@@ -13,7 +13,6 @@ define([
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Request',
-        '../Core/RequestType',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../ThirdParty/protobuf-minimal',
@@ -33,7 +32,6 @@ define([
         CesiumMath,
         Rectangle,
         Request,
-        RequestType,
         RuntimeError,
         TileProviderError,
         protobuf,
@@ -131,7 +129,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            credit = new Credit({text: credit});
         }
         this._credit = credit;
 

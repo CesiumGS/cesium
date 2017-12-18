@@ -1,6 +1,7 @@
 defineSuite([
         'DataSources/ModelGraphics',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
@@ -14,6 +15,7 @@ defineSuite([
     ], function(
         ModelGraphics,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         DistanceDisplayCondition,
         JulianDate,
@@ -35,6 +37,7 @@ defineSuite([
             maximumScale : 200,
             incrementallyLoadTextures : false,
             runAnimations : false,
+            clampAnimations : false,
             shadows : ShadowMode.DISABLED,
             heightReference : HeightReference.CLAMP_TO_GROUND,
             distanceDisplayCondition : new DistanceDisplayCondition(),
@@ -43,6 +46,7 @@ defineSuite([
             color : new Color(0.0, 1.0, 0.0, 0.2),
             colorBlendMode : ColorBlendMode.HIGHLIGHT,
             colorBlendAmount : 0.5,
+            clippingPlanes : new ClippingPlaneCollection(),
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -67,7 +71,9 @@ defineSuite([
         expect(model.color).toBeInstanceOf(ConstantProperty);
         expect(model.colorBlendMode).toBeInstanceOf(ConstantProperty);
         expect(model.colorBlendAmount).toBeInstanceOf(ConstantProperty);
+        expect(model.clippingPlanes).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
+        expect(model.clampAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
 
@@ -85,7 +91,9 @@ defineSuite([
         expect(model.color.getValue()).toEqual(options.color);
         expect(model.colorBlendMode.getValue()).toEqual(options.colorBlendMode);
         expect(model.colorBlendAmount.getValue()).toEqual(options.colorBlendAmount);
+        expect(model.clippingPlanes.getValue().planes).toEqual(options.clippingPlanes.planes);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
+        expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
         var expectedNodeTransformations = options.nodeTransformations;
@@ -112,7 +120,9 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.runAnimations = new ConstantProperty(true);
+        source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
                 translation : Cartesian3.UNIT_Y,
@@ -141,7 +151,9 @@ defineSuite([
         expect(target.color).toBe(source.color);
         expect(target.colorBlendMode).toBe(source.colorBlendMode);
         expect(target.colorBlendAmount).toBe(source.colorBlendAmount);
+        expect(target.clippingPlanes).toBe(source.clippingPlanes);
         expect(target.runAnimations).toBe(source.runAnimations);
+        expect(target.clampAnimations).toBe(source.clampAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
 
@@ -161,7 +173,9 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.runAnimations = new ConstantProperty(true);
+        source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
         };
@@ -180,7 +194,9 @@ defineSuite([
         var color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         var colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         var colorBlendAmount = new ConstantProperty(0.5);
+        var clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         var runAnimations = new ConstantProperty(true);
+        var clampAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
         });
@@ -200,7 +216,9 @@ defineSuite([
         target.color = color;
         target.colorBlendMode = colorBlendMode;
         target.colorBlendAmount = colorBlendAmount;
+        target.clippingPlanes = clippingPlanes;
         target.runAnimations = runAnimations;
+        target.clampAnimations = clampAnimations;
         target.nodeTransformations = nodeTransformations;
 
         target.merge(source);
@@ -219,7 +237,9 @@ defineSuite([
         expect(target.color).toBe(color);
         expect(target.colorBlendMode).toBe(colorBlendMode);
         expect(target.colorBlendAmount).toBe(colorBlendAmount);
+        expect(target.clippingPlanes).toBe(clippingPlanes);
         expect(target.runAnimations).toBe(runAnimations);
+        expect(target.clampAnimations).toBe(clampAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
 
@@ -239,7 +259,9 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.runAnimations = new ConstantProperty(true);
+        source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
             node2 : new NodeTransformationProperty()
@@ -260,7 +282,9 @@ defineSuite([
         expect(result.color).toBe(source.color);
         expect(result.colorBlendMode).toBe(source.colorBlendMode);
         expect(result.colorBlendAmount).toBe(source.colorBlendAmount);
+        expect(result.clippingPlanes).toBe(source.clippingPlanes);
         expect(result.runAnimations).toBe(source.runAnimations);
+        expect(result.clampAnimations).toBe(source.clampAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });
 

@@ -8,6 +8,7 @@ defineSuite([
         'Core/ClockStep',
         'Core/Color',
         'Core/CornerType',
+        'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/ExtrapolationType',
@@ -46,6 +47,7 @@ defineSuite([
         ClockStep,
         Color,
         CornerType,
+        DistanceDisplayCondition,
         Ellipsoid,
         Event,
         ExtrapolationType,
@@ -3632,6 +3634,8 @@ defineSuite([
             expect(e.billboard.translucencyByDistance.getValue(date)).toEqual(new NearFarScalar(43707, 31146, 12921, 57138));
             expect(e.billboard.pixelOffsetScaleByDistance.getValue(date)).toEqual(new NearFarScalar(11873, 40494, 29598, 27507));
             expect(e.billboard.imageSubRegion.getValue(date)).toEqual(new BoundingRectangle(62620, 63220, 23030, 63321));
+            expect(e.billboard.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(22843, 27481));
+            expect(e.billboard.disableDepthTestDistance.getValue(date)).toEqual(39764.0);
             expect(e.box.show.getValue(date)).toEqual(true);
             expect(e.box.dimensions.getValue(date)).toEqual(new Cartesian3(57494, 62432, 42995));
             expect(e.box.fill.getValue(date)).toEqual(true);
@@ -3640,6 +3644,7 @@ defineSuite([
             expect(e.box.outlineColor.getValue(date)).toEqual(Color.fromBytes(121, 42, 244, 168));
             expect(e.box.outlineWidth.getValue(date)).toEqual(15323.0);
             expect(e.box.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.box.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(3775, 49016));
             expect(e.corridor.show.getValue(date)).toEqual(true);
             expect(e.corridor.positions.getValue(date)).toEqual([ new Cartesian3(36415, 2702, 36618), new Cartesian3(47759, 11706, 63277) ]);
             expect(e.corridor.width.getValue(date)).toEqual(20413.0);
@@ -3653,6 +3658,7 @@ defineSuite([
             expect(e.corridor.outlineColor.getValue(date)).toEqual(Color.fromBytes(198, 25, 134, 60));
             expect(e.corridor.outlineWidth.getValue(date)).toEqual(9132.0);
             expect(e.corridor.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.corridor.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(15797, 46507));
             expect(e.cylinder.show.getValue(date)).toEqual(true);
             expect(e.cylinder.length.getValue(date)).toEqual(33298.0);
             expect(e.cylinder.topRadius.getValue(date)).toEqual(16245.0);
@@ -3665,6 +3671,7 @@ defineSuite([
             expect(e.cylinder.numberOfVerticalLines.getValue(date)).toEqual(38567.0);
             expect(e.cylinder.slices.getValue(date)).toEqual(39979.0);
             expect(e.cylinder.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.cylinder.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(43860, 52395));
             expect(e.ellipse.show.getValue(date)).toEqual(true);
             expect(e.ellipse.semiMajorAxis.getValue(date)).toEqual(60072.0);
             expect(e.ellipse.semiMinorAxis.getValue(date)).toEqual(38653.0);
@@ -3680,6 +3687,7 @@ defineSuite([
             expect(e.ellipse.outlineWidth.getValue(date)).toEqual(8839.0);
             expect(e.ellipse.numberOfVerticalLines.getValue(date)).toEqual(38878.0);
             expect(e.ellipse.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.ellipse.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(27813, 30828));
             expect(e.ellipsoid.show.getValue(date)).toEqual(true);
             expect(e.ellipsoid.radii.getValue(date)).toEqual(new Cartesian3(15638, 24381, 37983));
             expect(e.ellipsoid.fill.getValue(date)).toEqual(true);
@@ -3687,10 +3695,11 @@ defineSuite([
             expect(e.ellipsoid.outline.getValue(date)).toEqual(true);
             expect(e.ellipsoid.outlineColor.getValue(date)).toEqual(Color.fromBytes(55, 23, 226, 7));
             expect(e.ellipsoid.outlineWidth.getValue(date)).toEqual(47507.0);
-            expect(e.ellipsoid.stackPartitions.getValue(date)).toEqual(54278.0);
-            expect(e.ellipsoid.slicePartitions.getValue(date)).toEqual(28562.0);
+            expect(e.ellipsoid.stackPartitions.getValue(date)).toEqual(54278);
+            expect(e.ellipsoid.slicePartitions.getValue(date)).toEqual(28562);
             expect(e.ellipsoid.subdivisions.getValue(date)).toEqual(14008.0);
             expect(e.ellipsoid.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.ellipsoid.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(3293, 56793));
             expect(e.label.show.getValue(date)).toEqual(true);
             expect(e.label.text.getValue(date)).toEqual('string36641');
             expect(e.label.font.getValue(date)).toEqual('14px sans-serif');
@@ -3709,6 +3718,9 @@ defineSuite([
             expect(e.label.outlineWidth.getValue(date)).toEqual(36637.0);
             expect(e.label.translucencyByDistance.getValue(date)).toEqual(new NearFarScalar(34067, 16517, 11328, 13612));
             expect(e.label.pixelOffsetScaleByDistance.getValue(date)).toEqual(new NearFarScalar(21220, 35154, 33161, 36737));
+            expect(e.label.scaleByDistance.getValue(date)).toEqual(new NearFarScalar(7350, 32796, 1408, 55045));
+            expect(e.label.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(5204, 21012));
+            expect(e.label.disableDepthTestDistance.getValue(date)).toEqual(17959.0);
             expect(e.model.show.getValue(date)).toEqual(true);
             expect(e.model.uri.getValue(date)).toEqual('http://example.com/60043');
             expect(e.model.scale.getValue(date)).toEqual(44278.0);
@@ -3723,6 +3735,7 @@ defineSuite([
             expect(e.model.color.getValue(date)).toEqual(Color.fromBytes(0, 52, 75, 73));
             expect(e.model.colorBlendMode.getValue(date)).toEqual(ColorBlendMode.REPLACE);
             expect(e.model.colorBlendAmount.getValue(date)).toEqual(7475.0);
+            expect(e.model.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(31861, 62844));
             expect(e.model.nodeTransformations.prop.translation.getValue(date)).toEqual(new Cartesian3(18548, 48456, 21181));
             expect(e.model.nodeTransformations.prop.rotation.getValue(date)).toEqualEpsilon(new Quaternion(0.527960606328925, 0.567156704919186, 0.624812964569899, 0.0959146992664751), 1e-14);
             expect(e.model.nodeTransformations.prop.scale.getValue(date)).toEqual(new Cartesian3(53739, 37841, 41107));
@@ -3732,6 +3745,7 @@ defineSuite([
             expect(e.path.leadTime.getValue(date)).toEqual(5997.0);
             expect(e.path.trailTime.getValue(date)).toEqual(52915.0);
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(10, 78, 168, 13));
+            expect(e.path.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(11646, 32422));
             expect(e.point.show.getValue(date)).toEqual(true);
             expect(e.point.pixelSize.getValue(date)).toEqual(53869.0);
             expect(e.point.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -3740,6 +3754,8 @@ defineSuite([
             expect(e.point.outlineWidth.getValue(date)).toEqual(27922.0);
             expect(e.point.scaleByDistance.getValue(date)).toEqual(new NearFarScalar(20128, 16462, 49728, 18882));
             expect(e.point.translucencyByDistance.getValue(date)).toEqual(new NearFarScalar(52796, 43982, 61099, 50158));
+            expect(e.point.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(29646, 52915));
+            expect(e.point.disableDepthTestDistance.getValue(date)).toEqual(9675.0);
             expect(e.polygon.show.getValue(date)).toEqual(true);
             expect(e.polygon.hierarchy.getValue(date)).toEqual([ new Cartesian3(39143, 2200, 6408), new Cartesian3(27161, 33386, 62338) ]);
             expect(e.polygon.height.getValue(date)).toEqual(26391.0);
@@ -3755,6 +3771,7 @@ defineSuite([
             expect(e.polygon.closeTop.getValue(date)).toEqual(true);
             expect(e.polygon.closeBottom.getValue(date)).toEqual(true);
             expect(e.polygon.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.polygon.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(5989, 26104));
             expect(e.polyline.show.getValue(date)).toEqual(true);
             expect(e.polyline.positions.getValue(date)).toEqual([ new Cartesian3(23333, 31067, 17529), new Cartesian3(57924, 41186, 31648) ]);
             expect(e.polyline.width.getValue(date)).toEqual(14667.0);
@@ -3762,6 +3779,8 @@ defineSuite([
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(88, 0, 232, 230));
             expect(e.polyline.followSurface.getValue(date)).toEqual(true);
             expect(e.polyline.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(197, 195, 115, 198));
+            expect(e.polyline.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(5807, 30486));
             expect(e.rectangle.show.getValue(date)).toEqual(true);
             expect(e.rectangle.coordinates.getValue(date)).toEqual(new Rectangle(1.13325368272577, 0.703573207377445, 0.756676249095309, 0.339217858685931));
             expect(e.rectangle.height.getValue(date)).toEqual(20608.0);
@@ -3777,6 +3796,7 @@ defineSuite([
             expect(e.rectangle.closeTop.getValue(date)).toEqual(true);
             expect(e.rectangle.closeBottom.getValue(date)).toEqual(true);
             expect(e.rectangle.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.rectangle.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(21388, 23379));
             expect(e.wall.show.getValue(date)).toEqual(true);
             expect(e.wall.positions.getValue(date)).toEqual([ new Cartesian3(21681, 40276, 30621), new Cartesian3(3959, 61967, 19442) ]);
             expect(e.wall.minimumHeights.getValue(date)).toEqual([ 49466, 44737 ]);
@@ -3788,6 +3808,7 @@ defineSuite([
             expect(e.wall.outlineColor.getValue(date)).toEqual(Color.fromBytes(107, 196, 96, 198));
             expect(e.wall.outlineWidth.getValue(date)).toEqual(50458.0);
             expect(e.wall.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.wall.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(27810, 41691));
             expect(e = dataSource.entities.getById('constant_position_cartographicRadians')).toBeDefined();
             expect(e.position.getValue(date)).toEqual(Cartesian3.fromRadians(0.368123392863751, 0.678098621973879, 32050));
             expect(e = dataSource.entities.getById('constant_position_cartographicDegrees')).toBeDefined();
@@ -3969,7 +3990,7 @@ defineSuite([
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(190, 189, 9, 7));
             expect(e.path.material.gapColor.getValue(date)).toEqual(Color.fromBytes(170, 88, 12, 24));
             expect(e.path.material.dashLength.getValue(date)).toEqual(45848.0);
-            expect(e.path.material.dashPattern.getValue(date)).toEqual(13519.0);
+            expect(e.path.material.dashPattern.getValue(date)).toEqual(13519);
             expect(e = dataSource.entities.getById('material_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(72, 114, 200, 147));
             expect(e.path.material.glowPower.getValue(date)).toEqual(42344.0);
@@ -4063,7 +4084,7 @@ defineSuite([
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(22, 214, 57, 141));
             expect(e.polyline.material.gapColor.getValue(date)).toEqual(Color.fromBytes(150, 91, 109, 117));
             expect(e.polyline.material.dashLength.getValue(date)).toEqual(60297.0);
-            expect(e.polyline.material.dashPattern.getValue(date)).toEqual(40430.0);
+            expect(e.polyline.material.dashPattern.getValue(date)).toEqual(40430);
             expect(e = dataSource.entities.getById('material_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(59, 125, 181, 171));
             expect(e.polyline.material.glowPower.getValue(date)).toEqual(41345.0);
@@ -4104,6 +4125,59 @@ defineSuite([
             expect(e.polyline.material.evenColor.getValue(date)).toEqualEpsilon(new Color(0.647058823529412, 0.862745098039216, 0.129411764705882, 0.780392156862745), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_stripe_oddColor')).toBeDefined();
             expect(e.polyline.material.oddColor.getValue(date)).toEqualEpsilon(new Color(0.290196078431373, 0.780392156862745, 0.0705882352941176, 0.27843137254902), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_solidColor_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqualEpsilon(new Color(0.905882352941176, 0.635294117647059, 0.435294117647059, 0.631372549019608), 1e-14);
+            expect(e = dataSource.entities.getById('material_polyline_depthFailMaterial_polylineOutline')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(238, 116, 228, 18));
+            expect(e.polyline.depthFailMaterial.outlineColor.getValue(date)).toEqual(Color.fromBytes(36, 55, 18, 134));
+            expect(e.polyline.depthFailMaterial.outlineWidth.getValue(date)).toEqual(33747.0);
+            expect(e = dataSource.entities.getById('material_polyline_depthFailMaterial_polylineArrow')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(80, 78, 117, 160));
+            expect(e = dataSource.entities.getById('material_polyline_depthFailMaterial_polylineDash')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(139, 171, 44, 217));
+            expect(e.polyline.depthFailMaterial.gapColor.getValue(date)).toEqual(Color.fromBytes(253, 13, 109, 243));
+            expect(e.polyline.depthFailMaterial.dashLength.getValue(date)).toEqual(21429.0);
+            expect(e.polyline.depthFailMaterial.dashPattern.getValue(date)).toEqual(13659);
+            expect(e = dataSource.entities.getById('material_polyline_depthFailMaterial_polylineGlow')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(82, 227, 164, 249));
+            expect(e.polyline.depthFailMaterial.glowPower.getValue(date)).toEqual(52932.0);
+            expect(e = dataSource.entities.getById('material_polyline_depthFailMaterial_image')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.image.getValue(date)).toEqual('http://example.com/6349');
+            expect(e.polyline.depthFailMaterial.repeat.getValue(date)).toEqual(new Cartesian2(24549, 50015));
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(71, 233, 193, 55));
+            expect(e.polyline.depthFailMaterial.transparent.getValue(date)).toEqual(true);
+            expect(e = dataSource.entities.getById('material_polyline_depthFailMaterial_grid')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(241, 160, 22, 116));
+            expect(e.polyline.depthFailMaterial.cellAlpha.getValue(date)).toEqual(32801.0);
+            expect(e.polyline.depthFailMaterial.lineCount.getValue(date)).toEqual(new Cartesian2(27318, 57194));
+            expect(e.polyline.depthFailMaterial.lineThickness.getValue(date)).toEqual(new Cartesian2(2299, 50440));
+            expect(e.polyline.depthFailMaterial.lineOffset.getValue(date)).toEqual(new Cartesian2(16744, 62785));
+            expect(e = dataSource.entities.getById('material_polyline_depthFailMaterial_stripe')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.orientation.getValue(date)).toEqual(StripeOrientation.VERTICAL);
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(date)).toEqual(Color.fromBytes(174, 135, 160, 224));
+            expect(e.polyline.depthFailMaterial.oddColor.getValue(date)).toEqual(Color.fromBytes(8, 166, 115, 198));
+            expect(e.polyline.depthFailMaterial.offset.getValue(date)).toEqual(58992.0);
+            expect(e.polyline.depthFailMaterial.repeat.getValue(date)).toEqual(7346.0);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_polylineOutline_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqualEpsilon(new Color(0.976470588235294, 0.133333333333333, 0.835294117647059, 0.694117647058824), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_polylineOutline_outlineColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.8, 0.866666666666667, 0.219607843137255, 0.262745098039216), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_polylineArrow_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqualEpsilon(new Color(0.0392156862745098, 0.988235294117647, 0.784313725490196, 0.211764705882353), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_polylineDash_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqualEpsilon(new Color(0.0431372549019608, 0.235294117647059, 0.443137254901961, 0.701960784313725), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_polylineDash_gapColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.gapColor.getValue(date)).toEqualEpsilon(new Color(0.388235294117647, 0.0196078431372549, 0.780392156862745, 0.941176470588235), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_polylineGlow_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqualEpsilon(new Color(0.733333333333333, 0.180392156862745, 0.407843137254902, 0.168627450980392), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_image_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqualEpsilon(new Color(0.815686274509804, 0.47843137254902, 0.254901960784314, 0.47843137254902), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_grid_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqualEpsilon(new Color(0.247058823529412, 0.945098039215686, 0.0274509803921569, 0.968627450980392), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_stripe_evenColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(date)).toEqualEpsilon(new Color(0.517647058823529, 0.576470588235294, 0.615686274509804, 0.682352941176471), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_depthFailMaterial_stripe_oddColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.oddColor.getValue(date)).toEqualEpsilon(new Color(0.333333333333333, 0.537254901960784, 0.443137254901961, 0.658823529411765), 1e-14);
             expect(e = dataSource.entities.getById('constant_rectangle_coordinates_wsenDegrees')).toBeDefined();
             expect(e.rectangle.coordinates.getValue(date)).toEqual(Rectangle.fromDegrees(42, 22, 5, 35));
             expect(e = dataSource.entities.getById('constant_rectangle_material_solidColor_color')).toBeDefined();
@@ -4371,6 +4445,8 @@ defineSuite([
             expect(e.billboard.translucencyByDistance.getValue(date)).toEqual(constant.billboard.translucencyByDistance.getValue(date));
             expect(e.billboard.pixelOffsetScaleByDistance.getValue(date)).toEqual(constant.billboard.pixelOffsetScaleByDistance.getValue(date));
             expect(e.billboard.imageSubRegion.getValue(date)).toEqual(constant.billboard.imageSubRegion.getValue(date));
+            expect(e.billboard.distanceDisplayCondition.getValue(date)).toEqual(constant.billboard.distanceDisplayCondition.getValue(date));
+            expect(e.billboard.disableDepthTestDistance.getValue(date)).toEqual(constant.billboard.disableDepthTestDistance.getValue(date));
             expect(e.box.show.getValue(date)).toEqual(constant.box.show.getValue(date));
             expect(e.box.dimensions.getValue(date)).toEqual(constant.box.dimensions.getValue(date));
             expect(e.box.fill.getValue(date)).toEqual(constant.box.fill.getValue(date));
@@ -4379,6 +4455,7 @@ defineSuite([
             expect(e.box.outlineColor.getValue(date)).toEqual(constant.box.outlineColor.getValue(date));
             expect(e.box.outlineWidth.getValue(date)).toEqual(constant.box.outlineWidth.getValue(date));
             expect(e.box.shadows.getValue(date)).toEqual(constant.box.shadows.getValue(date));
+            expect(e.box.distanceDisplayCondition.getValue(date)).toEqual(constant.box.distanceDisplayCondition.getValue(date));
             expect(e.corridor.show.getValue(date)).toEqual(constant.corridor.show.getValue(date));
             expect(e.corridor.positions.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.corridor.width.getValue(date)).toEqual(constant.corridor.width.getValue(date));
@@ -4392,6 +4469,7 @@ defineSuite([
             expect(e.corridor.outlineColor.getValue(date)).toEqual(constant.corridor.outlineColor.getValue(date));
             expect(e.corridor.outlineWidth.getValue(date)).toEqual(constant.corridor.outlineWidth.getValue(date));
             expect(e.corridor.shadows.getValue(date)).toEqual(constant.corridor.shadows.getValue(date));
+            expect(e.corridor.distanceDisplayCondition.getValue(date)).toEqual(constant.corridor.distanceDisplayCondition.getValue(date));
             expect(e.cylinder.show.getValue(date)).toEqual(constant.cylinder.show.getValue(date));
             expect(e.cylinder.length.getValue(date)).toEqual(constant.cylinder.length.getValue(date));
             expect(e.cylinder.topRadius.getValue(date)).toEqual(constant.cylinder.topRadius.getValue(date));
@@ -4404,6 +4482,7 @@ defineSuite([
             expect(e.cylinder.numberOfVerticalLines.getValue(date)).toEqual(constant.cylinder.numberOfVerticalLines.getValue(date));
             expect(e.cylinder.slices.getValue(date)).toEqual(constant.cylinder.slices.getValue(date));
             expect(e.cylinder.shadows.getValue(date)).toEqual(constant.cylinder.shadows.getValue(date));
+            expect(e.cylinder.distanceDisplayCondition.getValue(date)).toEqual(constant.cylinder.distanceDisplayCondition.getValue(date));
             expect(e.ellipse.show.getValue(date)).toEqual(constant.ellipse.show.getValue(date));
             expect(e.ellipse.semiMajorAxis.getValue(date)).toEqual(constant.ellipse.semiMajorAxis.getValue(date));
             expect(e.ellipse.semiMinorAxis.getValue(date)).toEqual(constant.ellipse.semiMinorAxis.getValue(date));
@@ -4419,6 +4498,7 @@ defineSuite([
             expect(e.ellipse.outlineWidth.getValue(date)).toEqual(constant.ellipse.outlineWidth.getValue(date));
             expect(e.ellipse.numberOfVerticalLines.getValue(date)).toEqual(constant.ellipse.numberOfVerticalLines.getValue(date));
             expect(e.ellipse.shadows.getValue(date)).toEqual(constant.ellipse.shadows.getValue(date));
+            expect(e.ellipse.distanceDisplayCondition.getValue(date)).toEqual(constant.ellipse.distanceDisplayCondition.getValue(date));
             expect(e.ellipsoid.show.getValue(date)).toEqual(constant.ellipsoid.show.getValue(date));
             expect(e.ellipsoid.radii.getValue(date)).toEqual(constant.ellipsoid.radii.getValue(date));
             expect(e.ellipsoid.fill.getValue(date)).toEqual(constant.ellipsoid.fill.getValue(date));
@@ -4430,6 +4510,7 @@ defineSuite([
             expect(e.ellipsoid.slicePartitions.getValue(date)).toEqual(constant.ellipsoid.slicePartitions.getValue(date));
             expect(e.ellipsoid.subdivisions.getValue(date)).toEqual(constant.ellipsoid.subdivisions.getValue(date));
             expect(e.ellipsoid.shadows.getValue(date)).toEqual(constant.ellipsoid.shadows.getValue(date));
+            expect(e.ellipsoid.distanceDisplayCondition.getValue(date)).toEqual(constant.ellipsoid.distanceDisplayCondition.getValue(date));
             expect(e.label.show.getValue(date)).toEqual(constant.label.show.getValue(date));
             expect(e.label.text.getValue(date)).toEqual(constant.label.text.getValue(date));
             expect(e.label.font.getValue(date)).toEqual(constant.label.font.getValue(date));
@@ -4448,6 +4529,9 @@ defineSuite([
             expect(e.label.outlineWidth.getValue(date)).toEqual(constant.label.outlineWidth.getValue(date));
             expect(e.label.translucencyByDistance.getValue(date)).toEqual(constant.label.translucencyByDistance.getValue(date));
             expect(e.label.pixelOffsetScaleByDistance.getValue(date)).toEqual(constant.label.pixelOffsetScaleByDistance.getValue(date));
+            expect(e.label.scaleByDistance.getValue(date)).toEqual(constant.label.scaleByDistance.getValue(date));
+            expect(e.label.distanceDisplayCondition.getValue(date)).toEqual(constant.label.distanceDisplayCondition.getValue(date));
+            expect(e.label.disableDepthTestDistance.getValue(date)).toEqual(constant.label.disableDepthTestDistance.getValue(date));
             expect(e.model.show.getValue(date)).toEqual(constant.model.show.getValue(date));
             expect(e.model.uri.getValue(date)).toEqual(constant.model.uri.getValue(date));
             expect(e.model.scale.getValue(date)).toEqual(constant.model.scale.getValue(date));
@@ -4462,6 +4546,7 @@ defineSuite([
             expect(e.model.color.getValue(date)).toEqual(constant.model.color.getValue(date));
             expect(e.model.colorBlendMode.getValue(date)).toEqual(constant.model.colorBlendMode.getValue(date));
             expect(e.model.colorBlendAmount.getValue(date)).toEqual(constant.model.colorBlendAmount.getValue(date));
+            expect(e.model.distanceDisplayCondition.getValue(date)).toEqual(constant.model.distanceDisplayCondition.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.translation.getValue(date)).toEqual(constant.model.nodeTransformations.prop.translation.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.rotation.getValue(date)).toEqual(constant.model.nodeTransformations.prop.rotation.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.scale.getValue(date)).toEqual(constant.model.nodeTransformations.prop.scale.getValue(date));
@@ -4471,6 +4556,7 @@ defineSuite([
             expect(e.path.leadTime.getValue(date)).toEqual(constant.path.leadTime.getValue(date));
             expect(e.path.trailTime.getValue(date)).toEqual(constant.path.trailTime.getValue(date));
             expect(e.path.material.color.getValue(date)).toEqual(constant.path.material.color.getValue(date));
+            expect(e.path.distanceDisplayCondition.getValue(date)).toEqual(constant.path.distanceDisplayCondition.getValue(date));
             expect(e.point.show.getValue(date)).toEqual(constant.point.show.getValue(date));
             expect(e.point.pixelSize.getValue(date)).toEqual(constant.point.pixelSize.getValue(date));
             expect(e.point.heightReference.getValue(date)).toEqual(constant.point.heightReference.getValue(date));
@@ -4479,6 +4565,8 @@ defineSuite([
             expect(e.point.outlineWidth.getValue(date)).toEqual(constant.point.outlineWidth.getValue(date));
             expect(e.point.scaleByDistance.getValue(date)).toEqual(constant.point.scaleByDistance.getValue(date));
             expect(e.point.translucencyByDistance.getValue(date)).toEqual(constant.point.translucencyByDistance.getValue(date));
+            expect(e.point.distanceDisplayCondition.getValue(date)).toEqual(constant.point.distanceDisplayCondition.getValue(date));
+            expect(e.point.disableDepthTestDistance.getValue(date)).toEqual(constant.point.disableDepthTestDistance.getValue(date));
             expect(e.polygon.show.getValue(date)).toEqual(constant.polygon.show.getValue(date));
             expect(e.polygon.hierarchy.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.polygon.height.getValue(date)).toEqual(constant.polygon.height.getValue(date));
@@ -4494,6 +4582,7 @@ defineSuite([
             expect(e.polygon.closeTop.getValue(date)).toEqual(constant.polygon.closeTop.getValue(date));
             expect(e.polygon.closeBottom.getValue(date)).toEqual(constant.polygon.closeBottom.getValue(date));
             expect(e.polygon.shadows.getValue(date)).toEqual(constant.polygon.shadows.getValue(date));
+            expect(e.polygon.distanceDisplayCondition.getValue(date)).toEqual(constant.polygon.distanceDisplayCondition.getValue(date));
             expect(e.polyline.show.getValue(date)).toEqual(constant.polyline.show.getValue(date));
             expect(e.polyline.positions.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.polyline.width.getValue(date)).toEqual(constant.polyline.width.getValue(date));
@@ -4501,6 +4590,8 @@ defineSuite([
             expect(e.polyline.material.color.getValue(date)).toEqual(constant.polyline.material.color.getValue(date));
             expect(e.polyline.followSurface.getValue(date)).toEqual(constant.polyline.followSurface.getValue(date));
             expect(e.polyline.shadows.getValue(date)).toEqual(constant.polyline.shadows.getValue(date));
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(constant.polyline.depthFailMaterial.color.getValue(date));
+            expect(e.polyline.distanceDisplayCondition.getValue(date)).toEqual(constant.polyline.distanceDisplayCondition.getValue(date));
             expect(e.rectangle.show.getValue(date)).toEqual(constant.rectangle.show.getValue(date));
             expect(e.rectangle.coordinates.getValue(date)).toEqual(constant.rectangle.coordinates.getValue(date));
             expect(e.rectangle.height.getValue(date)).toEqual(constant.rectangle.height.getValue(date));
@@ -4516,6 +4607,7 @@ defineSuite([
             expect(e.rectangle.closeTop.getValue(date)).toEqual(constant.rectangle.closeTop.getValue(date));
             expect(e.rectangle.closeBottom.getValue(date)).toEqual(constant.rectangle.closeBottom.getValue(date));
             expect(e.rectangle.shadows.getValue(date)).toEqual(constant.rectangle.shadows.getValue(date));
+            expect(e.rectangle.distanceDisplayCondition.getValue(date)).toEqual(constant.rectangle.distanceDisplayCondition.getValue(date));
             expect(e.wall.show.getValue(date)).toEqual(constant.wall.show.getValue(date));
             expect(e.wall.positions.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.wall.minimumHeights.getValue(date)).toEqual([dataSource.entities.getById('ConstantDouble1').billboard.scale.getValue(date), dataSource.entities.getById('ConstantDouble2').billboard.scale.getValue(date)]);
@@ -4527,6 +4619,7 @@ defineSuite([
             expect(e.wall.outlineColor.getValue(date)).toEqual(constant.wall.outlineColor.getValue(date));
             expect(e.wall.outlineWidth.getValue(date)).toEqual(constant.wall.outlineWidth.getValue(date));
             expect(e.wall.shadows.getValue(date)).toEqual(constant.wall.shadows.getValue(date));
+            expect(e.wall.distanceDisplayCondition.getValue(date)).toEqual(constant.wall.distanceDisplayCondition.getValue(date));
             expect(e = dataSource.entities.getById('reference_box_material_image')).toBeDefined();
             expect(e.box.material.image.getValue(date)).toEqual(dataSource.entities.getById('material_box_material_image').box.material.image.getValue(date));
             expect(e.box.material.repeat.getValue(date)).toEqual(dataSource.entities.getById('material_box_material_image').box.material.repeat.getValue(date));
@@ -4691,6 +4784,37 @@ defineSuite([
             expect(e.polyline.material.oddColor.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_stripe').polyline.material.oddColor.getValue(date));
             expect(e.polyline.material.offset.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_stripe').polyline.material.offset.getValue(date));
             expect(e.polyline.material.repeat.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_stripe').polyline.material.repeat.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_depthFailMaterial_polylineOutline')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineOutline').polyline.depthFailMaterial.color.getValue(date));
+            expect(e.polyline.depthFailMaterial.outlineColor.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineOutline').polyline.depthFailMaterial.outlineColor.getValue(date));
+            expect(e.polyline.depthFailMaterial.outlineWidth.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineOutline').polyline.depthFailMaterial.outlineWidth.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_depthFailMaterial_polylineArrow')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineArrow').polyline.depthFailMaterial.color.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_depthFailMaterial_polylineDash')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineDash').polyline.depthFailMaterial.color.getValue(date));
+            expect(e.polyline.depthFailMaterial.gapColor.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineDash').polyline.depthFailMaterial.gapColor.getValue(date));
+            expect(e.polyline.depthFailMaterial.dashLength.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineDash').polyline.depthFailMaterial.dashLength.getValue(date));
+            expect(e.polyline.depthFailMaterial.dashPattern.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineDash').polyline.depthFailMaterial.dashPattern.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_depthFailMaterial_polylineGlow')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineGlow').polyline.depthFailMaterial.color.getValue(date));
+            expect(e.polyline.depthFailMaterial.glowPower.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_polylineGlow').polyline.depthFailMaterial.glowPower.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_depthFailMaterial_image')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.image.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_image').polyline.depthFailMaterial.image.getValue(date));
+            expect(e.polyline.depthFailMaterial.repeat.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_image').polyline.depthFailMaterial.repeat.getValue(date));
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_image').polyline.depthFailMaterial.color.getValue(date));
+            expect(e.polyline.depthFailMaterial.transparent.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_image').polyline.depthFailMaterial.transparent.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_depthFailMaterial_grid')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_grid').polyline.depthFailMaterial.color.getValue(date));
+            expect(e.polyline.depthFailMaterial.cellAlpha.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_grid').polyline.depthFailMaterial.cellAlpha.getValue(date));
+            expect(e.polyline.depthFailMaterial.lineCount.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_grid').polyline.depthFailMaterial.lineCount.getValue(date));
+            expect(e.polyline.depthFailMaterial.lineThickness.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_grid').polyline.depthFailMaterial.lineThickness.getValue(date));
+            expect(e.polyline.depthFailMaterial.lineOffset.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_grid').polyline.depthFailMaterial.lineOffset.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_depthFailMaterial_stripe')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.orientation.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_stripe').polyline.depthFailMaterial.orientation.getValue(date));
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_stripe').polyline.depthFailMaterial.evenColor.getValue(date));
+            expect(e.polyline.depthFailMaterial.oddColor.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_stripe').polyline.depthFailMaterial.oddColor.getValue(date));
+            expect(e.polyline.depthFailMaterial.offset.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_stripe').polyline.depthFailMaterial.offset.getValue(date));
+            expect(e.polyline.depthFailMaterial.repeat.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_depthFailMaterial_stripe').polyline.depthFailMaterial.repeat.getValue(date));
             expect(e = dataSource.entities.getById('reference_rectangle_material_image')).toBeDefined();
             expect(e.rectangle.material.image.getValue(date)).toEqual(dataSource.entities.getById('material_rectangle_material_image').rectangle.material.image.getValue(date));
             expect(e.rectangle.material.repeat.getValue(date)).toEqual(dataSource.entities.getById('material_rectangle_material_image').rectangle.material.repeat.getValue(date));
@@ -4809,6 +4933,10 @@ defineSuite([
             expect(e.billboard.pixelOffsetScaleByDistance.getValue(documentStopDate)).toEqual(new NearFarScalar(37417, 4754, 19986, 15182));
             expect(e.billboard.imageSubRegion.getValue(documentStartDate)).toEqual(new BoundingRectangle(26590, 12135, 16431, 56640));
             expect(e.billboard.imageSubRegion.getValue(documentStopDate)).toEqual(new BoundingRectangle(43063, 42664, 60326, 52715));
+            expect(e.billboard.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(952, 47317));
+            expect(e.billboard.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(16896, 28226));
+            expect(e.billboard.disableDepthTestDistance.getValue(documentStartDate)).toEqual(18661.0);
+            expect(e.billboard.disableDepthTestDistance.getValue(documentStopDate)).toEqual(61609.0);
             expect(e.box.dimensions.getValue(documentStartDate)).toEqual(new Cartesian3(37525, 42898, 18087));
             expect(e.box.dimensions.getValue(documentStopDate)).toEqual(new Cartesian3(49399, 59584, 63976));
             expect(e.box.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(172, 28, 222, 165));
@@ -4817,6 +4945,8 @@ defineSuite([
             expect(e.box.outlineColor.getValue(documentStopDate)).toEqual(Color.fromBytes(163, 75, 228, 48));
             expect(e.box.outlineWidth.getValue(documentStartDate)).toEqual(45211.0);
             expect(e.box.outlineWidth.getValue(documentStopDate)).toEqual(20490.0);
+            expect(e.box.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(8940, 60664));
+            expect(e.box.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(41202, 60832));
             expect(e.corridor.width.getValue(documentStartDate)).toEqual(62443.0);
             expect(e.corridor.width.getValue(documentStopDate)).toEqual(13988.0);
             expect(e.corridor.height.getValue(documentStartDate)).toEqual(20585.0);
@@ -4831,6 +4961,8 @@ defineSuite([
             expect(e.corridor.outlineColor.getValue(documentStopDate)).toEqual(Color.fromBytes(93, 178, 74, 64));
             expect(e.corridor.outlineWidth.getValue(documentStartDate)).toEqual(14678.0);
             expect(e.corridor.outlineWidth.getValue(documentStopDate)).toEqual(57820.0);
+            expect(e.corridor.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(10884, 63530));
+            expect(e.corridor.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(20076, 27683));
             expect(e.cylinder.length.getValue(documentStartDate)).toEqual(30241.0);
             expect(e.cylinder.length.getValue(documentStopDate)).toEqual(48364.0);
             expect(e.cylinder.topRadius.getValue(documentStartDate)).toEqual(62881.0);
@@ -4847,6 +4979,8 @@ defineSuite([
             expect(e.cylinder.numberOfVerticalLines.getValue(documentStopDate)).toEqual(42247.0);
             expect(e.cylinder.slices.getValue(documentStartDate)).toEqual(46140.0);
             expect(e.cylinder.slices.getValue(documentStopDate)).toEqual(53530.0);
+            expect(e.cylinder.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(2783, 57220));
+            expect(e.cylinder.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(13855, 50230));
             expect(e.ellipse.semiMajorAxis.getValue(documentStartDate)).toEqual(13136.0);
             expect(e.ellipse.semiMajorAxis.getValue(documentStopDate)).toEqual(55507.0);
             expect(e.ellipse.semiMinorAxis.getValue(documentStartDate)).toEqual(41580.0);
@@ -4869,6 +5003,8 @@ defineSuite([
             expect(e.ellipse.outlineWidth.getValue(documentStopDate)).toEqual(24194.0);
             expect(e.ellipse.numberOfVerticalLines.getValue(documentStartDate)).toEqual(52822.0);
             expect(e.ellipse.numberOfVerticalLines.getValue(documentStopDate)).toEqual(45768.0);
+            expect(e.ellipse.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(38393, 63947));
+            expect(e.ellipse.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(29119, 43121));
             expect(e.ellipsoid.radii.getValue(documentStartDate)).toEqual(new Cartesian3(5183, 10004, 13863));
             expect(e.ellipsoid.radii.getValue(documentStopDate)).toEqual(new Cartesian3(39497, 12186, 45103));
             expect(e.ellipsoid.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(137, 128, 194, 84));
@@ -4877,12 +5013,14 @@ defineSuite([
             expect(e.ellipsoid.outlineColor.getValue(documentStopDate)).toEqual(Color.fromBytes(239, 35, 237, 247));
             expect(e.ellipsoid.outlineWidth.getValue(documentStartDate)).toEqual(10713.0);
             expect(e.ellipsoid.outlineWidth.getValue(documentStopDate)).toEqual(10444.0);
-            expect(e.ellipsoid.stackPartitions.getValue(documentStartDate)).toEqual(5841.0);
-            expect(e.ellipsoid.stackPartitions.getValue(documentStopDate)).toEqual(39170.0);
-            expect(e.ellipsoid.slicePartitions.getValue(documentStartDate)).toEqual(50327.0);
-            expect(e.ellipsoid.slicePartitions.getValue(documentStopDate)).toEqual(4672.0);
+            expect(e.ellipsoid.stackPartitions.getValue(documentStartDate)).toEqual(5841);
+            expect(e.ellipsoid.stackPartitions.getValue(documentStopDate)).toEqual(39170);
+            expect(e.ellipsoid.slicePartitions.getValue(documentStartDate)).toEqual(50327);
+            expect(e.ellipsoid.slicePartitions.getValue(documentStopDate)).toEqual(4672);
             expect(e.ellipsoid.subdivisions.getValue(documentStartDate)).toEqual(10225.0);
             expect(e.ellipsoid.subdivisions.getValue(documentStopDate)).toEqual(53957.0);
+            expect(e.ellipsoid.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(11751, 59227));
+            expect(e.ellipsoid.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(4769, 41441));
             expect(e.label.scale.getValue(documentStartDate)).toEqual(40153.0);
             expect(e.label.scale.getValue(documentStopDate)).toEqual(42123.0);
             expect(e.label.backgroundColor.getValue(documentStartDate)).toEqual(Color.fromBytes(30, 92, 161, 169));
@@ -4903,6 +5041,12 @@ defineSuite([
             expect(e.label.translucencyByDistance.getValue(documentStopDate)).toEqual(new NearFarScalar(58875, 9189, 20515, 15696));
             expect(e.label.pixelOffsetScaleByDistance.getValue(documentStartDate)).toEqual(new NearFarScalar(45296, 62896, 38133, 40084));
             expect(e.label.pixelOffsetScaleByDistance.getValue(documentStopDate)).toEqual(new NearFarScalar(28657, 25711, 9316, 62756));
+            expect(e.label.scaleByDistance.getValue(documentStartDate)).toEqual(new NearFarScalar(22356, 26711, 58216, 52963));
+            expect(e.label.scaleByDistance.getValue(documentStopDate)).toEqual(new NearFarScalar(26464, 26471, 23143, 37466));
+            expect(e.label.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(2314, 2614));
+            expect(e.label.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(23998, 48733));
+            expect(e.label.disableDepthTestDistance.getValue(documentStartDate)).toEqual(250.0);
+            expect(e.label.disableDepthTestDistance.getValue(documentStopDate)).toEqual(40425.0);
             expect(e.model.scale.getValue(documentStartDate)).toEqual(63647.0);
             expect(e.model.scale.getValue(documentStopDate)).toEqual(53878.0);
             expect(e.model.minimumPixelSize.getValue(documentStartDate)).toEqual(16357.0);
@@ -4917,6 +5061,8 @@ defineSuite([
             expect(e.model.color.getValue(documentStopDate)).toEqual(Color.fromBytes(127, 30, 46, 170));
             expect(e.model.colorBlendAmount.getValue(documentStartDate)).toEqual(64130.0);
             expect(e.model.colorBlendAmount.getValue(documentStopDate)).toEqual(21967.0);
+            expect(e.model.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(33246, 36993));
+            expect(e.model.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(5814, 10006));
             expect(e.path.width.getValue(documentStartDate)).toEqual(32449.0);
             expect(e.path.width.getValue(documentStopDate)).toEqual(33819.0);
             expect(e.path.resolution.getValue(documentStartDate)).toEqual(8399.0);
@@ -4927,6 +5073,8 @@ defineSuite([
             expect(e.path.trailTime.getValue(documentStopDate)).toEqual(57713.0);
             expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(97, 239, 22, 105));
             expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(242, 157, 215, 125));
+            expect(e.path.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(42994, 62047));
+            expect(e.path.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(52406, 59340));
             expect(e.point.pixelSize.getValue(documentStartDate)).toEqual(39714.0);
             expect(e.point.pixelSize.getValue(documentStopDate)).toEqual(3313.0);
             expect(e.point.color.getValue(documentStartDate)).toEqual(Color.fromBytes(137, 151, 128, 95));
@@ -4939,6 +5087,10 @@ defineSuite([
             expect(e.point.scaleByDistance.getValue(documentStopDate)).toEqual(new NearFarScalar(60522, 63980, 30201, 25205));
             expect(e.point.translucencyByDistance.getValue(documentStartDate)).toEqual(new NearFarScalar(61190, 16879, 16449, 10048));
             expect(e.point.translucencyByDistance.getValue(documentStopDate)).toEqual(new NearFarScalar(46491, 47541, 35769, 13707));
+            expect(e.point.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(7642, 55841));
+            expect(e.point.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(24270, 29534));
+            expect(e.point.disableDepthTestDistance.getValue(documentStartDate)).toEqual(30881.0);
+            expect(e.point.disableDepthTestDistance.getValue(documentStopDate)).toEqual(6667.0);
             expect(e.polygon.height.getValue(documentStartDate)).toEqual(64265.0);
             expect(e.polygon.height.getValue(documentStopDate)).toEqual(19257.0);
             expect(e.polygon.extrudedHeight.getValue(documentStartDate)).toEqual(12315.0);
@@ -4953,12 +5105,18 @@ defineSuite([
             expect(e.polygon.outlineColor.getValue(documentStopDate)).toEqual(Color.fromBytes(20, 135, 105, 81));
             expect(e.polygon.outlineWidth.getValue(documentStartDate)).toEqual(48428.0);
             expect(e.polygon.outlineWidth.getValue(documentStopDate)).toEqual(41508.0);
+            expect(e.polygon.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(22140, 31962));
+            expect(e.polygon.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(3927, 22422));
             expect(e.polyline.width.getValue(documentStartDate)).toEqual(60367.0);
             expect(e.polyline.width.getValue(documentStopDate)).toEqual(31077.0);
             expect(e.polyline.granularity.getValue(documentStartDate)).toEqual(62537.0);
             expect(e.polyline.granularity.getValue(documentStopDate)).toEqual(14676.0);
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(90, 30, 195, 220));
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(39, 17, 221, 74));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqual(Color.fromBytes(217, 122, 10, 152));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqual(Color.fromBytes(76, 105, 5, 67));
+            expect(e.polyline.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(4857, 10258));
+            expect(e.polyline.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(36588, 47246));
             expect(e.rectangle.coordinates.getValue(documentStartDate)).toEqual(new Rectangle(0.392205830501108, 1.04907471338688, 0.00211010473645246, 0.064281089310235));
             expect(e.rectangle.coordinates.getValue(documentStopDate)).toEqual(new Rectangle(0.523469985903937, 0.229690388867811, 0.399550037703662, 0.48478405941078));
             expect(e.rectangle.height.getValue(documentStartDate)).toEqual(56388.0);
@@ -4977,6 +5135,8 @@ defineSuite([
             expect(e.rectangle.outlineColor.getValue(documentStopDate)).toEqual(Color.fromBytes(87, 190, 148, 55));
             expect(e.rectangle.outlineWidth.getValue(documentStartDate)).toEqual(41576.0);
             expect(e.rectangle.outlineWidth.getValue(documentStopDate)).toEqual(33933.0);
+            expect(e.rectangle.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(24813, 30560));
+            expect(e.rectangle.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(34617, 40071));
             expect(e.wall.granularity.getValue(documentStartDate)).toEqual(64428.0);
             expect(e.wall.granularity.getValue(documentStopDate)).toEqual(25333.0);
             expect(e.wall.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(31, 188, 250, 46));
@@ -4985,6 +5145,8 @@ defineSuite([
             expect(e.wall.outlineColor.getValue(documentStopDate)).toEqual(Color.fromBytes(184, 17, 208, 44));
             expect(e.wall.outlineWidth.getValue(documentStartDate)).toEqual(62000.0);
             expect(e.wall.outlineWidth.getValue(documentStopDate)).toEqual(40549.0);
+            expect(e.wall.distanceDisplayCondition.getValue(documentStartDate)).toEqual(new DistanceDisplayCondition(12470, 36912));
+            expect(e.wall.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(35574, 63040));
             expect(e = dataSource.entities.getById('sampled_position_cartographicRadians')).toBeDefined();
             expect(e.position.getValue(documentStartDate)).toEqual(Cartesian3.fromRadians(1.00319530145806, 0.889718921347432, 16911));
             expect(e.position.getValue(documentStopDate)).toEqual(Cartesian3.fromRadians(0.828301545608097, 0.517994728610812, 62937));
@@ -5250,8 +5412,8 @@ defineSuite([
             expect(e.path.material.gapColor.getValue(documentStopDate)).toEqual(Color.fromBytes(16, 23, 0, 42));
             expect(e.path.material.dashLength.getValue(documentStartDate)).toEqual(38294.0);
             expect(e.path.material.dashLength.getValue(documentStopDate)).toEqual(33057.0);
-            expect(e.path.material.dashPattern.getValue(documentStartDate)).toEqual(58660.0);
-            expect(e.path.material.dashPattern.getValue(documentStopDate)).toEqual(3340.0);
+            expect(e.path.material.dashPattern.getValue(documentStartDate)).toEqual(58660);
+            expect(e.path.material.dashPattern.getValue(documentStopDate)).toEqual(3340);
             expect(e = dataSource.entities.getById('sampled_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(197, 117, 196, 254));
             expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(18, 17, 195, 230));
@@ -5381,8 +5543,8 @@ defineSuite([
             expect(e.polyline.material.gapColor.getValue(documentStopDate)).toEqual(Color.fromBytes(173, 151, 118, 138));
             expect(e.polyline.material.dashLength.getValue(documentStartDate)).toEqual(41757.0);
             expect(e.polyline.material.dashLength.getValue(documentStopDate)).toEqual(10126.0);
-            expect(e.polyline.material.dashPattern.getValue(documentStartDate)).toEqual(33948.0);
-            expect(e.polyline.material.dashPattern.getValue(documentStopDate)).toEqual(16892.0);
+            expect(e.polyline.material.dashPattern.getValue(documentStartDate)).toEqual(33948);
+            expect(e.polyline.material.dashPattern.getValue(documentStopDate)).toEqual(16892);
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(174, 178, 78, 176));
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(79, 191, 38, 195));
@@ -5443,6 +5605,88 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_polyline_material_stripe_oddColor')).toBeDefined();
             expect(e.polyline.material.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.427450980392157, 0.407843137254902, 0.470588235294118, 0.874509803921569), 1e-14);
             expect(e.polyline.material.oddColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.509803921568627, 0.427450980392157, 0.976470588235294, 0), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_solidColor_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.568627450980392, 0.243137254901961, 0.43921568627451, 0.541176470588235), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.729411764705882, 0.505882352941176, 0.282352941176471, 0.0274509803921569), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineOutline')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqual(Color.fromBytes(247, 124, 164, 106));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqual(Color.fromBytes(91, 114, 116, 82));
+            expect(e.polyline.depthFailMaterial.outlineColor.getValue(documentStartDate)).toEqual(Color.fromBytes(35, 216, 157, 243));
+            expect(e.polyline.depthFailMaterial.outlineColor.getValue(documentStopDate)).toEqual(Color.fromBytes(111, 11, 143, 175));
+            expect(e.polyline.depthFailMaterial.outlineWidth.getValue(documentStartDate)).toEqual(45494.0);
+            expect(e.polyline.depthFailMaterial.outlineWidth.getValue(documentStopDate)).toEqual(8666.0);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineArrow')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqual(Color.fromBytes(143, 46, 33, 146));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqual(Color.fromBytes(1, 147, 34, 93));
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineDash')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqual(Color.fromBytes(64, 52, 179, 199));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqual(Color.fromBytes(251, 205, 86, 110));
+            expect(e.polyline.depthFailMaterial.gapColor.getValue(documentStartDate)).toEqual(Color.fromBytes(98, 214, 1, 23));
+            expect(e.polyline.depthFailMaterial.gapColor.getValue(documentStopDate)).toEqual(Color.fromBytes(108, 132, 28, 207));
+            expect(e.polyline.depthFailMaterial.dashLength.getValue(documentStartDate)).toEqual(59636.0);
+            expect(e.polyline.depthFailMaterial.dashLength.getValue(documentStopDate)).toEqual(9250.0);
+            expect(e.polyline.depthFailMaterial.dashPattern.getValue(documentStartDate)).toEqual(33949);
+            expect(e.polyline.depthFailMaterial.dashPattern.getValue(documentStopDate)).toEqual(58673);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineGlow')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqual(Color.fromBytes(253, 71, 171, 138));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqual(Color.fromBytes(112, 154, 76, 178));
+            expect(e.polyline.depthFailMaterial.glowPower.getValue(documentStartDate)).toEqual(8542.0);
+            expect(e.polyline.depthFailMaterial.glowPower.getValue(documentStopDate)).toEqual(54440.0);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_image')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.repeat.getValue(documentStartDate)).toEqual(new Cartesian2(59796, 25065));
+            expect(e.polyline.depthFailMaterial.repeat.getValue(documentStopDate)).toEqual(new Cartesian2(38054, 9108));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqual(Color.fromBytes(32, 24, 155, 151));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqual(Color.fromBytes(9, 142, 253, 92));
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_grid')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqual(Color.fromBytes(206, 138, 53, 173));
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqual(Color.fromBytes(20, 11, 131, 253));
+            expect(e.polyline.depthFailMaterial.cellAlpha.getValue(documentStartDate)).toEqual(36676.0);
+            expect(e.polyline.depthFailMaterial.cellAlpha.getValue(documentStopDate)).toEqual(5143.0);
+            expect(e.polyline.depthFailMaterial.lineCount.getValue(documentStartDate)).toEqual(new Cartesian2(55344, 11736));
+            expect(e.polyline.depthFailMaterial.lineCount.getValue(documentStopDate)).toEqual(new Cartesian2(20410, 11343));
+            expect(e.polyline.depthFailMaterial.lineThickness.getValue(documentStartDate)).toEqual(new Cartesian2(22967, 31065));
+            expect(e.polyline.depthFailMaterial.lineThickness.getValue(documentStopDate)).toEqual(new Cartesian2(59168, 51431));
+            expect(e.polyline.depthFailMaterial.lineOffset.getValue(documentStartDate)).toEqual(new Cartesian2(59000, 31974));
+            expect(e.polyline.depthFailMaterial.lineOffset.getValue(documentStopDate)).toEqual(new Cartesian2(65334, 48383));
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_stripe')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(documentStartDate)).toEqual(Color.fromBytes(166, 16, 249, 230));
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(documentStopDate)).toEqual(Color.fromBytes(250, 177, 111, 216));
+            expect(e.polyline.depthFailMaterial.oddColor.getValue(documentStartDate)).toEqual(Color.fromBytes(210, 161, 181, 206));
+            expect(e.polyline.depthFailMaterial.oddColor.getValue(documentStopDate)).toEqual(Color.fromBytes(194, 73, 70, 224));
+            expect(e.polyline.depthFailMaterial.offset.getValue(documentStartDate)).toEqual(43239.0);
+            expect(e.polyline.depthFailMaterial.offset.getValue(documentStopDate)).toEqual(47157.0);
+            expect(e.polyline.depthFailMaterial.repeat.getValue(documentStartDate)).toEqual(58315.0);
+            expect(e.polyline.depthFailMaterial.repeat.getValue(documentStopDate)).toEqual(45308.0);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineOutline_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.611764705882353, 0.407843137254902, 0.807843137254902, 0.380392156862745), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.52156862745098, 0.654901960784314, 0.756862745098039, 0.368627450980392), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineOutline_outlineColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.outlineColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.670588235294118, 0.211764705882353, 0.607843137254902, 0.388235294117647), 1e-14);
+            expect(e.polyline.depthFailMaterial.outlineColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.611764705882353, 0.611764705882353, 0.298039215686275, 0.749019607843137), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineArrow_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.874509803921569, 0.541176470588235, 0.231372549019608, 0.596078431372549), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.729411764705882, 0.533333333333333, 0.411764705882353, 0.454901960784314), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineDash_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.776470588235294, 0.0823529411764706, 0.96078431372549, 0.776470588235294), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.0941176470588235, 0.643137254901961, 0.717647058823529, 0.890196078431373), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineDash_gapColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.gapColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.219607843137255, 0.403921568627451, 0.815686274509804, 0.803921568627451), 1e-14);
+            expect(e.polyline.depthFailMaterial.gapColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.294117647058824, 0.615686274509804, 0.172549019607843, 0.0235294117647059), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineGlow_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.168627450980392, 0.847058823529412, 0.968627450980392, 0.431372549019608), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.2, 0.603921568627451, 0.941176470588235, 0.0901960784313725), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_image_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.980392156862745, 0.450980392156863, 0.329411764705882, 0.670588235294118), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.556862745098039, 0.63921568627451, 0.156862745098039, 0.705882352941177), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_grid_color')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.623529411764706, 0.607843137254902, 0.913725490196078, 0.596078431372549), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.423529411764706, 0.968627450980392, 0.815686274509804, 0.968627450980392), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_stripe_evenColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.854901960784314, 0.843137254901961, 0.701960784313725, 0.113725490196078), 1e-14);
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.941176470588235, 0.890196078431373, 0.933333333333333, 0.588235294117647), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_stripe_oddColor')).toBeDefined();
+            expect(e.polyline.depthFailMaterial.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.427450980392157, 0.870588235294118, 0.96078431372549, 0.219607843137255), 1e-14);
+            expect(e.polyline.depthFailMaterial.oddColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.219607843137255, 0.847058823529412, 0.752941176470588, 0.172549019607843), 1e-14);
             expect(e = dataSource.entities.getById('sampled_rectangle_coordinates_wsenDegrees')).toBeDefined();
             expect(e.rectangle.coordinates.getValue(documentStartDate)).toEqual(Rectangle.fromDegrees(35, 18, 38, 15));
             expect(e.rectangle.coordinates.getValue(documentStopDate)).toEqual(Rectangle.fromDegrees(38, 1, 12, 30));

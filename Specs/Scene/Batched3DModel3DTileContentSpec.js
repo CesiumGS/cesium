@@ -1,20 +1,22 @@
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
-        'Core/deprecationWarning',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
+        'Core/Plane',
         'Core/Transforms',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
-        deprecationWarning,
         HeadingPitchRange,
         HeadingPitchRoll,
+        Plane,
         Transforms,
         Cesium3DTilesTester,
         createScene) {
@@ -285,6 +287,39 @@ defineSuite([
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
             expect(content.batchTableByteLength).toEqual(batchTexturesByteLength + pickTexturesByteLength);
+        });
+    });
+
+    it('Updates model\'s clipping planes', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var content = tile.content;
+            var model = content._model;
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes.length).toBe(0);
+            expect(model.clippingPlanes.enabled).toBe(false);
+
+            tileset.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            content.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes.length).toBe(1);
+            expect(model.clippingPlanes.enabled).toBe(true);
+
+            tile._isClipped = false;
+            content.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes.enabled).toBe(false);
+
+            tileset.clippingPlanes = undefined;
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes.enabled).toBe(false);
         });
     });
 
