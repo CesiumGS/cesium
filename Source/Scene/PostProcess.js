@@ -11,6 +11,7 @@ define([
         '../Core/destroyObject',
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
@@ -33,6 +34,7 @@ define([
         destroyObject,
         ClearCommand,
         Framebuffer,
+        PassState,
         PixelDatatype,
         RenderState,
         Sampler,
@@ -72,6 +74,12 @@ define([
         this._texturesToCreate = [];
         this._texturePromise = undefined;
 
+        this._passState = new PassState();
+        this._passState.scissorTest = {
+            enabled : true,
+            rectangle : defined(options.scissorRectangle) ? BoundingRectangle.clone(options.scissorRectangle) : new BoundingRectangle()
+        };
+
         this._ready = true;
 
         this.enabled = true;
@@ -97,6 +105,11 @@ define([
         outputTexture : {
             get : function() {
                 return this._outputTexture;
+            }
+        },
+        scissorRectangle : {
+            get : function() {
+                return this._passState.scissorTest.rectangle;
             }
         }
     });
@@ -388,7 +401,12 @@ define([
             this._colorTexture.sampler = this._sampler;
         }
 
-        this._command.execute(context);
+        var passState = this.scissorRectangle.width > 0 && this.scissorRectangle.height > 0 ? this._passState : undefined;
+        if (defined(passState)) {
+            passState.context = context;
+        }
+
+        this._command.execute(context, passState);
     };
 
     PostProcess.prototype.isDestroyed = function() {

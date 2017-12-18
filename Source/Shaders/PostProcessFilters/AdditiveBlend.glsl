@@ -11,9 +11,7 @@ void main()
     vec4 color0 = texture2D(colorTexture, v_textureCoordinates);
     vec4 color1 = texture2D(colorTexture2, v_textureCoordinates);
 
-    //float x = length(gl_FragCoord.xy - center) / radius;
-    //float t = smoothstep(0.5, 0.8, x);
-    //gl_FragColor = mix(color0 + color1, color0, t);
-
-    gl_FragColor = color0 + color1;
+    float x = length(gl_FragCoord.xy - center) / radius;
+    float t = smoothstep(0.5, 0.8, x);
+    gl_FragColor = mix(color0 + color1, color1, t);
 }

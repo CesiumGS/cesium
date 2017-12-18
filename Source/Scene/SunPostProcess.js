@@ -1,4 +1,5 @@
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
         '../Core/defined',
@@ -15,6 +16,7 @@ define([
         './PostProcessSampleMode',
         './SceneFramebuffer'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian4,
         defined,
@@ -35,7 +37,7 @@ define([
     function SunPostProcess() {
         this._sceneFramebuffer = new SceneFramebuffer();
 
-        var scale = 0.25;
+        var scale = 0.125;
         var processes = new Array(6);
 
         processes[0] = new PostProcess({
@@ -152,30 +154,37 @@ define([
         size.x = sunSize;
         size.y = sunSize;
 
-        //var scissorRectangle = this._upSamplePassState.scissorTest.rectangle;
-        //scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
-        //scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
-        //scissorRectangle.width = Math.min(size.x, width);
-        //scissorRectangle.height = Math.min(size.y, height);
-
         postProcess._uCenter = Cartesian2.clone(sunPositionWC, postProcess._uCenter);
         postProcess._uRadius = Math.max(size.x, size.y) * 0.15;
 
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+
+        var processes = postProcess._processes.processes;
+
+        var downSampleWidth = processes[0].outputTexture.width;
+        var downSampleHeight = processes[0].outputTexture.height;
+
+        var downSampleViewport = new BoundingRectangle();
+        downSampleViewport.width = downSampleWidth;
+        downSampleViewport.height = downSampleHeight;
+
         // create down sampled render state
-        //viewportTransformation = Matrix4.computeViewportTransformation(downSampleViewport, 0.0, 1.0, postProcessMatrix4Scratch);
-        //sunPositionWC = Transforms.pointToGLWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
+        viewportTransformation = Matrix4.computeViewportTransformation(downSampleViewport, 0.0, 1.0, postProcessMatrix4Scratch);
+        sunPositionWC = Transforms.pointToGLWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
 
-        //size.x *= downSampleWidth / width;
-        //size.y *= downSampleHeight / height;
+        size.x *= downSampleWidth / width;
+        size.y *= downSampleHeight / height;
 
-        //scissorRectangle = this._downSamplePassState.scissorTest.rectangle;
-        //scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
-        //scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
-        //scissorRectangle.width = Math.min(size.x, width);
-        //scissorRectangle.height = Math.min(size.y, height);
+        var scissorRectangle = processes[0].scissorRectangle;
+        scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
+        scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
+        scissorRectangle.width = Math.min(size.x, width);
+        scissorRectangle.height = Math.min(size.y, height);
 
-        //this._downSamplePassState.context = context;
-        //this._upSamplePassState.context = context;
+        for (var i = 1; i < 4; ++i) {
+            BoundingRectangle.clone(scissorRectangle, processes[i].scissorRectangle);
+        }
     }
 
     SunPostProcess.prototype.clear = function(context, passState, clearColor) {
@@ -185,8 +194,6 @@ define([
 
     SunPostProcess.prototype.update = function(passState) {
         var context = passState.context;
-        var viewport = passState.viewport;
-        updateSunPosition(this, context, viewport);
 
         var sceneFramebuffer = this._sceneFramebuffer;
         sceneFramebuffer.update(context);
@@ -194,6 +201,9 @@ define([
 
         var processes = this._processes;
         processes.update(context);
+
+        var viewport = passState.viewport;
+        updateSunPosition(this, context, viewport);
 
         return framebuffer;
     };
