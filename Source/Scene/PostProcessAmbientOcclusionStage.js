@@ -11,9 +11,8 @@ define([
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessFilters/AmbientOcclusion',
         '../Shaders/PostProcessFilters/AmbientOcclusionGenerate',
-        '../Shaders/PostProcessFilters/GaussianBlur1D',
         './PostProcess',
-        './PostProcessComposite'
+        './PostProcessBlurStage'
     ], function(
         defined,
         defineProperties,
@@ -27,9 +26,8 @@ define([
         TextureWrap,
         AmbientOcclusion,
         AmbientOcclusionGenerate,
-        GaussianBlur1D,
         PostProcess,
-        PostProcessComposite) {
+        PostProcessBlurStage) {
     'use strict';
 
     /**
@@ -43,16 +41,8 @@ define([
     function PostProcessAmbientOcclusionStage() {
         this._randomTexture = undefined;
 
-        var processes = new Array(3);
-
-        var delta = 1.0;
-        var sigma = 2.0;
-        var kernelSize = 1.0;
-
-        var blurShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
-
         var that = this;
-        var generateProcess = processes[0] = new PostProcess({
+        this._generatePostProcess = new PostProcess({
             fragmentShader : AmbientOcclusionGenerate,
             uniformValues : {
                 intensity : 4.0,
@@ -65,34 +55,15 @@ define([
                 }
             }
         });
-        var blurX = processes[1] = new PostProcess({
-            fragmentShader : blurShader,
-            uniformValues: {
-                delta : delta,
-                sigma : sigma,
-                kernelSize : kernelSize,
-                direction : 0.0
-            }
-        });
-        var blurY = processes[2] = new PostProcess({
-            fragmentShader : blurShader,
-            uniformValues: {
-                delta : delta,
-                sigma : sigma,
-                kernelSize : kernelSize,
-                direction : 1.0
-            }
-        });
-        this._generatePostProcess = new PostProcessComposite({
-            processes : processes
-        });
+
+        this._blurPostProcess = new PostProcessBlurStage();
 
         this._ambientOcclusionComposite = new PostProcess({
             fragmentShader : AmbientOcclusion,
             uniformValues : {
                 ambientOcclusionOnly : false,
                 ambientOcclusionTexture : function() {
-                    return that._generatePostProcess.outputTexture;
+                    return that._blurPostProcess.outputTexture;
                 }
             }
         });
@@ -108,90 +79,12 @@ define([
                 }
             }
         });
-
-        this._generateUniformValues = {};
-        defineProperties(this._generateUniformValues, {
-            intensity : {
-                get : function() {
-                    return generateProcess.uniformValues.intensity;
-                },
-                set : function(value) {
-                    generateProcess.uniformValues.intensity = value;
-                }
-            },
-            bias : {
-                get : function() {
-                    return generateProcess.uniformValues.bias;
-                },
-                set : function(value) {
-                    generateProcess.uniformValues.bias = value;
-                }
-            },
-            lengthCap : {
-                get : function() {
-                    return generateProcess.uniformValues.lengthCap;
-                },
-                set : function(value) {
-                    generateProcess.uniformValues.lengthCap = value;
-                }
-            },
-            stepSize : {
-                get : function() {
-                    return generateProcess.uniformValues.stepSize;
-                },
-                set : function(value) {
-                    generateProcess.uniformValues.stepSize = value;
-                }
-            },
-            frustumLength : {
-                get : function() {
-                    return generateProcess.uniformValues.frustumLength;
-                },
-                set : function(value) {
-                    generateProcess.uniformValues.frustumLength = value;
-                }
-            }
-        });
-
-        this._blurUniformValues = {};
-        defineProperties(this._blurUniformValues, {
-            delta : {
-                get : function() {
-                    return blurX.uniformValues.delta;
-                },
-                set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
-                    blurXUniforms.delta = blurYUniforms.delta = value;
-                }
-            },
-            sigma : {
-                get : function() {
-                    return blurX.uniformValues.sigma;
-                },
-                set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
-                    blurXUniforms.sigma = blurYUniforms.sigma = value;
-                }
-            },
-            kernelSize : {
-                get : function() {
-                    return blurX.uniformValues.kernelSize;
-                },
-                set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
-                    blurXUniforms.kernelSize = blurYUniforms.kernelSize = value;
-                }
-            }
-        });
     }
 
     defineProperties(PostProcessAmbientOcclusionStage.prototype, {
         ready : {
             get : function() {
-                return this._generatePostProcess.ready && this._ambientOcclusionComposite.ready;
+                return this._generatePostProcess.ready && this._blurPostProcess.ready && this._ambientOcclusionComposite.ready;
             }
         },
         enabled : {
@@ -199,7 +92,7 @@ define([
                 return this._generatePostProcess.enabled;
             },
             set : function(value) {
-                this._generatePostProcess.enabled = this._ambientOcclusionComposite.enabled = value;
+                this._generatePostProcess.enabled = this._blurPostProcess.enabled = this._ambientOcclusionComposite.enabled = value;
             }
         },
         uniformValues : {
@@ -209,12 +102,12 @@ define([
         },
         generateUniformValues : {
             get : function() {
-                return this._generateUniformValues;
+                return this._generatePostProcess.uniformValues;
             }
         },
         blurUniformValues : {
             get : function() {
-                return this._blurUniformValues;
+                return this._blurPostProcess.uniformValues;
             }
         },
         outputTexture : {
@@ -251,16 +144,19 @@ define([
         }
 
         this._generatePostProcess.update(context);
+        this._blurPostProcess.update(context);
         this._ambientOcclusionComposite.update(context);
     };
 
     PostProcessAmbientOcclusionStage.prototype.clear = function(context) {
         this._generatePostProcess.clear(context);
+        this._blurPostProcess.clear(context);
         this._ambientOcclusionComposite.clear(context);
     };
 
     PostProcessAmbientOcclusionStage.prototype.execute = function(context, colorTexture, depthTexture) {
         this._generatePostProcess.execute(context, colorTexture, depthTexture);
+        this._blurPostProcess.execute(context, this._generatePostProcess.outputTexture, depthTexture);
         this._ambientOcclusionComposite.execute(context, colorTexture, depthTexture);
     };
 
@@ -270,6 +166,7 @@ define([
 
     PostProcessAmbientOcclusionStage.prototype.destroy = function() {
         this._generatePostProcess.destroy();
+        this._blurPostProcess.destroy();
         this._ambientOcclusionComposite.destroy();
         this._randomTexture = this._randomTexture && this._randomTexture.destroy();
         return destroyObject(this);

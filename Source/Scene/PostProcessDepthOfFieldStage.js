@@ -4,16 +4,14 @@ define([
         '../Shaders/PostProcessFilters/DepthOfField',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
         './PostProcess',
-        './PostProcessComposite',
-        './PostProcessSampleMode'
+        './PostProcessBlurStage'
     ], function(
         defineProperties,
         destroyObject,
         DepthOfField,
         GaussianBlur1D,
         PostProcess,
-        PostProcessComposite,
-        PostProcessSampleMode) {
+        PostProcessBlurStage) {
     'use strict';
 
     /**
@@ -25,39 +23,8 @@ define([
      * @private
      */
     function PostProcessDepthOfFieldStage() {
-        var processes = new Array(2);
-
-        var delta = 1.0;
-        var sigma = 2.0;
-        var kernelSize = 1.0;
-
-        var blurShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
-
         var that = this;
-        var blurX = processes[0] = new PostProcess({
-            fragmentShader : blurShader,
-            uniformValues: {
-                delta : delta,
-                sigma : sigma,
-                kernelSize : kernelSize,
-                direction : 0.0
-            },
-            samplingMode : PostProcessSampleMode.LINEAR
-        });
-        var blurY = processes[1] = new PostProcess({
-            fragmentShader : blurShader,
-            uniformValues: {
-                delta : delta,
-                sigma : sigma,
-                kernelSize : kernelSize,
-                direction : 1.0
-            },
-            samplingMode : PostProcessSampleMode.LINEAR
-        });
-
-        this._blurProcess = new PostProcessComposite({
-            processes : processes
-        });
+        this._blurProcess = new PostProcessBlurStage();
         this._depthOfFieldProcess = new PostProcess({
             fragmentShader : DepthOfField,
             uniformValues : {
@@ -76,40 +43,6 @@ define([
                 },
                 set : function(value) {
                     that._depthOfFieldProcess.uniformValues.focalDistance = value;
-                }
-            }
-        });
-
-        this._blurUniformValues = {};
-        defineProperties(this._blurUniformValues, {
-            delta : {
-                get : function() {
-                    return blurX.uniformValues.delta;
-                },
-                set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
-                    blurXUniforms.delta = blurYUniforms.delta = value;
-                }
-            },
-            sigma : {
-                get : function() {
-                    return blurX.uniformValues.sigma;
-                },
-                set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
-                    blurXUniforms.sigma = blurYUniforms.sigma = value;
-                }
-            },
-            kernelSize : {
-                get : function() {
-                    return blurX.uniformValues.kernelSize;
-                },
-                set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
-                    blurXUniforms.kernelSize = blurYUniforms.kernelSize = value;
                 }
             }
         });
@@ -136,7 +69,7 @@ define([
         },
         blurUniformValues : {
             get : function() {
-                return this._blurUniformValues;
+                return this._blurProcess.uniformValues;
             }
         },
         outputTexture : {
