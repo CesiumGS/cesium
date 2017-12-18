@@ -283,7 +283,7 @@ define([
          * @readonly
          */
         isClosed : {
-            value : true
+            value : false
         },
         /**
          * Gets an event that is raised whenever the public properties

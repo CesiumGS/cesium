@@ -4,7 +4,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
+    ], 'Scene/Composite3DTileContent', function(
         Cartesian3,
         Color,
         HeadingPitchRange,

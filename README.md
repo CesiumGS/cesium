@@ -49,6 +49,11 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/idecanarias/"><img src="http://cesiumjs.org/demos/images/idecanarias.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/pop/"><img src="http://cesiumjs.org/demos/images/pop_bubbles.jpg" height="150" /></a>&nbsp;    
+<a href="http://cesiumjs.org/demos/onesky/"><img src="http://cesiumjs.org/demos/images/onesky.jpg" height="150" /></a>&nbsp;    
+<a href="http://cesiumjs.org/demos/analyticalservices/"><img src="http://cesiumjs.org/demos/images/analyticalservices.jpg" height="150" /></a>&nbsp;    
+<a href="http://cesiumjs.org/demos/uch_enmek/"><img src="http://cesiumjs.org/demos/images/uch_enmek.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/fishing/"><img src="http://cesiumjs.org/demos/images/fishing.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/moontrek/"><img src="http://cesiumjs.org/demos/images/moontrek.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/maven/"><img src="http://cesiumjs.org/demos/images/maven.jpg" height="150" /></a>&nbsp;

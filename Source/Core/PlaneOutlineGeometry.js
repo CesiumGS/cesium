@@ -76,15 +76,15 @@ define([
         return result;
     };
 
+    var min = new Cartesian3(-0.5, -0.5, 0.0);
+    var max = new Cartesian3( 0.5,  0.5, 0.0);
+
     /**
      * Computes the geometric representation of an outline of a plane, including its vertices, indices, and a bounding sphere.
      *
      * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PlaneOutlineGeometry.createGeometry = function() {
-        var min = new Cartesian3(-0.5, -0.5, 0.0);
-        var max = new Cartesian3( 0.5,  0.5, 0.0);
-
         var attributes = new GeometryAttributes();
         var indices = new Uint16Array(4 * 2);
         var positions = new Float64Array(4 * 3);

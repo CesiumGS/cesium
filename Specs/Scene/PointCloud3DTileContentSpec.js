@@ -1,5 +1,6 @@
 defineSuite([
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/defined',
@@ -11,13 +12,13 @@ defineSuite([
         'Core/Plane',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlaneCollection',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'ThirdParty/when'
-    ], function(
+    ], 'Scene/PointCloud3DTileContent', function(
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defined,
@@ -29,7 +30,6 @@ defineSuite([
         Plane,
         Transforms,
         Cesium3DTileStyle,
-        ClippingPlaneCollection,
         Expression,
         Cesium3DTilesTester,
         createScene,
@@ -777,7 +777,7 @@ defineSuite([
         });
     });
 
-    it('clipping planes combine regions', function() {
+    it('clipping planes union regions', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -790,12 +790,12 @@ defineSuite([
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ],
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
-                combineClippingRegions: false
+                unionClippingRegions: true
             });
 
             expect(scene).notToRender(color);
 
-            tileset.clippingPlanes.combineClippingRegions = true;
+            tileset.clippingPlanes.unionClippingRegions = false;
 
             expect(scene).toRender(color);
         });

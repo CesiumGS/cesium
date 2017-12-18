@@ -1,6 +1,7 @@
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/CullingVolume',
         'Core/getStringFromTypedArray',
@@ -21,7 +22,6 @@ defineSuite([
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlaneCollection',
         'Scene/CullFace',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -30,6 +30,7 @@ defineSuite([
     ], function(
         Cesium3DTileset,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         CullingVolume,
         getStringFromTypedArray,
@@ -50,7 +51,6 @@ defineSuite([
         Cesium3DTileContentState,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
-        ClippingPlaneCollection,
         CullFace,
         Cesium3DTilesTester,
         createScene,

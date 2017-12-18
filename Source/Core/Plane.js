@@ -13,8 +13,7 @@ define([
         DeveloperError,
         freezeObject,
         CesiumMath,
-        Matrix4
-) {
+        Matrix4) {
     'use strict';
 
     /**
@@ -179,6 +178,45 @@ define([
         Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
 
         return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
+    };
+
+    /**
+     * Duplicates a Plane instance.
+     *
+     * @param {Plane} plane The plane to duplicate.
+     * @param {Plane} [result] The object onto which to store the result.
+     * @returns {Plane} The modified result parameter or a new Plane instance if one was not provided.
+     */
+    Plane.clone = function(plane, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('plane', plane);
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Plane(plane.normal, plane.distance);
+        }
+
+        Cartesian3.clone(plane.normal, result.normal);
+        result.distance = plane.distance;
+
+        return result;
+    };
+
+    /**
+     * Compares the provided Planes by normal and distance and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     *
+     * @param {Plane} left The first plane.
+     * @param {Plane} right The second plane.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Plane.equals = function(left, right) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        //>>includeEnd('debug');
+
+        return (left.distance === right.distance) && Cartesian3.equals(left.normal, right.normal);
     };
 
     /**

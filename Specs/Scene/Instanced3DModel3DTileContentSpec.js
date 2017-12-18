@@ -1,22 +1,22 @@
 defineSuite([
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Plane',
         'Core/Transforms',
-        'Scene/ClippingPlaneCollection',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
+    ], 'Scene/Instanced3DModel3DTileContent', function(
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Plane,
         Transforms,
-        ClippingPlaneCollection,
         TileBoundingSphere,
         Cesium3DTilesTester,
         createScene) {
@@ -321,12 +321,17 @@ defineSuite([
             content.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeDefined();
-            expect(model.clippingPlanes.planes.length).toBe(1);
+            expect(model.clippingPlanes.length).toBe(1);
             expect(model.clippingPlanes.enabled).toBe(true);
 
             tile._isClipped = false;
             content.update(tileset, scene.frameState);
 
+            expect(model.clippingPlanes.enabled).toBe(false);
+
+            tileset.clippingPlanes = undefined;
+
+            expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes.enabled).toBe(false);
         });
     });
