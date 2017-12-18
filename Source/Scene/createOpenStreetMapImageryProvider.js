@@ -1,15 +1,19 @@
 define([
         '../Core/Credit',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
         './UrlTemplateImageryProvider'
     ], function(
         Credit,
         defaultValue,
+        defined,
         DeveloperError,
         Rectangle,
+        Resource,
         WebMercatorTilingScheme,
         UrlTemplateImageryProvider) {
     'use strict';
@@ -28,7 +32,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
@@ -59,10 +63,19 @@ define([
     function createOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
-        var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
+        var resource = options.url;
+        if (!defined(resource)) {
+            resource = 'https://a.tile.openstreetmap.org/'
+        }
+        if (typeof resource === 'string') {
+            resource = new Resource({
+                url: resource
+            });
+        }
 
+        var url = resource.url;
         if (!trailingSlashRegex.test(url)) {
-            url = url + '/';
+            url += '/';
         }
 
         var fileExtension = defaultValue(options.fileExtension, 'png');
@@ -95,10 +108,10 @@ define([
         }
 
         var templateUrl = url + '{z}/{x}/{y}.' + fileExtension;
+        resource.url = templateUrl;
 
         return new UrlTemplateImageryProvider({
-            url: templateUrl,
-            proxy: options.proxy,
+            url: resource,
             credit: credit,
             tilingScheme: tilingScheme,
             tileWidth: tileWidth,

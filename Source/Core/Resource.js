@@ -62,12 +62,20 @@ define([
     }
 
     defineProperties(Resource.prototype, {
+        queryParameters: {
+            get: function() {
+                return this._queryParameters;
+            }
+        },
         url: {
             get: function() {
                 var uri = new Uri(this._url);
                 uri.query = objectToQuery(this._queryParameters);
                 uri.fragment = this._fragment;
-                var url = uri.toString();
+
+                // objectToQuery escapes the placeholders.  Undo that.
+                var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
+
                 var template = this._urlTemplateValues;
                 var keys = Object.keys(template);
                 if (keys.length > 0) {
@@ -102,11 +110,15 @@ define([
         }
     });
 
-    Resource.prototype.setQueryParameters = function(params) {
-        this._queryParameters = combine(params, this._queryParameters);
+    Resource.prototype.addQueryParameters = function(params, useAsDefault) {
+        if (useAsDefault) {
+            this._queryParameters = combine(this._queryParameters, params);
+        } else {
+            this._queryParameters = combine(params, this._queryParameters);
+        }
     };
 
-    Resource.prototype.setTemplateValues = function(template) {
+    Resource.prototype.addTemplateValues = function(template) {
         this._urlTemplateValues = combine(template, this._urlTemplateValues);
     };
 

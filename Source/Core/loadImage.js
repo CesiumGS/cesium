@@ -64,6 +64,8 @@ define([
             });
         }
 
+        //TODO call loadImageViaBlob if `resource.headers` is defined
+
         request = urlOrResource.request;
         var url = urlOrResource.url;
         request = defined(request) ? request : new Request();

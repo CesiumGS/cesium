@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/MapboxApi',
+        '../Core/Resource',
         './UrlTemplateImageryProvider'
     ], function(
         Credit,
@@ -13,6 +14,7 @@ define([
         defineProperties,
         DeveloperError,
         MapboxApi,
+        Resource,
         UrlTemplateImageryProvider) {
     'use strict';
 
@@ -37,7 +39,7 @@ define([
      * @param {String} options.mapId The Mapbox Map ID.
      * @param {String} [options.accessToken] The public access token for the imagery.
      * @param {String} [options.format='png'] The format of the image request.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -66,10 +68,29 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = defaultValue(options.url, 'https://api.mapbox.com/v4/');
-        this._url = url;
+        var resource = options.url;
+        if (!defined(resource)) {
+            resource = 'https://api.mapbox.com/v4/';
+        }
+
+        if (typeof resource === 'string') {
+            resource = new Resource({
+                url: resource
+            });
+        }
+
+        if (defined(options.proxy)) {
+            //TODO deprecation warning
+            resource.proxy = options.proxy;
+        }
+
+        var accessToken = MapboxApi.getAccessToken(options.accessToken);
+        resource.addQueryParameters({
+            access_token: accessToken
+        });
+
         this._mapId = mapId;
-        this._accessToken = MapboxApi.getAccessToken(options.accessToken);
+        this._accessToken = accessToken;
         this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.accessToken);
         var format = defaultValue(options.format, 'png');
         if (!/\./.test(format)) {
@@ -77,14 +98,13 @@ define([
         }
         this._format = format;
 
-        var templateUrl = url;
-        if (!trailingSlashRegex.test(url)) {
+        var templateUrl = resource.url;
+        if (!trailingSlashRegex.test(templateUrl)) {
             templateUrl += '/';
         }
         templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
-        if (defined(this._accessToken)) {
-            templateUrl += '?access_token=' + this._accessToken;
-        }
+
+        resource.url = templateUrl;
 
         if (defined(options.credit)) {
             var credit = options.credit;
@@ -95,9 +115,9 @@ define([
             defaultCredit2.length = 0;
         }
 
+        this._resource = resource;
         this._imageryProvider = new UrlTemplateImageryProvider({
-            url: templateUrl,
-            proxy: options.proxy,
+            url: resource,
             credit: defaultCredit1,
             ellipsoid: options.ellipsoid,
             minimumLevel: options.minimumLevel,
@@ -115,7 +135,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.url;
             }
         },
 
@@ -276,6 +296,7 @@ define([
          */
         proxy : {
             get : function() {
+                //TODO deprecation warning
                 return this._imageryProvider.proxy;
             }
         },
