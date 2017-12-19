@@ -5,6 +5,7 @@ define([
         './PostProcess',
         './PostProcessDepthOfFieldStage',
         './PostProcessBloomStage',
+        './PostProcessBlurStage',
         './PostProcessSilhouetteStage',
         '../Shaders/PostProcessFilters/BlackAndWhite',
         '../Shaders/PostProcessFilters/Brightness',
@@ -20,6 +21,7 @@ define([
         PostProcess,
         PostProcessDepthOfFieldStage,
         PostProcessBloomStage,
+        PostProcessBlurStage,
         PostProcessSilhouetteStage,
         BlackAndWhite,
         Brightness,
@@ -108,6 +110,14 @@ define([
             }
         },
         /**
+         * @private
+         */
+        blur : {
+            get : function() {
+                return createBlur();
+            }
+        },
+        /**
          * private
          */
         depthOfField : {
@@ -181,7 +191,8 @@ define([
             fragmentShader : TextureOverlay,
             uniformValues : {
                 alpha : 0.5,
-                texture : buildModuleUrl('Assets/Textures/moonSmall.jpg')
+                // data uri for a 1x1 white canvas
+                texture : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQYV2P4////fwAJ+wP9BUNFygAAAABJRU5ErkJggg=='
             }
         });
     }
@@ -213,6 +224,10 @@ define([
 
     function createBloomStage() {
         return new PostProcessBloomStage();
+    }
+
+    function createBlur() {
+        return new PostProcessBlurStage();
     }
 
     function createSilhouetteStage() {

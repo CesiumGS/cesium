@@ -572,15 +572,6 @@ define([
         this._debugFrustumPlanes = undefined;
 
         /**
-         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
-         * is unsupported.
-         *
-         * @type Boolean
-         * @default true
-         */
-        this.fxaa = true;
-
-        /**
          * When <code>true</code>, enables picking using the depth buffer.
          *
          * @type Boolean
@@ -709,7 +700,6 @@ define([
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
             useOIT : false,
-            useFXAA : false,
             useInvertClassification : false,
             usePostProcess : false
         };
@@ -1244,6 +1234,22 @@ define([
                 }
                 //>>includeEnd('debug');
                 this._minimumDisableDepthTestDistance = value;
+            }
+        },
+
+        /**
+         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
+         * is unsupported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        fxaa : {
+            get : function() {
+                return this.postProcessCollection.fxaa.enabled;
+            },
+            set : function(value) {
+                this.postProcessCollection.fxaa.enabled = value;
             }
         }
     });
@@ -2672,7 +2678,6 @@ define([
         }
 
         var postProcess = scene.postProcessCollection;
-        //postProcess.fxaa.show = scene.fxaa;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.processes.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
@@ -2703,8 +2708,6 @@ define([
             if (scene.frameState.invertClassificationColor.alpha === 1.0) {
                 if (environmentState.useGlobeDepthFramebuffer) {
                     depthFramebuffer = scene._globeDepth.framebuffer;
-                } else if (environmentState.useFXAA) {
-                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
                 }
             }
 
@@ -3567,7 +3570,7 @@ define([
         }
 
         this._sceneFramebuffer = this._sceneFramebuffer && this._sceneFramebuffer.destroy();
-        this._postProcess = this._postProcess && this._postProcess.destroy();
+        this.postProcessCollection = this.postProcessCollection && this.postProcessCollection.destroy();
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
