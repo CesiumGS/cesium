@@ -13,7 +13,7 @@ define([
         '../Renderer/TextureWrap',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
-        '../shaders/PostProcessFilters/DepthViewPacked',
+        '../Shaders/PostProcessFilters/DepthViewPacked',
         '../Shaders/PostProcessFilters/PassThrough',
         '../Shaders/PostProcessFilters/PassThroughDepth'
     ], function(
