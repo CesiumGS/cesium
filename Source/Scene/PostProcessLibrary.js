@@ -116,6 +116,14 @@ define([
             }
         },
         /**
+         * @private
+         */
+        bloom : {
+            get : function() {
+                return createBloomStage();
+            }
+        },
+        /**
          * lensFlare.
          *
          * @memberof PostProcessLibrary

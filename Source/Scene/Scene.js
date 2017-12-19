@@ -2856,6 +2856,8 @@ define([
         updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
+
+        passState.framebuffer = undefined;
         executeOverlayCommands(scene, passState);
 
         if (defined(scene.globe)) {
