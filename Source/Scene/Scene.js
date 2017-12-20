@@ -1928,7 +1928,7 @@ define([
                     if (environmentState.useGlobeDepthFramebuffer) {
                         framebuffer = scene._globeDepth.framebuffer;
                     } else if (environmentState.usePostProcess) {
-                        framebuffer = scene._sceneFramebuffer.getFramebuffer().getColorFramebuffer();
+                        framebuffer = scene._sceneFramebuffer.getFramebuffer();
                     } else {
                         framebuffer = environmentState.originalFramebuffer;
                     }
