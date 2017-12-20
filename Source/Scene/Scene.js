@@ -1928,7 +1928,7 @@ define([
                     if (environmentState.useGlobeDepthFramebuffer) {
                         framebuffer = scene._globeDepth.framebuffer;
                     } else if (environmentState.usePostProcess) {
-                        framebuffer = scene._sceneFramebuffer.getColorFramebuffer();
+                        framebuffer = scene._sceneFramebuffer.getFramebuffer().getColorFramebuffer();
                     } else {
                         framebuffer = environmentState.originalFramebuffer;
                     }
@@ -2750,7 +2750,7 @@ define([
             scene._oit.execute(context, passState);
         }
 
-        if (usePostProcess) {
+        if (usePostProcess && (useOIT || defined(globeFramebuffer))) {
             var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
 
             var postProcess = scene.postProcessCollection;
