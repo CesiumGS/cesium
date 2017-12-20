@@ -158,6 +158,12 @@ define([
         TweenCollection) {
     'use strict';
 
+    var requestRenderListener = function (scene) {
+        return function () {
+            scene.requestRender();
+        };
+    };
+
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
      * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
@@ -741,8 +747,8 @@ define([
         this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.5);
         this._lastRenderTime = undefined;
 
-        this._removeRequestListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(requestRender(this));
-        this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRender(this));
+        this._removeRequestListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(requestRenderListener(this));
+        this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderListener(this));
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -753,12 +759,6 @@ define([
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
-    }
-
-    var requestRender = function (scene) {
-        return function () {
-            scene.requestRender();
-        }
     }
 
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
@@ -2824,7 +2824,6 @@ define([
 
     function update(scene, time) {
         var context = scene.context;
-        var us = context.uniformState;
         var frameState = scene._frameState;
 
         scene._groundPrimitives.update(frameState);
