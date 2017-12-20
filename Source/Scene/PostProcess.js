@@ -84,6 +84,10 @@ define([
 
         this.enabled = true;
         this._enabled = this.enabled;
+
+        // used by PostProcessCollection
+        this._collection = undefined;
+        this._index = undefined;
     }
 
     defineProperties(PostProcess.prototype, {

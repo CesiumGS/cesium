@@ -44,6 +44,8 @@ define([
 
         this._ao.enabled = false;
         this._bloom.enabled = false;
+
+        this._processesRemoved = false;
     }
 
     defineProperties(PostProcessCollection.prototype, {
@@ -62,11 +64,6 @@ define([
                 readyAndEnabled = readyAndEnabled || (this._bloom.ready && this._bloom.enabled);
 
                 return readyAndEnabled;
-            }
-        },
-        processes : {
-            get : function() {
-                return this._processes;
             }
         },
         outputTexture : {
@@ -109,24 +106,82 @@ define([
             get : function() {
                 return this._bloom;
             }
+        },
+        length : {
+            get : function() {
+                return this._processes.length;
+            }
         }
     });
 
+    function removeProcesses(collection) {
+        if (!collection._processesRemoved) {
+            return;
+        }
+
+        collection._processesRemoved = false;
+
+        var newProcesses = [];
+        var processes = collection._processes;
+        var length = processes.length;
+        for (var i = 0, j = 0; i < length; ++i) {
+            var process = processes[i];
+            if (process) {
+                process._index = j++;
+                newProcesses.push(process);
+            }
+        }
+
+        collection._processes = newProcesses;
+    }
+
     PostProcessCollection.prototype.add = function(postProcess) {
+        postProcess._collection = this;
+        postProcess._index = this._processes.length;
         this._processes.push(postProcess);
         return postProcess;
+    };
+
+    PostProcessCollection.prototype.remove = function(postProcess) {
+        if (this.contains(postProcess)) {
+            this._processes[postProcess._index] = undefined;
+            this._processesRemoved = true;
+            postProcess.destroy();
+            return true;
+        }
+        return false;
+    };
+
+    PostProcessCollection.prototype.contains = function(postProcess) {
+        return defined(postProcess) && postProcess._collection === this;
+    };
+
+    PostProcessCollection.prototype.get = function(index) {
+        removeProcesses(this);
+        //>>includeStart('debug', pragmas.debug);
+        var length = this._process.length;
+        Check.typeOf.number.greaterThanOrEquals('processes length', length, 0);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThan('index', index, length);
+        //>>includeEnd('debug');
+        return this._processes[index];
     };
 
     PostProcessCollection.prototype.removeAll = function() {
         var processes = this._processes;
         var length = processes.length;
         for (var i = 0; i < length; ++i) {
-            processes[i].destroy();
+            var process = processes[i];
+            if (defined(process)) {
+                process.destroy();
+            }
         }
         processes.length = 0;
     };
 
     PostProcessCollection.prototype.update = function(context) {
+        removeProcesses(this);
+
         this._fxaa.update(context);
         this._ao.update(context);
         this._bloom.update(context);
@@ -219,11 +274,10 @@ define([
     };
 
     PostProcessCollection.prototype.destroy = function() {
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            processes[i].destroy();
-        }
+        this._fxaa.destroy();
+        this._ao.destroy();
+        this._bloom.destroy();
+        this.removeAll();
         return destroyObject(this);
     };
 
