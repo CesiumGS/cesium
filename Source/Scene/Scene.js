@@ -2833,7 +2833,6 @@ define([
         }
 
         RequestScheduler.update();
-        callAfterRenderFunctions(frameState);
     }
 
     function render(scene, time) {
@@ -2943,8 +2942,6 @@ define([
                 throw error;
             }
         }
-
-        RequestScheduler.update();
 
         this._postRender.raiseEvent(this, time);
         this._isRendering = false;
