@@ -2823,7 +2823,6 @@ define([
     }
 
     function update(scene, time) {
-        var context = scene.context;
         var frameState = scene._frameState;
 
         scene._groundPrimitives.update(frameState);

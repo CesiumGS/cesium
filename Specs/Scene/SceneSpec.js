@@ -1389,7 +1389,7 @@ defineSuite([
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
-        var farFuture = JulianDate.addDays(lastRenderTime, 10000, new JulianDate())
+        var farFuture = JulianDate.addDays(lastRenderTime, 10000, new JulianDate());
 
         scene.renderForSpecs();
         scene.renderForSpecs(farFuture);
