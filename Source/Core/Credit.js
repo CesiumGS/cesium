@@ -30,7 +30,7 @@ define([
      * //Create a credit with a tooltip, image and link
      * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
-    function Credit(options, imageUrl, link) {
+    function Credit(options) {
         var text;
         var showOnScreen;
         if (typeof options !== 'object') {
