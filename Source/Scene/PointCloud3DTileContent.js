@@ -2,6 +2,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Math',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -15,6 +16,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
+        '../Core/OrthographicFrustum',
         '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
@@ -38,6 +40,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         Color,
         combine,
         ComponentDatatype,
@@ -51,6 +54,7 @@ define([
         Matrix3,
         Matrix4,
         oneTimeWarning,
+        OrthographicFrustum,
         Plane,
         PrimitiveType,
         RuntimeError,
@@ -149,6 +153,14 @@ define([
          * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
         this.featurePropertiesDirty = false;
+
+        // Options for geometric error based attenuation
+        this.geometricErrorAttenuation = false;
+        this._geometricErrorAttenuation = false;
+        this._geometricErrorScale = undefined;
+        this._maximumAttenuation = undefined;
+        this._baseResolution = undefined;
+        this._baseResolutionApproximation = undefined;
 
         initialize(this, arrayBuffer, byteOffset);
     }
@@ -448,9 +460,16 @@ define([
         content._hasColors = defined(colors);
         content._hasNormals = defined(normals);
         content._hasBatchIds = defined(batchIds);
+
+        // Compute an approximation for base resolution in case it isn't given
+        // Assume a uniform distribution of points in the bounding sphere around the tile.
+        var radius = content._tile.contentBoundingVolume.boundingSphere.radius;
+        var sphereVolume = (4.0 / 3.0) * CesiumMath.PI * radius * radius * radius;
+        content._baseResolutionApproximation = Math.cbrt(sphereVolume / pointsLength);
     }
 
     var scratchPointSizeAndTilesetTime = new Cartesian2();
+    var scratchGeometricErrorAndDepthMultiplier = new Cartesian2();
 
     var positionLocation = 0;
     var colorLocation = 1;
@@ -523,7 +542,7 @@ define([
 
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
-                scratchPointSizeAndTilesetTime.x = content._pointSize;
+                scratchPointSizeAndTilesetTime.x = content._geometricErrorAttenuation ? content._maximumAttenuation : content._pointSize;
                 scratchPointSizeAndTilesetTime.y = content._tileset.timeSinceLoad;
                 return scratchPointSizeAndTilesetTime;
             },
@@ -549,6 +568,24 @@ define([
                 var style = Color.clone(clippingPlanes.edgeColor);
                 style.alpha = clippingPlanes.edgeWidth;
                 return style;
+            },
+            u_geometricErrorAndDepthMultiplier : function() {
+                var geometricError = content.tile.geometricError;
+                if (geometricError === 0) {
+                    geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+                }
+                var frustum = frameState.camera.frustum;
+                var depthMultiplier;
+                // Attenuation is maximumAttenuation in 2D/ortho
+                if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
+                    depthMultiplier = Number.POSITIVE_INFINITY;
+                } else {
+                    depthMultiplier = context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
+                }
+
+                scratchGeometricErrorAndDepthMultiplier.x = geometricError * content._geometricErrorScale;
+                scratchGeometricErrorAndDepthMultiplier.y = depthMultiplier;
+                return scratchGeometricErrorAndDepthMultiplier;
             }
         };
 
@@ -816,6 +853,7 @@ define([
         var backFaceCulling = content._backFaceCulling;
         var vertexArray = content._drawCommand.vertexArray;
         var clippingPlanes = content._tileset.clippingPlanes;
+        var geometricErrorAttenuation = content._geometricErrorAttenuation;
 
         var colorStyleFunction;
         var showStyleFunction;
@@ -930,9 +968,17 @@ define([
                  'varying vec4 v_color; \n' +
                  'uniform vec2 u_pointSizeAndTilesetTime; \n' +
                  'uniform vec4 u_constantColor; \n' +
-                 'uniform vec4 u_highlightColor; \n' +
-                 'float u_pointSize; \n' +
-                 'float u_tilesetTime; \n';
+                 'uniform vec4 u_highlightColor; \n';
+        if (geometricErrorAttenuation) {
+            vs += 'uniform vec2 u_geometricErrorAndDepthMultiplier; \n';
+        }
+        vs += 'float u_pointSize; \n' +
+              'float u_tilesetTime; \n';
+
+        if (geometricErrorAttenuation) {
+            vs += 'float u_geometricError; \n' +
+                  'float u_depthMultiplier; \n';
+        }
 
         vs += attributeDeclarations;
 
@@ -984,6 +1030,11 @@ define([
               '    u_pointSize = u_pointSizeAndTilesetTime.x; \n' +
               '    u_tilesetTime = u_pointSizeAndTilesetTime.y; \n';
 
+        if (geometricErrorAttenuation) {
+            vs += '    u_geometricError = u_geometricErrorAndDepthMultiplier.x; \n' +
+                  '    u_depthMultiplier = u_geometricErrorAndDepthMultiplier.y; \n';
+        }
+
         if (usesColors) {
             if (isTranslucent) {
                 vs += '    vec4 color = a_color; \n';
@@ -1030,6 +1081,12 @@ define([
 
         if (hasPointSizeStyle) {
             vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
+        } else if (geometricErrorAttenuation) {
+            vs += '    vec3 positionWC = vec3(czm_model * vec4(position, 1.0)); \n' +
+                  '    vec4 positionEC = czm_view * vec4(positionWC, 1.0); \n' +
+                  '    float depth = -positionEC.z; \n' +
+                  // compute SSE for this point
+                  '    gl_PointSize = min((u_geometricError / depth) * u_depthMultiplier, u_pointSize); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
@@ -1253,6 +1310,19 @@ define([
             this._unionClippingRegions = unionClippingRegions;
 
             createShaders(this, frameState, tileset.style);
+        }
+
+        // Update attenuation
+        var pointAttenuationOptions = this._tileset.pointAttenuationOptions;
+        if (defined(pointAttenuationOptions)) {
+            this.geometricErrorAttenuation = pointAttenuationOptions.geometricErrorAttenuation;
+            this._geometricErrorScale = pointAttenuationOptions.geometricErrorScale;
+            this._maximumAttenuation = defined(pointAttenuationOptions.maximumAttenuation) ? pointAttenuationOptions.maximumAttenuation : tileset.maximumScreenSpaceError;
+            this._baseResolution = pointAttenuationOptions.baseResolution;
+            if (this.geometricErrorAttenuation !== this._geometricErrorAttenuation) {
+                this._geometricErrorAttenuation = this.geometricErrorAttenuation;
+                createShaders(this, frameState, tileset.style);
+            }
         }
 
         if (updateModelMatrix) {

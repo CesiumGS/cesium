@@ -14,6 +14,7 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
+        'Specs/createCanvas',
         'Specs/createScene',
         'ThirdParty/when'
     ], 'Scene/PointCloud3DTileContent', function(
@@ -32,6 +33,7 @@ defineSuite([
         Cesium3DTileStyle,
         Expression,
         Cesium3DTilesTester,
+        createCanvas,
         createScene,
         when) {
     'use strict';
@@ -433,6 +435,116 @@ defineSuite([
 
                 expect(pickedCount).toBeGreaterThan(pickedCountCulling);
             });
+        });
+    });
+
+    function countRenderedPixels(rgba) {
+        var pixelCount = rgba.length / 4;
+        var count = 0;
+        for (var i = 0; i < pixelCount; i++) {
+            var index = i * 4;
+            if (rgba[index] !== 0 ||
+                rgba[index + 1] !== 0 ||
+                rgba[index + 2] !== 0 ||
+                rgba[index + 3] !== 255) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    function rgbaToAscii(rgba) {
+        console.log(countRenderedPixels(rgba));
+        for (var i = 0; i < 10; i++) {
+            var scanline = rgba.slice(i * 40, i * 40 + 40);
+            var lineString = i + ' ';
+            for (var j = 0; j < 40; j += 4) {
+                var isDrawn = scanline[j] !== 0;
+                lineString += isDrawn ? '[ ]' : ' _ ';
+            }
+            console.log(lineString);
+        }
+    }
+
+    it('attenuates points based on geometric error', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+
+            var noAttenuationPixelCount = 0;
+            expect(scene).toRenderAndCall(function(rgba) {
+                noAttenuationPixelCount = countRenderedPixels(rgba);
+            });
+
+            // Activate attenuation
+            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
+            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
+            tileset.pointAttenuationOptions.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(countRenderedPixels(rgba)).toBeGreaterThan(noAttenuationPixelCount);
+            });
+
+            // Adjust screen space error in tileset to modulate maximumAttenuation
+            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
+            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
+            tileset.pointAttenuationOptions.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 1;
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
+            });
+
+            // Adjust maximumAttenuation directly
+            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
+            tileset.pointAttenuationOptions.maximumAttenuation = 1;
+            tileset.pointAttenuationOptions.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
+            });
+
+            // Adjust baseResolution - pointCloudNoColorUrl is a single tile with GeometricError = 0
+            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
+            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
+            tileset.pointAttenuationOptions.baseResolution = CesiumMath.EPSILON20;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
+            });
+
+            // Adjust geometricErrorScale
+            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointAttenuationOptions.geometricErrorScale = 0.0;
+            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
+            tileset.pointAttenuationOptions.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 1;
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
+            });
+
+            // Works with 2D scenes
+            scene.morphTo2D(0);
+            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
+            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
+            tileset.pointAttenuationOptions.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderAndCall(function(rgba) {
+                rgbaToAscii(rgba);
+                expect(countRenderedPixels(rgba)).toBeGreaterThan(noAttenuationPixelCount);
+            });
+
+            scene.destroyForSpecs();
         });
     });
 

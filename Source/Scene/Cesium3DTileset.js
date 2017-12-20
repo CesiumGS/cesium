@@ -1,41 +1,42 @@
 define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DoublyLinkedList',
-        '../Core/Event',
-        '../Core/getBaseUri',
-        '../Core/getExtensionFromUri',
-        '../Core/isDataUri',
-        '../Core/joinUrls',
-        '../Core/JulianDate',
-        '../Core/loadJson',
-        '../Core/ManagedArray',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/RuntimeError',
-        '../Renderer/ClearCommand',
-        '../Renderer/Pass',
-        '../ThirdParty/when',
-        './Axis',
-        './Cesium3DTile',
-        './Cesium3DTileColorBlendMode',
-        './Cesium3DTileOptimizations',
-        './Cesium3DTilesetStatistics',
-        './Cesium3DTilesetTraversal',
-        './Cesium3DTileStyleEngine',
-        './LabelCollection',
-        './SceneMode',
-        './ShadowMode',
-        './TileBoundingRegion',
-        './TileBoundingSphere',
-        './TileOrientedBoundingBox'
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartographic',
+    '../Core/Check',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/DoublyLinkedList',
+    '../Core/Event',
+    '../Core/getBaseUri',
+    '../Core/getExtensionFromUri',
+    '../Core/isDataUri',
+    '../Core/joinUrls',
+    '../Core/JulianDate',
+    '../Core/loadJson',
+    '../Core/ManagedArray',
+    '../Core/Math',
+    '../Core/Matrix4',
+    '../Core/RuntimeError',
+    '../Renderer/ClearCommand',
+    '../Renderer/Pass',
+    '../ThirdParty/when',
+    './Axis',
+    './Cesium3DTile',
+    './Cesium3DTileColorBlendMode',
+    './Cesium3DTileOptimizations',
+    './Cesium3DTilesetStatistics',
+    './Cesium3DTilesetTraversal',
+    './Cesium3DTileStyleEngine',
+    './LabelCollection',
+    './PointAttenuationOptions',
+    './SceneMode',
+    './ShadowMode',
+    './TileBoundingRegion',
+    './TileBoundingSphere',
+    './TileOrientedBoundingBox'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -69,6 +70,7 @@ define([
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         LabelCollection,
+        PointAttenuationOptions,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -112,6 +114,7 @@ define([
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
+     * @param {Object} [options.pointAttenuationOptions] Options for constructing a PointAttenuationOptions object to control point attenuation based on geometric error.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
@@ -316,6 +319,12 @@ define([
          * @default 0.5
          */
         this.colorBlendAmount = 0.5;
+
+        /**
+         * Options for controlling point attenuation based on geometric error.
+         * @type {PointAttenuationOptions}
+         */
+        this.pointAttenuationOptions = new PointAttenuationOptions(options.pointAttenuationOptions);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
