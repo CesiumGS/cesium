@@ -2920,7 +2920,7 @@ define([
 
         var cameraChanged = checkForCameraUpdates(this);
 
-        var shouldRender = !this.requestRenderMode || this._isRendering || cameraChanged;
+        var shouldRender = !this.requestRenderMode || this._isRendering || cameraChanged || (this.mode === SceneMode.MORPHING);
 
         var now = JulianDate.clone(time);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
@@ -2931,6 +2931,8 @@ define([
         try {
             if (shouldRender) {
                 this._lastRenderTime = now;
+                this._isRendering = false;
+
                 render(this, time);
             } else {
                 update(this, time);
@@ -2944,7 +2946,6 @@ define([
         }
 
         this._postRender.raiseEvent(this, time);
-        this._isRendering = false;
     };
 
     /**

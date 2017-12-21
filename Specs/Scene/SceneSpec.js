@@ -1268,6 +1268,7 @@ defineSuite([
         expect(lastRenderTime).toBeDefined();
 
         scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
         scene.renderForSpecs();
         expect(scene._lastRenderTime).toEqual(lastRenderTime);
 
@@ -1284,6 +1285,7 @@ defineSuite([
         expect(scene._isRendering).toBe(false);
 
         scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
 
         scene.requestRender();
         expect(scene._isRendering).toBe(true);
@@ -1304,6 +1306,7 @@ defineSuite([
         expect(scene._isRendering).toBe(false);
 
         scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
 
         scene.camera.moveLeft();
 
@@ -1323,6 +1326,7 @@ defineSuite([
         expect(scene._isRendering).toBe(false);
 
         scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
 
         RequestScheduler.requestLoadedEvent.raiseEvent();
 
@@ -1344,6 +1348,7 @@ defineSuite([
         expect(scene._isRendering).toBe(false);
 
         scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
 
         TaskProcessor.taskCompletedEvent.raiseEvent();
 
@@ -1351,6 +1356,59 @@ defineSuite([
 
         scene.renderForSpecs();
         expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('scene morphing causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._isRendering).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.completeMorph();
+        scene.renderForSpecs();
+        lastRenderTime = scene._lastRenderTime;
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+        lastRenderTime = scene._lastRenderTime;
+
+        scene.morphToColumbusView(1.0);
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.completeMorph();
+        scene.renderForSpecs();
+        lastRenderTime = scene._lastRenderTime;
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+        lastRenderTime = scene._lastRenderTime;
+
+        scene.morphTo3D(1.0);
+        scene.renderForSpecs();
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.completeMorph();
+        scene.renderForSpecs();
+        lastRenderTime = scene._lastRenderTime;
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
