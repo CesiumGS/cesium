@@ -157,7 +157,7 @@ define([
             this._randomTexture = undefined;
         }
 
-        if (!defined(this._randomTexture)) {
+        if (!defined(this._randomTexture) && this.enabled) {
             var length = 256 * 256 * 3;
             var random = new Uint8Array(length);
             for (var i = 0; i < length; i += 3) {
