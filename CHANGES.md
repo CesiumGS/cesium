@@ -3,7 +3,7 @@ Change Log
 
 ### 1.41 - 2017-01-02
 
-* Added optional scene request render mode to reduce CPU Usage
+* Added optional scene request render mode to reduce CPU usage
     * `scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`.
     * `scene.requestRender` will explicitly request a new render frame when in request render mode.
 * Added support for clipping planes
