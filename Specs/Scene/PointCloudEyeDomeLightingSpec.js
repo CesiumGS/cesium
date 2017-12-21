@@ -8,6 +8,7 @@ defineSuite([
     'Core/Transforms',
     'Core/PerspectiveFrustum',
     'Scene/PointCloud3DTileContent',
+    'Scene/PointCloudEyeDomeLighting',
     'Specs/Cesium3DTilesTester',
     'Specs/createScene'
 ], 'Scene/PointCloudEyeDomeLighting', function(
@@ -20,6 +21,7 @@ defineSuite([
     Transforms,
     PerspectiveFrustum,
     PointCloud3DTileContent,
+    PointCloudEyeDomeLighting,
     Cesium3DTilesTester,
     createScene) {
     'use strict';
@@ -60,6 +62,10 @@ defineSuite([
 
     it('Adds a clear command and a post-processing draw call', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            if (!PointCloudEyeDomeLighting.processingSupported(scene.frameState.context)) {
+                return;
+            }
+
             tileset.pointAttenuationOptions.eyeDomeLighting = true;
 
             scene.renderForSpecs();

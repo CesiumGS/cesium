@@ -72,6 +72,9 @@ define([
     'use strict';
 
     /**
+     * Eye dome lighting.
+     * Requires support for EXT_frag_depth, OES_texture_float, and WEBGL_draw_buffers extensions in WebGL 1.0.
+     *
      * @private
      */
     function PointCloudEyeDomeLighting() {
@@ -255,6 +258,8 @@ define([
     function processingSupported(context) {
         return context.floatingPointTexture && context.drawBuffers && context.fragmentDepth;
     }
+
+    PointCloudEyeDomeLighting.processingSupported = processingSupported;
 
     function getECShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'EC');
