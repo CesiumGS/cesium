@@ -68,7 +68,7 @@ define([
                 return this._blurProcess.enabled;
             },
             set : function(value) {
-                this._blurProcess.enabled = this._depthOfFieldProcess.enabled;
+                this._blurProcess.enabled = this._depthOfFieldProcess.enabled = value;
             }
         },
         name : {
