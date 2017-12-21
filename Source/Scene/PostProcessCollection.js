@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Shaders/PostProcessFilters/FXAA',
         '../Shaders/PostProcessFilters/PassThrough',
         '../ThirdParty/Shaders/FXAA3_11',
@@ -17,6 +18,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         FXAAFS,
         PassThrough,
         FXAA3_11,
@@ -31,11 +33,14 @@ define([
         FXAA3_11 + '\n' +
         FXAAFS;
 
+    var stackScratch = [];
+
     function PostProcessCollection() {
         this._processes = [];
         this._activeProcesses = [];
 
         this._fxaa = new PostProcess({
+            name : 'czm_FXAA',
             fragmentShader : fxaaFS,
             sampleMode : PostProcessSampleMode.LINEAR
         });
@@ -46,6 +51,25 @@ define([
         this._bloom.enabled = false;
 
         this._processesRemoved = false;
+
+        this._processNames = {};
+
+        var processNames = this._processNames;
+
+        var stack = stackScratch;
+        stack.push(this._fxaa, this._ao, this._bloom);
+        while (stack.length > 0) {
+            var process = stack.pop();
+            processNames[process.name] = process;
+            process._collection = this;
+
+            var length = process.length;
+            if (defined(length)) {
+                for (var i = 0; i < length; ++i) {
+                    stack.push(process.get(i));
+                }
+            }
+        }
     }
 
     defineProperties(PostProcessCollection.prototype, {
@@ -136,24 +160,66 @@ define([
     }
 
     PostProcessCollection.prototype.add = function(postProcess) {
-        postProcess._collection = this;
+        if (!defined(postProcess)) {
+            return;
+        }
+
+        var processNames = this._processNames;
+
+        var stack = stackScratch;
+        stack.push(postProcess);
+        while (stack.length > 0) {
+            var process = stack.pop();
+            //>>includeStart('debug', pragmas.debug);
+            if (defined(processNames[process.name])) {
+                throw new DeveloperError(process.name + ' has already been added to the collection or does not have a unique name.');
+            }
+            //>>includeEnd('debug');
+            processNames[process.name] = process;
+            process._collection = this;
+
+            var length = process.length;
+            if (defined(length)) {
+                for (var i = 0; i < length; ++i) {
+                    stack.push(process.get(i));
+                }
+            }
+        }
+
         postProcess._index = this._processes.length;
         this._processes.push(postProcess);
         return postProcess;
     };
 
     PostProcessCollection.prototype.remove = function(postProcess) {
-        if (this.contains(postProcess)) {
-            this._processes[postProcess._index] = undefined;
-            this._processesRemoved = true;
-            postProcess.destroy();
-            return true;
+        if (!this.contains(postProcess)) {
+            return false;
         }
-        return false;
+
+        var processNames = this._processNames;
+
+        var stack = stackScratch;
+        stack.push(postProcess);
+        while (stack.length > 0) {
+            var process = stack.pop();
+            delete processNames[process.name];
+
+            var length = process.length;
+            if (defined(length)) {
+                for (var i = 0; i < length; ++i) {
+                    stack.push(process.get(i));
+                }
+            }
+        }
+
+        this._processes[postProcess._index] = undefined;
+        this._processesRemoved = true;
+        postProcess.destroy();
+        return true;
     };
 
     PostProcessCollection.prototype.contains = function(postProcess) {
-        return defined(postProcess) && postProcess._collection === this;
+        return defined(postProcess) && defined(postProcess._index) && postProcess._collection === this;
     };
 
     PostProcessCollection.prototype.get = function(index) {
@@ -171,12 +237,13 @@ define([
         var processes = this._processes;
         var length = processes.length;
         for (var i = 0; i < length; ++i) {
-            var process = processes[i];
-            if (defined(process)) {
-                process.destroy();
-            }
+            this.remove(processes[i]);
         }
         processes.length = 0;
+    };
+
+    PostProcessCollection.prototype.getProcessByName = function(name) {
+        return this._processNames[name];
     };
 
     PostProcessCollection.prototype.update = function(context) {

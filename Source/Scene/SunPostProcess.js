@@ -219,7 +219,7 @@ define([
             this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
                     colorTexture : function() {
-                        return that._processes.outputTexture;
+                        return that._processes.get(this._processes.length - 1).outputTexture;
                     }
                 },
                 owner : this

@@ -67,9 +67,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-var postProcess = scene.postProcess;
 scene.globe.depthTestAgainstTerrain = true;
-scene.fxaa = false;
 
 var viewModel = {
     blackAndWhiteShow: false,

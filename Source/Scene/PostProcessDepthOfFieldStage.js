@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Shaders/PostProcessFilters/DepthOfField',
@@ -6,6 +7,7 @@ define([
         './PostProcess',
         './PostProcessBlurStage'
     ], function(
+        Check,
         defineProperties,
         destroyObject,
         DepthOfField,
@@ -23,18 +25,21 @@ define([
      * @private
      */
     function PostProcessDepthOfFieldStage() {
-        var that = this;
-        this._blurProcess = new PostProcessBlurStage();
+        this._name = 'czm_depth_of_field';
+
+        this._blurProcess = new PostProcessBlurStage({
+            name : 'czm_depth_of_field_blur'
+        });
         this._depthOfFieldProcess = new PostProcess({
+            name : 'czm_depth_of_field_composite',
             fragmentShader : DepthOfField,
             uniformValues : {
                 focalDistance : 5.0,
-                blurTexture : function() {
-                    return that._blurProcess.outputTexture;
-                }
+                blurTexture : this._blurProcess.name
             }
         });
 
+        var that = this;
         this._uniformValues = {};
         defineProperties(this._uniformValues, {
             focalDistance : {
@@ -46,6 +51,10 @@ define([
                 }
             }
         });
+
+        // used by PostProcessCollection
+        this._collection = undefined;
+        this._index = undefined;
     }
 
     defineProperties(PostProcessDepthOfFieldStage.prototype, {
@@ -62,6 +71,11 @@ define([
                 this._blurProcess.enabled = this._depthOfFieldProcess.enabled;
             }
         },
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;
@@ -76,8 +90,24 @@ define([
             get : function() {
                 return this._depthOfFieldProcess.outputTexture;
             }
+        },
+        length : {
+            get : function() {
+                return 2;
+            }
         }
     });
+
+    PostProcessDepthOfFieldStage.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThan('index', index, this.length);
+        //>>includeEnd('debug');
+        if (index === 0) {
+            return this._blurProcess;
+        }
+        return this._depthOfFieldProcess;
+    };
 
     PostProcessDepthOfFieldStage.prototype.update = function(context) {
         this._blurProcess.update(context);

@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
@@ -14,6 +15,7 @@ define([
         './PostProcess',
         './PostProcessBlurStage'
     ], function(
+        Check,
         defined,
         defineProperties,
         destroyObject,
@@ -39,10 +41,12 @@ define([
      * @private
      */
     function PostProcessAmbientOcclusionStage() {
+        this._name = 'czm_ambient_occlusion';
         this._randomTexture = undefined;
 
         var that = this;
         this._generatePostProcess = new PostProcess({
+            name : 'czm_ambient_occlusion_generate',
             fragmentShader : AmbientOcclusionGenerate,
             uniformValues : {
                 intensity : 4.0,
@@ -56,15 +60,16 @@ define([
             }
         });
 
-        this._blurPostProcess = new PostProcessBlurStage();
+        this._blurPostProcess = new PostProcessBlurStage({
+            name : 'czm_ambient_occlusion_blur'
+        });
 
         this._ambientOcclusionComposite = new PostProcess({
+            name : 'czm_ambient_occlusion_composite',
             fragmentShader : AmbientOcclusion,
             uniformValues : {
                 ambientOcclusionOnly : false,
-                ambientOcclusionTexture : function() {
-                    return that._blurPostProcess.outputTexture;
-                }
+                ambientOcclusionTexture : this._blurPostProcess.name
             }
         });
 
@@ -79,6 +84,10 @@ define([
                 }
             }
         });
+
+        // used by PostProcessCollection
+        this._collection = undefined;
+        this._index = undefined;
     }
 
     defineProperties(PostProcessAmbientOcclusionStage.prototype, {
@@ -93,6 +102,11 @@ define([
             },
             set : function(value) {
                 this._generatePostProcess.enabled = this._blurPostProcess.enabled = this._ambientOcclusionComposite.enabled = value;
+            }
+        },
+        name : {
+            get : function() {
+                return this._name;
             }
         },
         uniformValues : {
@@ -114,10 +128,35 @@ define([
             get : function() {
                 return this._ambientOcclusionComposite.outputTexture;
             }
+        },
+        length : {
+            get : function() {
+                return 3;
+            }
         }
     });
 
+    PostProcessAmbientOcclusionStage.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThan('index', index, this.length);
+        //>>includeEnd('debug');
+        switch (index) {
+            case 0:
+                return this._generatePostProcess;
+            case 1:
+                return this._blurPostProcess;
+            default:
+                return this._ambientOcclusionComposite;
+        }
+    };
+
     PostProcessAmbientOcclusionStage.prototype.update = function(context) {
+        if (defined(this._randomTexture) && !this.enabled) {
+            this._randomTexture.destroy();
+            this._randomTexture = undefined;
+        }
+
         if (!defined(this._randomTexture)) {
             var length = 256 * 256 * 3;
             var random = new Uint8Array(length);

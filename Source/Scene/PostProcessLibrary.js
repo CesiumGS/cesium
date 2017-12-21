@@ -158,6 +158,7 @@ define([
 
     function createBlackAndWhiteStage() {
         return new PostProcess({
+            name : 'czm_black_and_white',
             fragmentShader : BlackAndWhite,
             uniformValues : {
                 gradations : 5.0
@@ -167,6 +168,7 @@ define([
 
     function createBrightnessStage() {
         return new PostProcess({
+            name : 'czm_brightness',
             fragmentShader : Brightness,
             uniformValues : {
                 brightness : 0.5
@@ -176,6 +178,7 @@ define([
 
     function createEightBitStage() {
         return new PostProcess({
+            name : 'czm_eight_bit',
             fragmentShader : EightBit
         });
     }
@@ -187,6 +190,7 @@ define([
     }
 
     function createTextureOverlayStage() {
+        // not supplying a name means more than one effect can be added
         return new PostProcess({
             fragmentShader : TextureOverlay,
             uniformValues : {
@@ -199,12 +203,14 @@ define([
 
     function createDepthViewStage() {
         return new PostProcess({
+            name : 'czm_depth_view',
             fragmentShader : DepthView
         });
     }
 
     function createLensFlareStage() {
         return new PostProcess({
+            name : 'czm_lens_flare',
             fragmentShader: LensFlare,
             uniformValues: {
                 dirtTexture: buildModuleUrl('Assets/Textures/LensFlare/DirtMask.jpg'),

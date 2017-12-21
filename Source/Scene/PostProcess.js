@@ -2,6 +2,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/combine',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -25,6 +26,7 @@ define([
         BoundingRectangle,
         Color,
         combine,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -85,6 +87,11 @@ define([
         this.enabled = true;
         this._enabled = this.enabled;
 
+        this._name = options.name;
+        if (!defined(this._name)) {
+            this._name = createGuid();
+        }
+
         // used by PostProcessCollection
         this._collection = undefined;
         this._index = undefined;
@@ -94,6 +101,11 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+        name : {
+            get : function() {
+                return this._name;
             }
         },
         uniformValues : {
@@ -134,6 +146,13 @@ define([
                 var currentValue = uniformValues[name];
                 uniformValues[name] = value;
 
+                var actualUniformValues = postProcess._actualUniformValues;
+                var actualValue = actualUniformValues[name];
+                if (defined(actualValue) && actualValue !== currentValue && typeof actualValue === Texture && !defined(postProcess._collection.getProcessByName(name))) {
+                    postProcess._texturesToRelease.push(actualValue);
+                    delete actualUniformValues[name];
+                }
+
                 if (typeof currentValue === Texture) {
                     postProcess._texturesToRelease.push(currentValue);
                 }
@@ -143,7 +162,7 @@ define([
                     newType === HTMLVideoElement || newType === ImageData) {
                     postProcess._dirtyUniforms.push(name);
                 } else {
-                    postProcess._actualUniformValues[name] = value;
+                    actualUniformValues[name] = value;
                 }
             }
         };
@@ -280,6 +299,24 @@ define([
         };
     }
 
+    var stackScratch = [];
+
+    function getOutputTexture(process) {
+        var lastProcess;
+        var stack = stackScratch;
+        stack.push(process);
+        while (stack.length > 0) {
+            lastProcess = stack.pop();
+
+            var length = lastProcess.length;
+            if (defined(lastProcess.length)) {
+                stack.push(lastProcess.get(length - 1));
+            }
+        }
+
+        return lastProcess.outputTexture;
+    }
+
     function updateUniformTextures(postProcess, context) {
         var i;
         var texture;
@@ -313,20 +350,27 @@ define([
 
         length = dirtyUniforms.length;
         var uniformValues = postProcess._uniformValues;
-        var promises = new Array(length);
+        var promises = [];
         for (i = 0; i < length; ++i) {
             name = dirtyUniforms[i];
-            var imageUrl = uniformValues[name];
-            promises.push(loadImage(imageUrl).then(createLoadImageFunction(postProcess, name)));
+            var processNameOrUrl = uniformValues[name];
+            var process = postProcess._collection.getProcessByName(processNameOrUrl);
+            if (defined(process)) {
+                postProcess._actualUniformValues[name] = getOutputTexture(process);
+            } else {
+                promises.push(loadImage(processNameOrUrl).then(createLoadImageFunction(postProcess, name)));
+            }
         }
 
         dirtyUniforms.length = 0;
 
-        postProcess._ready = false;
-        postProcess._texturePromise = when.all(promises).then(function() {
-            postProcess._ready = true;
-            postProcess._texturePromise = undefined;
-        });
+        if (promises.length > 0) {
+            postProcess._ready = false;
+            postProcess._texturePromise = when.all(promises).then(function() {
+                postProcess._ready = true;
+                postProcess._texturePromise = undefined;
+            });
+        }
     }
 
     function releaseResources(postProcess) {
@@ -337,11 +381,16 @@ define([
             postProcess._command = undefined;
         }
 
-        var uniformValues = postProcess._actualUniformValues;
-        for (var name in uniformValues) {
-            if (uniformValues.hasOwnProperty(name) && typeof uniformValues[name] === Texture) {
-                uniformValues[name].destroy();
-                postProcess._dirtyUniforms.push(name);
+        var uniformValues = postProcess._uniformValues;
+        var actualUniformValues = postProcess._actualUniformValues;
+        for (var name in actualUniformValues) {
+            if (actualUniformValues.hasOwnProperty(name)) {
+                if (actualUniformValues[name] instanceof Texture) {
+                    if (!defined(postProcess._collection.getProcessByName(uniformValues[name]))) {
+                        actualUniformValues[name].destroy();
+                    }
+                    postProcess._dirtyUniforms.push(name);
+                }
             }
         }
     }

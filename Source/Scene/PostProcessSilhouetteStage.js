@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/Color',
         '../Core/defineProperties',
         '../Core/destroyObject',
@@ -8,6 +9,7 @@ define([
         './PostProcess',
         './PostProcessComposite'
     ], function(
+        Check,
         Color,
         defineProperties,
         destroyObject,
@@ -27,33 +29,38 @@ define([
      * @private
      */
     function PostProcessSilhouette() {
+        this._name = 'czm_silhouette';
+
         var processes = new Array(2);
         processes[0] = new PostProcess({
+            name : 'czm_silhouette_depth',
             fragmentShader : Silhouette
         });
         var edgeDetection = processes[1] = new PostProcess({
+            name : 'czm_silhouette_edge_detection',
             fragmentShader : EdgeDetection,
             uniformValues : {
                 length : 0.5,
                 color : Color.clone(Color.BLACK)
             }
         });
-
         this._silhouetteGenerateProcess = new PostProcessComposite({
+            name : 'czm_silhouette_generate',
             processes : processes
         });
-
-        var that = this;
         this._silhouetteProcess = new PostProcess({
+            name : 'czm_silhouette_composite',
             fragmentShader : SilhouetteComposite,
             uniformValues : {
-                silhouetteTexture : function() {
-                    return that._silhouetteGenerateProcess.outputTexture;
-                }
+                silhouetteTexture : this._silhouetteGenerateProcess.name
             }
         });
 
         this._edgeDetectionUniformValues = edgeDetection.uniformValues;
+
+        // used by PostProcessCollection
+        this._collection = undefined;
+        this._index = undefined;
     }
 
     defineProperties(PostProcessSilhouette.prototype, {
@@ -70,6 +77,11 @@ define([
                 this._silhouetteProcess.enabled = this._silhouetteGenerateProcess.enabled = value;
             }
         },
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
         edgeDetectionUniformValues : {
             get : function() {
                 return this._edgeDetectionUniformValues;
@@ -79,8 +91,24 @@ define([
             get : function() {
                 return this._silhouetteProcess.outputTexture;
             }
+        },
+        length : {
+            get : function() {
+                return 2;
+            }
         }
     });
+
+    PostProcessSilhouette.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThan('index', index, this.length);
+        //>>includeEnd('debug');
+        if (index === 0) {
+            return this._silhouetteGenerateProcess;
+        }
+        return this._silhouetteProcess;
+    };
 
     PostProcessSilhouette.prototype.update = function(context) {
         this._silhouetteGenerateProcess.update(context);

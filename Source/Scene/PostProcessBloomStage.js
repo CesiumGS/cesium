@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Shaders/PostProcessFilters/BloomComposite',
@@ -6,6 +7,7 @@ define([
         './PostProcess',
         './PostProcessBlurStage'
     ], function(
+        Check,
         defineProperties,
         destroyObject,
         BloomComposite,
@@ -23,25 +25,29 @@ define([
      * @private
      */
     function PostProcessBloomStage() {
-        var that = this;
+        this._name = 'czm_bloom';
+
         this._contrastBias = new PostProcess({
+            name : 'czm_bloom_contrast_bias',
             fragmentShader : ContrastBias,
             uniformValues : {
                 contrast : 0.0,
                 brightness : 0.0
             }
         });
-        this._blur = new PostProcessBlurStage();
+        this._blur = new PostProcessBlurStage({
+            name : 'czm_bloom_blur'
+        });
         this._bloomComposite = new PostProcess({
+            name : 'czm_bloom_composite',
             fragmentShader : BloomComposite,
             uniformValues : {
                 glowOnly : false,
-                bloomTexture : function() {
-                    return that._blur.outputTexture;
-                }
+                bloomTexture : this._blur.name
             }
         });
 
+        var that = this;
         this._uniformValues = {};
         defineProperties(this._uniformValues, {
             glowOnly : {
@@ -53,6 +59,10 @@ define([
                 }
             }
         });
+
+        // used by PostProcessCollection
+        this._collection = undefined;
+        this._index = undefined;
     }
 
     defineProperties(PostProcessBloomStage.prototype, {
@@ -67,6 +77,11 @@ define([
             },
             set : function(value) {
                 this._bloomComposite.enabled = this._blur.enabled = this._contrastBias.enabled = value;
+            }
+        },
+        name : {
+            get : function() {
+                return this._name;
             }
         },
         uniformValues : {
@@ -88,8 +103,28 @@ define([
             get : function() {
                 return this._bloomComposite.outputTexture;
             }
+        },
+        length : {
+            get : function() {
+                return 3;
+            }
         }
     });
+
+    PostProcessBloomStage.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThan('index', index, this.length);
+        //>>includeEnd('debug');
+        switch (index) {
+            case 0:
+                return this._contrastBias;
+            case 1:
+                return this._blur;
+            default:
+                return this._bloomComposite;
+        }
+    };
 
     PostProcessBloomStage.prototype.update = function(context) {
         this._contrastBias.update(context);
