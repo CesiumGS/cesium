@@ -33,10 +33,10 @@ define([
     function Credit(options) {
         var text;
         var showOnScreen;
-        var text = options.text;
+        text = options.text;
         var imageUrl = options.imageUrl;
         var link = options.link;
-        var showOnScreen = defaultValue(options.showOnScreen, false);        
+        showOnScreen = defaultValue(options.showOnScreen, false);
 
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
