@@ -48,6 +48,11 @@ define([
                 return true;
             }
         },
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
         enabled : {
             get : function() {
                 return this._processes[0].enabled;

@@ -160,10 +160,11 @@ define([
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
-        var processes = postProcess._processes.processes;
+        var processes = postProcess._processes;
+        var firstProcess = processes.get(0);
 
-        var downSampleWidth = processes[0].outputTexture.width;
-        var downSampleHeight = processes[0].outputTexture.height;
+        var downSampleWidth = firstProcess.outputTexture.width;
+        var downSampleHeight = firstProcess.outputTexture.height;
 
         var downSampleViewport = new BoundingRectangle();
         downSampleViewport.width = downSampleWidth;
@@ -176,14 +177,14 @@ define([
         size.x *= downSampleWidth / width;
         size.y *= downSampleHeight / height;
 
-        var scissorRectangle = processes[0].scissorRectangle;
+        var scissorRectangle = firstProcess.scissorRectangle;
         scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
         scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
         for (var i = 1; i < 4; ++i) {
-            BoundingRectangle.clone(scissorRectangle, processes[i].scissorRectangle);
+            BoundingRectangle.clone(scissorRectangle, processes.get(i).scissorRectangle);
         }
     }
 
@@ -219,7 +220,7 @@ define([
             this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
                     colorTexture : function() {
-                        return that._processes.get(this._processes.length - 1).outputTexture;
+                        return that._processes.outputTexture;
                     }
                 },
                 owner : this
