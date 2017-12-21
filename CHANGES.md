@@ -13,6 +13,7 @@ Change Log
 * Fixed globe materials when `Globe.enableLighting` was `false`. [#6042](https://github.com/AnalyticalGraphicsInc/cesium/issues/6042)
 * Fixed shader compilation failure on pick when globe materials were enabled. [#6039](https://github.com/AnalyticalGraphicsInc/cesium/issues/6039)
 * Fixed crash when `invertClassification` was enabled, the invert color had an alpha less than `1.0`, and the window was resized. [#6046](https://github.com/AnalyticalGraphicsInc/cesium/issues/6046)
+* Added geometric-error-based point cloud attenuation and eye dome lighting for point clouds using additive refinement.
 
 ### 1.40 - 2017-12-01
 
