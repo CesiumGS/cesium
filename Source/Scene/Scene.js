@@ -2833,6 +2833,7 @@ define([
         }
 
         RequestScheduler.update();
+        callAfterRenderFunctions(frameState);
     }
 
     function render(scene, time) {
@@ -2904,7 +2905,6 @@ define([
 
         context.endFrame();
         RequestScheduler.update();
-        callAfterRenderFunctions(frameState);
     }
 
     /**
