@@ -14,6 +14,9 @@ define([
      * {Number} [options.geometricErrorScale=1.0] Scale to be applied to each tile's geometric error.
      * {Number} [options.maximumAttenuation] Maximum attenuation in pixels. Defaults to the Cesium3DTileset's maximumScreenSpaceError.
      * {Number} [options.baseResolution] Average base resolution for the dataset in meters. Substitute for Geometric Error when not available.
+     * {Boolean} [options.eyeDomeLighting=false] When true, use eye dome lighting when drawing with point attenuation.
+     * {Number} [options.eyeDomeLightingStrength=1.0] Increasing this value increases contrast on slopes and edges.
+     * {Number} [options.eyeDomeLightingRadius=1.0] Increase the thickness of contours from eye dome lighting.
      * @constructor
      */
     function PointAttenuationOptions(options) {
@@ -44,6 +47,24 @@ define([
          * @type {Number}
          */
         this.baseResolution = pointAttenuationOptions.baseResolution;
+
+        /**
+         * Use eye dome lighting when drawing with point attenuation
+         * @type {Boolean}
+         */
+        this.eyeDomeLighting = defaultValue(pointAttenuationOptions.eyeDomeLighting, false);
+
+        /**
+         * Eye dome lighting strength (apparent contrast)
+         * @type {Number}
+         */
+        this.eyeDomeLightingStrength = defaultValue(pointAttenuationOptions.eyeDomeLightingStrength, 1.0);
+
+        /**
+         * Thickness of contours from eye dome lighting
+         * @type {Number}
+         */
+        this.eyeDomeLightingRadius = defaultValue(pointAttenuationOptions.eyeDomeLightingRadius, 1.0);
     }
 
     return PointAttenuationOptions;

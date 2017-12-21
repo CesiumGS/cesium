@@ -453,19 +453,6 @@ defineSuite([
         return count;
     }
 
-    function rgbaToAscii(rgba) {
-        console.log(countRenderedPixels(rgba));
-        for (var i = 0; i < 10; i++) {
-            var scanline = rgba.slice(i * 40, i * 40 + 40);
-            var lineString = i + ' ';
-            for (var j = 0; j < 40; j += 4) {
-                var isDrawn = scanline[j] !== 0;
-                lineString += isDrawn ? '[ ]' : ' _ ';
-            }
-            console.log(lineString);
-        }
-    }
-
     it('attenuates points based on geometric error', function() {
         var scene = createScene({
             canvas : createCanvas(10, 10)
@@ -540,7 +527,6 @@ defineSuite([
             tileset.pointAttenuationOptions.baseResolution = undefined;
             tileset.maximumScreenSpaceError = 16;
             expect(scene).toRenderAndCall(function(rgba) {
-                rgbaToAscii(rgba);
                 expect(countRenderedPixels(rgba)).toBeGreaterThan(noAttenuationPixelCount);
             });
 
