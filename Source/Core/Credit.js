@@ -33,16 +33,10 @@ define([
     function Credit(options) {
         var text;
         var showOnScreen;
-        if (typeof options !== 'object') {
-            deprecationWarning('Credit parameters', 'The Credit text, imageUrl and link parameters have been replaced by a single options object parameter with text, imageUrl and link properties. Use of the old parameters will be removed in Cesium 1.41');
-            text = options;
-            showOnScreen = false;
-        } else {
-            text = options.text;
-            imageUrl = options.imageUrl;
-            link = options.link;
-            showOnScreen = defaultValue(options.showOnScreen, false);
-        }
+        var text = options.text;
+        var imageUrl = options.imageUrl;
+        var link = options.link;
+        var showOnScreen = defaultValue(options.showOnScreen, false);        
 
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
