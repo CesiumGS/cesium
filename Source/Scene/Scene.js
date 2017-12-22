@@ -721,8 +721,9 @@ define([
 
         /**
          * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
-         * Enabling improves performance of the application.
-         * To render a new frame explicitly in this mode, use {@link requestRender}.
+         * Enabling improves performance of the application, but requires using {@link requestRender}
+         * to render a new frame explicitly in this mode. This will be necessary in many cases after making updates
+         * to the scene.
          *
          * @see Scene#maximumRenderTimeChange
          * @see Scene#requestRender
@@ -738,6 +739,8 @@ define([
          * simulation time allowed before a render is requested. Lower values decrease the number of frames rendered
          * and higher values increase the number of frames rendered. If <code>undefined</code>, changes to
          * the simulation time will never request a render.
+         * This value impacts the rate of rendering for changes in the scene like lighting, entity property updates,
+         * and animations.
          *
          * @see Scene#requestRenderMode
          *

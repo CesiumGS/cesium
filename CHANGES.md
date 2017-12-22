@@ -1,11 +1,14 @@
 Change Log
 ==========
 
-### 1.41 - 2017-01-02
+### 1.42 - 2017-02-01
 
 * Added optional scene request render mode to reduce CPU usage
     * `scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`.
     * `scene.requestRender` will explicitly request a new render frame when in request render mode.
+
+### 1.41 - 2017-01-02
+
 * Added support for clipping planes
     * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlaneCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
     * Added `clippingPlanes` property to `Globe` which specifies a `ClippingPlaneCollection` to selectively disable rendering of the globe surface. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)

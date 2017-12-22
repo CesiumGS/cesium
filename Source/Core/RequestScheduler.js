@@ -88,7 +88,7 @@ define([
     RequestScheduler.debugShowStatistics = false;
 
     /**
-     * An event that's raised when a requestISLoaded successfully.
+     * An event that's raised when a request is loaded successfully.
      *
      * @type {Event}
      */
