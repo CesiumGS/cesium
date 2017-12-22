@@ -732,7 +732,7 @@ define([
          * @default false
          */
         this.requestRenderMode = defaultValue(options.requestRenderMode, false);
-        this._isRendering = true;
+        this._renderRequested = true;
 
         /**
          * If {@link requestRenderMode} is <code>true</code>, this value defines the maximum change in
@@ -2923,7 +2923,7 @@ define([
 
         var cameraChanged = checkForCameraUpdates(this);
 
-        var shouldRender = !this.requestRenderMode || this._isRendering || cameraChanged || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
 
         var now = JulianDate.clone(time);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
@@ -2934,7 +2934,7 @@ define([
         try {
             if (shouldRender) {
                 this._lastRenderTime = now;
-                this._isRendering = false;
+                this._renderRequested = false;
 
                 render(this, time);
             } else {
@@ -3659,9 +3659,7 @@ define([
      * @see Scene#requestRenderMode
      */
     Scene.prototype.requestRender = function() {
-        if (!this._isRendering) {
-            this._isRendering = true;
-        }
+        this._renderRequested = true;
     };
 
     return Scene;
