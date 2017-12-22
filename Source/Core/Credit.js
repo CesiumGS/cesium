@@ -2,7 +2,6 @@ define([
     './defaultValue',
     './defined',
     './defineProperties',
-    './deprecationWarning',
     './DeveloperError'
 ], function(
     defaultValue,
