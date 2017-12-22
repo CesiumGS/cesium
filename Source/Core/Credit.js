@@ -31,12 +31,10 @@ define([
      * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
     function Credit(options) {
-        var text;
-        var showOnScreen;
-        text = options.text;
+        var text = options.text;
         var imageUrl = options.imageUrl;
         var link = options.link;
-        showOnScreen = defaultValue(options.showOnScreen, false);
+        var showOnScreen = defaultValue(options.showOnScreen, false);
 
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
