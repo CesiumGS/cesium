@@ -3,12 +3,14 @@ define([
         './defaultValue',
         './defined',
         './formatError',
-        './RuntimeError'
+        './RuntimeError',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         formatError,
-        RuntimeError) {
+        RuntimeError,
+        when) {
     'use strict';
 
     /**
@@ -134,7 +136,7 @@ define([
         }
 
         if (error.retry && defined(retryFunction)) {
-            retryFunction();
+            retryFunction(when(error.retry));
         }
 
         return error;
@@ -160,6 +162,8 @@ define([
 
     /**
      * A function that will be called to retry the operation.
+     * @param {Promise} promise A promise to wait for before retrying the operation. This promise may already
+     *                          be resolved if no waiting is necessary.
      * @callback TileProviderError~RetryFunction
      */
 

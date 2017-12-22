@@ -572,38 +572,38 @@ define([
         }
         //>>includeEnd('debug');
 
-        var that = this;
-        var tokenRetries = 1;
-        function loadImageWithToken (url) {
-            var loadPromise = loadImageViaBlob(url);
-            if (!defined(loadPromise)) {
-                return loadPromise;
-            }
+        // var that = this;
+        // var tokenRetries = 1;
+        // function loadImageWithToken (url) {
+        //     var loadPromise = loadImageViaBlob(url);
+        //     if (!defined(loadPromise)) {
+        //         return loadPromise;
+        //     }
 
-            return loadPromise.otherwise(function(requestErrorEvent) {
-                // If the token has expired or was not supplied the server sets the HTTP status code to 498/499 specifically to indicate these errors.
-                if (((requestErrorEvent.statusCode === 498) || (requestErrorEvent.statusCode === 499)) && (tokenRetries > 0)) {
-                    tokenRetries--;
+        //     return loadPromise.otherwise(function(requestErrorEvent) {
+        //         // If the token has expired or was not supplied the server sets the HTTP status code to 498/499 specifically to indicate these errors.
+        //         if (((requestErrorEvent.statusCode === 498) || (requestErrorEvent.statusCode === 499)) && (tokenRetries > 0)) {
+        //             tokenRetries--;
 
-                    // Note: The token may have already been updated between the request and now (when the response is received),
-                    // but for now we don't detect and optimize for this case and send off a new token request regardless.
-                    return updateToken(that).then(function () {
-                        // Rebuild the URL now that the token has been updated.
-                        url = buildImageUrl(that, x, y, level);
-                        return loadImageWithToken(url);
-                    });
-                }
+        //             // Note: The token may have already been updated between the request and now (when the response is received),
+        //             // but for now we don't detect and optimize for this case and send off a new token request regardless.
+        //             return updateToken(that).then(function () {
+        //                 // Rebuild the URL now that the token has been updated.
+        //                 url = buildImageUrl(that, x, y, level);
+        //                 return loadImageWithToken(url);
+        //             });
+        //         }
 
-                throw requestErrorEvent;
-            });
-        }
+        //         throw requestErrorEvent;
+        //     });
+        // }
 
         var url = buildImageUrl(this, x, y, level);
-        if (!defined(this._requestNewToken)) {
+        // if (!defined(this._requestNewToken)) {
             return ImageryProvider.loadImage(this, url);
-        } else {
-            return throttleRequestByServer(url, loadImageWithToken);
-        }
+        // } else {
+        //     return throttleRequestByServer(url, loadImageWithToken);
+        // }
     };
 
     /**

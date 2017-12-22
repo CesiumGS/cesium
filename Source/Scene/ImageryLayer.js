@@ -675,7 +675,7 @@ define([
 
         function failure(e) {
             // Initially assume failure.  handleError may retry, in which case the state will
-            // change to TRANSITIONING.
+            // change to TRANSITIONING when doRequest is called.
             imagery.state = ImageryState.FAILED;
 
             var message = 'Failed to obtain image tile X: ' + imagery.x + ' Y: ' + imagery.y + ' Level: ' + imagery.level + '.';
@@ -689,8 +689,18 @@ define([
                     e);
         }
 
-        function doRequest() {
+        function doRequest(waitPromise) {
             imagery.state = ImageryState.TRANSITIONING;
+
+            if (waitPromise) {
+                // We need to wait for this promise to resolve before retrying.
+                // This promise might be, for example, obtaining a new token that will allow access to the imagery.
+                // We wrap doRequest in a function so that the resolved value of the waitPromise is ignored and
+                // not passed to doRequest.
+                waitPromise.then(function() { doRequest(); }).otherwise(failure);
+                return;
+            }
+
             var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
 
             if (!defined(imagePromise)) {
