@@ -1,8 +1,18 @@
 Change Log
 ==========
 
-### 1.41 - 2018-01-...
+### 1.41 - 2017-01-02
 
+* Added support for clipping planes
+    * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlaneCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
+    * Added `clippingPlanes` property to `Globe` which specifies a `ClippingPlaneCollection` to selectively disable rendering of the globe surface. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+    * Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
+    * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+    * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+* Fixed point cloud crash in IE [#6051](https://github.com/AnalyticalGraphicsInc/cesium/pull/6051)
+* Fixed globe materials when `Globe.enableLighting` was `false`. [#6042](https://github.com/AnalyticalGraphicsInc/cesium/issues/6042)
+* Fixed shader compilation failure on pick when globe materials were enabled. [#6039](https://github.com/AnalyticalGraphicsInc/cesium/issues/6039)
+* Fixed crash when `invertClassification` was enabled, the invert color had an alpha less than `1.0`, and the window was resized. [#6046](https://github.com/AnalyticalGraphicsInc/cesium/issues/6046)
 * Added ability to create partial ellipsoid volumes using both the Entity API and CZML. New ellipsoid geometry properties: innerRadii, minimumAzimuth, maximumAzimuth, minimumElevation, maximumElevation. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Spheres%20and%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
 
 ### 1.40 - 2017-12-01

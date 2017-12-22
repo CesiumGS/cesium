@@ -729,15 +729,16 @@ define([
                 if (!defined(techniqueParameterForSemantic(technique, semantic))) {
                     var accessorId = attributes[semantic];
                     var accessor = accessors[accessorId];
-                    if (semantic.charAt(0) === '_') {
-                        semantic = semantic.slice(1);
+                    var lowerCase = semantic.toLowerCase();
+                    if (lowerCase.charAt(0) === '_') {
+                        lowerCase = lowerCase.slice(1);
                     }
-                    var attributeName = 'a_' + semantic;
-                    technique.parameters[semantic] = {
-                        semantic : semantic,
-                        type : accessor.componentType
+                    var attributeName = 'a_' + lowerCase;
+                    technique.parameters[lowerCase] = {
+                        semantic: semantic,
+                        type: accessor.componentType
                     };
-                    technique.attributes[attributeName] = semantic;
+                    technique.attributes[attributeName] = lowerCase;
                     program.attributes.push(attributeName);
                     var pipelineExtras = vertexShader.extras._pipeline;
                     var shaderText = pipelineExtras.source;
