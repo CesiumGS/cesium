@@ -2854,9 +2854,6 @@ define([
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
-
-        RequestScheduler.update();
-        callAfterRenderFunctions(frameState);
     }
 
     function render(scene, time) {
@@ -2908,9 +2905,7 @@ define([
         }
 
         frameState.creditDisplay.endFrame();
-
         context.endFrame();
-        RequestScheduler.update();
     }
 
     /**
@@ -2952,6 +2947,8 @@ define([
         }
 
         updateDebugShowFramesPerSecond(this, shouldRender);
+        RequestScheduler.update();
+        callAfterRenderFunctions(this._frameState);
         this._postRender.raiseEvent(this, time);
     };
 

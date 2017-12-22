@@ -1282,13 +1282,13 @@ defineSuite([
 
         var lastRenderTime = scene._lastRenderTime;
         expect(lastRenderTime).toBeDefined();
-        expect(scene._isRendering).toBe(false);
+        expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
         scene.requestRender();
-        expect(scene._isRendering).toBe(true);
+        expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
         expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
@@ -1303,7 +1303,7 @@ defineSuite([
 
         var lastRenderTime = scene._lastRenderTime;
         expect(lastRenderTime).toBeDefined();
-        expect(scene._isRendering).toBe(false);
+        expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
@@ -1323,14 +1323,14 @@ defineSuite([
 
         var lastRenderTime = scene._lastRenderTime;
         expect(lastRenderTime).toBeDefined();
-        expect(scene._isRendering).toBe(false);
+        expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
         RequestScheduler.requestLoadedEvent.raiseEvent();
 
-        expect(scene._isRendering).toBe(true);
+        expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
         expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
@@ -1345,14 +1345,14 @@ defineSuite([
 
         var lastRenderTime = scene._lastRenderTime;
         expect(lastRenderTime).toBeDefined();
-        expect(scene._isRendering).toBe(false);
+        expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
         TaskProcessor.taskCompletedEvent.raiseEvent();
 
-        expect(scene._isRendering).toBe(true);
+        expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
         expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
@@ -1362,12 +1362,11 @@ defineSuite([
 
     it('scene morphing causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
-
         scene.renderForSpecs();
 
         var lastRenderTime = scene._lastRenderTime;
         expect(lastRenderTime).toBeDefined();
-        expect(scene._isRendering).toBe(false);
+        expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
@@ -1401,6 +1400,7 @@ defineSuite([
         scene.morphTo3D(1.0);
         scene.renderForSpecs();
         scene.renderForSpecs();
+        scene.renderForSpecs();
         expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
@@ -1420,7 +1420,7 @@ defineSuite([
 
         var lastRenderTime = scene._lastRenderTime;
         expect(lastRenderTime).toBeDefined();
-        expect(scene._isRendering).toBe(false);
+        expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
 
@@ -1442,7 +1442,7 @@ defineSuite([
 
         var lastRenderTime = scene._lastRenderTime;
         expect(lastRenderTime).toBeDefined();
-        expect(scene._isRendering).toBe(false);
+        expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
