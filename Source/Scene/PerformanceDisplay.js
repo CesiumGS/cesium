@@ -1,6 +1,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getTimestamp',
@@ -8,6 +9,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         getTimestamp,
@@ -47,19 +49,58 @@ define([
         this._lastMsSampleTime = getTimestamp();
         this._fpsFrameCount = 0;
         this._msFrameCount = 0;
+
+        this._throttled = false;
+        var throttledElement = document.createElement('div');
+        throttledElement.className = 'cesium-performanceDisplay-throttled';
+        this._throttledText = document.createTextNode('');
+        throttledElement.appendChild(this._throttledText);
+        display.appendChild(throttledElement);
     }
+
+     defineProperties(PerformanceDisplay.prototype, {
+        /**
+         * The display should indicate the FPS is being throttled.
+         * @memberof PerformanceDisplay.prototype
+         *
+         * @type {Boolean}
+         */
+        throttled : {
+            get : function() {
+                return this._throttled;
+            },
+            set : function(value) {
+                if (this._throttled === value) {
+                    return;
+                }
+
+                if (value) {
+                    this._throttledText.nodeValue = '(throttled)';
+                } else {
+                    this._throttledText.nodeValue = '';
+                }
+
+                this._throttled = value;
+            }
+        }
+    });
 
     /**
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
      */
-    PerformanceDisplay.prototype.update = function() {
+    PerformanceDisplay.prototype.update = function(renderedThisFrame) {
         var time = getTimestamp();
 
         this._fpsFrameCount++;
         var fpsElapsedTime = time - this._lastFpsSampleTime;
         if (fpsElapsedTime > 1000) {
-            var fps = this._fpsFrameCount * 1000 / fpsElapsedTime | 0;
+            var fps = 'N/A';
+            if (renderedThisFrame) {
+                fps = this._fpsFrameCount * 1000 / fpsElapsedTime | 0;
+                this._fpsText.nodeValue = fps + ' FPS';
+            }
+
             this._fpsText.nodeValue = fps + ' FPS';
             this._lastFpsSampleTime = time;
             this._fpsFrameCount = 0;

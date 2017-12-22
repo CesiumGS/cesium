@@ -277,6 +277,8 @@ define([
      * An event that's raised when a task is completed successfully.
      *
      * @type {Event}
+     *
+     * @private
      */
     TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 
