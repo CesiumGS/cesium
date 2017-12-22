@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### 1.41 - 2017-01-02
+### 1.41 - 2018-01-02
 
 * Added support for clipping planes
     * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlaneCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
