@@ -86,15 +86,16 @@ define([
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
 
-    ModelUtility.getTransform = function(node) {
+    ModelUtility.getTransform = function(node, result) {
         if (defined(node.matrix)) {
-            return Matrix4.fromArray(node.matrix);
+            return Matrix4.fromArray(node.matrix, result);
         }
 
         return Matrix4.fromTranslationQuaternionRotationScale(
             Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
             Quaternion.unpack(node.rotation, 0, nodeQuaternionScratch),
-            Cartesian3.fromArray(node.scale, 0, nodeScaleScratch));
+            Cartesian3.fromArray(node.scale, 0, nodeScaleScratch),
+            result);
     };
 
     ModelUtility.getUsedExtensions = function(gltf) {

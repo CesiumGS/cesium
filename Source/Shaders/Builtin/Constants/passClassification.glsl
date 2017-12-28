@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passClassification = 8.0;
+const float czm_passClassification = 7.0;

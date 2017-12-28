@@ -93,6 +93,7 @@ define([
 
     /**
      * A 3D model for classifying other 3D assets based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
+     * This is a special case when a model of a 3D tileset becomes a classifier when setting {@link Cesium3DTileset#classificationType}.
      *
      * @alias ClassificationModel
      * @constructor
@@ -110,8 +111,12 @@ define([
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+     * @exception {RuntimeError} Only binary glTF is supported.
+     * @exception {RuntimeError} Only one node is supported for classification and it must have a mesh.
+     * @exception {RuntimeError} Only one mesh is supported when using b3dm for classification.
+     * @exception {RuntimeError} Only one primitive per mesh is supported when using b3dm for classification.
+     * @exception {RuntimeError} The mesh must have a position attribute.
+     * @exception {RuntimeError} The mesh must have a batch id attribute.
      */
     function ClassificationModel(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -123,8 +128,10 @@ define([
 
         if (gltf instanceof Uint8Array) {
             // Binary glTF
-             gltf = parseBinaryGltf(gltf);
-        } // else Normal glTF (JSON)
+            gltf = parseBinaryGltf(gltf);
+        } else {
+            throw new RuntimeError('Only binary glTF is supported as a classifier.');
+        }
 
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
@@ -245,7 +252,6 @@ define([
         this._extensionsUsed = undefined;     // Cached used glTF extensions
         this._extensionsRequired = undefined; // Cached required glTF extensions
         this._quantizedUniforms = undefined;  // Quantized uniforms for WEB3D_quantized_attributes
-        this._updatedGltfVersion = false;
 
         this._buffers = {};
         this._vertexArray = undefined;
@@ -302,8 +308,7 @@ define([
         },
 
         /**
-         * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animations and skins nor does it take into account {@link ClassificationModel#minimumPixelSize}.
+         * The model's bounding sphere in its local coordinate system.
          *
          * @memberof ClassificationModel.prototype
          *
@@ -370,16 +375,6 @@ define([
          * @type {Promise.<ClassificationModel>}
          * @readonly
          *
-         * @example
-         * // Play all animations at half-speed when the model is ready to render
-         * Cesium.when(model.readyPromise).then(function(model) {
-         *   model.activeAnimations.addAll({
-         *     speedup : 0.5
-         *   });
-         * }).otherwise(function(error){
-         *   window.alert(error);
-         * });
-         *
          * @see ClassificationModel#ready
          */
         readyPromise : {
@@ -404,6 +399,14 @@ define([
             }
         },
 
+        /**
+         * Returns an object with all of the glTF extensions used.
+         *
+         * @memberof ClassificationModel.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
         extensionsUsed : {
             get : function() {
                 if (!defined(this._extensionsUsed)) {
@@ -413,6 +416,14 @@ define([
             }
         },
 
+        /**
+         * Returns an object with all of the glTF extensions required.
+         *
+         * @memberof ClassificationModel.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
         extensionsRequired : {
             get : function() {
                 if (!defined(this._extensionsRequired)) {
@@ -552,18 +563,17 @@ define([
         var loadResources = model._loadResources;
         // Iterate this way for compatibility with objects and arrays
         var buffers = model.gltf.buffers;
-        for (var id in buffers) {
-            if (buffers.hasOwnProperty(id)) {
-                var buffer = buffers[id];
-                buffer.extras = defaultValue(buffer.extras, {});
-                buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
-                if (defined(buffer.extras._pipeline.source)) {
-                    loadResources.buffers[id] = buffer.extras._pipeline.source;
-                } else {
-                    var bufferPath = joinUrls(model._baseUri, buffer.uri);
-                    ++loadResources.pendingBufferLoads;
-                    loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
-                }
+        var length = buffers.length;
+        for (var i = 0; i < length; ++i) {
+            var buffer = buffers[i];
+            buffer.extras = defaultValue(buffer.extras, {});
+            buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
+            if (defined(buffer.extras._pipeline.source)) {
+                loadResources.buffers[i] = buffer.extras._pipeline.source;
+            } else {
+                var bufferPath = joinUrls(model._baseUri, buffer.uri);
+                ++loadResources.pendingBufferLoads;
+                loadArrayBuffer(bufferPath).then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
             }
         }
     }
@@ -852,12 +862,9 @@ define([
         var primitive = gltfMeshes[0].primitives[0];
         var ix = accessors[primitive.indices];
 
-        var boundingSphere;
         var positionAccessor = primitive.attributes.POSITION;
-        if (defined(positionAccessor)) {
-            var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-            boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
-        }
+        var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
+        var boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
 
         var offset;
         var count;

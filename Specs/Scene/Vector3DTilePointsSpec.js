@@ -46,6 +46,9 @@ defineSuite([
             _statistics : {
                 batchTableByteLength : 0
             }
+        },
+        tileset : {
+            ellipsoid : Ellipsoid.WGS84
         }
     };
 

@@ -183,7 +183,7 @@ define([
         /**
          * Gets or sets the label color of this feature.
          * <p>
-         * The outline color will be applied to the label if <code>labelText</code> is defined.
+         * The color will be applied to the label if <code>labelText</code> is defined.
          * </p>
          *
          * @memberof Cesium3DTilePointFeature.prototype
@@ -227,7 +227,7 @@ define([
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *
-         * @type {Color}
+         * @type {Number}
          */
         labelOutlineWidth : {
             get : function() {
@@ -418,8 +418,7 @@ define([
             set : function(value) {
                 var offset = defaultValue(this._heightOffset, 0.0);
 
-                // TODO: ellipsoid
-                var ellipsoid = Ellipsoid.WGS84;
+                var ellipsoid = this._content.tileset.ellipsoid;
                 var cart = ellipsoid.cartesianToCartographic(this._billboard.position, scratchCartographic);
                 cart.height = cart.height - offset + value;
                 var newPosition = ellipsoid.cartographicToCartesian(cart);

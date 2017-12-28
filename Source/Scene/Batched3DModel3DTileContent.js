@@ -516,7 +516,7 @@ define([
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && frameState.passes.render && !(this._model instanceof ClassificationModel)) {
+        if ((commandStart < commandEnd) && frameState.passes.render && !defined(tileset.classificationType)) {
             var finalResolution = this._tile._finalResolution;
             this._batchTable.addDerivedCommands(frameState, commandStart, finalResolution);
         }

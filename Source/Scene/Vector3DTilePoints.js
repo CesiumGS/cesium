@@ -176,7 +176,7 @@ define([
                 return;
             }
 
-            when(verticesPromise, function(result) {
+            verticesPromise.then(function(result) {
                 points._positions = new Float64Array(result.positions);
                 points._ready = true;
             });
