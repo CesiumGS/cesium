@@ -72,7 +72,6 @@ defineSuite([
                 color : "color('red')",
                 show : "${id} < 100.0",
                 pointSize : "${id} / 100.0",
-                pointColor : "color('green')",
                 pointOutlineColor : "color('blue')",
                 pointOutlineWidth : "5.0",
                 labelColor : "color('yellow')",
@@ -98,7 +97,6 @@ defineSuite([
             expect(style.color).toEqual(new Expression("color('red')"));
             expect(style.show).toEqual(new Expression('${id} < 100.0'));
             expect(style.pointSize).toEqual(new Expression('${id} / 100.0'));
-            expect(style.pointColor).toEqual(new Expression("color('green')"));
             expect(style.pointOutlineColor).toEqual(new Expression("color('blue')"));
             expect(style.pointOutlineWidth).toEqual(new Expression("5.0"));
             expect(style.labelColor).toEqual(new Expression("color('yellow')"));
@@ -383,86 +381,6 @@ defineSuite([
 
         style.pointSize = jsonExp;
         expect(style.pointSize).toEqual(new ConditionsExpression(jsonExp, defines));
-    });
-
-    it('sets pointColor value to undefined if value not present', function() {
-        var style = new Cesium3DTileStyle({});
-        expect(style.pointColor).toBeUndefined();
-
-        style = new Cesium3DTileStyle();
-        expect(style.pointColor).toBeUndefined();
-    });
-
-    it('sets pointColor value to expression', function() {
-        var style = new Cesium3DTileStyle({
-            pointColor : 'color("red")'
-        });
-        expect(style.pointColor).toEqual(new Expression('color("red")'));
-
-        style = new Cesium3DTileStyle({
-            pointColor : 'rgba(30, 30, 30, 0.5)'
-        });
-        expect(style.pointColor).toEqual(new Expression('rgba(30, 30, 30, 0.5)'));
-
-        style = new Cesium3DTileStyle({
-            pointColor : '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
-        });
-        expect(style.pointColor).toEqual(new Expression('(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'));
-    });
-
-    it('sets pointColor value to conditional', function() {
-        var jsonExp = {
-            conditions : [
-                ['${height} > 2', 'color("cyan")'],
-                ['true', 'color("blue")']
-            ]
-        };
-
-        var style = new Cesium3DTileStyle({
-            pointColor : jsonExp
-        });
-        expect(style.pointColor).toEqual(new ConditionsExpression(jsonExp));
-    });
-
-    it('sets pointColor expressions in setter', function() {
-        var style = new Cesium3DTileStyle();
-
-        var exp = new Expression('color("red")');
-        style.pointColor = exp;
-        expect(style.pointColor).toEqual(exp);
-
-        var condExp = new ConditionsExpression({
-            conditions : [
-                ['${height} > 2', 'color("cyan")'],
-                ['true', 'color("blue")']
-            ]
-        });
-
-        style.pointColor = condExp;
-        expect(style.pointColor).toEqual(condExp);
-
-        style.pointColor = undefined;
-        expect(style.pointColor).toBeUndefined();
-    });
-
-    it('sets pointColor values in setter', function() {
-        var defines = {
-            'targetColor': 'red'
-        };
-        var style = new Cesium3DTileStyle({ 'defines': defines });
-
-        style.pointColor = 'color("${targetColor}")';
-        expect(style.pointColor).toEqual(new Expression('color("${targetColor}")', defines));
-
-        var jsonExp = {
-            conditions : [
-                ['${height} > 2', 'color("cyan")'],
-                ['true', 'color("${targetColor}")']
-            ]
-        };
-
-        style.pointColor = jsonExp;
-        expect(style.pointColor).toEqual(new ConditionsExpression(jsonExp, defines));
     });
 
     it('sets pointOutlineColor value to undefined if value not present', function() {
@@ -2154,15 +2072,6 @@ defineSuite([
 
         expect(function() {
             return style.pointSize;
-        }).toThrowDeveloperError();
-    });
-
-    it('throws on accessing pointColor if not ready', function() {
-        var style = new Cesium3DTileStyle({});
-        style._ready = false;
-
-        expect(function() {
-            return style.pointColor;
         }).toThrowDeveloperError();
     });
 

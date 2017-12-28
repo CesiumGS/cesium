@@ -232,7 +232,7 @@ defineSuite([
         expect(scene).toPickAndCall(function(result) {
             expect(result).toBeDefined();
 
-            result.pointColor = Color.clone(Color.YELLOW, result.color);
+            result.color = Color.clone(Color.YELLOW, result.color);
 
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
@@ -312,7 +312,7 @@ defineSuite([
         });
 
         tileset.style = new Cesium3DTileStyle({
-            pointColor : 'rgba(0, 0, 255, 1.0)'
+            color : 'rgba(0, 0, 255, 1.0)'
         });
         expectRenderPoints(scene, function(rgba) {
             expect(rgba[0]).toEqual(0);
@@ -378,7 +378,7 @@ defineSuite([
         expect(scene).toPickAndCall(function(result) {
             expect(result).toBeDefined();
 
-            result.pointColor = Color.clone(Color.YELLOW, result.color);
+            result.color = Color.clone(Color.YELLOW, result.color);
 
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
@@ -439,8 +439,7 @@ defineSuite([
         expectRenderCombined(scene, [255, 255, 255, 255]);
 
         tileset.style = new Cesium3DTileStyle({
-            color : 'rgba(0, 0, 255, 1.0)',
-            pointColor : 'rgba(0, 0, 255, 1.0)'
+            color : 'rgba(0, 0, 255, 1.0)'
         });
         expectRenderCombined(scene, [0, 0, 255, 255]);
     }

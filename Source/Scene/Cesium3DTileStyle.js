@@ -61,7 +61,6 @@ define([
 
         this._show = undefined;
         this._color = undefined;
-        this._pointColor = undefined;
         this._pointSize = undefined;
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
@@ -115,7 +114,6 @@ define([
         that.show = styleJson.show;
         that.color = styleJson.color;
         that.pointSize = styleJson.pointSize;
-        that.pointColor = styleJson.pointColor;
         that.pointOutlineColor = styleJson.pointOutlineColor;
         that.pointOutlineWidth = styleJson.pointOutlineWidth;
         that.labelColor = styleJson.labelColor;
@@ -347,51 +345,6 @@ define([
             set : function(value) {
                 this._color = getExpression(this, value);
                 this._colorShaderFunctionReady = false;
-            }
-        },
-
-        /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointColor</code> property. Alternatively a string or object defining a color style can be used.
-         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
-         * <p>
-         * The expression must return a <code>Color</code>.
-         * </p>
-         *
-         * @memberof Cesium3DTileStyle.prototype
-         *
-         * @type {StyleExpression}
-         *
-         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
-         *
-         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-         *
-         * @example
-         * var style = new Cesium.Cesium3DTileStyle();
-         * // Override pointColor expression with a string
-         * style.pointColor = 'color("blue")';
-         *
-         * @example
-         * var style = new Cesium.Cesium3DTileStyle();
-         * // Override pointColor expression with a condition
-         * style.pointColor = {
-         *     conditions : [
-         *         ['${height} > 2', 'color("cyan")'],
-         *         ['true', 'color("blue")']
-         *     ]
-         * };
-         */
-        pointColor : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._pointColor;
-            },
-            set : function(value) {
-                this._pointColor = getExpression(this, value);
             }
         },
 

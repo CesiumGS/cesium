@@ -88,7 +88,7 @@ define([
 
     ModelUtility.getTransform = function(node, result) {
         if (defined(node.matrix)) {
-            return Matrix4.fromArray(node.matrix, result);
+            return Matrix4.fromColumnMajorArray(node.matrix, result);
         }
 
         return Matrix4.fromTranslationQuaternionRotationScale(

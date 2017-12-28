@@ -1025,15 +1025,7 @@ define([
         var gltf = model.gltf;
         var nodes = gltf.nodes;
         var gltfNode = nodes[0];
-        if (defined(gltfNode.matrix)) {
-            model._nodeMatrix = Matrix4.fromColumnMajorArray(gltfNode.matrix, model._nodeMatrix);
-        } else {
-            // TRS converted to Cesium types
-            var translation = Cartesian3.fromArray(gltfNode.translation);
-            var rotation = Quaternion.unpack(gltfNode.rotation);
-            var scale = Cartesian3.fromArray(gltfNode.scale);
-            model._nodeMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, model._nodeMatrix);
-        }
+        model._nodeMatrix = ModelUtility.getTransform(gltfNode, model._nodeMatrix);
 
         createPrimitive(model);
     }

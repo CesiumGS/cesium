@@ -269,7 +269,7 @@ define([
 
             feature.show = true;
             feature.pointSize = Cesium3DTilePointFeature.defaultPointSize;
-            feature.pointColor = Cesium3DTilePointFeature.defaultPointColor;
+            feature.color = Cesium3DTilePointFeature.defaultColor;
             feature.pointOutlineColor = Cesium3DTilePointFeature.defaultPointOutlineColor;
             feature.pointOutlineWidth = Cesium3DTilePointFeature.defaultPointOutlineWidth;
             feature.labelColor = Color.WHITE;
@@ -331,8 +331,8 @@ define([
                 feature.pointSize = style.pointSize.evaluate(frameState, feature);
             }
 
-            if (defined(style.pointColor)) {
-                feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor);
+            if (defined(style.color)) {
+                feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             }
 
             if (defined(style.pointOutlineColor)) {

@@ -67,7 +67,7 @@ define([
         this._billboardOutlineWidth = undefined;
         this._billboardSize = undefined;
         this._pointSize = undefined;
-        this._pointColor = undefined;
+        this._color = undefined;
         this._pointSize = undefined;
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
@@ -101,7 +101,7 @@ define([
         },
 
         /**
-         * Gets or sets the point color of this feature.
+         * Gets or sets the color of the point of this feature.
          * <p>
          * Only applied when <code>image</code> is <code>undefined</code>.
          * </p>
@@ -110,12 +110,12 @@ define([
          *
          * @type {Color}
          */
-        pointColor : {
+        color : {
             get : function() {
-                return this._pointColor;
+                return this._color;
             },
             set : function(value) {
-                this._pointColor = Color.clone(value, this._pointColor);
+                this._color = Color.clone(value, this._color);
                 setBillboardImage(this);
             }
         },
@@ -584,7 +584,7 @@ define([
         }
     });
 
-    Cesium3DTilePointFeature.defaultPointColor = Color.WHITE;
+    Cesium3DTilePointFeature.defaultColor = Color.WHITE;
     Cesium3DTilePointFeature.defaultPointOutlineColor = Color.BLACK;
     Cesium3DTilePointFeature.defaultPointOutlineWidth = 0.0;
     Cesium3DTilePointFeature.defaultPointSize = 8.0;
@@ -600,7 +600,7 @@ define([
             return;
         }
 
-        var newColor = defaultValue(feature._pointColor, Cesium3DTilePointFeature.defaultPointColor);
+        var newColor = defaultValue(feature._color, Cesium3DTilePointFeature.defaultColor);
         var newOutlineColor = defaultValue(feature._pointOutlineColor, Cesium3DTilePointFeature.defaultPointOutlineColor);
         var newOutlineWidth = defaultValue(feature._pointOutlineWidth, Cesium3DTilePointFeature.defaultPointOutlineWidth);
         var newPointSize = defaultValue(feature._pointSize, Cesium3DTilePointFeature.defaultPointSize);
