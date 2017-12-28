@@ -27,12 +27,15 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// An example of using a b3dm tilset to classify another b3dm tileset.
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+// A normal b3dm tileset of photogrammetry
 var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url : 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg'
 }));
 
+// Move the camera to view the tileset on load.
 tileset.readyPromise.then(function() {
     var boundingSphere = tileset.boundingSphere;
     viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
@@ -41,6 +44,7 @@ tileset.readyPromise.then(function() {
     throw(error);
 });
 
+// A b3dm tileset used to classify the photogrammetry tileset
 var classification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url: 'https://beta.cesium.com/api/assets/3486?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
     classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
@@ -54,6 +58,7 @@ classification.readyPromise.then(function() {
     throw(error);
 });
 
+// The same b3dm tileset used for classification, but rendered normally for comparison.
 var nonClassification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url: 'https://beta.cesium.com/api/assets/3486?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
     show : false

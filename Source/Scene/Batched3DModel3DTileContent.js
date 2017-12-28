@@ -352,12 +352,12 @@ define([
             }
         }
 
-        var colorChangeCallback;
+        var colorChangedCallback;
         if (defined(tileset.classificationType)) {
-            colorChangeCallback = createColorChangedCallback(content);
+            colorChangedCallback = createColorChangedCallback(content);
         }
 
-        var batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary, colorChangeCallback);
+        var batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary, colorChangedCallback);
         content._batchTable = batchTable;
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
@@ -380,6 +380,15 @@ define([
         };
 
         if (!defined(tileset.classificationType)) {
+            var clippingPlanes;
+            if (defined(tileset.clippingPlanes)) {
+                clippingPlanes = tileset.clippingPlanes.clone();
+            } else {
+                clippingPlanes = new ClippingPlaneCollection({
+                    enabled : false
+                });
+            }
+
             // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
             // The pick shader still needs to be patched.
             content._model = new Model({
@@ -396,27 +405,22 @@ define([
                 incrementallyLoadTextures : false,
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 fragmentShaderLoaded : getFragmentShaderCallback(content),
-                classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
                 pickVertexShaderLoaded : getPickVertexShaderCallback(content),
                 pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
                 pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject,
-                clippingPlanes : new ClippingPlaneCollection({
-                    enabled : false
-                })
+                clippingPlanes : clippingPlanes
             });
-            if (defined(tileset.clippingPlanes)) {
-                content._model.clippingPlanes = tileset.clippingPlanes.clone();
-            }
         } else {
-            // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector a geometry data.
+            // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
             // For a list of limitations on the input glTF, see the documentation for classificationType of Cesium3DTileset.
             content._model = new ClassificationModel({
                 gltf : gltfView,
                 cull : false,           // The model is already culled by 3D Tiles
                 basePath : basePath,
+                requestType : RequestType.TILES3D,
                 modelMatrix : tile.computedTransform,
                 upAxis : tileset._gltfUpAxis,
                 debugWireframe : tileset.debugWireframe,

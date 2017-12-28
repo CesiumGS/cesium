@@ -141,6 +141,7 @@ define([
          */
         this.debugWireframe = false;
         this._debugWireframe = this.debugWireframe;
+        this._wireframeDirty = false;
 
         /**
          * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
@@ -667,6 +668,7 @@ define([
         primitive._framesSinceLastRebatch = 0;
         primitive._batchDirty = false;
         primitive._pickCommandsDirty = true;
+        primitive._wireframeDirty = true;
         return true;
     }
 
@@ -1070,7 +1072,9 @@ define([
     }
 
     function updateWireframe(primitive) {
-        if (primitive.debugWireframe === primitive._debugWireframe) {
+        var earlyExit = primitive.debugWireframe === primitive._debugWireframe;
+        earlyExit = earlyExit && !(primitive.debugWireframe && primitive._wireframeDirty);
+        if (earlyExit) {
             return;
         }
 
@@ -1098,6 +1102,7 @@ define([
         }
 
         primitive._debugWireframe = primitive.debugWireframe;
+        primitive._wireframeDirty = false;
     }
 
     /**

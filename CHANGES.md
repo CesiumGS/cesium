@@ -15,7 +15,14 @@ Change Log
    * `Cesium3DTileStyle` has expanded for styling point features. See the [styling specification](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
    * `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, and geometry features.
    * `Cesium3DTilePointFeature` can modify the styling options for a point feature.
-* Added `Cesium3DTileset.classificationType` to specify if a tileset classifies terrain, another 3D Tiles tileset, or both. This only applies to vector, geometry and batched 3D model tilesets. See [#6033](https://github.com/AnalyticalGraphicsInc/cesium/pull/6033) for limitations on the glTF contained in the b3dm tile.
+* Added `Cesium3DTileset.classificationType` to specify if a tileset classifies terrain, another 3D Tiles tileset, or both. This only applies to vector, geometry and batched 3D model tilesets. The limitations on the glTF contained in the b3dm tile are:
+   * `POSITION` and `_BATCHID` semantics are required.
+   * All indices with the same batch id must occupy contiguous sections of the index buffer.
+   * All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.
+   * The only supported extensions are `CESIUM_RTC` and `WEB3D_quantized_attributes`.
+   * Only one node is supported.
+   * Only one mesh per node is supported.
+   * Only one primitive per mesh is supported.
 
 ### 1.40 - 2017-12-01
 
