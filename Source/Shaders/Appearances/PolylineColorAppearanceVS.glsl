@@ -27,4 +27,5 @@ void main()
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
     v_position = (czm_modelViewRelativeToEye * p);
+	v_position.w = -v_position.z;
 }
