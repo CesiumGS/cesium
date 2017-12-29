@@ -97,7 +97,7 @@ upHandler.setInputAction(function() {
 var moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 moveHandler.setInputAction(function(movement) {
     if (Cesium.defined(selectedPlane)) {
-        var deltaY = movement.endPosition.y - movement.startPosition.y;
+        var deltaY = movement.startPosition.y - movement.endPosition.y;
         targetY += deltaY;
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -106,10 +106,7 @@ var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
 function createPlaneUpdateFunction(plane, transform) {
     return function () {
         plane.distance = targetY;
-
-        var transformedPlane = Cesium.Plane.transform(plane, transform, scratchPlane);
-        transformedPlane.distance = -transformedPlane.distance;
-        return transformedPlane;
+        return Cesium.Plane.transform(plane, transform, scratchPlane);
     };
 }
 
