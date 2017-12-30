@@ -241,6 +241,40 @@ define([
                 };
             },
 
+            toRenderPixelCount : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected) {
+                        var actualRgba = renderAndReadPixels(actual);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            return {pass : countRenderedPixels(actualRgba) === expected};
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toRenderPixelCountGreaterThan : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected) {
+                        var actualRgba = renderAndReadPixels(actual);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            return {pass : countRenderedPixels(actualRgba) > expected};
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
             toRenderAndCall : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expected) {
@@ -416,6 +450,21 @@ define([
 
             toThrowSyntaxError : makeThrowFunction(true, SyntaxError, 'SyntaxError')
         };
+    }
+
+    function countRenderedPixels(rgba) {
+        var pixelCount = rgba.length / 4;
+        var count = 0;
+        for (var i = 0; i < pixelCount; i++) {
+            var index = i * 4;
+            if (rgba[index] !== 0 ||
+                rgba[index + 1] !== 0 ||
+                rgba[index + 2] !== 0 ||
+                rgba[index + 3] !== 255) {
+                count++;
+            }
+        }
+        return count;
     }
 
     function renderAndReadPixels(options) {

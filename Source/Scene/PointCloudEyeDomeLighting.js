@@ -1,5 +1,5 @@
 define([
-        '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Math',
         '../Core/clone',
         '../Core/Color',
@@ -34,7 +34,7 @@ define([
         '../Scene/StencilOperation',
         '../Shaders/PostProcessFilters/PointCloudEyeDomeLighting'
     ], function(
-        Cartesian2,
+        Cartesian3,
         CesiumMath,
         clone,
         Color,
@@ -181,7 +181,7 @@ define([
         processor._depthTexture = depthTexture;
     }
 
-    var edlStrengthAndRadiusScratch = new Cartesian2();
+    var distancesAndEdlStrengthScratch = new Cartesian3();
 
     function createCommands(processor, context) {
         processor._drawCommands = {};
@@ -195,10 +195,11 @@ define([
             u_pointCloud_ecAndLogDepthTexture : function() {
                 return processor._ecAndLogDepthTexture;
             },
-            u_edlStrengthAndDistance : function() {
-                edlStrengthAndRadiusScratch.x = processor._strength;
-                edlStrengthAndRadiusScratch.y = processor._radius;
-                return edlStrengthAndRadiusScratch;
+            u_distancesAndEdlStrength : function() {
+                distancesAndEdlStrengthScratch.x = processor._radius / context.drawingBufferWidth;
+                distancesAndEdlStrengthScratch.y = processor._radius / context.drawingBufferHeight;
+                distancesAndEdlStrengthScratch.z = processor._strength;
+                return distancesAndEdlStrengthScratch;
             }
         };
 
@@ -314,11 +315,10 @@ define([
             return;
         }
 
-        this._strength = tileset.pointAttenuationOptions.eyeDomeLightingStrength;
-        this._radius = tileset.pointAttenuationOptions.eyeDomeLightingRadius;
+        this._strength = tileset.pointShading.eyeDomeLightingStrength;
+        this._radius = tileset.pointShading.eyeDomeLightingRadius;
 
-        var dirty = false;
-        dirty |= createResources(this, frameState.context, dirty);
+        var dirty = createResources(this, frameState.context, false);
 
         // Hijack existing point commands to render into an offscreen FBO.
         var i;
@@ -332,7 +332,7 @@ define([
             }
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
             if (!defined(derivedCommand) || command.dirty || dirty ||
-                derivedCommand.framebuffer !== this._framebuffers.prior) { // Prevent crash when tiles out-of-view come in-view during context size change
+                (derivedCommand.framebuffer !== this._framebuffers.prior)) { // Prevent crash when tiles out-of-view come in-view during context size change
                 derivedCommand = DrawCommand.shallowClone(command);
                 command.derivedCommands.pointCloudProcessor = derivedCommand;
 

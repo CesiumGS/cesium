@@ -438,21 +438,6 @@ defineSuite([
         });
     });
 
-    function countRenderedPixels(rgba) {
-        var pixelCount = rgba.length / 4;
-        var count = 0;
-        for (var i = 0; i < pixelCount; i++) {
-            var index = i * 4;
-            if (rgba[index] !== 0 ||
-                rgba[index + 1] !== 0 ||
-                rgba[index + 2] !== 0 ||
-                rgba[index + 3] !== 255) {
-                count++;
-            }
-        }
-        return count;
-    }
-
     it('attenuates points based on geometric error', function() {
         var scene = createScene({
             canvas : createCanvas(10, 10)
@@ -463,72 +448,157 @@ defineSuite([
         scene.camera.zoomIn(6);
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            var noAttenuationPixelCount = 16;
 
-            var noAttenuationPixelCount = 0;
-            expect(scene).toRenderAndCall(function(rgba) {
-                noAttenuationPixelCount = countRenderedPixels(rgba);
-            });
-
-            // Activate attenuation
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
-            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
-            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
-            tileset.pointAttenuationOptions.baseResolution = undefined;
+            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorScale = 1.0;
+            tileset.pointShading.maximumAttenuation = undefined;
+            tileset.pointShading.baseResolution = undefined;
             tileset.maximumScreenSpaceError = 16;
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(countRenderedPixels(rgba)).toBeGreaterThan(noAttenuationPixelCount);
-            });
+            expect(scene).toRenderPixelCountGreaterThan(noAttenuationPixelCount);
 
-            // Adjust screen space error in tileset to modulate maximumAttenuation
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
-            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
-            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
-            tileset.pointAttenuationOptions.baseResolution = undefined;
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('modulates attenuation using the tileset screen space error', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            var noAttenuationPixelCount = 16;
+
+            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorScale = 1.0;
+            tileset.pointShading.maximumAttenuation = undefined;
+            tileset.pointShading.baseResolution = undefined;
             tileset.maximumScreenSpaceError = 1;
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
-            });
+            expect(scene).toRenderPixelCount(noAttenuationPixelCount);
 
-            // Adjust maximumAttenuation directly
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
-            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
-            tileset.pointAttenuationOptions.maximumAttenuation = 1;
-            tileset.pointAttenuationOptions.baseResolution = undefined;
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('modulates attenuation using the maximumAttenuation parameter', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            var noAttenuationPixelCount = 16;
+
+            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorScale = 1.0;
+            tileset.pointShading.maximumAttenuation = 1;
+            tileset.pointShading.baseResolution = undefined;
             tileset.maximumScreenSpaceError = 16;
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
-            });
+            expect(scene).toRenderPixelCount(noAttenuationPixelCount);
 
-            // Adjust baseResolution - pointCloudNoColorUrl is a single tile with GeometricError = 0
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
-            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
-            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
-            tileset.pointAttenuationOptions.baseResolution = CesiumMath.EPSILON20;
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('modulates attenuation using the baseResolution parameter', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            var noAttenuationPixelCount = 16;
+
+            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorScale = 1.0;
+            tileset.pointShading.maximumAttenuation = undefined;
+            tileset.pointShading.baseResolution = CesiumMath.EPSILON20;
             tileset.maximumScreenSpaceError = 16;
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
-            });
+            expect(scene).toRenderPixelCount(noAttenuationPixelCount);
 
-            // Adjust geometricErrorScale
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
-            tileset.pointAttenuationOptions.geometricErrorScale = 0.0;
-            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
-            tileset.pointAttenuationOptions.baseResolution = undefined;
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('modulates attenuation using the baseResolution parameter', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            var noAttenuationPixelCount = 16;
+
+            // pointCloudNoColorUrl is a single tile with GeometricError = 0,
+            // which results in default baseResolution being computed
+            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorScale = 1.0;
+            tileset.pointShading.maximumAttenuation = undefined;
+            tileset.pointShading.baseResolution = CesiumMath.EPSILON20;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderPixelCount(noAttenuationPixelCount);
+
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('modulates attenuation using the geometricErrorScale parameter', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            var noAttenuationPixelCount = 16;
+
+            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorScale = 0.0;
+            tileset.pointShading.maximumAttenuation = undefined;
+            tileset.pointShading.baseResolution = undefined;
             tileset.maximumScreenSpaceError = 1;
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(countRenderedPixels(rgba)).toEqual(noAttenuationPixelCount);
-            });
+            expect(scene).toRenderPixelCount(noAttenuationPixelCount);
 
-            // Works with 2D scenes
+            scene.destroyForSpecs();
+        });
+    });
+
+
+    it('attenuates points based on geometric error in 2D', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+
+            var noAttenuationPixelCount = 16;
+
             scene.morphTo2D(0);
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
-            tileset.pointAttenuationOptions.geometricErrorScale = 1.0;
-            tileset.pointAttenuationOptions.maximumAttenuation = undefined;
-            tileset.pointAttenuationOptions.baseResolution = undefined;
+            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorScale = 1.0;
+            tileset.pointShading.maximumAttenuation = undefined;
+            tileset.pointShading.baseResolution = undefined;
             tileset.maximumScreenSpaceError = 16;
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(countRenderedPixels(rgba)).toBeGreaterThan(noAttenuationPixelCount);
-            });
+            expect(scene).toRenderPixelCountGreaterThan(noAttenuationPixelCount);
 
             scene.destroyForSpecs();
         });

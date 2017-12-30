@@ -2,7 +2,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Math',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -40,7 +39,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        CesiumMath,
         Color,
         combine,
         ComponentDatatype,
@@ -461,10 +459,12 @@ define([
         content._hasNormals = defined(normals);
         content._hasBatchIds = defined(batchIds);
 
-        // Compute an approximation for base resolution in case it isn't given
-        // Assume a uniform distribution of points in the bounding sphere around the tile.
-        var radius = content._tile.contentBoundingVolume.boundingSphere.radius;
-        var sphereVolume = (4.0 / 3.0) * CesiumMath.PI * radius * radius * radius;
+        // Compute an approximation for base resolution in case it isn't given.
+        // Assume a uniform distribution of points in cubical cells throughout the
+        // bounding sphere around the tile.
+        // Typical use case is leaves, where lower estimates of interpoint distance might
+        // lead to underattenuation.
+        var sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
         content._baseResolutionApproximation = Math.cbrt(sphereVolume / pointsLength);
     }
 
@@ -1313,12 +1313,12 @@ define([
         }
 
         // Update attenuation
-        var pointAttenuationOptions = this._tileset.pointAttenuationOptions;
-        if (defined(pointAttenuationOptions)) {
-            this.geometricErrorAttenuation = pointAttenuationOptions.geometricErrorAttenuation;
-            this._geometricErrorScale = pointAttenuationOptions.geometricErrorScale;
-            this._maximumAttenuation = defined(pointAttenuationOptions.maximumAttenuation) ? pointAttenuationOptions.maximumAttenuation : tileset.maximumScreenSpaceError;
-            this._baseResolution = pointAttenuationOptions.baseResolution;
+        var pointShading = this._tileset.pointShading;
+        if (defined(pointShading)) {
+            this.geometricErrorAttenuation = pointShading.geometricErrorAttenuation;
+            this._geometricErrorScale = pointShading.geometricErrorScale;
+            this._maximumAttenuation = defined(pointShading.maximumAttenuation) ? pointShading.maximumAttenuation : tileset.maximumScreenSpaceError;
+            this._baseResolution = pointShading.baseResolution;
             if (this.geometricErrorAttenuation !== this._geometricErrorAttenuation) {
                 this._geometricErrorAttenuation = this.geometricErrorAttenuation;
                 createShaders(this, frameState, tileset.style);

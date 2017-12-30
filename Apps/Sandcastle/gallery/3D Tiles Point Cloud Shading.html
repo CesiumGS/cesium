@@ -101,16 +101,24 @@ var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : url
 }));
 
+// Set the initial camera view to look at Mt. St. Helens
+var initialPosition = Cesium.Cartesian3.fromRadians(-2.1344873183780484, 0.8071380277370774, 5743.394497982162);
+var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(112.99596671210358, -21.34390550872461, 0.0716951918898415);
+viewer.scene.camera.setView({
+    destination: initialPosition,
+    orientation: initialOrientation,
+    endTransform: Cesium.Matrix4.IDENTITY
+});
+
 tileset.readyPromise.then(function() {
-    var boundingSphere = tileset.boundingSphere;
-    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -1.0, boundingSphere.radius));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-    tileset.maximumScreenSpaceError = 16.0;
+    tileset.maximumScreenSpaceError = 8.0;
+    tileset.pointShading.geometricErrorAttenuation = true;
+    tileset.pointShading.eyeDomeLighting = true;
 });
 
 // The viewModel tracks the state of our mini application.
 var viewModel = {
-    maximumScreenSpaceError : 16.0,
+    maximumScreenSpaceError : 8.0,
     geometricErrorScale : 1.0,
     maximumAttenuation : 0, // Equivalent to undefined
     baseResolution : 0, // Equivalent to undefined
@@ -138,40 +146,40 @@ Cesium.knockout.getObservable(viewModel, 'maximumScreenSpaceError').subscribe(
 
 Cesium.knockout.getObservable(viewModel, 'geometricErrorScale').subscribe(
     function(newValue) {
-        tileset.pointAttenuationOptions.geometricErrorScale = parseFloat(newValue);
+        tileset.pointShading.geometricErrorScale = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'maximumAttenuation').subscribe(
     function(newValue) {
-        tileset.pointAttenuationOptions.maximumAttenuation = checkZero(newValue);
+        tileset.pointShading.maximumAttenuation = checkZero(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'baseResolution').subscribe(
     function(newValue) {
-        tileset.pointAttenuationOptions.baseResolution = checkZero(newValue);
+        tileset.pointShading.baseResolution = checkZero(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'eyeDomeLightingStrength').subscribe(
     function(newValue) {
-        tileset.pointAttenuationOptions.eyeDomeLightingStrength = parseFloat(newValue);
+        tileset.pointShading.eyeDomeLightingStrength = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'eyeDomeLightingRadius').subscribe(
     function(newValue) {
-        tileset.pointAttenuationOptions.eyeDomeLightingRadius = parseFloat(newValue);
+        tileset.pointShading.eyeDomeLightingRadius = parseFloat(newValue);
     }
 );
 
-Sandcastle.addToggleButton('Enable Attenuation', false, function(checked) {
-    tileset.pointAttenuationOptions.geometricErrorAttenuation = checked;
+Sandcastle.addToggleButton('Enable Attenuation', true, function(checked) {
+    tileset.pointShading.geometricErrorAttenuation = checked;
 });
 
-Sandcastle.addToggleButton('Enable Eye Dome Lighting', false, function(checked) {
-    tileset.pointAttenuationOptions.eyeDomeLighting = checked;
+Sandcastle.addToggleButton('Enable Eye Dome Lighting', true, function(checked) {
+    tileset.pointShading.eyeDomeLighting = checked;
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();

@@ -60,32 +60,32 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it('Adds a clear command and a post-processing draw call', function() {
+    it('adds a clear command and a post-processing draw call', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             if (!PointCloudEyeDomeLighting.processingSupported(scene.frameState.context)) {
                 return;
             }
 
-            tileset.pointAttenuationOptions.eyeDomeLighting = true;
+            tileset.pointShading.eyeDomeLighting = true;
 
             scene.renderForSpecs();
             var originalLength = scene.frameState.commandList.length;
 
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorAttenuation = true;
             scene.renderForSpecs();
             var newLength = scene.frameState.commandList.length;
             expect(newLength).toEqual(originalLength + 2);
         });
     });
 
-    it('Does not change commands for pick calls', function() {
+    it('does not change commands for pick calls', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
-            tileset.pointAttenuationOptions.eyeDomeLighting = true;
+            tileset.pointShading.eyeDomeLighting = true;
 
             scene.pickForSpecs();
             var originalLength = scene.frameState.commandList.length;
 
-            tileset.pointAttenuationOptions.geometricErrorAttenuation = true;
+            tileset.pointShading.geometricErrorAttenuation = true;
             scene.pickForSpecs();
             var newLength = scene.frameState.commandList.length;
             expect(newLength).toEqual(originalLength);
