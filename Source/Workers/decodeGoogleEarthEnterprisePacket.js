@@ -202,7 +202,9 @@ define([
 
         var offset = 0;
         var terrainTiles = [];
-        while (offset < totalSize) {
+        var subTileCount = 0;
+        while (offset < totalSize && subTileCount < 5) {
+            subTileCount++;
             // Each tile is split into 4 parts
             var tileStart = offset;
             for (var quad = 0; quad < 4; ++quad) {
