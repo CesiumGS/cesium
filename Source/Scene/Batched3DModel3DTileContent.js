@@ -204,11 +204,12 @@ define([
     }
 
     function getVertexShaderCallback(content) {
-        return function(vs) {
+        return function(vs, programId) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
             var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
+            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE', programId);
+            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName, diffuseUniformName);
             return defined(callback) ? callback(vs) : vs;
         };
     }
@@ -224,10 +225,10 @@ define([
     }
 
     function getFragmentShaderCallback(content) {
-        return function(fs) {
+        return function(fs, programId) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
-            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
+            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE', programId);
             var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
             return defined(callback) ? callback(fs) : fs;
         };

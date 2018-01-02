@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.42 - 2017-02-01
+
+* Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
+
 ### 1.41 - 2018-01-02
 
 * Breaking changes
@@ -52,6 +56,7 @@ Change Log
 * Added `customTags` property to the UrlTemplateImageryProvider to allow custom keywords in the template URL. [#5696](https://github.com/AnalyticalGraphicsInc/cesium/pull/5696)
 * Added `eyeSeparation` and `focalLength` properties to `Scene` to configure VR settings. [#5917](https://github.com/AnalyticalGraphicsInc/cesium/pull/5917)
 * Improved CZML Reference Properties example [#5754](https://github.com/AnalyticalGraphicsInc/cesium/pull/5754)
+>>>>>>> master
 
 ### 1.38 - 2017-10-02
 
