@@ -2,7 +2,6 @@ define([
     './defaultValue',
     './defined',
     './defineProperties',
-    './deprecationWarning',
     './DeveloperError'
 ], function(
     defaultValue,
@@ -30,19 +29,11 @@ define([
      * //Create a credit with a tooltip, image and link
      * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
-    function Credit(options, imageUrl, link) {
-        var text;
-        var showOnScreen;
-        if (typeof options !== 'object') {
-            deprecationWarning('Credit parameters', 'The Credit text, imageUrl and link parameters have been replaced by a single options object parameter with text, imageUrl and link properties. Use of the old parameters will be removed in Cesium 1.41');
-            text = options;
-            showOnScreen = false;
-        } else {
-            text = options.text;
-            imageUrl = options.imageUrl;
-            link = options.link;
-            showOnScreen = defaultValue(options.showOnScreen, false);
-        }
+    function Credit(options) {
+        var text = options.text;
+        var imageUrl = options.imageUrl;
+        var link = options.link;
+        var showOnScreen = defaultValue(options.showOnScreen, false);
 
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
