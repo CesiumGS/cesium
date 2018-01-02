@@ -3,6 +3,8 @@ Change Log
 
 ### 1.41 - 2018-01-02
 
+* Breaking changes
+  * Removed the `text`, `imageUrl`, and `link` parameters for `Credit`, which were deprecated in Cesium 1.40.  Use `options.text`, `options.imageUrl`, and `options.link` instead.
 * Added support for clipping planes
     * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlaneCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
     * Added `clippingPlanes` property to `Globe` which specifies a `ClippingPlaneCollection` to selectively disable rendering of the globe surface. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
