@@ -251,7 +251,6 @@ gulp.task('makeZipFile', ['release'], function() {
         'Specs/**',
         'ThirdParty/**',
         'favicon.ico',
-        'gulpfile.js',
         'server.js',
         'package.json',
         'LICENSE.md',
