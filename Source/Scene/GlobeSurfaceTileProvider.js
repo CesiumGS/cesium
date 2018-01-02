@@ -13,6 +13,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/FeatureDetection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
@@ -59,6 +60,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        FeatureDetection,
         GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
@@ -1320,7 +1322,7 @@ define([
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0) && !FeatureDetection.isInternetExplorer();
             var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : false;
 
             if (defined(tileProvider.uniformMap)) {
