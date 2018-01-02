@@ -118,7 +118,11 @@ define([
         this._proxy = options.proxy;
         this._channel = options.channel;
         this._requestType = 'ImageryMaps';
-        this._credit = new Credit('Google Imagery', GoogleEarthEnterpriseMapsProvider._logoData, 'http://www.google.com/enterprise/mapsearth/products/earthenterprise.html');
+        this._credit = new Credit({
+            text: 'Google Imagery',
+            imageUrl: GoogleEarthEnterpriseMapsProvider._logoData,
+            link: 'http://www.google.com/enterprise/mapsearth/products/earthenterprise.html'
+        });
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.

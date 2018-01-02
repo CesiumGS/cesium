@@ -427,11 +427,11 @@ define([
 
         primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
 
-        var tileProvider = primitive._tileProvider;
-        var occluders = primitive._occluders;
-
         var tile;
         var levelZeroTiles = primitive._levelZeroTiles;
+
+        var tileProvider = primitive._tileProvider;
+        var occluders = levelZeroTiles.length > 1 ? primitive._occluders : undefined;
 
         // Sort the level zero tiles by the distance from the center to the camera.
         // The level zero tiles aren't necessarily a nice neat quad, so we can use the

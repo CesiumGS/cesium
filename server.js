@@ -48,7 +48,7 @@
         'model/gltf-binary' : ['bgltf', 'glb'],
         'application/octet-stream' : ['b3dm', 'pnts', 'i3dm', 'cmpt'],
         'text/plain' : ['glsl']
-    });
+    }, true);
 
     var app = express();
     app.use(compression());

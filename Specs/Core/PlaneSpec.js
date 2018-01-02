@@ -1,11 +1,17 @@
 defineSuite([
         'Core/Plane',
         'Core/Cartesian3',
-        'Core/Cartesian4'
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix3',
+        'Core/Matrix4'
     ], function(
         Plane,
         Cartesian3,
-        Cartesian4) {
+        Cartesian4,
+        CesiumMath,
+        Matrix3,
+        Matrix4) {
     'use strict';
 
     it('constructs', function() {
@@ -120,6 +126,98 @@ defineSuite([
         var plane = new Plane(Cartesian3.UNIT_X, 0.0);
         expect(function() {
             return Plane.getPointDistance(plane, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('clone throws without a plane', function() {
+        expect(function() {
+            Plane.clone(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('clones a plane instance', function() {
+        var normal = new Cartesian3(1.0, 2.0, 3.0);
+        normal = Cartesian3.normalize(normal, normal);
+        var distance = 4.0;
+        var plane = new Plane(normal, distance);
+
+        var result = Plane.clone(plane);
+        expect(result.normal).toEqual(normal);
+        expect(result.distance).toEqual(distance);
+    });
+
+    it('clones a plane instance into a result paramter', function() {
+        var normal = new Cartesian3(1.0, 2.0, 3.0);
+        normal = Cartesian3.normalize(normal, normal);
+        var distance = 4.0;
+        var plane = new Plane(normal, distance);
+
+        var result = new Plane(Cartesian3.UNIT_X, 1.0);
+
+        Plane.clone(plane, result);
+        expect(result.normal).toEqual(normal);
+        expect(result.distance).toEqual(distance);
+    });
+
+    it('equals returns true only if two planes are equal by normal and distance', function() {
+        var left = new Plane(Cartesian3.UNIT_X, 0.0);
+        var right = new Plane(Cartesian3.UNIT_Y, 1.0);
+
+        expect(Plane.equals(left, right)).toBe(false);
+
+        right.distance = 0.0;
+
+        expect(Plane.equals(left, right)).toBe(false);
+
+        right.normal = Cartesian3.UNIT_X;
+
+        expect(Plane.equals(left, right)).toBe(true);
+
+        right.distance = 1.0;
+
+        expect(Plane.equals(left, right)).toBe(false);
+    });
+
+    it('equals throws developer error is left is undefined', function() {
+        var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+        expect(function() {
+            return Plane.equals(undefined, plane);
+        }).toThrowDeveloperError();
+    });
+
+    it('equals throws developer error is right is undefined', function() {
+        var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+        expect(function() {
+            return Plane.equals(plane, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('transforms a plane according to a transform', function() {
+        var normal = new Cartesian3(1.0, 2.0, 3.0);
+        normal = Cartesian3.normalize(normal, normal);
+        var plane = new Plane(normal, 12.34);
+
+        var transform = Matrix4.fromUniformScale(2.0);
+        transform = Matrix4.multiplyByMatrix3(transform, Matrix3.fromRotationY(Math.PI), transform);
+
+        var transformedPlane = Plane.transform(plane, transform);
+        expect(transformedPlane.distance).toEqual(plane.distance * 2.0);
+        expect(transformedPlane.normal.x).toEqualEpsilon(-plane.normal.x, CesiumMath.EPSILON10);
+        expect(transformedPlane.normal.y).toEqual(plane.normal.y);
+        expect(transformedPlane.normal.z).toEqual(-plane.normal.z);
+    });
+
+    it('transform throws without a plane', function() {
+        var transform = Matrix4.IDENTITY;
+        expect(function() {
+            return Plane.transform(undefined, transform);
+        }).toThrowDeveloperError();
+    });
+
+    it('transform throws without a transform', function() {
+        var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+        expect(function() {
+            return Plane.transform(plane, undefined);
         }).toThrowDeveloperError();
     });
 });

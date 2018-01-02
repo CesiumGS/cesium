@@ -14,8 +14,6 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
-        './Request',
-        './RequestType',
         './TerrainProvider',
         './TileProviderError'
     ], function(
@@ -34,8 +32,6 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
-        Request,
-        RequestType,
         TerrainProvider,
         TileProviderError) {
     'use strict';
@@ -100,7 +96,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            credit = new Credit({text: credit});
         }
         this._credit = credit;
 

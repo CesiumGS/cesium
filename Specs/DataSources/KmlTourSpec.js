@@ -1,9 +1,7 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/KmlTour',
         'DataSources/KmlTourFlyTo',
         'DataSources/KmlTourWait',
-        'DataSources/KmlCamera',
         'DataSources/KmlLookAt',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
@@ -13,7 +11,6 @@ defineSuite([
         KmlTour,
         KmlTourFlyTo,
         KmlTourWait,
-        KmlCamera,
         KmlLookAt,
         Cartesian3,
         HeadingPitchRange,

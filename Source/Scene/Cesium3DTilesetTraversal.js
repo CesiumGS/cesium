@@ -167,6 +167,9 @@ define([
      * NOTE: this will no longer work when there is a chain of selected tiles that is longer than the size of the
      * stencil buffer (usually 8 bits). In other words, the subset of the tree containing only selected tiles must be
      * no deeper than 255. It is very, very unlikely this will cause a problem.
+     *
+     * NOTE: when the scene has inverted classification enabled, the stencil buffer will be masked to 4 bits. So, the
+     * selected tiles must be no deeper than 15. This is still very unlikely.
      */
     function traverseAndSelect(tileset, root, frameState) {
         var stack = scratchStack;

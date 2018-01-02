@@ -26,6 +26,7 @@ define([
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
@@ -63,6 +64,7 @@ define([
         RenderState,
         ShaderProgram,
         ShaderSource,
+        Texture,
         VertexArray,
         PolylineCommon,
         PolylineFS,
@@ -104,7 +106,7 @@ define([
      * A renderable collection of polylines.
      * <br /><br />
      * <div align="center">
-     * <img src="images/Polyline.png" width="400" height="300" /><br />
+     * <img src="Images/Polyline.png" width="400" height="300" /><br />
      * Example polylines
      * </div>
      * <br /><br />
@@ -1010,6 +1012,14 @@ define([
         }
     }
 
+    function replacer(key, value) {
+        if (value instanceof Texture) {
+            return value.id;
+        }
+
+        return value;
+    }
+
     var scratchUniformArray = [];
     function createMaterialId(material) {
         var uniforms = Material._uniformList[material.type];
@@ -1024,7 +1034,7 @@ define([
             index += 2;
         }
 
-        return material.type + ':' + JSON.stringify(scratchUniformArray);
+        return material.type + ':' + JSON.stringify(scratchUniformArray, replacer);
     }
 
     function sortPolylinesIntoBuckets(collection) {

@@ -272,8 +272,8 @@ define([
         if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required');
         }
-        if (rectangle.width < 0.0 || rectangle.width > CesiumMath.PI) {
-            throw new DeveloperError('Rectangle width must be between 0 and pi');
+        if (rectangle.width < 0.0 || rectangle.width > CesiumMath.TWO_PI) {
+            throw new DeveloperError('Rectangle width must be between 0 and 2*pi');
         }
         if (rectangle.height < 0.0 || rectangle.height > CesiumMath.PI) {
             throw new DeveloperError('Rectangle height must be between 0 and pi');

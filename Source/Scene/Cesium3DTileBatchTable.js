@@ -860,9 +860,12 @@ define([
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain =
+                newMain = '';
+                if (handleTranslucent) {
+                    newMain += 'uniform bool tile_translucentCommand; \n';
+                }
+                newMain +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1033,9 +1036,11 @@ define([
                     '    tile_color(tile_featureColor); \n' +
                     '}';
             } else {
+                if (handleTranslucent) {
+                    source += 'uniform bool tile_translucentCommand; \n';
+                }
                 source +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1237,7 +1242,7 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
+    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart, finalResolution) {
         var commandList = frameState.commandList;
         var commandEnd = commandList.length;
         var tile = this._content._tile;
@@ -1264,7 +1269,7 @@ define([
             }
 
             if (bivariateVisibilityTest) {
-                if (command.pass !== Pass.TRANSLUCENT) {
+                if (command.pass !== Pass.TRANSLUCENT && !finalResolution) {
                     if (!defined(derivedCommands.zback)) {
                         derivedCommands.zback = deriveZBackfaceCommand(derivedCommands.originalCommand);
                     }
@@ -1357,6 +1362,20 @@ define([
         var rs = clone(derivedCommand.renderState, true);
         rs.cull.enabled = true;
         rs.cull.face = CullFace.FRONT;
+        // Back faces do not need to write color.
+        rs.colorMask = {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        };
+        // Push back face depth away from the camera so it is less likely that back faces and front faces of the same tile
+        // intersect and overlap. This helps avoid flickering for very thin double-sided walls.
+        rs.polygonOffset = {
+            enabled : true,
+            factor : 5.0,
+            units : 5.0
+        };
         derivedCommand.renderState = RenderState.fromCache(rs);
         derivedCommand.castShadows = false;
         derivedCommand.receiveShadows = false;
@@ -1370,8 +1389,12 @@ define([
             // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
             derivedCommand = DrawCommand.shallowClone(command);
             var rs = clone(derivedCommand.renderState, true);
+            // Stencil test is masked to the most significant 4 bits so the reference is shifted.
+            // This is to prevent clearing the stencil before classification which needs the least significant
+            // bits for increment/decrement operations.
             rs.stencilTest.enabled = true;
-            rs.stencilTest.reference = reference;
+            rs.stencilTest.mask = 0xF0;
+            rs.stencilTest.reference = reference << 4;
             rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
             rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
             derivedCommand.renderState = RenderState.fromCache(rs);

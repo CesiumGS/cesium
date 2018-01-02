@@ -114,6 +114,24 @@ define([
     WeightSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 
     /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, wrapped around to the updated animation.
+     */
+    WeightSpline.prototype.wrapTime = Spline.prototype.wrapTime;
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, clamped to the animation period.
+     */
+    WeightSpline.prototype.clampTime = Spline.prototype.clampTime;
+
+    /**
      * Evaluates the curve at a given time.
      *
      * @param {Number} time The time at which to evaluate the curve.

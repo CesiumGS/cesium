@@ -219,6 +219,9 @@ define([
             emission : [
                 0.5, 0.5, 0.5, 1.0
             ]
+        },
+        extras : {
+            _pipeline: {}
         }
     };
 
@@ -357,7 +360,6 @@ define([
                 }
                 material.technique = defaultTechniqueId;
             }
-
         }
     }
 
