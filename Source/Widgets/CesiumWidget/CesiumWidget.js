@@ -161,6 +161,7 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
      *        to the bottom of the widget itself.
+     * @param {Element|String} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
@@ -230,11 +231,13 @@ define([
         };
         element.appendChild(canvas);
 
-        var creditContainer = document.createElement('div');
-        creditContainer.className = 'cesium-widget-credits';
+        var innerCreditContainer = document.createElement('div');
+        innerCreditContainer.className = 'cesium-widget-credits';
 
-        var creditContainerContainer = defined(options.creditContainer) ? getElement(options.creditContainer) : element;
-        creditContainerContainer.appendChild(creditContainer);
+        var creditContainer = defined(options.creditContainer) ? getElement(options.creditContainer) : element;
+        creditContainer.appendChild(innerCreditContainer);
+
+        var creditViewport = defined(options.creditViewport) ? getElement(options.creditViewport) : element;
 
         var showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
 
@@ -243,8 +246,9 @@ define([
         this._canvas = canvas;
         this._canvasWidth = 0;
         this._canvasHeight = 0;
-        this._creditContainerContainer = creditContainerContainer;
+        this._creditViewport = creditViewport;
         this._creditContainer = creditContainer;
+        this._innerCreditContainer = innerCreditContainer;
         this._canRender = false;
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = showRenderLoopErrors;
@@ -258,7 +262,8 @@ define([
             var scene = new Scene({
                 canvas : canvas,
                 contextOptions : options.contextOptions,
-                creditContainer : creditContainer,
+                creditContainer : innerCreditContainer,
+                creditViewport: creditViewport,
                 mapProjection : options.mapProjection,
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false),
@@ -415,6 +420,18 @@ define([
         creditContainer: {
             get : function() {
                 return this._creditContainer;
+            }
+        },
+
+        /**
+         * Gets the credit viewport
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Element}
+         */
+        creditViewport: {
+            get: function() {
+                return this._creditViewport;
             }
         },
 
@@ -665,7 +682,7 @@ define([
     CesiumWidget.prototype.destroy = function() {
         this._scene = this._scene && this._scene.destroy();
         this._container.removeChild(this._element);
-        this._creditContainerContainer.removeChild(this._creditContainer);
+        this._creditContainer.removeChild(this._innerCreditContainer);
         destroyObject(this);
     };
 

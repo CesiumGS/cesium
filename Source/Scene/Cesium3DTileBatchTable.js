@@ -858,9 +858,12 @@ define([
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain =
+                newMain = '';
+                if (handleTranslucent) {
+                    newMain += 'uniform bool tile_translucentCommand; \n';
+                }
+                newMain +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1005,9 +1008,11 @@ define([
                     '    tile_color(tile_featureColor); \n' +
                     '}';
             } else {
+                if (handleTranslucent) {
+                    source += 'uniform bool tile_translucentCommand; \n';
+                }
                 source +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
