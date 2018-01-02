@@ -510,4 +510,107 @@ defineSuite([
             verifyPick(scene);
         });
     });
+
+    it('renders all geometries with debug color', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : geometryAllWithBatchTable,
+            debugColorizeTiles : true
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            var center = Rectangle.center(tilesetRectangle);
+            var ulRect = new Rectangle(tilesetRectangle.west, center.latitude, center.longitude, tilesetRectangle.north);
+            var urRect = new Rectangle(center.longitude, center.longitude, tilesetRectangle.east, tilesetRectangle.north);
+            var llRect = new Rectangle(tilesetRectangle.west, tilesetRectangle.south, center.longitude, center.latitude);
+            var lrRect = new Rectangle(center.longitude, tilesetRectangle.south, tilesetRectangle.east, center.latitude);
+
+            scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)), new Cartesian3(0.0, 0.0, 5.0));
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                expect(rgba).not.toEqual([255, 255, 255, 255]);
+            });
+            scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(urRect)), new Cartesian3(0.0, 0.0, 5.0));
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                expect(rgba).not.toEqual([255, 255, 255, 255]);
+            });
+            scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(llRect)), new Cartesian3(0.0, 0.0, 5.0));
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                expect(rgba).not.toEqual([255, 255, 255, 255]);
+            });
+            scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(lrRect)), new Cartesian3(0.0, 0.0, 5.0));
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+                expect(rgba).not.toEqual([255, 255, 255, 255]);
+            });
+        });
+    });
+
+    it('can get features and properties', function() {
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : geometryBoxesWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(content.featuresLength).toBe(1);
+            expect(content.innerContents).toBeUndefined();
+            expect(content.hasProperty(0, 'name')).toBe(true);
+            expect(content.getFeature(0)).toBeDefined();
+        });
+    });
+
+    it('throws when calling getFeature with invalid index', function() {
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : geometryBoxesWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function(){
+                content.getFeature(-1);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature(1000);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature();
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('throws with invalid version', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateGeometryTileBuffer({
+            version : 2
+        });
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'geom');
+    });
+
+    it('throws with empty feature table', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateGeometryTileBuffer({
+            defineFeatureTable : false
+        });
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'geom');
+    });
+
+    it('throws without all batch ids', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateGeometryTileBuffer({
+            boxesLength : 1,
+            cylindersLength : 1,
+            ellipsoidsLength : 1,
+            spheresLength : 1,
+            boxBatchIds : [1],
+            cylinderBatchIds : [0],
+            ellipsoidBatchIds : [2]
+        });
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'geom');
+    });
+
+    it('destroys', function() {
+        var tileset = new Cesium3DTileset({
+            url : geometryBoxesWithBatchTable
+        });
+        expect(tileset.isDestroyed()).toEqual(false);
+        tileset.destroy();
+        expect(tileset.isDestroyed()).toEqual(true);
+    });
 });

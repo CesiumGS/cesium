@@ -708,6 +708,39 @@ defineSuite([
         });
     });
 
+    it('throws with invalid version', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            version : 2
+        });
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws with empty feature table', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            defineFeatureTable : false
+        });
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws without rectangle', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            defineRectangle : false,
+            polygonsLength : 1
+        });
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
+    it('throws without all batch ids', function() {
+        var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
+            polygonsLength : 1,
+            pointsLength : 1,
+            polylinesLength : 1,
+            polygonBatchIds : [1],
+            pointBatchIds : [0]
+        });
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
+    });
+
     it('destroys', function() {
         var tileset = new Cesium3DTileset({
             url : vectorCombined
