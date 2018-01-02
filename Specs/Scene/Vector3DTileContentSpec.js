@@ -619,14 +619,19 @@ defineSuite([
     it('renders with debug color', function() {
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren,
+            url : vectorCombined,
             debugColorizeTiles : true
         }));
         return loadTileset(tileset).then(function() {
-            var center = Rectangle.center(tilesetRectangle);
-            var ulRect = new Rectangle(tilesetRectangle.west, center.latitude, center.longitude, tilesetRectangle.north);
+            var width = combinedRectangle.width;
+            var step = width / 3;
 
-            scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)), new Cartesian3(0.0, 0.0, 5.0));
+            var west = combinedRectangle.west;
+            var north = combinedRectangle.north;
+            var south = combinedRectangle.south;
+            var rect = new Rectangle(west, south, west + step, north);
+
+            scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(rect)), new Cartesian3(0.0, 0.0, 5.0));
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([255, 255, 255, 255]);
                 expect(rgba).not.toEqual([255, 0, 0, 255]);
@@ -670,5 +675,45 @@ defineSuite([
                 });
             });
         });
+    });
+
+    it('can get features and properties', function() {
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorPolygonsWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(content.featuresLength).toBe(1);
+            expect(content.innerContents).toBeUndefined();
+            expect(content.hasProperty(0, 'name')).toBe(true);
+            expect(content.getFeature(0)).toBeDefined();
+        });
+    });
+
+    it('throws when calling getFeature with invalid index', function() {
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorPolygonsWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function(){
+                content.getFeature(-1);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature(1000);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature();
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('destroys', function() {
+        var tileset = new Cesium3DTileset({
+            url : vectorCombined
+        });
+        expect(tileset.isDestroyed()).toEqual(false);
+        tileset.destroy();
+        expect(tileset.isDestroyed()).toEqual(true);
     });
 });

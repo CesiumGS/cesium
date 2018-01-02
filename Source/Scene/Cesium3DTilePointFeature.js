@@ -481,7 +481,11 @@ define([
                 return this._billboardImage;
             },
             set : function(value) {
+                var imageChanged = this._billboardImage !== value;
                 this._billboardImage = value;
+                if (imageChanged) {
+                    setBillboardImage(this);
+                }
             }
         },
 
