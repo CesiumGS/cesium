@@ -1,5 +1,10 @@
 Change Log
 ==========
+### 1.42 - 2018-01-03
+* Updated GlobalFS.glsl to only apply material over non-ocean areas. Added 4 new local variables: normalWithNoise, shiness, specular, isOcean in main() funcion. Updated #ifdef APPLY_MATERIAL section and #ifdef ENABLE_VERTEX_LIGHTING section to enable normal maps and blinn-phong shading on snow material.
+* Updated Source/Scene/Material.js to include snow material.
+* Added New Shader SnowMaterial.glsl under Source/Shaders/Materials for snow material.
+* Added example page Apps/Sandcastle/SnowRendering.html, as well as corresponding normal maps snowNormalMapLevel*.jpg under Apps/Sandcastle/images/.
 
 ### 1.41 - 2018-01-02
 

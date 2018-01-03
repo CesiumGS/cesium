@@ -169,6 +169,10 @@ void main()
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
     vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+	vec3 normalWithNoise = vec3(0.0); //Added by Yuxin for Snow Rendering
+    float shiness = 0.0; //Added by Yuxin for Snow Rendering
+    float specular = 0.0; //Added by Yuxin for Snow Rendering
+    bool isOcean = false; //Added by Yuxin to avoid applying material over the ocean area																	 																					 
 
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
@@ -192,6 +196,7 @@ void main()
 
     if (mask > 0.0)
     {
+		isOcean = true; //Added by Yuxin to set flag isOcean to true so that no snow will cover the ocean area																									  
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
 
         vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
@@ -204,18 +209,36 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
+//Added by Yuxin, only applying material when it is not an ocean
+if(!isOcean){
     czm_materialInput materialInput;
     materialInput.st = v_textureCoordinates.st;
-    materialInput.normalEC = normalize(v_normalEC);
+    materialInput.str = vec3(gl_FragCoord.xy / czm_viewport.zw, -v_positionEC.z);
+    materialInput.normalEC = v_normalEC;
     materialInput.slope = v_slope;
     materialInput.height = v_height;
+    // Here we pass the Model coordinate position in to see how that works
+    materialInput.positionToEyeEC = v_positionMC;
+    mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, v_normalEC);
+    materialInput.tangentToEyeMatrix = enuToEye;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+    shiness = material.shininess;
+    normalWithNoise = material.normal;
+    specular = material.specular;
+}
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+	vec4 finalColor = vec4(0.0, 0.0, 0.0, 1.0);
+    if(shiness > 0.0){
+         float specularIntensity = clamp(czm_getSpecular(normalize(czm_sunDirectionEC), normalize(-v_positionEC), normalize(normalWithNoise), shiness), 0.0, 1.0);
+         diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(normalWithNoise)) * 0.9 + 0.3, 0.0, 1.0);
+         finalColor = vec4(color.rgb * diffuseIntensity*0.8  + specular*specularIntensity*0.2, color.a);
+    }else{
+         finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+    }
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     float cameraDist = length(czm_view[3]);
