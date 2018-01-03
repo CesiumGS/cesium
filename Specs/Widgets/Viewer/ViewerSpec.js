@@ -806,6 +806,22 @@ defineSuite([
         });
     });
 
+    it('can enable requestRender mode', function() {
+        viewer = createViewer(container, {
+            requestRenderMode : true
+        });
+
+        expect(viewer.scene.requestRenderMode).toBe(true);
+    });
+
+    it('can set maximumRenderTimeChange', function() {
+        viewer = createViewer(container, {
+            maximumRenderTimeChange : Number.POSITIVE_INFINITY
+        });
+
+        expect(viewer.scene.maximumRenderTimeChange).toBe(Number.POSITIVE_INFINITY);
+    });
+
     it('can get and set trackedEntity', function() {
         viewer = createViewer(container);
 

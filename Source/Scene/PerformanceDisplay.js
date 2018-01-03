@@ -89,7 +89,7 @@ define([
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
      *
-     * @param {Boolean} [renderedThisFrame] If provided, the FPS count will only update and display if true.
+     * @param {Boolean} [renderedThisFrame=true] If provided, the FPS count will only update and display if true.
      */
     PerformanceDisplay.prototype.update = function(renderedThisFrame) {
         var time = getTimestamp();
