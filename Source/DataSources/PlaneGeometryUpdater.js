@@ -686,7 +686,7 @@ define([
             dimensions = new Cartesian2(1.0, 1.0);
         }
 
-        var translation = Cartesian3.multiplyByScalar(normal, distance, scratchTranslation);
+        var translation = Cartesian3.multiplyByScalar(normal, -distance, scratchTranslation);
         translation = Matrix4.multiplyByPoint(modelMatrix, translation, translation);
 
         var transformedNormal = Matrix4.multiplyByPointAsVector(modelMatrix, normal, scratchNormal);
