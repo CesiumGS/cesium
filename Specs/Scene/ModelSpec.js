@@ -2588,7 +2588,7 @@ defineSuite([
                 expect(rgba).not.toEqual(modelColor);
             });
 
-            plane.distance = -10.0;
+            plane.distance = 10.0;
             model.update(scene.frameState);
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).toEqual(modelColor);
@@ -2623,7 +2623,7 @@ defineSuite([
                 expect(rgba).not.toEqual(modelColor);
             });
 
-            plane.distance = -5.0;
+            plane.distance = 5.0;
             model.update(scene.frameState);
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).toEqual([0, 0, 255, 255]);
@@ -2646,7 +2646,7 @@ defineSuite([
 
             model.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -5.0),
+                    new Plane(Cartesian3.UNIT_Z, 5.0),
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ],
                 unionClippingRegions: true

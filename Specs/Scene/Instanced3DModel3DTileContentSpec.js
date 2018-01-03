@@ -9,7 +9,7 @@ defineSuite([
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
+    ], 'Scene/Instanced3DModel3DTileContent', function(
         Cartesian3,
         ClippingPlaneCollection,
         Color,

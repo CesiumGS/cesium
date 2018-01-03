@@ -3,7 +3,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
+    ], 'Scene/Tileset3DTileContent', function(
         Cartesian3,
         HeadingPitchRange,
         Cesium3DTilesTester,

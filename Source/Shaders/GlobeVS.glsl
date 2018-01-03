@@ -135,10 +135,10 @@ void main()
     float height = position3DAndHeight.w;
     vec2 textureCoordinates = textureCoordAndEncodedNormals.xy;
 
-#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)) && defined(INCLUDE_WEB_MERCATOR_Y)
+#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)) && defined(INCLUDE_WEB_MERCATOR_Y)
     float webMercatorT = textureCoordAndEncodedNormals.z;
     float encodedNormal = textureCoordAndEncodedNormals.w;
-#elif defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
+#elif defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
     float webMercatorT = textureCoordinates.y;
     float encodedNormal = textureCoordAndEncodedNormals.z;
 #elif defined(INCLUDE_WEB_MERCATOR_Y)
@@ -156,7 +156,7 @@ void main()
 
     v_textureCoordinates = vec3(textureCoordinates, webMercatorT);
 
-#if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
     vec3 normalMC = czm_octDecode(encodedNormal);
