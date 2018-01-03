@@ -232,7 +232,7 @@ define([
             }
         },
         /**
-         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
+         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane. Clipping planes are not currently supported in Internet Explorer.
          *
          * @memberof Globe.prototype
          * @type {ClippingPlaneCollection}
@@ -261,6 +261,9 @@ define([
                 if (value !== this._terrainProvider) {
                     this._terrainProvider = value;
                     this._terrainProviderChanged.raiseEvent(value);
+                    if (defined(this._material)) {
+                        makeShadersDirty(this);
+                    }
                 }
             }
         },
@@ -311,8 +314,10 @@ define([
     function makeShadersDirty(globe) {
         var defines = [];
 
+        var requireNormals = defined(globe._material) && (globe._material.shaderSource.match(/slope/) || globe._material.shaderSource.match('normalEC'));
+
         var fragmentSources = [];
-        if (defined(globe._material)) {
+        if (defined(globe._material) && (!requireNormals || globe._terrainProvider.requestVertexNormals)) {
             fragmentSources.push(globe._material.shaderSource);
             defines.push('APPLY_MATERIAL');
             globe._surface._tileProvider.uniformMap = globe._material._uniforms;

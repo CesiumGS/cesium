@@ -174,7 +174,7 @@ define([
         Matrix4.multiplyByPointAsVector(transform, plane.normal, scratchNormal);
         Cartesian3.normalize(scratchNormal, scratchNormal);
 
-        Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchPosition);
+        Cartesian3.multiplyByScalar(plane.normal, -plane.distance, scratchPosition);
         Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
 
         return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
