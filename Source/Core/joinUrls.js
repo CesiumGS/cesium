@@ -76,8 +76,15 @@ define([
             url += '//' + baseUri.authority;
 
             if (baseUri.path !== '' && baseUri.path !== '/') {
+                // The next line ensures that url (including a non-blank authority) ends with a slash.
                 url = url.replace(/\/?$/, '/');
                 baseUri.path = baseUri.path.replace(/^\/?/g, '');
+
+                // If authority is empty, add a third slash.  This is primarily for the file scheme,
+                // where a blank authority indicates a file on localhost (as opposed to a network share).
+                if (baseUri.authority === '') {
+                    url += '/';
+                }
             }
         }
 

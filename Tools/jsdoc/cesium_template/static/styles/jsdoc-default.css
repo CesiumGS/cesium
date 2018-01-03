@@ -165,7 +165,7 @@ div.menu
     height: 35px;
 }
 
-div.nav 
+div.nav
 {
     overflow-x: hidden;
     overflow-y: auto;
@@ -211,7 +211,7 @@ div.nav div.divider
     line-height: 1.0em;
 }
 
-form 
+form
 {
     display: block;
 }
@@ -600,4 +600,18 @@ h4 .doc-link {
 
 h4:hover .doc-link {
     opacity: 0.7;
+}
+
+div.tag-experimental {
+    margin-left: -10px;
+    padding: 10px;
+    background-color: #ffd4a8;
+    color: #925415;
+}
+div.tag-experimental > h5 {
+    font-weight: bold;
+    margin-top: 0;
+}
+div.tag-experimental > p {
+    margin: 0 0 5px;
 }

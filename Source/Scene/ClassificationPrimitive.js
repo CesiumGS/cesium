@@ -548,6 +548,7 @@ define([
 
         if (classificationPrimitive._primitive.allowPicking) {
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
+            vsPick = Primitive._appendShowToShader(primitive, vsPick);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             var pickVS = new ShaderSource({

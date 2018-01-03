@@ -5,7 +5,6 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/loadJson',
-        '../Core/RequestScheduler',
         '../ThirdParty/when',
         './ConditionsExpression',
         './Expression'
@@ -16,7 +15,6 @@ define([
         defineProperties,
         DeveloperError,
         loadJson,
-        RequestScheduler,
         when,
         ConditionsExpression,
         Expression) {

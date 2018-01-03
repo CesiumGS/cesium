@@ -1,13 +1,11 @@
 defineSuite([
         'Renderer/RenderState',
-        'Core/defined',
         'Core/WebGLConstants',
         'Core/WindingOrder',
         'Renderer/ContextLimits',
         'Specs/createContext'
     ], function(
         RenderState,
-        defined,
         WebGLConstants,
         WindingOrder,
         ContextLimits,

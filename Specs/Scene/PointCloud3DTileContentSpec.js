@@ -1,29 +1,33 @@
 defineSuite([
-        'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
+        'Core/Matrix4',
         'Core/PerspectiveFrustum',
+        'Core/Plane',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'ThirdParty/when'
-    ], function(
-        PointCloud3DTileContent,
+    ], 'Scene/PointCloud3DTileContent', function(
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defined,
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
+        Matrix4,
         PerspectiveFrustum,
+        Plane,
         Transforms,
         Cesium3DTileStyle,
         Expression,
@@ -682,6 +686,118 @@ defineSuite([
             expect(content.geometryByteLength).toEqual(pointCloudGeometryMemory);
             expect(content.texturesByteLength).toEqual(0);
             expect(content.batchTableByteLength).toEqual(batchTexturesByteLength + pickTexturesByteLength);
+        });
+    });
+
+    it('Updates clipping planes when clipping planes are enabled', function () {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
+
+            expect(content._packedClippingPlanes).toBeDefined();
+            expect(content._packedClippingPlanes.length).toBe(0);
+            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+
+            tileset.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+
+            content.update(tileset, scene.frameState);
+
+            expect(content._packedClippingPlanes.length).toBe(1);
+            expect(content._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
+        });
+    });
+
+    it('Does not update clipping planes when tile is not clipped', function () {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var tile = tileset._root;
+            tile._isClipped = false;
+            var content = tile.content;
+
+            expect(content._packedClippingPlanes).toBeDefined();
+            expect(content._packedClippingPlanes.length).toBe(0);
+            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+
+            tileset.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+
+            content.update(tileset, scene.frameState);
+
+            expect(content._packedClippingPlanes.length).toBe(0);
+            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+        });
+    });
+
+    it('Clipping planes selectively disable rendering', function () {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10.0);
+            tileset.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    clipPlane
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center)
+            });
+
+            expect(scene).notToRender(color);
+
+            clipPlane.distance = 0.0;
+
+            expect(scene).toRender(color);
+        });
+    });
+
+    it('clipping planes apply edge styling', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10.0);
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    clipPlane
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
+                edgeWidth : 20.0,
+                edgeColor : Color.RED
+            });
+
+            expect(scene).notToRender(color);
+        });
+    });
+
+    it('clipping planes union regions', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    new Plane(Cartesian3.UNIT_Z, -10.0),
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
+                unionClippingRegions: true
+            });
+
+            expect(scene).notToRender(color);
+
+            tileset.clippingPlanes.unionClippingRegions = false;
+
+            expect(scene).toRender(color);
         });
     });
 

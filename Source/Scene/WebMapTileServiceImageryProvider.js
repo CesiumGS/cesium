@@ -11,8 +11,6 @@ define([
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestType',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -31,8 +29,6 @@ define([
         objectToQuery,
         queryToObject,
         Rectangle,
-        Request,
-        RequestType,
         WebMercatorTilingScheme,
         Uri,
         when,
@@ -82,7 +78,7 @@ define([
      *     tileMatrixSetID : 'default028mm',
      *     // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
      *     maximumLevel: 19,
-     *     credit : new Cesium.Credit('U. S. Geological Survey')
+     *     credit : new Cesium.Credit({ text : 'U. S. Geological Survey' })
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief1);
      *
@@ -95,7 +91,7 @@ define([
      *     format : 'image/jpeg',
      *     tileMatrixSetID : 'default028mm',
      *     maximumLevel: 19,
-     *     credit : new Cesium.Credit('U. S. Geological Survey')
+     *     credit : new Cesium.Credit({ text : 'U. S. Geological Survey' })
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      *
@@ -118,7 +114,7 @@ define([
      *     format : 'image/png',
      *     clock: clock,
      *     times: times,
-     *     credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
+     *     credit : new Cesium.Credit({ text : 'NASA Global Imagery Browse Services for EOSDIS' })
      * });
      * viewer.imageryLayers.addImageryProvider(weather);
      *
@@ -205,7 +201,7 @@ define([
         this._errorEvent = new Event();
 
         var credit = options.credit;
-        this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
+        this._credit = typeof credit === 'string' ? new Credit({text: credit}) : credit;
 
         this._subdomains = options.subdomains;
         if (isArray(this._subdomains)) {

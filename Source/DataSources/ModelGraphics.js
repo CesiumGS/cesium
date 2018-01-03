@@ -45,6 +45,7 @@ define([
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
+     * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
@@ -54,6 +55,7 @@ define([
      * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
      * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
      * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -74,6 +76,7 @@ define([
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
+        this._clampAnimations = undefined;
         this._runAnimationsSubscription = undefined;
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
@@ -91,6 +94,8 @@ define([
         this._colorBlendModeSubscription = undefined;
         this._colorBlendAmount = undefined;
         this._colorBlendAmountSubscription = undefined;
+        this._clippingPlanes = undefined;
+        this._clippingPlanesSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -180,6 +185,14 @@ define([
         runAnimations : createPropertyDescriptor('runAnimations'),
 
         /**
+         * Gets or sets the boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default true
+         */
+        clampAnimations : createPropertyDescriptor('clampAnimations'),
+
+        /**
          * Gets or sets the set of node transformations to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
          * names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
          * @memberof ModelGraphics.prototype
@@ -242,7 +255,14 @@ define([
          * @type {Property}
          * @default 0.5
          */
-        colorBlendAmount : createPropertyDescriptor('colorBlendAmount')
+        colorBlendAmount : createPropertyDescriptor('colorBlendAmount'),
+
+        /**
+         * A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        clippingPlanes : createPropertyDescriptor('clippingPlanes')
     });
 
     /**
@@ -263,6 +283,7 @@ define([
         result.shadows = this.shadows;
         result.uri = this.uri;
         result.runAnimations = this.runAnimations;
+        result.clampAnimations = this.clampAnimations;
         result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
@@ -271,6 +292,7 @@ define([
         result.color = this.color;
         result.colorBlendMode = this.colorBlendMode;
         result.colorBlendAmount = this.colorBlendAmount;
+        result.clippingPlanes = this.clippingPlanes;
 
         return result;
     };
@@ -296,6 +318,7 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
+        this.clampAnimations = defaultValue(this.clampAnimations, source.clampAnimations);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.silhouetteColor = defaultValue(this.silhouetteColor, source.silhouetteColor);
@@ -303,6 +326,7 @@ define([
         this.color = defaultValue(this.color, source.color);
         this.colorBlendMode = defaultValue(this.colorBlendMode, source.colorBlendMode);
         this.colorBlendAmount = defaultValue(this.colorBlendAmount, source.colorBlendAmount);
+        this.clippingPlanes = defaultValue(this.clippingPlanes, source.clippingPlanes);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

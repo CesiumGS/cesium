@@ -1311,9 +1311,9 @@ define([
         }
     }
 
-    //To add another language, simply add it's Unicode block range(s) to the below regex.
+    //To add another language, simply add its Unicode block range(s) to the below regex.
     var hebrew = '\u05D0-\u05EA';
-    var arabic = '\u0600-\u06FF\u0750–\u077F\u08A0–\u08FF';
+    var arabic = '\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF';
     var rtlChars = new RegExp('[' + hebrew + arabic + ']');
 
     /**

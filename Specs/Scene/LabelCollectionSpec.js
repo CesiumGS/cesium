@@ -1826,7 +1826,7 @@ defineSuite([
 
         it('should increase label height and decrease width when adding newlines', function() {
             var label = labels.add({
-                text : 'apl apl apl',
+                text : 'apl apl apl'
             });
             scene.renderForSpecs();
 
@@ -1933,6 +1933,50 @@ defineSuite([
             });
 
             expect(label.text).toEqual(expectedText);
+        });
+
+        it('detects characters in the range \\u05D0-\\u05EA', function() {
+            var text = '\u05D1\u05D2';
+            var expectedText = '\u05D2\u05D1';
+            var label = labels.add({
+                text : text
+            });
+
+            expect(label.text).toEqual(text);
+            expect(label._renderedText).toEqual(expectedText);
+        });
+
+        it('detects characters in the range \\u0600-\\u06FF', function() {
+            var text = '\u0601\u0602';
+            var expectedText = '\u0602\u0601';
+            var label = labels.add({
+                text : text
+            });
+
+            expect(label.text).toEqual(text);
+            expect(label._renderedText).toEqual(expectedText);
+        });
+
+        it('detects characters in the range \\u0750-\\u077F', function() {
+            var text = '\u0751\u0752';
+            var expectedText = '\u0752\u0751';
+            var label = labels.add({
+                text : text
+            });
+
+            expect(label.text).toEqual(text);
+            expect(label._renderedText).toEqual(expectedText);
+        });
+
+        it('detects characters in the range \\u08A0-\\u08FF', function() {
+            var text = '\u08A1\u08A2';
+            var expectedText = '\u08A2\u08A1';
+            var label = labels.add({
+                text : text
+            });
+
+            expect(label.text).toEqual(text);
+            expect(label._renderedText).toEqual(expectedText);
         });
     });
 
