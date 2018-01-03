@@ -2949,7 +2949,7 @@ define([
 
         try {
             if (shouldRender) {
-                this._lastRenderTime = JulianDate.clone(time, scratchTime);;
+                this._lastRenderTime = JulianDate.clone(time, scratchTime);
                 this._renderRequested = false;
 
                 render(this, time);

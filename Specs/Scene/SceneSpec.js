@@ -1259,6 +1259,8 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    var scratchTime = new JulianDate();
+
     it('doesn\'t render scene if requestRenderMode is enabled', function() {
         var scene = createScene();
 
@@ -1274,8 +1276,6 @@ defineSuite([
 
         scene.destroyForSpecs();
     });
-
-    var scratchTime = new JulianDate();
 
     it('requestRender causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
