@@ -15,6 +15,7 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
+        'Scene/VerticalOrigin',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -34,6 +35,7 @@ defineSuite([
         Cesium3DTileStyle,
         HorizontalOrigin,
         LabelStyle,
+        VerticalOrigin,
         createScene,
         pollToPromise) {
     'use strict';
@@ -178,10 +180,11 @@ defineSuite([
             minimumHeight : minHeight,
             maximumHeight : maxHeight
         }));
+        var style = new Cesium3DTileStyle({ verticalOrigin : VerticalOrigin.BOTTOM });
         return loadPoints(points).then(function() {
             var features = [];
             points.createFeatures(mockTileset, features);
-            points.applyStyle(scene.frameState, undefined, features);
+            points.applyStyle(scene.frameState, style, features);
 
             for (var i = 0; i < cartoPositions.length; ++i) {
                 var position = ellipsoid.cartographicToCartesian(cartoPositions[i]);
@@ -280,8 +283,10 @@ defineSuite([
             anchorLineEnabled : 'true',
             anchorLineColor : 'rgba(255, 255, 0, 1.0)',
             disableDepthTestDistance : '1.0e6',
-            origin : '' + HorizontalOrigin.CENTER,
-            labelOrigin : '' + HorizontalOrigin.RIGHT
+            horizontalOrigin : '' + HorizontalOrigin.CENTER,
+            verticalOrigin : '' + VerticalOrigin.CENTER,
+            labelHorizontalOrigin : '' + HorizontalOrigin.RIGHT,
+            labelVerticalOrigin : '' + VerticalOrigin.BOTTOM
         });
 
         return loadPoints(points).then(function() {
@@ -313,8 +318,10 @@ defineSuite([
                 expect(feature.anchorLineEnabled).toEqual(true);
                 expect(feature.anchorLineColor).toEqual(new Color(1.0, 1.0, 0.0, 1.0));
                 expect(feature.disableDepthTestDistance).toEqual(1.0e6);
-                expect(feature.origin).toEqual(HorizontalOrigin.CENTER);
-                expect(feature.labelOrigin).toEqual(HorizontalOrigin.RIGHT);
+                expect(feature.horizontalOrigin).toEqual(HorizontalOrigin.CENTER);
+                expect(feature.verticalOrigin).toEqual(VerticalOrigin.CENTER);
+                expect(feature.labelHorizontalOrigin).toEqual(HorizontalOrigin.RIGHT);
+                expect(feature.labelVerticalOrigin).toEqual(VerticalOrigin.BOTTOM);
             }
 
             var position;
@@ -397,10 +404,11 @@ defineSuite([
             minimumHeight : minHeight,
             maximumHeight : maxHeight
         }));
+        var style = new Cesium3DTileStyle({ verticalOrigin : VerticalOrigin.BOTTOM });
         return loadPoints(points).then(function() {
             var features = [];
             points.createFeatures(mockTileset, features);
-            points.applyStyle(scene.frameState, undefined, features);
+            points.applyStyle(scene.frameState, style, features);
             points.applyDebugSettings(true, Color.YELLOW);
 
             var i;
@@ -437,4 +445,5 @@ defineSuite([
         points.destroy();
         expect(points.isDestroyed()).toEqual(true);
     });
-});
+
+}, 'WebGL');

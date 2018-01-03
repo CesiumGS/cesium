@@ -613,4 +613,5 @@ defineSuite([
         tileset.destroy();
         expect(tileset.isDestroyed()).toEqual(true);
     });
-});
+
+}, 'WebGL');

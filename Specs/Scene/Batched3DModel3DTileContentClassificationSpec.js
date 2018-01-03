@@ -157,4 +157,5 @@ defineSuite([
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
+
 }, 'WebGL');

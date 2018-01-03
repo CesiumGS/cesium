@@ -538,4 +538,5 @@ defineSuite([
             expect(polygons.isDestroyed()).toEqual(true);
         });
     }
-});
+
+}, 'WebGL');

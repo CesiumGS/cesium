@@ -514,12 +514,29 @@ define([
          *
          * @type {HorizontalOrigin}
          */
-        origin : {
+        horizontalOrigin : {
             get : function() {
                 return this._billboard.horizontalOrigin;
             },
             set : function(value) {
                 this._billboard.horizontalOrigin = value;
+            }
+        },
+
+        /**
+         * Gets or sets the vertical origin of this point, which determines if the point is
+         * to the bottom, center, or top of its anchor position.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {VerticalOrigin}
+         */
+        verticalOrigin : {
+            get : function() {
+                return this._billboard.verticalOrigin;
+            },
+            set : function(value) {
+                this._billboard.verticalOrigin = value;
             }
         },
 
@@ -531,12 +548,29 @@ define([
          *
          * @type {HorizontalOrigin}
          */
-        labelOrigin : {
+        labelHorizontalOrigin : {
             get : function() {
                 return this._label.horizontalOrigin;
             },
             set : function(value) {
                 this._label.horizontalOrigin = value;
+            }
+        },
+
+        /**
+         * Get or sets the vertical origin of this point's text, which determines if the point's text is
+         * to the bottom, center, top, or baseline of it's anchor point.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {VerticalOrigin}
+         */
+        labelVerticalOrigin : {
+            get : function() {
+                return this._label.verticalOrigin;
+            },
+            set : function(value) {
+                this._label.verticalOrigin = value;
             }
         },
 
