@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.42 - 2018-02-01
+
+* Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
+
 ### 1.41 - 2018-01-02
 
 * Breaking changes
