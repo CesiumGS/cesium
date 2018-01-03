@@ -1,19 +1,27 @@
 Change Log
 ==========
 
-### 1.41 - 2017-01-02
+### 1.42 - 2018-02-01
 
-* Added support for clipping planes
-    * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlaneCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
-    * Added `clippingPlanes` property to `Globe` which specifies a `ClippingPlaneCollection` to selectively disable rendering of the globe surface. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
-    * Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
-    * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
-    * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+* Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
+
+### 1.41 - 2018-01-02
+
+* Breaking changes
+  * Removed the `text`, `imageUrl`, and `link` parameters from `Credit`, which were deprecated in Cesium 1.40.  Use `options.text`, `options.imageUrl`, and `options.link` instead.
+* Added support for clipping planes. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913), [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+    * Added `clippingPlanes` property to `ModelGraphics`, `Model`, `Cesium3DTileset`, and `Globe`, which specifies a `ClippingPlaneCollection` to selectively disable rendering.
+    * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, `PlaneOutlineGeometryUpdater`, `PlaneGraphics`, and `Entity.plane` to visualize planes.
+    * Added `Plane.transformPlane` to apply a transformation to a plane.
+* Fixed point cloud exception in IE. [#6051](https://github.com/AnalyticalGraphicsInc/cesium/pull/6051)
+* Fixed globe materials when `Globe.enableLighting` was `false`. [#6042](https://github.com/AnalyticalGraphicsInc/cesium/issues/6042)
+* Fixed shader compilation failure on pick when globe materials were enabled. [#6039](https://github.com/AnalyticalGraphicsInc/cesium/issues/6039)
+* Fixed exception when `invertClassification` was enabled, the invert color had an alpha less than `1.0`, and the window was resized. [#6046](https://github.com/AnalyticalGraphicsInc/cesium/issues/6046)
 
 ### 1.40 - 2017-12-01
 
 * Deprecated
-  * The `text`, `imageUrl` and `link` parameters for `Credit` have been deprecated and will be removed in Cesium 1.41.  Use `options.text`, `options.imageUrl` and `options.link` instead.
+  * The `text`, `imageUrl` and `link` parameters from `Credit` have been deprecated and will be removed in Cesium 1.41.  Use `options.text`, `options.imageUrl` and `options.link` instead.
 * Added `Globe.material` to apply materials to the globe/terrain for shading such as height- or slope-based color ramps.  See the new [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Globe%20Materials.html&label=Showcases). [#5919](https://github.com/AnalyticalGraphicsInc/cesium/pull/5919/files)
 * Added CZML support for `polyline.depthFailMaterial`, `label.scaleByDistance`, `distanceDisplayCondition`, and `disableDepthTestDistance`. [#5986](https://github.com/AnalyticalGraphicsInc/cesium/pull/5986)
 * Fixed a bug where drill picking a polygon clamped to ground would cause the browser to hang. [#5971](https://github.com/AnalyticalGraphicsInc/cesium/issues/5971)
