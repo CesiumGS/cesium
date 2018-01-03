@@ -218,7 +218,10 @@ define([
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
-     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as
+     *  determined by changes within the scene. Enabling improves performance of the application, but requires using
+     *  {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases
+     *  after making changes to the scene in other parts of the API.
      * @param {Number} [options.maximumRenderTimeChange=0.5] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested.
      *
      * @see CesiumWidget
@@ -721,9 +724,9 @@ define([
 
         /**
          * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
-         * Enabling improves performance of the application, but requires using {@link requestRender}
-         * to render a new frame explicitly in this mode. This will be necessary in many cases after making updates
-         * to the scene.
+         * Enabling improves performance of the application, but requires using {@link Scene#requestRender}
+         * to render a new frame explicitly in this mode. This will be necessary in many cases after making changes
+         * to the scene in other parts of the API.
          *
          * @see Scene#maximumRenderTimeChange
          * @see Scene#requestRender
@@ -735,9 +738,9 @@ define([
         this._renderRequested = true;
 
         /**
-         * If {@link requestRenderMode} is <code>true</code>, this value defines the maximum change in
-         * simulation time allowed before a render is requested. Lower values decrease the number of frames rendered
-         * and higher values increase the number of frames rendered. If <code>undefined</code>, changes to
+         * If {@link Scene#requestRenderMode} is <code>true</code>, this value defines the maximum change in
+         * simulation time allowed before a render is requested. Lower values increase the number of frames rendered
+         * and higher values decrease the number of frames rendered. If <code>undefined</code>, changes to
          * the simulation time will never request a render.
          * This value impacts the rate of rendering for changes in the scene like lighting, entity property updates,
          * and animations.
@@ -1065,6 +1068,20 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
+            }
+        },
+
+        /**
+         * Gets the simulation time when the scene was last rendered. Returns undefined if the scene has not yet been
+         * rendered.
+         * @memberof Scene.prototype
+         *
+         * @type {JulianDate}
+         * @readonly
+         */
+        lastRenderTime : {
+            get : function() {
+                return this._lastRenderTime;
             }
         },
 
@@ -2908,6 +2925,8 @@ define([
         context.endFrame();
     }
 
+    var scratchTime = new JulianDate();
+
     /**
      * @private
      */
@@ -2923,15 +2942,14 @@ define([
 
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
 
-        var now = JulianDate.clone(time);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
-            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, now));
+            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference >= this.maximumRenderTimeChange;
         }
 
         try {
             if (shouldRender) {
-                this._lastRenderTime = now;
+                this._lastRenderTime = JulianDate.clone(time, scratchTime);;
                 this._renderRequested = false;
 
                 render(this, time);
@@ -2950,6 +2968,16 @@ define([
         RequestScheduler.update();
         callAfterRenderFunctions(this._frameState);
         this._postRender.raiseEvent(this, time);
+    };
+
+    /**
+     * Requests a new rendered frame when {@link Scene#requestRenderMode} is set to <code>true</code>.
+     * The render rate will not exceed the {@link CesiumWidget#targetFrameRate}.
+     *
+     * @see Scene#requestRenderMode
+     */
+    Scene.prototype.requestRender = function() {
+        this._renderRequested = true;
     };
 
     /**
@@ -3496,6 +3524,28 @@ define([
     };
 
     /**
+     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
+     * HTML element at the same screen position as an object in the scene.
+     *
+     * @param {Cartesian3} position The position in cartesian coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     *
+     * @example
+     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
+     * var scene = widget.scene;
+     * var ellipsoid = scene.globe.ellipsoid;
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * handler.setInputAction(function(movement) {
+     *     console.log(scene.cartesianToCanvasCoordinates(position));
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     */
+    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
+        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
+    };
+
+    /**
      * Instantly completes an active transition.
      */
     Scene.prototype.completeMorph = function(){
@@ -3621,46 +3671,10 @@ define([
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
 
-        if (defined(this._removeRequestListenerCallback)) {
-            this._removeRequestListenerCallback();
-        }
-        if (defined(this._removeTaskProcessorListenerCallback)) {
-            this._removeTaskProcessorListenerCallback();
-        }
+        this._removeRequestListenerCallback();
+        this._removeTaskProcessorListenerCallback();
 
         return destroyObject(this);
-    };
-
-    /**
-     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
-     * HTML element at the same screen position as an object in the scene.
-     *
-     * @param {Cartesian3} position The position in cartesian coordinates.
-     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
-     *
-     * @example
-     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
-     * var scene = widget.scene;
-     * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-     * handler.setInputAction(function(movement) {
-     *     console.log(scene.cartesianToCanvasCoordinates(position));
-     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-     */
-    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
-        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
-    };
-
-    /**
-     * Requests a new rendered frame when {@link requestRenderMode} is set to <code>true</code>.
-     * The render rate will not exceed the {@link CesiumWidget#targetFrameRate}.
-     *
-     * @see Scene#requestRenderMode
-     */
-    Scene.prototype.requestRender = function() {
-        this._renderRequested = true;
     };
 
     return Scene;

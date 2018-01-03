@@ -88,15 +88,18 @@ define([
     /**
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
+     *
+     * @param {Boolean} [renderedThisFrame] If provided, the FPS count will only update and display if true.
      */
     PerformanceDisplay.prototype.update = function(renderedThisFrame) {
         var time = getTimestamp();
+        var updateFps = defaultValue(renderedThisFrame, true);
 
         this._fpsFrameCount++;
         var fpsElapsedTime = time - this._lastFpsSampleTime;
         if (fpsElapsedTime > 1000) {
             var fps = 'N/A';
-            if (renderedThisFrame) {
+            if (updateFps) {
                 fps = this._fpsFrameCount * 1000 / fpsElapsedTime | 0;
                 this._fpsText.nodeValue = fps + ' FPS';
             }

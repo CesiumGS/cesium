@@ -1264,23 +1264,25 @@ defineSuite([
 
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
+
+    var scratchTime = new JulianDate();
 
     it('requestRender causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
 
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
@@ -1291,7 +1293,7 @@ defineSuite([
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
@@ -1301,7 +1303,7 @@ defineSuite([
 
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
@@ -1311,7 +1313,7 @@ defineSuite([
         scene.camera.moveLeft();
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
@@ -1321,7 +1323,7 @@ defineSuite([
 
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
@@ -1333,7 +1335,7 @@ defineSuite([
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
@@ -1343,7 +1345,7 @@ defineSuite([
 
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
@@ -1355,7 +1357,7 @@ defineSuite([
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
@@ -1364,7 +1366,7 @@ defineSuite([
         var scene = createScene();
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
@@ -1374,41 +1376,41 @@ defineSuite([
         scene.morphTo2D(1.0);
         scene.renderForSpecs();
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
         scene.renderForSpecs();
-        lastRenderTime = scene._lastRenderTime;
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).toEqual(lastRenderTime);
-        lastRenderTime = scene._lastRenderTime;
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphToColumbusView(1.0);
         scene.renderForSpecs();
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
         scene.renderForSpecs();
-        lastRenderTime = scene._lastRenderTime;
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).toEqual(lastRenderTime);
-        lastRenderTime = scene._lastRenderTime;
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphTo3D(1.0);
         scene.renderForSpecs();
         scene.renderForSpecs();
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
         scene.renderForSpecs();
-        lastRenderTime = scene._lastRenderTime;
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
@@ -1418,19 +1420,19 @@ defineSuite([
 
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
         scene.maximumRenderTimeChange = 0.0;
 
         scene.renderForSpecs();
-        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });
@@ -1440,7 +1442,7 @@ defineSuite([
 
         scene.renderForSpecs();
 
-        var lastRenderTime = scene._lastRenderTime;
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
@@ -1452,7 +1454,7 @@ defineSuite([
         scene.renderForSpecs();
         scene.renderForSpecs(farFuture);
 
-        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });

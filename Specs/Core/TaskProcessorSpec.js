@@ -136,7 +136,6 @@ defineSuite([
         };
         var eventRaised = false;
         var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function () {
-            console.log('2');
             eventRaised = true;
         });
 
