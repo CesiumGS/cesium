@@ -201,7 +201,7 @@ defineSuite([
         transform = Matrix4.multiplyByMatrix3(transform, Matrix3.fromRotationY(Math.PI), transform);
 
         var transformedPlane = Plane.transform(plane, transform);
-        expect(transformedPlane.distance).toEqual(-plane.distance * 2.0);
+        expect(transformedPlane.distance).toEqual(plane.distance * 2.0);
         expect(transformedPlane.normal.x).toEqualEpsilon(-plane.normal.x, CesiumMath.EPSILON10);
         expect(transformedPlane.normal.y).toEqual(plane.normal.y);
         expect(transformedPlane.normal.z).toEqual(-plane.normal.z);

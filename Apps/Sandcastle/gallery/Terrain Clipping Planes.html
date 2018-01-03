@@ -39,6 +39,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Use clipping planes to selectively hide parts of the globe surface.
+// Clipping planes are not currently supported in Internet Explorer.
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     skyAtmosphere: false
 });
@@ -75,10 +78,10 @@ globe.depthTestAgainstTerrain = true;
 globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
     modelMatrix : entity.computeModelMatrix(Cesium.JulianDate.now()),
     planes : [
-        new Cesium.Plane(new Cesium.Cartesian3( 1.0,  0.0, 0.0), 700.0),
-        new Cesium.Plane(new Cesium.Cartesian3(-1.0,  0.0, 0.0), 700.0),
-        new Cesium.Plane(new Cesium.Cartesian3( 0.0,  1.0, 0.0), 700.0),
-        new Cesium.Plane(new Cesium.Cartesian3( 0.0, -1.0, 0.0), 700.0)
+        new Cesium.Plane(new Cesium.Cartesian3( 1.0,  0.0, 0.0), -700.0),
+        new Cesium.Plane(new Cesium.Cartesian3(-1.0,  0.0, 0.0), -700.0),
+        new Cesium.Plane(new Cesium.Cartesian3( 0.0,  1.0, 0.0), -700.0),
+        new Cesium.Plane(new Cesium.Cartesian3( 0.0, -1.0, 0.0), -700.0)
     ],
     edgeWidth: 1.0,
     edgeColor: Cesium.Color.WHITE

@@ -271,7 +271,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -517,7 +517,7 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
-         * The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
          *
          * @type {ClippingPlaneCollection}
          */
@@ -1876,7 +1876,9 @@ define([
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
         var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
-        finalFS = modifyShaderForClippingPlanes(finalFS);
+        if (!FeatureDetection.isInternetExplorer()) {
+            finalFS = modifyShaderForClippingPlanes(finalFS);
+        }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
