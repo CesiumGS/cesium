@@ -77,6 +77,7 @@ define([
      * @param {Uint16Array} options.vertexBatchIds The batch id for each vertex.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of meshes.
      * @param {BoundingSphere[]} options.boundingVolumes The bounding volume for each mesh.
+     * @param {ClassificationType} [options.classificationType] What this tile will classify.
      *
      * @private
      */
@@ -140,6 +141,7 @@ define([
          */
         this.debugWireframe = false;
         this._debugWireframe = this.debugWireframe;
+        this._wireframeDirty = false;
 
         /**
          * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
@@ -151,10 +153,20 @@ define([
         /**
          * What this tile will classify.
          * @type {ClassificationType}
-         * @default ClassificationType.CESIUM_3D_TILE
+         * @default ClassificationType.BOTH
          */
-        this.classificationType = ClassificationType.CESIUM_3D_TILE;
-        this._classificationType = this.classificationType;
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
+
+        // Hidden options
+        this._vertexShaderSource = options._vertexShaderSource;
+        this._fragmentShaderSource = options._fragmentShaderSource;
+        this._attributeLocations = options._attributeLocations;
+        this._pickVertexShaderSource = options._pickVertexShaderSource;
+        this._pickFragmentShaderSource = options._pickFragmentShaderSource;
+        this._uniformMap = options._uniformMap;
+        this._pickUniformMap = options._pickUniformMap;
+        this._modelMatrix = options._modelMatrix;
+        this._boundingSphere = options._boundingSphere;
 
         this._batchIdLookUp = {};
 
@@ -195,7 +207,7 @@ define([
         }
     });
 
-    var attributeLocations = {
+    var defaultAttributeLocations = {
         position : 0,
         a_batchId : 1
     };
@@ -223,14 +235,14 @@ define([
         });
 
         var vertexAttributes = [{
-            index : attributeLocations.position,
+            index : 0,
             vertexBuffer : positionBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
+            componentDatatype : ComponentDatatype.fromTypedArray(primitive._positions),
             componentsPerAttribute : 3
         }, {
-            index : attributeLocations.a_batchId,
+            index : 1,
             vertexBuffer : idBuffer,
-            componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+            componentDatatype : ComponentDatatype.fromTypedArray(primitive._vertexBatchIds),
             componentsPerAttribute : 1
         }];
 
@@ -265,6 +277,25 @@ define([
         }
 
         var batchTable = primitive._batchTable;
+        var attributeLocations = defaultValue(primitive._attributeLocations, defaultAttributeLocations);
+
+        var vertexShaderSource = primitive._vertexShaderSource;
+        if (defined(vertexShaderSource)) {
+            primitive._sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vertexShaderSource,
+                fragmentShaderSource : primitive._fragmentShaderSource,
+                attributeLocations : attributeLocations
+            });
+            primitive._spStencil = primitive._sp;
+            primitive._spPick = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : primitive._pickVertexShaderSource,
+                fragmentShaderSource : primitive._pickFragmentShaderSource,
+                attributeLocations : attributeLocations
+            });
+            return;
+        }
 
         var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(ShadowVolumeVS);
         var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false, undefined);
@@ -452,7 +483,7 @@ define([
             return;
         }
 
-        primitive._uniformMap = {
+        var uniformMap = {
             u_modifiedModelViewProjection : function() {
                 var viewMatrix = context.uniformState.view;
                 var projectionMatrix = context.uniformState.projection;
@@ -466,6 +497,9 @@ define([
                 return primitive._highlightColor;
             }
         };
+
+        primitive._uniformMap = primitive._batchTable.getUniformMapCallback()(uniformMap);
+        primitive._pickUniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
     }
 
     function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds, batchIdLookUp) {
@@ -634,6 +668,7 @@ define([
         primitive._framesSinceLastRebatch = 0;
         primitive._batchDirty = false;
         primitive._pickCommandsDirty = true;
+        primitive._wireframeDirty = true;
         return true;
     }
 
@@ -643,25 +678,21 @@ define([
         var commands = primitive._commands;
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
-        var commandsLength = length * 3 * (primitive._classificationType === ClassificationType.BOTH ? 2 : 1);
+        var commandsLength = length * 3;
 
         if (defined(commands) &&
             !needsRebatch &&
-            commands.length === commandsLength &&
-            primitive.classificationType === primitive._classificationType) {
+            commands.length === commandsLength) {
             return;
         }
 
-        primitive._pickCommandsDirty = primitive._pickCommandsDirty || primitive._classificationType !== primitive.classificationType;
-        primitive._classificationType = primitive.classificationType;
         commands.length = commandsLength;
 
         var vertexArray = primitive._va;
         var sp = primitive._sp;
-        var modelMatrix = Matrix4.IDENTITY;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
+        var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
+        var uniformMap = primitive._uniformMap;
         var bv = primitive._boundingVolume;
-        var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
 
         for (var j = 0; j < length; ++j) {
             var offset = batchedIndices[j].offset;
@@ -682,7 +713,7 @@ define([
             stencilPreloadCommand.shaderProgram = sp;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = pass;
+            stencilPreloadCommand.cull = false;
 
             var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -699,7 +730,7 @@ define([
             stencilDepthCommand.shaderProgram = sp;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = pass;
+            stencilDepthCommand.cull = false;
 
             var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -716,27 +747,14 @@ define([
             colorCommand.shaderProgram = sp;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = pass;
-        }
-
-        if (primitive._classificationType === ClassificationType.BOTH) {
-            length = length * 3;
-            for (var i = 0; i < length; ++i) {
-                var command = commands[i + length];
-                if (!defined(command)) {
-                    command = commands[i + length] = new DrawCommand();
-                }
-
-                DrawCommand.shallowClone(commands[i], command);
-                command.pass = Pass.TERRAIN_CLASSIFICATION;
-            }
+            colorCommand.cull = false;
         }
 
         primitive._commandsDirty = true;
     }
 
     function createColorCommandsIgnoreShow(primitive, frameState) {
-        if (primitive._classificationType === ClassificationType.TERRAIN ||
+        if (primitive.classificationType === ClassificationType.TERRAIN ||
             !frameState.invertClassification ||
             (defined(primitive._commandsIgnoreShow) && !primitive._commandsDirty)) {
             return;
@@ -772,19 +790,18 @@ define([
 
         var length = primitive._indexOffsets.length;
         var pickCommands = primitive._pickCommands;
-        pickCommands.length = length * 3 * (primitive._classificationType === ClassificationType.BOTH ? 2 : 1);
+        pickCommands.length = length * 3;
 
         var vertexArray = primitive._va;
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
-        var modelMatrix = Matrix4.IDENTITY;
-        var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
-        var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
+        var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
+        var uniformMap = primitive._pickUniformMap;
 
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
             var count = primitive._indexCounts[j];
-            var bv = primitive._boundingVolumes[j];
+            var bv = defined(primitive._boundingVolumes) ? primitive._boundingVolumes[j] : primitive.boundingVolume;
 
             var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {
@@ -801,7 +818,6 @@ define([
             stencilPreloadCommand.shaderProgram = spStencil;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = pass;
 
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -818,7 +834,6 @@ define([
             stencilDepthCommand.shaderProgram = spStencil;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = pass;
 
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -835,20 +850,6 @@ define([
             colorCommand.shaderProgram = spPick;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = pass;
-        }
-
-        if (primitive._classificationType === ClassificationType.BOTH) {
-            length = length * 3;
-            for (var i = 0; i < length; ++i) {
-                var command = pickCommands[i + length];
-                if (!defined(command)) {
-                    command = pickCommands[i + length] = new DrawCommand();
-                }
-
-                DrawCommand.shallowClone(pickCommands[i], command);
-                command.pass = Pass.TERRAIN_CLASSIFICATION;
-            }
         }
 
         primitive._pickCommandsDirty = false;
@@ -1037,12 +1038,15 @@ define([
         this._batchDirty = true;
     };
 
-    function queueCommands(frameState, commands, commandsIgnoreShow) {
+    function queueCommands(frameState, pass, commands, commandsIgnoreShow) {
         var commandList = frameState.commandList;
         var commandLength = commands.length;
         var i;
+        var command;
         for (i = 0; i < commandLength; ++i) {
-            commandList.push(commands[i]);
+            command = commands[i];
+            command.pass = pass;
+            commandList.push(command);
         }
 
         if (!frameState.invertClassification || !defined(commandsIgnoreShow)) {
@@ -1051,7 +1055,9 @@ define([
 
         commandLength = commandsIgnoreShow.length;
         for (i = 0; i < commandLength; ++i) {
-            commandList.push(commandsIgnoreShow[i]);
+            command = commandsIgnoreShow[i];
+            command.pass = pass;
+            commandList.push(command);
         }
     }
 
@@ -1059,12 +1065,16 @@ define([
         var commandList = frameState.commandList;
         var commandLength = commands.length;
         for (var i = 0; i < commandLength; i += 3) {
-            commandList.push(commands[i + 2]);
+            var command = commands[i + 2];
+            command.pass = Pass.OPAQUE;
+            commandList.push(command);
         }
     }
 
     function updateWireframe(primitive) {
-        if (primitive.debugWireframe === primitive._debugWireframe) {
+        var earlyExit = primitive.debugWireframe === primitive._debugWireframe;
+        earlyExit = earlyExit && !(primitive.debugWireframe && primitive._wireframeDirty);
+        if (earlyExit) {
             return;
         }
 
@@ -1092,6 +1102,7 @@ define([
         }
 
         primitive._debugWireframe = primitive.debugWireframe;
+        primitive._wireframeDirty = false;
     }
 
     /**
@@ -1107,6 +1118,18 @@ define([
         createRenderStates(this);
         createUniformMap(this, context);
 
+        var pass;
+        switch (this.classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
+        }
+
         var passes = frameState.passes;
         if (passes.render) {
             createColorCommands(this, context);
@@ -1116,13 +1139,13 @@ define([
             if (this._debugWireframe) {
                 queueWireframeCommands(frameState, this._commands);
             } else {
-                queueCommands(frameState, this._commands, this._commandsIgnoreShow);
+                queueCommands(frameState, pass, this._commands, this._commandsIgnoreShow);
             }
         }
 
         if (passes.pick) {
             createPickCommands(this);
-            queueCommands(frameState, this._pickCommands);
+            queueCommands(frameState, pass, this._pickCommands);
         }
     };
 

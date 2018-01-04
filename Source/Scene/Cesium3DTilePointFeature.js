@@ -67,11 +67,13 @@ define([
         this._billboardOutlineWidth = undefined;
         this._billboardSize = undefined;
         this._pointSize = undefined;
-        this._pointColor = undefined;
+        this._color = undefined;
         this._pointSize = undefined;
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
         this._heightOffset = undefined;
+
+        setBillboardImage(this);
     }
 
     var scratchCartographic = new Cartographic();
@@ -99,7 +101,7 @@ define([
         },
 
         /**
-         * Gets or sets the point color of this feature.
+         * Gets or sets the color of the point of this feature.
          * <p>
          * Only applied when <code>image</code> is <code>undefined</code>.
          * </p>
@@ -108,12 +110,12 @@ define([
          *
          * @type {Color}
          */
-        pointColor : {
+        color : {
             get : function() {
-                return this._pointColor;
+                return this._color;
             },
             set : function(value) {
-                this._pointColor = Color.clone(value, this._pointColor);
+                this._color = Color.clone(value, this._color);
                 setBillboardImage(this);
             }
         },
@@ -181,7 +183,7 @@ define([
         /**
          * Gets or sets the label color of this feature.
          * <p>
-         * The outline color will be applied to the label if <code>labelText</code> is defined.
+         * The color will be applied to the label if <code>labelText</code> is defined.
          * </p>
          *
          * @memberof Cesium3DTilePointFeature.prototype
@@ -225,7 +227,7 @@ define([
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *
-         * @type {Color}
+         * @type {Number}
          */
         labelOutlineWidth : {
             get : function() {
@@ -416,8 +418,7 @@ define([
             set : function(value) {
                 var offset = defaultValue(this._heightOffset, 0.0);
 
-                // TODO: ellipsoid
-                var ellipsoid = Ellipsoid.WGS84;
+                var ellipsoid = this._content.tileset.ellipsoid;
                 var cart = ellipsoid.cartesianToCartographic(this._billboard.position, scratchCartographic);
                 cart.height = cart.height - offset + value;
                 var newPosition = ellipsoid.cartographicToCartesian(cart);
@@ -480,7 +481,11 @@ define([
                 return this._billboardImage;
             },
             set : function(value) {
+                var imageChanged = this._billboardImage !== value;
                 this._billboardImage = value;
+                if (imageChanged) {
+                    setBillboardImage(this);
+                }
             }
         },
 
@@ -509,12 +514,29 @@ define([
          *
          * @type {HorizontalOrigin}
          */
-        origin : {
+        horizontalOrigin : {
             get : function() {
                 return this._billboard.horizontalOrigin;
             },
             set : function(value) {
                 this._billboard.horizontalOrigin = value;
+            }
+        },
+
+        /**
+         * Gets or sets the vertical origin of this point, which determines if the point is
+         * to the bottom, center, or top of its anchor position.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {VerticalOrigin}
+         */
+        verticalOrigin : {
+            get : function() {
+                return this._billboard.verticalOrigin;
+            },
+            set : function(value) {
+                this._billboard.verticalOrigin = value;
             }
         },
 
@@ -526,12 +548,29 @@ define([
          *
          * @type {HorizontalOrigin}
          */
-        labelOrigin : {
+        labelHorizontalOrigin : {
             get : function() {
                 return this._label.horizontalOrigin;
             },
             set : function(value) {
                 this._label.horizontalOrigin = value;
+            }
+        },
+
+        /**
+         * Get or sets the vertical origin of this point's text, which determines if the point's text is
+         * to the bottom, center, top, or baseline of it's anchor point.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {VerticalOrigin}
+         */
+        labelVerticalOrigin : {
+            get : function() {
+                return this._label.verticalOrigin;
+            },
+            set : function(value) {
+                this._label.verticalOrigin = value;
             }
         },
 
@@ -583,7 +622,7 @@ define([
         }
     });
 
-    Cesium3DTilePointFeature.defaultPointColor = Color.WHITE;
+    Cesium3DTilePointFeature.defaultColor = Color.WHITE;
     Cesium3DTilePointFeature.defaultPointOutlineColor = Color.BLACK;
     Cesium3DTilePointFeature.defaultPointOutlineWidth = 0.0;
     Cesium3DTilePointFeature.defaultPointSize = 8.0;
@@ -599,7 +638,7 @@ define([
             return;
         }
 
-        var newColor = defaultValue(feature._pointColor, Cesium3DTilePointFeature.defaultPointColor);
+        var newColor = defaultValue(feature._color, Cesium3DTilePointFeature.defaultColor);
         var newOutlineColor = defaultValue(feature._pointOutlineColor, Cesium3DTilePointFeature.defaultPointOutlineColor);
         var newOutlineWidth = defaultValue(feature._pointOutlineWidth, Cesium3DTilePointFeature.defaultPointOutlineWidth);
         var newPointSize = defaultValue(feature._pointSize, Cesium3DTilePointFeature.defaultPointSize);

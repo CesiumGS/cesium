@@ -176,7 +176,7 @@ define([
                 return;
             }
 
-            when(verticesPromise, function(result) {
+            verticesPromise.then(function(result) {
                 points._positions = new Float64Array(result.positions);
                 points._ready = true;
             });
@@ -200,13 +200,11 @@ define([
 
                 var b = billboardCollection.add();
                 b.position = position;
-                b.verticalOrigin = VerticalOrigin.BOTTOM;
                 b._batchIndex = id;
 
                 var l = labelCollection.add();
                 l.text = ' ';
                 l.position = position;
-                l.verticalOrigin = VerticalOrigin.BOTTOM;
                 l._batchIndex = id;
 
                 var p = polylineCollection.add();
@@ -269,7 +267,7 @@ define([
 
             feature.show = true;
             feature.pointSize = Cesium3DTilePointFeature.defaultPointSize;
-            feature.pointColor = Cesium3DTilePointFeature.defaultPointColor;
+            feature.color = Cesium3DTilePointFeature.defaultColor;
             feature.pointOutlineColor = Cesium3DTilePointFeature.defaultPointOutlineColor;
             feature.pointOutlineWidth = Cesium3DTilePointFeature.defaultPointOutlineWidth;
             feature.labelColor = Color.WHITE;
@@ -289,8 +287,10 @@ define([
             feature.anchorLineColor = Color.WHITE;
             feature.image = undefined;
             feature.disableDepthTestDistance = 0.0;
-            feature.origin = HorizontalOrigin.CENTER;
-            feature.labelOrigin = HorizontalOrigin.LEFT;
+            feature.horizontalOrigin = HorizontalOrigin.CENTER;
+            feature.verticalOrigin = VerticalOrigin.CENTER;
+            feature.labelHorizontalOrigin = HorizontalOrigin.RIGHT;
+            feature.labelVerticalOrigin = VerticalOrigin.BASELINE;
         }
     }
 
@@ -331,8 +331,8 @@ define([
                 feature.pointSize = style.pointSize.evaluate(frameState, feature);
             }
 
-            if (defined(style.pointColor)) {
-                feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor);
+            if (defined(style.color)) {
+                feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             }
 
             if (defined(style.pointOutlineColor)) {
@@ -434,12 +434,20 @@ define([
                 feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(frameState, feature);
             }
 
-            if (defined(style.origin)) {
-                feature.origin = style.origin.evaluate(frameState, feature);
+            if (defined(style.horizontalOrigin)) {
+                feature.horizontalOrigin = style.horizontalOrigin.evaluate(frameState, feature);
             }
 
-            if (defined(style.labelOrigin)) {
-                feature.labelOrigin = style.labelOrigin.evaluate(frameState, feature);
+            if (defined(style.verticalOrigin)) {
+                feature.verticalOrigin = style.verticalOrigin.evaluate(frameState, feature);
+            }
+
+            if (defined(style.labelHorizontalOrigin)) {
+                feature.labelHorizontalOrigin = style.labelHorizontalOrigin.evaluate(frameState, feature);
+            }
+
+            if (defined(style.labelVerticalOrigin)) {
+                feature.labelVerticalOrigin = style.labelVerticalOrigin.evaluate(frameState, feature);
             }
         }
     };

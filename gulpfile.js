@@ -546,10 +546,10 @@ function listAll(s3, bucketName, prefix, files, marker) {
 }
 
 gulp.task('deploy-set-version', function() {
-    var version = yargs.argv.version;
-    if (version) {
+    var buildVersion = yargs.argv.buildVersion;
+    if (buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
-        packageJson.version += '-' + version.replace(/[^[0-9A-Za-z-]/g, '');
+        packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });

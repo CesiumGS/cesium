@@ -487,81 +487,85 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    it('renders a globe', function() {
-        var s = createScene();
+    describe('render tests', function() {
+        var s;
 
-        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
-        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+        beforeEach(function() {
+            s = createScene();
+        });
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
+        afterEach(function() {
+            s.destroyForSpecs();
+        });
 
-        return expect(s).toRenderAndCall(function() {
-            return pollToPromise(function() {
-                render(s.frameState, s.globe);
-                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+        it('renders a globe', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
             });
         });
-    });
 
-    it('renders a globe with an ElevationContour', function() {
-        var s = createScene();
+        it('renders a globe with an ElevationContour', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('ElevationContour');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
-        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
-        s.globe.material = Material.fromType('ElevationContour');
-        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
-        return expect(s).toRenderAndCall(function() {
-            return pollToPromise(function() {
-                render(s.frameState, s.globe);
-                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
             });
         });
-    });
 
-    it('renders a globe with a SlopeRamp', function() {
-        var s = createScene();
+        it('renders a globe with a SlopeRamp', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('SlopeRamp');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
-        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
-        s.globe.material = Material.fromType('SlopeRamp');
-        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
-        return expect(s).toRenderAndCall(function() {
-            return pollToPromise(function() {
-                render(s.frameState, s.globe);
-                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
             });
         });
-    });
 
-    it('renders a globe with a ElevationRamp', function() {
-        var s = createScene();
+        it('renders a globe with a ElevationRamp', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('ElevationRamp');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
-        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
-        s.globe.material = Material.fromType('ElevationRamp');
-        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
-
-        return expect(s).toRenderAndCall(function() {
-            return pollToPromise(function() {
-                render(s.frameState, s.globe);
-                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
             });
         });
     });
@@ -1190,6 +1194,8 @@ defineSuite([
 
         scene.globe = undefined;
         expect(scene.imageryLayers).toBeUndefined();
+
+        scene.destroyForSpecs();
     });
 
     it('Gets terrainProvider', function() {
@@ -1199,6 +1205,8 @@ defineSuite([
 
         scene.globe = undefined;
         expect(scene.terrainProvider).toBeUndefined();
+
+        scene.destroyForSpecs();
     });
 
     it('Sets terrainProvider', function() {
@@ -1216,6 +1224,8 @@ defineSuite([
                 url: '//newTerrain/tiles'
             });
         }).not.toThrow();
+
+        scene.destroyForSpecs();
     });
 
     it('Gets terrainProviderChanged', function() {
@@ -1225,6 +1235,8 @@ defineSuite([
 
         scene.globe = undefined;
         expect(scene.terrainProviderChanged).toBeUndefined();
+
+        scene.destroyForSpecs();
     });
 
 
@@ -1237,6 +1249,8 @@ defineSuite([
 
         globe.material = undefined;
         expect(globe.material).toBeUndefined();
+
+        scene.destroyForSpecs();
     });
 
 }, 'WebGL');

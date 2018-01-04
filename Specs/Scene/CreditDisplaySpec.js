@@ -1,8 +1,10 @@
 defineSuite([
         'Scene/CreditDisplay',
+        'Core/defined',
         'Core/Credit'
     ], function(
         CreditDisplay,
+        defined,
         Credit) {
     'use strict';
 
@@ -13,10 +15,18 @@ defineSuite([
     var image = 'cesium-credit-image';
     var imgSrc = 'imagesrc';
     var delimiter = 'cesium-credit-delimiter';
+    var creditDisplay;
 
     beforeEach(function() {
         container = document.createElement('div');
         container.id = 'credit-container';
+    });
+
+    afterEach(function(){
+        if (defined(creditDisplay)) {
+            creditDisplay.destroy();
+            creditDisplay = undefined;
+        }
     });
 
     it('credit display throws with no container', function() {
@@ -27,21 +37,21 @@ defineSuite([
 
     it('credit display addCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay(container);
+            creditDisplay = new CreditDisplay(container);
             creditDisplay.addCredit();
         }).toThrowDeveloperError();
     });
 
     it('credit display addDefaultCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay(container);
+            creditDisplay = new CreditDisplay(container);
             creditDisplay.addDefaultCredit();
         }).toThrowDeveloperError();
     });
 
     it('credit display removeDefaultCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay(container);
+            creditDisplay = new CreditDisplay(container);
             creditDisplay.removeDefaultCredit();
         }).toThrowDeveloperError();
     });
@@ -68,7 +78,7 @@ defineSuite([
     });
 
     it('credit display displays text credit', function() {
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         var credit = new Credit({
             text: 'credit1',
             showOnScreen: true
@@ -88,7 +98,7 @@ defineSuite([
     });
 
     it('credit display displays image credit', function() {
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         var credit = new Credit({
             imageUrl: imgSrc,
             showOnScreen: true
@@ -110,7 +120,7 @@ defineSuite([
     });
 
     it('credit display displays hyperlink credit', function() {
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         var link = 'http://cesiumjs.org/';
         var credit = new Credit({
             link: link,
@@ -143,7 +153,7 @@ defineSuite([
             showOnScreen: true
         });
 
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -192,7 +202,7 @@ defineSuite([
             text: 'credit2',
             showOnScreen: true
         });
-        var creditDisplay = new CreditDisplay(container, ', ');
+        creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
@@ -226,7 +236,7 @@ defineSuite([
             showOnScreen: true
         });
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
@@ -281,7 +291,7 @@ defineSuite([
             imageUrl: imgSrc,
             showOnScreen: true
         });
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -303,7 +313,7 @@ defineSuite([
             link: 'link.com',
             showOnScreen: true
         });
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -330,7 +340,7 @@ defineSuite([
             showOnScreen: true
         });
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -365,7 +375,7 @@ defineSuite([
             showOnScreen: true
         });
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -400,7 +410,7 @@ defineSuite([
             text: 'credit1',
             showOnScreen: true
         });
-        var creditDisplay = new CreditDisplay(container, ', ');
+        creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -432,7 +442,7 @@ defineSuite([
             showOnScreen: true
         });
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -465,7 +475,7 @@ defineSuite([
             imageUrl: imgSrc,
             showOnScreen: true
         });
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
@@ -492,7 +502,7 @@ defineSuite([
             text: 'credit1',
             showOnScreen: true
         });
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
@@ -511,7 +521,7 @@ defineSuite([
         var credit1 = new Credit({text: 'credit1'});
         var credit2 = new Credit({imageUrl: imgSrc});
 
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         var creditList = creditDisplay._creditList;
 
         creditDisplay.showLightbox();
@@ -552,7 +562,7 @@ defineSuite([
         var credit1 = new Credit({text: 'credit1'});
         var credit2 = new Credit({imageUrl: imgSrc});
 
-        var creditDisplay = new CreditDisplay(container);
+        creditDisplay = new CreditDisplay(container);
         var creditList = creditDisplay._creditList;
 
         creditDisplay.beginFrame();
