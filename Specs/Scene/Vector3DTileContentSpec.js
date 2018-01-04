@@ -722,9 +722,9 @@ defineSuite([
         Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');
     });
 
-    it('throws without rectangle', function() {
+    it('throws without region', function() {
         var arrayBuffer = Cesium3DTilesTester.generateVectorTileBuffer({
-            defineRectangle : false,
+            defineRegion : false,
             polygonsLength : 1
         });
         Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'vctr');

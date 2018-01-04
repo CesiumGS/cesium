@@ -351,9 +351,9 @@ define([
         var featureTableJsonByteLength = 0;
         var defineFeatureTable = defaultValue(options.defineFeatureTable, true);
         if (defineFeatureTable) {
-            var defineRectangle = defaultValue(options.defineRectangle, true);
+            var defineRegion = defaultValue(options.defineRegion, true);
             var featureTableJson = {
-                RECTANGLE : defineRectangle ? [-1.0, -1.0, 1.0, 1.0] : undefined,
+                REGION : defineRegion ? [-1.0, -1.0, 1.0, 1.0, -1.0, 1.0] : undefined,
                 POLYGONS_LENGTH : defaultValue(options.polygonsLength, 0),
                 POLYLINES_LENGTH : defaultValue(options.polylinesLength, 0),
                 POINTS_LENGTH : defaultValue(options.pointsLength, 0),

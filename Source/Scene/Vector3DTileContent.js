@@ -371,14 +371,17 @@ define([
         }
 
         var rectangle;
-        if (defined(featureTableJson.RECTANGLE)) {
-            rectangle = Rectangle.unpack(featureTableJson.RECTANGLE);
+        var minHeight;
+        var maxHeight;
+        if (defined(featureTableJson.REGION)) {
+            var region = featureTableJson.REGION;
+            rectangle = Rectangle.unpack(region);
+            minHeight = region[4];
+            maxHeight = region[5];
         } else {
-            throw new RuntimeError('Rectangle is required in the feature table.');
+            throw new RuntimeError('REGION is required in the feature table.');
         }
 
-        var minHeight = featureTableJson.MINIMUM_HEIGHT;
-        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
         var modelMatrix = content._tile.computedTransform;
 
         var center;

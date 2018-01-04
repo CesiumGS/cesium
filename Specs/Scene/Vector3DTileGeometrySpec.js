@@ -197,8 +197,8 @@ defineSuite([
             for (var i = 0; i < length; ++i) {
                 var sphere = spheres[i];
                 packedSpheres[offset++] = sphere.radius;
-                Matrix4.pack(sphere.modelMatrix, packedSpheres, offset);
-                offset += Matrix4.packedLength;
+                Cartesian3.pack(Matrix4.getTranslation(sphere.modelMatrix, new Cartesian3()), packedSpheres, offset);
+                offset += Cartesian3.packedLength;
             }
             return packedSpheres;
         }
