@@ -705,7 +705,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         eventHelper.add(dataSourceCollection.dataSourceRemoved, Viewer.prototype._onDataSourceRemoved, this);
 
         // Prior to each render, check if anything needs to be resized.
-        eventHelper.add(cesiumWidget.scene.preRender, Viewer.prototype.resize, this);
+        eventHelper.add(cesiumWidget.scene.postUpdate, Viewer.prototype.resize, this);
         eventHelper.add(cesiumWidget.scene.postRender, Viewer.prototype._postRender, this);
 
         // We need to subscribe to the data sources and collections so that we can clear the

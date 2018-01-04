@@ -339,6 +339,9 @@ define([
 
         this._transitioner = new SceneTransitioner(this);
 
+        this._preUpdate = new Event();
+        this._postUpdate = new Event();
+
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
@@ -1025,6 +1028,45 @@ define([
         },
 
         /**
+         * Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the event
+         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * @memberof Scene.prototype
+         *
+         * @see scene#postUpdate
+         * @see scene#preRender
+         * @see scene#postRender
+         * @see scene#render
+         *
+         * @type {Event}
+         * @readonly
+         */
+        preUpdate : {
+            get : function() {
+                return this._preUpdate;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised immediately after the scene is updated and before the scene is rendered.
+         * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
+         * parameter.
+         * @memberof Scene.prototype
+         *
+         * @see scene#preUpdate
+         * @see scene#preRender
+         * @see scene#postRender
+         * @see scene#render
+         *
+         * @type {Event}
+         * @readonly
+         */
+        postUpdate : {
+            get : function() {
+                return this._postUpdate;
+            }
+        },
+
+        /**
          * Gets the event that will be raised when an error is thrown inside the <code>render</code> function.
          * The Scene instance and the thrown error are the only two parameters passed to the event handler.
          * By default, errors are not rethrown after this event is raised, but that can be changed by setting
@@ -1041,9 +1083,15 @@ define([
         },
 
         /**
-         * Gets the event that will be raised at the start of each call to <code>render</code>.  Subscribers to the event
-         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * Gets the event that will be raised after the scene is updated and immediately before the scene is rendered.
+         * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
+         * parameter.
          * @memberof Scene.prototype
+         *
+         * @see scene#preUpdate
+         * @see scene#postUpdate
+         * @see scene#postRender
+         * @see scene#render
          *
          * @type {Event}
          * @readonly
@@ -1055,9 +1103,14 @@ define([
         },
 
         /**
-         * Gets the event that will be raised at the end of each call to <code>render</code>.  Subscribers to the event
+         * Gets the event that will be raised immediately after the scene is rendered.  Subscribers to the event
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
+         *
+         * @see scene#preUpdate
+         * @see scene#postUpdate
+         * @see scene#postRender
+         * @see scene#render
          *
          * @type {Event}
          * @readonly
@@ -2787,7 +2840,7 @@ define([
         }
     }
 
-    function callAfterRenderFunctions(frameState) {
+    function callAfterRenderCycleFunctions(frameState) {
         // Functions are queued up during primitive update and executed here in case
         // the function modifies scene state that should remain constant over the frame.
         var functions = frameState.afterRender;
@@ -2860,14 +2913,7 @@ define([
     }
 
     function update(scene, time) {
-        var frameState = scene._frameState;
-
-        scene._groundPrimitives.update(frameState);
-        scene._primitives.update(frameState);
-
-        if (defined(scene.globe)) {
-            scene.globe.update(frameState);
-        }
+        // TODO: Update primitives, including globe
     }
 
     function render(scene, time) {
@@ -2922,6 +2968,18 @@ define([
         context.endFrame();
     }
 
+    function tryAndCatchError(scene, time, functionToExecute) {
+        try {
+            functionToExecute(scene, time);
+        } catch (error) {
+            scene._renderError.raiseEvent(scene, error);
+
+            if (scene.rethrowRenderErrors) {
+                throw error;
+            }
+        }
+    }
+
     /**
      * @private
      */
@@ -2930,39 +2988,33 @@ define([
             time = JulianDate.now();
         }
 
-        this._preRender.raiseEvent(this, time);
         this._jobScheduler.resetBudgets();
 
+        // Update
+        this._preUpdate.raiseEvent(this, time);
+        tryAndCatchError(this, time, update);
+        this._postUpdate.raiseEvent(this, time);
+
         var cameraChanged = checkForCameraUpdates(this);
-
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
-
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference >= this.maximumRenderTimeChange;
         }
 
-        try {
-            if (shouldRender) {
-                this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
-                this._renderRequested = false;
+        if (shouldRender) {
+            this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
+            this._renderRequested = false;
 
-                render(this, time);
-            } else {
-                update(this, time);
-            }
-        } catch (error) {
-            this._renderError.raiseEvent(this, error);
-
-            if (this.rethrowRenderErrors) {
-                throw error;
-            }
+            // Render
+            this._preRender.raiseEvent(this, time);
+            tryAndCatchError(this, time, render);
+            this._postRender.raiseEvent(this, time);
         }
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         RequestScheduler.update();
-        callAfterRenderFunctions(this._frameState);
-        this._postRender.raiseEvent(this, time);
+        callAfterRenderCycleFunctions(this._frameState);
     };
 
     /**
@@ -3143,7 +3195,7 @@ define([
 
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        callAfterRenderFunctions(frameState);
+        callAfterRenderCycleFunctions(frameState);
         return object;
     };
 

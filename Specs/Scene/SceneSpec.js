@@ -983,7 +983,47 @@ defineSuite([
         s.destroyForSpecs();
     });
 
-    it('raises the preRender event prior to rendering', function() {
+    it('alwayas raises preUpdate event prior to updating', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.preUpdate.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(2);
+
+        s.destroyForSpecs();
+    });
+
+    it('always raises preUpdate event after updating', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.preUpdate.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(2);
+
+        s.destroyForSpecs();
+    });
+
+    it('raises the preRender event prior to rendering only if the scene renders', function() {
         var s = createScene();
 
         var spyListener = jasmine.createSpy('listener');
@@ -993,14 +1033,28 @@ defineSuite([
 
         expect(spyListener.calls.count()).toBe(1);
 
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
         s.destroyForSpecs();
     });
 
-    it('raises the postRender event after rendering', function() {
+    it('raises the postRender event after rendering if the scene rendered', function() {
         var s = createScene();
 
         var spyListener = jasmine.createSpy('listener');
         s.postRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        s.requestRenderMode = true;
+        s.maximumRenderTimeChange = undefined;
 
         s.render();
 
@@ -1244,7 +1298,6 @@ defineSuite([
 
         scene.destroyForSpecs();
     });
-
 
     it('Sets material', function() {
         var scene = createScene();
