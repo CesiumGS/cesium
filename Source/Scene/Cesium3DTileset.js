@@ -184,6 +184,9 @@ define([
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
 
+        // For re-throwing any parsing error
+        this._error = undefined;
+
         var replacementList = new DoublyLinkedList();
 
         // [head, sentinel) -> tiles that weren't selected this frame and may be replaced
@@ -1261,7 +1264,13 @@ define([
         tile.contentReadyPromise.then(function() {
             removeFunction();
             tileset.tileLoad.raiseEvent(tile);
-        }).otherwise(removeFunction);
+        }).otherwise(function(error) {
+            removeFunction();
+            if (error instanceof RuntimeError) {
+                tileset._error = error;
+                error.message += ' URL:\n' + tile._contentUrl;
+            }
+        });
     }
 
     function requestTiles(tileset, outOfCore) {
@@ -1642,6 +1651,10 @@ define([
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;
+        }
+
+        if (defined(this._error)) {
+            throw this._error;
         }
 
         if (!this.show || !this.ready) {
