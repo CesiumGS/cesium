@@ -226,6 +226,20 @@ define([
         return result;
     }
 
+    function modelHasVertexColors(gltf) {
+        var hasVertexColors = false;
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                ForEach.meshPrimitiveAttribute(primitive, function(attribute, semantic) {
+                    if (semantic.indexOf('COLOR') === 0) {
+                        hasVertexColors = true;
+                    }
+                });
+            });
+        });
+        return hasVertexColors;
+    }
+
     function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
         var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
         var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
@@ -442,6 +456,19 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
+        var hasVertexColors = modelHasVertexColors(gltf);
+        if (hasVertexColors) {
+            techniqueAttributes.a_vertexColor = 'vertexColor';
+            techniqueParameters.vertexColor = {
+                semantic: 'COLOR_0',
+                type: WebGLConstants.FLOAT_VEC4
+            };
+            vertexShader += 'attribute vec4 a_vertexColor;\n';
+            vertexShader += 'varying vec4 v_vertexColor;\n';
+            vertexShaderMain += '  v_vertexColor = a_vertexColor;\n';
+            fragmentShader += 'varying vec4 v_vertexColor;\n';
+        }
+
         if (addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = 'batchId';
             techniqueParameters.batchId = {
@@ -606,6 +633,10 @@ define([
             } else {
                 finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
             }
+        }
+
+        if (hasVertexColors) {
+            colorCreationBlock += '  color *= v_vertexColor.rgb;\n';
         }
 
         if (defined(techniqueParameters.emission)) {

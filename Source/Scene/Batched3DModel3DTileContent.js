@@ -18,6 +18,7 @@ define([
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './getAttributeOrUniformBySemantic',
+        './getDiffuseAttributeOrUniform',
         './Model'
     ], function(
         ClippingPlaneCollection,
@@ -39,6 +40,7 @@ define([
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         getAttributeOrUniformBySemantic,
+        getDiffuseAttributeOrUniform,
         Model) {
     'use strict';
 
@@ -208,8 +210,8 @@ define([
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
             var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE', programId);
-            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName, diffuseUniformName);
+            var diffuseAttributeOrUniformName = getDiffuseAttributeOrUniform(gltf, programId);
+            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName, diffuseAttributeOrUniformName);
             return defined(callback) ? callback(vs) : vs;
         };
     }
@@ -228,8 +230,8 @@ define([
         return function(fs, programId) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
-            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE', programId);
-            var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
+            var diffuseAttributeOrUniformName = getDiffuseAttributeOrUniform(gltf, programId);
+            var callback = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName);
             return defined(callback) ? callback(fs) : fs;
         };
     }

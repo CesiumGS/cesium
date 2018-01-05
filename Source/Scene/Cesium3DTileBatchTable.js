@@ -846,7 +846,7 @@ define([
             '} \n';
     }
 
-    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent, batchIdAttributeName, diffuseUniformName) {
+    Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent, batchIdAttributeName, diffuseAttributeOrUniformName) {
         if (this.featuresLength === 0) {
             return;
         }
@@ -855,7 +855,7 @@ define([
         return function(source) {
             // If the color blend mode is HIGHLIGHT, the highlight color will always be applied in the fragment shader.
             // No need to apply the highlight color in the vertex shader as well.
-            var renamedSource = modifyDiffuse(source, diffuseUniformName, false);
+            var renamedSource = modifyDiffuse(source, diffuseAttributeOrUniformName, false);
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
@@ -934,17 +934,17 @@ define([
                '} \n';
     }
 
-    function modifyDiffuse(source, diffuseUniformName, applyHighlight) {
+    function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
         // If the glTF does not specify the _3DTILESDIFFUSE semantic, return the default shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
-        if (!defined(diffuseUniformName)) {
+        if (!defined(diffuseAttributeOrUniformName)) {
             return getDefaultShader(source, applyHighlight);
         }
 
         // Find the diffuse uniform. Examples matches:
         //   uniform vec3 u_diffuseColor;
         //   uniform sampler2D diffuseTexture;
-        var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
+        var regex = new RegExp('(uniform|attribute|in)\\s+(vec[34]|sampler2D)\\s+' + diffuseAttributeOrUniformName + ';');
         var uniformMatch = source.match(regex);
 
         if (!defined(uniformMatch)) {
@@ -953,7 +953,7 @@ define([
         }
 
         var declaration = uniformMatch[0];
-        var type = uniformMatch[1];
+        var type = uniformMatch[2];
 
         source = ShaderSource.replaceMain(source, 'tile_main');
         source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below doesn't affect it
@@ -983,9 +983,9 @@ define([
 
         var setColor;
         if (type === 'vec3' || type === 'vec4') {
-            var sourceDiffuse = (type === 'vec3') ? ('vec4(' + diffuseUniformName + ', 1.0)') : diffuseUniformName;
+            var sourceDiffuse = (type === 'vec3') ? ('vec4(' + diffuseAttributeOrUniformName + ', 1.0)') : diffuseAttributeOrUniformName;
             var replaceDiffuse = (type === 'vec3') ? 'tile_diffuse.xyz' : 'tile_diffuse';
-            regex = new RegExp(diffuseUniformName, 'g');
+            regex = new RegExp(diffuseAttributeOrUniformName, 'g');
             source = source.replace(regex, replaceDiffuse);
             setColor =
                 '    vec4 source = ' + sourceDiffuse + '; \n' +
@@ -995,7 +995,7 @@ define([
             // Regex handles up to one level of nested parentheses:
             // E.g. texture2D(u_diffuse, uv)
             // E.g. texture2D(u_diffuse, computeUV(index))
-            regex = new RegExp('texture2D\\(' + diffuseUniformName + '.*?(\\)\\)|\\))', 'g');
+            regex = new RegExp('texture2D\\(' + diffuseAttributeOrUniformName + '.*?(\\)\\)|\\))', 'g');
             source = source.replace(regex, 'tile_diffuse_final($&, tile_diffuse)');
             setColor =
                 '    tile_diffuse = tile_featureColor; \n' +
@@ -1017,16 +1017,15 @@ define([
         }
 
         source += '} \n';
-
         return source;
     }
 
-    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, diffuseUniformName) {
+    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, diffuseAttributeOrUniformName) {
         if (this.featuresLength === 0) {
             return;
         }
         return function(source) {
-            source = modifyDiffuse(source, diffuseUniformName, true);
+            source = modifyDiffuse(source, diffuseAttributeOrUniformName, true);
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
