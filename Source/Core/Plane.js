@@ -1,19 +1,19 @@
 define([
-        './Cartesian3',
-        './Check',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math',
-        './Matrix4'
-    ], function(
-        Cartesian3,
-        Check,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath,
-        Matrix4) {
+    './Cartesian3',
+    './Check',
+    './defined',
+    './DeveloperError',
+    './freezeObject',
+    './Math',
+    './Matrix4'
+], function(
+    Cartesian3,
+    Check,
+    defined,
+    DeveloperError,
+    freezeObject,
+    CesiumMath,
+    Matrix4) {
     'use strict';
 
     /**
@@ -154,6 +154,30 @@ define([
         //>>includeEnd('debug');
 
         return Cartesian3.dot(plane.normal, point) + plane.distance;
+    };
+
+    var scratchCartesian = new Cartesian3();
+    /**
+     * Projects a point onto the plane.
+     * @param {Plane} plane The plane to project the point onto
+     * @param {Cartesian3} point The point to project onto the plane
+     * @param {Cartesian3} [result] The result point.  If undefined, a new Cartesian3 will be created.
+     */
+    Plane.projectPointOntoPlane = function(plane, point, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('plane', plane);
+        Check.typeOf.object('point', point);
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        // projectedPoint = point - (normal.point + scale) * normal
+        var pointDistance = Plane.getPointDistance(plane, point);
+        var scaledNormal = Cartesian3.multiplyByScalar(plane.normal, pointDistance, scratchCartesian);
+
+        return Cartesian3.subtract(point, scaledNormal, result);
     };
 
     var scratchPosition = new Cartesian3();

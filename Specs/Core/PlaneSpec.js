@@ -129,6 +129,26 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('projects a point onto the plane', function() {
+        var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+        var point = new Cartesian3(1.0, 1.0, 0.0);
+        var result = Plane.projectPointOntoPlane(plane, point);
+        expect(result).toEqual(new Cartesian3(0.0, 1.0, 0.0));
+
+        plane = new Plane(Cartesian3.UNIT_Y, 0.0);
+        result = Plane.projectPointOntoPlane(plane, point);
+        expect(result).toEqual(new Cartesian3(1.0, 0.0, 0.0));
+    });
+
+    it('projectPointOntoPlane uses result parameter', function() {
+        var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+        var point = new Cartesian3(1.0, 1.0, 0.0);
+        var result = new Cartesian3();
+        var returnedResult = Plane.projectPointOntoPlane(plane, point, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(new Cartesian3(0.0, 1.0, 0.0));
+    });
+
     it('clone throws without a plane', function() {
         expect(function() {
             Plane.clone(undefined);
