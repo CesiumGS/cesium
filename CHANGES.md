@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.42 - 2018-02-01
+
+* Breaking changes
+  *
+* Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
+
 ### 1.41 - 2018-01-02
 
 * Breaking changes
