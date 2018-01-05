@@ -1,19 +1,19 @@
 define([
-    './Cartesian3',
-    './Check',
-    './defined',
-    './DeveloperError',
-    './freezeObject',
-    './Math',
-    './Matrix4'
-], function(
-    Cartesian3,
-    Check,
-    defined,
-    DeveloperError,
-    freezeObject,
-    CesiumMath,
-    Matrix4) {
+        './Cartesian3',
+        './Check',
+        './defined',
+        './DeveloperError',
+        './freezeObject',
+        './Math',
+        './Matrix4'
+    ], function(
+        Cartesian3,
+        Check,
+        defined,
+        DeveloperError,
+        freezeObject,
+        CesiumMath,
+        Matrix4) {
     'use strict';
 
     /**
