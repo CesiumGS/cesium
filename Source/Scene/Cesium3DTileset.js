@@ -184,9 +184,6 @@ define([
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
 
-        // For re-throwing any parsing error
-        this._error = undefined;
-
         var replacementList = new DoublyLinkedList();
 
         // [head, sentinel) -> tiles that weren't selected this frame and may be replaced
@@ -410,6 +407,20 @@ define([
          * @see Cesium3DTileset#trimLoadedTiles
          */
         this.tileUnload = new Event();
+
+        /**
+         * The event fired to indicate that a tile's content failed to load.
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.tileFailed.addEventListener(function(error) {
+         *     console.log('An error occurred loading tile: ' + error.url);
+         *     console.log('Error: ' + error.message);
+         * });
+         */
+        this.tileFailed = new Event();
 
         /**
          * This event fires once for each visible tile in a frame.  This can be used to manually
@@ -1266,9 +1277,16 @@ define([
             tileset.tileLoad.raiseEvent(tile);
         }).otherwise(function(error) {
             removeFunction();
-            if (error instanceof RuntimeError) {
-                tileset._error = error;
-                error.message += ' URL:\n' + tile._contentUrl;
+            var url = tile._contentUrl;
+            var message = defined(error.message) ? error.message : error.toString();
+            if (tileset.tileFailed.numberOfListeners > 0) {
+                tileset.tileFailed.raiseEvent({
+                    url : url,
+                    message : message
+                });
+            } else {
+                console.log('A 3D tile failed to load: ' + url);
+                console.log('Error: ' + message);
             }
         });
     }
@@ -1651,10 +1669,6 @@ define([
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;
-        }
-
-        if (defined(this._error)) {
-            throw this._error;
         }
 
         if (!this.show || !this.ready) {

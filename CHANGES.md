@@ -4,6 +4,7 @@ Change Log
 ### 1.42 - 2018-02-01
 
 * Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
+* Added `Cesium3DTileset.tileFailed` event that will be raised when a tile fails to load. The object passed to the event listener will have a url and message property. [#6088](https://github.com/AnalyticalGraphicsInc/cesium/pull/6088)
 
 ### 1.41 - 2018-01-02
 
