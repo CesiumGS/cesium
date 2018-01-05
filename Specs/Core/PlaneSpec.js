@@ -149,6 +149,16 @@ defineSuite([
         expect(result).toEqual(new Cartesian3(0.0, 1.0, 0.0));
     });
 
+    it('projectPointOntoPlane requires the plane and point parameters', function() {
+        expect(function() {
+            return Plane.projectPointOntoPlane(new Plane(Cartesian3.UNIT_X, 0), undefined);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return Plane.projectPointOntoPlane(undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
     it('clone throws without a plane', function() {
         expect(function() {
             Plane.clone(undefined);
