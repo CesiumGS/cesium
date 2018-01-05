@@ -1296,7 +1296,7 @@ define([
         var commandEnd = commandList.length;
         var tile = this._content._tile;
         var tileset = tile._tileset;
-        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {

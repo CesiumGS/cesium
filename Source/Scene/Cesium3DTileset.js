@@ -468,6 +468,8 @@ define([
          * @default true
          */
         this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, true);
+        this._skipLevelOfDetail = this.skipLevelOfDetail;
+        this._disableSkipLevelOfDetail = false;
 
         /**
          * The screen space error that must be reached before skipping levels of detail.
@@ -1278,8 +1280,8 @@ define([
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
-        var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
+        var skipLevels = tileset._skipLevelOfDetail ? tileset.skipLevels : 0;
+        var skipScreenSpaceErrorFactor = tileset._skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
 
         return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLevelOfDetail) &&
                (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
@@ -1502,7 +1504,7 @@ define([
         var tileVisible = tileset.tileVisible;
         var i;
 
-        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
+        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
 
         tileset._backfaceCommands.length = 0;
 
@@ -1710,6 +1712,8 @@ define([
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+
+        this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail;
 
         // Do not do out-of-core operations (new content requests, cache removal,
         // process new tiles) during the pick pass.
