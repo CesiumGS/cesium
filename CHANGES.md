@@ -5,6 +5,7 @@ Change Log
 
 * Breaking changes
   *
+* Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
 * Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
 
 ### 1.41 - 2018-01-02
