@@ -68,7 +68,7 @@ define([
                 request: request
             });
         }
-        var url = urlOrResource.getUrl();
+        var url = urlOrResource.url;
         if (!xhrBlobSupported || isDataUri(url)) {
             return loadImage(urlOrResource);
         }
@@ -83,9 +83,10 @@ define([
                 return;
             }
             var blobUrl = window.URL.createObjectURL(blob);
-            var resource = urlOrResource.clone();
-            resource.url = blobUrl;
-            resource.allowCrossOrigin = false;
+            var resource = new Resource({
+                url: blobUrl,
+                allowCrossOrigin: false
+            });
             return loadImage(resource).then(function(image) {
                 image.blob = blob;
                 window.URL.revokeObjectURL(blobUrl);

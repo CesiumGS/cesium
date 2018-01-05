@@ -651,7 +651,7 @@ define([
         var subdomains = imageryProvider._imageUrlSubdomains;
         var subdomainIndex = (x + y + level) % subdomains.length;
 
-        imageryProvider._resource.getDerivedResource({
+        return imageryProvider._resource.getDerivedResource({
             url: imageUrl,
             request: request,
             urlTemplateValues: {

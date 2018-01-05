@@ -276,8 +276,7 @@ defineSuite([
         var model = Model.fromGltf({
             url: url
         });
-        expect(model._basePath).toEndWith(params);
-        expect(model._baseUri).toEndWith(params);
+        expect(model.basePath).toEndWith(params);
     });
 
     it('fromGltf takes a base path', function() {
@@ -287,7 +286,7 @@ defineSuite([
             url: url,
             basePath: basePath
         });
-        expect(model._basePath).toEndWith(basePath);
+        expect(model.basePath).toEndWith(basePath);
         expect(model._cacheKey).toEndWith(basePath);
     });
 

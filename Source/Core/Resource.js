@@ -1,4 +1,5 @@
 define([
+    './clone',
     './combine',
     './defaultValue',
     './defined',
@@ -8,7 +9,8 @@ define([
     './queryToObject',
     './Check',
     '../ThirdParty/Uri'
-], function(combine,
+], function(clone,
+            combine,
             defaultValue,
             defined,
             defineProperties,
@@ -41,9 +43,9 @@ define([
         //>>includeEnd('debug');
 
         this._url = '';
-        this._urlTemplateValues = defaultValue(options.urlTemplateValues, {});
+        this.urlTemplateValues = defaultValue(options.urlTemplateValues, {});
         this._queryParameters = defaultValue(options.queryParameters, {});
-        this._fragment = defaultValue(options.fragment, '');
+        this.fragment = defaultValue(options.fragment, '');
 
         this.url = options.url;
 
@@ -61,6 +63,16 @@ define([
         this._retryCount = 0;
     }
 
+    Resource.createIfNeeded = function(resource, options) {
+        if (typeof resource === 'string') {
+            var args = defined(options) ? clone(options) : {};
+            args.url = resource;
+            resource = new Resource(args);
+        }
+
+        return resource;
+    };
+
     defineProperties(Resource.prototype, {
         queryParameters: {
             get: function() {
@@ -71,12 +83,12 @@ define([
             get: function() {
                 var uri = new Uri(this._url);
                 uri.query = objectToQuery(this._queryParameters);
-                uri.fragment = this._fragment;
+                uri.fragment = this.fragment;
 
                 // objectToQuery escapes the placeholders.  Undo that.
                 var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
 
-                var template = this._urlTemplateValues;
+                var template = this.urlTemplateValues;
                 var keys = Object.keys(template);
                 if (keys.length > 0) {
                     for (var i = 0; i < keys.length; i++) {
@@ -102,7 +114,7 @@ define([
                 if (defined(uri.fragment)) {
                     var fragment = uri.fragment;
                     uri.fragment = undefined;
-                    this._fragment = fragment;
+                    this.fragment = fragment;
                 }
 
                 this._url = uri.toString();
@@ -119,7 +131,7 @@ define([
     };
 
     Resource.prototype.addTemplateValues = function(template) {
-        this._urlTemplateValues = combine(template, this._urlTemplateValues);
+        this.urlTemplateValues = combine(template, this.urlTemplateValues);
     };
 
     Resource.prototype.getDerivedResource = function(options) {
@@ -131,7 +143,7 @@ define([
             if (defined(uri.fragment)) {
                 var fragment = uri.fragment;
                 uri.fragment = undefined;
-                resource._fragment = fragment;
+                resource.fragment = fragment;
             }
 
             if (defined(uri.query)) {
@@ -190,13 +202,15 @@ define([
 
     Resource.prototype.clone = function(result) {
         if (!defined(result)) {
-            return new Resource(this);
+            result = new Resource({
+                url : this._url
+            });
         }
 
         result._url = this._url;
         result._queryParameters = this._queryParameters;
-        result._urlTemplateValues = this._urlTemplateValues;
-        result._fragment = this._fragment;
+        result.urlTemplateValues = this.urlTemplateValues;
+        result.fragment = this.fragment;
         result.headers = this.headers;
         result.request = this.request;
         result.responseType = this.responseType;

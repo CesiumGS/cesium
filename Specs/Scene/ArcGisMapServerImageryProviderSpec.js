@@ -9,6 +9,7 @@ defineSuite([
         'Core/loadImage',
         'Core/loadJsonp',
         'Core/loadWithXhr',
+        'Core/objectToQuery',
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -33,6 +34,7 @@ defineSuite([
         loadImage,
         loadJsonp,
         loadWithXhr,
+        objectToQuery,
         queryToObject,
         Rectangle,
         RequestScheduler,
@@ -414,6 +416,10 @@ defineSuite([
             token : token
         });
 
+        var expectedTileUrl = baseUrl + '/tile/0/0/0?' + objectToQuery({
+            token: token
+        });
+
         expect(provider.url).toEqual(baseUrl);
         expect(provider.token).toEqual(token);
 
@@ -435,7 +441,7 @@ defineSuite([
                     // load blob url normally
                     loadImage.defaultCreateImage(url, crossOrigin, deferred);
                 } else {
-                    expect(url).toEqual(baseUrl + '/tile/0/0/0?token=' + token);
+                    expect(url).toEqual(expectedTileUrl);
 
                     // Just return any old image.
                     loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -443,7 +449,7 @@ defineSuite([
             };
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(baseUrl + '/tile/0/0/0?token=' + token);
+                expect(url).toEqual(expectedTileUrl);
 
                 // Just return any old image.
                 loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
@@ -988,7 +994,10 @@ defineSuite([
             });
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toContain('layers=visible:someLayer,anotherLayerYay');
+                var uri = new Uri(url);
+                var query = queryToObject(uri.getQuery());
+
+                expect(query.layers).toContain('visible:someLayer,anotherLayerYay');
                 loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
             };
 

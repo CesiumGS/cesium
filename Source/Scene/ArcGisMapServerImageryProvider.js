@@ -262,11 +262,11 @@ define([
             });
         } else {
             var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            var bbox = nativeRectangle.west + '%2C' + nativeRectangle.south + '%2C' + nativeRectangle.east + '%2C' + nativeRectangle.north;
+            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
 
             var query = {
                 bbox: bbox,
-                size: imageryProvider._tileWidth + '%2C' + imageryProvider._tileHeight,
+                size: imageryProvider._tileWidth + ',' + imageryProvider._tileHeight,
                 format: 'png',
                 transparent: true,
                 f: 'image'
@@ -302,7 +302,7 @@ define([
          */
         url : {
             get : function() {
-                return this._resource.url;
+                return this._resource._url;
             }
         },
 
