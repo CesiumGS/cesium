@@ -1032,10 +1032,9 @@ define([
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
          *
-         * @see scene#postUpdate
-         * @see scene#preRender
-         * @see scene#postRender
-         * @see scene#render
+         * @see Scene#postUpdate
+         * @see Scene#preRender
+         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -1052,10 +1051,9 @@ define([
          * parameter.
          * @memberof Scene.prototype
          *
-         * @see scene#preUpdate
-         * @see scene#preRender
-         * @see scene#postRender
-         * @see scene#render
+         * @see Scene#preUpdate
+         * @see Scene#preRender
+         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -1088,10 +1086,9 @@ define([
          * parameter.
          * @memberof Scene.prototype
          *
-         * @see scene#preUpdate
-         * @see scene#postUpdate
-         * @see scene#postRender
-         * @see scene#render
+         * @see Scene#preUpdate
+         * @see Scene#postUpdate
+         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -1107,10 +1104,9 @@ define([
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
          *
-         * @see scene#preUpdate
-         * @see scene#postUpdate
-         * @see scene#postRender
-         * @see scene#render
+         * @see Scene#preUpdate
+         * @see Scene#postUpdate
+         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -2840,7 +2836,7 @@ define([
         }
     }
 
-    function callAfterRenderCycleFunctions(frameState) {
+    function callAfterRenderFunctions(frameState) {
         // Functions are queued up during primitive update and executed here in case
         // the function modifies scene state that should remain constant over the frame.
         var functions = frameState.afterRender;
@@ -3014,7 +3010,7 @@ define([
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         RequestScheduler.update();
-        callAfterRenderCycleFunctions(this._frameState);
+        callAfterRenderFunctions(this._frameState);
     };
 
     /**
@@ -3195,7 +3191,7 @@ define([
 
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        callAfterRenderCycleFunctions(frameState);
+        callAfterRenderFunctions(frameState);
         return object;
     };
 

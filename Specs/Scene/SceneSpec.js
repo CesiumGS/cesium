@@ -1003,11 +1003,11 @@ defineSuite([
         s.destroyForSpecs();
     });
 
-    it('always raises preUpdate event after updating', function() {
+    it('always raises postUpdate event after updating', function() {
         var s = createScene();
 
         var spyListener = jasmine.createSpy('listener');
-        s.preUpdate.addEventListener(spyListener);
+        s.postUpdate.addEventListener(spyListener);
 
         s.render();
 
