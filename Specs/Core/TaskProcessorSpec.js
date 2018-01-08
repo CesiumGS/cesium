@@ -124,4 +124,42 @@ defineSuite([
             expect(error).toContain('postMessage failed');
         });
     });
+
+    it('successful task raises the taskCompletedEvent', function() {
+        taskProcessor = new TaskProcessor('returnParameters');
+
+        var parameters = {
+            prop : 'blah',
+            obj : {
+                val : true
+            }
+        };
+        var eventRaised = false;
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function () {
+            eventRaised = true;
+        });
+
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
+            expect(eventRaised).toBe(true);
+        }).always(function () {
+            removeListenerCallback();
+        });
+    });
+
+    it('unsuccessful tasks do not raise the taskCompletedEvent', function() {
+        taskProcessor = new TaskProcessor('throwError');
+
+        var message = 'foo';
+        var parameters = {
+            message : message
+        };
+
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function () {
+            fail('should not be called');
+        });
+
+        return taskProcessor.scheduleTask(parameters).always(function () {
+            removeListenerCallback();
+        });
+    });
 });

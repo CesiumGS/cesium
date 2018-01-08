@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### 1.42 - 2017-02-01
+
+* Added optional scene request render mode to reduce CPU usage. [#6065](https://github.com/AnalyticalGraphicsInc/cesium/pull/6065)
+    * `Scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`. 
+    * `Scene.requestRender` will explicitly request a new render frame when in request render mode.
+    * Added `Scene.preUpdate` and `Scene.postUpdate` events that are raised before and after the scene updates respectively. The scene is always updated before executing a potential render. Continue to listen to `Scene.preRender and `Scene.postRender` events for when the scene renders a frame.
+
 ### 1.41 - 2017-01-02
 
 * Added support for clipping planes
