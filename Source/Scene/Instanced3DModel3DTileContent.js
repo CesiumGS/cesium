@@ -453,12 +453,11 @@ define([
     }
 
     function createFeatures(content) {
-        var tileset = content._tileset;
         var featuresLength = content.featuresLength;
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
+                features[i] = new Cesium3DTileFeature(content, i);
             }
             content._features = features;
         }
