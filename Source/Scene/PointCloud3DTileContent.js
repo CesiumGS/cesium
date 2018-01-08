@@ -2,6 +2,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -38,6 +39,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        ClippingPlaneCollection,
         Color,
         combine,
         ComponentDatatype,
@@ -844,7 +846,7 @@ define([
         var hasColorStyle = defined(colorStyleFunction);
         var hasShowStyle = defined(showStyleFunction);
         var hasPointSizeStyle = defined(pointSizeStyleFunction);
-        var hasClippedContent = defined(clippingPlanes) && clippingPlanes.enabled && content._tile._isClipped;
+        var hasClippedContent = defined(clippingPlanes) && clippingPlanes.enabled && content._tile._isClipped && ClippingPlaneCollection.isSupported();
 
         // Get the properties in use by the style
         var styleableProperties = [];
@@ -1138,12 +1140,11 @@ define([
     }
 
     function createFeatures(content) {
-        var tileset = content._tileset;
         var featuresLength = content.featuresLength;
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
+                features[i] = new Cesium3DTileFeature(content, i);
             }
             content._features = features;
         }

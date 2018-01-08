@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
@@ -50,6 +51,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        ClippingPlaneCollection,
         Color,
         ColorGeometryInstanceAttribute,
         combine,
@@ -1320,7 +1322,7 @@ define([
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0) && ClippingPlaneCollection.isSupported();
             var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : false;
 
             if (defined(tileProvider.uniformMap)) {
