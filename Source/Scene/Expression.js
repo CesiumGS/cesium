@@ -703,9 +703,18 @@ define([
         }
     }
 
+    function parseNumberConstant(ast) {
+        var name = ast.property.name;
+        if (name === 'POSITIVE_INFINITY') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Number.POSITIVE_INFINITY);
+        }
+    }
+
     function parseMemberExpression(expression, ast) {
         if (ast.object.name === 'Math') {
             return parseMathConstant(ast);
+        } else if (ast.object.name === 'Number') {
+            return parseNumberConstant(ast);
         }
 
         var val;

@@ -74,7 +74,7 @@ define([
     /**
      * @private
      */
-    function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary) {
+    function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary, colorChangedCallback) {
         /**
          * @readonly
          */
@@ -121,6 +121,8 @@ define([
         this._pickIds = [];
 
         this._content = content;
+
+        this._colorChangedCallback = colorChangedCallback;
 
         // Dimensions for batch and pick textures
         var textureDimensions;
@@ -457,6 +459,10 @@ define([
             }
 
             this._batchValuesDirty = true;
+
+            if (defined(this._colorChangedCallback)) {
+                this._colorChangedCallback(batchId, color);
+            }
         }
     };
 
@@ -1048,6 +1054,37 @@ define([
         };
     };
 
+    Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+        return function(source) {
+            source = ShaderSource.replaceMain(source, 'tile_main');
+            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+                // When VTF is supported, per-feature show/hide already happened in the fragment shader
+                source +=
+                    'varying vec4 tile_featureColor; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = tile_featureColor; \n' +
+                    '}';
+            } else {
+                source +=
+                    'uniform sampler2D tile_batchTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+                    '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
+                    '        discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = featureProperties; \n' +
+                    '} \n';
+            }
+            return source;
+        };
+    };
+
     function getColorBlend(batchTable) {
         var tileset = batchTable._content._tileset;
         var colorBlendMode = tileset.colorBlendMode;
@@ -1180,6 +1217,46 @@ define([
         };
     };
 
+    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallbackIgnoreShow = function(batchIdAttributeName) {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        var that = this;
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                '}';
+
+            return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
+        };
+    };
+
+    Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallbackIgnoreShow = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'uniform sampler2D tile_pickTexture; \n' +
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
+                '}';
+
+            return renamedSource + '\n' + newMain;
+        };
+    };
+
     Cesium3DTileBatchTable.prototype.getPickUniformMapCallback = function() {
         if (this.featuresLength === 0) {
             return;
@@ -1219,7 +1296,7 @@ define([
         var commandEnd = commandList.length;
         var tile = this._content._tile;
         var tileset = tile._tileset;
-        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {

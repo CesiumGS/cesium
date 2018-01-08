@@ -147,6 +147,7 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
+        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._imageIndex = -1;
         this._imageIndexPromise = undefined;
