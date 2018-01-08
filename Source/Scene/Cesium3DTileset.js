@@ -409,6 +409,23 @@ define([
         this.tileUnload = new Event();
 
         /**
+         * The event fired to indicate that a tile's content failed to load.
+         * <p>
+         * If there are no event listeners, error messages will be logged to the console.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.tileFailed.addEventListener(function(error) {
+         *     console.log('An error occurred loading tile: ' + error.url);
+         *     console.log('Error: ' + error.message);
+         * });
+         */
+        this.tileFailed = new Event();
+
+        /**
          * This event fires once for each visible tile in a frame.  This can be used to manually
          * style a tileset.
          * <p>
@@ -1261,7 +1278,20 @@ define([
         tile.contentReadyPromise.then(function() {
             removeFunction();
             tileset.tileLoad.raiseEvent(tile);
-        }).otherwise(removeFunction);
+        }).otherwise(function(error) {
+            removeFunction();
+            var url = tile._contentUrl;
+            var message = defined(error.message) ? error.message : error.toString();
+            if (tileset.tileFailed.numberOfListeners > 0) {
+                tileset.tileFailed.raiseEvent({
+                    url : url,
+                    message : message
+                });
+            } else {
+                console.log('A 3D tile failed to load: ' + url);
+                console.log('Error: ' + message);
+            }
+        });
     }
 
     function requestTiles(tileset, outOfCore) {
