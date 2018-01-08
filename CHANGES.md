@@ -9,7 +9,7 @@ Change Log
 * Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
 * Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane` [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092) 
 * Added `Cartesian3.vectorProjection` for projecting one vector to another [#6093](https://github.com/AnalyticalGraphicsInc/cesium/pull/6093) 
-* Added `Cesium3DTileset.tileFailed` event that will be raised when a tile fails to load. The object passed to the event listener will have a url and message property. [#6088](https://github.com/AnalyticalGraphicsInc/cesium/pull/6088)
+* Added `Cesium3DTileset.tileFailed` event that will be raised when a tile fails to load. The object passed to the event listener will have a url and message property. If there are no event listeners, error message will be logged to the console. [#6088](https://github.com/AnalyticalGraphicsInc/cesium/pull/6088)
 
 ### 1.41 - 2018-01-02
 

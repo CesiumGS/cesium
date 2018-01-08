@@ -410,6 +410,9 @@ define([
 
         /**
          * The event fired to indicate that a tile's content failed to load.
+         * <p>
+         * If there are no event listeners, error messages will be logged to the console.
+         * </p>
          *
          * @type {Event}
          * @default new Event()
