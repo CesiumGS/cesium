@@ -1244,24 +1244,24 @@ defineSuite([
     it('projects vector a onto vector b', function() {
         var a = new Cartesian3(0.0, 1.0, 0.0);
         var b = new Cartesian3(1.0, 0.0, 0.0);
-        var result = Cartesian3.vectorProjection(a, b, new Cartesian3());
+        var result = Cartesian3.projectVector(a, b, new Cartesian3());
         expect(result).toEqual(new Cartesian3(0.0, 0.0, 0.0));
 
         a = new Cartesian3(1.0, 1.0, 0.0);
         b = new Cartesian3(1.0, 0.0, 0.0);
-        result = Cartesian3.vectorProjection(a, b, new Cartesian3());
+        result = Cartesian3.projectVector(a, b, new Cartesian3());
         expect(result).toEqual(new Cartesian3(1.0, 0.0, 0.0));
     });
 
-    it('vectorProjection throws when missing parameters', function() {
+    it('projectVector throws when missing parameters', function() {
         expect(function() {
-            return Cartesian3.vectorProjection(undefined, new Cartesian3(), new Cartesian3());
+            return Cartesian3.projectVector(undefined, new Cartesian3(), new Cartesian3());
         }).toThrowDeveloperError();
         expect(function() {
-            return Cartesian3.vectorProjection(new Cartesian3(), undefined, new Cartesian3());
+            return Cartesian3.projectVector(new Cartesian3(), undefined, new Cartesian3());
         }).toThrowDeveloperError();
         expect(function() {
-            return Cartesian3.vectorProjection(new Cartesian3(), new Cartesian3(), undefined);
+            return Cartesian3.projectVector(new Cartesian3(), new Cartesian3(), undefined);
         }).toThrowDeveloperError();
     });
 

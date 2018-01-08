@@ -689,7 +689,7 @@ define([
      * @param {Cartesian3} result The result cartesian
      * @returns {Cartesian3} The modified result parameter
      */
-    Cartesian3.vectorProjection = function(a, b, result) {
+    Cartesian3.projectVector = function(a, b, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('a', a);
         Check.defined('b', b);
