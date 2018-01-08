@@ -61,7 +61,6 @@ define([
 
         this._show = undefined;
         this._color = undefined;
-        this._pointColor = undefined;
         this._pointSize = undefined;
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
@@ -82,8 +81,10 @@ define([
         this._anchorLineColor = undefined;
         this._image = undefined;
         this._disableDepthTestDistance = undefined;
-        this._origin = undefined;
-        this._labelOrigin = undefined;
+        this._horizontalOrigin = undefined;
+        this._verticalOrigin = undefined;
+        this._labelHorizontalOrigin = undefined;
+        this._labelVerticalOrigin = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -115,7 +116,6 @@ define([
         that.show = styleJson.show;
         that.color = styleJson.color;
         that.pointSize = styleJson.pointSize;
-        that.pointColor = styleJson.pointColor;
         that.pointOutlineColor = styleJson.pointOutlineColor;
         that.pointOutlineWidth = styleJson.pointOutlineWidth;
         that.labelColor = styleJson.labelColor;
@@ -135,8 +135,10 @@ define([
         that.anchorLineColor = styleJson.anchorLineColor;
         that.image = styleJson.image;
         that.disableDepthTestDistance = styleJson.disableDepthTestDistance;
-        that.origin = styleJson.origin;
-        that.labelOrigin = styleJson.labelOrigin;
+        that.horizontalOrigin = styleJson.horizontalOrigin;
+        that.verticalOrigin = styleJson.verticalOrigin;
+        that.labelHorizontalOrigin = styleJson.labelHorizontalOrigin;
+        that.labelVerticalOrigin = styleJson.labelVerticalOrigin;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -347,51 +349,6 @@ define([
             set : function(value) {
                 this._color = getExpression(this, value);
                 this._colorShaderFunctionReady = false;
-            }
-        },
-
-        /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointColor</code> property. Alternatively a string or object defining a color style can be used.
-         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
-         * <p>
-         * The expression must return a <code>Color</code>.
-         * </p>
-         *
-         * @memberof Cesium3DTileStyle.prototype
-         *
-         * @type {StyleExpression}
-         *
-         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
-         *
-         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-         *
-         * @example
-         * var style = new Cesium.Cesium3DTileStyle();
-         * // Override pointColor expression with a string
-         * style.pointColor = 'color("blue")';
-         *
-         * @example
-         * var style = new Cesium.Cesium3DTileStyle();
-         * // Override pointColor expression with a condition
-         * style.pointColor = {
-         *     conditions : [
-         *         ['${height} > 2', 'color("cyan")'],
-         *         ['true', 'color("blue")']
-         *     ]
-         * };
-         */
-        pointColor : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._pointColor;
-            },
-            set : function(value) {
-                this._pointColor = getExpression(this, value);
             }
         },
 
@@ -1270,7 +1227,7 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>origin</code> property. Alternatively a string or object defining a number style can be used.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>horizontalOrigin</code> property. Alternatively a string or object defining a number style can be used.
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>HorizontalOrigin</code>.
@@ -1286,20 +1243,20 @@ define([
          *
          * @example
          * var style = new Cesium3DTileStyle({
-         *     origin : HorizontalOrigin.LEFT
+         *     horizontalOrigin : HorizontalOrigin.LEFT
          * });
-         * style.origin.evaluate(frameState, feature); // returns a HorizontalOrigin
+         * style.horizontalOrigin.evaluate(frameState, feature); // returns a HorizontalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
-         * // Override origin expression with a custom function
-         * style.origin = {
+         * // Override horizontalOrigin expression with a custom function
+         * style.horizontalOrigin = {
          *     evaluate : function(frameState, feature) {
          *         return HorizontalOrigin.CENTER;
          *     }
          * };
          */
-        origin : {
+        horizontalOrigin : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -1307,15 +1264,60 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._origin;
+                return this._horizontalOrigin;
             },
             set : function(value) {
-                this._origin = getExpression(this, value);
+                this._horizontalOrigin = getExpression(this, value);
             }
         },
 
         /**
-         Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOrigin</code> property. Alternatively a string or object defining a number style can be used.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>verticalOrigin</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
+         * <p>
+         * The expression must return a <code>VerticalOrigin</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     verticalOrigin : VerticalOrigin.TOP
+         * });
+         * style.verticalOrigin.evaluate(frameState, feature); // returns a VerticalOrigin
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override verticalOrigin expression with a custom function
+         * style.verticalOrigin = {
+         *     evaluate : function(frameState, feature) {
+         *         return VerticalOrigin.CENTER;
+         *     }
+         * };
+         */
+        verticalOrigin : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._verticalOrigin;
+            },
+            set : function(value) {
+                this._verticalOrigin = getExpression(this, value);
+            }
+        },
+
+        /**
+         Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelHorizontalOrigin</code> property. Alternatively a string or object defining a number style can be used.
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>HorizontalOrigin</code>.
@@ -1331,20 +1333,20 @@ define([
          *
          * @example
          * var style = new Cesium3DTileStyle({
-         *     labelOrigin : HorizontalOrigin.LEFT
+         *     labelHorizontalOrigin : HorizontalOrigin.LEFT
          * });
-         * style.labelOrigin.evaluate(frameState, feature); // returns a HorizontalOrigin
+         * style.labelHorizontalOrigin.evaluate(frameState, feature); // returns a HorizontalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
-         * // Override labelOrigin expression with a custom function
-         * style.labelOrigin = {
+         * // Override labelHorizontalOrigin expression with a custom function
+         * style.labelHorizontalOrigin = {
          *     evaluate : function(frameState, feature) {
          *         return HorizontalOrigin.CENTER;
          *     }
          * };
          */
-        labelOrigin : {
+        labelHorizontalOrigin : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -1352,10 +1354,55 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._labelOrigin;
+                return this._labelHorizontalOrigin;
             },
             set : function(value) {
-                this._labelOrigin = getExpression(this, value);
+                this._labelHorizontalOrigin = getExpression(this, value);
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelVerticalOrigin</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
+         * <p>
+         * The expression must return a <code>VerticalOrigin</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     labelVerticalOrigin : VerticalOrigin.TOP
+         * });
+         * style.labelVerticalOrigin.evaluate(frameState, feature); // returns a VerticalOrigin
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelVerticalOrigin expression with a custom function
+         * style.labelVerticalOrigin = {
+         *     evaluate : function(frameState, feature) {
+         *         return VerticalOrigin.CENTER;
+         *     }
+         * };
+         */
+        labelVerticalOrigin : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._labelVerticalOrigin;
+            },
+            set : function(value) {
+                this._labelVerticalOrigin = getExpression(this, value);
             }
         },
 

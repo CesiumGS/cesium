@@ -2,7 +2,6 @@
     "color" : "color('red')",
     "show" : "${id} < 100.0",
     "pointSize" : "${id} / 100.0",
-    "pointColor" : "color('green')",
     "pointOutlineColor" : "color('blue')",
     "pointOutlineWidth" : "5.0",
     "labelColor" : "color('yellow')",
@@ -22,6 +21,8 @@
     "anchorLineColor" : "color('fuchsia')",
     "image" : "'url/to/invalid/image'",
     "disableDepthTestDistance" : "1000.0",
-    "origin" : "0",
-    "labelOrigin" : "0"
+    "horizontalOrigin" : "0",
+    "verticalOrigin" : "0",
+    "labelHorizontalOrigin" : "0",
+    "labelVerticalOrigin" : "0"
 }

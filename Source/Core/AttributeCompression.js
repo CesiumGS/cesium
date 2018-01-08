@@ -284,9 +284,9 @@ define([
     /**
      * Decodes delta and ZigZag encoded vertices. This modifies the buffers in place.
      *
-     * @param {Uint16Array} uBuffer The buffer or buffer view of u values.
-     * @param {Uint16Array} vBuffer The buffer or buffer view of v values.
-     * @param {Uint16Array} [heightBuffer] The buffer or buffer view of height values.
+     * @param {Uint16Array} uBuffer The buffer view of u values.
+     * @param {Uint16Array} vBuffer The buffer view of v values.
+     * @param {Uint16Array} [heightBuffer] The buffer view of height values.
      *
      * @see {@link http://cesiumjs.org/data-and-assets/terrain/formats/quantized-mesh-1.0.html|quantized-mesh-1.0 terrain format}
      */

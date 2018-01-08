@@ -312,7 +312,7 @@ define([
 
                 // will be released
                 polygons._batchedPositions = new Float32Array(result.positions);
-                polygons._vertexBatchIds = new Uint32Array(result.batchIds);
+                polygons._vertexBatchIds = new Uint16Array(result.batchIds);
 
                 polygons._ready = true;
             });

@@ -2,6 +2,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -14,6 +15,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -35,6 +37,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Color,
+        CullingVolume,
         defaultValue,
         defined,
         defineProperties,
@@ -47,6 +50,7 @@ define([
         loadArrayBuffer,
         Matrix3,
         Matrix4,
+        Plane,
         Rectangle,
         Request,
         RequestScheduler,
@@ -317,6 +321,7 @@ define([
         this._lastVisitedFrame = undefined;
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
+        this._isClipped = true;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -747,6 +752,18 @@ define([
     Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
+
+        var tileset = this._tileset;
+        var clippingPlanes = tileset.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            var tileTransform = tileset._root.computedTransform;
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            this._isClipped = intersection !== Intersect.INSIDE;
+            if (intersection === Intersect.OUTSIDE) {
+                return CullingVolume.MASK_OUTSIDE;
+            }
+        }
+
         return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask);
     };
 
@@ -770,6 +787,18 @@ define([
         // tile's (not the content's) bounding volume intersects the culling volume?
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getContentBoundingVolume(this, frameState);
+
+        var tileset = this._tileset;
+        var clippingPlanes = tileset.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            var tileTransform = tileset._root.computedTransform;
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            this._isClipped = intersection !== Intersect.INSIDE;
+            if (intersection === Intersect.OUTSIDE) {
+                return Intersect.OUTSIDE;
+            }
+        }
+
         return cullingVolume.computeVisibility(boundingVolume);
     };
 

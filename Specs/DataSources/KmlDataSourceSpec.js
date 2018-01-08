@@ -260,6 +260,22 @@ defineSuite([
         });
     });
 
+    it('load deletes duplicate namespace declaration in kml', function() {
+        var datasource = new KmlDataSource(options);
+        return datasource.load('Data/KML/duplicateNamespace.kml').then(function(source) {
+            expect(source).toBe(datasource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load deletes duplicate namespace declaration in kmz', function() {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/duplicateNamespace.kmz').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
     it('load rejects nonexistent URL', function() {
         return KmlDataSource.load('test.invalid', options).otherwise(function(e) {
             expect(e).toBeInstanceOf(RequestErrorEvent);

@@ -237,4 +237,5 @@ defineSuite([
         polylines.destroy();
         expect(polylines.isDestroyed()).toEqual(true);
     });
-});
+
+}, 'WebGL');

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="User-defined clipping planes applied to terrain.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <input type="checkbox" value="false" data-bind="checked: clippingPlanesEnabled, valueUpdate: 'input'"> Globe clipping planes enabled
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+// Use clipping planes to selectively hide parts of the globe surface.
+// Clipping planes are not currently supported in Internet Explorer.
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    skyAtmosphere: false
+});
+
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+var position = Cesium.Cartesian3.fromRadians(-2.0862979473351286, 0.6586620013036164, 1400.0);
+
+var entity = viewer.entities.add({
+    position : position,
+    box : {
+        dimensions : new Cesium.Cartesian3(1400.0, 1400.0, 2800.0),
+        material : Cesium.Color.WHITE.withAlpha(0.3),
+        outline : true,
+        outlineColor : Cesium.Color.WHITE
+    }
+});
+
+viewer.entities.add({
+    position : position,
+    model : {
+        uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
+        minimumPixelSize : 128,
+        maximumScale : 800
+    }
+});
+
+var globe = viewer.scene.globe;
+globe.depthTestAgainstTerrain = true;
+globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
+    modelMatrix : entity.computeModelMatrix(Cesium.JulianDate.now()),
+    planes : [
+        new Cesium.Plane(new Cesium.Cartesian3( 1.0,  0.0, 0.0), -700.0),
+        new Cesium.Plane(new Cesium.Cartesian3(-1.0,  0.0, 0.0), -700.0),
+        new Cesium.Plane(new Cesium.Cartesian3( 0.0,  1.0, 0.0), -700.0),
+        new Cesium.Plane(new Cesium.Cartesian3( 0.0, -1.0, 0.0), -700.0)
+    ],
+    edgeWidth: 1.0,
+    edgeColor: Cesium.Color.WHITE
+});
+
+viewer.trackedEntity = entity;
+
+var viewModel = {
+    clippingPlanesEnabled : true
+};
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.track(viewModel);
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'clippingPlanesEnabled').subscribe(function(value) {
+    globe.clippingPlanes.enabled = value;
+});
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

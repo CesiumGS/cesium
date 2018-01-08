@@ -696,4 +696,5 @@ defineSuite([
             expect(geometry.isDestroyed()).toEqual(true);
         });
     }
-});
+
+}, 'WebGL');

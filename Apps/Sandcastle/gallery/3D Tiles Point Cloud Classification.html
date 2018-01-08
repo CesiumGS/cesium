@@ -26,18 +26,19 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-//Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
+// An example showing a point cloud tileset classified by a Geometry tileset.
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+//Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
+viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url : 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM'
 }));
 
-// Vector 3D Tiles are experimental and the format is subject to change in the future.
+// Geometry Tiles are experimental and the format is subject to change in the future.
 // For more details, see:
-//    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData
+//    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/Geometry
 var classification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://beta.cesium.com/api/assets/3394?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
+    url: 'https://beta.cesium.com/api/assets/3469?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
     skipLevelOfDetail : false,
     classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
 }));
@@ -88,7 +89,7 @@ viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
     // Highlight the feature
     highlighted.feature = pickedFeature;
     Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-    pickedFeature.color = Cesium.Color.WHITE.withAlpha(0.5);
+    pickedFeature.color = Cesium.Color.YELLOW.withAlpha(0.5);
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 //Sandcastle_End
 Sandcastle.finishedLoading();

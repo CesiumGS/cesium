@@ -864,9 +864,12 @@ define([
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain =
+                newMain = '';
+                if (handleTranslucent) {
+                    newMain += 'uniform bool tile_translucentCommand; \n';
+                }
+                newMain +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1011,9 +1014,11 @@ define([
                     '    tile_color(tile_featureColor); \n' +
                     '}';
             } else {
+                if (handleTranslucent) {
+                    source += 'uniform bool tile_translucentCommand; \n';
+                }
                 source +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1043,6 +1048,37 @@ define([
 
                 source +=
                     '    tile_color(featureProperties); \n' +
+                    '} \n';
+            }
+            return source;
+        };
+    };
+
+    Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+        return function(source) {
+            source = ShaderSource.replaceMain(source, 'tile_main');
+            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+                // When VTF is supported, per-feature show/hide already happened in the fragment shader
+                source +=
+                    'varying vec4 tile_featureColor; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = tile_featureColor; \n' +
+                    '}';
+            } else {
+                source +=
+                    'uniform sampler2D tile_batchTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+                    '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
+                    '        discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = featureProperties; \n' +
                     '} \n';
             }
             return source;
