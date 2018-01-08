@@ -78,6 +78,11 @@ define([
             url += '/';
         }
 
+        if (defined(options.proxy)) {
+            //TODO deprectaion warning
+            resource.proxy = options.proxy;
+        }
+
         var fileExtension = defaultValue(options.fileExtension, 'png');
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });

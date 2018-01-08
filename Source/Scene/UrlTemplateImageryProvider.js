@@ -592,24 +592,15 @@ define([
             var allTags = combine(tags, customTags);
             var allPickFeaturesTags = combine(pickFeaturesTags, customTags);
 
-            var resource = properties.url;
-            if (typeof resource === 'string') {
-                resource = new Resource({
-                    url: resource
-                });
-            }
-            var pickFeaturesResource = properties.pickFeaturesUrl;
-            if (typeof pickFeaturesResource === 'string') {
-                pickFeaturesResource = new Resource({
-                    url: pickFeaturesResource
-                });
-            }
-
-            if (defined(properties.proxy)) {
+            var resource = Resource.createIfNeeded(properties.url, {
                 //TODO deprecation warning
-                resource.proxy = properties.proxy;
-                pickFeaturesResource.proxy = properties.proxy;
-            }
+                proxy: properties.proxy
+            });
+
+            var pickFeaturesResource = Resource.createIfNeeded(properties.pickFeaturesUrl, {
+                //TODO deprecation warning
+                proxy: properties.proxy
+            });
 
             that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
             that._urlSchemeZeroPadding = defaultValue(properties.urlSchemeZeroPadding, that.urlSchemeZeroPadding);
@@ -758,8 +749,8 @@ define([
         projectedScratchComputed = false;
 
         var resource = imageryProvider._resource;
-        var url = resource.url;
-        var allTags = this._tags;
+        var url = resource._url;
+        var allTags = imageryProvider._tags;
         var urlTemplateValues = {};
         url.match(templateRegex).forEach(function(tag) {
             var key = tag.substring(1, tag.length - 1); //strip {}

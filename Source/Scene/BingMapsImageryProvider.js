@@ -106,19 +106,14 @@ define([
         this._key = BingMapsApi.getKey(options.key);
         this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
 
-        var urlResource = options.url;
-        if (typeof urlResource === 'string') {
-            urlResource = new Resource({
-                url: urlResource,
-                queryParameters: {
-                    key: this._key
-                }
-            });
-        }
-        if (defined(options.proxy)) {
-            //TODO deprectaion warning
-            urlResource.proxy = options.proxy;
-        }
+        var urlResource = Resource.createIfNeeded(options.url, {
+            //TODO deprecation warning
+            proxy: options.proxy
+        });
+
+        urlResource.addQueryParameters({
+            key: this._key
+        });
 
         this._resource = urlResource;
 

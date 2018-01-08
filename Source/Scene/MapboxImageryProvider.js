@@ -68,27 +68,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        var resource = options.url;
-        if (!defined(resource)) {
-            resource = 'https://api.mapbox.com/v4/';
+        var url = options.url;
+        if (!defined(url)) {
+            url = 'https://api.mapbox.com/v4/';
         }
+        this._url = url;
 
-        if (typeof resource === 'string') {
-            resource = new Resource({
-                url: resource
-            });
-        }
-
-        if (defined(options.proxy)) {
-            //TODO deprecation warning
-            resource.proxy = options.proxy;
-        }
+        var resource = Resource.createIfNeeded(url);
 
         var accessToken = MapboxApi.getAccessToken(options.accessToken);
-        resource.addQueryParameters({
-            access_token: accessToken
-        });
-
         this._mapId = mapId;
         this._accessToken = accessToken;
         this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.accessToken);
@@ -103,8 +91,16 @@ define([
             templateUrl += '/';
         }
         templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
-
         resource.url = templateUrl;
+
+        if (defined(options.proxy)) {
+            //TODO deprecation warning
+            resource.proxy = options.proxy;
+        }
+
+        resource.addQueryParameters({
+            access_token: accessToken
+        });
 
         if (defined(options.credit)) {
             var credit = options.credit;
@@ -135,7 +131,7 @@ define([
          */
         url : {
             get : function() {
-                return this._resource.url;
+                return this._url;
             }
         },
 

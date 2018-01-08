@@ -68,28 +68,23 @@ define([
      */
     function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('resourceOrUrl', resourceOrUrl);
+        Check.defined('resourceOrUrl', resourceOrUrl);
         //>>includeEnd('debug');
 
-        if (typeof resourceOrUrl === 'string') {
-            resourceOrUrl = new Resource({
-                url: resourceOrUrl
-            });
-        } else if (!(resourceOrUrl instanceof Resource)) {
-            var options = resourceOrUrl;
+        var url = resourceOrUrl;
+        var proxy;
+        if (!(url instanceof Resource)) {
             //>>includeStart('debug', pragmas.debug);
-            Check.typeOf.string('options.url', options.url);
+            Check.typeOf.string('options.url', resourceOrUrl.url);
             //>>includeEnd('debug');
-
-            resourceOrUrl = new Resource({
-                url: options.url
-            });
-
-            if (defined(options.proxy)) {
-                //TODO derpecation warning
-                resourceOrUrl.proxy = options.proxy;
-            }
+            //TODO deprecation warning
+            url = resourceOrUrl.url;
+            proxy = resourceOrUrl.proxy;
         }
+
+        this._resource = Resource.createIfNeeded(url, {
+            proxy: proxy
+        });
 
         /**
          * True if imagery is available.
@@ -140,8 +135,6 @@ define([
         this.key = undefined;
 
         this._quadPacketVersion = 1;
-
-        this._resource = resourceOrUrl;
 
         this._tileInfo = {};
         this._subtreePromises = {};

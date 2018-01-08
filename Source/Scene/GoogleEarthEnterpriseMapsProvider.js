@@ -113,21 +113,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        var resource = options.url;
-        if (typeof resource === 'string') {
-            resource = new Resource({
-                url: resource
-            });
-        }
-        if (defined(options.proxy)) {
-            //TODO deprecation warning
-            resource.proxy = options.proxy;
-        }
-
+        var url = options.url;
         var path = defaultValue(options.path, '/default_map');
-        resource.url = resource.url + path;
+        var resource = Resource.createIfNeeded(url + path, {
+            //TODO deprecation warning
+            proxy: options.proxy
+        });
 
         this._resource = resource;
+        this._url = url;
         this._path = path;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._channel = options.channel;
@@ -255,7 +249,7 @@ define([
          */
         url : {
             get : function() {
-                return this._resource.url;
+                return this._url;
             }
         },
 

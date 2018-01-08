@@ -320,7 +320,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
-     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -343,7 +343,6 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
-     * @param {Resource} [options.resource] A resource used to retrieve the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -399,18 +398,8 @@ define([
         }
         setCachedGltf(this, cachedGltf);
 
-        this._resource = options.resource;
-
-        // If we have a base path, create a new resource so all derived requests use that instead
-        if (defined(options.basePath) || !options.resource) {
-            var basePath = defaultValue(options.basePath, '');
-            var baseUri = getBaseUri(document.location.href);
-            baseUri = joinUrls(baseUri, basePath);
-
-            this._resource = new Resource({
-                url: baseUri
-            });
-        }
+        var basePath = defaultValue(options.basePath, '');
+        this._resource = Resource.createIfNeeded(basePath);
 
         /**
          * Determines if the model primitive will be shown.
@@ -800,7 +789,7 @@ define([
          */
         basePath : {
             get : function() {
-                return getBaseUri(this._resource.url, true);
+                return this._resource.url;
             }
         },
 
@@ -1133,7 +1122,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Resource|String} options.url The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
-     * @param {String} [options.basePath] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1189,24 +1178,34 @@ define([
         //>>includeEnd('debug');
 
         var url = options.url;
+        options = clone(options);
+
+        // Create resource for the model file
+        var modelResource = Resource.createIfNeeded(url, {
+            headers : defined(options.headers) ? clone(options.headers) : {}
+        });
+        if (!defined(modelResource.headers.Accept)) {
+            modelResource.headers.Accept = defaultModelAccept;
+        }
+
+        // Setup basePath to get dependent files
+        var basePath = options.basePath;
+        if (!defined(basePath)) {
+            basePath = getBaseUri(modelResource.url, true);
+        }
+
+        var resource = Resource.createIfNeeded(basePath, {
+            headers : defined(options.headers) ? clone(options.headers) : {}
+        });
+
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
-
-        options = clone(options);
         if (defined(options.basePath) && !defined(options.cacheKey)) {
-            cacheKey += options.basePath;
+            cacheKey += resource.url;
         }
-
         options.cacheKey = cacheKey;
-
-        // Create a resource using the model's path
-        var baseUrl = getBaseUri(url, true);
-        var modelFilename = url.substring(baseUrl.length);
-        var resource = Resource.createIfNeeded(baseUrl, {
-            headers : defined(options.headers) ? clone(options.headers) : {}
-        });
-        options.resource = resource;
+        options.basePath = resource;
 
         var model = new Model(options);
 
@@ -1219,15 +1218,6 @@ define([
             cachedGltf.modelsToLoad.push(model);
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
-
-            // Clone the resource and add appropriate Accept header for the model request
-            var modelResource = resource.getDerivedResource({
-                url : modelFilename
-            });
-
-            if (!defined(modelResource.headers.Accept)) {
-                modelResource.headers.Accept = defaultModelAccept;
-            }
 
             loadArrayBuffer(modelResource).then(function(arrayBuffer) {
                 var array = new Uint8Array(arrayBuffer);

@@ -4,6 +4,7 @@ define([
     './defaultValue',
     './defined',
     './defineProperties',
+    './getAbsoluteUri',
     './joinUrls',
     './objectToQuery',
     './queryToObject',
@@ -14,12 +15,41 @@ define([
             defaultValue,
             defined,
             defineProperties,
+            getAbsoluteUri,
             joinUrls,
             objectToQuery,
             queryToObject,
             Check,
             Uri) {
     'use strict';
+
+    /**
+     * @private
+     */
+    function parseQuery(queryString) {
+        // Special case we run into where the querystring is just a string, not key/value pairs
+        if (queryString.indexOf('=') === -1) {
+            var result = {};
+            result[queryString] = undefined;
+            return result;
+        }
+
+        return queryToObject(queryString);
+    }
+
+    /**
+     * @private
+     */
+    function stringifyQuery(queryObject) {
+        var keys = Object.keys(queryObject);
+
+        // We have 1 key with an undefined value, so this is just a string, not key/value pairs
+        if (keys.length === 1 && !defined(queryObject[keys[0]])) {
+            return keys[0];
+        }
+
+        return objectToQuery(queryObject);
+    }
 
     /**
      * @param {Object} options An object with the following properties
@@ -64,6 +94,10 @@ define([
     }
 
     Resource.createIfNeeded = function(resource, options) {
+        if (!defined(resource)) {
+            return;
+        }
+
         if (typeof resource === 'string') {
             var args = defined(options) ? clone(options) : {};
             args.url = resource;
@@ -82,7 +116,7 @@ define([
         url: {
             get: function() {
                 var uri = new Uri(this._url);
-                uri.query = objectToQuery(this._queryParameters);
+                uri.query = stringifyQuery(this._queryParameters);
                 uri.fragment = this.fragment;
 
                 // objectToQuery escapes the placeholders.  Undo that.
@@ -106,7 +140,7 @@ define([
                 var uri = new Uri(value);
 
                 if (defined(uri.query)) {
-                    var query = queryToObject(uri.query);
+                    var query = parseQuery(uri.query);
                     this._queryParameters = combine(this._queryParameters, query);
                     uri.query = undefined;
                 }
@@ -147,7 +181,7 @@ define([
             }
 
             if (defined(uri.query)) {
-                var query = queryToObject(uri.query);
+                var query = parseQuery(uri.query);
                 uri.query = undefined;
                 resource._queryParameters = combine(query, resource._queryParameters);
             }

@@ -113,16 +113,10 @@ define([
         if (defined(options.metadata)) {
             metadata = options.metadata;
         } else {
-            var resource = options.url;
-            if (typeof resource === 'string') {
-                resource = new Resource({
-                    url: resource
-                });
-            }
-            if (defined(options.proxy)) {
+            var resource = Resource.createIfNeeded(options.url, {
                 //TODO deprecation warning
-                resource.proxy = options.proxy;
-            }
+                proxy: options.proxy
+            });
             metadata = new GoogleEarthEnterpriseMetadata(resource);
         }
         this._metadata = metadata;
