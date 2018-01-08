@@ -633,7 +633,7 @@ define([
 
             that._resource = resource;
             that._tags = allTags;
-            that._pickFeaturesResoruce = pickFeaturesResource;
+            that._pickFeaturesResource = pickFeaturesResource;
             that._pickFeaturesTags = allPickFeaturesTags;
 
             return true;
@@ -752,10 +752,16 @@ define([
         var url = resource._url;
         var allTags = imageryProvider._tags;
         var urlTemplateValues = {};
-        url.match(templateRegex).forEach(function(tag) {
-            var key = tag.substring(1, tag.length - 1); //strip {}
-            urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level);
-        });
+
+        var match = url.match(templateRegex);
+        if (defined(match)) {
+            match.forEach(function(tag) {
+                var key = tag.substring(1, tag.length - 1); //strip {}
+                if (defined(allTags[key])) {
+                    urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level);
+                }
+            });
+        }
 
         return resource.getDerivedResource({
             request: request,
@@ -773,14 +779,19 @@ define([
         ijScratchComputed = false;
         longitudeLatitudeProjectedScratchComputed = false;
 
-        var resource = imageryProvider._pickFeaturesResoruce;
-        var url = resource.url;
-        var allTags = this._pickFeaturesTags;
+        var resource = imageryProvider._pickFeaturesResource;
+        var url = resource._url;
+        var allTags = imageryProvider._pickFeaturesTags;
         var urlTemplateValues = {};
-        url.match(templateRegex).forEach(function(tag) {
-            var key = tag.substring(1, tag.length - 1); //strip {}
-            urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level, longitude, latitude, format);
-        });
+        var match = url.match(templateRegex);
+        if (defined(match)) {
+            match.forEach(function(tag) {
+                var key = tag.substring(1, tag.length - 1); //strip {}
+                if (defined(allTags[key])) {
+                    urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level, longitude, latitude, format);
+                }
+            });
+        }
 
         return resource.getDerivedResource({
             urlTemplateValues: urlTemplateValues
