@@ -246,6 +246,9 @@ define([
         if (defined(options.allowCrossOrigin)) {
             resource.allowCrossOrigin = options.allowCrossOrigin;
         }
+        if (defined(options.request)) {
+            resource.request = options.request;
+        }
 
         return resource;
     };
