@@ -274,6 +274,24 @@ define([
         }
     };
 
+    function getOutputTexture(process) {
+        while (defined(process.length)) {
+            process = process.get(process.length - 1);
+            if (defined(process.outputTexture)) {
+                return process.outputTexture;
+            }
+        }
+        return process.outputTexture;
+    }
+
+    PostProcessCollection.prototype.getOutputTexture = function(processName) {
+        var process = this.getProcessByName(processName);
+        if (!defined(process)) {
+            return undefined;
+        }
+        return getOutputTexture(process);
+    };
+
     PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
         var activeProcesses = this._activeProcesses;
         var processes = this._processes;
@@ -298,11 +316,11 @@ define([
         var initialTexture = colorTexture;
         if (ao.enabled && ao.ready) {
             ao.execute(context, initialTexture, depthTexture);
-            initialTexture = ao.outputTexture;
+            initialTexture = getOutputTexture(ao);
         }
         if (bloom.enabled && bloom.ready) {
             bloom.execute(context, initialTexture, depthTexture);
-            initialTexture = bloom.outputTexture;
+            initialTexture = getOutputTexture(bloom);
         }
 
         var lastTexture = initialTexture;
@@ -310,9 +328,9 @@ define([
         if (count > 0) {
             activeProcesses[0].execute(context, initialTexture, depthTexture);
             for (i = 1; i < count; ++i) {
-                activeProcesses[i].execute(context, activeProcesses[i - 1].outputTexture, depthTexture);
+                activeProcesses[i].execute(context, getOutputTexture(activeProcesses[i - 1]), depthTexture);
             }
-            lastTexture = activeProcesses[count - 1].outputTexture;
+            lastTexture = getOutputTexture(activeProcesses[count - 1]);
         }
 
         if (fxaa.enabled && fxaa.ready) {

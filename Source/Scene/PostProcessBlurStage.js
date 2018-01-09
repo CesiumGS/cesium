@@ -126,11 +126,6 @@ define([
                 return this._uniformValues;
             }
         },
-        outputTexture : {
-            get : function() {
-                return this._blurPostProcess.outputTexture;
-            }
-        },
         length : {
             get : function() {
                 return this._blurPostProcess.length;

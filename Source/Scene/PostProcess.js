@@ -299,24 +299,6 @@ define([
         };
     }
 
-    var stackScratch = [];
-
-    function getOutputTexture(process) {
-        var lastProcess;
-        var stack = stackScratch;
-        stack.push(process);
-        while (stack.length > 0) {
-            lastProcess = stack.pop();
-
-            var length = lastProcess.length;
-            if (defined(lastProcess.length)) {
-                stack.push(lastProcess.get(length - 1));
-            }
-        }
-
-        return lastProcess.outputTexture;
-    }
-
     function updateUniformTextures(postProcess, context) {
         var i;
         var texture;
@@ -354,9 +336,9 @@ define([
         for (i = 0; i < length; ++i) {
             name = dirtyUniforms[i];
             var processNameOrUrl = uniformValues[name];
-            var process = postProcess._collection.getProcessByName(processNameOrUrl);
-            if (defined(process)) {
-                postProcess._actualUniformValues[name] = getOutputTexture(process);
+            var outputTexture = postProcess._collection.getOutputTexture(processNameOrUrl);
+            if (defined(outputTexture)) {
+                postProcess._actualUniformValues[name] = outputTexture;
             } else {
                 promises.push(loadImage(processNameOrUrl).then(createLoadImageFunction(postProcess, name)));
             }

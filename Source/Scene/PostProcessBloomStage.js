@@ -106,11 +106,6 @@ define([
                 return this._blur.uniformValues;
             }
         },
-        outputTexture : {
-            get : function() {
-                return this._bloomComposite.outputTexture;
-            }
-        },
         length : {
             get : function() {
                 return 3;

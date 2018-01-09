@@ -86,11 +86,6 @@ define([
                 return this._blurProcess.uniformValues;
             }
         },
-        outputTexture : {
-            get : function() {
-                return this._depthOfFieldProcess.outputTexture;
-            }
-        },
         length : {
             get : function() {
                 return 2;

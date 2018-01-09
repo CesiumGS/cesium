@@ -129,11 +129,6 @@ define([
                 return this._blurPostProcess.uniformValues;
             }
         },
-        outputTexture : {
-            get : function() {
-                return this._ambientOcclusionComposite.outputTexture;
-            }
-        },
         length : {
             get : function() {
                 return 3;

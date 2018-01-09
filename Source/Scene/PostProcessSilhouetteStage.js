@@ -87,11 +87,6 @@ define([
                 return this._edgeDetectionUniformValues;
             }
         },
-        outputTexture : {
-            get : function() {
-                return this._silhouetteProcess.outputTexture;
-            }
-        },
         length : {
             get : function() {
                 return 2;
