@@ -24,6 +24,7 @@ define([
 
         this._processes = options.processes;
         this._destroyProcesses = defaultValue(options.destroyProcesses, true);
+        this._executeInSeries = defaultValue(options.executeInSeries, true);
 
         this._name = options.name;
         if (!defined(this._name)) {
@@ -93,20 +94,20 @@ define([
         }
     };
 
-    PostProcessComposite.prototype.clear = function(context) {
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            processes[i].clear(context);
-        }
-    };
-
     PostProcessComposite.prototype.execute = function(context, colorTexture, depthTexture) {
         var processes = this._processes;
         var length = processes.length;
-        processes[0].execute(context, colorTexture, depthTexture);
-        for (var i = 1; i < length; ++i) {
-            processes[i].execute(context, processes[i - 1].outputTexture, depthTexture);
+        var i;
+
+        if (this._executeInSeries) {
+            processes[0].execute(context, colorTexture, depthTexture);
+            for (i = 1; i < length; ++i) {
+                processes[i].execute(context, processes[i - 1].outputTexture, depthTexture);
+            }
+        } else {
+            for (i = 0; i < length; ++i) {
+                processes[i].execute(context, colorTexture, depthTexture);
+            }
         }
     };
 

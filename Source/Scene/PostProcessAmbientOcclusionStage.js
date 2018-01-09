@@ -64,12 +64,12 @@ define([
         this._blurPostProcess = new PostProcessBlurStage({
             name : 'czm_ambient_occlusion_blur'
         });
-        this._compositeProcess = new PostProcessComposite({
+        var generateComposite = new PostProcessComposite({
             name : 'czm_ambient_occlusion_generate_blur',
             processes : [this._generatePostProcess, this._blurPostProcess]
         });
 
-        this._ambientOcclusionComposite = new PostProcess({
+        var ambientOcclusionComposite = new PostProcess({
             name : 'czm_ambient_occlusion_composite',
             fragmentShader : AmbientOcclusion,
             uniformValues : {
@@ -78,14 +78,20 @@ define([
             }
         });
 
+        this._compositeProcess = new PostProcessComposite({
+            name : 'czm_ambient_occlusion_generate_and_composite',
+            processes : [generateComposite, ambientOcclusionComposite],
+            executeInSeries : false
+        });
+
         this._uniformValues = {};
         defineProperties(this._uniformValues, {
             ambientOcclusionOnly : {
                 get : function() {
-                    return that._ambientOcclusionComposite.uniformValues.ambientOcclusionOnly;
+                    return ambientOcclusionComposite.uniformValues.ambientOcclusionOnly;
                 },
                 set : function(value) {
-                    that._ambientOcclusionComposite.uniformValues.ambientOcclusionOnly = value;
+                    ambientOcclusionComposite.uniformValues.ambientOcclusionOnly = value;
                 }
             }
         });
@@ -98,7 +104,7 @@ define([
     defineProperties(PostProcessAmbientOcclusionStage.prototype, {
         ready : {
             get : function() {
-                return this._compositeProcess.ready && this._ambientOcclusionComposite.ready;
+                return this._compositeProcess.ready;
             }
         },
         enabled : {
@@ -106,7 +112,7 @@ define([
                 return this._compositeProcess.enabled;
             },
             set : function(value) {
-                this._compositeProcess.enabled = this._ambientOcclusionComposite.enabled = value;
+                this._compositeProcess.enabled = value;
             }
         },
         name : {
@@ -131,19 +137,12 @@ define([
         },
         length : {
             get : function() {
-                return 3;
+                return this._compositeProcess.length;
             }
         }
     });
 
     PostProcessAmbientOcclusionStage.prototype.get = function(index) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
-        Check.typeOf.number.lessThan('index', index, this.length);
-        //>>includeEnd('debug');
-        if (index === 2) {
-            return this._ambientOcclusionComposite;
-        }
         return this._compositeProcess.get(index);
     };
 
@@ -179,12 +178,10 @@ define([
         }
 
         this._compositeProcess.update(context);
-        this._ambientOcclusionComposite.update(context);
     };
 
     PostProcessAmbientOcclusionStage.prototype.execute = function(context, colorTexture, depthTexture) {
         this._compositeProcess.execute(context, colorTexture, depthTexture);
-        this._ambientOcclusionComposite.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessAmbientOcclusionStage.prototype.isDestroyed = function() {
@@ -193,7 +190,6 @@ define([
 
     PostProcessAmbientOcclusionStage.prototype.destroy = function() {
         this._compositeProcess.destroy();
-        this._ambientOcclusionComposite.destroy();
         this._randomTexture = this._randomTexture && this._randomTexture.destroy();
         return destroyObject(this);
     };

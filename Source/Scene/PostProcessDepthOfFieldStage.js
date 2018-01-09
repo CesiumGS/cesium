@@ -5,7 +5,8 @@ define([
         '../Shaders/PostProcessFilters/DepthOfField',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
         './PostProcess',
-        './PostProcessBlurStage'
+        './PostProcessBlurStage',
+        './PostProcessComposite'
     ], function(
         Check,
         defineProperties,
@@ -13,7 +14,8 @@ define([
         DepthOfField,
         GaussianBlur1D,
         PostProcess,
-        PostProcessBlurStage) {
+        PostProcessBlurStage,
+        PostProcessComposite) {
     'use strict';
 
     /**
@@ -30,7 +32,7 @@ define([
         this._blurProcess = new PostProcessBlurStage({
             name : 'czm_depth_of_field_blur'
         });
-        this._depthOfFieldProcess = new PostProcess({
+        var depthOfFieldProcess = new PostProcess({
             name : 'czm_depth_of_field_composite',
             fragmentShader : DepthOfField,
             uniformValues : {
@@ -38,16 +40,20 @@ define([
                 blurTexture : this._blurProcess.name
             }
         });
+        this._composite = new PostProcessComposite({
+            name : 'czm_depth_of_field_composite',
+            processes : [this._blurProcess, depthOfFieldProcess],
+            executeInSeries : false
+        });
 
-        var that = this;
         this._uniformValues = {};
         defineProperties(this._uniformValues, {
             focalDistance : {
                 get : function() {
-                    return that._depthOfFieldProcess.uniformValues.focalDistance;
+                    return depthOfFieldProcess.uniformValues.focalDistance;
                 },
                 set : function(value) {
-                    that._depthOfFieldProcess.uniformValues.focalDistance = value;
+                    depthOfFieldProcess.uniformValues.focalDistance = value;
                 }
             }
         });
@@ -60,15 +66,15 @@ define([
     defineProperties(PostProcessDepthOfFieldStage.prototype, {
         ready : {
             get : function() {
-                return this._blurProcess.ready && this._depthOfFieldProcess.ready;
+                return this._composite.ready;
             }
         },
         enabled : {
             get : function() {
-                return this._blurProcess.enabled;
+                return this._composite.enabled;
             },
             set : function(value) {
-                this._blurProcess.enabled = this._depthOfFieldProcess.enabled = value;
+                this._composite.enabled = value;
             }
         },
         name : {
@@ -88,30 +94,21 @@ define([
         },
         length : {
             get : function() {
-                return 2;
+                return this._composite.length;
             }
         }
     });
 
     PostProcessDepthOfFieldStage.prototype.get = function(index) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
-        Check.typeOf.number.lessThan('index', index, this.length);
-        //>>includeEnd('debug');
-        if (index === 0) {
-            return this._blurProcess;
-        }
-        return this._depthOfFieldProcess;
+        return this._composite.get(index);
     };
 
     PostProcessDepthOfFieldStage.prototype.update = function(context) {
-        this._blurProcess.update(context);
-        this._depthOfFieldProcess.update(context);
+        this._composite.update(context);
     };
 
     PostProcessDepthOfFieldStage.prototype.execute = function(context, colorTexture, depthTexture) {
-        this._blurProcess.execute(context, colorTexture, depthTexture);
-        this._depthOfFieldProcess.execute(context, colorTexture, depthTexture);
+        this._composite.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessDepthOfFieldStage.prototype.isDestroyed = function() {
@@ -119,8 +116,7 @@ define([
     };
 
     PostProcessDepthOfFieldStage.prototype.destroy = function() {
-        this._blurProcess.destroy();
-        this._depthOfFieldProcess.destroy();
+        this._composite.destroy();
         return destroyObject(this);
     };
 

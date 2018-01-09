@@ -31,12 +31,11 @@ define([
     function PostProcessSilhouette() {
         this._name = 'czm_silhouette';
 
-        var processes = new Array(2);
-        processes[0] = new PostProcess({
+        var silhouetteDepth = new PostProcess({
             name : 'czm_silhouette_depth',
             fragmentShader : Silhouette
         });
-        var edgeDetection = processes[1] = new PostProcess({
+        var edgeDetection = new PostProcess({
             name : 'czm_silhouette_edge_detection',
             fragmentShader : EdgeDetection,
             uniformValues : {
@@ -44,16 +43,21 @@ define([
                 color : Color.clone(Color.BLACK)
             }
         });
-        this._silhouetteGenerateProcess = new PostProcessComposite({
+        var silhouetteGenerateProcess = new PostProcessComposite({
             name : 'czm_silhouette_generate',
-            processes : processes
+            processes : [silhouetteDepth, edgeDetection]
         });
-        this._silhouetteProcess = new PostProcess({
+        var silhouetteProcess = new PostProcess({
             name : 'czm_silhouette_composite',
             fragmentShader : SilhouetteComposite,
             uniformValues : {
-                silhouetteTexture : this._silhouetteGenerateProcess.name
+                silhouetteTexture : silhouetteGenerateProcess.name
             }
+        });
+        this._composite = new PostProcessComposite({
+            name : 'czm_silhouette_composite',
+            processes : [silhouetteGenerateProcess, silhouetteProcess],
+            executeInSeries : false
         });
 
         this._edgeDetectionUniformValues = edgeDetection.uniformValues;
@@ -66,15 +70,15 @@ define([
     defineProperties(PostProcessSilhouette.prototype, {
         ready : {
             get : function() {
-                return this._silhouetteGenerateProcess.ready && this._silhouetteProcess.ready;
+                return this._composite.ready;
             }
         },
         enabled : {
             get : function() {
-                return this._silhouetteProcess.enabled;
+                return this._composite.enabled;
             },
             set : function(value) {
-                this._silhouetteProcess.enabled = this._silhouetteGenerateProcess.enabled = value;
+                this._composite.enabled = value;
             }
         },
         name : {
@@ -89,30 +93,21 @@ define([
         },
         length : {
             get : function() {
-                return 2;
+                return this._composite.length;
             }
         }
     });
 
     PostProcessSilhouette.prototype.get = function(index) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
-        Check.typeOf.number.lessThan('index', index, this.length);
-        //>>includeEnd('debug');
-        if (index === 0) {
-            return this._silhouetteGenerateProcess;
-        }
-        return this._silhouetteProcess;
+        return this._composite.get(index);
     };
 
     PostProcessSilhouette.prototype.update = function(context) {
-        this._silhouetteGenerateProcess.update(context);
-        this._silhouetteProcess.update(context);
+        this._composite.update(context);
     };
 
     PostProcessSilhouette.prototype.execute = function(context, colorTexture, depthTexture) {
-        this._silhouetteGenerateProcess.execute(context, colorTexture, depthTexture);
-        this._silhouetteProcess.execute(context, colorTexture, depthTexture);
+        this._composite.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessSilhouette.prototype.isDestroyed = function() {
@@ -120,8 +115,7 @@ define([
     };
 
     PostProcessSilhouette.prototype.destroy = function() {
-        this._silhouetteGenerateProcess.destroy();
-        this._silhouetteProcess.destroy();
+        this._composite.destroy();
         return destroyObject(this);
     };
 
