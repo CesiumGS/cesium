@@ -280,7 +280,7 @@ define([
      *
      * @see Model.fromGltf
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
     function Model(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -664,7 +664,7 @@ define([
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
          * geometry, textures, and animations are embedded in the .gltf file, which is the
-         * default for the {@link http://cesiumjs.org/convertmodel.html|Cesium model converter}.
+         * default for the {@link https://cesiumjs.org/convertmodel.html|Cesium model converter}.
          * This is especially useful for cases like 3D buildings, where each .gltf model is unique
          * and caching the glTF JSON is not effective.
          *
