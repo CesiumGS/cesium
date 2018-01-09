@@ -5,7 +5,8 @@ define([
         '../Shaders/PostProcessFilters/BloomComposite',
         '../Shaders/PostProcessFilters/ContrastBias',
         './PostProcess',
-        './PostProcessBlurStage'
+        './PostProcessBlurStage',
+        './PostProcessComposite'
     ], function(
         Check,
         defineProperties,
@@ -13,7 +14,8 @@ define([
         BloomComposite,
         ContrastBias,
         PostProcess,
-        PostProcessBlurStage) {
+        PostProcessBlurStage,
+        PostProcessComposite) {
     'use strict';
 
     /**
@@ -38,6 +40,11 @@ define([
         this._blur = new PostProcessBlurStage({
             name : 'czm_bloom_blur'
         });
+        this._composite = new PostProcessComposite({
+            name : 'czm_bloom_contrast_bias_bloom',
+            processes : [this._contrastBias, this._blur]
+        });
+
         this._bloomComposite = new PostProcess({
             name : 'czm_bloom_composite',
             fragmentShader : BloomComposite,
@@ -68,15 +75,15 @@ define([
     defineProperties(PostProcessBloomStage.prototype, {
         ready : {
             get : function() {
-                return this._contrastBias.ready && this._blur.ready && this._bloomComposite.ready;
+                return this._composite.ready && this._bloomComposite.ready;
             }
         },
         enabled : {
             get : function() {
-                return this._contrastBias.enabled;
+                return this._composite.enabled;
             },
             set : function(value) {
-                this._bloomComposite.enabled = this._blur.enabled = this._contrastBias.enabled = value;
+                this._bloomComposite.enabled = this._composite.enabled = value;
             }
         },
         name : {
@@ -116,31 +123,19 @@ define([
         Check.typeOf.number.greaterThanOrEquals('index', index, 0);
         Check.typeOf.number.lessThan('index', index, this.length);
         //>>includeEnd('debug');
-        switch (index) {
-            case 0:
-                return this._contrastBias;
-            case 1:
-                return this._blur;
-            default:
-                return this._bloomComposite;
+        if (index === 2) {
+            return this._bloomComposite;
         }
+        return this._composite.get(index);
     };
 
     PostProcessBloomStage.prototype.update = function(context) {
-        this._contrastBias.update(context);
-        this._blur.update(context);
+        this._composite.update(context);
         this._bloomComposite.update(context);
     };
 
-    PostProcessBloomStage.prototype.clear = function(context) {
-        this._contrastBias.clear(context);
-        this._blur.clear(context);
-        this._bloomComposite.clear(context);
-    };
-
     PostProcessBloomStage.prototype.execute = function(context, colorTexture, depthTexture) {
-        this._contrastBias.execute(context, colorTexture, depthTexture);
-        this._blur.execute(context, this._contrastBias.outputTexture, depthTexture);
+        this._composite.execute(context, colorTexture, depthTexture);
         this._bloomComposite.execute(context, colorTexture, depthTexture);
     };
 
@@ -149,8 +144,7 @@ define([
     };
 
     PostProcessBloomStage.prototype.destroy = function() {
-        this._contrastBias.destroy();
-        this._blur.destroy();
+        this._composite.destroy();
         this._bloomComposite.destroy();
         return destroyObject(this);
     };

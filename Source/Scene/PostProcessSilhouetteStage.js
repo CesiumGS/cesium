@@ -115,11 +115,6 @@ define([
         this._silhouetteProcess.update(context);
     };
 
-    PostProcessSilhouette.prototype.clear = function(context) {
-        this._silhouetteGenerateProcess.clear(context);
-        this._silhouetteProcess.clear(context);
-    };
-
     PostProcessSilhouette.prototype.execute = function(context, colorTexture, depthTexture) {
         this._silhouetteGenerateProcess.execute(context, colorTexture, depthTexture);
         this._silhouetteProcess.execute(context, colorTexture, depthTexture);

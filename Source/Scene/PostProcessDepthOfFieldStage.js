@@ -114,11 +114,6 @@ define([
         this._depthOfFieldProcess.update(context);
     };
 
-    PostProcessDepthOfFieldStage.prototype.clear = function(context) {
-        this._blurProcess.clear(context);
-        this._depthOfFieldProcess.clear(context);
-    };
-
     PostProcessDepthOfFieldStage.prototype.execute = function(context, colorTexture, depthTexture) {
         this._blurProcess.execute(context, colorTexture, depthTexture);
         this._depthOfFieldProcess.execute(context, colorTexture, depthTexture);

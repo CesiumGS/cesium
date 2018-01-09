@@ -13,7 +13,8 @@ define([
         '../Shaders/PostProcessFilters/AmbientOcclusion',
         '../Shaders/PostProcessFilters/AmbientOcclusionGenerate',
         './PostProcess',
-        './PostProcessBlurStage'
+        './PostProcessBlurStage',
+        './PostProcessComposite'
     ], function(
         Check,
         defined,
@@ -29,7 +30,8 @@ define([
         AmbientOcclusion,
         AmbientOcclusionGenerate,
         PostProcess,
-        PostProcessBlurStage) {
+        PostProcessBlurStage,
+        PostProcessComposite) {
     'use strict';
 
     /**
@@ -59,9 +61,12 @@ define([
                 }
             }
         });
-
         this._blurPostProcess = new PostProcessBlurStage({
             name : 'czm_ambient_occlusion_blur'
+        });
+        this._compositeProcess = new PostProcessComposite({
+            name : 'czm_ambient_occlusion_generate_blur',
+            processes : [this._generatePostProcess, this._blurPostProcess]
         });
 
         this._ambientOcclusionComposite = new PostProcess({
@@ -93,15 +98,15 @@ define([
     defineProperties(PostProcessAmbientOcclusionStage.prototype, {
         ready : {
             get : function() {
-                return this._generatePostProcess.ready && this._blurPostProcess.ready && this._ambientOcclusionComposite.ready;
+                return this._compositeProcess.ready && this._ambientOcclusionComposite.ready;
             }
         },
         enabled : {
             get : function() {
-                return this._generatePostProcess.enabled;
+                return this._compositeProcess.enabled;
             },
             set : function(value) {
-                this._generatePostProcess.enabled = this._blurPostProcess.enabled = this._ambientOcclusionComposite.enabled = value;
+                this._compositeProcess.enabled = this._ambientOcclusionComposite.enabled = value;
             }
         },
         name : {
@@ -141,14 +146,10 @@ define([
         Check.typeOf.number.greaterThanOrEquals('index', index, 0);
         Check.typeOf.number.lessThan('index', index, this.length);
         //>>includeEnd('debug');
-        switch (index) {
-            case 0:
-                return this._generatePostProcess;
-            case 1:
-                return this._blurPostProcess;
-            default:
-                return this._ambientOcclusionComposite;
+        if (index === 2) {
+            return this._ambientOcclusionComposite;
         }
+        return this._compositeProcess.get(index);
     };
 
     PostProcessAmbientOcclusionStage.prototype.update = function(context) {
@@ -182,20 +183,12 @@ define([
             });
         }
 
-        this._generatePostProcess.update(context);
-        this._blurPostProcess.update(context);
+        this._compositeProcess.update(context);
         this._ambientOcclusionComposite.update(context);
     };
 
-    PostProcessAmbientOcclusionStage.prototype.clear = function(context) {
-        this._generatePostProcess.clear(context);
-        this._blurPostProcess.clear(context);
-        this._ambientOcclusionComposite.clear(context);
-    };
-
     PostProcessAmbientOcclusionStage.prototype.execute = function(context, colorTexture, depthTexture) {
-        this._generatePostProcess.execute(context, colorTexture, depthTexture);
-        this._blurPostProcess.execute(context, this._generatePostProcess.outputTexture, depthTexture);
+        this._compositeProcess.execute(context, colorTexture, depthTexture);
         this._ambientOcclusionComposite.execute(context, colorTexture, depthTexture);
     };
 
@@ -204,8 +197,7 @@ define([
     };
 
     PostProcessAmbientOcclusionStage.prototype.destroy = function() {
-        this._generatePostProcess.destroy();
-        this._blurPostProcess.destroy();
+        this._compositeProcess.destroy();
         this._ambientOcclusionComposite.destroy();
         this._randomTexture = this._randomTexture && this._randomTexture.destroy();
         return destroyObject(this);

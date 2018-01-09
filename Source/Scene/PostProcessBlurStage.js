@@ -146,10 +146,6 @@ define([
         this._blurPostProcess.update(context);
     };
 
-    PostProcessBlurStage.prototype.clear = function(context) {
-        this._blurPostProcess.clear(context);
-    };
-
     PostProcessBlurStage.prototype.execute = function(context, colorTexture, depthTexture) {
         this._blurPostProcess.execute(context, colorTexture, depthTexture);
     };

@@ -262,14 +262,15 @@ define([
     };
 
     PostProcessCollection.prototype.clear = function(context) {
-        this._fxaa.clear(context);
-        this._ao.clear(context);
-        this._bloom.clear(context);
-
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            processes[i].clear(context);
+        // POST TODO: clear all framebuffers in cache
+        var processNames = this._processNames;
+        for (var name in processNames) {
+            if (processNames.hasOwnProperty(name)) {
+                var process = processNames[name];
+                if (defined(process.clear)) {
+                    process.clear(context);
+                }
+            }
         }
     };
 
