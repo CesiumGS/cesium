@@ -12,9 +12,10 @@ define([
         SceneMode) {
     'use strict';
 
-    function GlobeSurfaceShader(numberOfDayTextures, flags, shaderProgram) {
+    function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram) {
         this.numberOfDayTextures = numberOfDayTextures;
         this.flags = flags;
+        this.material = material;
         this.shaderProgram = shaderProgram;
     }
 
@@ -30,6 +31,8 @@ define([
 
         this._shadersByTexturesFlags = [];
         this._pickShaderPrograms = [];
+
+        this.material = undefined;
     }
 
     function getPositionMode(sceneMode) {
@@ -61,7 +64,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, unionClippingRegions) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -87,12 +90,14 @@ define([
                     (useWebMercatorProjection << 12) |
                     (enableFog << 13) |
                     (quantization << 14) |
-                    (applySplit << 15);
+                    (applySplit << 15) |
+                    (enableClippingPlanes << 16);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
             surfaceShader.numberOfDayTextures === numberOfDayTextures &&
-            surfaceShader.flags === flags) {
+            surfaceShader.flags === flags &&
+            surfaceShader.material === this.material) {
 
             return surfaceShader.shaderProgram;
         }
@@ -104,7 +109,7 @@ define([
         }
 
         surfaceShader = shadersByFlags[flags];
-        if (!defined(surfaceShader)) {
+        if (!defined(surfaceShader) || surfaceShader.material !== this.material) {
             // Cache miss - we've never seen this combination of numberOfDayTextures and flags before.
             var vs = this.baseVertexShaderSource.clone();
             var fs = this.baseFragmentShaderSource.clone();
@@ -160,6 +165,14 @@ define([
                 fs.defines.push('APPLY_SPLIT');
             }
 
+            if (enableClippingPlanes) {
+                fs.defines.push('ENABLE_CLIPPING_PLANES');
+
+                if (unionClippingRegions) {
+                    fs.defines.push('UNION_CLIPPING_REGIONS');
+                }
+            }
+
             var computeDayColor = '\
     vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates)\n\
     {\n\
@@ -199,7 +212,7 @@ define([
                 attributeLocations : terrainEncoding.getAttributeLocations()
             });
 
-            surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, shader);
+            surfaceShader = shadersByFlags[flags] = new GlobeSurfaceShader(numberOfDayTextures, flags, this.material, shader);
         }
 
         surfaceTile.surfaceShader = surfaceShader;

@@ -16,8 +16,10 @@ define([
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
+        '../Renderer/Pass',
         '../ThirdParty/when',
         './ClassificationPrimitive',
+        './ClassificationType',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -37,8 +39,10 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
+        Pass,
         when,
         ClassificationPrimitive,
+        ClassificationType,
         SceneMode) {
     'use strict';
 
@@ -78,6 +82,7 @@ define([
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+     * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
@@ -159,6 +164,14 @@ define([
          * @default true
          */
         this.show = defaultValue(options.show, true);
+        /**
+         * Determines whether terrain, 3D Tiles or both will be classified.
+         *
+         * @type {ClassificationType}
+         *
+         * @default ClassificationType.BOTH
+         */
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
@@ -554,38 +567,72 @@ define([
         }
     }
 
+    function boundingVolumeIndex(commandIndex, length) {
+        return Math.floor((commandIndex % length) / 3);
+    }
+
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = groundPrimitive._boundingVolumes;
-        } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
+        } else {
             boundingVolumes = groundPrimitive._boundingVolumes2D;
+        }
+
+        var pass;
+        switch (groundPrimitive.classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
         }
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
-            for (var i = 0; i < colorLength; ++i) {
-                var colorCommand = colorCommands[i];
+            var i;
+            var colorCommand;
+
+            for (i = 0; i < colorLength; ++i) {
+                colorCommand = colorCommands[i];
                 colorCommand.owner = groundPrimitive;
                 colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = boundingVolumes[Math.floor(i / 3)];
+                colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommand.pass = pass;
 
                 commandList.push(colorCommand);
+            }
+
+            if (frameState.invertClassification) {
+                var ignoreShowCommands = groundPrimitive._primitive._commandsIgnoreShow;
+                var ignoreShowCommandsLength = ignoreShowCommands.length;
+
+                for (i = 0; i < ignoreShowCommandsLength; ++i) {
+                    var bvIndex = Math.floor(i / 2);
+                    colorCommand = ignoreShowCommands[i];
+                    colorCommand.modelMatrix = modelMatrix;
+                    colorCommand.boundingVolume = boundingVolumes[bvIndex];
+                    colorCommand.cull = cull;
+                    colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+
+                    commandList.push(colorCommand);
+                }
             }
         }
 
         if (passes.pick) {
+            var pickLength = pickCommands.length;
             var primitive = groundPrimitive._primitive._primitive;
             var pickOffsets = primitive._pickOffsets;
-            var length = pickOffsets.length * 3;
-            pickCommands.length = length;
-
-            for (var j = 0; j < length; ++j) {
-                var pickOffset = pickOffsets[Math.floor(j / 3)];
+            for (var j = 0; j < pickLength; ++j) {
+                var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
                 var bv = boundingVolumes[pickOffset.index];
 
                 var pickCommand = pickCommands[j];
@@ -593,6 +640,7 @@ define([
                 pickCommand.modelMatrix = modelMatrix;
                 pickCommand.boundingVolume = bv;
                 pickCommand.cull = cull;
+                pickCommand.pass = pass;
 
                 commandList.push(pickCommand);
             }

@@ -120,6 +120,10 @@ define([
         return false;
     };
 
+    function compareNumber(a,b) {
+        return b - a;
+    }
+
     /**
      * Raises the event by calling each registered listener with all supplied arguments.
      *
@@ -146,12 +150,15 @@ define([
         //Actually remove items removed in removeEventListener.
         var toRemove = this._toRemove;
         length = toRemove.length;
-        for (i = 0; i < length; i++) {
-            var index = toRemove[i];
-            listeners.splice(index, 1);
-            scopes.splice(index, 1);
+        if (length > 0) {
+            toRemove.sort(compareNumber);
+            for (i = 0; i < length; i++) {
+                var index = toRemove[i];
+                listeners.splice(index, 1);
+                scopes.splice(index, 1);
+            }
+            toRemove.length = 0;
         }
-        toRemove.length = 0;
 
         this._insideRaiseEvent = false;
     };

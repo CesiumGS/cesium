@@ -298,6 +298,11 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
     });
 
+    it('evaluates number constants', function() {
+        var expression = new Expression('Number.POSITIVE_INFINITY');
+        expect(expression.evaluate(frameState, undefined)).toEqual(Number.POSITIVE_INFINITY);
+    });
+
     it('converts to literal number', function() {
         var expression = new Expression('Number()');
         expect(expression.evaluate(frameState, undefined)).toEqual(0);
@@ -2696,15 +2701,15 @@ defineSuite([
         expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.REGEX);
     });
 
-    it('throws if regex constructor has invalid pattern', function() {
+    it('does not throw SyntaxError if regex constructor has invalid pattern', function() {
         var expression = new Expression('regExp("(?<=\\s)" + ".")');
         expect(function() {
             expression.evaluate(frameState, undefined);
-        }).toThrowRuntimeError();
+        }).not.toThrowSyntaxError();
 
         expect(function() {
             return new Expression('regExp("(?<=\\s)")');
-        }).toThrowRuntimeError();
+        }).not.toThrowSyntaxError();
     });
 
     it('throws if regex constructor has invalid flags', function() {

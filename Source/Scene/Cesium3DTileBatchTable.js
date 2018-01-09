@@ -74,7 +74,7 @@ define([
     /**
      * @private
      */
-    function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary) {
+    function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary, colorChangedCallback) {
         /**
          * @readonly
          */
@@ -121,6 +121,8 @@ define([
         this._pickIds = [];
 
         this._content = content;
+
+        this._colorChangedCallback = colorChangedCallback;
 
         // Dimensions for batch and pick textures
         var textureDimensions;
@@ -457,6 +459,10 @@ define([
             }
 
             this._batchValuesDirty = true;
+
+            if (defined(this._colorChangedCallback)) {
+                this._colorChangedCallback(batchId, color);
+            }
         }
     };
 
@@ -858,9 +864,12 @@ define([
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain =
+                newMain = '';
+                if (handleTranslucent) {
+                    newMain += 'uniform bool tile_translucentCommand; \n';
+                }
+                newMain +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1005,9 +1014,11 @@ define([
                     '    tile_color(tile_featureColor); \n' +
                     '}';
             } else {
+                if (handleTranslucent) {
+                    source += 'uniform bool tile_translucentCommand; \n';
+                }
                 source +=
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1037,6 +1048,37 @@ define([
 
                 source +=
                     '    tile_color(featureProperties); \n' +
+                    '} \n';
+            }
+            return source;
+        };
+    };
+
+    Cesium3DTileBatchTable.prototype.getClassificationFragmentShaderCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+        return function(source) {
+            source = ShaderSource.replaceMain(source, 'tile_main');
+            if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+                // When VTF is supported, per-feature show/hide already happened in the fragment shader
+                source +=
+                    'varying vec4 tile_featureColor; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = tile_featureColor; \n' +
+                    '}';
+            } else {
+                source +=
+                    'uniform sampler2D tile_batchTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+                    '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
+                    '        discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = featureProperties; \n' +
                     '} \n';
             }
             return source;
@@ -1175,6 +1217,46 @@ define([
         };
     };
 
+    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallbackIgnoreShow = function(batchIdAttributeName) {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        var that = this;
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                '}';
+
+            return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
+        };
+    };
+
+    Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallbackIgnoreShow = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'uniform sampler2D tile_pickTexture; \n' +
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
+                '}';
+
+            return renamedSource + '\n' + newMain;
+        };
+    };
+
     Cesium3DTileBatchTable.prototype.getPickUniformMapCallback = function() {
         if (this.featuresLength === 0) {
             return;
@@ -1209,12 +1291,12 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
+    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart, finalResolution) {
         var commandList = frameState.commandList;
         var commandEnd = commandList.length;
         var tile = this._content._tile;
         var tileset = tile._tileset;
-        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {
@@ -1236,7 +1318,7 @@ define([
             }
 
             if (bivariateVisibilityTest) {
-                if (command.pass !== Pass.TRANSLUCENT) {
+                if (command.pass !== Pass.TRANSLUCENT && !finalResolution) {
                     if (!defined(derivedCommands.zback)) {
                         derivedCommands.zback = deriveZBackfaceCommand(derivedCommands.originalCommand);
                     }
@@ -1329,6 +1411,20 @@ define([
         var rs = clone(derivedCommand.renderState, true);
         rs.cull.enabled = true;
         rs.cull.face = CullFace.FRONT;
+        // Back faces do not need to write color.
+        rs.colorMask = {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        };
+        // Push back face depth away from the camera so it is less likely that back faces and front faces of the same tile
+        // intersect and overlap. This helps avoid flickering for very thin double-sided walls.
+        rs.polygonOffset = {
+            enabled : true,
+            factor : 5.0,
+            units : 5.0
+        };
         derivedCommand.renderState = RenderState.fromCache(rs);
         derivedCommand.castShadows = false;
         derivedCommand.receiveShadows = false;
@@ -1342,8 +1438,12 @@ define([
             // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
             derivedCommand = DrawCommand.shallowClone(command);
             var rs = clone(derivedCommand.renderState, true);
+            // Stencil test is masked to the most significant 4 bits so the reference is shifted.
+            // This is to prevent clearing the stencil before classification which needs the least significant
+            // bits for increment/decrement operations.
             rs.stencilTest.enabled = true;
-            rs.stencilTest.reference = reference;
+            rs.stencilTest.mask = 0xF0;
+            rs.stencilTest.reference = reference << 4;
             rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
             rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
             derivedCommand.renderState = RenderState.fromCache(rs);

@@ -37,6 +37,8 @@
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
+uniform vec4 u_cameraAndRadiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
+
 const float g = -0.95;
 const float g2 = g * g;
 
@@ -73,5 +75,12 @@ void main (void)
     l = min(l, czm_luminance(rgb));
 #endif
 
-    gl_FragColor = vec4(rgb, min(smoothstep(0.0, 0.1, l), 1.0) * smoothstep(0.0, 1.0, czm_morphTime));
+    // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
+    float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.x) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
+
+    // Alter alpha based on time of day (0.0 = night , 1.0 = day)
+    float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.0, 1.0) : 1.0;
+    atmosphereAlpha *= pow(nightAlpha, 0.5);
+
+    gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 }

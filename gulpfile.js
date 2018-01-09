@@ -113,7 +113,10 @@ gulp.task('build-watch', function() {
 });
 
 gulp.task('buildApps', function() {
-    return buildCesiumViewer();
+    return Promise.join(
+        buildCesiumViewer(),
+        buildSandcastle()
+    );
 });
 
 gulp.task('clean', function(done) {
@@ -516,7 +519,7 @@ function getMimeType(filename) {
         return {type : 'application/font-woff', compress : false, isCompressed : false};
     }
 
-    var mimeType = mime.lookup(filename);
+    var mimeType = mime.getType(filename);
     var compress = compressible(mimeType);
     return {type : mimeType, compress : compress, isCompressed : false};
 }
@@ -543,10 +546,10 @@ function listAll(s3, bucketName, prefix, files, marker) {
 }
 
 gulp.task('deploy-set-version', function() {
-    var version = yargs.argv.version;
-    if (version) {
+    var buildVersion = yargs.argv.buildVersion;
+    if (buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
-        packageJson.version += '-' + version.replace(/[^[0-9A-Za-z-]/g, '');
+        packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });
@@ -1046,11 +1049,6 @@ function createCesiumJs() {
         file = path.relative('Source', file);
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
-        if (moduleId === 'Scene/OrthographicFrustum' || moduleId === 'Scene/OrthographicOffCenterFrustum' ||
-            moduleId === 'Scene/PerspectiveFrustum' || moduleId === 'Scene/PerspectiveOffCenterFrustum' ||
-            moduleId === 'Scene/CullingVolume') {
-            return;
-        }
 
         var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
         if (moduleId.indexOf('Shaders/') === 0) {
@@ -1156,6 +1154,35 @@ function createJsHintOptions() {
 var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
 
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
+}
+
+function buildSandcastle() {
+    var appStream = gulp.src([
+            'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/images/**',
+            '!Apps/Sandcastle/gallery/**.jpg'
+        ])
+        // Replace require Source with pre-built Cesium
+        .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
+        // Use unminified cesium instead of source
+        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        // Fix relative paths for new location
+        .pipe(gulpReplace('../../Source', '../../../Source'))
+        .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
+        .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
+        .pipe(gulpReplace('Build/Documentation', 'Documentation'))
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    var imageStream = gulp.src([
+            'Apps/Sandcastle/gallery/**.jpg',
+            'Apps/Sandcastle/images/**'
+        ], {
+            base: 'Apps/Sandcastle',
+            buffer: false
+        })
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    return eventStream.merge(appStream, imageStream);
 }
 
 function buildCesiumViewer() {

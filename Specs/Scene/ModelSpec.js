@@ -1,10 +1,9 @@
 defineSuite([
         'Scene/Model',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
-        'Core/clone',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/combine',
         'Core/defaultValue',
@@ -22,6 +21,7 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
+        'Core/Plane',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Core/WebGLConstants',
@@ -37,11 +37,10 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Model,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
-        clone,
+        ClippingPlaneCollection,
         Color,
         combine,
         defaultValue,
@@ -59,6 +58,7 @@ defineSuite([
         Matrix3,
         Matrix4,
         PerspectiveFrustum,
+        Plane,
         PrimitiveType,
         Transforms,
         WebGLConstants,
@@ -888,22 +888,31 @@ defineSuite([
     });
 
     it('renders textured box with external KTX texture', function() {
-        return loadModel(texturedBoxKTXUrl).then(function(m) {
+        return loadModel(texturedBoxKTXUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
 
     it('renders textured box with embedded binary KTX texture', function() {
-        return loadModel(texturedBoxKTXBinaryUrl).then(function(m) {
+        return loadModel(texturedBoxKTXBinaryUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
 
     it('renders textured box with embedded base64 encoded KTX texture', function() {
-        return loadModel(texturedBoxKTXEmbeddedUrl).then(function(m) {
+        return loadModel(texturedBoxKTXEmbeddedUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
@@ -912,8 +921,11 @@ defineSuite([
         if (!scene.context.s3tc) {
             return;
         }
-        return loadModel(texturedBoxCRNUrl).then(function(m) {
+        return loadModel(texturedBoxCRNUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
@@ -922,8 +934,11 @@ defineSuite([
         if (!scene.context.s3tc) {
             return;
         }
-        return loadModel(texturedBoxCRNBinaryUrl).then(function(m) {
+        return loadModel(texturedBoxCRNBinaryUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
@@ -932,8 +947,11 @@ defineSuite([
         if (!scene.context.s3tc) {
             return;
         }
-        return loadModel(texturedBoxCRNEmbeddedUrl).then(function(m) {
+        return loadModel(texturedBoxCRNEmbeddedUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
@@ -1117,10 +1135,10 @@ defineSuite([
         var spyAdd = jasmine.createSpy('listener');
         animations.animationAdded.addEventListener(spyAdd);
         var a = animations.add({
-            name : 1
+            name : 'animation_1'
         });
         expect(a).toBeDefined();
-        expect(a.name).toEqual(1);
+        expect(a.name).toEqual('animation_1');
         expect(a.startTime).not.toBeDefined();
         expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
@@ -1146,6 +1164,41 @@ defineSuite([
         expect(animations.length).toEqual(0);
         expect(spyRemove).toHaveBeenCalledWith(animBoxesModel, a);
         animations.animationRemoved.removeEventListener(spyRemove);
+    });
+
+    it('adds an animation by index', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+
+        var spyAdd = jasmine.createSpy('listener');
+        animations.animationAdded.addEventListener(spyAdd);
+        var a = animations.add({
+            index : 1
+        });
+        expect(a).toBeDefined();
+        expect(a.name).toEqual('animation_1');
+        animations.remove(a);
+    });
+
+    it('add throws when name and index are not defined', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add();
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws when index is invalid', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : -1
+            });
+        }).toThrowDeveloperError();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : 2
+            });
+        }).toThrowDeveloperError();
     });
 
     it('add throws when model is not loaded', function() {
@@ -1189,7 +1242,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             removeOnStop : true
         });
@@ -1235,7 +1288,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             delay : 1.0
         });
@@ -1259,7 +1312,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             stopTime : stopTime
         });
@@ -1283,7 +1336,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             speedup : 1.5
         });
@@ -1308,7 +1361,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             reverse : true
         });
@@ -1335,7 +1388,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             loop : ModelAnimationLoop.REPEAT
         });
@@ -1365,7 +1418,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             loop : ModelAnimationLoop.MIRRORED_REPEAT
         });
@@ -1399,7 +1452,7 @@ defineSuite([
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
             var animations = m.activeAnimations;
             var a = animations.add({
-                name : 1,
+                name : 'animation_1',
                 startTime : time
             });
 
@@ -1951,6 +2004,15 @@ defineSuite([
         });
     });
 
+    it('loads a glTF 2.0 with node animations set to unclamped', function() {
+        return loadModel(boxAnimatedPbrUrl, {
+            clampAnimations : false
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('loads a glTF 2.0 with skinning', function() {
         return loadModel(riggedSimplePbrUrl).then(function(m) {
             verifyRender(m);
@@ -2344,6 +2406,8 @@ defineSuite([
             scene.renderForSpecs();
             var commands = scene.frameState.commandList;
             expect(commands.length).toBe(0);
+
+            primitives.remove(model);
         });
     });
 
@@ -2450,9 +2514,9 @@ defineSuite([
             model.silhouetteColor = Color.GREEN;
 
             // Load a second model
-            return loadModel(boxUrl).then(function(model) {
-                model.show = true;
-                model.silhouetteSize = 1.0;
+            return loadModel(boxUrl).then(function(model2) {
+                model2.show = true;
+                model2.silhouetteSize = 1.0;
                 scene.renderForSpecs();
                 expect(commands.length).toBe(4);
                 expect(commands[0].renderState.stencilTest.enabled).toBe(true);
@@ -2467,7 +2531,139 @@ defineSuite([
                 var reference1 = commands[0].renderState.stencilTest.reference;
                 var reference2 = commands[2].renderState.stencilTest.reference;
                 expect(reference2).toEqual(reference1 + 1);
+
+                primitives.remove(model);
+                primitives.remove(model2);
             });
+        });
+    });
+
+    it('Updates clipping planes when clipping planes are enabled', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            scene.renderForSpecs();
+
+            expect(model._packedClippingPlanes).toBeDefined();
+            expect(model._packedClippingPlanes.length).toBe(0);
+            expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+
+            model.clippingPlanes = new ClippingPlaneCollection({
+               planes : [
+                   new Plane(Cartesian3.UNIT_X, 0.0)
+               ]
+            });
+
+            model.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(model._packedClippingPlanes.length).toBe(1);
+            expect(model._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes selectively disable rendering', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            plane.distance = 10.0;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual(modelColor);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes apply edge styling', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    plane
+                ],
+                edgeWidth : 5.0,
+                edgeColor : Color.BLUE
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            plane.distance = 5.0;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual([0, 0, 255, 255]);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes union regions', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_Z, 5.0),
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ],
+                unionClippingRegions: true
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            model.clippingPlanes.unionClippingRegions = false;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual(modelColor);
+            });
+
+            primitives.remove(model);
         });
     });
 

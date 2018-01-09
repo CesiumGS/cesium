@@ -7,6 +7,8 @@ defineSuite([
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Renderer/ComputeEngine',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
         'Scene/createTileMapServiceImageryProvider',
@@ -30,6 +32,8 @@ defineSuite([
         Rectangle,
         RequestScheduler,
         ComputeEngine,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         createTileMapServiceImageryProvider,
@@ -187,6 +191,9 @@ defineSuite([
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
                         expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture.sampler).toBeDefined();
+                        expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                        expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                         imagery.releaseReference();
                     });
@@ -269,6 +276,9 @@ defineSuite([
                             return imagery.state === ImageryState.READY;
                         }).then(function() {
                             expect(imagery.texture).toBeDefined();
+                            expect(imagery.texture.sampler).toBeDefined();
+                            expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                            expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                             expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                             imagery.releaseReference();
                         });
@@ -315,6 +325,9 @@ defineSuite([
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
                         expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture.sampler).toBeDefined();
+                        expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                        expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                         expect(imagery.texture).toBe(imagery.textureWebMercator);
                         imagery.releaseReference();
                     });
@@ -365,6 +378,60 @@ defineSuite([
         expect(layer.isDestroyed()).toEqual(false);
         layer.destroy();
         expect(layer.isDestroyed()).toEqual(true);
+    });
+
+    it('allows setting texture filter properties', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        // expect default LINEAR
+        var layer = new ImageryLayer(provider);
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
+        layer.destroy();
+
+        // change to NEAREST
+        layer = new ImageryLayer(provider, {
+            minificationFilter: TextureMinificationFilter.NEAREST,
+            magnificationFilter: TextureMagnificationFilter.NEAREST
+        });
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+                var sampler = imagery.texture.sampler;
+                expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                imagery.releaseReference();
+                layer.destroy();
+            });
+        });
+    });
+
+    it('uses default texture filter properties of ImageryProvider', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        provider.defaultMinificationFilter = TextureMinificationFilter.NEAREST;
+        provider.defaultMagnificationFilter = TextureMinificationFilter.NEAREST;
+
+        var layer = new ImageryLayer(provider);
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+        layer.destroy();
     });
 
     it('returns HTTP status code information in TileProviderError', function() {

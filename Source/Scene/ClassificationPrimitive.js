@@ -16,6 +16,7 @@ define([
         '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
         './BlendingState',
+        './ClassificationType',
         './DepthFunction',
         './PerInstanceColorAppearance',
         './Primitive',
@@ -40,6 +41,7 @@ define([
         ShadowVolumeVS,
         when,
         BlendingState,
+        ClassificationType,
         DepthFunction,
         PerInstanceColorAppearance,
         Primitive,
@@ -84,6 +86,7 @@ define([
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+     * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
@@ -125,6 +128,14 @@ define([
          */
         this.show = defaultValue(options.show, true);
         /**
+         * Determines whether terrain, 3D Tiles or both will be classified.
+         *
+         * @type {ClassificationType}
+         *
+         * @default ClassificationType.BOTH
+         */
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
+        /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
          * Draws the bounding sphere for each draw command in the primitive.
@@ -153,12 +164,15 @@ define([
         this._uniformMap = options._uniformMap;
 
         this._sp = undefined;
+        this._spStencil = undefined;
         this._spPick = undefined;
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
+
+        this._commandsIgnoreShow = [];
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -333,6 +347,12 @@ define([
         return scene.context.stencilBuffer;
     };
 
+    // The stencil mask only uses the least significant 4 bits.
+    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
+    // can be classified.
+    var stencilMask = 0x0F;
+    var stencilReference = 0;
+
     function getStencilPreloadRenderState(enableStencil) {
         return {
             colorMask : {
@@ -355,8 +375,8 @@ define([
                     zFail : StencilOperation.INCREMENT_WRAP,
                     zPass : StencilOperation.INCREMENT_WRAP
                 },
-                reference : 0,
-                mask : ~0
+                reference : stencilReference,
+                mask : stencilMask
             },
             depthTest : {
                 enabled : false
@@ -387,8 +407,8 @@ define([
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : 0,
-                mask : ~0
+                reference : stencilReference,
+                mask : stencilMask
             },
             depthTest : {
                 enabled : true,
@@ -415,8 +435,8 @@ define([
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : 0,
-                mask : ~0
+                reference : stencilReference,
+                mask : stencilMask
             },
             depthTest : {
                 enabled : false
@@ -441,8 +461,8 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         depthTest : {
             enabled : false
@@ -499,7 +519,6 @@ define([
         var primitive = classificationPrimitive._primitive;
         var vs = ShadowVolumeVS;
         vs = classificationPrimitive._primitive._batchTable.getVertexShaderCallback()(vs);
-        vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
         vs = Primitive._modifyShaderPosition(classificationPrimitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
@@ -519,9 +538,9 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
-        classificationPrimitive._sp = ShaderProgram.replaceCache({
+        classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,
-            shaderProgram : classificationPrimitive._sp,
+            shaderProgram : classificationPrimitive._spStencil,
             vertexShaderSource : vsSource,
             fragmentShaderSource : fsSource,
             attributeLocations : attributeLocations
@@ -529,6 +548,7 @@ define([
 
         if (classificationPrimitive._primitive.allowPicking) {
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
+            vsPick = Primitive._appendShowToShader(primitive, vsPick);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             var pickVS = new ShaderSource({
@@ -556,6 +576,20 @@ define([
                 attributeLocations : attributeLocations
             });
         }
+
+        vs = Primitive._appendShowToShader(primitive, vs);
+        vsSource = new ShaderSource({
+            defines : [extrudedDefine],
+            sources : [vs]
+        });
+
+        classificationPrimitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : classificationPrimitive._sp,
+            vertexShaderSource : vsSource,
+            fragmentShaderSource : fsSource,
+            attributeLocations : attributeLocations
+        });
     }
 
     function createColorCommands(classificationPrimitive, colorCommands) {
@@ -563,14 +597,16 @@ define([
         var length = primitive._va.length * 3;
         colorCommands.length = length;
 
+        var i;
+        var command;
         var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
 
-        for (var i = 0; i < length; i += 3) {
+        for (i = 0; i < length; i += 3) {
             var vertexArray = primitive._va[vaIndex++];
 
             // stencil preload command
-            var command = colorCommands[i];
+            command = colorCommands[i];
             if (!defined(command)) {
                 command = colorCommands[i] = new DrawCommand({
                     owner : classificationPrimitive,
@@ -582,7 +618,6 @@ define([
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
-            command.pass = Pass.GROUND;
 
             // stencil depth command
             command = colorCommands[i + 1];
@@ -597,7 +632,6 @@ define([
             command.renderState = classificationPrimitive._rsStencilDepthPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
-            command.pass = Pass.GROUND;
 
             // color command
             command = colorCommands[i + 2];
@@ -612,7 +646,24 @@ define([
             command.renderState = classificationPrimitive._rsColorPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
-            command.pass = Pass.GROUND;
+        }
+
+        var commandsIgnoreShow = classificationPrimitive._commandsIgnoreShow;
+        var spStencil = classificationPrimitive._spStencil;
+
+        var commandIndex = 0;
+        length = commandsIgnoreShow.length = length / 3 * 2;
+
+        for (var j = 0; j < length; j += 2) {
+            var commandIgnoreShow = commandsIgnoreShow[j] = DrawCommand.shallowClone(colorCommands[commandIndex], commandsIgnoreShow[j]);
+            commandIgnoreShow.shaderProgram = spStencil;
+            commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+
+            commandIgnoreShow = commandsIgnoreShow[j + 1] = DrawCommand.shallowClone(colorCommands[commandIndex + 1], commandsIgnoreShow[j + 1]);
+            commandIgnoreShow.shaderProgram = spStencil;
+            commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+
+            commandIndex += 3;
         }
     }
 
@@ -622,10 +673,12 @@ define([
         var length = pickOffsets.length * 3;
         pickCommands.length = length;
 
+        var j;
+        var command;
         var pickIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
 
-        for (var j = 0; j < length; j += 3) {
+        for (j = 0; j < length; j += 3) {
             var pickOffset = pickOffsets[pickIndex++];
 
             var offset = pickOffset.offset;
@@ -633,7 +686,7 @@ define([
             var vertexArray = primitive._va[pickOffset.index];
 
             // stencil preload command
-            var command = pickCommands[j];
+            command = pickCommands[j];
             if (!defined(command)) {
                 command = pickCommands[j] = new DrawCommand({
                     owner : classificationPrimitive,
@@ -645,9 +698,8 @@ define([
             command.offset = offset;
             command.count = count;
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
-            command.shaderProgram = classificationPrimitive._sp;
+            command.shaderProgram = classificationPrimitive._spStencil;
             command.uniformMap = uniformMap;
-            command.pass = Pass.GROUND;
 
             // stencil depth command
             command = pickCommands[j + 1];
@@ -662,9 +714,8 @@ define([
             command.offset = offset;
             command.count = count;
             command.renderState = classificationPrimitive._rsStencilDepthPass;
-            command.shaderProgram = classificationPrimitive._sp;
+            command.shaderProgram = classificationPrimitive._spStencil;
             command.uniformMap = uniformMap;
-            command.pass = Pass.GROUND;
 
             // color command
             command = pickCommands[j + 2];
@@ -681,13 +732,16 @@ define([
             command.renderState = classificationPrimitive._rsPickPass;
             command.shaderProgram = classificationPrimitive._spPick;
             command.uniformMap = uniformMap;
-            command.pass = Pass.GROUND;
         }
     }
 
     function createCommands(classificationPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
         createColorCommands(classificationPrimitive, colorCommands);
         createPickCommands(classificationPrimitive, pickCommands);
+    }
+
+    function boundingVolumeIndex(commandIndex, length) {
+        return Math.floor((commandIndex % length) / 3);
     }
 
     function updateAndQueueCommands(classificationPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
@@ -707,30 +761,61 @@ define([
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
+
+        var i;
+        var pass;
+        switch (classificationPrimitive.classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
+        }
+
         if (passes.render) {
+            var colorCommand;
             var colorLength = colorCommands.length;
-            for (var i = 0; i < colorLength; ++i) {
-                var colorCommand = colorCommands[i];
+            for (i = 0; i < colorLength; ++i) {
+                colorCommand = colorCommands[i];
                 colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = boundingVolumes[Math.floor(i / 3)];
+                colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommand.pass = pass;
 
                 commandList.push(colorCommand);
+            }
+
+            if (frameState.invertClassification) {
+                var ignoreShowCommands = classificationPrimitive._commandsIgnoreShow;
+                var ignoreShowCommandsLength = ignoreShowCommands.length;
+
+                for (i = 0; i < ignoreShowCommandsLength; ++i) {
+                    var bvIndex = Math.floor(i / 2);
+                    colorCommand = ignoreShowCommands[i];
+                    colorCommand.modelMatrix = modelMatrix;
+                    colorCommand.boundingVolume = boundingVolumes[bvIndex];
+                    colorCommand.cull = cull;
+                    colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+
+                    commandList.push(colorCommand);
+                }
             }
         }
 
         if (passes.pick) {
+            var pickLength = pickCommands.length;
             var pickOffsets = primitive._pickOffsets;
-            var length = pickOffsets.length * 3;
-            pickCommands.length = length;
-
-            for (var j = 0; j < length; ++j) {
-                var pickOffset = pickOffsets[Math.floor(j / 3)];
-                var pickCommand = pickCommands[j];
+            for (i = 0; i < pickLength; ++i) {
+                var pickOffset = pickOffsets[boundingVolumeIndex(i, pickLength)];
+                var pickCommand = pickCommands[i];
                 pickCommand.modelMatrix = modelMatrix;
                 pickCommand.boundingVolume = boundingVolumes[pickOffset.index];
                 pickCommand.cull = cull;
+                pickCommand.pass = pass;
 
                 commandList.push(pickCommand);
             }

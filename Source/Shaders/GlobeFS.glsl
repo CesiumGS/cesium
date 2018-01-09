@@ -52,11 +52,26 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+#ifdef ENABLE_CLIPPING_PLANES
+uniform int u_clippingPlanesLength;
+uniform vec4 u_clippingPlanes[czm_maxClippingPlanes];
+uniform vec4 u_clippingPlanesEdgeStyle;
+#endif
+
+#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+uniform float u_minimumBrightness;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
+
+#ifdef APPLY_MATERIAL
+varying float v_height;
+varying float v_slope;
+#endif
 
 #ifdef FOG
 varying float v_distance;
@@ -141,6 +156,14 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
+#ifdef ENABLE_CLIPPING_PLANES
+    #ifdef UNION_CLIPPING_REGIONS
+    float clipDistance = czm_discardIfClippedWithUnion(u_clippingPlanes, u_clippingPlanesLength);
+    #else
+    float clipDistance = czm_discardIfClippedWithIntersect(u_clippingPlanes, u_clippingPlanesLength);
+    #endif
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
@@ -180,6 +203,16 @@ void main()
     }
 #endif
 
+#ifdef APPLY_MATERIAL
+    czm_materialInput materialInput;
+    materialInput.st = v_textureCoordinates.st;
+    materialInput.normalEC = normalize(v_normalEC);
+    materialInput.slope = v_slope;
+    materialInput.height = v_height;
+    czm_material material = czm_getMaterial(materialInput);
+    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+#endif
+
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
@@ -195,11 +228,26 @@ void main()
     vec4 finalColor = color;
 #endif
 
+#ifdef ENABLE_CLIPPING_PLANES
+    vec4 clippingPlanesEdgeColor = vec4(1.0);
+    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb;
+    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a;
+
+    if (clipDistance < clippingPlanesEdgeWidth)
+    {
+        finalColor = clippingPlanesEdgeColor;
+    }
+#endif
 
 #ifdef FOG
     const float fExposure = 2.0;
     vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+    fogColor *= darken;
+#endif
 
     gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
 #else

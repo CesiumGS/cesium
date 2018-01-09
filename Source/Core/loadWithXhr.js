@@ -3,7 +3,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './Request',
         './RequestErrorEvent',
@@ -15,7 +14,6 @@ define([
         Check,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Request,
         RequestErrorEvent,
@@ -70,19 +68,6 @@ define([
 
         var url = options.url;
 
-        if (typeof url !== 'string') {
-            // Returning a promise here is okay because it is unlikely that anyone using the deprecated functionality is also
-            // providing a Request object marked as throttled.
-            deprecationWarning('url promise', 'options.url as a Promise is deprecated and will be removed in Cesium 1.37');
-            return url.then(function(url) {
-                return makeRequest(options, url);
-            });
-        }
-
-        return makeRequest(options);
-    }
-
-    function makeRequest(options, url) {
         var responseType = options.responseType;
         var method = defaultValue(options.method, 'GET');
         var data = options.data;
@@ -187,8 +172,14 @@ define([
             xhr.responseType = responseType;
         }
 
+        // While non-standard, file protocol always returns a status of 0 on success
+        var localFile = false;
+        if (typeof url === 'string') {
+            localFile = url.indexOf('file://') === 0;
+        }
+
         xhr.onload = function() {
-            if (xhr.status < 200 || xhr.status >= 300) {
+            if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
                 deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
                 return;
             }
@@ -196,10 +187,13 @@ define([
             var response = xhr.response;
             var browserResponseType = xhr.responseType;
 
-            //All modern browsers will go into either the first if block or last else block.
+            //All modern browsers will go into either the first or second if block or last else block.
             //Other code paths support older browsers that either do not support the supplied responseType
             //or do not support the xhr.response property.
-            if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+            if (xhr.status === 204) {
+                // accept no content
+                deferred.resolve();
+            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
                 deferred.resolve(response);
             } else if ((responseType === 'json') && typeof response === 'string') {
                 try {

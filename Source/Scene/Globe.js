@@ -24,6 +24,7 @@ define([
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
+        './Material',
         './QuadtreePrimitive',
         './SceneMode',
         './ShadowMode'
@@ -53,6 +54,7 @@ define([
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
+        Material,
         QuadtreePrimitive,
         SceneMode,
         ShadowMode) {
@@ -79,14 +81,7 @@ define([
         this._imageryLayerCollection = imageryLayerCollection;
 
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
-
-        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-            sources : [GroundAtmosphere, GlobeVS]
-        });
-
-        this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
-            sources : [GlobeFS]
-        });
+        this._material = undefined;
 
         this._surface = new QuadtreePrimitive({
             tileProvider : new GlobeSurfaceTileProvider({
@@ -98,6 +93,8 @@ define([
 
         this._terrainProvider = terrainProvider;
         this._terrainProviderChanged = new Event();
+
+        makeShadersDirty(this);
 
         /**
          * Determines if the globe will be shown.
@@ -235,6 +232,20 @@ define([
             }
         },
         /**
+         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane. Clipping planes are not currently supported in Internet Explorer.
+         *
+         * @memberof Globe.prototype
+         * @type {ClippingPlaneCollection}
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._surface.tileProvider.clippingPlanes;
+            },
+            set : function(value) {
+                this._surface.tileProvider.clippingPlanes = value;
+            }
+        },
+        /**
          * The terrain provider providing surface geometry for this globe.
          * @type {TerrainProvider}
          *
@@ -250,6 +261,9 @@ define([
                 if (value !== this._terrainProvider) {
                     this._terrainProvider = value;
                     this._terrainProviderChanged.raiseEvent(value);
+                    if (defined(this._material)) {
+                        makeShadersDirty(this);
+                    }
                 }
             }
         },
@@ -276,8 +290,53 @@ define([
             get: function() {
                 return this._surface.tileLoadProgressEvent;
             }
+        },
+
+        /**
+         * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * @memberof Globe.prototype
+         * @type {Material}
+         */
+        material: {
+            get: function() {
+                return this._material;
+            },
+            set: function(material) {
+                if (this._material !== material) {
+                    this._material = material;
+                    makeShadersDirty(this);
+                }
+            }
         }
     });
+
+    function makeShadersDirty(globe) {
+        var defines = [];
+
+        var requireNormals = defined(globe._material) && (globe._material.shaderSource.match(/slope/) || globe._material.shaderSource.match('normalEC'));
+
+        var fragmentSources = [];
+        if (defined(globe._material) && (!requireNormals || globe._terrainProvider.requestVertexNormals)) {
+            fragmentSources.push(globe._material.shaderSource);
+            defines.push('APPLY_MATERIAL');
+            globe._surface._tileProvider.uniformMap = globe._material._uniforms;
+        } else {
+            globe._surface._tileProvider.uniformMap = undefined;
+        }
+        fragmentSources.push(GlobeFS);
+
+        globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+            sources : [GroundAtmosphere, GlobeVS],
+            defines : defines
+        });
+
+        globe._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
+            sources : fragmentSources,
+            defines : defines
+        });
+        globe._surfaceShaderSet.material = globe._material;
+    }
 
     function createComparePickTileFunction(rayOrigin) {
         return function(a, b) {
@@ -523,6 +582,10 @@ define([
     Globe.prototype.update = function(frameState) {
         if (!this.show) {
             return;
+        }
+
+        if (defined(this._material)) {
+            this._material.update(frameState.context);
         }
 
         var surface = this._surface;

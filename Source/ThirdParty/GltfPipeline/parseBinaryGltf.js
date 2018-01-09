@@ -61,8 +61,7 @@ define([
             var contentString = getStringFromTypedArray(data, jsonStart, contentLength);
             gltf = JSON.parse(contentString);
 
-            // Clone just the binary chunk so the underlying buffer can be freed
-            var binaryData = new Uint8Array(data.subarray(binaryStart, length));
+            var binaryData = data.subarray(binaryStart, length);
 
             buffers = gltf.buffers;
             if (defined(buffers) && Object.keys(buffers).length > 0) {
@@ -106,8 +105,7 @@ define([
                 }
                 // Load Binary chunk
                 else if (chunkType === 0x004E4942) {
-                    // Clone just the binary chunk so the underlying buffer can be freed
-                    binaryBuffer = new Uint8Array(chunkBuffer);
+                    binaryBuffer = chunkBuffer;
                 }
             }
             if (defined(gltf) && defined(binaryBuffer)) {

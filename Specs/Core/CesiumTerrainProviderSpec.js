@@ -73,6 +73,20 @@ defineSuite([
         return returnTileJson('Data/CesiumTerrainTileJson/PartialAvailability.tile.json');
     }
 
+    function returnParentUrlTileJson() {
+        var paths = ['Data/CesiumTerrainTileJson/ParentUrl.tile.json',
+                     'Data/CesiumTerrainTileJson/Parent.tile.json'];
+        var i = 0;
+        var oldLoad = loadWithXhr.load;
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            if (url.indexOf('layer.json') >= 0) {
+                loadWithXhr.defaultLoad(paths[i++], responseType, method, data, headers, deferred);
+            } else {
+                return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
+            }
+        };
+    }
+
     function waitForTile(level, x, y, requestNormals, requestWaterMask, f) {
         var terrainProvider = new CesiumTerrainProvider({
             url : 'made/up/url',
@@ -244,6 +258,42 @@ defineSuite([
         }).then(function() {
             expect(provider.requestVertexNormals).toBe(false);
             expect(provider.hasVertexNormals).toBe(false);
+        });
+    });
+
+    it('requests parent layer.json', function() {
+        returnParentUrlTileJson();
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : true,
+            requestWaterMask : true
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.credit.text).toBe('This is a child tileset! This amazing data is courtesy The Amazing Data Source!');
+            expect(provider.requestVertexNormals).toBe(true);
+            expect(provider.requestWaterMask).toBe(true);
+            expect(provider.hasVertexNormals).toBe(false); // Neither tileset has them
+            expect(provider.hasWaterMask).toBe(true); // The child tileset has them
+            expect(provider.availability.isTileAvailable(1, 2, 1)).toBe(true); // Both have this
+            expect(provider.availability.isTileAvailable(1, 3, 1)).toBe(true); // Parent has this, but child doesn't
+            expect(provider.availability.isTileAvailable(2, 0, 0)).toBe(false); // Neither has this
+
+            var layers = provider._layers;
+            expect(layers.length).toBe(2);
+            expect(layers[0].hasVertexNormals).toBe(false);
+            expect(layers[0].hasWaterMask).toBe(true);
+            expect(layers[0].availability.isTileAvailable(1, 2, 1)).toBe(true);
+            expect(layers[0].availability.isTileAvailable(1, 3, 1)).toBe(false);
+            expect(layers[0].availability.isTileAvailable(2, 0, 0)).toBe(false);
+            expect(layers[1].hasVertexNormals).toBe(false);
+            expect(layers[1].hasWaterMask).toBe(false);
+            expect(layers[1].availability.isTileAvailable(1, 2, 1)).toBe(true);
+            expect(layers[1].availability.isTileAvailable(1, 3, 1)).toBe(true);
+            expect(layers[1].availability.isTileAvailable(2, 0, 0)).toBe(false);
         });
     });
 

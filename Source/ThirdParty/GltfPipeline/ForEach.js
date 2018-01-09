@@ -6,9 +6,8 @@ define([
 
     /**
      * Contains traversal functions for processing elements of the glTF hierarchy.
-     * @constructor
      */
-    function ForEach() {}
+    var ForEach = {};
 
     ForEach.object = function(arrayOfObjects, handler) {
         if (defined(arrayOfObjects)) {
@@ -211,5 +210,6 @@ define([
     ForEach.texture = function(gltf, handler) {
         ForEach.topLevel(gltf, 'textures', handler);
     };
+
     return ForEach;
 });

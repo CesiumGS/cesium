@@ -5,7 +5,6 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/deprecationWarning',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Event',
@@ -51,7 +50,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -282,6 +280,7 @@ define([
      * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
+     * @param {Element|String} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
      *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
@@ -404,11 +403,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var scene3DOnly = defaultValue(options.scene3DOnly, false);
 
-        var deprecatedClock = options.clock;
-        if (defined(deprecatedClock)) {
-            deprecationWarning('Viewer.options.clock', 'Passing options.clock when creating a new Viewer instance was deprecated in Cesium 1.34 and will be removed in Cesium 1.37, pass options.clockViewModel instead.');
-        }
-
         var clock;
         var clockViewModel;
         var destroyClockViewModel = false;
@@ -416,7 +410,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             clockViewModel = options.clockViewModel;
             clock = clockViewModel.clock;
         } else {
-            clock = defined(deprecatedClock) ? deprecatedClock : new Clock();
+            clock = new Clock();
             clockViewModel = new ClockViewModel(clock);
             destroyClockViewModel = true;
         }
@@ -437,6 +431,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
+            creditViewport: options.creditViewport,
             scene3DOnly : scene3DOnly,
             terrainExaggeration : options.terrainExaggeration,
             shadows : options.shadows,

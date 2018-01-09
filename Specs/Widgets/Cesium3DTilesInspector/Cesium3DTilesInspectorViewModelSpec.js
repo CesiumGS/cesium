@@ -1,7 +1,5 @@
 defineSuite([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
-        'Core/defined',
-        'Core/Math',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/Globe',
@@ -9,8 +7,6 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Cesium3DTilesInspectorViewModel,
-        defined,
-        CesiumMath,
         Cesium3DTileset,
         Cesium3DTileStyle,
         Globe,

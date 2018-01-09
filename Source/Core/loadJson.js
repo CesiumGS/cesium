@@ -65,6 +65,9 @@ define([
         }
 
         return textPromise.then(function(value) {
+            if (!defined(value)) {
+                return;
+            }
             return JSON.parse(value);
         });
     }

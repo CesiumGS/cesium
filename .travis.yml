@@ -1,13 +1,13 @@
 language: node_js
 node_js:
-  - "6"
+  - "8"
 sudo: false
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 script:
   - echo 'deployPending' && echo -en 'travis_fold:start:script.deployPending\\r'
-  - npm run deploy-set-version -- --version $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
+  - npm run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm run deploy-status -- --status pending --message 'Waiting for build'
   - echo -en 'travis_fold:end:script.deployPending\\r'
 

@@ -20,7 +20,7 @@ define([
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/BaseLayerPicker.png" width="264" height="287" alt="" />
+     * <img src="Images/BaseLayerPicker.png" width="264" height="287" alt="" />
      * <br />BaseLayerPicker with its drop-panel open.
      * </span>
      * <br /><br />

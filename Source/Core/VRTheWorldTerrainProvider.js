@@ -4,7 +4,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Event',
@@ -15,8 +14,6 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
-        './Request',
-        './RequestType',
         './TerrainProvider',
         './TileProviderError'
     ], function(
@@ -25,7 +22,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -36,8 +32,6 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
-        Request,
-        RequestType,
         TerrainProvider,
         TileProviderError) {
     'use strict';
@@ -102,7 +96,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            credit = new Credit({text: credit});
         }
         this._credit = credit;
 
@@ -277,15 +271,6 @@ define([
         var proxy = this._proxy;
         if (defined(proxy)) {
             url = proxy.getURL(url);
-        }
-
-        if (typeof request === 'boolean') {
-            deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
-            request = new Request({
-                throttle : request,
-                throttleByServer : request,
-                type : RequestType.TERRAIN
-            });
         }
 
         var promise = loadImage(url, undefined, request);

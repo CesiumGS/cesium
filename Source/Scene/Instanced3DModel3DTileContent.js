@@ -1,6 +1,7 @@
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -30,6 +31,7 @@ define([
     ], function(
         AttributeCompression,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -451,12 +453,11 @@ define([
     }
 
     function createFeatures(content) {
-        var tileset = content._tileset;
         var featuresLength = content.featuresLength;
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
+                features[i] = new Cesium3DTileFeature(content, i);
             }
             content._features = features;
         }
@@ -514,10 +515,26 @@ define([
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
 
+        // Update clipping planes
+        var tilesetClippingPlanes = this._tileset.clippingPlanes;
+        var model = this._modelInstanceCollection._model;
+        var modelClippingPlanes = model.clippingPlanes;
+        if (defined(tilesetClippingPlanes)) {
+            if (!defined(modelClippingPlanes)) {
+                model.clippingPlanes = new ClippingPlaneCollection();
+                modelClippingPlanes = model.clippingPlanes;
+            }
+
+            tilesetClippingPlanes.clone(modelClippingPlanes);
+            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
+            modelClippingPlanes.enabled = false;
+        }
+
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
         if ((commandStart < commandEnd) && frameState.passes.render) {
-            this._batchTable.addDerivedCommands(frameState, commandStart);
+            this._batchTable.addDerivedCommands(frameState, commandStart, false);
         }
     };
 

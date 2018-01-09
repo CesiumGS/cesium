@@ -400,5 +400,23 @@ define([
         });
     };
 
+    var unitEllipsoidGeometry;
+
+    /**
+     * Returns the geometric representation of a unit ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    EllipsoidGeometry.getUnitEllipsoid = function() {
+        if (!defined(unitEllipsoidGeometry)) {
+            unitEllipsoidGeometry = EllipsoidGeometry.createGeometry((new EllipsoidGeometry({
+                radii : new Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
+            })));
+        }
+        return unitEllipsoidGeometry;
+    };
+
     return EllipsoidGeometry;
 });
