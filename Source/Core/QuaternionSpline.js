@@ -34,7 +34,7 @@ define([
     }
 
     /**
-     * A spline that uses spherical quadrangle (squad) interpolation to create a quaternion curve.
+     * A spline that uses spherical linear (slerp) interpolation to create a quaternion curve.
      * The generated curve is in the class C<sup>1</sup>.
      *
      * @alias QuaternionSpline
