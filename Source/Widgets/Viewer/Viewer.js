@@ -1,6 +1,7 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
+        '../../Core/Check',
         '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -9,6 +10,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/EventHelper',
+        '../../Core/HeadingPitchRange',
         '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -46,6 +48,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Check,
         Clock,
         defaultValue,
         defined,
@@ -54,6 +57,7 @@ define([
         DeveloperError,
         Event,
         EventHelper,
+        HeadingPitchRange,
         isArray,
         Matrix4,
         Rectangle,
@@ -1845,6 +1849,26 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             zoomPromise.resolve(false);
         }
     }
+
+    /**
+     * Zooms to a {@link Cesium3DTileset} with an optional offset. If offset is not supplied then will zoom to origin at
+     * a distance of the diameter.
+     *
+     * @param {Cesium3dTileset} tileset The tileset to which this zooms.
+     * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
+     */
+    Viewer.prototype.zoomToTileset = function(tileset, offset) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('tileset', tileset);
+        //>>includeEnd('debug');
+
+        var boundingSphere = tileset.boundingSphere;
+        if (!defined(offset)) {
+            offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
+        }
+        this.camera.viewBoundingSphere(boundingSphere, offset);
+        this.camera.lookAtTransform(Matrix4.IDENTITY);
+    };
 
     /**
      * @private
