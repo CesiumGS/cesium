@@ -292,6 +292,27 @@ define([
         return getOutputTexture(process);
     };
 
+    function execute(process, context, colorTexture, depthTexture) {
+        if (defined(process.execute)) {
+            process.execute(context, colorTexture, depthTexture);
+            return;
+        }
+
+        var length = process.length;
+        var i;
+
+        if (process.executeInSeries) {
+            execute(process.get(0), context, colorTexture, depthTexture);
+            for (i = 1; i < length; ++i) {
+                execute(process.get(i), context, getOutputTexture(process.get(i - 1)), depthTexture);
+            }
+        } else {
+            for (i = 0; i < length; ++i) {
+                execute(process.get(i), context, colorTexture, depthTexture);
+            }
+        }
+    }
+
     PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
         var activeProcesses = this._activeProcesses;
         var processes = this._processes;
@@ -315,26 +336,26 @@ define([
 
         var initialTexture = colorTexture;
         if (ao.enabled && ao.ready) {
-            ao.execute(context, initialTexture, depthTexture);
+            execute(ao, context, initialTexture, depthTexture);
             initialTexture = getOutputTexture(ao);
         }
         if (bloom.enabled && bloom.ready) {
-            bloom.execute(context, initialTexture, depthTexture);
+            execute(bloom, context, initialTexture, depthTexture);
             initialTexture = getOutputTexture(bloom);
         }
 
         var lastTexture = initialTexture;
 
         if (count > 0) {
-            activeProcesses[0].execute(context, initialTexture, depthTexture);
+            execute(activeProcesses[0], context, initialTexture, depthTexture);
             for (i = 1; i < count; ++i) {
-                activeProcesses[i].execute(context, getOutputTexture(activeProcesses[i - 1]), depthTexture);
+                execute(activeProcesses[i], context, getOutputTexture(activeProcesses[i - 1]), depthTexture);
             }
             lastTexture = getOutputTexture(activeProcesses[count - 1]);
         }
 
         if (fxaa.enabled && fxaa.ready) {
-            fxaa.execute(context, lastTexture, depthTexture);
+            execute(fxaa, context, lastTexture, depthTexture);
         }
     };
 

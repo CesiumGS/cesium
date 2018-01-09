@@ -108,6 +108,11 @@ define([
                 return this._blurPostProcess.ready;
             }
         },
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
         enabled : {
             get : function() {
                 return this._blurPostProcess.enabled;
@@ -116,19 +121,19 @@ define([
                 this._blurPostProcess.enabled = value;
             }
         },
-        name : {
+        executeInSeries : {
             get : function() {
-                return this._name;
-            }
-        },
-        uniformValues : {
-            get : function() {
-                return this._uniformValues;
+                return this._blurPostProcess.executeInSeries;
             }
         },
         length : {
             get : function() {
                 return this._blurPostProcess.length;
+            }
+        },
+        uniformValues : {
+            get : function() {
+                return this._uniformValues;
             }
         }
     });
@@ -139,10 +144,6 @@ define([
 
     PostProcessBlurStage.prototype.update = function(context) {
         this._blurPostProcess.update(context);
-    };
-
-    PostProcessBlurStage.prototype.execute = function(context, colorTexture, depthTexture) {
-        this._blurPostProcess.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessBlurStage.prototype.isDestroyed = function() {

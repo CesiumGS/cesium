@@ -66,9 +66,9 @@ define([
                 }
             }
         },
-        outputTexture : {
+        executeInSeries : {
             get : function() {
-                return this._processes[this._processes.length - 1].outputTexture;
+                return this._executeInSeries;
             }
         },
         length : {
@@ -91,23 +91,6 @@ define([
         var length = processes.length;
         for (var i = 0; i < length; ++i) {
             processes[i].update(context);
-        }
-    };
-
-    PostProcessComposite.prototype.execute = function(context, colorTexture, depthTexture) {
-        var processes = this._processes;
-        var length = processes.length;
-        var i;
-
-        if (this._executeInSeries) {
-            processes[0].execute(context, colorTexture, depthTexture);
-            for (i = 1; i < length; ++i) {
-                processes[i].execute(context, processes[i - 1].outputTexture, depthTexture);
-            }
-        } else {
-            for (i = 0; i < length; ++i) {
-                processes[i].execute(context, colorTexture, depthTexture);
-            }
         }
     };
 

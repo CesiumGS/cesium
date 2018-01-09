@@ -83,6 +83,11 @@ define([
                 return this._composite.ready;
             }
         },
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
         enabled : {
             get : function() {
                 return this._composite.enabled;
@@ -91,9 +96,14 @@ define([
                 this._composite.enabled = value;
             }
         },
-        name : {
+        executeInSeries : {
             get : function() {
-                return this._name;
+                return this._composite.executeInSeries;
+            }
+        },
+        length : {
+            get : function() {
+                return this._composite.length;
             }
         },
         uniformValues : {
@@ -110,11 +120,6 @@ define([
             get : function() {
                 return this._blur.uniformValues;
             }
-        },
-        length : {
-            get : function() {
-                return this._composite.length;
-            }
         }
     });
 
@@ -124,10 +129,6 @@ define([
 
     PostProcessBloomStage.prototype.update = function(context) {
         this._composite.update(context);
-    };
-
-    PostProcessBloomStage.prototype.execute = function(context, colorTexture, depthTexture) {
-        this._composite.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessBloomStage.prototype.isDestroyed = function() {

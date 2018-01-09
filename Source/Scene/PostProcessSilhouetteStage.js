@@ -73,6 +73,11 @@ define([
                 return this._composite.ready;
             }
         },
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
         enabled : {
             get : function() {
                 return this._composite.enabled;
@@ -81,9 +86,14 @@ define([
                 this._composite.enabled = value;
             }
         },
-        name : {
+        executeInSeries : {
             get : function() {
-                return this._name;
+                return this._composite.executeInSeries;
+            }
+        },
+        length : {
+            get : function() {
+                return this._composite.length;
             }
         },
         edgeDetectionUniformValues : {
@@ -91,11 +101,6 @@ define([
                 return this._edgeDetectionUniformValues;
             }
         },
-        length : {
-            get : function() {
-                return this._composite.length;
-            }
-        }
     });
 
     PostProcessSilhouette.prototype.get = function(index) {
@@ -104,10 +109,6 @@ define([
 
     PostProcessSilhouette.prototype.update = function(context) {
         this._composite.update(context);
-    };
-
-    PostProcessSilhouette.prototype.execute = function(context, colorTexture, depthTexture) {
-        this._composite.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessSilhouette.prototype.isDestroyed = function() {

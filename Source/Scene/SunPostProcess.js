@@ -190,7 +190,11 @@ define([
 
     SunPostProcess.prototype.clear = function(context, passState, clearColor) {
         this._sceneFramebuffer.clear(context, passState, clearColor);
-        this._processes.clear(context);
+
+        var length = this._processes.length;
+        for (var i = 0; i < length; ++i) {
+            this._processes.get(i).clear(context);
+        }
     };
 
     SunPostProcess.prototype.update = function(passState) {
@@ -211,7 +215,11 @@ define([
 
     SunPostProcess.prototype.execute = function(context) {
         var colorTexture = this._sceneFramebuffer.getFramebuffer().getColorTexture(0);
-        this._processes.execute(context, colorTexture);
+        var length = this._processes.length;
+        this._processes.get(0).execute(context, colorTexture);
+        for (var i = 1; i < length; ++i) {
+            this._processes.get(i).execute(context, this._processes.get(i - 1).outputTexture);
+        }
     };
 
     SunPostProcess.prototype.copy = function(context, framebuffer) {
@@ -220,7 +228,7 @@ define([
             this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
                     colorTexture : function() {
-                        return that._processes.outputTexture;
+                        return that._processes.get(that._processes.length - 1).outputTexture;
                     }
                 },
                 owner : this
