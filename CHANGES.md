@@ -25,7 +25,7 @@ Change Log
    * Only one node is supported.
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
-* Updated documentation links to reflect new locations on cesium.com. 
+* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com. 
 
 ### 1.41 - 2018-01-02
 
