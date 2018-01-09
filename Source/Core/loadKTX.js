@@ -86,7 +86,9 @@ define([
         }
 
         return loadPromise.then(function(data) {
-            return parseKTX(data);
+            if (defined(data)) {
+                return parseKTX(data);
+            }
         });
     }
 
