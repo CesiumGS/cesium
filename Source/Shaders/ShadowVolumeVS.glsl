@@ -12,7 +12,7 @@ uniform float u_globeMinimumAltitude;
 // emulated noperspective
 varying float v_WindowZ;
 varying vec4 v_color;
-varying vec4 v_position;
+varying float v_inverse_depth;
 
 vec4 depthClampFarPlane(vec4 vertexInClipCoordinates)
 {
@@ -36,5 +36,5 @@ void main()
 #endif
 
     gl_Position = depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
-	v_position = gl_Position;
+	v_inverse_depth = 1. / gl_Position.w;
 }

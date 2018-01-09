@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -18,6 +19,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Color,
         defined,
         DeveloperError,
         CesiumMath,
@@ -310,7 +312,13 @@ define([
             var frustumCommand = scene._frustumCommandsList[0];
             var far = frustumCommand.far;
             var near = frustumCommand.near;
-            depth = far * (1 - 1 /(Math.exp(depth * Math.log(far / near + 1)) - 1)) / (far - near);
+            /* transforming logarithmic depth of form
+             * log(z / near) / log( far / near);
+             * to perspective form
+             * (far - far * near / z) / (far - near)
+             */
+            console.log(Math.exp(depth * Math.log(far / near)) * near);
+            depth = far * (1 - 1 /(Math.exp(depth * Math.log(far / near)))) / (far - near);
         }
         ndc.z = (depth * 2.0) - 1.0;
         ndc.w = 1.0;
@@ -336,8 +344,18 @@ define([
             var w = 1.0 / worldCoords.w;
             Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
         }
-
-        return Cartesian3.fromCartesian4(worldCoords, result);
+        result = Cartesian3.fromCartesian4(worldCoords, result);
+//        window.vw.entities.add({
+//            name : 'Red sphere with black outline',
+//            position: result,
+//            ellipsoid : {
+//                radii : new Cartesian3(30.0, 30.0, 30.0),
+//                material : Color.RED.withAlpha(0.5),
+//                outline : true,
+//                outlineColor : Color.BLACK
+//            }
+//        });
+        return result;
     };
 
     return SceneTransforms;

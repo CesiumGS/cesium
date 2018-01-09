@@ -1,7 +1,7 @@
 // emulated noperspective
 varying float v_WindowZ;
 varying vec4 v_color;
-varying vec4 v_position;
+varying float v_inverse_depth;
 
 void writeDepthClampedToFarPlane()
 {
@@ -13,5 +13,5 @@ void writeDepthClampedToFarPlane()
 void main(void)
 {
     gl_FragColor = v_color;
-    czm_logDepth(v_position.w);
+    czm_logDepth(v_inverse_depth);
 }

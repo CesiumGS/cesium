@@ -1,5 +1,5 @@
 varying vec2 v_st;
-varying vec4 v_position;
+varying float v_inverse_depth;
 
 void main()
 {
@@ -11,5 +11,5 @@ void main()
     
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
-    czm_logDepth(-v_position.z);
+    czm_logDepth(v_inverse_depth);
 }

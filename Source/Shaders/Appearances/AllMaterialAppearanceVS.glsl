@@ -11,6 +11,7 @@ varying vec3 v_normalEC;
 varying vec3 v_tangentEC;
 varying vec3 v_bitangentEC;
 varying vec2 v_st;
+v_inverse_depth = -1. / v_positionEC.z;
 
 void main()
 {
@@ -21,6 +22,7 @@ void main()
     v_tangentEC = czm_normal * tangent;                       // tangent in eye coordinates
     v_bitangentEC = czm_normal * bitangent;                   // bitangent in eye coordinates
     v_st = st;
+    v_inverse_depth = -1. / v_positionEC.z;
 
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
 }

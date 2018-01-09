@@ -3,6 +3,7 @@ attribute vec3 position;
 uniform vec3 u_radii;
 
 varying vec3 v_positionEC;
+varying float v_inverse_depth;
 
 void main() 
 {
@@ -14,6 +15,7 @@ void main()
 
     v_positionEC = (czm_modelView * p).xyz;     // position in eye coordinates
     gl_Position = czm_modelViewProjection * p;  // position in clip coordinates
+    v_inverse_depth = 1. / v_positionEC.z;
 
     // With multi-frustum, when the ellipsoid primitive is positioned on the intersection of two frustums 
     // and close to terrain, the terrain (writes depth) in the closest frustum can overwrite part of the 

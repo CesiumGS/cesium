@@ -17,7 +17,7 @@ uniform vec2 u_southMercatorYAndOneOverHeight;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
-varying vec4 v_position;
+varying float v_inverse_depth;
 
 varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
@@ -157,7 +157,7 @@ void main()
 
     v_textureCoordinates = vec3(textureCoordinates, webMercatorT);
 
-    v_position = gl_Position;
+    v_inverse_depth = 1. / gl_Position.w;
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates

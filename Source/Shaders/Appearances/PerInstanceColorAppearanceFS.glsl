@@ -1,7 +1,7 @@
 varying vec3 v_positionEC;
 varying vec3 v_normalEC;
 varying vec4 v_color;
-varying vec4 v_position;
+varying float v_inverse_depth;
 
 void main()
 {
@@ -20,5 +20,5 @@ void main()
     material.alpha = v_color.a;
     
     gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
-    czm_logDepth(v_position.w);
+    czm_logDepth(v_inverse_depth);
 }

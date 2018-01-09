@@ -2,6 +2,7 @@ uniform vec3 u_radii;
 uniform vec3 u_oneOverEllipsoidRadiiSquared;
 
 varying vec3 v_positionEC;
+varying float v_inverse_depth;
 
 vec4 computeEllipsoidColor(czm_ray ray, float intersection, float side)
 {
@@ -85,7 +86,5 @@ void main()
     gl_FragColor = mix(insideFaceColor, outsideFaceColor, outsideFaceColor.a);
     gl_FragColor.a = 1.0 - (1.0 - insideFaceColor.a) * (1.0 - outsideFaceColor.a);
 
-#ifdef WRITE_DEPTH
-    czm_logDepth(v_positionEC.z);
-#endif
+    czm_logDepth(v_inverse_depth);
 }
