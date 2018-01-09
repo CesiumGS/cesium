@@ -732,7 +732,7 @@ define([
             } else if (format.type === 'text' || format.type === 'html') {
                 return loadText(resource).then(format.callback).otherwise(doRequest);
             }
-            resource.responseTye = format.format;
+            resource.responseType = format.format;
             return loadWithXhr(resource).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
@@ -749,23 +749,23 @@ define([
         projectedScratchComputed = false;
 
         var resource = imageryProvider._resource;
-        var url = resource._url;
+        var url = resource.getUrl(true);
         var allTags = imageryProvider._tags;
-        var urlTemplateValues = {};
+        var templateValues = {};
 
         var match = url.match(templateRegex);
         if (defined(match)) {
             match.forEach(function(tag) {
                 var key = tag.substring(1, tag.length - 1); //strip {}
                 if (defined(allTags[key])) {
-                    urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level);
+                    templateValues[key] = allTags[key](imageryProvider, x, y, level);
                 }
             });
         }
 
         return resource.getDerivedResource({
             request: request,
-            urlTemplateValues: urlTemplateValues
+            templateValues: templateValues
         });
     }
 
@@ -780,21 +780,21 @@ define([
         longitudeLatitudeProjectedScratchComputed = false;
 
         var resource = imageryProvider._pickFeaturesResource;
-        var url = resource._url;
+        var url = resource.getUrl(true);
         var allTags = imageryProvider._pickFeaturesTags;
-        var urlTemplateValues = {};
+        var templateValues = {};
         var match = url.match(templateRegex);
         if (defined(match)) {
             match.forEach(function(tag) {
                 var key = tag.substring(1, tag.length - 1); //strip {}
                 if (defined(allTags[key])) {
-                    urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level, longitude, latitude, format);
+                    templateValues[key] = allTags[key](imageryProvider, x, y, level, longitude, latitude, format);
                 }
             });
         }
 
         return resource.getDerivedResource({
-            urlTemplateValues: urlTemplateValues
+            templateValues: templateValues
         });
     }
 

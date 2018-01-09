@@ -269,7 +269,7 @@ define([
                 }
             }
             resource = imageryProvider._resource.clone();
-            resource.url = resource;
+            resource.url = url;
         } else {
             // build KVP request
             var query = {};

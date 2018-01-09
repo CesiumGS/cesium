@@ -627,7 +627,7 @@ define([
 
         var resource = this._resource.getDerivedResource({
             url: urlTemplates[(x + tmsY + level) % urlTemplates.length],
-            urlTemplateValues: {
+            templateValues: {
                 version: layerToUse.version,
                 z: level,
                 x: x,

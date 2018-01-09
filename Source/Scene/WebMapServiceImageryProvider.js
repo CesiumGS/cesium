@@ -100,12 +100,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        var resource = options.url;
-        if (typeof resource === 'string') {
-            resource = new Resource({
-                url: resource
-            });
-        }
+        var resource = Resource.createIfNeeded(options.url, {
+            //TODO deprecation warning
+            proxy: options.proxy
+        });
+
         var pickFeatureResource = resource.clone();
 
         resource.addQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
@@ -178,7 +177,7 @@ define([
          */
         url : {
             get : function() {
-                return this._resource.url;
+                return this._resource._url;
             }
         },
 

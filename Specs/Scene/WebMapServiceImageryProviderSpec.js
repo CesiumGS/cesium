@@ -154,7 +154,7 @@ defineSuite([
 
         spyOn(ImageryProvider, 'loadImage');
         provider.requestImage(0, 0, 0);
-        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
         expect('123'.indexOf(url.substring(0, 1))).toBeGreaterThanOrEqualTo(0);
     });
 
@@ -167,7 +167,7 @@ defineSuite([
 
         spyOn(ImageryProvider, 'loadImage');
         provider.requestImage(0, 0, 0);
-        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].url;
         expect(['foo', 'bar'].indexOf(url.substring(0, 3))).toBeGreaterThanOrEqualTo(0);
     });
 

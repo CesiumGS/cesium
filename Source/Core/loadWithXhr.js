@@ -68,10 +68,11 @@ define([
 
         var url = optionsOrResource.url;
         var responseType = optionsOrResource.responseType;
-        var method = optionsOrResource.method;
+        var method = defaultValue(optionsOrResource.method, 'GET');
         var data = optionsOrResource.data;
         var headers = optionsOrResource.headers;
         var overrideMimeType = optionsOrResource.overrideMimeType;
+
         var request = optionsOrResource.request;
         request = defined(request) ? request : new Request();
         request.url = url;

@@ -74,7 +74,7 @@ defineSuite([
         var tilerow = 5;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1]);
+        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
         var queryObject = queryToObject(uri.query);
 
         expect(queryObject.request).toEqual('GetTile');
@@ -92,7 +92,7 @@ defineSuite([
         tilerow = 3;
         level = 2;
         provider.requestImage(tilecol, tilerow, level);
-        uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1]);
+        uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].url);
         queryObject = queryToObject(uri.query);
 
         expect(queryObject.request).toEqual('GetTile');
@@ -124,7 +124,7 @@ defineSuite([
         var tilerow = 1;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].getUrl();
         expect('123'.indexOf(url)).toBeGreaterThanOrEqualTo(0);
     });
 
@@ -145,7 +145,7 @@ defineSuite([
         var tilerow = 1;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].getUrl();
         expect(['foo', 'bar'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
     });
 
@@ -167,7 +167,7 @@ defineSuite([
         var tilerow = 5;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1]);
+        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].getUrl());
         expect(uri.toString()).toEqual('http://wmts.invalid/someStyle/someTMS/second/5/12.png');
     });
 
@@ -619,7 +619,7 @@ defineSuite([
                 return provider.requestImage(0, 0, 0, new Request());
             })
             .then(function() {
-                expect(lastUrl).toEqual('http://wmts.invalid/BAR');
+                expect(lastUrl).toStartWith('http://wmts.invalid/BAR');
                 expect(provider._reload.calls.count()).toEqual(0);
                 provider.dimensions = {
                     FOO : 'BAZ'
@@ -628,7 +628,7 @@ defineSuite([
                 return provider.requestImage(0, 0, 0, new Request());
             })
             .then(function() {
-                expect(lastUrl).toEqual('http://wmts.invalid/BAZ');
+                expect(lastUrl).toStartWith('http://wmts.invalid/BAZ');
             });
     });
 
@@ -641,9 +641,6 @@ defineSuite([
 
         var uri = new Uri('http://wmts.invalid/kvp');
         var query = {
-            service: 'WMTS',
-            version: '1.0.0',
-            request: 'GetTile',
             tilematrix : 0,
             layer : 'someLayer',
             style : 'someStyle',
@@ -651,7 +648,10 @@ defineSuite([
             tilecol : 0,
             tilematrixset : 'someTMS',
             format : 'image/jpeg',
-            FOO : 'BAR'
+            FOO : 'BAR',
+            service: 'WMTS',
+            version: '1.0.0',
+            request: 'GetTile'
         };
 
         var provider = new WebMapTileServiceImageryProvider({

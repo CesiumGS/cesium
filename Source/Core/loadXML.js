@@ -1,7 +1,9 @@
 define([
+        './Check',
         './loadWithXhr',
         './Resource'
     ], function(
+        Check,
         loadWithXhr,
         Resource) {
     'use strict';
@@ -15,8 +17,8 @@ define([
      * @exports loadXML
      *
      * @param {Resource|String} urlOrResource The URL to request.
-     * @param {Object} [headers] HTTP headers to send with the request.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Object} [headers] HTTP headers to send with the request. // TODO: Do we want to deprecate?
+     * @param {Request} [request] The request object. Intended for internal use only. // TODO: Do we want to deprecate?
      * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -35,16 +37,18 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function loadXML(urlOrResource, headers, request) {
-        if (typeof urlOrResource === 'string') {
-            urlOrResource = new Resource({
-                url: urlOrResource,
-                headers: headers,
-                request: request
-            });
-        }
-        urlOrResource.responseType = 'document';
-        urlOrResource.overrideMimeType = 'text/xml';
-        return loadWithXhr(urlOrResource);
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
+
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
+        });
+
+        resource.responseType = 'document';
+        resource.overrideMimeType = 'text/xml';
+        return loadWithXhr(resource);
     }
 
     return loadXML;

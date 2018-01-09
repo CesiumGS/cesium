@@ -27,6 +27,10 @@ define([
      * @private
      */
     function parseQuery(queryString) {
+        if (queryString.length === 0) {
+            return {};
+        }
+
         // Special case we run into where the querystring is just a string, not key/value pairs
         if (queryString.indexOf('=') === -1) {
             var result = {};
@@ -52,9 +56,24 @@ define([
     }
 
     /**
+     * @private
+     */
+    function encodeValues(object) {
+        var result = {};
+        for(var key in object) {
+            if (object.hasOwnProperty(key)) {
+                result[key] = encodeURIComponent(object[key]);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * @param {Object} options An object with the following properties
      * @param {String} options.url
      * @param {Object} [options.queryParameters]
+     * @param {Object} [options.templateValues]
      * @param {Object} [options.headers]
      * @param {Request} [options.request]
      * @param {String} [options.method='GET']
@@ -73,7 +92,7 @@ define([
         //>>includeEnd('debug');
 
         this._url = '';
-        this.urlTemplateValues = defaultValue(options.urlTemplateValues, {});
+        this._templateValues = encodeValues(defaultValue(options.templateValues, {}));
         this._queryParameters = defaultValue(options.queryParameters, {});
         this.fragment = defaultValue(options.fragment, '');
 
@@ -113,28 +132,14 @@ define([
                 return this._queryParameters;
             }
         },
+        templateValues: {
+            get: function() {
+                return this._templateValues;
+            }
+        },
         url: {
             get: function() {
-                var uri = new Uri(this._url);
-                uri.query = stringifyQuery(this._queryParameters);
-                uri.fragment = this.fragment;
-
-                // objectToQuery escapes the placeholders.  Undo that.
-                var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
-
-                var template = this.urlTemplateValues;
-                var keys = Object.keys(template);
-                if (keys.length > 0) {
-                    for (var i = 0; i < keys.length; i++) {
-                        var key = keys[i];
-                        var value = template[key];
-                        url = url.replace(new RegExp('{' + key + '}', 'g'), value);
-                    }
-                }
-                if (defined(this.proxy)) {
-                    url = this.proxy.getURL(url);
-                }
-                return url;
+                return this.getUrl(true, true);
             },
             set: function(value) {
                 var uri = new Uri(value);
@@ -156,6 +161,32 @@ define([
         }
     });
 
+    Resource.prototype.getUrl = function(query, proxy) {
+        var uri = new Uri(this._url);
+
+        if (query) {
+            uri.query = stringifyQuery(this._queryParameters);
+        }
+        uri.fragment = this.fragment;
+
+        // objectToQuery escapes the placeholders.  Undo that.
+        var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
+
+        var template = this._templateValues;
+        var keys = Object.keys(template);
+        if (keys.length > 0) {
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                var value = template[key];
+                url = url.replace(new RegExp('{' + key + '}', 'g'), value);
+            }
+        }
+        if (proxy && defined(this.proxy)) {
+            url = this.proxy.getURL(url);
+        }
+        return url;
+    };
+
     Resource.prototype.addQueryParameters = function(params, useAsDefault) {
         if (useAsDefault) {
             this._queryParameters = combine(this._queryParameters, params);
@@ -165,7 +196,7 @@ define([
     };
 
     Resource.prototype.addTemplateValues = function(template) {
-        this.urlTemplateValues = combine(template, this.urlTemplateValues);
+        this._templateValues = combine(encodeValues(template), this._templateValues);
     };
 
     Resource.prototype.getDerivedResource = function(options) {
@@ -191,8 +222,8 @@ define([
         if (defined(options.queryParameters)) {
             resource._queryParameters = combine(options.queryParameters, resource._queryParameters);
         }
-        if (defined(options.urlTemplateValues)) {
-            resource.urlTemplateValues = combine(options.urlTemplateValues, resource.urlTemplateValues);
+        if (defined(options.templateValues)) {
+            resource._templateValues = combine(encodeValues(options.templateValues), resource.templateValues);
         }
         if (defined(options.headers)) {
             resource.headers = combine(options.headers, resource.headers);
@@ -243,7 +274,7 @@ define([
 
         result._url = this._url;
         result._queryParameters = this._queryParameters;
-        result.urlTemplateValues = this.urlTemplateValues;
+        result._templateValues = this._templateValues;
         result.fragment = this.fragment;
         result.headers = this.headers;
         result.request = this.request;

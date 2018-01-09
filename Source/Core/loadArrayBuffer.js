@@ -1,7 +1,9 @@
 define([
+        './Check',
         './loadWithXhr',
         './Resource'
     ], function(
+        Check,
         loadWithXhr,
         Resource) {
     'use strict';
@@ -15,8 +17,8 @@ define([
      * @exports loadArrayBuffer
      *
      * @param {Resource|String} urlOrResource The URL of the binary data.
-     * @param {Object} [headers] HTTP headers to send with the requests.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Object} [headers] HTTP headers to send with the requests. // TODO: Do we want to deprecate?
+     * @param {Request} [request] The request object. Intended for internal use only. // TODO: Do we want to deprecate?
      * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @example
@@ -31,15 +33,17 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function loadArrayBuffer(urlOrResource, headers, request) {
-        if (typeof urlOrResource === 'string') {
-            urlOrResource = new Resource({
-                url: urlOrResource,
-                headers: headers,
-                request: request
-            });
-        }
-        urlOrResource.responseType = 'arraybuffer';
-        return loadWithXhr(urlOrResource);
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
+
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
+        });
+
+        resource.responseType = 'arraybuffer';
+        return loadWithXhr(resource);
     }
 
     return loadArrayBuffer;

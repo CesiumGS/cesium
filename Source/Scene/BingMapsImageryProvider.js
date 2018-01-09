@@ -649,7 +649,7 @@ define([
         return imageryProvider._resource.getDerivedResource({
             url: imageUrl,
             request: request,
-            urlTemplateValues: {
+            templateValues: {
                 quadkey: BingMapsImageryProvider.tileXYToQuadKey(x, y, level),
                 subdomain: subdomains[subdomainIndex],
                 culture: imageryProvider._culture

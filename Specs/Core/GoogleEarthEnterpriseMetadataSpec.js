@@ -225,7 +225,7 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(provider.url).toEqual(baseurl);
+        expect(provider._resource._url).toEqual(baseurl);
         expect(provider.proxy).toEqual(proxy);
 
         return provider.readyPromise.then(function(result) {
