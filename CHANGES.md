@@ -27,6 +27,7 @@ Change Log
    * Only one primitive per mesh is supported.
 * Updated documentation links to reflect new locations on cesiumjs.org and cesium.com. 
 * Added `Viewer.zoomToTileset` to zoom to a tileset.
+* Updated the sandcastle 3DTileset examples to use the Viewer.zoomToTileset function
 
 ### 1.41 - 2018-01-02
 
