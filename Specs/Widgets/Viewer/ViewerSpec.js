@@ -3,6 +3,7 @@ defineSuite([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/EllipsoidTerrainProvider',
+        'Core/HeadingPitchRange',
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/WebMercatorProjection',
@@ -14,6 +15,7 @@ defineSuite([
         'DataSources/Entity',
         'Scene/Camera',
         'Scene/CameraFlightPath',
+        'Scene/Cesium3DTileSet',
         'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
         'Scene/ShadowMode',
@@ -38,6 +40,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         EllipsoidTerrainProvider,
+        HeadingPitchRange,
         JulianDate,
         Matrix4,
         WebMercatorProjection,
@@ -49,6 +52,7 @@ defineSuite([
         Entity,
         Camera,
         CameraFlightPath,
+        Cesium3DTileSet,
         ImageryLayerCollection,
         SceneMode,
         ShadowMode,
@@ -1020,5 +1024,48 @@ defineSuite([
 
         expect(preMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
         expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
+    });
+
+    it('zoomToTileset throws if tileset is not defined', function() {
+        viewer = createViewer(container);
+
+        expect(function() {
+            viewer.zoomToTileset();
+        }).toThrowDeveloperError();
+    });
+
+    it('zoomToTileset uses default offset if not defined', function() {
+       viewer = createViewer(container);
+
+       var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+       var tileset = new Cesium3DTileSet({
+           url : path
+       });
+
+       spyOn(viewer.camera, 'viewBoundingSphere');
+
+       return viewer.zoomToTileset(tileset).then(function() {
+           var boundingSphere = tileset.boundingSphere;
+           var offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
+           expect(viewer.camera.viewBoundingSphere).toHaveBeenCalledWith(boundingSphere, offset);
+       });
+    });
+
+    it('zooms to tileset', function() {
+        viewer = createViewer(container);
+
+        // stored for movement check
+        var camPos = Cartesian3.clone(viewer.camera.position);
+        var camDir = Cartesian3.clone(viewer.camera.direction);
+
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var tileset = new Cesium3DTileSet({
+            url : path
+        });
+
+        return viewer.zoomToTileset(tileset).then(function() {
+            expect(viewer.camera.position).not.toEqual(camPos);
+            expect(viewer.camera.direction).not.toEqual(camDir);
+        });
     });
 }, 'WebGL');

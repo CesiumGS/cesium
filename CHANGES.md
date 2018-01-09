@@ -26,6 +26,7 @@ Change Log
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
 * Updated documentation links to reflect new locations on cesiumjs.org and cesium.com. 
+* Added `Viewer.zoomToTileset` to zoom to a tileset.
 
 ### 1.41 - 2018-01-02
 

@@ -209,13 +209,13 @@ define([
         if (defined(homeButton)) {
             homeButton.container.style.visibility = visibility;
         }
-        if(defined(sceneModePicker)) {
+        if (defined(sceneModePicker)) {
             sceneModePicker.container.style.visibility = visibility;
         }
         if (defined(projectionPicker)) {
             projectionPicker.container.style.visibility = visibility;
         }
-        if(defined(baseLayerPicker)) {
+        if (defined(baseLayerPicker)) {
             baseLayerPicker.container.style.visibility = visibility;
         }
         if (defined(animation)) {
@@ -360,7 +360,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var createBaseLayerPicker = (!defined(options.globe) || options.globe !== false) &&
-            (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
+                                    (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
 
         //>>includeStart('debug', pragmas.debug);
         // If using BaseLayerPicker, imageryProvider is an invalid option
@@ -435,7 +435,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
-            creditViewport: options.creditViewport,
+            creditViewport : options.creditViewport,
             scene3DOnly : scene3DOnly,
             terrainExaggeration : options.terrainExaggeration,
             shadows : options.shadows,
@@ -495,7 +495,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
-                geocoderServices: defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
+                geocoderServices : defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -1856,18 +1856,22 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      *
      * @param {Cesium3dTileset} tileset The tileset to which this zooms.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
+     * @returns (Promise) A promise that resolves when the loaded tileset is zoomed to.
      */
     Viewer.prototype.zoomToTileset = function(tileset, offset) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('tileset', tileset);
         //>>includeEnd('debug');
 
-        var boundingSphere = tileset.boundingSphere;
-        if (!defined(offset)) {
-            offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
-        }
-        this.camera.viewBoundingSphere(boundingSphere, offset);
-        this.camera.lookAtTransform(Matrix4.IDENTITY);
+        var camera = this.camera;
+        return tileset.readyPromise.then(function() {
+            var boundingSphere = tileset.boundingSphere;
+            if (!defined(offset)) {
+                offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
+            }
+            camera.viewBoundingSphere(boundingSphere, offset);
+            camera.lookAtTransform(Matrix4.IDENTITY);
+        });
     };
 
     /**
