@@ -66,7 +66,7 @@ define([
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)

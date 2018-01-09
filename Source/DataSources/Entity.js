@@ -120,7 +120,7 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
