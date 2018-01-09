@@ -1,5 +1,4 @@
 define([
-        '../Core/Check',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -20,7 +19,6 @@ define([
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
-        Check,
         Color,
         defaultValue,
         defined,

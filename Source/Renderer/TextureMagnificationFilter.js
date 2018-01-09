@@ -7,24 +7,22 @@ define([
     'use strict';
 
     /**
-     * Enumerates all possible filters used when magnifying WebGL textures, which takes places when zooming
-     * into imagery. Provides the possible values for the {@link ImageryLayer#magnificationFilter} property.
+     * Enumerates all possible filters used when magnifying WebGL textures.
      *
      * @exports TextureMagnificationFilter
      *
      * @see TextureMinificationFilter
-     * @see ImageryLayer#magnificationFilter
      */
     var TextureMagnificationFilter = {
         /**
-         * Nearest neighbor sampling of image pixels to texture.
+         * Samples the texture by returning the closest pixel.
          *
          * @type {Number}
          * @constant
          */
         NEAREST : WebGLConstants.NEAREST,
         /**
-         * Bi-linear interpolation of image pixels to texture.
+         * Samples the texture through bi-linear interpolation of the four nearest pixels. This produces smoother results than <code>NEAREST</code> filtering.
          *
          * @type {Number}
          * @constant

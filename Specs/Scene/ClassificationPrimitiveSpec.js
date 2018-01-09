@@ -5,12 +5,8 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/destroyObject',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix4',
         'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -29,12 +25,8 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         destroyObject,
-        DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
         GeometryInstance,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix4,
         PolygonGeometry,
         Rectangle,
         RectangleGeometry,
@@ -649,6 +641,25 @@ defineSuite([
 
         expect(scene).toPickAndCall(function(result) {
             expect(result.id).toEqual('box');
+        });
+    });
+
+    it('drill picking', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
+            asynchronous : false
+        });
+
+        verifyClassificationPrimitiveRender(primitive, boxColor);
+
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[1].primitive).toEqual(depthPrimitive._primitive);
         });
     });
 

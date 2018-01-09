@@ -398,7 +398,26 @@ defineSuite([
         });
         expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
         expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
-        layer.destroy();
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+                var sampler = imagery.texture.sampler;
+                expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                imagery.releaseReference();
+                layer.destroy();
+            });
+        });
     });
 
     it('uses default texture filter properties of ImageryProvider', function() {

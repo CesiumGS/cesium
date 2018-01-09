@@ -11,7 +11,14 @@ defineSuite([
 
     var qualifiedUrl = "http://www.url.com";
     var qualifiedUrlWithQueryString = "http://www.url.com" + "?" + queryString;
-    var qualifiedUrlWithPath = "http://www.url.com/some/path";
+    var qualifiedUrlWithPath = "http://www.url.com/some/qualified/path";
+
+    // Local files require three slashes on the front, to leave the hostname blank.
+    // Windows is leanient so long as a drive letter is present.  Other systems are not.
+    var localFileUrlWithPath = "file:///mnt/local/path";
+    var driveUrlWithPath = "file:///c:/some/drive/path";
+    // Files can be read from network shares with only two slashes on the front.
+    var networkUrlWithPath = "file://networkShareHostname/some/remote/path";
 
     var absolutePath = "/some/path";
     var absolutePathWithQueryString = absolutePath + "?" + queryString;
@@ -56,7 +63,7 @@ defineSuite([
     });
 
     it('appends relative path correctly to qualified url', function() {
-        var result = joinUrls(qualifiedUrl, absolutePath);
+        var result = joinUrls(qualifiedUrl, relativePath);
         expect(result).toEqual(expectedQualifiedUrl);
     });
 
@@ -95,14 +102,9 @@ defineSuite([
         expect(result).toEqual(qualifiedUrl);
     });
 
-    it('appends qualfied url correctly to qualified url with path', function() {
-        var result = joinUrls(qualifiedUrl, qualifiedUrlWithPath);
-        expect(result).toEqual(expectedQualifiedUrl);
-    });
-
     it('appends qualfied url with path correctly to qualified url', function() {
         var result = joinUrls(qualifiedUrl, qualifiedUrlWithPath);
-        expect(result).toEqual(expectedQualifiedUrl);
+        expect(result).toEqual(qualifiedUrlWithPath);
     });
 
     it('appends qualfied url with path correctly to qualified url with path', function() {
@@ -167,5 +169,60 @@ defineSuite([
 
         result = joinUrls(absolutePath, dataUri);
         expect(result).toEqual(dataUri);
+    });
+
+    // File scheme tests
+    //
+    // NOTE: Following example set by 'appends absolute path correctly to qualified url with path',
+    // the so-called 'absolutePath' is expected to simply append to the existing path, not reset it.
+
+    it('appends absolute path correctly to local file with path', function() {
+        var result = joinUrls(localFileUrlWithPath, absolutePath);
+        expect(result).toEqual(localFileUrlWithPath + absolutePath);
+    });
+
+    it('appends relative path correctly to local file with path', function() {
+        var result = joinUrls(localFileUrlWithPath, relativePath);
+        expect(result).toEqual(localFileUrlWithPath + absolutePath);
+    });
+
+    it('appends absolute path correctly to drive letter with path', function() {
+        var result = joinUrls(driveUrlWithPath, absolutePath);
+        expect(result).toEqual(driveUrlWithPath + absolutePath);
+    });
+
+    it('appends relative path correctly to drive letter with path', function() {
+        var result = joinUrls(driveUrlWithPath, relativePath);
+        expect(result).toEqual(driveUrlWithPath + absolutePath);
+    });
+
+    it('appends absolute path correctly to network share with path', function() {
+        var result = joinUrls(networkUrlWithPath, absolutePath);
+        expect(result).toEqual(networkUrlWithPath + absolutePath);
+    });
+
+    it('appends relative path correctly to network share with path', function() {
+        var result = joinUrls(networkUrlWithPath, relativePath);
+        expect(result).toEqual(networkUrlWithPath + absolutePath);
+    });
+
+    it('works when the file scheme appears in the second path', function() {
+        var result = joinUrls(driveUrlWithPath, localFileUrlWithPath);
+        expect(result).toEqual(localFileUrlWithPath);
+    });
+
+    it('works when a drive letter appears in the second path', function() {
+        var result = joinUrls(localFileUrlWithPath, driveUrlWithPath);
+        expect(result).toEqual(driveUrlWithPath);
+    });
+
+    it('works when the first is a network file and the second is a local file', function() {
+        var result = joinUrls(networkUrlWithPath, localFileUrlWithPath);
+        expect(result).toEqual(localFileUrlWithPath);
+    });
+
+    it('works when the first is a local file and the second is a network file', function() {
+        var result = joinUrls(localFileUrlWithPath, networkUrlWithPath);
+        expect(result).toEqual(networkUrlWithPath);
     });
 });

@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
@@ -45,6 +46,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         FeatureDetection,
         GeographicTilingScheme,
         IndexDatatype,
@@ -813,6 +815,13 @@ define([
                 }
             }
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (this.minificationFilter !== TextureMinificationFilter.NEAREST &&
+            this.minificationFilter !== TextureMinificationFilter.LINEAR) {
+            throw new DeveloperError('ImageryLayer minification filter must be NEAREST or LINEAR');
+        }
+        //>>includeEnd('debug');
 
         var sampler = new Sampler({
             minificationFilter : this.minificationFilter,

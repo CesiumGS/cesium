@@ -1,11 +1,15 @@
 define([
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError) {
+    './defaultValue',
+    './defined',
+    './defineProperties',
+    './deprecationWarning',
+    './DeveloperError'
+], function(
+    defaultValue,
+    defined,
+    defineProperties,
+    deprecationWarning,
+    DeveloperError) {
     'use strict';
 
     var nextCreditId = 0;
@@ -13,10 +17,11 @@ define([
 
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
-     *
-     * @param {String} [text] The text to be displayed on the screen if no imageUrl is specified.
-     * @param {String} [imageUrl] The source location for an image
-     * @param {String} [link] A URL location for which the credit will be hyperlinked
+     * @param {Object} [options] An object with the following properties
+     * @param {String} [options.text] The text to be displayed on the screen if no imageUrl is specified.
+     * @param {String} [options.imageUrl] The source location for an image
+     * @param {String} [options.link] A URL location for which the credit will be hyperlinked
+     * @param {String} [options.showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
      *
      * @alias Credit
      * @constructor
@@ -25,7 +30,20 @@ define([
      * //Create a credit with a tooltip, image and link
      * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
-    function Credit(text, imageUrl, link) {
+    function Credit(options, imageUrl, link) {
+        var text;
+        var showOnScreen;
+        if (typeof options !== 'object') {
+            deprecationWarning('Credit parameters', 'The Credit text, imageUrl and link parameters have been replaced by a single options object parameter with text, imageUrl and link properties. Use of the old parameters will be removed in Cesium 1.41');
+            text = options;
+            showOnScreen = false;
+        } else {
+            text = options.text;
+            imageUrl = options.imageUrl;
+            link = options.link;
+            showOnScreen = defaultValue(options.showOnScreen, false);
+        }
+
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
         var hasText = (defined(text));
@@ -45,6 +63,7 @@ define([
         this._link = link;
         this._hasLink = hasLink;
         this._hasImage = hasImage;
+        this._showOnScreen = showOnScreen;
 
         // Credits are immutable so generate an id to use to optimize equal()
         var id;
@@ -107,6 +126,18 @@ define([
         id : {
             get : function() {
                 return this._id;
+            }
+        },
+
+        /**
+         * Whether the credit should be displayed on screen or in a lightbox
+         * @memberof Credit.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        showOnScreen : {
+            get : function() {
+                return this._showOnScreen;
             }
         }
     });

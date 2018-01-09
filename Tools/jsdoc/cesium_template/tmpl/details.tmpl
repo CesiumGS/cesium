@@ -81,6 +81,15 @@ var self = this;
     <?js }); ?></ul>
     <?js } ?>
 
+    <?js if (data.experimental && experimental.length) { ?>
+    <div class="tag-experimental">
+        <h5>Experimental</h5>
+        <?js experimental.forEach(function(e) { ?>
+            <p><?js= e ?></p>
+        <?js }); ?>
+    </div>
+    <?js } ?>
+
     <?js if (data.see && see.length) {?>
     <h5>See:</h5>
     <ul class="see-list"><?js see.forEach(function(s) { ?>

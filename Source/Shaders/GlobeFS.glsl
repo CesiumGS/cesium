@@ -62,6 +62,11 @@ varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+#ifdef APPLY_MATERIAL
+varying float v_height;
+varying float v_slope;
+#endif
+
 #ifdef FOG
 varying float v_distance;
 varying vec3 v_rayleighColor;
@@ -182,6 +187,16 @@ void main()
 
         color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask);
     }
+#endif
+
+#ifdef APPLY_MATERIAL
+    czm_materialInput materialInput;
+    materialInput.st = v_textureCoordinates.st;
+    materialInput.normalEC = normalize(v_normalEC);
+    materialInput.slope = v_slope;
+    materialInput.height = v_height;
+    czm_material material = czm_getMaterial(materialInput);
+    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING

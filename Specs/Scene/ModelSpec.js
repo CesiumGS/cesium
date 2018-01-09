@@ -1,10 +1,8 @@
 defineSuite([
         'Scene/Model',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
-        'Core/clone',
         'Core/Color',
         'Core/combine',
         'Core/defaultValue',
@@ -37,11 +35,9 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Model,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
-        clone,
         Color,
         combine,
         defaultValue,
@@ -1999,6 +1995,15 @@ defineSuite([
 
     it('loads a glTF 2.0 with node animation', function() {
         return loadModel(boxAnimatedPbrUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with node animations set to unclamped', function() {
+        return loadModel(boxAnimatedPbrUrl, {
+            clampAnimations : false
+        }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });

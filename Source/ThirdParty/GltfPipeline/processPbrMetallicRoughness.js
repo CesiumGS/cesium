@@ -49,23 +49,16 @@ define([
             // Pre-processing to assign skinning info and address incompatibilities
             splitIncompatibleSkins(gltf);
 
-            if (!defined(gltf.techniques)) {
-                gltf.techniques = [];
-            }
-            var materials = [];
             ForEach.material(gltf, function(material) {
-                if (defined(material.pbrMetallicRoughness)) {
-                    var pbrMetallicRoughness = material.pbrMetallicRoughness;
+                var pbrMetallicRoughness = material.pbrMetallicRoughness;
+                if (defined(pbrMetallicRoughness)) {
                     var technique = generateTechnique(gltf, material, options);
 
-                    var newMaterial = {
-                        values : pbrMetallicRoughness,
-                        technique : technique
-                    };
-                    materials.push(newMaterial);
+                    material.values = pbrMetallicRoughness;
+                    material.technique = technique;
+                    delete material.pbrMetallicRoughness;
                 }
             });
-            gltf.materials = materials;
 
             // If any primitives have semantics that aren't declared in the generated
             // shaders, we want to preserve them.

@@ -15,7 +15,6 @@ define([
         '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
         '../Shaders/DepthPlaneVS',
-        './DepthFunction',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -34,7 +33,6 @@ define([
         VertexArray,
         DepthPlaneFS,
         DepthPlaneVS,
-        DepthFunction,
         SceneMode) {
     'use strict';
 

@@ -106,7 +106,7 @@ define([
      * A renderable collection of polylines.
      * <br /><br />
      * <div align="center">
-     * <img src="images/Polyline.png" width="400" height="300" /><br />
+     * <img src="Images/Polyline.png" width="400" height="300" /><br />
      * Example polylines
      * </div>
      * <br /><br />

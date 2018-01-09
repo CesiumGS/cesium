@@ -13,7 +13,6 @@ define([
         './loadArrayBuffer',
         './Math',
         './Request',
-        './RequestType',
         './RuntimeError',
         './TaskProcessor'
     ], function(
@@ -31,7 +30,6 @@ define([
         loadArrayBuffer,
         CesiumMath,
         Request,
-        RequestType,
         RuntimeError,
         TaskProcessor) {
     'use strict';
@@ -522,7 +520,7 @@ define([
                     var provider = providerInfo[i];
                     var copyrightString = provider.copyrightString;
                     if (defined(copyrightString)) {
-                        providers[provider.providerId] = new Credit(copyrightString.value);
+                        providers[provider.providerId] = new Credit({text: copyrightString.value});
                     }
                 }
             })
