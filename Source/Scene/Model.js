@@ -1913,7 +1913,6 @@
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
         fs = modifyFsShaderForDepth(fs);
-        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
         vs = modifyVertexShaderForDepth(vs);
         var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
         if (ClippingPlaneCollection.isSupported()) {
