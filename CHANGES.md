@@ -25,6 +25,7 @@ Change Log
    * Only one node is supported.
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
+* Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
 
 ### 1.41 - 2018-01-02
 
