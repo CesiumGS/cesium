@@ -11,13 +11,11 @@ define([
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
-        '../Core/loadImageViaBlob',
         '../Core/loadJson',
         '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/RuntimeError',
-        '../Core/throttleRequestByServer',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
@@ -37,13 +35,11 @@ define([
         Ellipsoid,
         Event,
         GeographicTilingScheme,
-        loadImageViaBlob,
         loadJson,
         loadJsonp,
         CesiumMath,
         Rectangle,
         RuntimeError,
-        throttleRequestByServer,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
@@ -63,8 +59,6 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the ArcGIS MapServer service.
      * @param {String} [options.token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
-     * @param {ArcGisMapServerImageryProvider~requestNewTokenCallback} [options.requestNewToken] A callback to retrieve new tokens if
-     *        its detected that the current token has expired or was not supplied.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -130,7 +124,6 @@ define([
 
         this._url = options.url;
         this._token = options.token;
-        this._requestNewToken = options.requestNewToken;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
 
@@ -232,20 +225,19 @@ define([
         }
 
         function requestMetadata() {
-            loadJsonHandleTokenErrors(that, function () {
-                var parameters = {
-                    f: 'json'
-                };
+            var parameters = {
+                f: 'json'
+            };
 
-                if (defined(that._token)) {
-                    parameters.token = that._token;
-                }
+            if (defined(that._token)) {
+                parameters.token = that._token;
+            }
 
-                return loadJsonp(that._url, {
-                    parameters : parameters,
-                    proxy : that._proxy
-                });
-            }).then(metadataSuccess).otherwise(metadataFailure);
+            var metadata = loadJsonp(that._url, {
+                parameters : parameters,
+                proxy : that._proxy
+            });
+            when(metadata, metadataSuccess, metadataFailure);
         }
 
         if (defined(options.mapServerData)) {
@@ -263,6 +255,48 @@ define([
         }
     }
 
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var url;
+        if (imageryProvider._useTiles) {
+            url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
+        } else {
+            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var bbox = nativeRectangle.west + '%2C' + nativeRectangle.south + '%2C' + nativeRectangle.east + '%2C' + nativeRectangle.north;
+
+            url = imageryProvider._url + '/export?';
+            url += 'bbox=' + bbox;
+            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+                url += '&bboxSR=4326&imageSR=4326';
+            } else {
+                url += '&bboxSR=3857&imageSR=3857';
+            }
+            url += '&size=' + imageryProvider._tileWidth + '%2C' + imageryProvider._tileHeight;
+            url += '&format=png&transparent=true&f=image';
+
+            if (imageryProvider.layers) {
+                url += '&layers=show:' + imageryProvider.layers;
+            }
+        }
+
+        var token = imageryProvider._token;
+        if (defined(token)) {
+            if (url.indexOf('?') === -1) {
+                url += '?';
+            }
+            if (url[url.length - 1] !== '?'){
+                url += '&';
+            }
+            url += 'token=' + token;
+        }
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
+
     defineProperties(ArcGisMapServerImageryProvider.prototype, {
         /**
          * Gets the URL of the ArcGIS MapServer.
@@ -277,7 +311,7 @@ define([
         },
 
         /**
-         * The ArcGIS token used to authenticate with the ArcGis MapServer service.
+         * Gets or sets the ArcGIS token used to authenticate with the ArcGis MapServer service.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {String}
          */
@@ -572,38 +606,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var that = this;
-        var tokenRetries = 1;
-        function loadImageWithToken (url) {
-            var loadPromise = loadImageViaBlob(url);
-            if (!defined(loadPromise)) {
-                return loadPromise;
-            }
-
-            return loadPromise.otherwise(function(requestErrorEvent) {
-                // If the token has expired or was not supplied the server sets the HTTP status code to 498/499 specifically to indicate these errors.
-                if (((requestErrorEvent.statusCode === 498) || (requestErrorEvent.statusCode === 499)) && (tokenRetries > 0)) {
-                    tokenRetries--;
-
-                    // Note: The token may have already been updated between the request and now (when the response is received),
-                    // but for now we don't detect and optimize for this case and send off a new token request regardless.
-                    return updateToken(that).then(function () {
-                        // Rebuild the URL now that the token has been updated.
-                        url = buildImageUrl(that, x, y, level);
-                        return loadImageWithToken(url);
-                    });
-                }
-
-                throw requestErrorEvent;
-            });
-        }
-
         var url = buildImageUrl(this, x, y, level);
-        if (!defined(this._requestNewToken)) {
-            return ImageryProvider.loadImage(this, url);
-        } else {
-            return throttleRequestByServer(url, loadImageWithToken);
-        }
+        return ImageryProvider.loadImage(this, url);
     };
 
     /**
@@ -633,189 +637,75 @@ define([
             return undefined;
         }
 
-        var that = this;
-        return loadJsonHandleTokenErrors(this, function () {
-            var url = buildPickURL(that, x, y, level, longitude, latitude);
-            return loadJson(url);
-        }).then(function(json) {
-            return jsonToFeatures(json);
-        });
-    };
-
-    function loadJsonHandleTokenErrors(item, loadJson) {
-        var tokenRetries = 1;
-        function loadJsonHandleError() {
-            return loadJson().then(function(json) {
-                // In this case if the token fails the server returns with a HTTP status code of 200 and encodes the error as JSON.
-                if (defined(json.error) && defined(json.error.code)) {
-                    if (((json.error.code === 498) || (json.error.code === 499)) && defined(item._requestNewToken) && (tokenRetries > 0)) {
-                        tokenRetries--;
-
-                        // Note: The token may have already been updated between the request and now (when the response is received),
-                        // but for now we don't detect and optimize for this case and send off a new token request regardless.
-                        return updateToken(item).then(function () {
-                            return loadJsonHandleError();
-                        });
-                    }
-                }
-
-                return json;
-            });
-        }
-
-        return loadJsonHandleError();
-    }
-
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var url;
-        if (imageryProvider._useTiles) {
-            url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
-        } else {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            var bbox = nativeRectangle.west + '%2C' + nativeRectangle.south + '%2C' + nativeRectangle.east + '%2C' + nativeRectangle.north;
-
-            url = imageryProvider._url + '/export?';
-            url += 'bbox=' + bbox;
-            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
-                url += '&bboxSR=4326&imageSR=4326';
-            } else {
-                url += '&bboxSR=3857&imageSR=3857';
-            }
-            url += '&size=' + imageryProvider._tileWidth + '%2C' + imageryProvider._tileHeight;
-            url += '&format=png&transparent=true&f=image';
-
-            if (imageryProvider.layers) {
-                url += '&layers=show:' + imageryProvider.layers;
-            }
-        }
-
-        var token = imageryProvider._token;
-        if (defined(token)) {
-            if (url.indexOf('?') === -1) {
-                url += '?';
-            }
-            if (url[url.length - 1] !== '?'){
-                url += '&';
-            }
-            url += 'token=' + token;
-        }
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
-
-    function buildPickURL(imageryProvider, x, y, level, longitude, latitude) {
-        var rectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
 
         var horizontal;
         var vertical;
         var sr;
-        if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+        if (this._tilingScheme instanceof GeographicTilingScheme) {
             horizontal = CesiumMath.toDegrees(longitude);
             vertical = CesiumMath.toDegrees(latitude);
             sr = '4326';
         } else {
-            var projected = imageryProvider._tilingScheme.projection.project(new Cartographic(longitude, latitude, 0.0));
+            var projected = this._tilingScheme.projection.project(new Cartographic(longitude, latitude, 0.0));
             horizontal = projected.x;
             vertical = projected.y;
             sr = '3857';
         }
 
-        var url = imageryProvider._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
+        var url = this._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
         url += '&geometry=' + horizontal + ',' + vertical;
         url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
-        url += '&imageDisplay=' + imageryProvider._tileWidth + ',' + imageryProvider._tileHeight + ',96';
+        url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
         url += '&sr=' + sr;
 
         url += '&layers=visible';
-        if (defined(imageryProvider._layers)) {
-            url += ':' + imageryProvider._layers;
+        if (defined(this._layers)) {
+            url += ':' + this._layers;
         }
 
-        if (defined(imageryProvider._token)) {
-            url += '&token=' + imageryProvider._token;
+        if (defined(this._token)) {
+            url += '&token=' + this._token;
         }
 
-        if (defined(imageryProvider._proxy)) {
-            url = imageryProvider._proxy.getURL(url);
+        if (defined(this._proxy)) {
+            url = this._proxy.getURL(url);
         }
 
-        return url;
-    }
+        return loadJson(url).then(function(json) {
+            var result = [];
 
-    function jsonToFeatures(json) {
-        var result = [];
-
-        var features = json.results;
-        if (!defined(features)) {
-            return result;
-        }
-
-        for (var i = 0; i < features.length; ++i) {
-            var feature = features[i];
-
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.name = feature.value;
-            featureInfo.properties = feature.attributes;
-            featureInfo.configureDescriptionFromProperties(feature.attributes);
-
-            // If this is a point feature, use the coordinates of the point.
-            if (feature.geometryType === 'esriGeometryPoint' && feature.geometry) {
-                var wkid = feature.geometry.spatialReference && feature.geometry.spatialReference.wkid ? feature.geometry.spatialReference.wkid : 4326;
-                if (wkid === 4326 || wkid === 4283) {
-                    featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
-                } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
-                    var projection = new WebMercatorProjection();
-                    featureInfo.position = projection.unproject(new Cartesian3(feature.geometry.x, feature.geometry.y, feature.geometry.z));
-                }
+            var features = json.results;
+            if (!defined(features)) {
+                return result;
             }
 
-            result.push(featureInfo);
-        }
+            for (var i = 0; i < features.length; ++i) {
+                var feature = features[i];
 
-        return result;
-    }
+                var featureInfo = new ImageryLayerFeatureInfo();
+                featureInfo.data = feature;
+                featureInfo.name = feature.value;
+                featureInfo.properties = feature.attributes;
+                featureInfo.configureDescriptionFromProperties(feature.attributes);
 
-    function updateToken(imageryProvider) {
-        if (!defined(imageryProvider._newTokenRequestInFlight) && defined(imageryProvider._requestNewToken)) {
-            // Due to the promise implementation used the function registered with .then() will be executed immediatly if the imageryProvider._requestNewToken()
-            // promise has already resolved when .then() is called. This flag allows us to make sure that ._newTokenRequestInFlight is defined correctly in both
-            // cases (where then runs immediately, when then runs deferred).
-            // Note: We explicitly set/test alreadyRun from both .then() and .otherwise() rather then using loadPromise.always() so that the order of execution is well
-            // defined (i.e. these operations will be run before any subsequently chained operations which might then call updateToken() and not want to get this result
-            // which has been resolved).
-            var alreadyRun = false;
-            var loadPromise = imageryProvider._requestNewToken().then(function(newToken) {
-                alreadyRun = true;
-                imageryProvider._newTokenRequestInFlight = undefined;
+                // If this is a point feature, use the coordinates of the point.
+                if (feature.geometryType === 'esriGeometryPoint' && feature.geometry) {
+                    var wkid = feature.geometry.spatialReference && feature.geometry.spatialReference.wkid ? feature.geometry.spatialReference.wkid : 4326;
+                    if (wkid === 4326 || wkid === 4283) {
+                        featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
+                    } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
+                        var projection = new WebMercatorProjection();
+                        featureInfo.position = projection.unproject(new Cartesian3(feature.geometry.x, feature.geometry.y, feature.geometry.z));
+                    }
+                }
 
-                imageryProvider.token = newToken;
-                return newToken;
-            }).otherwise(function(requestErrorEvent) {
-                alreadyRun = true;
-                imageryProvider._newTokenRequestInFlight = undefined;
+                result.push(featureInfo);
+            }
 
-                throw requestErrorEvent;
-            });
-
-            imageryProvider._newTokenRequestInFlight = alreadyRun ? undefined : loadPromise;
-            return loadPromise;
-        }
-
-        return imageryProvider._newTokenRequestInFlight;
-    }
+            return result;
+        });
+    };
 
     return ArcGisMapServerImageryProvider;
 });
-
-/**
- * A function that will make a request for a new token.
- *
- * @callback ArcGisMapServerImageryProvider~requestNewTokenCallback
- * @return {Promise.<String>} A promise which will resolve to a new token.
- */
