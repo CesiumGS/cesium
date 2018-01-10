@@ -805,7 +805,7 @@ define([
                         },
                         hasVertexColors : hasVertexColors
                     };
-                } else if ((primitive.skinning.skinned !== isSkinned) || (primitive.skinning.type !== type) || (primitive.hasVertexColors !== hasVertexColors)) {
+                } else if ((primitiveInfo.skinning.skinned !== isSkinned) || (primitiveInfo.skinning.type !== type) || (primitiveInfo.hasVertexColors !== hasVertexColors)) {
                     // This primitive uses the same material as another one that either:
                     // * Isn't skinned
                     // * Uses a different type to store joints and weights
