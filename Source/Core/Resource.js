@@ -1,25 +1,27 @@
 define([
+    './Check',
     './clone',
     './combine',
     './defaultValue',
     './defined',
     './defineProperties',
     './getAbsoluteUri',
+    './getBaseUri',
     './joinUrls',
     './objectToQuery',
     './queryToObject',
-    './Check',
     '../ThirdParty/Uri'
-], function(clone,
+], function(Check,
+            clone,
             combine,
             defaultValue,
             defined,
             defineProperties,
             getAbsoluteUri,
+            getBaseUri,
             joinUrls,
             objectToQuery,
             queryToObject,
-            Check,
             Uri) {
     'use strict';
 
@@ -74,13 +76,13 @@ define([
      * @param {String} options.url
      * @param {Object} [options.queryParameters]
      * @param {Object} [options.templateValues]
-     * @param {Object} [options.headers]
+     * @param {Object} [options.headers={}]
      * @param {Request} [options.request]
      * @param {String} [options.method='GET']
      * @param {Object} [options.data]
      * @param {String} [options.overrideMimeType]
      * @param {DefaultProxy} [options.proxy]
-     * @param {Boolean} [options.allowCrossOrigin]
+     * @param {Boolean} [options.allowCrossOrigin=true]
      *
      * @constructor
      */
@@ -88,7 +90,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.url', options.url);
+        Check.typeOf.string('options.url', options.url);
         //>>includeEnd('debug');
 
         this._url = '';
@@ -98,7 +100,7 @@ define([
 
         this.url = options.url;
 
-        this.headers = options.headers;
+        this.headers = defined(options.headers) ? clone(options.headers) : {};
         this.request = options.request;
         this.responseType = options.responseType;
         this.method = defaultValue(options.method, 'GET');
@@ -199,26 +201,7 @@ define([
         this._templateValues = combine(encodeValues(template), this._templateValues);
     };
 
-    Resource.prototype.getDerivedResource = function(options) {
-        var resource = this.clone();
-
-        if (defined(options.url)) {
-            var uri = new Uri(options.url);
-
-            if (defined(uri.fragment)) {
-                var fragment = uri.fragment;
-                uri.fragment = undefined;
-                resource.fragment = fragment;
-            }
-
-            if (defined(uri.query)) {
-                var query = parseQuery(uri.query);
-                uri.query = undefined;
-                resource._queryParameters = combine(query, resource._queryParameters);
-            }
-
-            resource._url = joinUrls(resource._url, uri.toString());
-        }
+    function mergeOptions(resource, options) {
         if (defined(options.queryParameters)) {
             resource._queryParameters = combine(options.queryParameters, resource._queryParameters);
         }
@@ -249,6 +232,73 @@ define([
         if (defined(options.request)) {
             resource.request = options.request;
         }
+    }
+
+    /**
+     * @param {Object} options An object with the following properties
+     * @param {String} options.url
+     * @param {Object} [options.queryParameters]
+     * @param {Object} [options.templateValues]
+     * @param {Object} [options.headers={}]
+     * @param {Request} [options.request]
+     * @param {String} [options.method='GET']
+     * @param {Object} [options.data]
+     * @param {String} [options.overrideMimeType]
+     * @param {DefaultProxy} [options.proxy]
+     * @param {Boolean} [options.allowCrossOrigin=true]
+     */
+    Resource.prototype.getDerivedResource = function(options) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.string('options.url', options.url);
+        //>>includeEnd('debug');
+
+        var resource = this.clone();
+
+        if (defined(options.url)) {
+            var uri = new Uri(options.url);
+
+            if (defined(uri.fragment)) {
+                var fragment = uri.fragment;
+                uri.fragment = undefined;
+                resource.fragment = fragment;
+            }
+
+            if (defined(uri.query)) {
+                var query = parseQuery(uri.query);
+                uri.query = undefined;
+                resource._queryParameters = combine(query, resource._queryParameters);
+            }
+
+            resource._url = joinUrls(resource._url, uri.toString());
+        }
+
+        mergeOptions(resource, options);
+
+        return resource;
+    };
+
+    /**
+     * Returns a resource referring to the parent path of the resource.
+     *
+     * @param {Object} [options] An object with the following properties
+     * @param {Object} [options.queryParameters]
+     * @param {Object} [options.templateValues]
+     * @param {Object} [options.headers={}]
+     * @param {Request} [options.request]
+     * @param {String} [options.method='GET']
+     * @param {Object} [options.data]
+     * @param {String} [options.overrideMimeType]
+     * @param {DefaultProxy} [options.proxy]
+     * @param {Boolean} [options.allowCrossOrigin=true]
+     */
+    Resource.prototype.getParentResource = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var resource = this.clone();
+
+        resource._url = getBaseUri(resource.url);
+
+        mergeOptions(resource, options);
 
         return resource;
     };

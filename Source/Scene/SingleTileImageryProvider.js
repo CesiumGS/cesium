@@ -59,16 +59,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        var resource = options.url;
-        if (typeof resource === 'string') {
-            resource = new Resource({
-                url: resource
-            });
-        }
-        if (defined(options.proxy)) {
+        var resource = Resource.createIfNeeded(options.url, {
             //TODO deprecation warning
-            resource.proxy = options.proxy;
-        }
+            proxy: options.proxy
+        });
 
         var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         var tilingScheme = new GeographicTilingScheme({

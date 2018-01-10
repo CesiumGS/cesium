@@ -15,7 +15,6 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
-        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
@@ -93,7 +92,6 @@ define([
         DistanceDisplayCondition,
         FeatureDetection,
         getAbsoluteUri,
-        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
@@ -1121,7 +1119,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Resource|String} options.url The url to the .gltf file.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Object} [options.headers] HTTP headers to send with the request. // TODO: Deprecate
      * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -1182,20 +1180,18 @@ define([
 
         // Create resource for the model file
         var modelResource = Resource.createIfNeeded(url, {
-            headers : defined(options.headers) ? clone(options.headers) : {}
+            headers : options.headers
         });
-        if (!defined(modelResource.headers.Accept)) {
-            modelResource.headers.Accept = defaultModelAccept;
-        }
+
 
         // Setup basePath to get dependent files
         var basePath = options.basePath;
         if (!defined(basePath)) {
-            basePath = getBaseUri(modelResource.url, true);
+            basePath = modelResource.getParentResource();
         }
 
         var resource = Resource.createIfNeeded(basePath, {
-            headers : defined(options.headers) ? clone(options.headers) : {}
+            headers : options.headers
         });
 
         // If no cache key is provided, use the absolute URL, since two URLs with
@@ -1218,6 +1214,11 @@ define([
             cachedGltf.modelsToLoad.push(model);
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
+
+            // Add Accept header if we need it
+            if (!defined(modelResource.headers.Accept)) {
+                modelResource.headers.Accept = defaultModelAccept;
+            }
 
             loadArrayBuffer(modelResource).then(function(arrayBuffer) {
                 var array = new Uint8Array(arrayBuffer);
