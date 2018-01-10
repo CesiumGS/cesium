@@ -1113,7 +1113,6 @@ define([
     };
 
     function getColorBlend(batchTable) {
-        console.log('here');
         var tileset = batchTable._content._tileset;
         var colorBlendMode = tileset.colorBlendMode;
         var colorBlendAmount = tileset.colorBlendAmount;
