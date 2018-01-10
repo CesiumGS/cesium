@@ -304,7 +304,9 @@ define([
      * @private
      */
     QuadtreePrimitive.prototype.update = function(frameState) {
-        this._tileProvider.updateImagery();
+        if (defined(this._tileProvider.updateImagery)) {
+            this._tileProvider.updateImagery();
+        }
 
         // Don't process the load queue or update heights during the morph flights.
         if (frameState.mode !== SceneMode.MORPHING) {
