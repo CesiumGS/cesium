@@ -46,8 +46,8 @@ define([
                 gltf.techniques = [];
             }
 
-            // Pre-processing to assign skinning info and address incompatibilities
-            splitIncompatibleSkins(gltf);
+            // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
+            splitIncompatibleMaterials(gltf);
 
             ForEach.material(gltf, function(material) {
                 var pbrMetallicRoughness = material.pbrMetallicRoughness;
@@ -66,20 +66,6 @@ define([
         }
 
         return gltf;
-    }
-
-    function modelHasVertexColors(gltf) {
-        var hasVertexColors = false;
-        ForEach.mesh(gltf, function(mesh) {
-            ForEach.meshPrimitive(mesh, function(primitive) {
-                ForEach.meshPrimitiveAttribute(primitive, function(attribute, semantic) {
-                    if (semantic.indexOf('COLOR') === 0) {
-                        hasVertexColors = true;
-                    }
-                });
-            });
-        });
-        return hasVertexColors;
     }
 
     function generateTechnique(gltf, material, options) {
@@ -107,8 +93,10 @@ define([
         }
         var joints = (defined(skin)) ? skin.joints : [];
         var jointCount = joints.length;
-        var skinningInfo = material.extras._pipeline.skinning;
-        var hasSkinning = defined(skinningInfo.type);
+        var primitiveInfo = material.extras._pipeline.primitive;
+        var skinningInfo = primitiveInfo.skinning;
+        var hasSkinning = skinningInfo.skinned;
+        var hasVertexColors = primitiveInfo.hasVertexColors;
 
         var hasNormals = true;
         var hasTangents = false;
@@ -363,7 +351,6 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
-        var hasVertexColors = modelHasVertexColors(gltf);
         if (hasVertexColors) {
             techniqueAttributes.a_vertexColor = 'vertexColor';
             techniqueParameters.vertexColor = {
@@ -789,7 +776,7 @@ define([
         });
     }
 
-    function splitIncompatibleSkins(gltf) {
+    function splitIncompatibleMaterials(gltf) {
         var accessors = gltf.accessors;
         var materials = gltf.materials;
         ForEach.mesh(gltf, function(mesh) {
@@ -806,21 +793,31 @@ define([
                     type = jointAccessor.type;
                 }
                 var isSkinned = defined(jointAccessorId);
+                var hasVertexColors = defined(primitive.attributes.COLOR_0);
 
-                var skinningInfo = material.extras._pipeline.skinning;
-                if (!defined(skinningInfo)) {
-                    material.extras._pipeline.skinning = {
-                        skinned : isSkinned,
-                        componentType : componentType,
-                        type : type
+                var primitiveInfo = material.extras._pipeline.primitive;
+                if (!defined(primitiveInfo)) {
+                    material.extras._pipeline.primitive = {
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
+                        },
+                        hasVertexColors : hasVertexColors
                     };
-                } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
-                    // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
+                } else if ((primitive.skinning.skinned !== isSkinned) || (primitive.skinning.type !== type) || (primitive.hasVertexColors !== hasVertexColors)) {
+                    // This primitive uses the same material as another one that either:
+                    // * Isn't skinned
+                    // * Uses a different type to store joints and weights
+                    // * Doesn't have vertex colors
                     var clonedMaterial = clone(material, true);
-                    clonedMaterial.material.extras._pipeline.skinning = {
-                        skinned : isSkinned,
-                        componentType : componentType,
-                        type : type
+                    clonedMaterial.extras._pipeline.skinning = {
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
+                        },
+                        hasVertexColors : hasVertexColors
                     };
                     // Split this off as a separate material
                     materialId = addToArray(materials, clonedMaterial);

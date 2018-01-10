@@ -63,8 +63,8 @@ define([
 
             var lightParameters = generateLightParameters(gltf);
 
-            // Pre-processing to assign skinning info and address incompatibilities
-            splitIncompatibleSkins(gltf);
+            // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
+            splitIncompatibleMaterials(gltf);
 
             var techniques = {};
             ForEach.material(gltf, function(material) {
@@ -226,20 +226,6 @@ define([
         return result;
     }
 
-    function modelHasVertexColors(gltf) {
-        var hasVertexColors = false;
-        ForEach.mesh(gltf, function(mesh) {
-            ForEach.meshPrimitive(mesh, function(primitive) {
-                ForEach.meshPrimitiveAttribute(primitive, function(attribute, semantic) {
-                    if (semantic.indexOf('COLOR') === 0) {
-                        hasVertexColors = true;
-                    }
-                });
-            });
-        });
-        return hasVertexColors;
-    }
-
     function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
         var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
         var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
@@ -263,10 +249,9 @@ define([
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
 
         var hasSkinning = jointCount > 0;
-        var skinningInfo = {};
-        if (hasSkinning) {
-            skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
-        }
+        var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
+        var skinningInfo = primitiveInfo.skinning;
+        var hasVertexColors = primitiveInfo.hasVertexColors;
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -456,7 +441,6 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
-        var hasVertexColors = modelHasVertexColors(gltf);
         if (hasVertexColors) {
             techniqueAttributes.a_vertexColor = 'vertexColor';
             techniqueParameters.vertexColor = {
@@ -803,10 +787,12 @@ define([
         techniqueKey += transparent.toString() + ';';
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         techniqueKey += jointCount.toString() + ';';
+        var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
+        var skinningInfo = primitiveInfo.skinning;
         if (jointCount > 0) {
-            var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
             techniqueKey += skinningInfo.type + ';';
         }
+        techniqueKey += primitiveInfo.hasVertexColors;
 
         return techniqueKey;
     }
@@ -933,7 +919,7 @@ define([
         });
     }
 
-    function splitIncompatibleSkins(gltf) {
+    function splitIncompatibleMaterials(gltf) {
         var accessors = gltf.accessors;
         var materials = gltf.materials;
         ForEach.mesh(gltf, function(mesh) {
@@ -952,21 +938,31 @@ define([
                        type = jointAccessor.type;
                    }
                    var isSkinned = defined(jointAccessorId);
+                   var hasVertexColors = defined(primitive.attributes.COLOR_0);
 
-                   var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
-                   if (!defined(skinningInfo)) {
-                       khrMaterialsCommon.extras._pipeline.skinning = {
-                           skinned: isSkinned,
-                           componentType: componentType,
-                           type: type
+                   var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
+                   if (!defined(primitiveInfo)) {
+                       khrMaterialsCommon.extras._pipeline.primitive = {
+                           skinning : {
+                               skinned: isSkinned,
+                               componentType: componentType,
+                               type: type
+                           },
+                           hasVertexColors : hasVertexColors
                        };
-                   } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
-                       // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
+                   } else if ((primitive.skinning.skinned !== isSkinned) || (primitive.skinning.type !== type) || (primitive.hasVertexColors !== hasVertexColors)) {
+                       // This primitive uses the same material as another one that either:
+                       // * Isn't skinned
+                       // * Uses a different type to store joints and weights
+                       // * Doesn't have vertex colors
                        var clonedMaterial = clone(material, true);
-                       clonedMaterial.extensions.KHR_materials_common.extras._pipeline.skinning = {
-                           skinned: isSkinned,
-                           componentType: componentType,
-                           type: type
+                       clonedMaterial.extensions.KHR_materials_common.extras._pipeline.primitive = {
+                           skinning : {
+                               skinned: isSkinned,
+                               componentType: componentType,
+                               type: type
+                           },
+                           hasVertexColors : hasVertexColors
                        };
                        // Split this off as a separate material
                        materialId = addToArray(materials, clonedMaterial);
