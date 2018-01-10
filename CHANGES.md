@@ -1,8 +1,32 @@
 Change Log
 ==========
 
-### 1.42 - 2017-02-01
+### 1.42 - 2018-02-01
 
+* Breaking changes
+  *
+* Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
+* Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
+* Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane` [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092) 
+* Added `Cartesian3.projectVector` for projecting one vector to another [#6093](https://github.com/AnalyticalGraphicsInc/cesium/pull/6093) 
+* Added `Cesium3DTileset.tileFailed` event that will be raised when a tile fails to load. The object passed to the event listener will have a url and message property. If there are no event listeners, error messages will be logged to the console. [#6088](https://github.com/AnalyticalGraphicsInc/cesium/pull/6088)
+* Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
+* Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
+* Added `Cesium3DTileset.ellipsoid` determining the size and shape of the globe. This can be set at construction and defaults to a WGS84 ellipsoid.
+* Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
+   * `Cesium3DTileStyle` has expanded for styling point features. See the [styling specification](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
+   * `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, and geometry features.
+   * `Cesium3DTilePointFeature` can modify the styling options for a point feature.
+* Added `Cesium3DTileset.classificationType` to specify if a tileset classifies terrain, another 3D Tiles tileset, or both. This only applies to vector, geometry and batched 3D model tilesets. The limitations on the glTF contained in the b3dm tile are:
+   * `POSITION` and `_BATCHID` semantics are required.
+   * All indices with the same batch id must occupy contiguous sections of the index buffer.
+   * All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.
+   * The only supported extensions are `CESIUM_RTC` and `WEB3D_quantized_attributes`.
+   * Only one node is supported.
+   * Only one mesh per node is supported.
+   * Only one primitive per mesh is supported.
+* Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
+* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
 
 ### 1.41 - 2018-01-02

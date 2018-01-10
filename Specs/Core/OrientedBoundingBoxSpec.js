@@ -10,7 +10,8 @@ defineSuite([
         'Core/Occluder',
         'Core/Plane',
         'Core/Quaternion',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Specs/createPackableSpecs'
     ], function(
         OrientedBoundingBox,
         BoundingSphere,
@@ -23,7 +24,8 @@ defineSuite([
         Occluder,
         Plane,
         Quaternion,
-        Rectangle) {
+        Rectangle,
+        createPackableSpecs) {
     'use strict';
 
     var positions = [
@@ -766,4 +768,6 @@ defineSuite([
         expect(box.equals(new OrientedBoundingBox())).toEqual(true);
         expect(box.equals(undefined)).toEqual(false);
     });
+
+    createPackableSpecs(OrientedBoundingBox, new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY), [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
 });

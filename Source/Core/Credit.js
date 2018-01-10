@@ -31,7 +31,7 @@ define([
      * var credit = new Cesium.Credit({
      *     text : 'Cesium',
      *     imageUrl : '/images/cesium_logo.png',
-     *     link : 'http://cesiumjs.org/'
+     *     link : 'https://cesiumjs.org/'
      * });
      */
     function Credit(options) {

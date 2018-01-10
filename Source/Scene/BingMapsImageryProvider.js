@@ -150,6 +150,10 @@ define([
         var metadataError;
 
         function metadataSuccess(data) {
+            if (data.resourceSets.length !== 1) {
+                metadataFailure();
+                return;
+            }
             var resource = data.resourceSets[0].resources[0];
 
             that._tileWidth = resource.imageWidth;

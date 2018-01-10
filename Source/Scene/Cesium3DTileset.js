@@ -9,6 +9,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DoublyLinkedList',
+        '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
@@ -30,6 +31,7 @@ define([
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
+        './ClassificationType',
         './LabelCollection',
         './SceneMode',
         './ShadowMode',
@@ -47,6 +49,7 @@ define([
         destroyObject,
         DeveloperError,
         DoublyLinkedList,
+        Ellipsoid,
         Event,
         getBaseUri,
         getExtensionFromUri,
@@ -68,6 +71,7 @@ define([
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
+        ClassificationType,
         LabelCollection,
         SceneMode,
         ShadowMode,
@@ -102,6 +106,8 @@ define([
      * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
      * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
+     * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -219,6 +225,10 @@ define([
         this._tileDebugLabels = undefined;
 
         this._readyPromise = when.defer();
+
+        this._classificationType = options.classificationType;
+
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -409,6 +419,23 @@ define([
         this.tileUnload = new Event();
 
         /**
+         * The event fired to indicate that a tile's content failed to load.
+         * <p>
+         * If there are no event listeners, error messages will be logged to the console.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.tileFailed.addEventListener(function(error) {
+         *     console.log('An error occurred loading tile: ' + error.url);
+         *     console.log('Error: ' + error.message);
+         * });
+         */
+        this.tileFailed = new Event();
+
+        /**
          * This event fires once for each visible tile in a frame.  This can be used to manually
          * style a tileset.
          * <p>
@@ -458,6 +485,8 @@ define([
          * @default true
          */
         this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, true);
+        this._skipLevelOfDetail = this.skipLevelOfDetail;
+        this._disableSkipLevelOfDetail = false;
 
         /**
          * The screen space error that must be reached before skipping levels of detail.
@@ -1049,6 +1078,53 @@ define([
             get : function() {
                 return this._statistics;
             }
+        },
+
+        /**
+         * Determines whether terrain, 3D Tiles or both will be classified by this tileset.
+         * <p>
+         * This option is only applied to tilesets containing batched 3D models, geometry data, or vector data. Even when undefined, vector data and geometry data
+         * must render as classifications and will default to rendering on both terrain and other 3D Tiles tilesets.
+         * </p>
+         * <p>
+         * When enabled for batched 3D model tilesets, there are a few requirements/limitations on the glTF:
+         * <ul>
+         *     <li>POSITION and _BATCHID semantics are required.</li>
+         *     <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>
+         *     <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>
+         *     <li>The only supported extensions are CESIUM_RTC and WEB3D_quantized_attributes.</li>
+         *     <li>Only one node is supported.</li>
+         *     <li>Only one mesh per node is supported.</li>
+         *     <li>Only one primitive per mesh is supported.</li>
+         * </ul>
+         * </p>
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {ClassificationType}
+         * @default undefined
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         * @readonly
+         */
+        classificationType : {
+            get : function() {
+                return this._classificationType;
+            }
+        },
+
+        /**
+         * Gets an ellipsoid describing the shape of the globe.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Ellipsoid}
+         * @readonly
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
         }
     });
 
@@ -1221,8 +1297,8 @@ define([
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
-        var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
+        var skipLevels = tileset._skipLevelOfDetail ? tileset.skipLevels : 0;
+        var skipScreenSpaceErrorFactor = tileset._skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
 
         return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLevelOfDetail) &&
                (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
@@ -1261,7 +1337,20 @@ define([
         tile.contentReadyPromise.then(function() {
             removeFunction();
             tileset.tileLoad.raiseEvent(tile);
-        }).otherwise(removeFunction);
+        }).otherwise(function(error) {
+            removeFunction();
+            var url = tile._contentUrl;
+            var message = defined(error.message) ? error.message : error.toString();
+            if (tileset.tileFailed.numberOfListeners > 0) {
+                tileset.tileFailed.raiseEvent({
+                    url : url,
+                    message : message
+                });
+            } else {
+                console.log('A 3D tile failed to load: ' + url);
+                console.log('Error: ' + message);
+            }
+        });
     }
 
     function requestTiles(tileset, outOfCore) {
@@ -1445,7 +1534,7 @@ define([
         var tileVisible = tileset.tileVisible;
         var i;
 
-        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
+        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
 
         tileset._backfaceCommands.length = 0;
 
@@ -1653,6 +1742,8 @@ define([
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+
+        this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail;
 
         // Do not do out-of-core operations (new content requests, cache removal,
         // process new tiles) during the pick pass.

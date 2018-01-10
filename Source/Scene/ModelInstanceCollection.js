@@ -19,9 +19,9 @@ define([
         '../Renderer/Pass',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './getDiffuseAttributeOrUniform',
         './Model',
         './ModelInstance',
+        './ModelUtility',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -45,9 +45,9 @@ define([
         Pass,
         ShaderSource,
         when,
-        getDiffuseAttributeOrUniform,
         Model,
         ModelInstance,
+        ModelUtility,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -340,7 +340,7 @@ define([
 
             if (usesBatchTable) {
                 var gltf = collection._model.gltf;
-                var diffuseAttributeOrUniformName = getDiffuseAttributeOrUniform(gltf, programId);
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
                 instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(instancedSource);
             }
 
@@ -353,7 +353,7 @@ define([
             var batchTable = collection._batchTable;
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
-                var diffuseAttributeOrUniformName = getDiffuseAttributeOrUniform(gltf, programId);
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
                 fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
             }
             return fs;
@@ -436,7 +436,7 @@ define([
         return function(vs, programId) {
             if (defined(collection._batchTable)) {
                 var gltf = collection._model.gltf;
-                var diffuseAttributeOrUniformName = getDiffuseAttributeOrUniform(gltf, programId);
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
                 vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;

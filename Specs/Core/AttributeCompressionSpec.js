@@ -2,11 +2,13 @@ defineSuite([
         'Core/AttributeCompression',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/defined',
         'Core/Math'
     ], function(
         AttributeCompression,
         Cartesian2,
         Cartesian3,
+        defined,
         CesiumMath) {
     'use strict';
 
@@ -533,5 +535,107 @@ defineSuite([
     it('compresses/decompresses values very close but not equal to 1.0', function() {
         var coords = new Cartesian2(0.99999999999999, 0.99999999999999);
         expect(AttributeCompression.decompressTextureCoordinates(AttributeCompression.compressTextureCoordinates(coords), new Cartesian2())).toEqualEpsilon(coords, 1.0 / 4095.0);
+    });
+
+    function zigZag(value) {
+        return ((value << 1) ^ (value >> 15)) & 0xFFFF;
+    }
+
+    var maxShort = 32767;
+
+    function deltaZigZagEncode(uBuffer, vBuffer, heightBuffer) {
+        var length = uBuffer.length;
+        var buffer = new Uint16Array(length * (defined(heightBuffer) ? 3 : 2));
+
+        var lastU = 0;
+        var lastV = 0;
+        var lastHeight = 0;
+
+        for (var i = 0; i < length; ++i) {
+            var u = uBuffer[i];
+            var v = vBuffer[i];
+
+            buffer[i] = zigZag(u - lastU);
+            buffer[i + length] = zigZag(v - lastV);
+
+            lastU = u;
+            lastV = v;
+
+            if (defined(heightBuffer)) {
+                var height = heightBuffer[i];
+
+                buffer[i + length * 2] = zigZag(height - lastHeight);
+
+                lastHeight = height;
+            }
+        }
+
+        return buffer;
+    }
+
+    it('decodes delta and ZigZag encoded vertices without height', function() {
+        var length = 10;
+        var decodedUBuffer = new Array(length);
+        var decodedVBuffer = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            decodedUBuffer[i] = Math.floor(Math.random() * maxShort);
+            decodedVBuffer[i] = Math.floor(Math.random() * maxShort);
+        }
+
+        var encoded = deltaZigZagEncode(decodedUBuffer, decodedVBuffer);
+        var uBuffer = new Uint16Array(encoded.buffer, 0, length);
+        var vBuffer = new Uint16Array(encoded.buffer, length * Uint16Array.BYTES_PER_ELEMENT, length);
+
+        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer);
+
+        expect(uBuffer).toEqual(decodedUBuffer);
+        expect(vBuffer).toEqual(decodedVBuffer);
+    });
+
+    it('decodes delta and ZigZag encoded vertices with height', function() {
+        var length = 10;
+        var decodedUBuffer = new Array(length);
+        var decodedVBuffer = new Array(length);
+        var decodedHeightBuffer = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            decodedUBuffer[i] = Math.floor(Math.random() * maxShort);
+            decodedVBuffer[i] = Math.floor(Math.random() * maxShort);
+            decodedHeightBuffer[i] = Math.floor(Math.random() * maxShort);
+        }
+
+        var encoded = deltaZigZagEncode(decodedUBuffer, decodedVBuffer, decodedHeightBuffer);
+        var uBuffer = new Uint16Array(encoded.buffer, 0, length);
+        var vBuffer = new Uint16Array(encoded.buffer, length * Uint16Array.BYTES_PER_ELEMENT, length);
+        var heightBuffer = new Uint16Array(encoded.buffer, 2 * length * Uint16Array.BYTES_PER_ELEMENT, length);
+
+        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
+
+        expect(uBuffer).toEqual(decodedUBuffer);
+        expect(vBuffer).toEqual(decodedVBuffer);
+        expect(heightBuffer).toEqual(decodedHeightBuffer);
+    });
+
+    it('throws when zigZagDeltaDecode has an undefined uBuffer', function() {
+        expect(function() {
+            AttributeCompression.zigZagDeltaDecode(undefined, new Uint16Array(10));
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when zigZagDeltaDecode has an undefined vBuffer', function() {
+        expect(function() {
+            AttributeCompression.zigZagDeltaDecode(new Uint16Array(10), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when zigZagDeltaDecode has unequal uBuffer and vBuffer length', function() {
+        expect(function() {
+            AttributeCompression.zigZagDeltaDecode(new Uint16Array(10), new Uint16Array(11));
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when zigZagDeltaDecode has unequal uBuffer, vBuffer, and heightBuffer length', function() {
+        expect(function() {
+            AttributeCompression.zigZagDeltaDecode(new Uint16Array(10), new Uint16Array(10), new Uint16Array(11));
+        }).toThrowDeveloperError();
     });
 });
