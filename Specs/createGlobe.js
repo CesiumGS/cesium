@@ -20,6 +20,7 @@ define([
             beginFrame: function() {},
             endFrame: function() {},
             update : function() {},
+            render : function() {},
             getHeight : function() {
                 return 0.0;
             },

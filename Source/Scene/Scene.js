@@ -755,6 +755,8 @@ define([
 
         this._removeRequestListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(requestRenderListener(this));
         this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderListener(this));
+        this._removeGlobeTileLoadCallback = undefined;
+        this._removeGlobeImageryUpdateCallback = undefined;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -768,6 +770,28 @@ define([
     }
 
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
+
+    function updateGlobeListeners(scene, globe) {
+        if (defined(scene._removeGlobeTileLoadCallback)) {
+            scene._removeGlobeTileLoadCallback();
+        }
+        if (defined(scene._removeGlobeImageryUpdateCallback)) {
+            scene._removeGlobeImageryUpdateCallback();
+        }
+
+        var removeGlobeTileLoadCallback;
+        var removeGlobeImageryUpdateCallback;
+        if (defined(globe)) {
+            if (defined(globe.tileLoadProgressEvent)) {
+                removeGlobeTileLoadCallback = globe.tileLoadProgressEvent.addEventListener(requestRenderListener(scene));
+            }
+            if (defined(globe.imageryLayersUpdatedEvent)) {
+                removeGlobeImageryUpdateCallback = globe.imageryLayersUpdatedEvent.addEventListener(requestRenderListener(scene));
+            }
+        }
+        scene._removeGlobeTileLoadCallback = removeGlobeTileLoadCallback;
+        scene._removeGlobeImageryUpdateCallback = removeGlobeImageryUpdateCallback;
+    }
 
     defineProperties(Scene.prototype, {
         /**
@@ -870,6 +894,8 @@ define([
             set: function(globe) {
                 this._globe = this._globe && this._globe.destroy();
                 this._globe = globe;
+
+                updateGlobeListeners(this, globe);
             }
         },
 
@@ -2381,7 +2407,7 @@ define([
             updateAndClearFramebuffers(scene, passState, backgroundColor);
 
             if (!depthOnly) {
-                updatePrimitives(scene);
+                updateAndRenderPrimitives(scene);
             }
 
             createPotentiallyVisibleSet(scene);
@@ -2561,7 +2587,7 @@ define([
         }
 
         if (!depthOnly) {
-            updatePrimitives(scene);
+            updateAndRenderPrimitives(scene);
         }
 
         createPotentiallyVisibleSet(scene);
@@ -2696,7 +2722,7 @@ define([
         }
     }
 
-    function updatePrimitives(scene) {
+    function updateAndRenderPrimitives(scene) {
         var frameState = scene._frameState;
 
         scene._groundPrimitives.update(frameState);
@@ -2706,7 +2732,7 @@ define([
         updateShadowMaps(scene);
 
         if (scene._globe) {
-            scene._globe.update(frameState);
+            scene._globe.render(frameState);
         }
     }
 
@@ -2836,13 +2862,15 @@ define([
         }
     }
 
-    function callAfterRenderFunctions(frameState) {
+    function callAfterRenderFunctions(scene) {
         // Functions are queued up during primitive update and executed here in case
         // the function modifies scene state that should remain constant over the frame.
-        var functions = frameState.afterRender;
+        var functions = scene._frameState.afterRender;
         for (var i = 0, length = functions.length; i < length; ++i) {
             functions[i]();
+            scene.requestRender();
         }
+
         functions.length = 0;
     }
 
@@ -2909,7 +2937,13 @@ define([
     }
 
     function update(scene, time) {
-        // TODO: Update primitives, including globe
+        var frameState = scene._frameState;
+
+        if (defined(scene.globe)) {
+            scene.globe.update(frameState);
+        }
+
+        frameState.creditDisplay.update();
     }
 
     function render(scene, time) {
@@ -3010,7 +3044,7 @@ define([
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         RequestScheduler.update();
-        callAfterRenderFunctions(this._frameState);
+        callAfterRenderFunctions(this);
     };
 
     /**
@@ -3191,7 +3225,7 @@ define([
 
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        callAfterRenderFunctions(frameState);
+        callAfterRenderFunctions(this);
         return object;
     };
 
@@ -3716,6 +3750,12 @@ define([
 
         this._removeRequestListenerCallback();
         this._removeTaskProcessorListenerCallback();
+        if (defined(this._removeGlobeTileLoadCallback)) {
+            this._removeGlobeTileLoadCallback();
+        }
+        if (defined(this._removeGlobeImageryUpdateCallback)) {
+            this._removeGlobeImageryUpdateCallback();
+        }
 
         return destroyObject(this);
     };

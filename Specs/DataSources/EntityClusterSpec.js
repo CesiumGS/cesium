@@ -50,6 +50,7 @@ defineSuite([
             },
             beginFrame : function() {},
             update : function() {},
+            render : function() {},
             endFrame : function() {}
 
         };
