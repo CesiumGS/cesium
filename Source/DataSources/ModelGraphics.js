@@ -57,8 +57,8 @@ define([
      * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
      *
-     * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
+     * @see {@link https://cesiumjs.org/tutorials/3D-Models-Tutorial/|3D Models Tutorial}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
      */
     function ModelGraphics(options) {
         this._show = undefined;

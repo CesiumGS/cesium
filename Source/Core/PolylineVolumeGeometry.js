@@ -201,7 +201,7 @@ define([
      *
      * @see PolylineVolumeGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      *
      * @example
      * function computeCircle(radius) {

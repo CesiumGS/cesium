@@ -2043,7 +2043,7 @@ define([
      *
      * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
     function CzmlDataSource(name) {
         this._name = name;
