@@ -2,7 +2,7 @@
  * Transforms a position from window to eye coordinates.
  * The transform from window to normalized device coordinates is done using components
  * of (@link czm_viewport} and {@link czm_viewportTransformation} instead of calculating
- * the inverse of <code>czm_viewportTransformation</code>. The transformation from 
+ * the inverse of <code>czm_viewportTransformation</code>. The transformation from
  * normalized device coordinates to clip coordinates is done using <code>positionWC.w</code>,
  * which is expected to be the scalar used in the perspective divide. The transformation
  * from clip to eye coordinates is done using {@link czm_inverseProjection}.
@@ -30,6 +30,23 @@ vec4 czm_windowToEyeCoordinates(vec4 fragmentCoordinate)
     float z = (fragmentCoordinate.z - czm_viewportTransformation[3][2]) / czm_viewportTransformation[2][2];
     vec4 q = vec4(x, y, z, 1.0);
     q /= fragmentCoordinate.w;
-    q = czm_inverseProjection * q;
+
+    if (czm_inverseProjection != mat4(0.0)) {
+        q = czm_inverseProjection * q;
+    } else {
+        float top = czm_frustumPlanes.x;
+        float bottom = czm_frustumPlanes.y;
+        float left = czm_frustumPlanes.z;
+        float right = czm_frustumPlanes.w;
+
+        float near = czm_currentFrustum.x;
+        float far = czm_currentFrustum.y;
+
+        q.x = (q.x * (right - left) + left + right) * 0.5;
+        q.y = (q.y * (top - bottom) + bottom + top) * 0.5;
+        q.z = (q.z * (near - far) - near - far) * 0.5;
+        q.w = 1.0;
+    }
+
     return q;
 }

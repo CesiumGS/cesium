@@ -1,9 +1,6 @@
-/*global define*/
 define([
-    './defineProperties',
-    './DeveloperError'
+        './DeveloperError'
     ], function(
-        defineProperties,
         DeveloperError) {
     'use strict';
 

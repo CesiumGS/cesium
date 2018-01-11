@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'dijit/_CssStateMixin',
         'dijit/_TemplatedMixin',

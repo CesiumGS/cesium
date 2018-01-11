@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -12,7 +11,6 @@ define([
         '../Core/FeatureDetection',
         '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/RuntimeError',
         '../Renderer/ContextLimits',
         '../Renderer/PixelDatatype',
         '../Renderer/Sampler',
@@ -32,7 +30,6 @@ define([
         FeatureDetection,
         CesiumMath,
         PixelFormat,
-        RuntimeError,
         ContextLimits,
         PixelDatatype,
         Sampler,

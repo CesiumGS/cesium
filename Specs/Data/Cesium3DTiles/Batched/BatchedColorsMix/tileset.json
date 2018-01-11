@@ -1,0 +1,41 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "properties": {
+    "id": {
+      "minimum": 0,
+      "maximum": 9
+    },
+    "Longitude": {
+      "minimum": -1.3196972173766555,
+      "maximum": -1.3196683129064435
+    },
+    "Latitude": {
+      "minimum": 0.698861998722264,
+      "maximum": 0.6988888301460953
+    },
+    "Height": {
+      "minimum": 6.929546581581235,
+      "maximum": 13.581844886764884
+    }
+  },
+  "geometricError": 70,
+  "root": {
+    "refine": "ADD",
+    "boundingVolume": {
+      "region": [
+        -1.3197004795898053,
+        0.6988582109,
+        -1.3196595204101946,
+        0.6988897891,
+        0,
+        20
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "url": "batchedColorsMix.b3dm"
+    }
+  }
+}

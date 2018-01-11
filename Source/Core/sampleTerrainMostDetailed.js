@@ -1,17 +1,14 @@
-/*global define*/
 define([
-    '../ThirdParty/when',
-    './defined',
-    './sampleTerrain',
-    './DeveloperError',
-    './Rectangle'
-], function(
-    when,
-    defined,
-    sampleTerrain,
-    DeveloperError,
-    Rectangle) {
-    "use strict";
+        '../ThirdParty/when',
+        './defined',
+        './DeveloperError',
+        './sampleTerrain'
+    ], function(
+        when,
+        defined,
+        DeveloperError,
+        sampleTerrain) {
+    'use strict';
 
     /**
      * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.
@@ -26,7 +23,7 @@ define([
      * @example
      * // Query the terrain height of two Cartographic positions
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//assets.agi.com/stk-terrain/world'
+     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
      * });
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),

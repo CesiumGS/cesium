@@ -30,7 +30,7 @@ function startup(Cesium) {
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-       
+
 // Example 1: Draw a yellow polyline on the globe surface.
 var yellowPolyline = new Cesium.GeometryInstance({
     geometry : new Cesium.SimplePolylineGeometry({
@@ -66,7 +66,7 @@ var perSegmentPolyline = new Cesium.GeometryInstance({
 // Example 3: Draw a polyline with per vertex coloring.
 
 // For per vertex coloring, set the colorsPerVertex option
-// to true, and provide the colors options with an array of 
+// to true, and provide the colors options with an array of
 // colors where the length is equal to the number of positions.
 var perVertexPolyline = new Cesium.GeometryInstance({
     geometry : new Cesium.SimplePolylineGeometry({

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/PerformanceWatchdog/PerformanceWatchdog',
         'Specs/createScene'

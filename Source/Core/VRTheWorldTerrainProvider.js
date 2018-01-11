@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './Credit',
@@ -16,7 +15,6 @@ define([
         './Math',
         './Rectangle',
         './TerrainProvider',
-        './throttleRequestByServer',
         './TileProviderError'
     ], function(
         when,
@@ -35,7 +33,6 @@ define([
         CesiumMath,
         Rectangle,
         TerrainProvider,
-        throttleRequestByServer,
         TileProviderError) {
     'use strict';
 
@@ -99,7 +96,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            credit = new Credit({text: credit});
         }
         this._credit = credit;
 
@@ -256,14 +253,12 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
@@ -278,16 +273,9 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise;
-
-        throttleRequests = defaultValue(throttleRequests, true);
-        if (throttleRequests) {
-            promise = throttleRequestByServer(url, loadImage);
-            if (!defined(promise)) {
-                return undefined;
-            }
-        } else {
-            promise = loadImage(url);
+        var promise = loadImage(url, undefined, request);
+        if (!defined(promise)) {
+            return undefined;
         }
 
         var that = this;

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AttributeCompression',
         './barycentricCoordinates',
@@ -10,7 +9,6 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './EncodedCartesian3',
         './GeographicProjection',
@@ -37,7 +35,6 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         EncodedCartesian3,
         GeographicProjection,
@@ -386,8 +383,8 @@ define([
                     while (intoElementsIn < numVertices) {
                         var temp = indexCrossReferenceOldToNew[intoElementsIn];
                         if (temp !== -1) {
-                            for (i = 0; i < numComponents; i++) {
-                                elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+                            for (var j = 0; j < numComponents; j++) {
+                                elementsOut[numComponents * temp + j] = elementsIn[numComponents * intoElementsIn + j];
                             }
                         }
                         ++intoElementsIn;
@@ -1104,8 +1101,8 @@ define([
         var normalsPerVertex = new Array(numVertices);
         var normalsPerTriangle = new Array(numIndices / 3);
         var normalIndices = new Array(numIndices);
-
-        for ( var i = 0; i < numVertices; i++) {
+        var i;
+        for ( i = 0; i < numVertices; i++) {
             normalsPerVertex[i] = {
                 indexOffset : 0,
                 count : 0,
@@ -1173,20 +1170,28 @@ define([
         for (i = 0; i < numVertices; i++) {
             var i3 = i * 3;
             vertexNormalData = normalsPerVertex[i];
+            Cartesian3.clone(Cartesian3.ZERO, normal);
             if (vertexNormalData.count > 0) {
-                Cartesian3.clone(Cartesian3.ZERO, normal);
                 for (j = 0; j < vertexNormalData.count; j++) {
                     Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }
-                Cartesian3.normalize(normal, normal);
-                normalValues[i3] = normal.x;
-                normalValues[i3 + 1] = normal.y;
-                normalValues[i3 + 2] = normal.z;
-            } else {
-                normalValues[i3] = 0.0;
-                normalValues[i3 + 1] = 0.0;
-                normalValues[i3 + 2] = 1.0;
+
+                // We can run into an issue where a vertex is used with 2 primitives that have opposite winding order.
+                if (Cartesian3.equalsEpsilon(Cartesian3.ZERO, normal, CesiumMath.EPSILON10)) {
+                    Cartesian3.clone(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset]], normal);
+                }
             }
+
+            // We end up with a zero vector probably because of a degenerate triangle
+            if (Cartesian3.equalsEpsilon(Cartesian3.ZERO, normal, CesiumMath.EPSILON10)) {
+                // Default to (0,0,1)
+                normal.z = 1.0;
+            }
+
+            Cartesian3.normalize(normal, normal);
+            normalValues[i3] = normal.x;
+            normalValues[i3 + 1] = normal.y;
+            normalValues[i3 + 2] = normal.z;
         }
 
         geometry.attributes.normal = new GeometryAttribute({
@@ -1259,7 +1264,8 @@ define([
         var numIndices = indices.length;
         var tan1 = new Array(numVertices * 3);
 
-        for ( var i = 0; i < tan1.length; i++) {
+        var i;
+        for ( i = 0; i < tan1.length; i++) {
             tan1[i] = 0;
         }
 
@@ -1340,34 +1346,6 @@ define([
             componentsPerAttribute : 3,
             values : bitangentValues
         });
-
-        return geometry;
-    };
-
-    /**
-     * Computes per-vertex binormal and tangents for a geometry containing <code>TRIANGLES</code>.
-     * The result is new <code>binormal</code> and <code>tangent</code> attributes added to the geometry.
-     * This assumes a counter-clockwise winding order.
-     * <p>
-     * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
-     * for an Arbitrary Mesh</a> by Eric Lengyel.
-     * </p>
-     *
-     * @param {Geometry} geometry The geometry to modify.
-     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
-     *
-     * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
-     * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
-     *
-     * @example
-     * Cesium.GeometryPipeline.computeBinormalAndTangent(geometry);
-     *
-     * @see GeometryPipeline.computeTangentAndBitangent
-     */
-    GeometryPipeline.computeBinormalAndTangent = function(geometry) {
-        deprecationWarning('computeBinormalAndTangent', 'computeBinormalAndTangent was deprecated in 1.30.  It will be removed in 1.31.  Use a computeTangentAndBitangent.');
-        GeometryPipeline.computeTangentAndBitangent(geometry);
-        geometry.attributes.binormal = geometry.attributes.bitangent;
 
         return geometry;
     };

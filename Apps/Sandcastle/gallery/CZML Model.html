@@ -46,9 +46,9 @@ var czml = [{
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var promise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+var dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
-promise.then(function(dataSource){
+dataSourcePromise.then(function(dataSource){
     viewer.trackedEntity = dataSource.entities.getById('aircraft model');
 }).otherwise(function(error){
     window.alert(error);

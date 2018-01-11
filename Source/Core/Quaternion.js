@@ -1,10 +1,8 @@
-/*global define*/
 define([
         './Cartesian3',
         './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './FeatureDetection',
         './freezeObject',
         './Math',
@@ -14,7 +12,6 @@ define([
         Check,
         defaultValue,
         defined,
-        DeveloperError,
         FeatureDetection,
         freezeObject,
         CesiumMath,
@@ -172,30 +169,29 @@ define([
     };
 
     var scratchHPRQuaternion = new Quaternion();
+    var scratchHeadingQuaternion = new Quaternion();
+    var scratchPitchQuaternion = new Quaternion();
+    var scratchRollQuaternion = new Quaternion();
 
     /**
      * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
      * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
      * the positive x axis.
      *
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} roll The roll angle in radians.
+     * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      */
-    Quaternion.fromHeadingPitchRoll = function(heading, pitch, roll, result) {
+    Quaternion.fromHeadingPitchRoll = function(headingPitchRoll, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('heading', heading);
-        Check.typeOf.number('pitch', pitch);
-        Check.typeOf.number('roll', roll);
+        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, roll, scratchHPRQuaternion);
-        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -pitch, result);
-        result = Quaternion.multiply(pitchQuaternion, rollQuaternion, pitchQuaternion);
-        var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -heading, scratchHPRQuaternion);
-        return Quaternion.multiply(headingQuaternion, result, result);
+        scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
+        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -headingPitchRoll.pitch, result);
+        result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
+        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -headingPitchRoll.heading, scratchHPRQuaternion);
+        return Quaternion.multiply(scratchHeadingQuaternion, result, result);
     };
 
     var sampledQuaternionAxis = new Cartesian3();

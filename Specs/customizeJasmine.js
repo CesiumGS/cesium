@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Source/ThirdParty/when',
         'Specs/addDefaultMatchers',
@@ -42,6 +41,8 @@ define([
                 }
             });
         }
+
+        window.specsUsingRelease = release;
 
         window.fdefineSuite = function(deps, name, suite, categories) {
             defineSuite(deps, name, suite, categories, true);

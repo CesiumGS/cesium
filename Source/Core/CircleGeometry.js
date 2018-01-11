@@ -1,11 +1,9 @@
-/*global define*/
 define([
         './Cartesian3',
         './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
         './VertexFormat'
@@ -15,7 +13,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         EllipseGeometry,
         Ellipsoid,
         VertexFormat) {

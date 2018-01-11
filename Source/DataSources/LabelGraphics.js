@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -19,7 +18,7 @@ define([
      * Describes a two dimensional label located at the position of the containing {@link Entity}.
      * <p>
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * </p>
@@ -45,10 +44,12 @@ define([
      * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+     * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
+     * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function LabelGraphics(options) {
         this._text = undefined;
@@ -87,8 +88,12 @@ define([
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
         this._pixelOffsetScaleByDistanceSubscription = undefined;
+        this._scaleByDistance = undefined;
+        this._scaleByDistanceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._disableDepthTestDistance = undefined;
+        this._disableDepthTestDistanceSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -179,8 +184,8 @@ define([
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>l.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code><br /><br />
          * </div>
@@ -207,8 +212,8 @@ define([
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='Images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The label's origin is indicated by the yellow point.
          * </div>
@@ -224,7 +229,7 @@ define([
          * A scale greater than <code>1.0</code> enlarges the label while a scale less than <code>1.0</code> shrinks it.
          * <p>
          * <div align='center'>
-         * <img src='images/Label.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Label.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
          * and <code>2.0</code>.
          * </div>
@@ -290,11 +295,31 @@ define([
         pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance'),
 
         /**
+         * Gets or sets near and far scaling properties of a Label based on the label's distance from the camera.
+         * A label's scale will interpolate between the {@link NearFarScalar#nearValue} and
+         * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+         * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+         * Outside of these ranges the label's scale remains clamped to the nearest bound.  If undefined,
+         * scaleByDistance will be disabled.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        scaleByDistance : createPropertyDescriptor('scaleByDistance'),
+
+        /**
          * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this label will be displayed.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        disableDepthTestDistance : createPropertyDescriptor('disableDepthTestDistance')
     });
 
     /**
@@ -325,7 +350,9 @@ define([
         result.pixelOffset = this.pixelOffset;
         result.translucencyByDistance = this.translucencyByDistance;
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
+        result.scaleByDistance = this.scaleByDistance;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.disableDepthTestDistance = this.disableDepthTestDistance;
         return result;
     };
 
@@ -358,9 +385,11 @@ define([
         this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
-        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
-        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.translucencyByDistance = defaultValue(this.translucencyByDistance, source.translucencyByDistance);
+        this.pixelOffsetScaleByDistance = defaultValue(this.pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.disableDepthTestDistance = defaultValue(this.disableDepthTestDistance, source.disableDepthTestDistance);
     };
 
     return LabelGraphics;

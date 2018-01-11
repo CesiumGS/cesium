@@ -19,7 +19,7 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-    
+
     #viewChanged, #cameraChanged {
         display: none;
         background-color: red;
@@ -141,7 +141,7 @@ function setReferenceFrame() {
 
 function setHeadingPitchRoll() {
     Sandcastle.declare(setHeadingPitchRoll);
-    
+
     var camera = viewer.camera;
     camera.setView({
         destination : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
@@ -171,7 +171,7 @@ function viewInICRF() {
     Sandcastle.declare(viewInICRF);
 
     viewer.camera.flyHome(0);
-    
+
     clock.multiplier = 3 * 60 * 60;
     scene.preRender.addEventListener(icrf);
     scene.globe.enableLighting = true;
@@ -184,7 +184,7 @@ var removeEnd;
 
 function cameraEvents() {
     Sandcastle.declare(cameraEvents);
-    
+
     var camera = viewer.camera;
     removeStart = camera.moveStart.addEventListener(function() {
         viewChanged.style.display = 'block';
@@ -211,7 +211,7 @@ function cameraChanges() {
 
 function flyInACity() {
     Sandcastle.declare(flyInACity);
-    
+
     var camera = scene.camera;
     camera.flyTo({
         destination : Cesium.Cartesian3.fromDegrees(-73.98580932617188, 40.74843406689482, 363.34038727246224),
@@ -228,6 +228,54 @@ function flyInACity() {
             }, 1000);
         }
     });
+}
+
+function losAngelesToTokyo(adjustPitch) {
+    var camera = scene.camera;
+
+    var tokyoOptions = {
+        destination : Cesium.Cartesian3.fromDegrees(139.8148, 35.7142, 20000.0),
+        orientation: {
+            heading : Cesium.Math.toRadians(15.0),
+            pitch : Cesium.Math.toRadians(-60),
+            roll : 0.0
+        },
+        duration: 20,
+        flyOverLongitude: Cesium.Math.toRadians(60.0)
+    };
+
+    var laOptions = {
+        destination : Cesium.Cartesian3.fromDegrees(-117.729, 34.457, 10000.0),
+        duration: 5,
+        orientation: {
+            heading : Cesium.Math.toRadians(-15.0),
+            pitch : -Cesium.Math.PI_OVER_FOUR,
+            roll : 0.0
+        }
+    };
+
+    laOptions.complete = function() {
+        setTimeout(function() {
+            camera.flyTo(tokyoOptions);
+        }, 1000);
+    };
+
+    if (adjustPitch) {
+        tokyoOptions.pitchAdjustHeight = 1000;
+        laOptions.pitchAdjustHeight = 1000;
+    }
+
+    camera.flyTo(laOptions);
+}
+
+function flyOverLongitude(adjustPitch) {
+    Sandcastle.declare(flyOverLongitude);
+    losAngelesToTokyo();
+}
+
+function flyOverLongitudeWithPitch() {
+    Sandcastle.declare(flyOverLongitudeWithPitch);
+    losAngelesToTokyo(true);
 }
 
 Sandcastle.addToolbarMenu([{
@@ -298,7 +346,20 @@ Sandcastle.addToolbarMenu([{
         cameraChanges();
         Sandcastle.highlight(cameraChanges);
     }
-}]);
+}, {
+    text : 'Fly from Los Angeles to Tokyo via Europe',
+    onselect : function() {
+        flyOverLongitude();
+        Sandcastle.highlight(flyOverLongitude);
+    }
+}, {
+    text : 'Look down during exaggerated flight',
+    onselect : function() {
+        flyOverLongitudeWithPitch();
+        Sandcastle.highlight(flyOverLongitudeWithPitch);
+    }
+}
+]);
 
 Sandcastle.reset = function() {
     scene.completeMorph();
@@ -311,7 +372,7 @@ Sandcastle.reset = function() {
         removeEnd();
 
         viewChanged.style.display = 'none';
-        
+
         removeStart = undefined;
         removeEnd = undefined;
     }

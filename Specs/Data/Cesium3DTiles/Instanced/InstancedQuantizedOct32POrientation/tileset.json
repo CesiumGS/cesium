@@ -1,0 +1,29 @@
+{
+  "asset": {
+    "version": "1.0"
+  },
+  "properties": {
+    "Height": {
+      "minimum": 20,
+      "maximum": 20
+    }
+  },
+  "geometricError": 70,
+  "root": {
+    "refine": "ADD",
+    "boundingVolume": {
+      "region": [
+        -1.3197004795898053,
+        0.6988582109,
+        -1.3196595204101946,
+        0.6988897891,
+        0,
+        30
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "url": "instancedQuantizedOct32POrientation.i3dm"
+    }
+  }
+}

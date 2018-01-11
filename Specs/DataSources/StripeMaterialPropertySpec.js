@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/StripeMaterialProperty',
         'Core/Color',

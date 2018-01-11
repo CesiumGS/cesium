@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -14,6 +14,7 @@ define([
         './BufferUsage',
         './ContextLimits'
     ], function(
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -256,24 +257,19 @@ define([
      *     context : context,
      *     attributes : attributes
      * });
-     * 
+     *
      * @see Buffer#createVertexBuffer
      * @see Buffer#createIndexBuffer
      * @see Context#draw
-     * 
+     *
      * @private
      */
     function VertexArray(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
-
-        if (!defined(options.attributes)) {
-            throw new DeveloperError('options.attributes is required.');
-        }
+        Check.defined('options.context', options.context);
+        Check.defined('options.attributes', options.attributes);
         //>>includeEnd('debug');
 
         var context = options.context;
@@ -285,6 +281,7 @@ define([
         var vaAttributes = [];
         var numberOfVertices = 1;   // if every attribute is backed by a single value
         var hasInstancedAttributes = false;
+        var hasConstantAttributes = false;
 
         var length = attributes.length;
         for (i = 0; i < length; ++i) {
@@ -306,7 +303,9 @@ define([
         for (i = 0; i < length; ++i) {
             if (vaAttributes[i].instanceDivisor > 0) {
                 hasInstancedAttributes = true;
-                break;
+            }
+            if (defined(vaAttributes[i].value)) {
+                hasConstantAttributes = true;
             }
         }
 
@@ -334,6 +333,7 @@ define([
 
         this._numberOfVertices = numberOfVertices;
         this._hasInstancedAttributes = hasInstancedAttributes;
+        this._hasConstantAttributes = hasConstantAttributes;
         this._context = context;
         this._gl = gl;
         this._vao = vao;
@@ -515,7 +515,7 @@ define([
      * // Example 3.  When the caller destroys the vertex array, it also destroys the
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
-     * 
+     *
      * @see Buffer#createVertexBuffer
      * @see Buffer#createIndexBuffer
      * @see GeometryPipeline.createAttributeLocations
@@ -525,9 +525,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
@@ -666,9 +664,7 @@ define([
      */
     VertexArray.prototype.getAttribute = function(index) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(index)) {
-            throw new DeveloperError('index is required.');
-        }
+        Check.defined('index', index);
         //>>includeEnd('debug');
 
         return this._attributes[index];
@@ -714,11 +710,27 @@ define([
         }
     }
 
+    // Vertex attributes backed by a constant value go through vertexAttrib[1234]f[v]
+    // which is part of context state rather than VAO state.
+    function setConstantAttributes(vertexArray, gl) {
+        var attributes = vertexArray._attributes;
+        var length = attributes.length;
+        for (var i = 0; i < length; ++i) {
+            var attribute = attributes[i];
+            if (attribute.enabled && defined(attribute.value)) {
+                attribute.vertexAttrib(gl);
+            }
+        }
+    }
+
     VertexArray.prototype._bind = function() {
         if (defined(this._vao)) {
             this._context.glBindVertexArray(this._vao);
             if (this._context.instancedArrays) {
                 setVertexAttribDivisor(this);
+            }
+            if (this._hasConstantAttributes) {
+                setConstantAttributes(this, this._gl);
             }
         } else {
             bind(this._gl, this._attributes, this._indexBuffer);

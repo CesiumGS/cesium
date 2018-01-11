@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Credit',
         '../Core/defaultValue',
@@ -18,8 +17,14 @@ define([
     'use strict';
 
     var trailingSlashRegex = /\/$/;
-    var defaultCredit1 = new Credit('© Mapbox © OpenStreetMap', undefined, 'https://www.mapbox.com/about/maps/');
-    var defaultCredit2 = [new Credit('Improve this map', undefined, 'https://www.mapbox.com/map-feedback/')];
+    var defaultCredit1 = new Credit({
+        text:'© Mapbox © OpenStreetMap',
+        link: 'https://www.mapbox.com/about/maps/'
+    });
+    var defaultCredit2 = [new Credit({
+        text: 'Improve this map',
+        link: 'https://www.mapbox.com/map-feedback/'
+    })];
 
     /**
      * Provides tiled imagery hosted by Mapbox.
@@ -65,7 +70,7 @@ define([
         this._url = url;
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
-        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.key);
+        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.accessToken);
         var format = defaultValue(options.format, 'png');
         if (!/\./.test(format)) {
             format = '.' + format;
@@ -84,7 +89,7 @@ define([
         if (defined(options.credit)) {
             var credit = options.credit;
             if (typeof credit === 'string') {
-                credit = new Credit(credit);
+                credit = new Credit({text: credit});
             }
             defaultCredit1 = credit;
             defaultCredit2.length = 0;
@@ -317,6 +322,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -324,8 +330,8 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    MapboxImageryProvider.prototype.requestImage = function(x, y, level) {
-        return this._imageryProvider.requestImage(x, y, level);
+    MapboxImageryProvider.prototype.requestImage = function(x, y, level, request) {
+        return this._imageryProvider.requestImage(x, y, level, request);
     };
 
     /**

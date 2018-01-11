@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -21,7 +20,7 @@ define([
      *
      * @exception {DeveloperError} viewer is required.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
@@ -45,10 +44,6 @@ define([
                     return cesiumInspector;
                 }
             }
-        });
-
-        viewer.scene.postRender.addEventListener(function() {
-            viewer.cesiumInspector.viewModel.update();
         });
     }
 

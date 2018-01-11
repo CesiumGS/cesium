@@ -14,6 +14,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 
 * [Naming](#naming)
 * [Formatting](#formatting)
+* [Linting](#linting)
 * [Units](#units)
 * [Basic Code Construction](#basic-code-construction)
 * [Functions](#functions)
@@ -135,6 +136,50 @@ function Model(options) {
 
 * Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
 
+## Linting
+
+For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/node.js).
+
+**General rules:**
+- [block-scoped-var](http://eslint.org/docs/rules/block-scoped-var)
+- [no-alert](http://eslint.org/docs/rules/no-alert)
+- [no-floating-decimal](http://eslint.org/docs/rules/no-floating-decimal)
+- [no-implicit-globals](http://eslint.org/docs/rules/no-implicit-globals)
+- [no-loop-func](http://eslint.org/docs/rules/no-loop-func)
+- [no-use-before-define](http://eslint.org/docs/rules/no-use-before-define) to prevent using variables and functions before they are defined.
+- [no-else-return](http://eslint.org/docs/rules/no-else-return)
+- [no-undef-init](http://eslint.org/docs/rules/no-undef-init)
+- [no-sequences](http://eslint.org/docs/rules/no-sequences)
+- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
+- [no-trailing-spaces](http://eslint.org/docs/rules/no-trailing-spaces)
+- [no-lonely-if](http://eslint.org/docs/rules/no-lonely-if)
+- [quotes](http://eslint.org/docs/rules/quotes) to enforce using single-quotes
+- [no-sequences](http://eslint.org/docs/rules/no-sequences)
+- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
+
+**Node-specific rules:**
+- [global-require](http://eslint.org/docs/rules/global-require)
+- [no-buffer-constructor](http://eslint.org/docs/rules/no-buffer-constructor)
+- [no-new-require](http://eslint.org/docs/rules/no-new-require)
+
+**[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
+ * When disabling linting for one line, use `//eslint-disable-line`:
+```js
+function exit(warningMessage) {
+    window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
+}
+```
+
+* When disabling linting for blocks of code, place `eslint-disable` comments on new lines and as close to the associated code as possible:
+```js
+/*eslint-disable no-empty*/
+try {
+    lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
+} catch(ex) {
+}
+/*eslint-enable no-empty*/
+```
+
 ## Units
 
 * Cesium uses SI units:
@@ -239,7 +284,6 @@ if (defined(u)) {
 ```
 * Use Cesium's `freezeObject` function to create enums, e.g.,
 ```javascript
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
@@ -290,12 +334,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     updateTiles(this, frameState);
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -571,12 +615,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-Cesium3DTileset.prototype._processTiles(tiles3D, frameState) {
+Cesium3DTileset.prototype._processTiles(tileset, frameState) {
     var tiles = this._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -587,12 +631,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -672,13 +716,13 @@ Model.prototype.update = function(frameState) {
 
 It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example, `Cesium3DTileset.js`,
 ```javascript
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
@@ -687,16 +731,16 @@ is better written as
 ```javascript
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
 
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 ```
-even though it relies on implicitly hoisting the `loadTilesJson` function to the top of the file.
+even though it relies on implicitly hoisting the `loadTileset` function to the top of the file.
 
 ## Design
 
@@ -753,6 +797,8 @@ From release to release, we strive to keep the public Cesium API stable but also
 
 A `@private` API is considered a Cesium implementation detail and can be broken immediately without deprecation.
 
+An `@experimental` API is subject to breaking changes in future Cesium releases without deprecation. It allows for new experimental features, for instance implementing draft formats.
+
 A public identifier (class, function, property) should be deprecated before being removed.  To do so:
 
 * Decide on which future version the deprecated API should be removed.  This is on a case-by-case basis depending on how badly it impacts users and Cesium development.  Most deprecated APIs will removed in 1-3 releases.  This can be discussed in the pull request if needed.
@@ -800,7 +846,7 @@ When using a subscription, always be sure to [dispose the subscription](https://
 ```
 fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
 // ...then later...
-fullscreenSubscription.dispose(); 
+fullscreenSubscription.dispose();
 ```
 
 ## GLSL

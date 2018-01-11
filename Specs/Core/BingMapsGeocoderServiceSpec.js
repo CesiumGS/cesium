@@ -1,29 +1,50 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/BingMapsGeocoderService',
-    'Core/Cartesian3',
-    'Core/loadJsonp',
-    'Core/Rectangle'
-], function(
-    BingMapsGeocoderService,
-    Cartesian3,
-    loadJsonp,
-    Rectangle) {
+        'Core/BingMapsGeocoderService',
+        'Core/loadJsonp',
+        'Core/Rectangle',
+        'Specs/createScene'
+    ], function(
+        BingMapsGeocoderService,
+        loadJsonp,
+        Rectangle,
+        createScene) {
     'use strict';
 
-    var service = new BingMapsGeocoderService();
+    var service;
+    var scene;
+    beforeEach(function() {
+        scene = createScene();
+        service = new BingMapsGeocoderService({scene: scene});
+    });
+
+    afterEach(function() {
+        scene.destroyForSpecs();
+    });
+
+    afterAll(function() {
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
+    });
+
+    it('constructor throws without scene', function() {
+        expect(function() {
+            return new BingMapsGeocoderService();
+        }).toThrowDeveloperError();
+    });
 
     it('returns geocoder results', function (done) {
         var query = 'some query';
-        jasmine.createSpy('testSpy', loadJsonp).and.returnValue({
+        var data = {
             resourceSets: [{
                 resources : [{
                     name : 'a',
                     bbox : [32.0, 3.0, 3.0, 4.0]
                 }]
             }]
-        });
-        service.geocode(query, function(err, results) {
+        };
+        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+            deferred.resolve(data);
+        };
+        service.geocode(query).then(function(results) {
             expect(results.length).toEqual(1);
             expect(results[0].displayName).toEqual('a');
             expect(results[0].destination).toBeInstanceOf(Rectangle);
@@ -33,10 +54,13 @@ defineSuite([
 
     it('returns no geocoder results if Bing has no results', function (done) {
         var query = 'some query';
-        jasmine.createSpy('testSpy', loadJsonp).and.returnValue({
+        var data = {
             resourceSets: []
-        });
-        service.geocode(query, function(err, results) {
+        };
+        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+            deferred.resolve(data);
+        };
+        service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();
         });
@@ -44,12 +68,15 @@ defineSuite([
 
     it('returns no geocoder results if Bing has results but no resources', function (done) {
         var query = 'some query';
-        jasmine.createSpy('testSpy', loadJsonp).and.returnValue({
+        var data = {
             resourceSets: [{
                 resources: []
             }]
-        });
-        service.geocode(query, function(err, results) {
+        };
+        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+            deferred.resolve(data);
+        };
+        service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();
         });

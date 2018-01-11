@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -9,6 +8,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
         '../Core/Transforms',
         './SceneMode'
     ], function(
@@ -21,6 +22,8 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         Transforms,
         SceneMode) {
     'use strict';
@@ -184,7 +187,7 @@ define([
         if (frameState.mode !== SceneMode.SCENE2D || cameraCentered) {
             // View-projection matrix to transform from world coordinates to clip coordinates
             positionCC = worldToClip(actualPosition, eyeOffset, camera, positionCC);
-            if (positionCC.z < 0 && frameState.mode !== SceneMode.SCENE2D) {
+            if (positionCC.z < 0 && !(camera.frustum instanceof OrthographicFrustum) && !(camera.frustum instanceof OrthographicOffCenterFrustum)) {
                 return undefined;
             }
 
@@ -282,20 +285,6 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToDrawingBufferCoordinates = function(viewport, position, result) {
-        // Perspective divide to transform from clip coordinates to normalized device coordinates
-        Cartesian3.divideByScalar(position, position.w, positionNDC);
-
-        // Viewport transform to transform from clip coordinates to drawing buffer coordinates
-        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
-        Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
-
-        return Cartesian2.fromCartesian3(positionWC, result);
-    };
-
-    /**
-     * @private
-     */
     SceneTransforms.transformWindowToDrawingBuffer = function(scene, windowPosition, result) {
         var canvas = scene.canvas;
         var xScale = scene.drawingBufferWidth / canvas.clientWidth;
@@ -320,11 +309,27 @@ define([
         ndc.z = (depth * 2.0) - 1.0;
         ndc.w = 1.0;
 
-        var worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, scratchWorldCoords);
+        var worldCoords;
+        var frustum = scene.camera.frustum;
+        if (!defined(frustum.fovy)) {
+            if (defined(frustum._offCenterFrustum)) {
+                frustum = frustum._offCenterFrustum;
+            }
+            var currentFrustum = uniformState.currentFrustum;
+            worldCoords = scratchWorldCoords;
+            worldCoords.x = (ndc.x * (frustum.right - frustum.left) + frustum.left + frustum.right) * 0.5;
+            worldCoords.y = (ndc.y * (frustum.top - frustum.bottom) + frustum.bottom + frustum.top) * 0.5;
+            worldCoords.z = (ndc.z * (currentFrustum.x - currentFrustum.y) - currentFrustum.x - currentFrustum.y) * 0.5;
+            worldCoords.w = 1.0;
 
-        // Reverse perspective divide
-        var w = 1.0 / worldCoords.w;
-        Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
+            worldCoords = Matrix4.multiplyByVector(uniformState.inverseView, worldCoords, worldCoords);
+        } else {
+            worldCoords = Matrix4.multiplyByVector(uniformState.inverseViewProjection, ndc, scratchWorldCoords);
+
+            // Reverse perspective divide
+            var w = 1.0 / worldCoords.w;
+            Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
+        }
 
         return Cartesian3.fromCartesian4(worldCoords, result);
     };

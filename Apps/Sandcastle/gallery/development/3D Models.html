@@ -97,13 +97,13 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 
 Cesium.knockout.getObservable(viewModel, 'color').subscribe(
     function(newValue) {
-        model.color = Cesium.Color.fromAlpha(getColor(newValue), viewModel.alpha);
+        model.color = Cesium.Color.fromAlpha(getColor(newValue), Number(viewModel.alpha));
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'alpha').subscribe(
     function(newValue) {
-        model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), newValue);
+        model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), Number(newValue));
     }
 );
 
@@ -139,7 +139,7 @@ function createModel(url, height, heading, pitch, roll) {
     }));
 
     model.readyPromise.then(function(model) {
-        model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), viewModel.alpha);
+        model.color = Cesium.Color.fromAlpha(getColor(viewModel.color), Number(viewModel.alpha));
         model.colorBlendMode = getColorBlendMode(viewModel.colorBlendMode);
         model.colorBlendAmount = viewModel.colorBlendAmount;
         // Play and loop all animations at half-speed

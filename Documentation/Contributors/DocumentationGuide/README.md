@@ -220,7 +220,6 @@ CesiumMath.EPSILON1 = 0.1;
  *
  * @see EllipsoidTerrainProvider
  * @see CesiumTerrainProvider
- * @see ArcGisImageServerTerrainProvider
  */
 function TerrainProvider() { /* ... */ }
 ```

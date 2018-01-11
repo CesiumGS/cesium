@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/defaultValue',
@@ -77,6 +76,15 @@ define([
          * @see Scene#debugCommandFilter
          */
         this.owner = options.owner;
+
+        /**
+         * The pass in which to run this command.
+         *
+         * @type {Pass}
+         *
+         * @default undefined
+         */
+        this.pass = options.pass;
     }
 
     /**

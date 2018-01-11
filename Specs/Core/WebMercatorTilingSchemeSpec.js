@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/WebMercatorTilingScheme',
         'Core/Cartesian2',

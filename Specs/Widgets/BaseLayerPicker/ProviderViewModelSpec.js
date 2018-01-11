@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/BaseLayerPicker/ProviderViewModel',
         'ThirdParty/knockout',

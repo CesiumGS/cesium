@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BingMapsApi',
         '../Core/Cartesian2',
@@ -76,7 +75,7 @@ define([
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
@@ -113,7 +112,11 @@ define([
         this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
-        this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
+        this._credit = new Credit({
+            text: 'Bing Imagery',
+            imageUrl: BingMapsImageryProvider._logoData,
+            link: 'http://www.bing.com'
+        });
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -147,6 +150,10 @@ define([
         var metadataError;
 
         function metadataSuccess(data) {
+            if (data.resourceSets.length !== 1) {
+                metadataFailure();
+                return;
+            }
             var resource = data.resourceSets[0].resources[0];
 
             that._tileWidth = resource.imageWidth;
@@ -181,7 +188,9 @@ define([
             for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
                 var attribution = attributionList[attributionIndex];
 
-                attribution.credit = new Credit(attribution.attribution);
+                attribution.credit = new Credit({
+                    text: attribution.attribution
+                });
 
                 var coverageAreas = attribution.coverageAreas;
 
@@ -522,6 +531,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -529,7 +539,7 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
+    BingMapsImageryProvider.prototype.requestImage = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
@@ -537,7 +547,7 @@ define([
         //>>includeEnd('debug');
 
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return ImageryProvider.loadImage(this, url, request);
     };
 
     /**

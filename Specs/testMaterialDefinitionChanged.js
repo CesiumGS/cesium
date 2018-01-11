@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'DataSources/ColorMaterialProperty'
     ], function(

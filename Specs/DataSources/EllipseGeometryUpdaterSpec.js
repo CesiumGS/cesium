@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/EllipseGeometryUpdater',
         'Core/Cartesian3',

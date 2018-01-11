@@ -1,14 +1,11 @@
-/*global define*/
 define([
         './Check',
         './defaultValue',
-        './defined',
-        './DeveloperError'
+        './defined'
     ], function(
         Check,
         defaultValue,
-        defined,
-        DeveloperError) {
+        defined) {
     'use strict';
 
     /**

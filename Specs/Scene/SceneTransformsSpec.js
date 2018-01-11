@@ -1,10 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/SceneTransforms',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/OrthographicFrustum',
         'Core/Rectangle',
         'Scene/Camera',
         'Scene/SceneMode',
@@ -15,6 +15,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        OrthographicFrustum,
         Rectangle,
         Camera,
         SceneMode,
@@ -181,6 +182,29 @@ defineSuite([
         expect(windowCoordinates.y).toBeLessThan(1.0);
     });
 
+    it('returns correct window position in 3D with orthographic frustum', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        scene.camera.frustum = frustum;
+
+        // Update scene state
+        scene.renderForSpecs();
+
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
+
+        var position = Cartesian3.fromDegrees(0,0);
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+
+        expect(windowCoordinates.x).toBeGreaterThan(0.0);
+        expect(windowCoordinates.y).toBeGreaterThan(0.0);
+
+        expect(windowCoordinates.x).toBeLessThan(1.0);
+        expect(windowCoordinates.y).toBeLessThan(1.0);
+    });
+
     it('returns correct drawing buffer position in 2D', function() {
         scene.camera.setView({
             destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
@@ -200,7 +224,7 @@ defineSuite([
         expect(drawingBufferCoordinates.y).toBeLessThan(1.0);
     });
 
-    it('should not error when zoomed out and in 2D', function(done) {
+    it('should not error when zoomed out and in 2D', function() {
         var scene = createScene();
         scene.camera.setView({
             destination : Cartesian3.fromDegrees(75, 15, 30000000.0)

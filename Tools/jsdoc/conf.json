@@ -8,7 +8,7 @@
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
-    "plugins": ["cesiumTags"],
+    "plugins": ["./Tools/jsdoc/cesiumTags"],
     "templates": {
         "cleverLinks": true,
         "default": {
@@ -18,7 +18,7 @@
     },
     "opts": {
         "destination": "Build/Documentation",
-        "template": "cesium_template",
+        "template": "./Tools/jsdoc/cesium_template",
         "recurse": true
     }
 }

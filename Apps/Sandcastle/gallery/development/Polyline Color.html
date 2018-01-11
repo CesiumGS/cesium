@@ -34,7 +34,8 @@ var scene = viewer.scene;
 // Example 1: Draw a polyline with per segment colors
 var positions = [];
 var colors = [];
-for (var i = 0; i < 12; ++i) {
+var i;
+for (i = 0; i < 12; ++i) {
     positions.push(Cesium.Cartesian3.fromDegrees(-124.0 + 5*i, 40.0));
     colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
 }

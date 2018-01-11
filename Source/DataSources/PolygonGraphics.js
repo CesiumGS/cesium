@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -44,7 +43,7 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      */
     function PolygonGraphics(options) {
         this._show = undefined;
@@ -220,7 +219,7 @@ define([
 
         /**
          * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this polygon will be displayed.
-         * @memberof BillboardGraphics.prototype
+         * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
         distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
@@ -34,6 +33,7 @@ define([
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
+    var defaultClampAnimations = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
     var defaultSilhouetteColor = Color.RED;
@@ -101,7 +101,7 @@ define([
 
             var modelMatrix;
             if (show) {
-                modelMatrix = entity._getModelMatrix(time, modelMatrixScratch);
+                modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
                 uri = Property.getValueOrUndefined(modelGraphics._uri, time);
                 show = defined(modelMatrix) && defined(uri);
             }
@@ -153,6 +153,8 @@ define([
             model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor, model._color);
             model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
+            model.clippingPlanes = Property.getValueOrUndefined(modelGraphics._clippingPlanes, time);
+            model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartesian4',
@@ -6,7 +5,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './freezeObject',
         './Math',
         './Matrix3',
@@ -18,7 +16,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         freezeObject,
         CesiumMath,
         Matrix3,

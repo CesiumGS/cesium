@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian3',
         'Core/ClockRange',
@@ -26,6 +25,7 @@ defineSuite([
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Widgets/BaseLayerPicker/ProviderViewModel',
         'Widgets/CesiumWidget/CesiumWidget',
+        'Widgets/ClockViewModel',
         'Widgets/FullscreenButton/FullscreenButton',
         'Widgets/Geocoder/Geocoder',
         'Widgets/HomeButton/HomeButton',
@@ -33,7 +33,7 @@ defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
-    ], function(
+    ], 'Widgets/Viewer/Viewer', function(
         Cartesian3,
         ClockRange,
         ClockStep,
@@ -60,6 +60,7 @@ defineSuite([
         BaseLayerPicker,
         ProviderViewModel,
         CesiumWidget,
+        ClockViewModel,
         FullscreenButton,
         Geocoder,
         HomeButton,
@@ -114,6 +115,8 @@ defineSuite([
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
         expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.clockViewModel).toBeInstanceOf(ClockViewModel);
+        expect(viewer.animation.viewModel.clockViewModel).toBe(viewer.clockViewModel);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
         expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
@@ -128,6 +131,16 @@ defineSuite([
         expect(viewer.isDestroyed()).toEqual(false);
         viewer.destroy();
         expect(viewer.isDestroyed()).toEqual(true);
+    });
+
+    it('can specify custom clockViewModel', function() {
+        var clockViewModel = new ClockViewModel();
+        viewer = createViewer(container, {clockViewModel : clockViewModel});
+        expect(viewer.clockViewModel).toBe(clockViewModel);
+        expect(viewer.animation.viewModel.clockViewModel).toBe(viewer.clockViewModel);
+        viewer.destroy();
+        expect(clockViewModel.isDestroyed()).toBe(false);
+        clockViewModel.destroy();
     });
 
     it('renders without errors', function() {
@@ -822,6 +835,54 @@ defineSuite([
 
         viewer.selectedEntity = undefined;
         expect(viewer.selectedEntity).toBeUndefined();
+
+        viewer.destroy();
+    });
+
+    it('raises an event when the selected entity changes', function() {
+        var viewer = createViewer(container);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.entities.add(entity);
+
+        var myEntity;
+        viewer.selectedEntityChanged.addEventListener(function(newSelection) {
+            myEntity = newSelection;
+        });
+        viewer.selectedEntity = entity;
+        expect(myEntity).toBe(entity);
+
+        viewer.selectedEntity = undefined;
+        expect(myEntity).toBeUndefined();
+
+        viewer.destroy();
+    });
+
+    it('raises an event when the tracked entity changes', function() {
+        var viewer = createViewer(container);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.entities.add(entity);
+
+        var myEntity;
+        viewer.trackedEntityChanged.addEventListener(function(newValue) {
+            myEntity = newValue;
+        });
+        viewer.trackedEntity = entity;
+        expect(myEntity).toBe(entity);
+
+        viewer.trackedEntity = undefined;
+        expect(myEntity).toBeUndefined();
 
         viewer.destroy();
     });

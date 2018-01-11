@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Color',
@@ -66,6 +65,7 @@ define([
     var SCALE_BY_DISTANCE_INDEX = PointPrimitive.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = PointPrimitive.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var DISTANCE_DISPLAY_CONDITION_INDEX = PointPrimitive.DISTANCE_DISPLAY_CONDITION_INDEX;
+    var DISABLE_DEPTH_DISTANCE_INDEX = PointPrimitive.DISABLE_DEPTH_DISTANCE_INDEX;
     var NUMBER_OF_PROPERTIES = PointPrimitive.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
@@ -74,7 +74,7 @@ define([
         compressedAttribute0 : 2,        // color, outlineColor, pick color
         compressedAttribute1 : 3,        // show, translucency by distance, some free space
         scaleByDistance : 4,
-        distanceDisplayCondition : 5
+        distanceDisplayConditionAndDisableDepth : 5
     };
 
     /**
@@ -143,6 +143,10 @@ define([
         this._shaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayConditionPick = false;
+
+        this._shaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistancePick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -489,8 +493,8 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[SCALE_BY_DISTANCE_INDEX]
         }, {
-            index : attributeLocations.distanceDisplayCondition,
-            componentsPerAttribute : 2,
+            index : attributeLocations.distanceDisplayConditionAndDisableDepth,
+            componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }], numberOfPointPrimitives); // 1 vertex per pointPrimitive
@@ -628,9 +632,9 @@ define([
         writer(i, near, nearValue, far, farValue);
     }
 
-    function writeDistanceDisplayCondition(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
+    function writeDistanceDisplayConditionAndDepthDisable(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
         var i = pointPrimitive._index;
-        var writer = vafWriters[attributeLocations.distanceDisplayCondition];
+        var writer = vafWriters[attributeLocations.distanceDisplayConditionAndDisableDepth];
         var near = 0.0;
         var far = Number.MAX_VALUE;
 
@@ -638,10 +642,23 @@ define([
         if (defined(distanceDisplayCondition)) {
             near = distanceDisplayCondition.near;
             far = distanceDisplayCondition.far;
+
+            near *= near;
+            far *= far;
+
             pointPrimitiveCollection._shaderDistanceDisplayCondition = true;
         }
 
-        writer(i, near, far);
+        var disableDepthTestDistance = pointPrimitive.disableDepthTestDistance;
+        disableDepthTestDistance *= disableDepthTestDistance;
+        if (disableDepthTestDistance > 0.0) {
+            pointPrimitiveCollection._shaderDisableDepthDistance = true;
+            if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
+                disableDepthTestDistance = -1.0;
+            }
+        }
+
+        writer(i, near, far, disableDepthTestDistance);
     }
 
     function writePointPrimitive(pointPrimitiveCollection, context, vafWriters, pointPrimitive) {
@@ -649,7 +666,7 @@ define([
         writeCompressedAttrib0(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeCompressedAttrib1(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
         writeScaleByDistance(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
-        writeDistanceDisplayCondition(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
+        writeDistanceDisplayConditionAndDepthDisable(pointPrimitiveCollection, context, vafWriters, pointPrimitive);
     }
 
     function recomputeActualPositions(pointPrimitiveCollection, pointPrimitives, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -766,65 +783,63 @@ define([
             }
 
             this._pointPrimitivesToUpdateIndex = 0;
-        } else {
+        } else if (pointPrimitivesToUpdateLength > 0) {
             // PointPrimitives were modified, but none were added or removed.
-            if (pointPrimitivesToUpdateLength > 0) {
-                var writers = scratchWriterArray;
-                writers.length = 0;
+            var writers = scratchWriterArray;
+            writers.length = 0;
 
-                if (properties[POSITION_INDEX] || properties[OUTLINE_WIDTH_INDEX] || properties[PIXEL_SIZE_INDEX]) {
-                    writers.push(writePositionSizeAndOutline);
-                }
-
-                if (properties[COLOR_INDEX] || properties[OUTLINE_COLOR_INDEX]) {
-                    writers.push(writeCompressedAttrib0);
-                }
-
-                if (properties[SHOW_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
-                    writers.push(writeCompressedAttrib1);
-                }
-
-                if (properties[SCALE_BY_DISTANCE_INDEX]) {
-                    writers.push(writeScaleByDistance);
-                }
-
-                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX]) {
-                    writers.push(writeDistanceDisplayCondition);
-                }
-
-                var numWriters = writers.length;
-
-                vafWriters = this._vaf.writers;
-
-                if ((pointPrimitivesToUpdateLength / pointPrimitivesLength) > 0.1) {
-                    // If more than 10% of pointPrimitive change, rewrite the entire buffer.
-
-                    // PERFORMANCE_IDEA:  I totally made up 10% :).
-
-                    for (var m = 0; m < pointPrimitivesToUpdateLength; ++m) {
-                        var b = pointPrimitivesToUpdate[m];
-                        b._dirty = false;
-
-                        for ( var n = 0; n < numWriters; ++n) {
-                            writers[n](this, context, vafWriters, b);
-                        }
-                    }
-                    this._vaf.commit();
-                } else {
-                    for (var h = 0; h < pointPrimitivesToUpdateLength; ++h) {
-                        var bb = pointPrimitivesToUpdate[h];
-                        bb._dirty = false;
-
-                        for ( var o = 0; o < numWriters; ++o) {
-                            writers[o](this, context, vafWriters, bb);
-                        }
-                        this._vaf.subCommit(bb._index, 1);
-                    }
-                    this._vaf.endSubCommits();
-                }
-
-                this._pointPrimitivesToUpdateIndex = 0;
+            if (properties[POSITION_INDEX] || properties[OUTLINE_WIDTH_INDEX] || properties[PIXEL_SIZE_INDEX]) {
+                writers.push(writePositionSizeAndOutline);
             }
+
+            if (properties[COLOR_INDEX] || properties[OUTLINE_COLOR_INDEX]) {
+                writers.push(writeCompressedAttrib0);
+            }
+
+            if (properties[SHOW_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                writers.push(writeCompressedAttrib1);
+            }
+
+            if (properties[SCALE_BY_DISTANCE_INDEX]) {
+                writers.push(writeScaleByDistance);
+            }
+
+            if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE_INDEX]) {
+                writers.push(writeDistanceDisplayConditionAndDepthDisable);
+            }
+
+            var numWriters = writers.length;
+
+            vafWriters = this._vaf.writers;
+
+            if ((pointPrimitivesToUpdateLength / pointPrimitivesLength) > 0.1) {
+                // If more than 10% of pointPrimitive change, rewrite the entire buffer.
+
+                // PERFORMANCE_IDEA:  I totally made up 10% :).
+
+                for (var m = 0; m < pointPrimitivesToUpdateLength; ++m) {
+                    var b = pointPrimitivesToUpdate[m];
+                    b._dirty = false;
+
+                    for ( var n = 0; n < numWriters; ++n) {
+                        writers[n](this, context, vafWriters, b);
+                    }
+                }
+                this._vaf.commit();
+            } else {
+                for (var h = 0; h < pointPrimitivesToUpdateLength; ++h) {
+                    var bb = pointPrimitivesToUpdate[h];
+                    bb._dirty = false;
+
+                    for ( var o = 0; o < numWriters; ++o) {
+                        writers[o](this, context, vafWriters, bb);
+                    }
+                    this._vaf.subCommit(bb._index, 1);
+                }
+                this._vaf.endSubCommits();
+            }
+
+            this._pointPrimitivesToUpdateIndex = 0;
         }
 
         // If the number of total pointPrimitives ever shrinks considerably
@@ -883,10 +898,15 @@ define([
             }
         }
 
+        this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
+        var vs;
+        var fs;
+
         if (blendOptionChanged ||
             (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
             (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
-            (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayCondition)) {
+            (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayCondition) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
 
             vs = new ShaderSource({
                 sources : [PointPrimitiveCollectionVS]
@@ -899,6 +919,9 @@ define([
             }
             if (this._shaderDistanceDisplayCondition) {
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
 
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
@@ -956,12 +979,14 @@ define([
             this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
             this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
         }
 
         if (!defined(this._spPick) ||
             (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
             (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
-            (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayConditionPick)) {
+            (this._shaderDistanceDisplayCondition && !this._compiledShaderDistanceDisplayConditionPick) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
 
             vs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -976,6 +1001,9 @@ define([
             }
             if (this._shaderDistanceDisplayCondition) {
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
 
             fs = new ShaderSource({
@@ -994,14 +1022,13 @@ define([
             this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
             this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
             this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
         }
 
         var va;
         var vaLength;
         var command;
         var j;
-        var vs;
-        var fs;
 
         var commandList = frameState.commandList;
 

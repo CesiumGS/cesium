@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TileCoordinatesImageryProvider',
         'Core/Ellipsoid',

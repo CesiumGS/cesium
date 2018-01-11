@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian2',
@@ -71,8 +70,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = defaultValue(options.stackPartitions, 64);
-        var slicePartitions = defaultValue(options.slicePartitions, 64);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -399,6 +398,24 @@ define([
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
         });
+    };
+
+    var unitEllipsoidGeometry;
+
+    /**
+     * Returns the geometric representation of a unit ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    EllipsoidGeometry.getUnitEllipsoid = function() {
+        if (!defined(unitEllipsoidGeometry)) {
+            unitEllipsoidGeometry = EllipsoidGeometry.createGeometry((new EllipsoidGeometry({
+                radii : new Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
+            })));
+        }
+        return unitEllipsoidGeometry;
     };
 
     return EllipsoidGeometry;

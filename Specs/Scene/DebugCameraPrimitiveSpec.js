@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/DebugCameraPrimitive',
         'Core/Cartesian3',
@@ -17,16 +16,18 @@ defineSuite([
     var camera;
 
     beforeAll(function() {
-        scene = createScene();
-
-        camera = new Camera(scene);
-        camera.position = new Cartesian3(0.0, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        scene = createScene({
+            scene3DOnly : true
+        });
 
         scene.camera.position = new Cartesian3(0.0, 0.0, 0.0);
         scene.camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         scene.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        scene.camera.frustum.near = 1.0;
+        scene.camera.frustum.far = 500.0;
+
+        camera = Camera.clone(scene.camera);
+
         scene.camera.zoomOut(1.0);
     });
 
@@ -86,9 +87,9 @@ defineSuite([
             camera : camera
         }));
         scene.renderForSpecs();
-        var primitive = p._outlinePrimitive;
+        var primitive = p._outlinePrimitives[0];
         scene.renderForSpecs();
-        expect(p._outlinePrimitive).not.toBe(primitive);
+        expect(p._outlinePrimitives[0]).not.toBe(primitive);
     });
 
     it('does not update when updateOnChange is false', function() {

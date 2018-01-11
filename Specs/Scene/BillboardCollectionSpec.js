@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/BillboardCollection',
         'Core/BoundingRectangle',
@@ -11,12 +10,13 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/OrthographicOffCenterFrustum',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Scene/Billboard',
         'Scene/BlendOption',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
-        'Scene/OrthographicFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
@@ -35,12 +35,13 @@ defineSuite([
         loadImage,
         CesiumMath,
         NearFarScalar,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Rectangle,
         Billboard,
         BlendOption,
         HeightReference,
         HorizontalOrigin,
-        OrthographicFrustum,
         TextureAtlas,
         VerticalOrigin,
         createGlobe,
@@ -90,6 +91,10 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
+
         billboards = new BillboardCollection();
         scene.primitives.add(billboards);
     });
@@ -124,6 +129,7 @@ defineSuite([
         expect(b.heightReference).toEqual(HeightReference.NONE);
         expect(b.sizeInMeters).toEqual(false);
         expect(b.distanceDisplayCondition).not.toBeDefined();
+        expect(b.disableDepthTestDistance).toEqual(0.0);
     });
 
     it('can add and remove before first update.', function() {
@@ -157,6 +163,7 @@ defineSuite([
             height : 200.0,
             sizeInMeters : true,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            disableDepthTestDistance : 10.0,
             id : 'id'
         });
 
@@ -181,6 +188,7 @@ defineSuite([
         expect(b.height).toEqual(200.0);
         expect(b.sizeInMeters).toEqual(true);
         expect(b.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
+        expect(b.disableDepthTestDistance).toEqual(10.0);
         expect(b.id).toEqual('id');
     });
 
@@ -204,6 +212,7 @@ defineSuite([
         b.pixelOffsetScaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
         b.sizeInMeters = true;
         b.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+        b.disableDepthTestDistance = 10.0;
 
         expect(b.show).toEqual(false);
         expect(b.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -226,6 +235,7 @@ defineSuite([
         expect(b.height).toEqual(200.0);
         expect(b.sizeInMeters).toEqual(true);
         expect(b.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
+        expect(b.disableDepthTestDistance).toEqual(10.0);
     });
 
     it('is not destroyed', function() {
@@ -445,6 +455,37 @@ defineSuite([
         var dc = new DistanceDisplayCondition(100.0, 10.0);
         expect(function() {
             b.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders with disableDepthTestDistance', function() {
+        var b = billboards.add({
+            position : new Cartesian3(-1.0, 0.0, 0.0),
+            image : greenImage
+        });
+        billboards.add({
+            position : Cartesian3.ZERO,
+            image : blueImage
+        });
+
+        expect(scene).toRender([0, 0, 255, 255]);
+
+        b.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it('throws with new billboard with disableDepthTestDistance less than 0.0', function() {
+        expect(function() {
+            billboards.add({
+                disableDepthTestDistance : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with disableDepthTestDistance set less than 0.0', function() {
+        var b = billboards.add();
+        expect(function() {
+            b.disableDepthTestDistance = -1.0;
         }).toThrowDeveloperError();
     });
 
@@ -917,6 +958,10 @@ defineSuite([
     });
 
     it('renders more than 16K billboards', function() {
+        if(!context.instancedArrays) {
+            return;
+        }
+
         for ( var i = 0; i < 16 * 1024; ++i) {
             billboards.add({
                 position : Cartesian3.ZERO,
@@ -1086,6 +1131,26 @@ defineSuite([
             position : Cartesian3.ZERO,
             eyeOffset : new Cartesian3(1.0, 1.0, 0.0)
         });
+        scene.renderForSpecs();
+        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
+    });
+
+    it('computes screen space position in Columbus view', function() {
+        var b = billboards.add({
+            position : Cartesian3.fromDegrees(0.0, 0.0, 10.0)
+        });
+        scene.morphToColumbusView(0.0);
+        scene.camera.setView({ destination : Rectangle.MAX_VALUE });
+        scene.renderForSpecs();
+        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
+    });
+
+    it('computes screen space position in 2D', function() {
+        var b = billboards.add({
+            position : Cartesian3.fromDegrees(0.0, 0.0, 10.0)
+        });
+        scene.morphTo2D(0.0);
+        scene.camera.setView({ destination : Rectangle.MAX_VALUE });
         scene.renderForSpecs();
         expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(0.5, 0.5), CesiumMath.EPSILON1);
     });
@@ -1353,7 +1418,7 @@ defineSuite([
         });
 
         var maxRadii = ellipsoid.maximumRadius;
-        var orthoFrustum = new OrthographicFrustum();
+        var orthoFrustum = new OrthographicOffCenterFrustum();
         orthoFrustum.right = maxRadii * Math.PI;
         orthoFrustum.left = -orthoFrustum.right;
         orthoFrustum.top = orthoFrustum.right;
@@ -1809,6 +1874,10 @@ defineSuite([
             scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
             cartographic = scene.globe.ellipsoid.cartesianToCartographic(b._clampedPosition);
             expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+
+            //Setting position to zero should clear the clamped position.
+            b.position = Cartesian3.ZERO;
+            expect(b._clampedPosition).toBeUndefined();
         });
 
         it('changing the terrain provider', function() {

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/ClearCommand',
         'Core/Color'

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/GroundPrimitive',
         'Core/Color',
@@ -14,6 +13,7 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Renderer/Pass',
+        'Scene/InvertClassification',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createScene',
@@ -33,6 +33,7 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Pass,
+        InvertClassification,
         PerInstanceColorAppearance,
         Primitive,
         createScene,
@@ -73,7 +74,9 @@ defineSuite([
 
     function MockGlobePrimitive(primitive) {
         this._primitive = primitive;
+        this.pass = Pass.GLOBE;
     }
+
     MockGlobePrimitive.prototype.update = function(frameState) {
         var commandList = frameState.commandList;
         var startLength = commandList.length;
@@ -81,7 +84,7 @@ defineSuite([
 
         for (var i = startLength; i < commandList.length; ++i) {
             var command = commandList[i];
-            command.pass = Pass.GLOBE;
+            command.pass = this.pass;
         }
     };
 
@@ -153,6 +156,7 @@ defineSuite([
         expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
+        expect(primitive.debugShowShadowVolume).toEqual(false);
     });
 
     it('constructs with options', function() {
@@ -167,7 +171,8 @@ defineSuite([
             releaseGeometryInstances : false,
             allowPicking : false,
             asynchronous : false,
-            debugShowBoundingVolume : true
+            debugShowBoundingVolume : true,
+            debugShowShadowVolume : true
         });
 
         expect(primitive.geometryInstances).toEqual(geometryInstances);
@@ -179,6 +184,7 @@ defineSuite([
         expect(primitive.allowPicking).toEqual(false);
         expect(primitive.asynchronous).toEqual(false);
         expect(primitive.debugShowBoundingVolume).toEqual(true);
+        expect(primitive.debugShowShadowVolume).toEqual(true);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
@@ -385,6 +391,82 @@ defineSuite([
         verifyGroundPrimitiveRender(primitive, rectColorAttribute.value);
     });
 
+    it('renders with invert classification and an opaque color', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        scene.invertClassification = true;
+        scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
+
+        depthPrimitive.pass = Pass.CESIUM_3D_TILE;
+        rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance,
+            asynchronous : false
+        });
+
+        scene.camera.setView({ destination : rectangle });
+
+        var invertedColor = new Array(4);
+        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red);
+        invertedColor[1] = Color.floatToByte(Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green);
+        invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue);
+        invertedColor[3] = 255;
+
+        scene.groundPrimitives.add(depthPrimitive);
+        expect(scene).toRender(invertedColor);
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender(rectColor);
+
+        primitive.getGeometryInstanceAttributes('rectangle').show = [0];
+        expect(scene).toRender(depthColor);
+
+        scene.invertClassification = false;
+    });
+
+    it('renders with invert classification and a translucent color', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        if (!InvertClassification.isTranslucencySupported(scene.context)) {
+            return;
+        }
+
+        scene.invertClassification = true;
+        scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 0.25);
+
+        depthPrimitive.pass = Pass.CESIUM_3D_TILE;
+        rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance,
+            asynchronous : false
+        });
+
+        scene.camera.setView({ destination : rectangle });
+
+        var invertedColor = new Array(4);
+        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red  * scene.invertClassificationColor.alpha);
+        invertedColor[1] = Color.floatToByte(Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green * scene.invertClassificationColor.alpha);
+        invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue * scene.invertClassificationColor.alpha);
+        invertedColor[3] = 255;
+
+        scene.groundPrimitives.add(depthPrimitive);
+        expect(scene).toRender(invertedColor);
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender(rectColor);
+
+        primitive.getGeometryInstanceAttributes('rectangle').show = [0];
+        expect(scene).toRender(depthColor);
+
+        scene.invertClassification = false;
+    });
+
     it('renders bounding volume with debugShowBoundingVolume', function() {
         if (!GroundPrimitive.isSupported(scene)) {
             return;
@@ -493,6 +575,10 @@ defineSuite([
     });
 
     it('renders with distance display condition per instance attribute', function() {
+        if (!context.floatingPointTexture) {
+            return;
+        }
+
         if (!GroundPrimitive.isSupported(scene)) {
             return;
         }

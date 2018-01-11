@@ -1,17 +1,14 @@
-/*global define*/
 define([
         './Cartesian3',
         './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './EllipsoidOutlineGeometry'
     ], function(
         Cartesian3,
         Check,
         defaultValue,
         defined,
-        DeveloperError,
         EllipsoidOutlineGeometry) {
     'use strict';
 

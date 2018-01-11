@@ -1,58 +1,55 @@
-/*global define*/
 define([
-    './BoundingSphere',
-    './Cartesian2',
-    './Cartesian3',
-    './Cartographic',
-    './Check',
-    './ComponentDatatype',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Ellipsoid',
-    './Geometry',
-    './GeometryAttribute',
-    './GeometryAttributes',
-    './GeometryInstance',
-    './GeometryPipeline',
-    './IndexDatatype',
-    './Math',
-    './Matrix2',
-    './Matrix3',
-    './PolygonPipeline',
-    './PrimitiveType',
-    './Quaternion',
-    './Rectangle',
-    './RectangleGeometryLibrary',
-    './VertexFormat'
-], function(
-    BoundingSphere,
-    Cartesian2,
-    Cartesian3,
-    Cartographic,
-    Check,
-    ComponentDatatype,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Ellipsoid,
-    Geometry,
-    GeometryAttribute,
-    GeometryAttributes,
-    GeometryInstance,
-    GeometryPipeline,
-    IndexDatatype,
-    CesiumMath,
-    Matrix2,
-    Matrix3,
-    PolygonPipeline,
-    PrimitiveType,
-    Quaternion,
-    Rectangle,
-    RectangleGeometryLibrary,
-    VertexFormat) {
+        './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
+        './Cartographic',
+        './Check',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Ellipsoid',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes',
+        './GeometryInstance',
+        './GeometryPipeline',
+        './IndexDatatype',
+        './Math',
+        './Matrix3',
+        './PolygonPipeline',
+        './PrimitiveType',
+        './Quaternion',
+        './Rectangle',
+        './RectangleGeometryLibrary',
+        './VertexFormat'
+    ], function(
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Check,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Ellipsoid,
+        Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
+        GeometryInstance,
+        GeometryPipeline,
+        IndexDatatype,
+        CesiumMath,
+        Matrix3,
+        PolygonPipeline,
+        PrimitiveType,
+        Quaternion,
+        Rectangle,
+        RectangleGeometryLibrary,
+        VertexFormat) {
     'use strict';
 
     var positionScratch = new Cartesian3();
@@ -623,10 +620,10 @@ define([
      *
      * @see RectangleGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      *
      * @example
-     * // 1. create an rectangle
+     * // 1. create a rectangle
      * var rectangle = new Cesium.RectangleGeometry({
      *   ellipsoid : Cesium.Ellipsoid.WGS84,
      *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
@@ -811,7 +808,7 @@ define([
     var quaternionScratch = new Quaternion();
     var centerScratch = new Cartographic();
     /**
-     * Computes the geometric representation of an rectangle, including its vertices, indices, and a bounding sphere.
+     * Computes the geometric representation of a rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
      * @returns {Geometry|undefined} The computed vertices and indices.

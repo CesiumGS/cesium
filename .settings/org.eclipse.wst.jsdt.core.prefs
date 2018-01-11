@@ -162,6 +162,7 @@ org.eclipse.wst.jsdt.core.formatter.insert_space_after_comma_in_superinterfaces=
 org.eclipse.wst.jsdt.core.formatter.insert_space_after_comma_in_type_arguments=insert
 org.eclipse.wst.jsdt.core.formatter.insert_space_after_comma_in_type_parameters=insert
 org.eclipse.wst.jsdt.core.formatter.insert_space_after_ellipsis=insert
+org.eclipse.wst.jsdt.core.formatter.insert_space_after_function_keyword=do not insert
 org.eclipse.wst.jsdt.core.formatter.insert_space_after_opening_angle_bracket_in_parameterized_type_reference=do not insert
 org.eclipse.wst.jsdt.core.formatter.insert_space_after_opening_angle_bracket_in_type_arguments=do not insert
 org.eclipse.wst.jsdt.core.formatter.insert_space_after_opening_angle_bracket_in_type_parameters=do not insert

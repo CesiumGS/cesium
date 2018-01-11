@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './Check',
@@ -318,7 +317,7 @@ define([
 
         var m10 = cosTheta * sinPsi;
         var m11 = cosPhi * cosPsi + sinPhi * sinTheta * sinPsi;
-        var m12 = -sinTheta * cosPhi + cosPhi * sinTheta * sinPsi;
+        var m12 = -sinPhi * cosPsi + cosPhi * sinTheta * sinPsi;
 
         var m20 = -sinTheta;
         var m21 = sinPhi * cosTheta;

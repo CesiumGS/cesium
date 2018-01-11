@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -11,6 +10,7 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
+        '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -21,6 +21,8 @@ define([
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
         '../Core/PixelFormat',
         '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
@@ -37,18 +39,14 @@ define([
         '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         './Camera',
         './CullFace',
-        './CullingVolume',
         './DebugCameraPrimitive',
-        './OrthographicFrustum',
         './PerInstanceColorAppearance',
-        './PerspectiveFrustum',
         './Primitive',
         './ShadowMapShader'
     ], function(
@@ -63,6 +61,7 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         combine,
+        CullingVolume,
         defaultValue,
         defined,
         defineProperties,
@@ -73,6 +72,8 @@ define([
         Intersect,
         CesiumMath,
         Matrix4,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         PixelFormat,
         Quaternion,
         SphereOutlineGeometry,
@@ -89,18 +90,14 @@ define([
         RenderbufferFormat,
         RenderState,
         Sampler,
-        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
         Camera,
         CullFace,
-        CullingVolume,
         DebugCameraPrimitive,
-        OrthographicFrustum,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
         Primitive,
         ShadowMapShader) {
     'use strict';
@@ -131,7 +128,7 @@ define([
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -256,7 +253,7 @@ define([
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
             // Cascaded shadows are always orthographic. The frustum dimensions are calculated on the fly.
-            this._shadowMapCamera.frustum = new OrthographicFrustum();
+            this._shadowMapCamera.frustum = new OrthographicOffCenterFrustum();
         } else if (defined(this._lightCamera.frustum.fov)) {
             // If the light camera uses a perspective frustum, then the light source is a spot light
             this._isSpotLight = true;
@@ -1005,6 +1002,8 @@ define([
     var scratchSplits = new Array(5);
     var scratchFrustum = new PerspectiveFrustum();
     var scratchCascadeDistances = new Array(4);
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
 
     function computeCascades(shadowMap, frameState) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -1129,8 +1128,6 @@ define([
     var scratchLightView = new Matrix4();
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
-    var scratchMin = new Cartesian3();
-    var scratchMax = new Cartesian3();
     var scratchTranslation = new Cartesian3();
 
     function fitShadowMapToScene(shadowMap, frameState) {
@@ -1481,28 +1478,28 @@ define([
         result.receiveShadows = false;
 
         if (!defined(castShader) || oldShaderId !== command.shaderProgram.id || shadowsDirty) {
-            if (defined(castShader)) {
-                castShader.destroy();
-            }
-
             var shaderProgram = command.shaderProgram;
-            var vertexShaderSource = shaderProgram.vertexShaderSource;
-            var fragmentShaderSource = shaderProgram.fragmentShaderSource;
 
             var isTerrain = command.pass === Pass.GLOBE;
             var isOpaque = command.pass !== Pass.TRANSLUCENT;
             var isPointLight = shadowMap._isPointLight;
             var usesDepthTexture= shadowMap._usesDepthTexture;
 
-            var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
-            var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, usesDepthTexture, isOpaque);
+            var keyword =  ShadowMapShader.getShadowCastShaderKeyword(isPointLight, isTerrain, usesDepthTexture, isOpaque);
+            castShader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
+            if (!defined(castShader)) {
+                var vertexShaderSource = shaderProgram.vertexShaderSource;
+                var fragmentShaderSource = shaderProgram.fragmentShaderSource;
 
-            castShader = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : castVS,
-                fragmentShaderSource : castFS,
-                attributeLocations : shaderProgram._attributeLocations
-            });
+                var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
+                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, usesDepthTexture, isOpaque);
+
+                castShader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
+                    vertexShaderSource : castVS,
+                    fragmentShaderSource : castFS,
+                    attributeLocations : shaderProgram._attributeLocations
+                });
+            }
 
             castRenderState = shadowMap._primitiveRenderState;
             if (isPointLight) {
@@ -1515,6 +1512,7 @@ define([
             var cullEnabled = command.renderState.cull.enabled;
             if (!cullEnabled) {
                 castRenderState = clone(castRenderState, false);
+                castRenderState.cull = clone(castRenderState.cull, false);
                 castRenderState.cull.enabled = false;
                 castRenderState = RenderState.fromCache(castRenderState);
             }
@@ -1582,19 +1580,18 @@ define([
             var shaderDirty = result.receiveShaderProgramId !== command.shaderProgram.id;
 
             if (!defined(receiveShader) || shaderDirty || shadowsDirty || castShadowsDirty) {
-                if (defined(receiveShader)) {
-                    receiveShader.destroy();
+                var keyword = ShadowMapShader.getShadowReceiveShaderKeyword(lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
+                receiveShader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
+                if (!defined(receiveShader)) {
+                    var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
+                    var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
+
+                    receiveShader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
+                        vertexShaderSource : receiveVS,
+                        fragmentShaderSource : receiveFS,
+                        attributeLocations : shaderProgram._attributeLocations
+                    });
                 }
-
-                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
-                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
-
-                receiveShader = ShaderProgram.fromCache({
-                    context : context,
-                    vertexShaderSource : receiveVS,
-                    fragmentShaderSource : receiveFS,
-                    attributeLocations : shaderProgram._attributeLocations
-                });
 
                 receiveUniformMap = combineUniforms(lightShadowMaps[0], command.uniformMap, isTerrain);
             }

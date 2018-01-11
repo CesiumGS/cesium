@@ -1,4 +1,5 @@
 /*jslint node: true, latedef: nofunc*/
+/*eslint-env node*/
 'use strict';
 
 var fs = require('fs');
@@ -11,7 +12,6 @@ var readline = require('readline');
 var request = require('request');
 
 var globby = require('globby');
-var jshint = require('gulp-jshint');
 var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
@@ -22,7 +22,6 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
-var os = require('os');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
@@ -38,7 +37,7 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
-var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/';
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -47,8 +46,10 @@ var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var buildingRelease = noDevelopmentGallery;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
-//travis reports 32 cores but only has 3GB of memory, which causes the VM to run out.  Limit to 8 cores instead.
-var concurrency = Math.min(os.cpus().length, 8);
+var concurrency = yargs.argv.concurrency;
+if (!concurrency) {
+    concurrency = os.cpus().length;
+}
 
 //Since combine and minify run in parallel already, split concurrency in half when building both.
 //This can go away when gulp 4 comes out because it allows for synchronous tasks.
@@ -66,21 +67,11 @@ var buildFiles = ['Specs/**/*.js',
                   '!Specs/SpecList.js',
                   'Source/Shaders/**/*.glsl'];
 
-var jsHintFiles = ['Source/**/*.js',
-                   '!Source/Shaders/**',
-                   '!Source/ThirdParty/**',
-                   '!Source/Workers/cesiumWorkerBootstrapper.js',
-                   'Apps/**/*.js',
-                   'Apps/Sandcastle/gallery/*.html',
-                   '!Apps/Sandcastle/ThirdParty/**',
-                   'Specs/**/*.js',
-                   'Tools/buildTasks/**/*.js',
-                   'gulpfile.js'];
-
 var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
+                    'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
@@ -122,7 +113,10 @@ gulp.task('build-watch', function() {
 });
 
 gulp.task('buildApps', function() {
-    return buildCesiumViewer();
+    return Promise.join(
+        buildCesiumViewer(),
+        buildSandcastle()
+    );
 });
 
 gulp.task('clean', function(done) {
@@ -134,6 +128,10 @@ gulp.task('clean', function(done) {
 
 gulp.task('requirejs', function(done) {
     var config = JSON.parse(new Buffer(process.argv[3].substring(2), 'base64').toString('utf8'));
+
+    // Disable module load timeout
+    config.waitSeconds = 0;
+
     requirejs.optimize(config, function() {
         done();
     }, done);
@@ -232,27 +230,6 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
     });
 });
 
-gulp.task('jsHint', ['build'], function() {
-    var stream = gulp.src(jsHintFiles)
-        .pipe(jshint.extract('auto'))
-        .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'));
-
-    if (yargs.argv.failTaskOnError) {
-        stream = stream.pipe(jshint.reporter('fail'));
-    }
-    return stream;
-});
-
-gulp.task('jsHint-watch', function() {
-    gulp.watch(jsHintFiles).on('change', function(event) {
-        gulp.src(event.path)
-            .pipe(jshint.extract('auto'))
-            .pipe(jshint())
-            .pipe(jshint.reporter('jshint-stylish'));
-    });
-});
-
 gulp.task('makeZipFile', ['release'], function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
     //See https://github.com/AnalyticalGraphicsInc/cesium/pull/3106#discussion_r42793558 for discussion.
@@ -286,7 +263,7 @@ gulp.task('makeZipFile', ['release'], function() {
         nodir : true
     });
 
-    var indexSrc = gulp.src('index.release.html').pipe(gulpRename("index.html"));
+    var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
 
     return eventStream.merge(builtSrc, staticSrc, indexSrc)
         .pipe(gulpTap(function(file) {
@@ -327,7 +304,7 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
     var uploadDirectory = argv.d;
@@ -409,7 +386,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 var mimeLookup = getMimeType(blobName);
                 var contentType = mimeLookup.type;
                 var compress = mimeLookup.compress;
-                var contentEncoding = compress ? 'gzip' : undefined;
+                var contentEncoding = compress || mimeLookup.isCompressed ? 'gzip' : undefined;
                 var etag;
 
                 totalFiles++;
@@ -529,21 +506,22 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 function getMimeType(filename) {
     var ext = path.extname(filename);
     if (ext === '.bin' || ext === '.terrain') {
-        return { type : 'application/octet-stream', compress : true };
+        return {type : 'application/octet-stream', compress : true, isCompressed : false};
     } else if (ext === '.md' || ext === '.glsl') {
-        return { type : 'text/plain', compress : true };
+        return {type : 'text/plain', compress : true, isCompressed : false};
     } else if (ext === '.czml' || ext === '.geojson' || ext === '.json') {
-        return { type : 'application/json', compress : true };
+        return {type : 'application/json', compress : true, isCompressed : false};
     } else if (ext === '.js') {
-        return { type : 'application/javascript', compress : true };
+        return {type : 'application/javascript', compress : true, isCompressed : false};
     } else if (ext === '.svg') {
-        return { type : 'image/svg+xml', compress : true };
+        return {type : 'image/svg+xml', compress : true, isCompressed : false};
     } else if (ext === '.woff') {
-        return { type : 'application/font-woff', compress : false };
+        return {type : 'application/font-woff', compress : false, isCompressed : false};
     }
 
-    var mimeType = mime.lookup(filename);
-    return {type : mimeType, compress : compressible(mimeType)};
+    var mimeType = mime.getType(filename);
+    var compress = compressible(mimeType);
+    return {type : mimeType, compress : compress, isCompressed : false};
 }
 
 // get all files currently in bucket asynchronously
@@ -568,9 +546,10 @@ function listAll(s3, bucketName, prefix, files, marker) {
 }
 
 gulp.task('deploy-set-version', function() {
-    var version = yargs.argv.version;
-    if (version) {
-        packageJson.version += '-' + version;
+    var buildVersion = yargs.argv.buildVersion;
+    if (buildVersion) {
+        // NPM versions can only contain alphanumeric and hyphen characters
+        packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });
@@ -674,8 +653,7 @@ gulp.task('generateStubs', ['build'], function(done) {
     var contents = '\
 /*global define,Cesium*/\n\
 (function() {\n\
-\'use strict\';\n\
-/*jshint sub:true*/\n';
+\'use strict\';\n';
     var modulePathMappings = [];
 
     globby.sync(sourceFiles).forEach(function(file) {
@@ -693,7 +671,6 @@ define(\'' + moduleId + '\', function() {\n\
     contents += '})();';
 
     var paths = '\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return {\n' + modulePathMappings.join(',\n') + '\n\
@@ -775,9 +752,8 @@ gulp.task('sortRequires', function() {
                     return -1;
                 } else if (aName > bName) {
                     return 1;
-                } else {
-                    return 0;
                 }
+                return 0;
             });
 
             if (preserveFirst) {
@@ -956,7 +932,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
 // we still are using from the set, then delete any files remaining in the set.
     var leftOverJsFiles = {};
 
-    globby.sync(['Source/Shaders/**/*.js']).forEach(function(file) {
+    globby.sync(['Source/Shaders/**/*.js', 'Source/ThirdParty/Shaders/*.js']).forEach(function(file) {
         leftOverJsFiles[path.normalize(file)] = true;
     });
 
@@ -964,7 +940,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
     var builtinConstants = [];
     var builtinStructs = [];
 
-    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl']);
+    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl', 'Source/ThirdParty/Shaders/*.glsl']);
     glslFiles.forEach(function(glslFile) {
         glslFile = path.normalize(glslFile);
         var baseName = path.basename(glslFile, '.glsl');
@@ -1010,7 +986,6 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
         contents = copyrightComments + '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return "' + contents + '";\n\
@@ -1051,7 +1026,6 @@ define(function() {\n\
 
     var fileContents = '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define([\n' +
                        contents.amdPath +
                        '\n    ], function(\n' +
@@ -1089,12 +1063,10 @@ function createCesiumJs() {
     });
 
     var contents = '\
-/*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   \'use strict\';\n\
-  /*jshint sub:true*/\n\
   var Cesium = {\n\
-    VERSION : "' + version + '",\n\
+    VERSION : \'' + version + '\',\n\
     _shaders : {}\n\
   };\n\
   ' + assignments.join('\n  ') + '\n\
@@ -1112,7 +1084,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = '/*jshint unused: false*/\nvar specs = [' + specs.join(',') + '];';
+    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
@@ -1151,9 +1123,8 @@ function createGalleryList() {
         return -1;
       } else if (a.name > b.name) {
         return 1;
-      } else {
-        return 0;
       }
+      return 0;
     });
 
     var helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
@@ -1172,7 +1143,7 @@ var gallery_demos = [' + demoJSONs.join(', ') + '];';
 }
 
 function createJsHintOptions() {
-    var primary = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
+    var primary = JSON.parse(fs.readFileSync(path.join('Apps', '.jshintrc'), 'utf8'));
     var gallery = JSON.parse(fs.readFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), 'utf8'));
     primary.jasmine = false;
     primary.predef = gallery.predef;
@@ -1183,6 +1154,35 @@ function createJsHintOptions() {
 var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
 
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
+}
+
+function buildSandcastle() {
+    var appStream = gulp.src([
+            'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/images/**',
+            '!Apps/Sandcastle/gallery/**.jpg'
+        ])
+        // Replace require Source with pre-built Cesium
+        .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
+        // Use unminified cesium instead of source
+        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        // Fix relative paths for new location
+        .pipe(gulpReplace('../../Source', '../../../Source'))
+        .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
+        .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
+        .pipe(gulpReplace('Build/Documentation', 'Documentation'))
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    var imageStream = gulp.src([
+            'Apps/Sandcastle/gallery/**.jpg',
+            'Apps/Sandcastle/images/**'
+        ], {
+            base: 'Apps/Sandcastle',
+            buffer: false
+        })
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    return eventStream.merge(appStream, imageStream);
 }
 
 function buildCesiumViewer() {
@@ -1289,6 +1289,7 @@ function requirejsOptimize(name, config) {
 function streamToPromise(stream) {
     return new Promise(function(resolve, reject) {
         stream.on('finish', resolve);
-        stream.on('end', reject);
+        stream.on('end', resolve);
+        stream.on('error', reject);
     });
 }

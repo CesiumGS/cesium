@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/Cartesian2',
@@ -49,6 +48,7 @@ define([
     var defaultHeightReference = HeightReference.NONE;
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
+    var defaultDisableDepthTestDistance = 0.0;
 
     var position = new Cartesian3();
     var fillColor = new Color();
@@ -59,6 +59,7 @@ define([
     var pixelOffset = new Cartesian2();
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
+    var scaleByDistance = new NearFarScalar();
     var distanceDisplayCondition = new DistanceDisplayCondition();
 
     function EntityData(entity) {
@@ -161,7 +162,9 @@ define([
             label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
             label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+            label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistance);
             label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+            label.disableDepthTestDistance = Property.getValueOrDefault(labelGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
         }
         return true;
     };

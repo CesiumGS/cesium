@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Matrix4',
@@ -527,17 +526,6 @@ define([
             datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseProjection;
-            }
-        }),
-
-        /**
-         * @private
-         */
-        czm_inverseProjectionOIT : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT_MAT4,
-            getValue : function(uniformState) {
-                return uniformState.inverseProjectionOIT;
             }
         }),
 
@@ -1420,6 +1408,80 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing the current scene background color.
+         *
+         * @alias czm_backgroundColor
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec4 czm_backgroundColor;
+         *
+         * // Example: If the given color's RGB matches the background color, invert it.
+         * vec4 adjustColorForContrast(vec4 color)
+         * {
+         *     if (czm_backgroundColor.rgb == color.rgb)
+         *     {
+         *         color.rgb = vec3(1.0) - color.rgb;
+         *     }
+         *
+         *     return color;
+         * }
+         */
+        czm_backgroundColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.backgroundColor;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing the BRDF look up texture used for image-based lighting computations.
+         *
+         * @alias czm_brdfLut
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform sampler2D czm_brdfLut;
+         *
+         * // Example: For a given roughness and NdotV value, find the material's BRDF information in the red and green channels
+         * float roughness = 0.5;
+         * float NdotV = dot(normal, view);
+         * vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;
+         */
+        czm_brdfLut : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.brdfLut;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing the environment map used within the scene.
+         *
+         * @alias czm_environmentMap
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform samplerCube czm_environmentMap;
+         *
+         * // Example: Create a perfect reflection of the environment map on a  model
+         * float reflected = reflect(view, normal);
+         * vec4 reflectedColor = textureCube(czm_environmentMap, reflected);
+         */
+        czm_environmentMap : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_CUBE,
+            getValue : function(uniformState) {
+                return uniformState.environmentMap;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
          *
@@ -1480,7 +1542,7 @@ define([
 
          /**
          * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
-         * This will be in the range 0.0 to 1.0 with 0.0 being the far left of the viewport and 1.0 being the far right of the viewport.
+         * This will be in pixel coordinates relative to the canvas.
          *
          * @alias czm_imagerySplitPosition
          * @glslUniform
@@ -1505,10 +1567,40 @@ define([
          * @glslUniform
          */
         czm_geometricToleranceOverMeter : new AutomaticUniform({
-            size: 1,
-            datatype: WebGLConstants.FLOAT,
-            getValue: function(uniformState) {
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
                 return uniformState.geometricToleranceOverMeter;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always be applied. When less than zero,
+         * the depth test should never be applied.
+         *
+         * @alias czm_minimumDisableDepthTestDistance
+         * @glslUniform
+         */
+        czm_minimumDisableDepthTestDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.minimumDisableDepthTestDistance;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that will be the highlight color of unclassified 3D Tiles.
+         *
+         * @alias czm_invertClassificationColor
+         * @glslUniform
+         */
+        czm_invertClassificationColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.invertClassificationColor;
             }
         })
     };

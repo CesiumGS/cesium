@@ -114,12 +114,31 @@ var czml = [{
         "followSurface" : false,
         "width" : 10
     }
+}, {
+    "id" : "dashedLine",
+    "name" : "Blue dashed line",
+    "polyline" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -75, 45, 500000,
+                -125, 45, 500000
+            ]
+        },
+        "material" : {
+            "polylineDash" : {
+                "color" : {
+                    "rgba" : [0, 255, 255, 255]
+                }
+            }
+        },
+        "width" : 4
+    }
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var dataSource = Cesium.CzmlDataSource.load(czml);
-viewer.dataSources.add(dataSource);
-viewer.zoomTo(dataSource);
+var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSourcePromise);
+viewer.zoomTo(dataSourcePromise);
 
   //Sandcastle_End
     Sandcastle.finishedLoading();

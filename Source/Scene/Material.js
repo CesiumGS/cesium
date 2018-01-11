@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/clone',
@@ -22,13 +21,17 @@ define([
         '../Shaders/Materials/BumpMapMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
+        '../Shaders/Materials/ElevationContourMaterial',
+        '../Shaders/Materials/ElevationRampMaterial',
         '../Shaders/Materials/FadeMaterial',
         '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
+        '../Shaders/Materials/PolylineDashMaterial',
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial',
         '../Shaders/Materials/RimLightingMaterial',
+        '../Shaders/Materials/SlopeRampMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/Water',
         '../ThirdParty/when'
@@ -55,13 +58,17 @@ define([
         BumpMapMaterial,
         CheckerboardMaterial,
         DotMaterial,
+        ElevationContourMaterial,
+        ElevationRampMaterial,
         FadeMaterial,
         GridMaterial,
         NormalMapMaterial,
         PolylineArrowMaterial,
+        PolylineDashMaterial,
         PolylineGlowMaterial,
         PolylineOutlineMaterial,
         RimLightingMaterial,
+        SlopeRampMaterial,
         StripeMaterial,
         WaterMaterial,
         when) {
@@ -207,6 +214,13 @@ define([
      *  <ul>
      *      <li><code>color</code>: diffuse color and alpha.</li>
      *  </ul>
+     *  <li>PolylineDash</li>
+     *  <ul>
+     *      <li><code>color</code>: color for the line.</li>
+     *      <li><code>gapColor</code>: color for the gaps in the line.</li>
+     *      <li><code>dashLength</code>: Dash length in pixels.</li>
+     *      <li><code>dashPattern</code>: The 16 bit stipple pattern for the line..</li>
+     *  </ul>
      *  <li>PolylineGlow</li>
      *  <ul>
      *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
@@ -218,6 +232,23 @@ define([
      *      <li><code>outlineColor</code>: diffuse color and alpha for the outline.</li>
      *      <li><code>outlineWidth</code>: width of the outline in pixels.</li>
      *  </ul>
+     *  <li>ElevationContour</li>
+     *  <ul>
+     *      <li><code>color</code>: color and alpha for the contour line.</li>
+     *      <li><code>spacing</code>: spacing for contour lines in meters.</li>
+     *      <li><code>width</code>: Number specifying the width of the grid lines in pixels.</li>
+     *  </ul>
+     *  <li>ElevationRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *      <li><code>minimumHeight</code>: minimum height for the ramp.</li>
+     *      <li><code>maximumHeight</code>: maximum height for the ramp.</li>
+     *  </ul>
+     *  <li>SlopeRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *  </ul>
+     * </ul>
      * </ul>
      * </div>
      *
@@ -242,7 +273,7 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -1259,7 +1290,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.evenColor.alpha < 1.0) || (uniforms.oddColor.alpha < 0.0);
+            return (uniforms.evenColor.alpha < 1.0) || (uniforms.oddColor.alpha < 1.0);
         }
     });
 
@@ -1281,7 +1312,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
+            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 1.0);
         }
     });
 
@@ -1303,7 +1334,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
+            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 1.0);
         }
     });
 
@@ -1331,7 +1362,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.baseWaterColor.alpha < 1.0) || (uniforms.blendColor.alpha < 0.0);
+            return (uniforms.baseWaterColor.alpha < 1.0) || (uniforms.blendColor.alpha < 1.0);
         }
     });
 
@@ -1353,7 +1384,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.color.alpha < 1.0) || (uniforms.rimColor.alpha < 0.0);
+            return (uniforms.color.alpha < 1.0) || (uniforms.rimColor.alpha < 1.0);
         }
     });
 
@@ -1402,6 +1433,26 @@ define([
         translucent : true
     });
 
+     /**
+     * Gets the name of the polyline glow material.
+     * @type {String}
+     * @readonly
+     */
+    Material.PolylineDashType = 'PolylineDash';
+    Material._materialCache.addMaterial(Material.PolylineDashType, {
+        fabric : {
+            type : Material.PolylineDashType,
+            uniforms : {
+                color : new Color(1.0, 0.0, 1.0, 1.0),
+                gapColor : new Color(0.0, 0.0, 0.0, 0.0),
+                dashLength : 16.0,
+                dashPattern : 255.0
+            },
+            source : PolylineDashMaterial
+        },
+        translucent : true
+    });
+
     /**
      * Gets the name of the polyline glow material.
      * @type {String}
@@ -1440,6 +1491,61 @@ define([
             var uniforms = material.uniforms;
             return (uniforms.color.alpha < 1.0) || (uniforms.outlineColor.alpha < 1.0);
         }
+    });
+
+    /**
+     * Gets the name of the elevation contour material.
+     * @type {String}
+     * @readonly
+     */
+    Material.ElevationContourType = 'ElevationContour';
+    Material._materialCache.addMaterial(Material.ElevationContourType, {
+        fabric : {
+            type : Material.ElevationContourType,
+            uniforms : {
+                spacing: 100.0,
+                color: new Color(1.0, 0.0, 0.0, 1.0),
+                width: 1.0
+            },
+            source : ElevationContourMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the elevation contour material.
+     * @type {String}
+     * @readonly
+     */
+    Material.ElevationRampType = 'ElevationRamp';
+    Material._materialCache.addMaterial(Material.ElevationRampType, {
+        fabric : {
+            type : Material.ElevationRampType,
+            uniforms : {
+                image: Material.DefaultImageId,
+                minimumHeight: 0.0,
+                maximumHeight: 10000.0
+            },
+            source : ElevationRampMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the slope ramp material.
+     * @type {String}
+     * @readonly
+     */
+    Material.SlopeRampMaterialType = 'SlopeRamp';
+    Material._materialCache.addMaterial(Material.SlopeRampMaterialType, {
+        fabric : {
+            type : Material.SlopeRampMaterialType,
+            uniforms : {
+                image: Material.DefaultImageId
+            },
+            source : SlopeRampMaterial
+        },
+        translucent : false
     });
 
     return Material;

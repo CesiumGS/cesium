@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian2',
@@ -410,6 +409,26 @@ define([
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : boundingSphere
         });
+    };
+
+    var unitCylinderGeometry;
+
+    /**
+     * Returns the geometric representation of a unit cylinder, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    CylinderGeometry.getUnitCylinder = function() {
+        if (!defined(unitCylinderGeometry)) {
+            unitCylinderGeometry = CylinderGeometry.createGeometry(new CylinderGeometry({
+                topRadius : 1.0,
+                bottomRadius : 1.0,
+                length : 1.0,
+                vertexFormat : VertexFormat.POSITION_ONLY
+            }));
+        }
+        return unitCylinderGeometry;
     };
 
     return CylinderGeometry;

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -15,6 +14,7 @@ define([
         '../Scene/LabelCollection',
         '../Scene/PointPrimitive',
         '../Scene/PointPrimitiveCollection',
+        '../Scene/SceneMode',
         '../ThirdParty/kdbush'
     ], function(
         BoundingRectangle,
@@ -32,6 +32,7 @@ define([
         LabelCollection,
         PointPrimitive,
         PointPrimitiveCollection,
+        SceneMode,
         kdbush) {
     'use strict';
 
@@ -49,7 +50,7 @@ define([
      * @alias EntityCluster
      * @constructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
      */
     function EntityCluster(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -147,6 +148,7 @@ define([
         cluster.point.show = false;
         cluster.label.show = true;
         cluster.label.text = numPoints.toLocaleString();
+        cluster.label.id = ids;
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
 
         entityCluster._clusterEvent.raiseEvent(ids, cluster);
@@ -166,7 +168,7 @@ define([
             var item = collection.get(i);
             item.clusterShow = false;
 
-            if (!item.show || !occluder.isPointVisible(item.position)) {
+            if (!item.show || (entityCluster._scene.mode === SceneMode.SCENE3D && !occluder.isPointVisible(item.position))) {
                 continue;
             }
 
@@ -721,10 +723,21 @@ define([
         // If clustering is enabled before the label collection is updated,
         // the glyphs haven't been created so the screen space bounding boxes
         // are incorrect.
+        var commandList;
         if (defined(this._labelCollection) && this._labelCollection.length > 0 && this._labelCollection.get(0)._glyphs.length === 0) {
-            var commandList = frameState.commandList;
+            commandList = frameState.commandList;
             frameState.commandList = [];
             this._labelCollection.update(frameState);
+            frameState.commandList = commandList;
+        }
+
+        // If clustering is enabled before the billboard collection is updated,
+        // the images haven't been added to the image atlas so the screen space bounding boxes
+        // are incorrect.
+        if (defined(this._billboardCollection) && this._billboardCollection.length > 0 && !defined(this._billboardCollection.get(0).width)) {
+            commandList = frameState.commandList;
+            frameState.commandList = [];
+            this._billboardCollection.update(frameState);
             frameState.commandList = commandList;
         }
 

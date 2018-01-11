@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -42,7 +41,7 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      */
     function CorridorGraphics(options) {
         this._show = undefined;
@@ -185,7 +184,7 @@ define([
          * @default CornerType.ROUNDED
          */
         cornerType : createPropertyDescriptor('cornerType'),
-        
+
         /**
          * Get or sets the enum Property specifying whether the corridor
          * casts or receives shadows from each light source.

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -109,19 +108,23 @@ define([
         if (defined(billboard)) {
             billboard.show = false;
             billboard.image = undefined;
+            if (defined(billboard._removeCallbackFunc)) {
+                billboard._removeCallbackFunc();
+                billboard._removeCallbackFunc = undefined;
+            }
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
     }
 
     function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
-        textureAtlas.addImage(id, canvas).then(function(index, id) {
+        textureAtlas.addImage(id, canvas).then(function(index) {
             glyphTextureInfo.index = index;
         });
     }
 
     function rebindAllGlyphs(labelCollection, label) {
-        var text = label._text;
+        var text = label._renderedText;
         var textLength = text.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
@@ -171,7 +174,9 @@ define([
             backgroundBillboard.id = label._id;
             backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
             backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+            backgroundBillboard.scaleByDistance = label._scaleByDistance;
             backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
+            backgroundBillboard.disableDepthTestDistance = label._disableDepthTestDistance;
         }
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
@@ -219,12 +224,10 @@ define([
                     // no texture, and therefore no billboard, for this glyph.
                     // so, completely unbind glyph.
                     unbindGlyph(labelCollection, glyph);
-                } else {
+                } else if (defined(glyph.textureInfo)) {
                     // we have a texture and billboard.  If we had one before, release
                     // our reference to that texture info, but reuse the billboard.
-                    if (defined(glyph.textureInfo)) {
-                        glyph.textureInfo = undefined;
-                    }
+                    glyph.textureInfo = undefined;
                 }
             } else {
                 // create a glyph object
@@ -263,7 +266,10 @@ define([
                 billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+                billboard.scaleByDistance = label._scaleByDistance;
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
+                billboard.disableDepthTestDistance = label._disableDepthTestDistance;
+                billboard._batchIndex = label._batchIndex;
             }
         }
 
@@ -287,7 +293,7 @@ define([
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
-        var text = label._text;
+        var text = label._renderedText;
         var glyph;
         var dimensions;
         var lastLineWidth = 0;
@@ -428,7 +434,7 @@ define([
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />
@@ -456,7 +462,7 @@ define([
      * @see Label
      * @see BillboardCollection
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      *
      * @example
      * // Create a label collection with two labels
@@ -474,6 +480,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
+        this._batchTable = options.batchTable;
 
         this._textureAtlas = undefined;
         this._backgroundTextureAtlas = undefined;
@@ -485,7 +492,8 @@ define([
         this._backgroundBillboardCollection.destroyTextureAtlas = false;
 
         this._billboardCollection = new BillboardCollection({
-            scene : this._scene
+            scene : this._scene,
+            batchTable : this._batchTable
         });
         this._billboardCollection.destroyTextureAtlas = false;
 
@@ -495,6 +503,8 @@ define([
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
+
+        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -806,6 +816,9 @@ define([
         var blendOption = backgroundBillboardCollection.length > 0 ? BlendOption.TRANSLUCENT : this.blendOption;
         billboardCollection.blendOption = blendOption;
         backgroundBillboardCollection.blendOption = blendOption;
+
+        billboardCollection._highlightColor = this._highlightColor;
+        backgroundBillboardCollection._highlightColor = this._highlightColor;
 
         this._labelsToUpdate.length = 0;
         backgroundBillboardCollection.update(frameState);

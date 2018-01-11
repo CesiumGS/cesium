@@ -1,6 +1,6 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
@@ -23,15 +23,18 @@ define([
         './LabelGraphics',
         './ModelGraphics',
         './PathGraphics',
+        './PlaneGraphics',
         './PointGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
         './PolylineVolumeGraphics',
         './Property',
+        './PropertyBag',
         './RectangleGraphics',
         './WallGraphics'
     ], function(
         Cartesian3,
+        Check,
         createGuid,
         defaultValue,
         defined,
@@ -54,11 +57,13 @@ define([
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
+        PlaneGraphics,
         PointGraphics,
         PolygonGraphics,
         PolylineGraphics,
         PolylineVolumeGraphics,
         Property,
+        PropertyBag,
         RectangleGraphics,
         WallGraphics) {
     'use strict';
@@ -106,14 +111,16 @@ define([
      * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
      * @param {ModelGraphics} [options.model] A model to associate with this entity.
      * @param {PathGraphics} [options.path] A path to associate with this entity.
+     * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
      * @param {PointGraphics} [options.point] A point to associate with this entity.
      * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
      * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
+     * @param {PropertyBag} [options.properties] Arbitrary properties to associate with this entity.
      * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -130,8 +137,8 @@ define([
         this._show = defaultValue(options.show, true);
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
-                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
-                               'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
+                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'plane', 'point', 'polygon', //
+                               'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -155,6 +162,8 @@ define([
         this._orientationSubscription = undefined;
         this._path = undefined;
         this._pathSubscription = undefined;
+        this._plane = undefined;
+        this._planeSubscription = undefined;
         this._point = undefined;
         this._pointSubscription = undefined;
         this._polygon = undefined;
@@ -165,6 +174,8 @@ define([
         this._polylineVolumeSubscription = undefined;
         this._position = undefined;
         this._positionSubscription = undefined;
+        this._properties = undefined;
+        this._propertiesSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
         this._viewFrom = undefined;
@@ -393,6 +404,12 @@ define([
          */
         path : createPropertyTypeDescriptor('path', PathGraphics),
         /**
+         * Gets or sets the plane.
+         * @memberof Entity.prototype
+         * @type {PlaneGraphics}
+         */
+        plane : createPropertyTypeDescriptor('plane', PlaneGraphics),
+        /**
          * Gets or sets the point graphic.
          * @memberof Entity.prototype
          * @type {PointGraphics}
@@ -416,6 +433,12 @@ define([
          * @type {PolylineVolumeGraphics}
          */
         polylineVolume : createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
+        /**
+         * Gets or sets the bag of arbitrary properties associated with this entity.
+         * @memberof Entity.prototype
+         * @type {PropertyBag}
+         */
+        properties : createPropertyTypeDescriptor('properties', PropertyBag),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype
@@ -571,9 +594,16 @@ define([
     var orientationScratch = new Quaternion();
 
     /**
-     * @private
+     * Computes the model matrix for the entity's transform at specified time. Returns undefined if orientation or position
+     * are undefined.
+     *
+     * @param {JulianDate} time The time to retrieve model matrix for.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position or orientation are undefined.
      */
-    Entity.prototype._getModelMatrix = function(time, result) {
+    Entity.prototype.computeModelMatrix = function(time, result) {
+        Check.typeOf.object('time', time);
         var position = Property.getValueOrUndefined(this._position, time, positionScratch);
         if (!defined(position)) {
             return undefined;

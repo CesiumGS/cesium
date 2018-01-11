@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './buildModuleUrl',
         './Color',
@@ -19,14 +18,14 @@ define([
      * A utility class for generating custom map pins as canvas elements.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/PinBuilder.png' width='500'/><br />
+     * <img src='Images/PinBuilder.png' width='500'/><br />
      * Example pins generated using both the maki icon set, which ships with Cesium, and single character text.
      * </div>
      *
      * @alias PinBuilder
      * @constructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
      */
     function PinBuilder() {
         this._cache = {};
@@ -171,8 +170,8 @@ define([
         }
 
         //x and y are the center of the pin box
-        var x = (size - sizeX) / 2;
-        var y = ((7 / 24) * size) - (sizeY / 2);
+        var x = Math.round((size - sizeX) / 2);
+        var y = Math.round(((7 / 24) * size) - (sizeY / 2));
 
         context2D.globalCompositeOperation = 'destination-out';
         context2D.drawImage(image, x - 1, y, sizeX, sizeY);
@@ -182,14 +181,14 @@ define([
 
         context2D.globalCompositeOperation = 'destination-over';
         context2D.fillStyle = Color.BLACK.toCssColorString();
-        context2D.fillRect(x - 1, y - 1, sizeX + 1, sizeY + 1);
+        context2D.fillRect(x - 1, y - 1, sizeX + 2, sizeY + 2);
 
         context2D.globalCompositeOperation = 'destination-out';
         context2D.drawImage(image, x, y, sizeX, sizeY);
 
         context2D.globalCompositeOperation = 'destination-over';
         context2D.fillStyle = Color.WHITE.toCssColorString();
-        context2D.fillRect(x, y, sizeX, sizeY);
+        context2D.fillRect(x - 1, y - 2, sizeX + 2, sizeY + 2);
     }
 
     var stringifyScratch = new Array(4);
@@ -210,7 +209,7 @@ define([
         canvas.width = size;
         canvas.height = size;
 
-        var context2D = canvas.getContext("2d");
+        var context2D = canvas.getContext('2d');
         drawPin(context2D, color, size);
 
         if (defined(url)) {

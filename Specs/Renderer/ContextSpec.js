@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/Context',
         'Core/Color',
@@ -126,13 +125,13 @@ defineSuite([
         fs +=
             'void main()\n' +
             '{\n';
-         
+
         if (context.standardDerivatives) {
             fs += '  gl_FragColor = vec4(dFdx(1.0), dFdy(1.0), 1.0, 1.0);\n';
         } else {
             fs += '  gl_FragColor = vec4(1.0);\n';
         }
-         
+
          fs += '}';
 
         var expected = context.standardDerivatives ? [0, 0, 255, 255] : [255, 255, 255, 255];
@@ -189,6 +188,10 @@ defineSuite([
     });
 
     it('get the fragment depth extension', function() {
+        if (context.fragmentDepth && !context.webgl2) {
+            return;
+        }
+
         var fs =
             'void main()\n' +
             '{\n' +
@@ -201,17 +204,13 @@ defineSuite([
             depth : 0.5
         }).contextToRender([255, 0, 0, 255]);
 
-        var fsFragDepth = '';
-        
-        if (context.fragmentDepth && !context.webgl2) {
-            fsFragDepth += '#extension GL_EXT_frag_depth : enable\n';
-        }
-        
+        var fsFragDepth = '#extension GL_EXT_frag_depth : enable\n';
+
         fsFragDepth +=
             'void main()\n' +
             '{\n' +
             '    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n';
-        
+
         if (context.fragmentDepth) {
             fsFragDepth += '    gl_FragDepth';
             if (!context.webgl2) {
@@ -219,10 +218,10 @@ defineSuite([
             }
             fsFragDepth += ' = 0.0;\n';
         }
-        
+
         fsFragDepth += '}\n';
 
-        var expected = context.fragmentDepth ? [0, 255, 0, 255] : [255, 0, 0, 255];
+        var expected = [0, 255, 0, 255];
         expect({
             context : context,
             fragmentShader : fsFragDepth,
