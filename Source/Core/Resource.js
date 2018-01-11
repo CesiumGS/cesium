@@ -1,25 +1,27 @@
 define([
+    './appendForwardSlash',
     './Check',
     './clone',
     './combine',
     './defaultValue',
     './defined',
     './defineProperties',
+    './freezeObject',
     './getAbsoluteUri',
     './getBaseUri',
-    './joinUrls',
     './objectToQuery',
     './queryToObject',
     '../ThirdParty/Uri'
-], function(Check,
+], function(appendForwardSlash,
+            Check,
             clone,
             combine,
             defaultValue,
             defined,
             defineProperties,
+            freezeObject,
             getAbsoluteUri,
             getBaseUri,
-            joinUrls,
             objectToQuery,
             queryToObject,
             Uri) {
@@ -83,6 +85,7 @@ define([
      * @param {String} [options.overrideMimeType]
      * @param {DefaultProxy} [options.proxy]
      * @param {Boolean} [options.allowCrossOrigin=true]
+     * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash
      *
      * @constructor
      */
@@ -96,7 +99,7 @@ define([
         this._url = '';
         this._templateValues = encodeValues(defaultValue(options.templateValues, {}));
         this._queryParameters = defaultValue(options.queryParameters, {});
-        this.fragment = defaultValue(options.fragment, '');
+        this.isDirectory = defaultValue(options.isDirectory, false);
 
         this.url = options.url;
 
@@ -152,13 +155,14 @@ define([
                     uri.query = undefined;
                 }
 
-                if (defined(uri.fragment)) {
-                    var fragment = uri.fragment;
-                    uri.fragment = undefined;
-                    this.fragment = fragment;
-                }
+                // Remove the fragment as it's not sent with a request
+                uri.fragment = undefined;
 
                 this._url = uri.toString();
+
+                if (this.isDirectory) {
+                    this._url = appendForwardSlash(this._url);
+                }
             }
         }
     });
@@ -169,7 +173,6 @@ define([
         if (query) {
             uri.query = stringifyQuery(this._queryParameters);
         }
-        uri.fragment = this.fragment;
 
         // objectToQuery escapes the placeholders.  Undo that.
         var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
@@ -201,7 +204,39 @@ define([
         this._templateValues = combine(encodeValues(template), this._templateValues);
     };
 
-    function mergeOptions(resource, options) {
+    /**
+     * @param {Object} options An object with the following properties
+     * @param {String} options.url
+     * @param {Object} [options.queryParameters]
+     * @param {Object} [options.templateValues]
+     * @param {Object} [options.headers={}]
+     * @param {Request} [options.request]
+     * @param {String} [options.method='GET']
+     * @param {Object} [options.data]
+     * @param {String} [options.overrideMimeType]
+     * @param {DefaultProxy} [options.proxy]
+     * @param {Boolean} [options.allowCrossOrigin=true]
+     * @param {Boolean} [options.isDirectory=false]
+     */
+    Resource.prototype.getDerivedResource = function(options) {
+        var resource = this.clone();
+        resource.isDirectory = false; // By default derived resources aren't a directory, but this can be overridden
+
+        if (defined(options.url)) {
+            var uri = new Uri(options.url);
+
+            // Remove the fragment as it's not sent with a request
+            uri.fragment = undefined;
+
+            if (defined(uri.query)) {
+                var query = parseQuery(uri.query);
+                uri.query = undefined;
+                resource._queryParameters = combine(query, resource._queryParameters);
+            }
+
+            resource._url = uri.resolve(new Uri(this._url)).toString();
+        }
+
         if (defined(options.queryParameters)) {
             resource._queryParameters = combine(options.queryParameters, resource._queryParameters);
         }
@@ -232,47 +267,9 @@ define([
         if (defined(options.request)) {
             resource.request = options.request;
         }
-    }
-
-    /**
-     * @param {Object} options An object with the following properties
-     * @param {String} options.url
-     * @param {Object} [options.queryParameters]
-     * @param {Object} [options.templateValues]
-     * @param {Object} [options.headers={}]
-     * @param {Request} [options.request]
-     * @param {String} [options.method='GET']
-     * @param {Object} [options.data]
-     * @param {String} [options.overrideMimeType]
-     * @param {DefaultProxy} [options.proxy]
-     * @param {Boolean} [options.allowCrossOrigin=true]
-     */
-    Resource.prototype.getDerivedResource = function(options) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('options.url', options.url);
-        //>>includeEnd('debug');
-
-        var resource = this.clone();
-
-        if (defined(options.url)) {
-            var uri = new Uri(options.url);
-
-            if (defined(uri.fragment)) {
-                var fragment = uri.fragment;
-                uri.fragment = undefined;
-                resource.fragment = fragment;
-            }
-
-            if (defined(uri.query)) {
-                var query = parseQuery(uri.query);
-                uri.query = undefined;
-                resource._queryParameters = combine(query, resource._queryParameters);
-            }
-
-            resource._url = joinUrls(getBaseUri(resource._url), uri.toString(), false);
+        if (defined(options.isDirectory)) {
+            resource.isDirectory = options.isDirectory;
         }
-
-        mergeOptions(resource, options);
 
         return resource;
     };
@@ -302,7 +299,6 @@ define([
         result._url = this._url;
         result._queryParameters = this._queryParameters;
         result._templateValues = this._templateValues;
-        result.fragment = this.fragment;
         result.headers = this.headers;
         result.request = this.request;
         result.responseType = this.responseType;
@@ -311,9 +307,20 @@ define([
         result.overrideMimeType = this.overrideMimeType;
         result.proxy = this.proxy;
         result.allowCrossOrigin = this.allowCrossOrigin;
+        result.isDirectory = this.isDirectory;
 
         return result;
     };
+
+    /**
+     * A resource instance initialized to the current browser location
+     *
+     * @type {Resource}
+     * @constant
+     */
+    Resource.DEFAULT = freezeObject(new Resource({
+        url: defined(document) ? document.location.href.split('?')[0] : ''
+    }));
 
     return Resource;
 });

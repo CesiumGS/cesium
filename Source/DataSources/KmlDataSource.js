@@ -18,12 +18,12 @@ define([
         '../Core/getExtensionFromUri',
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
-        '../Core/joinUrls',
         '../Core/JulianDate',
         '../Core/loadBlob',
         '../Core/loadXML',
         '../Core/Math',
         '../Core/NearFarScalar',
+        '../Core/objectToQuery',
         '../Core/oneTimeWarning',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
@@ -87,12 +87,12 @@ define([
         getExtensionFromUri,
         getFilenameFromUri,
         Iso8601,
-        joinUrls,
         JulianDate,
         loadBlob,
         loadXML,
         CesiumMath,
         NearFarScalar,
+        objectToQuery,
         oneTimeWarning,
         PinBuilder,
         PolygonHierarchy,
@@ -733,7 +733,9 @@ define([
                 hrefResource.addQueryParameters(queryToObject(cleanupString(httpQuery)));
             }
 
-            return processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, hrefResource, viewBoundScale, dataSource._lastCameraView.bbox);
+            processNetworkLinkQueryString(hrefResource, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox);
+
+            return hrefResource;
         }
 
         return hrefResource;
@@ -1966,12 +1968,8 @@ define([
         }
 
         var sFirst = s[0];
-        if (sFirst === '&') {
-            s.splice(0, 1);
-        }
-
-        if (sFirst !== '?') {
-            s = '?' + s;
+        if (sFirst === '&' || sFirst === '?') {
+            s = s.substring(1);
         }
 
         return s;
@@ -1982,7 +1980,7 @@ define([
     var scratchCartesian2 = new Cartesian2();
     var scratchCartesian3 = new Cartesian3();
 
-    function processNetworkLinkQueryString(camera, canvas, queryString, viewBoundScale, bbox) {
+    function processNetworkLinkQueryString(resource, camera, canvas, viewBoundScale, bbox) {
         function fixLatitude(value) {
             if (value < -CesiumMath.PI_OVER_TWO) {
                 return -CesiumMath.PI_OVER_TWO;
@@ -2001,6 +1999,11 @@ define([
 
             return value;
         }
+
+        var queryString = objectToQuery(resource.queryParameters);
+
+        // objectToQuery escapes [ and ], so fix that
+        queryString = queryString.replace(/%5B/g, '[').replace(/%5D/g, ']');
 
         if (defined(camera) && camera._mode !== SceneMode.MORPHING) {
             var wgs84 = Ellipsoid.WGS84;
@@ -2104,7 +2107,7 @@ define([
         queryString = queryString.replace('[clientName]', 'Cesium');
         queryString = queryString.replace('[language]', 'English');
 
-        return queryString;
+        resource.addQueryParameters(queryToObject(queryString));
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
@@ -2123,14 +2126,10 @@ define([
             if (defined(href)) {
                 var newSourceUri = href;
                 href = resolveHref(href, sourceResource, uriResolver);
-                var linkUrl;
 
                 // We need to pass in the original path if resolveHref returns a data uri because the network link
                 //  references a document in a KMZ archive
                 if (/^data:/.test(href.getUrl())) {
-                    // No need to build a query string for a data uri, just use as is
-                    linkUrl = href;
-
                     // So if sourceUri isn't the kmz file, then its another kml in the archive, so resolve it
                     if (!/\.kmz/i.test(sourceResource.getUrl())) {
                         newSourceUri = sourceResource.getDerivedResource({
@@ -2138,7 +2137,7 @@ define([
                         });
                     }
                 } else {
-                    newSourceUri = href; // Not a data uri so use the fully qualified uri
+                    newSourceUri = href.clone(); // Not a data uri so use the fully qualified uri
                     viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
                     viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
                     var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
@@ -2151,8 +2150,7 @@ define([
                         href.addQueryParameters(queryToObject(cleanupString(httpQuery)));
                     }
 
-                    linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, href,
-                        viewBoundScale, dataSource._lastCameraView.bbox);
+                    processNetworkLinkQueryString(href, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox);
                 }
 
                 var options = {
@@ -2161,7 +2159,7 @@ define([
                     context : networkEntity.id
                 };
                 var networkLinkCollection = new EntityCollection();
-                var promise = load(dataSource, networkLinkCollection, linkUrl, options).then(function(rootElement) {
+                var promise = load(dataSource, networkLinkCollection, href, options).then(function(rootElement) {
                     var entities = dataSource._entityCollection;
                     var newEntities = networkLinkCollection.values;
                     entities.suspendEvents();
@@ -2366,15 +2364,25 @@ define([
                 proxy: dataSource._proxy,
                 queryParameters: query
             });
+
             promise = loadBlob(data);
 
             sourceUri = defaultValue(sourceUri, data.clone());
+        } else {
+            sourceUri = defaultValue(sourceUri, Resource.DEFAULT.clone());
         }
 
-        sourceUri = Resource.createIfNeeded(sourceUri, {
-            proxy: dataSource._proxy,
-            queryParameters: query
-        });
+        sourceUri = Resource.createIfNeeded(sourceUri);
+
+        // Explicitly set these deprecated properties because we can use the default
+        //  resource which won't have these set.
+        if (defined(dataSource._proxy)) {
+            sourceUri.proxy = dataSource._proxy;
+        }
+
+        if (defined(query)) {
+            sourceUri.addQueryParameters(query);
+        }
 
         return when(promise)
             .then(function(dataToLoad) {
@@ -2962,7 +2970,7 @@ define([
                     var newEntityCollection = new EntityCollection();
                     var href = networkLink.href.clone();
                     href.addQueryParameters(networkLink.cookie);
-                    href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
+                    processNetworkLinkQueryString(href, that._camera, that._canvas, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newEntityCollection, href, {context : entity.id})
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
                         .otherwise(function(error) {

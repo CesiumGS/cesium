@@ -109,7 +109,8 @@ define([
 
         var resource = Resource.createIfNeeded(options.url, {
             //TODO deprecation warning
-            proxy: options.proxy
+            proxy: options.proxy,
+            isDirectory: true
         });
 
         this._resource = resource;

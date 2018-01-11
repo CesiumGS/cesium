@@ -132,7 +132,7 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        var url = 'host.invalid';
+        var url = 'http://host.invalid';
         imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
@@ -239,7 +239,7 @@ defineSuite([
     });
 
     it('raises error on invalid url', function() {
-        var url = 'host.invalid';
+        var url = 'http://host.invalid';
         imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });

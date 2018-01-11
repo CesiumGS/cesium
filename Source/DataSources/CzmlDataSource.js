@@ -21,7 +21,6 @@ define([
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
         '../Core/Iso8601',
-        '../Core/joinUrls',
         '../Core/JulianDate',
         '../Core/LagrangePolynomialApproximation',
         '../Core/LinearApproximation',
@@ -111,7 +110,6 @@ define([
         HermitePolynomialApproximation,
         isArray,
         Iso8601,
-        joinUrls,
         JulianDate,
         LagrangePolynomialApproximation,
         LinearApproximation,
@@ -1986,7 +1984,7 @@ define([
 
             promise = loadJson(czml);
 
-            sourceUri = defaultValue(sourceUri, czml.getParentResource());
+            sourceUri = defaultValue(sourceUri, czml.clone());
         }
 
         sourceUri = Resource.createIfNeeded(sourceUri, {

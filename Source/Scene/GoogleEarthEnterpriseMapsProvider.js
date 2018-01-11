@@ -117,7 +117,8 @@ define([
         var path = defaultValue(options.path, '/default_map');
         var resource = Resource.createIfNeeded(url + path, {
             //TODO deprecation warning
-            proxy: options.proxy
+            proxy: options.proxy,
+            isDirectory: true
         });
 
         this._resource = resource;

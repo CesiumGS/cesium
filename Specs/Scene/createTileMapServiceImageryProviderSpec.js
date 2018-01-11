@@ -181,7 +181,7 @@ defineSuite([
 
     it('supports no slash at the endof the URL', function() {
         var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server'
+            url : 'http://made/up/tms/server'
         });
 
         return pollToPromise(function() {
@@ -302,7 +302,7 @@ defineSuite([
         });
 
         var provider = createTileMapServiceImageryProvider({
-            url : 'server.invalid?query=1'
+            url : 'http://server.invalid?query=1'
         });
 
         return requestMetadata.promise.then(function(url) {

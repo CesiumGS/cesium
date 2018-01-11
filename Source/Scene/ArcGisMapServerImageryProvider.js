@@ -120,7 +120,8 @@ define([
 
         var resource = Resource.createIfNeeded(options.url, {
             //TODO deprecation warning
-            proxy: options.proxy
+            proxy: options.proxy,
+            isDirectory: true
         });
 
         if (defined(options.token)) {
@@ -251,7 +252,7 @@ define([
         var resource;
         if (imageryProvider._useTiles) {
             resource = imageryProvider._resource.getDerivedResource({
-                url: '/tile/' + level + '/' + y + '/' + x,
+                url: 'tile/' + level + '/' + y + '/' + x,
                 request: request
             });
         } else {
