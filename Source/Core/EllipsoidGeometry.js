@@ -51,10 +51,10 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
-     * @param {Number} [options.minimumAzimuth=0.0] The minimum azimuth in radians.
-     * @param {Number} [options.maximumAzimuth=2*PI] The maximum azimuth in radians.
-     * @param {Number} [options.minimumElevation=-PI/2] The minimum elevation in radians.
-     * @param {Number} [options.maximumElevation=PI/2] The maximum elevation in radians.
+     * @param {Number} [options.minimumClock=0.0] The minimum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
+     * @param {Number} [options.maximumClock=2*PI] The maximum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
+     * @param {Number} [options.minimumCone=0.0] The minimum angle measured from the positive z-axis and toward the negative z-axis.
+     * @param {Number} [options.maximumCone=PI] The maximum angle measured from the positive z-axis and toward the negative z-axis.
      * @param {Number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
      * @param {Number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -76,10 +76,10 @@ define([
 
         var radii = defaultValue(options.radii, defaultRadii);
         var innerRadii = defaultValue(options.innerRadii, radii);
-        var minimumAzimuth = defaultValue(options.minimumAzimuth, 0);
-        var maximumAzimuth = defaultValue(options.maximumAzimuth, CesiumMath.TWO_PI);
-        var minimumElevation = defaultValue(options.minimumElevation, -CesiumMath.PI_OVER_TWO);
-        var maximumElevation = defaultValue(options.maximumElevation, CesiumMath.PI_OVER_TWO);
+        var minimumClock = defaultValue(options.minimumClock, 0.0);
+        var maximumClock = defaultValue(options.maximumClock, CesiumMath.TWO_PI);
+        var minimumCone = defaultValue(options.minimumCone, 0.0);
+        var maximumCone = defaultValue(options.maximumCone, CesiumMath.PI);
         var stackPartitions = defaultValue(options.stackPartitions, 64);
         var slicePartitions = defaultValue(options.slicePartitions, 64);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -95,10 +95,10 @@ define([
 
         this._radii = Cartesian3.clone(radii);
         this._innerRadii = Cartesian3.clone(innerRadii);
-        this._minimumAzimuth = minimumAzimuth;
-        this._maximumAzimuth = maximumAzimuth;
-        this._minimumElevation = minimumElevation;
-        this._maximumElevation = maximumElevation;
+        this._minimumClock = minimumClock;
+        this._maximumClock = maximumClock;
+        this._minimumCone = minimumCone;
+        this._maximumCone = maximumCone;
         this._stackPartitions = stackPartitions;
         this._slicePartitions = slicePartitions;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
@@ -141,10 +141,10 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        array[startingIndex++] = value._minimumAzimuth;
-        array[startingIndex++] = value._maximumAzimuth;
-        array[startingIndex++] = value._minimumElevation;
-        array[startingIndex++] = value._maximumElevation;
+        array[startingIndex++] = value._minimumClock;
+        array[startingIndex++] = value._maximumClock;
+        array[startingIndex++] = value._minimumCone;
+        array[startingIndex++] = value._maximumCone;
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex++] = value._slicePartitions;
 
@@ -158,10 +158,10 @@ define([
         radii : scratchRadii,
         innerRadii : scratchInnerRadii,
         vertexFormat : scratchVertexFormat,
-        minimumAzimuth : undefined,
-        maximumAzimuth : undefined,
-        minimumElevation : undefined,
-        maximumElevation : undefined,
+        minimumClock : undefined,
+        maximumClock : undefined,
+        minimumCone : undefined,
+        maximumCone : undefined,
         stackPartitions : undefined,
         slicePartitions : undefined
     };
@@ -192,18 +192,18 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var minimumAzimuth = array[startingIndex++];
-        var maximumAzimuth = array[startingIndex++];
-        var minimumElevation = array[startingIndex++];
-        var maximumElevation = array[startingIndex++];
+        var minimumClock = array[startingIndex++];
+        var maximumClock = array[startingIndex++];
+        var minimumCone = array[startingIndex++];
+        var maximumCone = array[startingIndex++];
         var stackPartitions = array[startingIndex++];
         var slicePartitions = array[startingIndex++];
 
         if (!defined(result)) {
-            scratchOptions.minimumAzimuth = minimumAzimuth;
-            scratchOptions.maximumAzimuth = maximumAzimuth;
-            scratchOptions.minimumElevation = minimumElevation;
-            scratchOptions.maximumElevation = maximumElevation;
+            scratchOptions.minimumClock = minimumClock;
+            scratchOptions.maximumClock = maximumClock;
+            scratchOptions.minimumCone = minimumCone;
+            scratchOptions.maximumCone = maximumCone;
             scratchOptions.stackPartitions = stackPartitions;
             scratchOptions.slicePartitions = slicePartitions;
             return new EllipsoidGeometry(scratchOptions);
@@ -212,10 +212,10 @@ define([
         result._radii = Cartesian3.clone(radii, result._radii);
         result._innerRadii = Cartesian3.clone(innerRadii, result._innerRadii);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
-        result._minimumAzimuth = minimumAzimuth;
-        result._maximumAzimuth = maximumAzimuth;
-        result._minimumElevation = minimumElevation;
-        result._maximumElevation = maximumElevation;
+        result._minimumClock = minimumClock;
+        result._maximumClock = maximumClock;
+        result._minimumCone = minimumCone;
+        result._maximumCone = maximumCone;
         result._stackPartitions = stackPartitions;
         result._slicePartitions = slicePartitions;
 
@@ -239,17 +239,14 @@ define([
             return;
         }
 
-        var minimumAzimuth = ellipsoidGeometry._minimumAzimuth;
-        var maximumAzimuth = ellipsoidGeometry._maximumAzimuth;
-        var minimumElevation = ellipsoidGeometry._minimumElevation;
-        var maximumElevation = ellipsoidGeometry._maximumElevation;
-        var inclination1 = (CesiumMath.PI_OVER_TWO - maximumElevation);
-        var inclination2 = (CesiumMath.PI_OVER_TWO - minimumElevation);
-
+        var minimumClock = ellipsoidGeometry._minimumClock;
+        var maximumClock = ellipsoidGeometry._maximumClock;
+        var minimumCone = ellipsoidGeometry._minimumCone;
+        var maximumCone = ellipsoidGeometry._maximumCone;
         var vertexFormat = ellipsoidGeometry._vertexFormat;
 
-        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(maximumAzimuth - minimumAzimuth) / CesiumMath.TWO_PI);
-        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(maximumElevation - minimumElevation) / CesiumMath.TWO_PI);
+        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(maximumClock - minimumClock) / CesiumMath.TWO_PI);
+        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(maximumCone - minimumCone) / CesiumMath.PI);
         if (slicePartitions < 2) {
             slicePartitions = 2;
         }
@@ -257,9 +254,8 @@ define([
             stackPartitions = 2;
         }
 
-        // The extra slice and stack are for duplicating points at the x axis
-        // and poles. We need the texture coordinates to interpolate from
-        // (2 * pi - delta) to 2 * pi instead of (2 * pi - delta) to 0.
+        // Add an extra slice and stack so that the number of partitions is the
+        // number of surfaces rather than the number of joints
         slicePartitions++;
         stackPartitions++;
 
@@ -269,46 +265,46 @@ define([
 
         // Create arrays for theta and phi. Duplicate first and last angle to
         // allow different normals at the intersections.
-        var phis = [inclination1];
-        var thetas = [minimumAzimuth];
+        var phis = [minimumCone];
+        var thetas = [minimumClock];
         for (i = 0; i < stackPartitions; i++) {
-            phis.push(inclination1 + i * (inclination2 - inclination1) / (stackPartitions - 1));
+            phis.push(minimumCone + i * (maximumCone - minimumCone) / (stackPartitions - 1));
         }
-        phis.push(inclination2);
+        phis.push(maximumCone);
         for (j = 0; j < slicePartitions; j++) {
-            thetas.push(minimumAzimuth + j * (maximumAzimuth - minimumAzimuth) / (slicePartitions - 1));
+            thetas.push(minimumClock + j * (maximumClock - minimumClock) / (slicePartitions - 1));
         }
-        thetas.push(maximumAzimuth);
+        thetas.push(maximumClock);
         var numPhis = phis.length;
         var numThetas = thetas.length;
 
         // Allow for extra indices if there is an inner surface and if we need
-        // to close the sides if the azimuth range is not a full circle
+        // to close the sides if the clock range is not a full circle
         var extraIndices = 0;
         var vertexMultiplier = 1.0;
         var hasInnerSurface = ((innerRadii.x !== radii.x) || (innerRadii.y !== radii.y) || innerRadii.z !== radii.z);
         var isTopOpen = false;
         var isBotOpen = false;
-        var isAzimuthOpen = false;
+        var isClockOpen = false;
         if (hasInnerSurface) {
             vertexMultiplier = 2.0;
-            if (maximumElevation < CesiumMath.PI_OVER_TWO) {
+            if (minimumCone > 0.0) {
                 isTopOpen = true;
                 extraIndices += (slicePartitions - 1);
             }
-            if (minimumElevation > -CesiumMath.PI_OVER_TWO) {
+            if (maximumCone < Math.PI) {
                 isBotOpen = true;
                 extraIndices += (slicePartitions - 1);
             }
-            if ((maximumAzimuth - minimumAzimuth) % CesiumMath.TWO_PI) {
-                isAzimuthOpen = true;
+            if ((maximumClock - minimumClock) % CesiumMath.TWO_PI) {
+                isClockOpen = true;
                 extraIndices += ((stackPartitions - 1) * 2) + 1;
             } else {
                 extraIndices += 1;
             }
         }
 
-        var vertexCount = numThetas * numPhis* vertexMultiplier;
+        var vertexCount = numThetas * numPhis * vertexMultiplier;
         var positions = new Float64Array(vertexCount * 3);
         var isInner = new Array(vertexCount).fill(false);
         var negateNormal = new Array(vertexCount).fill(false);
@@ -406,10 +402,12 @@ define([
             }
         }
 
+        var outerOffset;
+        var innerOffset;
         if (hasInnerSurface) {
             if (isTopOpen) {
                 // Connect the top of the inner surface to the top of the outer surface
-                var innerOffset = numPhis * numThetas;
+                innerOffset = numPhis * numThetas;
                 for (i = 1; i < numThetas - 2; i++) {
                     indices[index++] = i;
                     indices[index++] = i + 1;
@@ -423,7 +421,7 @@ define([
 
             if (isBotOpen) {
                 // Connect the bottom of the inner surface to the bottom of the outer surface
-                var outerOffset = numPhis * numThetas - numThetas;
+                outerOffset = numPhis * numThetas - numThetas;
                 innerOffset = numPhis * numThetas * vertexMultiplier - numThetas;
                 for (i = 1; i < numThetas - 2; i++) {
                     indices[index++] = outerOffset + i + 1;
@@ -437,10 +435,8 @@ define([
             }
         }
 
-        // Connect the edges if azimuth is not closed
-        if (isAzimuthOpen) {
-            var outerOffset;
-            var innerOffset;
+        // Connect the edges if clock is not closed
+        if (isClockOpen) {
             for (i = 1; i < numPhis - 2; i++) {
                 innerOffset = numThetas * numPhis + (numThetas * i);
                 outerOffset = numThetas * i;
@@ -487,7 +483,7 @@ define([
         var ellipsoidInner = Ellipsoid.fromCartesian3(innerRadii);
 
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
-            for( i = 0; i < vertexCount; i++) {
+            for (i = 0; i < vertexCount; i++) {
                 ellipsoid = (isInner[i]) ? ellipsoidInner : ellipsoidOuter;
                 var position = Cartesian3.fromArray(positions, i * 3, scratchPosition);
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
@@ -497,19 +493,6 @@ define([
 
                 if (vertexFormat.st) {
                     var normalST = Cartesian2.negate(normal, scratchNormalST);
-
-                    // if the point is at or close to the pole, find a point along the same longitude
-                    // close to the xy-plane for the s coordinate.
-                    if (Cartesian2.magnitude(normalST) < CesiumMath.EPSILON6) {
-                        index = (i + numThetas * Math.floor(numPhis * 0.5)) * 3;
-                        if (index > positions.length) {
-                            index = (i - numThetas * Math.floor(numPhis * 0.5)) * 3;
-                        }
-                        Cartesian3.fromArray(positions, index, normalST);
-                        ellipsoid.geodeticSurfaceNormal(normalST, normalST);
-                        Cartesian2.negate(normalST, normalST);
-                    }
-
                     st[stIndex++] = (Math.atan2(normalST.y, normalST.x) / CesiumMath.TWO_PI) + 0.5;
                     st[stIndex++] = (Math.asin(normal.z) / Math.PI) + 0.5;
                 }
