@@ -185,6 +185,7 @@ define([
 
     function createNightVisionStage() {
         return new PostProcess({
+            name : 'czm_night_vision',
             fragmentShader : NightVision
         });
     }

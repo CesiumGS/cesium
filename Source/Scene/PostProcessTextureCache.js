@@ -35,7 +35,7 @@ define([
 
     function getProcessDependencies(collection, dependencies, process, previousName) {
         if (!process.enabled) {
-            return;
+            return previousName;
         }
 
         var processDependencies = dependencies[process.name] = {};
