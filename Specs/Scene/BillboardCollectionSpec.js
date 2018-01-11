@@ -1805,7 +1805,7 @@ defineSuite([
         scene.renderForSpecs();
 
         expect(b.position).toEqual(position);
-        expect(b._actualClampedPosition).toBeUndefined;
+        expect(b._actualClampedPosition).toBeUndefined();
     });
 
     describe('height referenced billboards', function() {
