@@ -950,10 +950,10 @@ define([
 
     Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
-        if (!defined(scene)) {
+        if (!defined(scene) || !defined(scene.globe)) {
             //>>includeStart('debug', pragmas.debug);
             if (owner._heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene.');
+                throw new DeveloperError('Height reference is not supported without a scene and globe.');
             }
             //>>includeEnd('debug');
             return;

@@ -2947,7 +2947,7 @@ defineSuite([
                 position : Cartesian3.fromDegrees(-72.0, 40.0),
                 show : true
             }).otherwise(function(error) {
-                expect(error.message).toEqual('Height reference is not supported without a scene.');
+                expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
             });
         });
 
@@ -2962,6 +2962,36 @@ defineSuite([
                 expect(function () {
                     return scene.renderForSpecs();
                 }).toThrowDeveloperError();
+
+                primitives.remove(model);
+            });
+        });
+
+        it('height reference without a globe rejects', function() {
+            scene.globe = undefined;
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).otherwise(function(error) {
+                expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
+            });
+        });
+
+        it('changing height reference without a globe throws DeveloperError', function() {
+            scene.globe = undefined;
+            return loadModelJson(texturedBoxModel.gltf, {
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                show : true
+            }).then(function(model) {
+                model.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+                expect(function () {
+                    return scene.renderForSpecs();
+                }).toThrowDeveloperError();
+
+                primitives.remove(model);
             });
         });
     });
