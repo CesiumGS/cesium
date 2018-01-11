@@ -10,7 +10,6 @@ define([
         '../Core/Math',
         '../Core/PixelFormat',
         '../Core/destroyObject',
-        '../Renderer/ClearCommand',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
@@ -33,7 +32,6 @@ define([
         CesiumMath,
         PixelFormat,
         destroyObject,
-        ClearCommand,
         PassState,
         PixelDatatype,
         RenderState,
@@ -61,7 +59,6 @@ define([
 
         this._uniformMap = undefined;
         this._command = undefined;
-        this._clearCommand = undefined;
 
         this._colorTexture = undefined;
         this._depthTexture = undefined;
@@ -353,12 +350,6 @@ define([
         createDrawCommand(this, context);
         createSampler(this);
 
-        if (!defined(this._clearCommand)) {
-            this._clearCommand = new ClearCommand({
-                color : this._clearColor
-            });
-        }
-
         var framebuffer = this._collection.getFramebuffer(this._name);
         var colorTexture = framebuffer.getColorTexture(0);
         var renderState = this._renderState;
@@ -368,16 +359,8 @@ define([
             });
         }
 
-        this._clearCommand.framebuffer = framebuffer;
         this._command.framebuffer = framebuffer;
         this._command.renderState = renderState;
-    };
-
-    PostProcess.prototype.clear = function(context) {
-        if (!this._enabled) {
-            return;
-        }
-        this._clearCommand.execute(context);
     };
 
     PostProcess.prototype.execute = function(context, colorTexture, depthTexture) {

@@ -273,16 +273,7 @@ define([
     };
 
     PostProcessCollection.prototype.clear = function(context) {
-        // POST TODO: clear all framebuffers in cache
-        var processNames = this._processNames;
-        for (var name in processNames) {
-            if (processNames.hasOwnProperty(name)) {
-                var process = processNames[name];
-                if (defined(process.clear)) {
-                    process.clear(context);
-                }
-            }
-        }
+        this._textureCache.clear(context);
     };
 
     function getOutputTexture(process) {

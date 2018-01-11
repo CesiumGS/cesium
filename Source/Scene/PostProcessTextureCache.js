@@ -157,7 +157,8 @@ define([
             pixelDatatype : pixelDatatype,
             clearColor : clearColor,
             processes : [processName],
-            buffer : undefined
+            buffer : undefined,
+            clear : undefined
         };
 
         framebuffers.push(framebuffer);
@@ -215,6 +216,10 @@ define([
                     pixelDatatype : framebuffer.pixelDatatype
                 })]
             });
+            framebuffer.clear = new ClearCommand({
+                color : framebuffer.clearColor,
+                framebuffer : framebuffer.buffer
+            });
         }
     }
 
@@ -248,6 +253,14 @@ define([
         this._height = height;
         releaseResources(this);
         updateFramebuffers(this, context);
+    };
+
+    PostProcessTextureCache.prototype.clear = function(context) {
+        var framebuffers = this._framebuffers;
+        var length = 0;
+        for (var i = 0; i < length; ++i) {
+            framebuffers[i].clear.execute(context);
+        }
     };
 
     PostProcessTextureCache.prototype.getFramebuffer = function(name) {
