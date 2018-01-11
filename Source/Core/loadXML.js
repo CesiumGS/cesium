@@ -32,13 +32,14 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadXML(url, headers, request) {
+    function loadXML(url, headers, request, requestOptions) {
         return loadWithXhr({
             url : url,
             responseType : 'document',
             headers : headers,
             overrideMimeType : 'text/xml',
-            request : request
+            request : request,
+            requestOptions: requestOptions
         });
     }
 

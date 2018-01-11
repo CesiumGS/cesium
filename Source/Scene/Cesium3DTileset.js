@@ -174,6 +174,9 @@ define([
             tilesetUrl = joinUrls(basePath, 'tileset.json');
         }
 
+        var requestOptions = options.requestOptions;
+
+        this._requestOptions = requestOptions;
         this._url = url;
         this._basePath = basePath;
         this._tilesetUrl = tilesetUrl;
@@ -680,7 +683,7 @@ define([
         var that = this;
 
         // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        Cesium3DTileset.loadJson(tilesetUrl).then(function(tilesetJson) {
+        Cesium3DTileset.loadJson(tilesetUrl, requestOptions).then(function(tilesetJson) {
             that._root = that.loadTileset(tilesetUrl, tilesetJson);
             var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
@@ -750,6 +753,12 @@ define([
                 //>>includeEnd('debug');
 
                 return this._properties;
+            }
+        },
+
+        requestOptions: {
+            get : function() {
+                return this._requestOptions;
             }
         },
 
@@ -1134,8 +1143,8 @@ define([
      * @param {String} tilesetUrl The url of the json file to be fetched
      * @returns {Promise.<Object>} A promise that resolves with the fetched json data
      */
-    Cesium3DTileset.loadJson = function(tilesetUrl) {
-        return loadJson(tilesetUrl);
+    Cesium3DTileset.loadJson = function(tilesetUrl, requestOptions) {
+        return loadJson(tilesetUrl, undefined, undefined, requestOptions);
     };
 
     /**

@@ -235,7 +235,8 @@ define([
                 maximumLevel : maximumLevel,
                 proxy : options.proxy,
                 tileDiscardPolicy : options.tileDiscardPolicy,
-                credit: options.credit
+                credit: options.credit,
+                requestOptions: options.requestOptions
             });
         }
 
@@ -261,7 +262,8 @@ define([
                 maximumLevel : maximumLevel,
                 proxy : options.proxy,
                 tileDiscardPolicy : options.tileDiscardPolicy,
-                credit: options.credit
+                credit: options.credit,
+                requestOptions: options.requestOptions
             });
         }
 
@@ -272,7 +274,7 @@ define([
                 resourceUrl = proxy.getURL(resourceUrl);
             }
             // Try to load remaining parameters from XML
-            loadXML(resourceUrl).then(metadataSuccess).otherwise(metadataFailure);
+            loadXML(resourceUrl, undefined, undefined, options.requestOptions).then(metadataSuccess).otherwise(metadataFailure);
         }
 
         requestMetadata();

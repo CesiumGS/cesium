@@ -46,7 +46,7 @@ define([
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadJsonp(url, options, request) {
+    function loadJsonp(url, options, request, requestOptions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -96,8 +96,8 @@ define([
                     window[functionName] = undefined;
                 }
             };
-
-            loadJsonp.loadAndExecuteScript(url, functionName, deferred);
+            requestOptions = defaultValue(requestOptions, defaultValue.EMPTY_OBJECT);
+            loadJsonp.loadAndExecuteScript(url, functionName, deferred, requestOptions, requestOptions.retryAttempts);
             return deferred.promise;
         };
 
@@ -105,7 +105,14 @@ define([
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+    loadJsonp.loadAndExecuteScript = function(url, functionName, deferred, requestOptions, retryAttempts) {
+        var retryOnError = requestOptions.retryOnError;
+        var beforeRequest = requestOptions.beforeRequest;
+        var baseUrl = url;
+        if (typeof beforeRequest === 'function') {
+            url = beforeRequest(url);
+        }
+
         var script = document.createElement('script');
         script.async = true;
         script.src = url;
@@ -116,7 +123,23 @@ define([
             head.removeChild(script);
         };
         script.onerror = function(e) {
-            deferred.reject(e);
+            if (typeof retryOnError === 'function' && retryAttempts > 0) {
+                when.resolve(requestOptions.retryOnError())
+                    .then(function(retry) {
+                        if (retry) {
+                            retryAttempts--;
+                            loadJsonp.loadAndExecuteScript(baseUrl, functionName, deferred, requestOptions, retryAttempts);
+                        } else {
+                            deferred.reject(e);
+                        }
+                    })
+                    .otherwise(function() {
+                        deferred.reject(e);
+                    });
+
+            } else {
+                deferred.reject(e);
+            }
         };
 
         head.appendChild(script);

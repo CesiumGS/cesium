@@ -44,7 +44,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadJson(url, headers, request) {
+    function loadJson(url, headers, request, requestOptions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -59,7 +59,7 @@ define([
             headers.Accept = defaultHeaders.Accept;
         }
 
-        var textPromise = loadText(url, headers, request);
+        var textPromise = loadText(url, headers, request, requestOptions);
         if (!defined(textPromise)) {
             return undefined;
         }

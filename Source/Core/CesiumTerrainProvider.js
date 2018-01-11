@@ -109,9 +109,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        var requestOptions = options.requestOptions;
         this._url = options.url;
         this._proxy = options.proxy;
-
+        this._requestOptions = requestOptions;
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1,
@@ -286,7 +287,7 @@ define([
                 if (defined(that._proxy)) {
                     metadataUrl = that._proxy.getURL(metadataUrl);
                 }
-                var parentMetadata = loadJson(metadataUrl);
+                var parentMetadata = loadJson(metadataUrl, undefined, undefined, requestOptions);
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
             }
 
@@ -344,7 +345,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadJson(metadataUrl);
+            var metadata = loadJson(metadataUrl, undefined, undefined, requestOptions);
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -615,7 +616,7 @@ define([
             extensionList.push('watermask');
         }
 
-        var promise = loadArrayBuffer(url, getRequestHeader(extensionList), request);
+        var promise = loadArrayBuffer(url, getRequestHeader(extensionList), request, this._requestOptions);
 
         if (!defined(promise)) {
             return undefined;

@@ -335,14 +335,14 @@ define([
      */
     ImageryProvider.loadImage = function(imageryProvider, url, request) {
         if (ktxRegex.test(url)) {
-            return loadKTX(url, undefined, request);
+            return loadKTX(url, undefined, request, imageryProvider.requestOptions);
         } else if (crnRegex.test(url)) {
-            return loadCRN(url, undefined, request);
+            return loadCRN(url, undefined, request, imageryProvider.requestOptions);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return loadImageViaBlob(url, request);
+            return loadImageViaBlob(url, request, imageryProvider.requestOptions);
         }
 
-        return loadImage(url, undefined, request);
+        return loadImage(url, undefined, request, imageryProvider.requestOptions);
     };
 
     return ImageryProvider;
