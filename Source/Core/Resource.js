@@ -269,34 +269,8 @@ define([
                 resource._queryParameters = combine(query, resource._queryParameters);
             }
 
-            resource._url = joinUrls(resource._url, uri.toString());
+            resource._url = joinUrls(getBaseUri(resource._url), uri.toString(), false);
         }
-
-        mergeOptions(resource, options);
-
-        return resource;
-    };
-
-    /**
-     * Returns a resource referring to the parent path of the resource.
-     *
-     * @param {Object} [options] An object with the following properties
-     * @param {Object} [options.queryParameters]
-     * @param {Object} [options.templateValues]
-     * @param {Object} [options.headers={}]
-     * @param {Request} [options.request]
-     * @param {String} [options.method='GET']
-     * @param {Object} [options.data]
-     * @param {String} [options.overrideMimeType]
-     * @param {DefaultProxy} [options.proxy]
-     * @param {Boolean} [options.allowCrossOrigin=true]
-     */
-    Resource.prototype.getParentResource = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var resource = this.clone();
-
-        resource._url = getBaseUri(resource.url);
 
         mergeOptions(resource, options);
 

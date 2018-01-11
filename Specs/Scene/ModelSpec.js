@@ -247,7 +247,7 @@ defineSuite([
         var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
         expect(texturedBoxModel.gltf).toBeDefined();
-        expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
+        expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
         expect(texturedBoxModel.show).toEqual(false);
         expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
         expect(texturedBoxModel.scale).toEqual(1.0);

@@ -2266,8 +2266,8 @@ define([
         var documentElement = kml.documentElement;
         var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
         var name = queryStringValue(document, 'name', namespaces.kml);
-        if (!defined(name) && defined(sourceUri)) {
-            name = getFilenameFromUri(sourceUri);
+        if (!defined(name)) {
+            name = getFilenameFromUri(sourceResource.getUrl());
         }
 
         // Only set the name from the root document
@@ -2368,7 +2368,7 @@ define([
             });
             promise = loadBlob(data);
 
-            sourceUri = defaultValue(sourceUri, data.getParentResource());
+            sourceUri = defaultValue(sourceUri, data.clone());
         }
 
         sourceUri = Resource.createIfNeeded(sourceUri, {

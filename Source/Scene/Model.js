@@ -1185,11 +1185,7 @@ define([
 
 
         // Setup basePath to get dependent files
-        var basePath = options.basePath;
-        if (!defined(basePath)) {
-            basePath = modelResource.getParentResource();
-        }
-
+        var basePath = defaultValue(options.basePath, modelResource.clone());
         var resource = Resource.createIfNeeded(basePath, {
             headers : options.headers
         });
