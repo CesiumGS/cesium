@@ -1876,30 +1876,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     }
 
     /**
-     * Zooms to a {@link Cesium3DTileset} with an optional offset. If offset is not supplied then will zoom to origin at
-     * a distance of the diameter.
-     *
-     * @param {Cesium3DTileset} tileset The tileset to which this zooms.
-     * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
-     * @returns (Promise) A promise that resolves when the loaded tileset is zoomed to.
-     */
-    Viewer.prototype.zoomToTileset = function(tileset, offset) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('tileset', tileset);
-        //>>includeEnd('debug');
-
-        var camera = this.camera;
-        return tileset.readyPromise.then(function() {
-            var boundingSphere = tileset.boundingSphere;
-            if (!defined(offset)) {
-                offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
-            }
-            camera.viewBoundingSphere(boundingSphere, offset);
-            camera.lookAtTransform(Matrix4.IDENTITY);
-        });
-    };
-
-    /**
      * @private
      */
     Viewer.prototype._postRender = function() {
