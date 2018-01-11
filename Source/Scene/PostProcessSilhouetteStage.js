@@ -100,7 +100,7 @@ define([
             get : function() {
                 return this._edgeDetectionUniformValues;
             }
-        },
+        }
     });
 
     PostProcessSilhouette.prototype.get = function(index) {

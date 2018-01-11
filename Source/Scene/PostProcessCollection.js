@@ -11,7 +11,8 @@ define([
         './PostProcess',
         './PostProcessAmbientOcclusionStage',
         './PostProcessBloomStage',
-        './PostProcessSampleMode'
+        './PostProcessSampleMode',
+        './PostProcessTextureCache'
     ], function(
         Check,
         defaultValue,
@@ -25,7 +26,8 @@ define([
         PostProcess,
         PostProcessAmbientOcclusionStage,
         PostProcessBloomStage,
-        PostProcessSampleMode) {
+        PostProcessSampleMode,
+        PostProcessTextureCache) {
     'use strict';
 
     var fxaaFS =
@@ -53,6 +55,7 @@ define([
         this._processesRemoved = false;
 
         this._processNames = {};
+        this._textureCache = undefined;
 
         var processNames = this._processNames;
 
@@ -225,7 +228,7 @@ define([
     PostProcessCollection.prototype.get = function(index) {
         removeProcesses(this);
         //>>includeStart('debug', pragmas.debug);
-        var length = this._process.length;
+        var length = this._processes.length;
         Check.typeOf.number.greaterThanOrEquals('processes length', length, 0);
         Check.typeOf.number.greaterThanOrEquals('index', index, 0);
         Check.typeOf.number.lessThan('index', index, length);
@@ -248,6 +251,8 @@ define([
 
     PostProcessCollection.prototype.update = function(context) {
         removeProcesses(this);
+
+        //this._textureCache = new PostProcessTextureCache(this); // TODO
 
         this._fxaa.update(context);
         this._ao.update(context);
