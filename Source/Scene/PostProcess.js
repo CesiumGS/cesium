@@ -120,7 +120,9 @@ define([
         },
         outputTexture : {
             get : function() {
-                return this._outputTexture;
+                //return this._outputTexture;
+                var framebuffer = this._collection.getFramebuffer(this._name);
+                return framebuffer.getColorTexture(0);
             }
         },
         scissorRectangle : {
@@ -170,6 +172,10 @@ define([
 
     function getUniformMapFunction(postProcess, name) {
         return function() {
+            var value = postProcess._actualUniformValues[name];
+            if (typeof value === 'function') {
+                return value();
+            }
             return postProcess._actualUniformValues[name];
         };
     }
@@ -299,6 +305,12 @@ define([
         };
     }
 
+    function createProcessOutputTextureFunction(postProcess, name) {
+        return function() {
+            return postProcess._collection.getOutputTexture(name);
+        };
+    }
+
     function updateUniformTextures(postProcess, context) {
         var i;
         var texture;
@@ -336,9 +348,9 @@ define([
         for (i = 0; i < length; ++i) {
             name = dirtyUniforms[i];
             var processNameOrUrl = uniformValues[name];
-            var outputTexture = postProcess._collection.getOutputTexture(processNameOrUrl);
-            if (defined(outputTexture)) {
-                postProcess._actualUniformValues[name] = outputTexture;
+            var process = postProcess._collection.getProcessByName(processNameOrUrl);
+            if (defined(process)) {
+                postProcess._actualUniformValues[name] = createProcessOutputTextureFunction(postProcess, processNameOrUrl);
             } else {
                 promises.push(loadImage(processNameOrUrl).then(createLoadImageFunction(postProcess, name)));
             }
@@ -412,9 +424,11 @@ define([
             });
         }
 
-        this._command.framebuffer = this._framebuffer;
+        //var framebuffer = this._framebuffer;
+        var framebuffer = this._collection.getFramebuffer(this._name);
+        this._clearCommand.framebuffer = framebuffer;
+        this._command.framebuffer = framebuffer;
         this._command.renderState = this._renderState;
-        this._clearCommand.framebuffer = this._framebuffer;
     };
 
     PostProcess.prototype.clear = function(context) {

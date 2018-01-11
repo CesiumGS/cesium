@@ -249,10 +249,16 @@ define([
         return this._processNames[name];
     };
 
+    PostProcessCollection.prototype.getFramebuffer = function(name) {
+        return this._textureCache.getFramebuffer(name);
+    };
+
     PostProcessCollection.prototype.update = function(context) {
         removeProcesses(this);
 
-        //this._textureCache = new PostProcessTextureCache(this); // TODO
+        this._textureCache = this._textureCache && this._textureCache.destroy();
+        this._textureCache = new PostProcessTextureCache(this); // TODO: only on post process change
+        this._textureCache.update(context);
 
         this._fxaa.update(context);
         this._ao.update(context);
@@ -282,9 +288,6 @@ define([
     function getOutputTexture(process) {
         while (defined(process.length)) {
             process = process.get(process.length - 1);
-            if (defined(process.outputTexture)) {
-                return process.outputTexture;
-            }
         }
         return process.outputTexture;
     }

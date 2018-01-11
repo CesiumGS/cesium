@@ -61,9 +61,6 @@ define([
     function getLastProcessName(process) {
         while (defined(process.length)) {
             process = process.get(process.length - 1);
-            if (defined(process.outputTexture)) {
-                return process.name;
-            }
         }
         return process.name;
     }
@@ -99,6 +96,7 @@ define([
             return previousName;
         }
 
+        var inSeries = !defined(composite.executeInSeries) || composite.executeInSeries;
         var currentName = previousName;
         var length = composite.length;
         for (var i = 0; i < length; ++i) {
@@ -108,10 +106,21 @@ define([
             } else {
                 currentName = getProcessDependencies(collection, dependencies, process, previousName);
             }
-            if (!defined(composite.executeInSeries) || composite.executeInSeries) {
+            if (inSeries) {
                 previousName = currentName;
             }
         }
+
+        if (!inSeries) {
+            for (var j = 1; j < length; ++j) {
+                var current = composite.get(j);
+                var currentDependencies = dependencies[current.name];
+                for (var k = 0; k < j; ++k) {
+                    currentDependencies[getLastProcessName(composite.get(k))] = true;
+                }
+            }
+        }
+
         return currentName;
     }
 
@@ -191,7 +200,7 @@ define([
         var dependencies = getDependencies(cache._collection);
         for (var processName in dependencies) {
             if (dependencies.hasOwnProperty(processName)) {
-                cache._processNameToFramebuffer[processName] = getFramebuffer(this, processName, dependencies[processName]);
+                cache._processNameToFramebuffer[processName] = getFramebuffer(cache, processName, dependencies[processName]);
             }
         }
     }
@@ -203,6 +212,41 @@ define([
             var framebuffer = framebuffers[i];
             framebuffer.buffer = framebuffer.buffer && framebuffer.buffer.destroy();
             framebuffer.buffer = undefined;
+        }
+    }
+
+    function updateFramebuffers(cache, context) {
+        var width = cache._width;
+        var height = cache._height;
+
+        var framebuffers = cache._framebuffers;
+        var length = framebuffers.length;
+        for (var i = 0; i < length; ++i) {
+            var framebuffer = framebuffers[i];
+
+            var scale = framebuffer.textureScale;
+            var textureWidth = Math.ceil(width * scale);
+            var textureHeight = Math.ceil(height * scale);
+
+            var size = Math.min(textureWidth, textureHeight);
+            if (framebuffer.forcePowerOfTwo) {
+                if (!CesiumMath.isPowerOfTwo(size)) {
+                    size = CesiumMath.nextPowerOfTwo(size);
+                }
+                textureWidth = size;
+                textureHeight = size;
+            }
+
+            framebuffer.buffer = new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
+                    width : width,
+                    height : height,
+                    pixelFormat : framebuffer.pixelFormat,
+                    pixelDatatype : framebuffer.pixelDatatype
+                })]
+            });
         }
     }
 
@@ -235,8 +279,15 @@ define([
         this._width = width;
         this._height = height;
         releaseResources(this);
+        updateFramebuffers(this, context);
+    };
 
-        // TODO: update/create framebuffers
+    PostProcessTextureCache.prototype.getFramebuffer = function(name) {
+        var framebuffer = this._processNameToFramebuffer[name];
+        if (!defined(framebuffer)) {
+            return undefined;
+        }
+        return framebuffer.buffer;
     };
 
     PostProcessTextureCache.prototype.isDestroyed = function() {
@@ -244,6 +295,7 @@ define([
     };
 
     PostProcessTextureCache.prototype.destroy = function() {
+        releaseResources(this);
         return destroyObject(this);
     };
 
