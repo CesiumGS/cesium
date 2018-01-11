@@ -225,7 +225,7 @@ define([
 
     PostProcessTextureCache.prototype.update = function(context) {
         var collection = this._collection;
-        var needsUpdate = collection.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
+        var needsUpdate = collection._activeProcesses.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
         if (!needsUpdate && this._framebuffers.length > 0) {
             releaseResources(this);
             this._framebuffers.length = 0;

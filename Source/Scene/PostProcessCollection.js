@@ -54,6 +54,11 @@ define([
 
         this._processesRemoved = false;
 
+        this._lastLength = undefined;
+        this._aoEnabled = undefined;
+        this._bloomEnabled = undefined;
+        this._fxaaEnabled = undefined;
+
         this._processNames = {};
         this._textureCache = undefined;
 
@@ -96,7 +101,7 @@ define([
         outputTexture : {
             get : function() {
                 if (this._fxaa.enabled && this._fxaa.ready) {
-                    return this._fxaa.outputTexture;
+                    return this.getOutputTexture(this._fxaa.name);
                 }
 
                 var processes = this._processes;
@@ -104,16 +109,16 @@ define([
                 for (var i = length - 1; i >= 0; --i) {
                     var process = processes[i];
                     if (process.ready && process.enabled) {
-                        return process.outputTexture;
+                        return this.getOutputTexture(process.name);
                     }
                 }
 
                 if (this._bloom.enabled && this._bloom.ready) {
-                    return this._bloom.outputTexture;
+                    return this.getOutputTexture(this._bloom.name);
                 }
 
                 if (this._ao.enabled && this._ao.ready) {
-                    return this._ao.outputTexture;
+                    return this.getOutputTexture(this._ao.name);
                 }
 
                 return undefined;
@@ -256,18 +261,43 @@ define([
     PostProcessCollection.prototype.update = function(context) {
         removeProcesses(this);
 
-        this._textureCache = this._textureCache && this._textureCache.destroy();
-        this._textureCache = new PostProcessTextureCache(this); // TODO: only on post process change
+        var activeProcesses = this._activeProcesses;
+        var processes = this._processes;
+        var length = activeProcesses.length = processes.length;
+
+        var i;
+        var process;
+        var count = 0;
+        for (i = 0; i < length; ++i) {
+            process = processes[i];
+            if (process.ready && process.enabled) {
+                activeProcesses[count++] = process;
+            }
+        }
+        activeProcesses.length = count;
+
+        var ao = this._ao;
+        var bloom = this._bloom;
+        var fxaa = this._fxaa;
+
+        if (count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
+            this._textureCache = this._textureCache && this._textureCache.destroy();
+            this._textureCache = new PostProcessTextureCache(this);
+
+            this._lastLength = count;
+            this._aoEnabled = ao.enabled;
+            this._bloomEnabled = bloom.enabled;
+            this._fxaaEnabled = fxaa.enabled;
+        }
+
         this._textureCache.update(context);
 
-        this._fxaa.update(context);
-        this._ao.update(context);
-        this._bloom.update(context);
+        fxaa.update(context);
+        ao.update(context);
+        bloom.update(context);
 
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            var process = processes[i];
+        for (i = 0; i < length; ++i) {
+            process = processes[i];
             process.update(context);
         }
     };
@@ -314,22 +344,12 @@ define([
 
     PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
         var activeProcesses = this._activeProcesses;
-        var processes = this._processes;
-        var length = activeProcesses.length = processes.length;
-
-        var i;
-        var count = 0;
-        for (i = 0; i < length; ++i) {
-            var process = processes[i];
-            if (process.ready && process.enabled) {
-                activeProcesses[count++] = process;
-            }
-        }
+        var length = activeProcesses.length;
 
         var fxaa = this._fxaa;
         var ao = this._ao;
         var bloom = this._bloom;
-        if (!fxaa.enabled && !ao.enabled && !bloom.enabled && count === 0) {
+        if (!fxaa.enabled && !ao.enabled && !bloom.enabled && length === 0) {
             return;
         }
 
@@ -345,12 +365,12 @@ define([
 
         var lastTexture = initialTexture;
 
-        if (count > 0) {
+        if (length > 0) {
             execute(activeProcesses[0], context, initialTexture, depthTexture);
-            for (i = 1; i < count; ++i) {
+            for (var i = 1; i < length; ++i) {
                 execute(activeProcesses[i], context, getOutputTexture(activeProcesses[i - 1]), depthTexture);
             }
-            lastTexture = getOutputTexture(activeProcesses[count - 1]);
+            lastTexture = getOutputTexture(activeProcesses[length - 1]);
         }
 
         if (fxaa.enabled && fxaa.ready) {
