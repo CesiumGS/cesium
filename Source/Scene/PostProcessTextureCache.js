@@ -1,51 +1,19 @@
 define([
-        '../Core/BoundingRectangle',
         '../Core/Color',
-        '../Core/combine',
-        '../Core/createGuid',
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/loadImage',
         '../Core/Math',
-        '../Core/PixelFormat',
         '../Core/destroyObject',
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
-        '../Renderer/PassState',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../ThirdParty/when',
-        './PostProcessSampleMode'
+        '../Renderer/Texture'
     ], function(
-        BoundingRectangle,
         Color,
-        combine,
-        createGuid,
-        defaultValue,
         defined,
-        defineProperties,
-        loadImage,
         CesiumMath,
-        PixelFormat,
         destroyObject,
         ClearCommand,
         Framebuffer,
-        PassState,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        when,
-        PostProcessSampleMode) {
+        Texture) {
     'use strict';
 
     function PostProcessTextureCache(postProcessCollection) {

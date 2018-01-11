@@ -11,7 +11,6 @@ define([
         '../Core/PixelFormat',
         '../Core/destroyObject',
         '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
@@ -35,7 +34,6 @@ define([
         PixelFormat,
         destroyObject,
         ClearCommand,
-        Framebuffer,
         PassState,
         PixelDatatype,
         RenderState,
@@ -62,8 +60,6 @@ define([
         this._uniformValues = options.uniformValues;
 
         this._uniformMap = undefined;
-        this._outputTexture = undefined;
-        this._framebuffer = undefined;
         this._command = undefined;
         this._clearCommand = undefined;
 
@@ -92,7 +88,7 @@ define([
             this._name = createGuid();
         }
 
-        // used by PostProcessCollection
+        // set by PostProcessCollection
         this._collection = undefined;
         this._index = undefined;
     }
@@ -120,7 +116,6 @@ define([
         },
         outputTexture : {
             get : function() {
-                //return this._outputTexture;
                 var framebuffer = this._collection.getFramebuffer(this._name);
                 return framebuffer.getColorTexture(0);
             }
@@ -214,50 +209,6 @@ define([
                 return postProcess._depthTexture;
             }
         });
-    }
-
-    function destroyTextures(postProcess) {
-        postProcess._outputTexture = postProcess._outputTexture && !postProcess._outputTexture.isDestroyed() && postProcess._outputTexture.destroy();
-    }
-
-    function destroyFramebuffers(postProcess) {
-        postProcess._framebuffer = postProcess._framebuffer && !postProcess._framebuffer.isDestroyed() && postProcess._framebuffer.destroy();
-    }
-
-    function createTextures(postProcess, context, width, height) {
-        postProcess._outputTexture = new Texture({
-            context : context,
-            width : width,
-            height : height,
-            pixelFormat : postProcess._pixelFormat,
-            pixelDatatype : postProcess._pixelDatatype
-        });
-    }
-
-    function createFramebuffers(postProcess, context) {
-        postProcess._framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [postProcess._outputTexture],
-            destroyAttachments : false
-        });
-    }
-
-    function createRenderState(postProcess, width, height) {
-        postProcess._renderState = RenderState.fromCache({
-            viewport : new BoundingRectangle(0, 0, width, height)
-        });
-    }
-
-    function updateFramebuffers(postProcess, context, width, height) {
-        var colorTexture = postProcess._outputTexture;
-        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height;
-        if (!defined(postProcess._framebuffer) || textureChanged) {
-            destroyTextures(postProcess);
-            destroyFramebuffers(postProcess);
-            createTextures(postProcess, context, width, height);
-            createFramebuffers(postProcess, context);
-            createRenderState(postProcess, width, height);
-        }
     }
 
     function createDrawCommand(postProcess, context) {
@@ -368,8 +319,6 @@ define([
     }
 
     function releaseResources(postProcess) {
-        destroyTextures(postProcess);
-        destroyFramebuffers(postProcess);
         if (defined(postProcess._command)) {
             postProcess._command.shaderProgram = postProcess._command.shaderProgram && postProcess._command.shaderProgram.destroy();
             postProcess._command = undefined;
@@ -399,22 +348,8 @@ define([
             return;
         }
 
-        var scale = this._textureScale;
-        var width = context.drawingBufferWidth * scale;
-        var height = context.drawingBufferHeight * scale;
-
-        var size = Math.min(width, height);
-        if (this._forcePowerOfTwo) {
-            if (!CesiumMath.isPowerOfTwo(size)) {
-                size = CesiumMath.nextPowerOfTwo(size);
-            }
-            width = size;
-            height = size;
-        }
-
         createUniformMap(this);
         updateUniformTextures(this, context);
-        updateFramebuffers(this, context, width, height);
         createDrawCommand(this, context);
         createSampler(this);
 
@@ -424,11 +359,18 @@ define([
             });
         }
 
-        //var framebuffer = this._framebuffer;
         var framebuffer = this._collection.getFramebuffer(this._name);
+        var colorTexture = framebuffer.getColorTexture(0);
+        var renderState = this._renderState;
+        if (!defined(renderState) || colorTexture.width !== renderState.viewport.width || colorTexture.height !== renderState.viewport.height) {
+            this._renderState = RenderState.fromCache({
+                viewport : new BoundingRectangle(0, 0, colorTexture.width, colorTexture.height)
+            });
+        }
+
         this._clearCommand.framebuffer = framebuffer;
         this._command.framebuffer = framebuffer;
-        this._command.renderState = this._renderState;
+        this._command.renderState = renderState;
     };
 
     PostProcess.prototype.clear = function(context) {
