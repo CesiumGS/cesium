@@ -129,7 +129,7 @@ function loadTileset(url) {
         var boundingSphere = tileset.boundingSphere;
         var radius = boundingSphere.radius;
 
-        viewer.zoomToTileset(tileset, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
+        viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
 
         for (var i = 0; i < clippingPlanes.length; ++i) {
             var plane = clippingPlanes[i];

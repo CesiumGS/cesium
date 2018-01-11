@@ -1800,6 +1800,28 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return;
             }
 
+            //If the zoom target is a Cesium3DTileset
+            if (zoomTarget instanceof Cesium3DTileset) {
+                var camera = that.camera;
+
+                // If the Cesium3DTileset is still loading, wait for it to finish loading before zooming
+                return zoomTarget.readyPromise.then(function() {
+
+                    // Only perform the zoom if it wasn't cancelled before the Cesium3DTileset finished loading
+                    if (that._zoomPromise === zoomPromise) {
+                        // that._zoomTarget is already the tileset zoomTarget
+
+                        var boundingSphere = zoomTarget.boundingSphere;
+                        // since zooming options = offset from zoomTo. if offset not defined then give it base value
+                        if (!defined(options)) {
+                            options = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
+                        }
+                        camera.viewBoundingSphere(boundingSphere, options);
+                        camera.lookAtTransform(Matrix4.IDENTITY);
+                    }
+                });
+            }
+
             //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
             if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
                 var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
@@ -1811,27 +1833,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     }
                 });
                 return;
-            }
-
-            //If the zoom target is a Cesium3DTileset
-            if (zoomTarget instanceof Cesium3DTileset) {
-                var camera = this.camera;
-
-                // If the Cesium3DTileset is still loading, wait for it to finish loading before zooming
-                return zoomTarget.readyPromise.then(function() {
-
-                    // Only perform the zoom if it wasn't cancelled before the Cesium3DTileset finished loading
-                    if (that._zoomPromise === zoomPromise) {
-                        // that._zoomTarget is already the tileset zoomTarget
-
-                        var boundingSphere = zoomTarget.boundingSphere;
-                        if (!defined(options.offset)) {
-                            options.offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
-                        }
-                        camera.viewBoundingSphere(boundingSphere, options.offset);
-                        camera.lookAtTransform(Matrix4.IDENTITY);
-                    }
-                });
             }
 
             //Zoom target is already an array, just copy it and return.
