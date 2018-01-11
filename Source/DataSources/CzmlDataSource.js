@@ -1534,11 +1534,11 @@ define([
 
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri, entityCollection, query);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri, entityCollection, query);
-        processPacketData(Cartesian3, ellipsoid, 'innerRadii', ellipsoidData.innerRadii, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipsoid, 'minimumAzimuth', ellipsoidData.minimumAzimuth, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipsoid, 'maximumAzimuth', ellipsoidData.maximumAzimuth, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipsoid, 'minimumElevation', ellipsoidData.minimumElevation, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipsoid, 'maximumElevation', ellipsoidData.maximumElevation, interval, sourceUri, entityCollection);
+        processPacketData(Cartesian3, ellipsoid, 'innerRadii', ellipsoidData.innerRadii, interval, sourceUri, entityCollection, query);
+        processPacketData(Number, ellipsoid, 'minimumClock', ellipsoidData.minimumClock, interval, sourceUri, entityCollection, query);
+        processPacketData(Number, ellipsoid, 'maximumClock', ellipsoidData.maximumClock, interval, sourceUri, entityCollection, query);
+        processPacketData(Number, ellipsoid, 'minimumCone', ellipsoidData.minimumCone, interval, sourceUri, entityCollection, query);
+        processPacketData(Number, ellipsoid, 'maximumCone', ellipsoidData.maximumCone, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri, entityCollection, query);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, ellipsoid, 'outline', ellipsoidData.outline, interval, sourceUri, entityCollection, query);
@@ -1617,7 +1617,6 @@ define([
         processPacketData(Number, model, 'maximumScale', modelData.maximumScale, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection, query);
-        processPacketData(Boolean, model, 'clampAnimations', modelData.clampAnimations, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection, query);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection, query);
         processPacketData(Color, model, 'silhouetteColor', modelData.silhouetteColor, interval, sourceUri, entityCollection, query);
