@@ -552,6 +552,17 @@ defineSuite([
         });
     });
 
+    it('rebuilds shader when normalShading changes', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            content.normalShading = true;
+            expect(scene).toRenderAndCall(function(rgba) {
+                content.normalShading = false;
+                expect(scene).notToRender(rgba);
+            });
+        });
+    });
+
     it('applies shader style to point cloud with normals', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({
