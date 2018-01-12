@@ -70,7 +70,7 @@ define([
      *
      * @internalConstructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -147,6 +147,7 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
+        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._imageIndex = -1;
         this._imageIndexPromise = undefined;
@@ -949,10 +950,10 @@ define([
 
     Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
-        if (!defined(scene)) {
+        if (!defined(scene) || !defined(scene.globe)) {
             //>>includeStart('debug', pragmas.debug);
             if (owner._heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene.');
+                throw new DeveloperError('Height reference is not supported without a scene and globe.');
             }
             //>>includeEnd('debug');
             return;

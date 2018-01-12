@@ -3,6 +3,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -19,6 +20,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -69,6 +71,59 @@ define([
         this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
     }
 
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    OrientedBoundingBox.packedLength = Cartesian3.packedLength + Matrix3.packedLength;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {OrientedBoundingBox} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
+     */
+    OrientedBoundingBox.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        Cartesian3.pack(value.center, array, startingIndex);
+        Matrix3.pack(value.halfAxes, array, startingIndex + Cartesian3.packedLength);
+
+        return array;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {OrientedBoundingBox} [result] The object into which to store the result.
+     * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
+     */
+    OrientedBoundingBox.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new OrientedBoundingBox();
+        }
+
+        Cartesian3.unpack(array, startingIndex, result.center);
+        Matrix3.unpack(array, startingIndex + Cartesian3.packedLength, result.halfAxes);
+        return result;
+    };
+
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
@@ -86,7 +141,7 @@ define([
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
      * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
      *
-     * @param {Cartesian3[]} positions List of {@link Cartesian3} points that the bounding box will enclose.
+     * @param {Cartesian3[]} [positions] List of {@link Cartesian3} points that the bounding box will enclose.
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
      *
