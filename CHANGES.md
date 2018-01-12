@@ -26,7 +26,8 @@ Change Log
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
 * Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
-* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com. 
+* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
+* Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
 
 ### 1.41 - 2018-01-02
 

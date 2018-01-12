@@ -119,6 +119,7 @@ defineSuite([
     var tilesetSubtreeUrl = './Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
     var batchedExpirationUrl = './Data/Cesium3DTiles/Batched/BatchedExpiration';
     var batchedColorsB3dmUrl = './Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm';
+    var batchedVertexColorsUrl = './Data/Cesium3DTiles/Batched/BatchedWithVertexColors';
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
@@ -2137,6 +2138,10 @@ defineSuite([
     it('sets colorBlendMode for instanced tileset', function() {
         viewInstances();
         return testColorBlendMode(instancedRedMaterialUrl);
+    });
+
+    it('sets colorBlendMode for vertex color tileset', function() {
+        return testColorBlendMode(batchedVertexColorsUrl);
     });
 
     ///////////////////////////////////////////////////////////////////////////

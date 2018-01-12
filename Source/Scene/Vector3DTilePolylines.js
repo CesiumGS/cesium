@@ -416,7 +416,7 @@ define([
 
         var batchTable = primitive._batchTable;
 
-        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(Vector3DTilePolylinesVS);
+        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(Vector3DTilePolylinesVS);
         var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS, false, undefined);
 
         var vs = new ShaderSource({

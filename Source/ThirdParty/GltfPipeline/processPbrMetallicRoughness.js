@@ -46,8 +46,8 @@ define([
                 gltf.techniques = [];
             }
 
-            // Pre-processing to assign skinning info and address incompatibilities
-            splitIncompatibleSkins(gltf);
+            // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
+            splitIncompatibleMaterials(gltf);
 
             ForEach.material(gltf, function(material) {
                 var pbrMetallicRoughness = material.pbrMetallicRoughness;
@@ -93,8 +93,10 @@ define([
         }
         var joints = (defined(skin)) ? skin.joints : [];
         var jointCount = joints.length;
-        var skinningInfo = material.extras._pipeline.skinning;
-        var hasSkinning = defined(skinningInfo.type);
+        var primitiveInfo = material.extras._pipeline.primitive;
+        var skinningInfo = primitiveInfo.skinning;
+        var hasSkinning = skinningInfo.skinned;
+        var hasVertexColors = primitiveInfo.hasVertexColors;
 
         var hasNormals = true;
         var hasTangents = false;
@@ -349,6 +351,18 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
+        if (hasVertexColors) {
+            techniqueAttributes.a_vertexColor = 'vertexColor';
+            techniqueParameters.vertexColor = {
+                semantic: 'COLOR_0',
+                type: WebGLConstants.FLOAT_VEC4
+            };
+            vertexShader += 'attribute vec4 a_vertexColor;\n';
+            vertexShader += 'varying vec4 v_vertexColor;\n';
+            vertexShaderMain += '  v_vertexColor = a_vertexColor;\n';
+            fragmentShader += 'varying vec4 v_vertexColor;\n';
+        }
+
         if (addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = 'batchId';
             techniqueParameters.batchId = {
@@ -457,6 +471,11 @@ define([
                 fragmentShader += '    vec4 baseColorWithAlpha = vec4(1.0);\n';
             }
         }
+
+        if (hasVertexColors) {
+            fragmentShader += '    baseColorWithAlpha *= v_vertexColor;\n';
+        }
+
         fragmentShader += '    vec3 baseColor = baseColorWithAlpha.rgb;\n';
         // Add metallic-roughness to fragment shader
         if (defined(parameterValues.metallicRoughnessTexture)) {
@@ -757,7 +776,7 @@ define([
         });
     }
 
-    function splitIncompatibleSkins(gltf) {
+    function splitIncompatibleMaterials(gltf) {
         var accessors = gltf.accessors;
         var materials = gltf.materials;
         ForEach.mesh(gltf, function(mesh) {
@@ -774,21 +793,31 @@ define([
                     type = jointAccessor.type;
                 }
                 var isSkinned = defined(jointAccessorId);
+                var hasVertexColors = defined(primitive.attributes.COLOR_0);
 
-                var skinningInfo = material.extras._pipeline.skinning;
-                if (!defined(skinningInfo)) {
-                    material.extras._pipeline.skinning = {
-                        skinned : isSkinned,
-                        componentType : componentType,
-                        type : type
+                var primitiveInfo = material.extras._pipeline.primitive;
+                if (!defined(primitiveInfo)) {
+                    material.extras._pipeline.primitive = {
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
+                        },
+                        hasVertexColors : hasVertexColors
                     };
-                } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
-                    // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
+                } else if ((primitiveInfo.skinning.skinned !== isSkinned) || (primitiveInfo.skinning.type !== type) || (primitiveInfo.hasVertexColors !== hasVertexColors)) {
+                    // This primitive uses the same material as another one that either:
+                    // * Isn't skinned
+                    // * Uses a different type to store joints and weights
+                    // * Doesn't have vertex colors
                     var clonedMaterial = clone(material, true);
-                    clonedMaterial.material.extras._pipeline.skinning = {
-                        skinned : isSkinned,
-                        componentType : componentType,
-                        type : type
+                    clonedMaterial.extras._pipeline.skinning = {
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
+                        },
+                        hasVertexColors : hasVertexColors
                     };
                     // Split this off as a separate material
                     materialId = addToArray(materials, clonedMaterial);
