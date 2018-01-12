@@ -41,10 +41,10 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
-     * @param {Number} [options.minimumAzimuth=0.0] The minimum azimuth in radians.
-     * @param {Number} [options.maximumAzimuth=2*PI] The maximum azimuth in radians.
-     * @param {Number} [options.minimumElevation=-PI/2] The minimum elevation in radians.
-     * @param {Number} [options.maximumElevation=PI/2] The maximum elevation in radians.
+     * @param {Number} [options.minimumClock=0.0] The minimum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
+     * @param {Number} [options.maximumClock=2*PI] The maximum angle lying in the xy-plane measured from the positive x-axis and toward the positive y-axis.
+     * @param {Number} [options.minimumCone=0.0] The minimum angle measured from the positive z-axis and toward the negative z-axis.
+     * @param {Number} [options.maximumCone=PI] The maximum angle measured from the positive z-axis and toward the negative z-axis.
      * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
      * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
      * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
@@ -66,10 +66,10 @@ define([
 
         var radii = defaultValue(options.radii, defaultRadii);
         var innerRadii = defaultValue(options.innerRadii, radii);
-        var minimumAzimuth = defaultValue(options.minimumAzimuth, 0);
-        var maximumAzimuth = defaultValue(options.maximumAzimuth, CesiumMath.TWO_PI);
-        var minimumElevation = defaultValue(options.minimumElevation, -CesiumMath.PI_OVER_TWO);
-        var maximumElevation = defaultValue(options.maximumElevation, CesiumMath.PI_OVER_TWO);
+        var minimumClock = defaultValue(options.minimumClock, 0.0);
+        var maximumClock = defaultValue(options.maximumClock, CesiumMath.TWO_PI);
+        var minimumCone = defaultValue(options.minimumCone, 0.0);
+        var maximumCone = defaultValue(options.maximumCone, CesiumMath.PI);
         var stackPartitions = defaultValue(options.stackPartitions, 10);
         var slicePartitions = defaultValue(options.slicePartitions, 8);
         var subdivisions = defaultValue(options.subdivisions, 128);
@@ -88,10 +88,10 @@ define([
 
         this._radii = Cartesian3.clone(radii);
         this._innerRadii = Cartesian3.clone(innerRadii);
-        this._minimumAzimuth = minimumAzimuth;
-        this._maximumAzimuth = maximumAzimuth;
-        this._minimumElevation = minimumElevation;
-        this._maximumElevation = maximumElevation;
+        this._minimumClock = minimumClock;
+        this._maximumClock = maximumClock;
+        this._minimumCone = minimumCone;
+        this._maximumCone = maximumCone;
         this._stackPartitions = stackPartitions;
         this._slicePartitions = slicePartitions;
         this._subdivisions = subdivisions;
@@ -131,10 +131,10 @@ define([
         Cartesian3.pack(value._innerRadii, array, startingIndex);
         startingIndex += Cartesian3.packedLength;
 
-        array[startingIndex++] = value._minimumAzimuth;
-        array[startingIndex++] = value._maximumAzimuth;
-        array[startingIndex++] = value._minimumElevation;
-        array[startingIndex++] = value._maximumElevation;
+        array[startingIndex++] = value._minimumClock;
+        array[startingIndex++] = value._maximumClock;
+        array[startingIndex++] = value._minimumCone;
+        array[startingIndex++] = value._maximumCone;
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex++] = value._slicePartitions;
         array[startingIndex++] = value._subdivisions;
@@ -147,10 +147,10 @@ define([
     var scratchOptions = {
         radii : scratchRadii,
         innerRadii : scratchInnerRadii,
-        minimumAzimuth : undefined,
-        maximumAzimuth : undefined,
-        minimumElevation : undefined,
-        maximumElevation : undefined,
+        minimumClock : undefined,
+        maximumClock : undefined,
+        minimumCone : undefined,
+        maximumCone : undefined,
         stackPartitions : undefined,
         slicePartitions : undefined,
         subdivisions : undefined
@@ -179,19 +179,19 @@ define([
         var innerRadii = Cartesian3.unpack(array, startingIndex, scratchInnerRadii);
         startingIndex += Cartesian3.packedLength;
 
-        var minimumAzimuth = array[startingIndex++];
-        var maximumAzimuth = array[startingIndex++];
-        var minimumElevation = array[startingIndex++];
-        var maximumElevation = array[startingIndex++];
+        var minimumClock = array[startingIndex++];
+        var maximumClock = array[startingIndex++];
+        var minimumCone = array[startingIndex++];
+        var maximumCone = array[startingIndex++];
         var stackPartitions = array[startingIndex++];
         var slicePartitions = array[startingIndex++];
         var subdivisions = array[startingIndex++];
 
         if (!defined(result)) {
-            scratchOptions.minimumAzimuth = minimumAzimuth;
-            scratchOptions.maximumAzimuth = maximumAzimuth;
-            scratchOptions.minimumElevation = minimumElevation;
-            scratchOptions.maximumElevation = maximumElevation;
+            scratchOptions.minimumClock = minimumClock;
+            scratchOptions.maximumClock = maximumClock;
+            scratchOptions.minimumCone = minimumCone;
+            scratchOptions.maximumCone = maximumCone;
             scratchOptions.stackPartitions = stackPartitions;
             scratchOptions.slicePartitions = slicePartitions;
             scratchOptions.subdivisions = subdivisions;
@@ -200,10 +200,10 @@ define([
 
         result._radii = Cartesian3.clone(radii, result._radii);
         result._innerRadii = Cartesian3.clone(innerRadii, result._innerRadii);
-        result._minimumAzimuth = minimumAzimuth;
-        result._maximumAzimuth = maximumAzimuth;
-        result._minimumElevation = minimumElevation;
-        result._maximumElevation = maximumElevation;
+        result._minimumClock = minimumClock;
+        result._maximumClock = maximumClock;
+        result._minimumCone = minimumCone;
+        result._maximumCone = maximumCone;
         result._stackPartitions = stackPartitions;
         result._slicePartitions = slicePartitions;
         result._subdivisions = subdivisions;
@@ -228,24 +228,25 @@ define([
             return;
         }
 
-        var minimumAzimuth = ellipsoidGeometry._minimumAzimuth;
-        var maximumAzimuth = ellipsoidGeometry._maximumAzimuth;
-        var minimumElevation = ellipsoidGeometry._minimumElevation;
-        var maximumElevation = ellipsoidGeometry._maximumElevation;
-        var inclination1 = (CesiumMath.PI_OVER_TWO - maximumElevation);
-        var inclination2 = (CesiumMath.PI_OVER_TWO - minimumElevation);
-
-        var ellipsoid = Ellipsoid.fromCartesian3(radii);
+        var minimumClock = ellipsoidGeometry._minimumClock;
+        var maximumClock = ellipsoidGeometry._maximumClock;
+        var minimumCone = ellipsoidGeometry._minimumCone;
+        var maximumCone = ellipsoidGeometry._maximumCone;
         var subdivisions = ellipsoidGeometry._subdivisions;
+        var ellipsoid = Ellipsoid.fromCartesian3(radii);
 
-        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(maximumAzimuth - minimumAzimuth) / CesiumMath.TWO_PI);
-        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(maximumElevation - minimumElevation) / CesiumMath.TWO_PI);
+        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(maximumClock - minimumClock) / CesiumMath.TWO_PI);
+        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(maximumCone - minimumCone) / CesiumMath.PI);
         if (slicePartitions < 2) {
             slicePartitions = 2;
         }
         if (stackPartitions < 2) {
             stackPartitions = 2;
         }
+
+        // Add an extra slice and stack to remain consistent with EllipsoidGeometry
+        slicePartitions++;
+        stackPartitions++;
 
         var extraIndices = 0;
         var vertexMultiplier = 1.0;
@@ -256,11 +257,11 @@ define([
             vertexMultiplier = 2.0;
             // Add 2x slicePartitions to connect the top/bottom of the outer to
             // the top/bottom of the inner
-            if (maximumElevation < CesiumMath.PI_OVER_TWO) {
+            if (minimumCone > 0.0) {
                 isTopOpen = true;
                 extraIndices += slicePartitions;
             }
-            if (minimumElevation > -CesiumMath.PI_OVER_TWO) {
+            if (maximumCone < Math.PI) {
                 isBotOpen = true;
                 extraIndices += slicePartitions;
             }
@@ -283,7 +284,7 @@ define([
         var sinPhi = new Array(stackPartitions);
         var cosPhi = new Array(stackPartitions);
         for (i = 0; i < stackPartitions; i++) {
-            phi = inclination1 + i * (inclination2 - inclination1) / (stackPartitions - 1);
+            phi = minimumCone + i * (maximumCone - minimumCone) / (stackPartitions - 1);
             sinPhi[i] = sin(phi);
             cosPhi[i] = cos(phi);
         }
@@ -292,7 +293,7 @@ define([
         var sinTheta = new Array(subdivisions);
         var cosTheta = new Array(subdivisions);
         for (i = 0; i < subdivisions; i++) {
-            theta = minimumAzimuth + i * (maximumAzimuth - minimumAzimuth) / (subdivisions - 1);
+            theta = minimumClock + i * (maximumClock - minimumClock) / (subdivisions - 1);
             sinTheta[i] = sin(theta);
             cosTheta[i] = cos(theta);
         }
@@ -321,7 +322,7 @@ define([
         sinPhi.length = subdivisions;
         cosPhi.length = subdivisions;
         for (i = 0; i < subdivisions; i++) {
-            phi = inclination1 + i * (inclination2 - inclination1) / (subdivisions - 1);
+            phi = minimumCone + i * (maximumCone - minimumCone) / (subdivisions - 1);
             sinPhi[i] = sin(phi);
             cosPhi[i] = cos(phi);
         }
@@ -330,7 +331,7 @@ define([
         sinTheta.length = slicePartitions;
         cosTheta.length = slicePartitions;
         for (i = 0; i < slicePartitions; i++) {
-            theta = minimumAzimuth + i * (maximumAzimuth - minimumAzimuth) / (slicePartitions - 1);
+            theta = minimumClock + i * (maximumClock - minimumClock) / (slicePartitions - 1);
             sinTheta[i] = sin(theta);
             cosTheta[i] = cos(theta);
         }
