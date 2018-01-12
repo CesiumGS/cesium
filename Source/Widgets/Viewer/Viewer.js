@@ -1736,7 +1736,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(target, offset) {
-        return zoomToOrFly(this, target, offset, false);
+        var options = {
+            offset : offset
+        };
+        return zoomToOrFly(this, target, options, false);
     };
 
     /**
@@ -1759,7 +1762,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
-     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled. //TODO: Cleanup entity mentions
      */
     Viewer.prototype.flyTo = function(target, options) {
         return zoomToOrFly(this, target, options, true);
@@ -1784,6 +1787,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         that._zoomOptions = options;
 
         when(zoomTarget, function(zoomTarget) {
+
             //Only perform the zoom if it wasn't cancelled before the promise resolved.
             if (that._zoomPromise !== zoomPromise) {
                 return;
@@ -1801,25 +1805,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //If the zoom target is a Cesium3DTileset
-            if (zoomTarget instanceof Cesium3DTileset) {
-                var camera = that.camera;
-
-                // If the Cesium3DTileset is still loading, wait for it to finish loading before zooming
-                return zoomTarget.readyPromise.then(function() {
-
-                    // Only perform the zoom if it wasn't cancelled before the Cesium3DTileset finished loading
-                    if (that._zoomPromise === zoomPromise) {
-                        // that._zoomTarget is already the tileset zoomTarget
-
-                        var boundingSphere = zoomTarget.boundingSphere;
-                        // since zooming options = offset from zoomTo. if offset not defined then give it base value
-                        if (!defined(options)) {
-                            options = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
-                        }
-                        camera.viewBoundingSphere(boundingSphere, options);
-                        camera.lookAtTransform(Matrix4.IDENTITY);
-                    }
-                });
+            if (defined(zoomTarget.readyPromise)) {
+                that._zoomTarget = zoomTarget;
+                return;
             }
 
             //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
@@ -1884,8 +1872,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     };
 
     function updateZoomTarget(viewer) {
-        var entities = viewer._zoomTarget;
-        if (!defined(entities) || viewer.scene.mode === SceneMode.MORPHING) {
+        var target = viewer._zoomTarget;
+        if (!defined(target) || viewer.scene.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -1893,10 +1881,47 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var camera = scene.camera;
         var zoomPromise = viewer._zoomPromise;
         var zoomOptions = defaultValue(viewer._zoomOptions, {});
+        var options;
+
+        // If zoomTarget was Cesium3DTileset
+        if (defined(target.readyPromise)) {
+            return target.readyPromise.then(function() {
+                var bSphere = target.boundingSphere;
+                // if offset was originally undefined then give it base value instead of empty object
+                if (!defined(zoomOptions.offset)) {
+                    zoomOptions.offset = new HeadingPitchRange(0.0, 0.0, 2.0 * bSphere.radius);
+                }
+
+                options = {
+                    offset : zoomOptions.offset,
+                    complete : function() {
+                        zoomPromise.resolve(true);
+                    },
+                    cancel : function() {
+                        zoomPromise.resolve(false);
+                    }
+                };
+
+                if (viewer._zoomIsFlight) {
+                    camera.flyToBoundingSphere(target.boundingSphere, options);
+                    // zoomPromise.resolve(true);
+                } else {
+                    camera.viewBoundingSphere(bSphere, zoomOptions.offset);
+                    camera.lookAtTransform(Matrix4.IDENTITY);
+
+                    // finish the promise
+                    zoomPromise.resolve(true);
+                }
+
+                clearZoom(viewer);
+            });
+        }
+
+        var entities = target;
 
         //If zoomTarget was an ImageryLayer
         if (entities instanceof Rectangle) {
-            var options = {
+            options = {
                 destination : entities,
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
@@ -1940,7 +1965,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
         if (!viewer._zoomIsFlight) {
-            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);
+            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions.offset);
             camera.lookAtTransform(Matrix4.IDENTITY);
             clearZoom(viewer);
             zoomPromise.resolve(true);
