@@ -25,6 +25,7 @@ define([
                 return 0.0;
             },
             _surface : {},
+            tileLoadProgressEvent : new Event(),
             destroy : function() {}
         };
 

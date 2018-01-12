@@ -782,9 +782,8 @@ define([
         var removeGlobeTileLoadCallback;
         var removeGlobeImageryUpdateCallback;
         if (defined(globe)) {
-            if (defined(globe.tileLoadProgressEvent)) {
-                removeGlobeTileLoadCallback = globe.tileLoadProgressEvent.addEventListener(requestRenderListener(scene));
-            }
+            removeGlobeTileLoadCallback = globe.tileLoadProgressEvent.addEventListener(requestRenderListener(scene));
+
             if (defined(globe.imageryLayersUpdatedEvent)) {
                 removeGlobeImageryUpdateCallback = globe.imageryLayersUpdatedEvent.addEventListener(requestRenderListener(scene));
             }

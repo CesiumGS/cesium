@@ -2719,6 +2719,7 @@ defineSuite([
                         tilesWaitingForChildren : 0
                     }
                 },
+                tileLoadProgressEvent : new Event(),
                 destroy : function() {}
             };
 
