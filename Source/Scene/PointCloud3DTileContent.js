@@ -1092,7 +1092,7 @@ define([
 
         if (hasBatchTable) {
             // Batched points always use the HIGHLIGHT color blend mode
-            drawVS = batchTable.getVertexShaderCallback(false, 'a_batchId')(drawVS);
+            drawVS = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(drawVS);
             drawFS = batchTable.getFragmentShaderCallback(false, undefined)(drawFS);
         }
 
