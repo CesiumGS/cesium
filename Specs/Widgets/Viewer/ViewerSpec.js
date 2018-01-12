@@ -1045,7 +1045,7 @@ defineSuite([
     it('zoomTo when target is Cesium3DTileset and uses default offset when offset not defined', function() {
         viewer = createViewer(container);
          var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
-         var tileset = new Cesium3DTileSet({
+         var tileset = new Cesium3DTileset({
             url : path
          });
 
@@ -1073,7 +1073,7 @@ defineSuite([
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
-        var tileset = new Cesium3DTileSet({
+        var tileset = new Cesium3DTileset({
             url : path
         });
 
@@ -1100,7 +1100,7 @@ defineSuite([
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
-        var tileset = new Cesium3DTileSet({
+        var tileset = new Cesium3DTileset({
             url : path
         });
 
@@ -1133,7 +1133,7 @@ defineSuite([
         var camDir = Cartesian3.clone(viewer.camera.direction);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
-        var tileset = new Cesium3DTileSet({
+        var tileset = new Cesium3DTileset({
             url : path
         });
 
@@ -1158,7 +1158,7 @@ defineSuite([
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
-        var tileset = new Cesium3DTileSet({
+        var tileset = new Cesium3DTileset({
             url : path
         });
 
