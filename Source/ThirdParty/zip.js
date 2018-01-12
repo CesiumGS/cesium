@@ -27,12 +27,7 @@
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **/
 
-define([
-        '../Core/buildModuleUrl',
-        '../Core/getWorkerUrl'
-    ], function(
-        buildModuleUrl,
-        getWorkerUrl) {
+define(['../Core/getWorkerUrl'], function(getWorkerUrl) {
     var tmp = {};
 
 (function(obj) {
