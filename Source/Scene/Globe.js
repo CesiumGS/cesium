@@ -219,6 +219,18 @@ define([
             }
         },
         /**
+         * Gets an event that's raised when an imagery layer is added, shown, hidden, moved, or removed.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        imageryLayersUpdatedEvent : {
+            get : function() {
+                return this._surface.tileProvider.imageryLayersUpdatedEvent;
+            }
+        },
+        /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof Globe.prototype
          * @type {Color}
@@ -515,7 +527,7 @@ define([
     /**
      * @private
      */
-    Globe.prototype.beginFrame = function(frameState) {
+    Globe.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -549,6 +561,26 @@ define([
             }
         }
 
+        surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
+        surface.tileCacheSize = this.tileCacheSize;
+
+        tileProvider.terrainProvider = terrainProvider;
+        tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
+        tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
+        tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+        tileProvider.hasWaterMask = hasWaterMask;
+        tileProvider.oceanNormalMap = this._oceanNormalMap;
+        tileProvider.enableLighting = this.enableLighting;
+        tileProvider.shadows = this.shadows;
+
+        surface.update(frameState);
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.beginFrame = function(frameState) {
+        var surface = this._surface;
         var mode = frameState.mode;
         var pass = frameState.passes;
 
@@ -560,18 +592,6 @@ define([
                 this._zoomedOutOceanSpecularIntensity = 0.0;
             }
 
-            surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
-            surface.tileCacheSize = this.tileCacheSize;
-
-            tileProvider.terrainProvider = this.terrainProvider;
-            tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
-            tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
-            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
-            tileProvider.hasWaterMask = hasWaterMask;
-            tileProvider.oceanNormalMap = this._oceanNormalMap;
-            tileProvider.enableLighting = this.enableLighting;
-            tileProvider.shadows = this.shadows;
-
             surface.beginFrame(frameState);
         }
     };
@@ -579,7 +599,7 @@ define([
     /**
      * @private
      */
-    Globe.prototype.update = function(frameState) {
+    Globe.prototype.render = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -592,11 +612,11 @@ define([
         var pass = frameState.passes;
 
         if (pass.render) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
 
         if (pass.pick) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
     };
 

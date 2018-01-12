@@ -1003,11 +1003,11 @@ defineSuite([
         s.destroyForSpecs();
     });
 
-    it('always raises postUpdate event after updating', function() {
+    it('always raises preUpdate event after updating', function() {
         var s = createScene();
 
         var spyListener = jasmine.createSpy('listener');
-        s.postUpdate.addEventListener(spyListener);
+        s.preUpdate.addEventListener(spyListener);
 
         s.render();
 
@@ -1415,6 +1415,84 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    it('Executing an after render function causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var functionCalled = false;
+        scene._frameState.afterRender.push(function () {
+            functionCalled = true;
+        });
+
+        scene.renderForSpecs();
+
+        expect(functionCalled).toBe(true);
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Globe tile loading triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.tileLoadProgressEvent.raiseEvent();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Globe imagery updates triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.imageryLayersUpdatedEvent.raiseEvent();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
     it('scene morphing causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
         scene.renderForSpecs();
@@ -1426,7 +1504,7 @@ defineSuite([
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
-        scene.morphTo2D(1.0);
+        scene.morphTo2D(0.1);
         scene.renderForSpecs();
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
@@ -1439,7 +1517,7 @@ defineSuite([
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
-        scene.morphToColumbusView(1.0);
+        scene.morphToColumbusView(0.1);
         scene.renderForSpecs();
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
@@ -1452,8 +1530,7 @@ defineSuite([
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
-        scene.morphTo3D(1.0);
-        scene.renderForSpecs();
+        scene.morphTo3D(0.1);
         scene.renderForSpecs();
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);

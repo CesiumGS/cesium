@@ -48,8 +48,10 @@ defineSuite([
                     tilesWaitingForChildren : 0
                 }
             },
+            tileLoadProgressEvent : new Event(),
             beginFrame : function() {},
             update : function() {},
+            render : function() {},
             endFrame : function() {}
 
         };

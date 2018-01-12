@@ -142,6 +142,7 @@ define([
         this._imageryLayers.layerRemoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerRemoved, this);
         this._imageryLayers.layerMoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerMoved, this);
         this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
+        this._imageryLayersUpdatedEvent = new Event();
 
         this._layerOrderChanged = false;
 
@@ -251,6 +252,17 @@ define([
         },
 
         /**
+         * Gets an event that's raised when an imagery layer is added, shown, hidden, moved, or removed.
+         * @memberof GlobeSurfaceTileProvider.prototype
+         * @type {Event}
+         */
+        imageryLayersUpdatedEvent : {
+            get : function() {
+                return this._imageryLayersUpdatedEvent;
+            }
+        },
+
+        /**
          * Gets or sets the terrain provider that describes the surface geometry.
          * @memberof GlobeSurfaceTileProvider.prototype
          * @type {TerrainProvider}
@@ -293,6 +305,23 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+     /**
+     * Make any updates to the tile provider that are not involved in rendering. Called before the render update cycle.
+     */
+    GlobeSurfaceTileProvider.prototype.updateImagery = function() {
+        // update collection: imagery indices, base layers, raise layer show/hide event
+        this._imageryLayers._update();
+
+        if (this._layerOrderChanged) {
+            this._layerOrderChanged = false;
+
+            // Sort the TileImagery instances in each tile by the layer index.
+            this._quadtree.forEachLoadedTile(function(tile) {
+                tile.data.imagery.sort(sortTileImageryByLayerIndex);
+            });
+        }
+    };
+
     function freeVertexArray(vertexArray) {
         var indexBuffer = vertexArray.indexBuffer;
         vertexArray.destroy();
@@ -305,32 +334,17 @@ define([
         }
     }
 
-    /**
-     * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
-     * @param {FrameState} frameState The frame state.
-     */
-    GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
-        var imageryLayers = this._imageryLayers;
+    function updateImageryForRender(surface, frameState) {
+        var imageryLayers = surface._imageryLayers;
 
-        // update collection: imagery indices, base layers, raise layer show/hide event
-        imageryLayers._update();
         // update each layer for texture reprojection.
         imageryLayers.queueReprojectionCommands(frameState);
-
-        if (this._layerOrderChanged) {
-            this._layerOrderChanged = false;
-
-            // Sort the TileImagery instances in each tile by the layer index.
-            this._quadtree.forEachLoadedTile(function(tile) {
-                tile.data.imagery.sort(sortTileImageryByLayerIndex);
-            });
-        }
 
         // Add credits for terrain and imagery providers.
         var creditDisplay = frameState.creditDisplay;
 
-        if (this._terrainProvider.ready && defined(this._terrainProvider.credit)) {
-            creditDisplay.addCredit(this._terrainProvider.credit);
+        if (surface._terrainProvider.ready && defined(surface._terrainProvider.credit)) {
+            creditDisplay.addCredit(surface._terrainProvider.credit);
         }
 
         for (var i = 0, len = imageryLayers.length; i < len; ++i) {
@@ -339,6 +353,15 @@ define([
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
+    }
+
+    /**
+     * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+     * @param {FrameState} frameState The frame state.
+     */
+    GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
+        // updates imagery layers and credit display
+        updateImageryForRender(this, frameState);
 
         var vertexArraysToDestroy = this._vertexArraysToDestroy;
         var length = vertexArraysToDestroy.length;
@@ -730,6 +753,7 @@ define([
             });
 
             this._layerOrderChanged = true;
+            this._imageryLayersUpdatedEvent.raiseEvent();
         }
     };
 
@@ -767,10 +791,13 @@ define([
         if (defined(layer.imageryProvider)) {
             layer.imageryProvider._reload = undefined;
         }
+
+        this._imageryLayersUpdatedEvent.raiseEvent();
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
         this._layerOrderChanged = true;
+        this._imageryLayersUpdatedEvent.raiseEvent();
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function(layer, index, show) {
