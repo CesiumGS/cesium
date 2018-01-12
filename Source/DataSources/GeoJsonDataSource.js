@@ -828,7 +828,7 @@ define([
             data = Resource.createIfNeeded(data);
 
             if (!defined(sourceUri)) {
-                sourceUri = data.getUrl(false, false);
+                sourceUri = data.getUrlComponent(false, false);
             }
             promise = loadJson(data);
         }

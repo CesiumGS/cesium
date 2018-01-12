@@ -695,7 +695,7 @@ define([
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
 
             if (defined(collection._url)) {
-                modelOptions.cacheKey = collection._url.getUrl() + '#instanced';
+                modelOptions.cacheKey = collection._url.getUrlComponent() + '#instanced';
             }
         } else {
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);

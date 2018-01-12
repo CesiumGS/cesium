@@ -85,11 +85,13 @@ define([
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {Request} [options.request] A Request object that will be used.
      * @param {String} [options.method='GET'] The method to use.
-     * @param {Object} [options.data] An object that can store user specific information
+     * @param {Object} [options.data] Data that is sent with the resource request.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Boolean} [options.allowCrossOrigin=true] Whether to allow Cross-Origin.
      * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
+     * @param {Function} [options.retryCallback] The function to call when loading the resource fails.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      *
      * @constructor
      */
@@ -116,8 +118,8 @@ define([
         this.proxy = options.proxy;
         this.allowCrossOrigin = defaultValue(options.allowCrossOrigin, true);
 
-        this._retryOnError = options.retryOnError;
-        this._retryAttempts = defaultValue(options.retryAttempts, 0);
+        this.retryCallback = options.retryCallback;
+        this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
     }
 
@@ -144,19 +146,43 @@ define([
     };
 
     defineProperties(Resource.prototype, {
+        /**
+         * Query parameters appended to the url.
+         *
+         * @memberof Resource.prototype
+         * @type {Object}
+         *
+         * @readonly
+         */
         queryParameters: {
             get: function() {
                 return this._queryParameters;
             }
         },
+
+        /**
+         * The key/value pairs used to replace template parameters in the url.
+         *
+         * @memberof Resource.prototype
+         * @type {Object}
+         *
+         * @readonly
+         */
         templateValues: {
             get: function() {
                 return this._templateValues;
             }
         },
+
+        /**
+         * The url to the resource.
+         *
+         * @memberof Resource.prototype
+         * @type {String}
+         */
         url: {
             get: function() {
-                return this.getUrl(true, true);
+                return this.getUrlComponent(true, true);
             },
             set: function(value) {
                 var uri = new Uri(value);
@@ -177,11 +203,27 @@ define([
                 }
             }
         },
+
+        /**
+         * The file extension of the resource.
+         *
+         * @memberof Resource.prototype
+         * @type {String}
+         *
+         * @readonly
+         */
         extension: {
             get: function() {
                 return getExtensionFromUri(this._url);
             }
         },
+
+        /**
+         * True if the Resource refers to a directory. A trailing forward slash will be maintained.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
         isDirectory: {
             get: function() {
                 return this._isDirectory;
@@ -201,7 +243,13 @@ define([
         }
     });
 
-    Resource.prototype.getUrl = function(query, proxy) {
+    /**
+     * Returns the url, optional with the query string and processed by a proxy.
+     *
+     * @param {Boolean} [query=false] If true, the query string is included.
+     * @param {Boolean{ [proxy=false] If true, the url is processed the proxy object if defined.
+     */
+    Resource.prototype.getUrlComponent = function(query, proxy) {
         var uri = new Uri(this._url);
 
         if (query) {
@@ -226,6 +274,12 @@ define([
         return url;
     };
 
+    /**
+     * Adds query parameters
+     *
+     * @param {Object{ params The query parameters
+     * @param {Boolean} [useAsDefault=false] If true the params will be used as the default values, so they will only be set if they are undefined.
+     */
     Resource.prototype.addQueryParameters = function(params, useAsDefault) {
         if (useAsDefault) {
             this._queryParameters = combine(this._queryParameters, params);
@@ -234,10 +288,20 @@ define([
         }
     };
 
-    Resource.prototype.addTemplateValues = function(template) {
-        this._templateValues = combine(encodeValues(template), this._templateValues);
+    /**
+     * Adds template values
+     *
+     * @param {Object{ params The template values
+     * @param {Boolean} [useAsDefault=false] If true the values will be used as the default values, so they will only be set if they are undefined.
+     */
+    Resource.prototype.addTemplateValues = function(template, useAsDefault) {
+        if (useAsDefault) {
+            this._templateValues = combine(this._templateValues, encodeValues(template));
+        } else {
+            this._templateValues = combine(encodeValues(template), this._templateValues);
+        }
     };
-    
+
     /**
      * Returns a resource relative to the current instance. All properties remain the same as the current instance unless overridden in options.
      *
@@ -248,15 +312,18 @@ define([
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {Request} [options.request] A Request object that will be used.
      * @param {String} [options.method] The method to use.
-     * @param {Object} [options.data] An object that can store user specific information
+     * @param {Object} [options.data] Data that is sent with the request.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Boolean} [options.allowCrossOrigin] Whether to allow Cross-Origin.
      * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
+     * @param {Function} [options.retryCallback] The function to call when loading the resource fails.
+     * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
      */
     Resource.prototype.getDerivedResource = function(options) {
         var resource = this.clone();
         resource._isDirectory = false; // By default derived resources aren't a directory, but this can be overridden
+        resource._retryCount = 0;
 
         if (defined(options.url)) {
             var uri = new Uri(options.url);
@@ -306,25 +373,41 @@ define([
         if (defined(options.isDirectory)) {
             resource._isDirectory = options.isDirectory;
         }
+        if (defined(options.retryCallback)) {
+            resource.retryCallback = options.retryCallback;
+        }
+        if (defined(options.retryAttempts)) {
+            resource.retryAttempts = options.retryAttempts;
+        }
 
         return resource;
     };
 
-    Resource.prototype.retryOnError = function(options) {
-        if (this._retryCount > this._retryAttempts) {
+    /**
+     * Called when a resource fails to load. This will call the retryCallback function if defined until retryAttempts is reached.
+     */
+    Resource.prototype.retryOnError = function() {
+        var retryCallback = this.retryCallback;
+        if ((typeof retryCallback !== 'function') || (this._retryCount > this.retryAttempts)) {
             return false;
         }
-        var retry = true;
-        var callback = this._retryOnError;
-        if (typeof callback === 'function') {
-            retry = callback(this, options);
+
+        if (retryCallback(this)) {
+            ++this._retryCount;
+            return true;
         }
-        if (retry) {
-            this._retryCount++;
-        }
-        return retry;
+
+        this._retryCount = 0;
+        return false;
     };
 
+    /**
+     * Duplicates a Resource instance.
+     *
+     * @param {Resource} [result] The object onto which to store the result.
+     *
+     * @returns {Resource} The modified result parameter or a new Resource instance if one was not provided.
+     */
     Resource.prototype.clone = function(result) {
         if (!defined(result)) {
             result = new Resource({
@@ -344,6 +427,9 @@ define([
         result.proxy = this.proxy;
         result.allowCrossOrigin = this.allowCrossOrigin;
         result._isDirectory = this._isDirectory;
+        result.retryCallback = this.retryCallback;
+        result.retryAttempts = this.retryAttempts;
+        result._retryCount = 0;
 
         return result;
     };

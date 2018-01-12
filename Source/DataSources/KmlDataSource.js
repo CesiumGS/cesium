@@ -544,7 +544,7 @@ define([
                 });
             } else {
                 // Needed for multiple levels of KML files in a KMZ
-                blob = uriResolver[resource.getUrl()];
+                blob = uriResolver[resource.getUrlComponent()];
                 if (defined(blob)) {
                     resource = new Resource({
                         url: blob
@@ -944,7 +944,7 @@ define([
                     url: uri
                 });
 
-                id = resource.getUrl() + '#' + tokens[1];
+                id = resource.getUrlComponent() + '#' + tokens[1];
             }
 
             styleEntity = styleCollection.getById(id);
@@ -985,7 +985,7 @@ define([
                 if (defined(id)) {
                     id = '#' + id;
                     if (isExternal && defined(sourceResource)) {
-                        id = sourceResource.getUrl() + id;
+                        id = sourceResource.getUrlComponent() + id;
                     }
                     if (!defined(styleCollection.getById(id))) {
                         styleEntity = new Entity({
@@ -1012,7 +1012,7 @@ define([
                         if (key === 'normal') {
                             id = '#' + id;
                             if (isExternal && defined(sourceResource)) {
-                                id = sourceResource.getUrl() + id;
+                                id = sourceResource.getUrlComponent() + id;
                             }
                             if (!defined(styleCollection.getById(id))) {
                                 styleEntity = styleCollection.getOrCreateEntity(id);
@@ -1024,7 +1024,7 @@ define([
                                     }
 
                                     if (isExternal && defined(sourceResource)) {
-                                        styleUrl = sourceResource.getUrl() + styleUrl;
+                                        styleUrl = sourceResource.getUrlComponent() + styleUrl;
                                     }
                                     var base = styleCollection.getById(styleUrl);
 
@@ -2129,9 +2129,9 @@ define([
 
                 // We need to pass in the original path if resolveHref returns a data uri because the network link
                 //  references a document in a KMZ archive
-                if (/^data:/.test(href.getUrl())) {
+                if (/^data:/.test(href.getUrlComponent())) {
                     // So if sourceUri isn't the kmz file, then its another kml in the archive, so resolve it
-                    if (!/\.kmz/i.test(sourceResource.getUrl())) {
+                    if (!/\.kmz/i.test(sourceResource.getUrlComponent())) {
                         newSourceUri = sourceResource.getDerivedResource({
                             url: newSourceUri
                         });
@@ -2265,7 +2265,7 @@ define([
         var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
         var name = queryStringValue(document, 'name', namespaces.kml);
         if (!defined(name)) {
-            name = getFilenameFromUri(sourceResource.getUrl());
+            name = getFilenameFromUri(sourceResource.getUrlComponent());
         }
 
         // Only set the name from the root document
@@ -2883,7 +2883,7 @@ define([
 
             networkLink.updating = false;
             networkLink.needsUpdate = false;
-            dataSource._refresh.raiseEvent(dataSource, processedHref.getUrl(true));
+            dataSource._refresh.raiseEvent(dataSource, processedHref.getUrlComponent(true));
         };
     }
 

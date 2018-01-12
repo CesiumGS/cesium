@@ -206,7 +206,7 @@ define([
          */
         url: {
             get: function() {
-                return this._resource.getUrl(true);
+                return this._resource.getUrlComponent(true);
             }
         },
 

@@ -2022,7 +2022,7 @@ define([
             dataSource._name = documentPacket.name;
             raiseChangedEvent = true;
         } else if (!defined(dataSource._name) && defined(sourceUri)) {
-            dataSource._name = getFilenameFromUri(sourceUri.getUrl());
+            dataSource._name = getFilenameFromUri(sourceUri.getUrlComponent());
             raiseChangedEvent = true;
         }
 

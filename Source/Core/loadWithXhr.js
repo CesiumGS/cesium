@@ -1,24 +1,28 @@
 define([
         '../ThirdParty/when',
         './Check',
+        './clone',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Request',
         './RequestErrorEvent',
         './RequestScheduler',
+        './RequestState',
         './Resource',
         './RuntimeError',
         './TrustedServers'
     ], function(
         when,
         Check,
+        clone,
         defaultValue,
         defined,
         DeveloperError,
         Request,
         RequestErrorEvent,
         RequestScheduler,
+        RequestState,
         Resource,
         RuntimeError,
         TrustedServers) {
@@ -61,21 +65,31 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
+
     function loadWithXhr(optionsOrResource) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('optionsOrResource', optionsOrResource);
         //>>includeEnd('debug');
 
+        optionsOrResource = defined(optionsOrResource.clone) ? optionsOrResource.clone() : clone(optionsOrResource);
+
+        optionsOrResource.method = defaultValue(optionsOrResource.method, 'GET');
+        optionsOrResource.request = defaultValue(optionsOrResource.request, new Request());
+
+        return makeRequest(optionsOrResource);
+    }
+
+    function makeRequest(optionsOrResource) {
         var url = optionsOrResource.url;
+        var request = optionsOrResource.request;
+        request.url = url;
+
         var responseType = optionsOrResource.responseType;
-        var method = defaultValue(optionsOrResource.method, 'GET');
+        var method = optionsOrResource.method;
         var data = optionsOrResource.data;
         var headers = optionsOrResource.headers;
         var overrideMimeType = optionsOrResource.overrideMimeType;
 
-        var request = optionsOrResource.request;
-        request = defined(request) ? request : new Request();
-        request.url = url;
         request.requestFunction = function() {
             var deferred = when.defer();
             var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
@@ -87,7 +101,23 @@ define([
             return deferred.promise;
         };
 
-        return RequestScheduler.request(request);
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                if (defined(optionsOrResource.retryOnError) && optionsOrResource.retryOnError()) {
+                    // Reset request so it can try again
+                    request.state = RequestState.UNISSUED;
+                    request.deferred = undefined;
+
+                    return makeRequest(optionsOrResource);
+                }
+
+                throw e;
+            });
     }
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;

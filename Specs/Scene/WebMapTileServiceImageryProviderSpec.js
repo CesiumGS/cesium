@@ -124,7 +124,7 @@ defineSuite([
         var tilerow = 1;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].getUrl();
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].getUrlComponent();
         expect('123'.indexOf(url)).toBeGreaterThanOrEqualTo(0);
     });
 
@@ -145,7 +145,7 @@ defineSuite([
         var tilerow = 1;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].getUrl();
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1].getUrlComponent();
         expect(['foo', 'bar'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
     });
 
@@ -167,7 +167,7 @@ defineSuite([
         var tilerow = 5;
         var level = 1;
         provider.requestImage(tilecol, tilerow, level);
-        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].getUrl());
+        var uri = new Uri(ImageryProvider.loadImage.calls.mostRecent().args[1].getUrlComponent());
         expect(uri.toString()).toEqual('http://wmts.invalid/someStyle/someTMS/second/5/12.png');
     });
 

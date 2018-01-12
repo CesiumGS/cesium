@@ -749,7 +749,7 @@ define([
         projectedScratchComputed = false;
 
         var resource = imageryProvider._resource;
-        var url = resource.getUrl(true);
+        var url = resource.getUrlComponent(true);
         var allTags = imageryProvider._tags;
         var templateValues = {};
 
@@ -780,7 +780,7 @@ define([
         longitudeLatitudeProjectedScratchComputed = false;
 
         var resource = imageryProvider._pickFeaturesResource;
-        var url = resource.getUrl(true);
+        var url = resource.getUrlComponent(true);
         var allTags = imageryProvider._pickFeaturesTags;
         var templateValues = {};
         var match = url.match(templateRegex);

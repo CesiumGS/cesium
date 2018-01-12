@@ -196,7 +196,7 @@ define([
             contentResource = baseResource.getDerivedResource({
                 url : contentHeader.url
             });
-            serverKey = RequestScheduler.getServerKey(contentResource.getUrl());
+            serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
         } else {
             content = new Empty3DTileContent(tileset, this);
             hasEmptyContent = true;
