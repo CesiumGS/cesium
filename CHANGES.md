@@ -7,8 +7,8 @@ Change Log
   *
 * Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
 * Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
-* Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane` [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092) 
-* Added `Cartesian3.projectVector` for projecting one vector to another [#6093](https://github.com/AnalyticalGraphicsInc/cesium/pull/6093) 
+* Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane` [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092)
+* Added `Cartesian3.projectVector` for projecting one vector to another [#6093](https://github.com/AnalyticalGraphicsInc/cesium/pull/6093)
 * Added `Cesium3DTileset.tileFailed` event that will be raised when a tile fails to load. The object passed to the event listener will have a url and message property. If there are no event listeners, error messages will be logged to the console. [#6088](https://github.com/AnalyticalGraphicsInc/cesium/pull/6088)
 * Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
 * Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
@@ -28,6 +28,7 @@ Change Log
 * Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
 * Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
+* Added support for KMZ loading from a cross-origin url by making the Zip.js code use the same worker url generation code as the rest of cesium. [#6114](https://github.com/AnalyticalGraphicsInc/cesium/pull/6114)
 
 ### 1.41 - 2018-01-02
 
