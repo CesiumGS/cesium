@@ -319,7 +319,7 @@ define([
      * @constant
      */
     Resource.DEFAULT = freezeObject(new Resource({
-        url: defined(document) ? document.location.href.split('?')[0] : ''
+        url: (typeof document === 'undefined') ? '' : document.location.href.split('?')[0]
     }));
 
     return Resource;

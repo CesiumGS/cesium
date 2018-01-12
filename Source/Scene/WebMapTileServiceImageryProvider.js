@@ -270,6 +270,7 @@ define([
             }
             resource = imageryProvider._resource.clone();
             resource.url = url;
+            resource.request = request;
         } else {
             // build KVP request
             var query = {};
@@ -297,7 +298,8 @@ define([
                 }
             }
             resource = imageryProvider._resource.getDerivedResource({
-                queryParameters: query
+                queryParameters: query,
+                request: request
             });
         }
 
