@@ -74,10 +74,10 @@ define([
         this.vertexFormat = undefined;
         this.radii = undefined;
         this.innerRadii = undefined;
-        this.minimumAzimuth = undefined;
-        this.maximumAzimuth = undefined;
-        this.minimumElevation = undefined;
-        this.maximumElevation = undefined;
+        this.minimumClock = undefined;
+        this.maximumClock = undefined;
+        this.minimumCone = undefined;
+        this.maximumCone = undefined;
         this.stackPartitions = undefined;
         this.slicePartitions = undefined;
         this.subdivisions = undefined;
@@ -503,10 +503,10 @@ define([
         this._outlineEnabled = outlineEnabled;
 
         var innerRadii = ellipsoid.innerRadii;
-        var minimumAzimuth = ellipsoid.minimumAzimuth;
-        var maximumAzimuth = ellipsoid.maximumAzimuth;
-        var minimumElevation = ellipsoid.minimumElevation;
-        var maximumElevation = ellipsoid.maximumElevation;
+        var minimumClock = ellipsoid.minimumClock;
+        var maximumClock = ellipsoid.maximumClock;
+        var minimumCone = ellipsoid.minimumCone;
+        var maximumCone = ellipsoid.maximumCone;
         var stackPartitions = ellipsoid.stackPartitions;
         var slicePartitions = ellipsoid.slicePartitions;
         var outlineWidth = ellipsoid.outlineWidth;
@@ -520,10 +520,10 @@ define([
             !Property.isConstant(entity.orientation) || //
             !radii.isConstant || //
             !innerRadii.isConstant || //
-            !Property.isConstant(minimumAzimuth) || //
-            !Property.isConstant(maximumAzimuth) || //
-            !Property.isConstant(minimumElevation) || //
-            !Property.isConstant(maximumElevation) || //
+            !Property.isConstant(minimumClock) || //
+            !Property.isConstant(maximumClock) || //
+            !Property.isConstant(minimumCone) || //
+            !Property.isConstant(maximumCone) || //
             !Property.isConstant(stackPartitions) || //
             !Property.isConstant(slicePartitions) || //
             !Property.isConstant(outlineWidth) || //
@@ -537,10 +537,10 @@ define([
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
             options.radii = radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
             options.innerRadii = innerRadii.getValue(Iso8601.MINIMUM_VALUE, options.innerRadii);
-            options.minimumAzimuth = defined(minimumAzimuth) ? minimumAzimuth.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.maximumAzimuth = defined(maximumAzimuth) ? maximumAzimuth.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.minimumElevation = defined(minimumElevation) ? minimumElevation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.maximumElevation = defined(maximumElevation) ? maximumElevation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.minimumClock = defined(minimumClock) ? minimumClock.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.maximumClock = defined(maximumClock) ? maximumClock.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.minimumCone = defined(minimumCone) ? minimumCone.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.maximumCone = defined(maximumCone) ? maximumCone.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -679,10 +679,10 @@ define([
             } else {
                options.innerRadii = innerRadii;
             }
-            options.minimumAzimuth = Property.getValueOrUndefined(ellipsoid.minimumAzimuth, time);
-            options.maximumAzimuth = Property.getValueOrUndefined(ellipsoid.maximumAzimuth, time);
-            options.minimumElevation = Property.getValueOrUndefined(ellipsoid.minimumElevation, time);
-            options.maximumElevation = Property.getValueOrUndefined(ellipsoid.maximumElevation, time);
+            options.minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
+            options.maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
+            options.minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
+            options.maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
 
             appearance = new MaterialAppearance({
                 material : material,
