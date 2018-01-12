@@ -3924,10 +3924,10 @@ define([
         }
 
         var scene = model._scene;
-        if (!defined(scene) || (model.heightReference === HeightReference.NONE)) {
+        if (!defined(scene) || !defined(scene.globe) || (model.heightReference === HeightReference.NONE)) {
             //>>includeStart('debug', pragmas.debug);
             if (model.heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene.');
+                throw new DeveloperError('Height reference is not supported without a scene and globe.');
             }
             //>>includeEnd('debug');
             model._clampedModelMatrix = undefined;

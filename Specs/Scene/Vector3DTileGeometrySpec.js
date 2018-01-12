@@ -14,6 +14,7 @@ defineSuite([
         'Core/Transforms',
         'Renderer/Pass',
         'Scene/Cesium3DTileBatchTable',
+        'Scene/ColorBlendMode',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createContext',
@@ -35,6 +36,7 @@ defineSuite([
         Transforms,
         Pass,
         Cesium3DTileBatchTable,
+        ColorBlendMode,
         PerInstanceColorAppearance,
         Primitive,
         createContext,
@@ -75,7 +77,8 @@ defineSuite([
             _tileset : {
                 _statistics : {
                     batchTableByteLength : 0
-                }
+                },
+                colorBlendMode : ColorBlendMode.HIGHLIGHT
             }
         };
 
