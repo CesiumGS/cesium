@@ -234,19 +234,20 @@ define([
         var maximumCone = ellipsoidGeometry._maximumCone;
         var subdivisions = ellipsoidGeometry._subdivisions;
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
+        
+        // Add an extra slice and stack to remain consistent with EllipsoidGeometry
+        var slicePartitions = ellipsoidGeometry._slicePartitions + 1;
+        var stackPartitions = ellipsoidGeometry._stackPartitions + 1;
 
-        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(maximumClock - minimumClock) / CesiumMath.TWO_PI);
-        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(maximumCone - minimumCone) / CesiumMath.PI);
+        slicePartitions = Math.round(slicePartitions * Math.abs(maximumClock - minimumClock) / CesiumMath.TWO_PI);
+        stackPartitions = Math.round(stackPartitions * Math.abs(maximumCone - minimumCone) / CesiumMath.PI);
+
         if (slicePartitions < 2) {
             slicePartitions = 2;
         }
         if (stackPartitions < 2) {
             stackPartitions = 2;
         }
-
-        // Add an extra slice and stack to remain consistent with EllipsoidGeometry
-        slicePartitions++;
-        stackPartitions++;
 
         var extraIndices = 0;
         var vertexMultiplier = 1.0;
