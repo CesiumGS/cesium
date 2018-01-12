@@ -25,10 +25,10 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.innerRadii] A {@link Cartesian3} Property specifying the inner radii of the ellipsoid.
-     * @param {Property} [options.minimumAzimuth=0] A Property specifying the minimum azimuth angle of the ellipsoid.
-     * @param {Property} [options.maximumAzimuth=2*PI] A Property specifying the maximum azimuth angle of the ellipsoid.
-     * @param {Property} [options.minimumElevation=-PI/2] A Property specifying the minimum elevation angle of the ellipsoid.
-     * @param {Property} [options.maximumElevation=PI/2] A Property specifying the maximum elevation angle of the ellipsoid.
+     * @param {Property} [options.minimumClock=0.0] A Property specifying the minimum clock angle of the ellipsoid.
+     * @param {Property} [options.maximumClock=2*PI] A Property specifying the maximum clock angle of the ellipsoid.
+     * @param {Property} [options.minimumCone=0.0] A Property specifying the minimum cone angle of the ellipsoid.
+     * @param {Property} [options.maximumCone=PI] A Property specifying the maximum cone angle of the ellipsoid.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
@@ -49,10 +49,10 @@ define([
         this._radii = undefined;
         this._radiiSubscription = undefined;
         this._innerRadii = undefined;
-        this._minimumAzimuth = undefined;
-        this._maximumAzimuth = undefined;
-        this._minimumElevation = undefined;
-        this._maximumElevation = undefined;
+        this._minimumClock = undefined;
+        this._maximumClock = undefined;
+        this._minimumCone = undefined;
+        this._maximumCone = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
         this._stackPartitions = undefined;
@@ -116,36 +116,36 @@ define([
         innerRadii : createPropertyDescriptor('innerRadii'),
 
         /**
-         * Gets or sets the Property specifying the minimum azimuth angle in radians.
+         * Gets or sets the Property specifying the minimum clock angle of the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          * @default 0.0
          */
-        minimumAzimuth : createPropertyDescriptor('minimumAzimuth'),
+        minimumClock : createPropertyDescriptor('minimumClock'),
 
         /**
-         * Gets or sets the Property specifying the maximum azimuth angle in radians.
+         * Gets or sets the Property specifying the maximum clock angle of the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          * @default 2*PI
          */
-        maximumAzimuth : createPropertyDescriptor('maximumAzimuth'),
+        maximumClock : createPropertyDescriptor('maximumClock'),
 
         /**
-         * Gets or sets the Property specifying the minimum elevation angle in radians.
+         * Gets or sets the Property specifying the minimum cone angle of the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
-         * @default -PI/2
+         * @default 0.0
          */
-        minimumElevation : createPropertyDescriptor('minimumElevation'),
+        minimumCone : createPropertyDescriptor('minimumCone'),
 
         /**
-         * Gets or sets the Property specifying the maximum elevation angle in radians.
+         * Gets or sets the Property specifying the maximum cone angle of the ellipsoid.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
-         * @default PI/2
+         * @default PI
          */
-        maximumElevation : createPropertyDescriptor('maximumElevation'),
+        maximumCone : createPropertyDescriptor('maximumCone'),
 
         /**
          * Gets or sets the Property specifying the material used to fill the ellipsoid.
@@ -241,10 +241,10 @@ define([
         result.show = this.show;
         result.radii = this.radii;
         result.innerRadii = this.innerRadii;
-        result.minimumAzimuth = this.minimumAzimuth;
-        result.maximumAzimuth = this.maximumAzimuth;
-        result.minimumElevation = this.minimumElevation;
-        result.maximumElevation = this.maximumElevation;
+        result.minimumClock = this.minimumClock;
+        result.maximumClock = this.maximumClock;
+        result.minimumCone = this.minimumCone;
+        result.maximumCone = this.maximumCone;
         result.material = this.material;
         result.fill = this.fill;
         result.outline = this.outline;
@@ -275,10 +275,10 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.radii = defaultValue(this.radii, source.radii);
         this.innerRadii = defaultValue(this.innerRadii, source.innerRadii);
-        this.minimumAzimuth = defaultValue(this.minimumAzimuth, source.minimumAzimuth);
-        this.maximumAzimuth = defaultValue(this.maximumAzimuth, source.maximumAzimuth);
-        this.minimumElevation = defaultValue(this.minimumElevation, source.minimumElevation);
-        this.maximumElevation = defaultValue(this.maximumElevation, source.maximumElevation);
+        this.minimumClock = defaultValue(this.minimumClock, source.minimumClock);
+        this.maximumClock = defaultValue(this.maximumClock, source.maximumClock);
+        this.minimumCone = defaultValue(this.minimumCone, source.minimumCone);
+        this.maximumCone = defaultValue(this.maximumCone, source.maximumCone);
         this.material = defaultValue(this.material, source.material);
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
