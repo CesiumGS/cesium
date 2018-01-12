@@ -24,7 +24,7 @@ defineSuite([
         new Plane(Cartesian3.UNIT_Y, 2.0)
     ];
 
-    var transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+    var transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
     var boundingVolume  = new BoundingSphere(Cartesian3.ZERO, 1.0);
 
     it('default constructor', function() {
@@ -125,8 +125,8 @@ defineSuite([
 
         var result = clippingPlanes.transformAndPackPlanes(transform);
         expect(result.length).toEqual(2);
-        expect(result[0]).toEqual(new Cartesian4(1.0, 0.0, 0.0, -2.0));
-        expect(result[1]).toEqual(new Cartesian4(0.0, 1.0, 0.0, -4.0));
+        expect(result[0]).toEqual(new Cartesian4(1.0, 0.0, 0.0, 0.0));
+        expect(result[1]).toEqual(new Cartesian4(0.0, 1.0, 0.0, -1.0));
     });
 
     it('transforms and packs planes with no result parameter creates new array', function() {
@@ -203,7 +203,7 @@ defineSuite([
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        clippingPlanes.add(new Plane(Cartesian3.UNIT_X, 2.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_X, -2.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.OUTSIDE);
 
@@ -211,7 +211,7 @@ defineSuite([
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INTERSECTING);
 
-        clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, -1.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, 1.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
@@ -228,11 +228,11 @@ defineSuite([
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, -1.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, 1.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        var temp = new Plane(Cartesian3.UNIT_Y, 2.0);
+        var temp = new Plane(Cartesian3.UNIT_Y, -2.0);
         clippingPlanes.add(temp);
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.OUTSIDE);

@@ -1,6 +1,7 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './AttributeCompression',
         './BoundingSphere',
         './Cartesian3',
         './Credit',
@@ -25,6 +26,7 @@ define([
     ], function(
         Uri,
         when,
+        AttributeCompression,
         BoundingSphere,
         Cartesian3,
         Credit,
@@ -445,24 +447,7 @@ define([
         var vBuffer = encodedVertexBuffer.subarray(vertexCount, 2 * vertexCount);
         var heightBuffer = encodedVertexBuffer.subarray(vertexCount * 2, 3 * vertexCount);
 
-        var i;
-        var u = 0;
-        var v = 0;
-        var height = 0;
-
-        function zigZagDecode(value) {
-            return (value >> 1) ^ (-(value & 1));
-        }
-
-        for (i = 0; i < vertexCount; ++i) {
-            u += zigZagDecode(uBuffer[i]);
-            v += zigZagDecode(vBuffer[i]);
-            height += zigZagDecode(heightBuffer[i]);
-
-            uBuffer[i] = u;
-            vBuffer[i] = v;
-            heightBuffer[i] = height;
-        }
+        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
         // skip over any additional padding that was added for 2/4 byte alignment
         if (pos % bytesPerIndex !== 0) {
@@ -478,7 +463,8 @@ define([
         // https://code.google.com/p/webgl-loader/source/browse/trunk/samples/loader.js?r=99#55
         // Copyright 2012 Google Inc., Apache 2.0 license.
         var highest = 0;
-        for (i = 0; i < indices.length; ++i) {
+        var length = indices.length;
+        for (var i = 0; i < length; ++i) {
             var code = indices[i];
             indices[i] = highest - code;
             if (code === 0) {

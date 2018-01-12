@@ -67,7 +67,7 @@ define([
 
         loadTile(tileset, root, frameState, true);
 
-        if (!tileset.skipLevelOfDetail) {
+        if (!tileset._skipLevelOfDetail) {
             // just execute base traversal and add tiles to _desiredTiles
             tileset._baseTraversal.execute(tileset, root, maximumScreenSpaceError, frameState, outOfCore);
             var leaves = tileset._baseTraversal.leaves;
@@ -366,7 +366,7 @@ define([
 
     BaseTraversal.prototype.leafHandler = function(tile) {
         // if skipLevelOfDetail is off, leaves of the base traversal get pushed to tileset._desiredTiles. additive tiles have already been pushed
-        if (this.tileset.skipLevelOfDetail || !hasAdditiveContent(tile)) {
+        if (this.tileset._skipLevelOfDetail || !hasAdditiveContent(tile)) {
             if (tile.refine === Cesium3DTileRefine.REPLACE && !childrenAreVisible(tile)) {
                 ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
                 return;

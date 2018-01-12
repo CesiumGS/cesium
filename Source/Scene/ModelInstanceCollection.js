@@ -19,9 +19,9 @@ define([
         '../Renderer/Pass',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './getAttributeOrUniformBySemantic',
         './Model',
         './ModelInstance',
+        './ModelUtility',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -45,9 +45,9 @@ define([
         Pass,
         ShaderSource,
         when,
-        getAttributeOrUniformBySemantic,
         Model,
         ModelInstance,
+        ModelUtility,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -223,9 +223,9 @@ define([
         BoundingSphere.expand(this._boundingSphere, translation, this._boundingSphere);
     };
 
-    function getInstancedUniforms(collection, programName) {
+    function getInstancedUniforms(collection, programId) {
         if (defined(collection._instancedUniformsByProgram)) {
-            return collection._instancedUniformsByProgram[programName];
+            return collection._instancedUniformsByProgram[programId];
         }
 
         var instancedUniformsByProgram = {};
@@ -259,7 +259,7 @@ define([
                                     uniformMap[uniformName] = semantic;
                                 } else {
                                     throw new RuntimeError('Shader program cannot be optimized for instancing. ' +
-                                        'Parameter "' + parameter + '" in program "' + programName +
+                                        'Parameter "' + parameter + '" in program "' + programId +
                                         '" uses unsupported semantic "' + semantic + '"'
                                     );
                                 }
@@ -270,14 +270,14 @@ define([
             }
         }
 
-        return instancedUniformsByProgram[programName];
+        return instancedUniformsByProgram[programId];
     }
 
     var vertexShaderCached;
 
     function getVertexShaderCallback(collection) {
-        return function(vs, programName) {
-            var instancedUniforms = getInstancedUniforms(collection, programName);
+        return function(vs, programId) {
+            var instancedUniforms = getInstancedUniforms(collection, programId);
             var usesBatchTable = defined(collection._batchTable);
 
             var renamedSource = ShaderSource.replaceMain(vs, 'czm_instancing_main');
@@ -339,7 +339,9 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(instancedSource);
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(instancedSource);
             }
 
             return instancedSource;
@@ -347,12 +349,12 @@ define([
     }
 
     function getFragmentShaderCallback(collection) {
-        return function(fs) {
+        return function(fs, programId) {
             var batchTable = collection._batchTable;
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
-                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
             }
             return fs;
         };
@@ -399,13 +401,13 @@ define([
     }
 
     function getUniformMapCallback(collection, context) {
-        return function(uniformMap, programName, node) {
+        return function(uniformMap, programId, node) {
             uniformMap = clone(uniformMap);
             uniformMap.czm_instanced_modifiedModelView = createModifiedModelView(collection, context);
             uniformMap.czm_instanced_nodeTransform = createNodeTransformFunction(node);
 
             // Remove instanced uniforms from the uniform map
-            var instancedUniforms = getInstancedUniforms(collection, programName);
+            var instancedUniforms = getInstancedUniforms(collection, programId);
             for (var uniform in instancedUniforms) {
                 if (instancedUniforms.hasOwnProperty(uniform)) {
                     delete uniformMap[uniform];
@@ -431,9 +433,11 @@ define([
     }
 
     function getVertexShaderNonInstancedCallback(collection) {
-        return function(vs) {
+        return function(vs, programId) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(vs);
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }

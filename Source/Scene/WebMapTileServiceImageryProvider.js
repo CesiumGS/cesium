@@ -66,7 +66,7 @@ define([
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)
@@ -78,7 +78,7 @@ define([
      *     tileMatrixSetID : 'default028mm',
      *     // tileMatrixLabels : ['default028mm:0', 'default028mm:1', 'default028mm:2' ...],
      *     maximumLevel: 19,
-     *     credit : new Cesium.Credit('U. S. Geological Survey')
+     *     credit : new Cesium.Credit({ text : 'U. S. Geological Survey' })
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief1);
      *
@@ -91,7 +91,7 @@ define([
      *     format : 'image/jpeg',
      *     tileMatrixSetID : 'default028mm',
      *     maximumLevel: 19,
-     *     credit : new Cesium.Credit('U. S. Geological Survey')
+     *     credit : new Cesium.Credit({ text : 'U. S. Geological Survey' })
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      *
@@ -114,7 +114,7 @@ define([
      *     format : 'image/png',
      *     clock: clock,
      *     times: times,
-     *     credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
+     *     credit : new Cesium.Credit({ text : 'NASA Global Imagery Browse Services for EOSDIS' })
      * });
      * viewer.imageryLayers.addImageryProvider(weather);
      *
