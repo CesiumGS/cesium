@@ -61,10 +61,10 @@ define([
      *
      * @private
      */
-    function Batched3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Batched3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._model = undefined;
         this._batchTable = undefined;
         this._features = undefined;
@@ -176,7 +176,7 @@ define([
          */
         url: {
             get: function() {
-                return this._url;
+                return this._resource.getUrl(true);
             }
         },
 
@@ -236,7 +236,7 @@ define([
     function initialize(content, arrayBuffer, byteOffset) {
         var tileset = content._tileset;
         var tile = content._tile;
-        var basePath = getAbsoluteUri(getBaseUri(content._url, true));
+        var resource = content._resource;
 
         var byteStart = defaultValue(byteOffset, 0);
         byteOffset = byteStart;
@@ -363,7 +363,7 @@ define([
             cull : false,           // The model is already culled by 3D Tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
-            basePath : basePath,
+            basePath : resource,
             requestType : RequestType.TILES3D,
             modelMatrix : tile.computedTransform,
             upAxis : tileset._gltfUpAxis,

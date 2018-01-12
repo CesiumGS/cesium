@@ -9,6 +9,7 @@ define([
     './freezeObject',
     './getAbsoluteUri',
     './getBaseUri',
+    './getExtensionFromUri',
     './objectToQuery',
     './queryToObject',
     '../ThirdParty/Uri'
@@ -22,6 +23,7 @@ define([
             freezeObject,
             getAbsoluteUri,
             getBaseUri,
+            getExtensionFromUri,
             objectToQuery,
             queryToObject,
             Uri) {
@@ -74,18 +76,20 @@ define([
     }
 
     /**
+     * A resource the location and any other parameters we need to retrieve it or create derived resources.
+     *
      * @param {Object} options An object with the following properties
-     * @param {String} options.url
-     * @param {Object} [options.queryParameters]
-     * @param {Object} [options.templateValues]
-     * @param {Object} [options.headers={}]
-     * @param {Request} [options.request]
-     * @param {String} [options.method='GET']
-     * @param {Object} [options.data]
-     * @param {String} [options.overrideMimeType]
-     * @param {DefaultProxy} [options.proxy]
-     * @param {Boolean} [options.allowCrossOrigin=true]
-     * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {Request} [options.request] A Request object that will be used.
+     * @param {String} [options.method='GET'] The method to use.
+     * @param {Object} [options.data] An object that can store user specific information
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Boolean} [options.allowCrossOrigin=true] Whether to allow Cross-Origin.
+     * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
      *
      * @constructor
      */
@@ -99,7 +103,7 @@ define([
         this._url = '';
         this._templateValues = encodeValues(defaultValue(options.templateValues, {}));
         this._queryParameters = defaultValue(options.queryParameters, {});
-        this.isDirectory = defaultValue(options.isDirectory, false);
+        this._isDirectory = defaultValue(options.isDirectory, false);
 
         this.url = options.url;
 
@@ -117,6 +121,14 @@ define([
         this._retryCount = 0;
     }
 
+    /**
+     * A helper function to create a resource depending on whether we have a String or a Resource
+     *
+     * @param {Resource|String} resource A Resource or a String to use when creating a new Resource.
+     * @param {Object{ options If resource is a String, these are the options passed to the Resource constructor. It is ignored otherwise.
+     *
+     * @returns {Resource} If resource is a String, a Resource constructed with the url and options. Otherwise the resource parameter is returned.
+     */
     Resource.createIfNeeded = function(resource, options) {
         if (!defined(resource)) {
             return;
@@ -160,8 +172,30 @@ define([
 
                 this._url = uri.toString();
 
-                if (this.isDirectory) {
+                if (this._isDirectory) {
                     this._url = appendForwardSlash(this._url);
+                }
+            }
+        },
+        extension: {
+            get: function() {
+                return getExtensionFromUri(this._url);
+            }
+        },
+        isDirectory: {
+            get: function() {
+                return this._isDirectory;
+            },
+            set: function(value) {
+                if (this._isDirectory !== value) {
+                    var url = this._url;
+                    if (value) {
+                        this._url = appendForwardSlash(url);
+                    } else if (url[url.length-1] === '/') {
+                        this._url = url.slice(0, -1);
+                    }
+
+                    this._isDirectory = value;
                 }
             }
         }
@@ -203,24 +237,26 @@ define([
     Resource.prototype.addTemplateValues = function(template) {
         this._templateValues = combine(encodeValues(template), this._templateValues);
     };
-
+    
     /**
+     * Returns a resource relative to the current instance. All properties remain the same as the current instance unless overridden in options.
+     *
      * @param {Object} options An object with the following properties
-     * @param {String} options.url
-     * @param {Object} [options.queryParameters]
-     * @param {Object} [options.templateValues]
-     * @param {Object} [options.headers={}]
-     * @param {Request} [options.request]
-     * @param {String} [options.method='GET']
-     * @param {Object} [options.data]
-     * @param {String} [options.overrideMimeType]
-     * @param {DefaultProxy} [options.proxy]
-     * @param {Boolean} [options.allowCrossOrigin=true]
-     * @param {Boolean} [options.isDirectory=false]
+     * @param {String} [options.url]  The url that will be resolved relative to the url of the current instance.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be combined with those of the current instance.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {Request} [options.request] A Request object that will be used.
+     * @param {String} [options.method] The method to use.
+     * @param {Object} [options.data] An object that can store user specific information
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Boolean} [options.allowCrossOrigin] Whether to allow Cross-Origin.
+     * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
      */
     Resource.prototype.getDerivedResource = function(options) {
         var resource = this.clone();
-        resource.isDirectory = false; // By default derived resources aren't a directory, but this can be overridden
+        resource._isDirectory = false; // By default derived resources aren't a directory, but this can be overridden
 
         if (defined(options.url)) {
             var uri = new Uri(options.url);
@@ -268,7 +304,7 @@ define([
             resource.request = options.request;
         }
         if (defined(options.isDirectory)) {
-            resource.isDirectory = options.isDirectory;
+            resource._isDirectory = options.isDirectory;
         }
 
         return resource;
@@ -307,7 +343,7 @@ define([
         result.overrideMimeType = this.overrideMimeType;
         result.proxy = this.proxy;
         result.allowCrossOrigin = this.allowCrossOrigin;
-        result.isDirectory = this.isDirectory;
+        result._isDirectory = this._isDirectory;
 
         return result;
     };

@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DoublyLinkedList',
@@ -19,6 +20,7 @@ define([
         '../Core/ManagedArray',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
@@ -44,6 +46,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         DoublyLinkedList,
@@ -57,6 +60,7 @@ define([
         ManagedArray,
         CesiumMath,
         Matrix4,
+        Resource,
         RuntimeError,
         ClearCommand,
         Pass,
@@ -84,7 +88,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
+     * @param {Resource|String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
@@ -154,23 +158,26 @@ define([
         Check.typeOf.string('options.url', url);
         //>>includeEnd('debug');
 
-        var tilesetUrl;
+        var resource = Resource.createIfNeeded(url);
+
+        var tilesetResource = resource;
         var basePath;
 
-        if (getExtensionFromUri(url) === 'json') {
-            tilesetUrl = url;
+        if (resource.extension === 'json') {
             basePath = getBaseUri(url, true);
         } else if (isDataUri(url)) {
-            tilesetUrl = url;
             basePath = '';
         } else {
+            resource.isDirectory = true;
+            tilesetResource = resource.getDerivedResource({
+                url: 'tileset.json'
+            });
             basePath = url;
-            tilesetUrl = joinUrls(basePath, 'tileset.json');
         }
 
         this._url = url;
+        this._tilesetUrl = tilesetResource.url;
         this._basePath = basePath;
-        this._tilesetUrl = tilesetUrl;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
@@ -651,8 +658,8 @@ define([
         var that = this;
 
         // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        Cesium3DTileset.loadJson(tilesetUrl).then(function(tilesetJson) {
-            that._root = that.loadTileset(tilesetUrl, tilesetJson);
+        Cesium3DTileset.loadJson(tilesetResource).then(function(tilesetJson) {
+            that._root = that.loadTileset(tilesetResource, tilesetJson);
             var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
             that._properties = tilesetJson.properties;
@@ -809,9 +816,11 @@ define([
          *
          * @type {String}
          * @readonly
+         * @deprecated
          */
         basePath : {
             get : function() {
+                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset.json that contains them. Use the url property instead.');
                 return this._basePath;
             }
         },
@@ -1055,7 +1064,7 @@ define([
     /**
      * Provides a hook to override the method used to request the tileset json
      * useful when fetching tilesets from remote servers
-     * @param {String} tilesetUrl The url of the json file to be fetched
+     * @param {Resource|String} tilesetUrl The url of the json file to be fetched
      * @returns {Promise.<Object>} A promise that resolves with the fetched json data
      */
     Cesium3DTileset.loadJson = function(tilesetUrl) {
@@ -1075,7 +1084,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, tilesetJson, parentTile) {
+    Cesium3DTileset.prototype.loadTileset = function(tilesetResource, tilesetJson, parentTile) {
         var asset = tilesetJson.asset;
         if (!defined(asset)) {
             throw new RuntimeError('Tileset must have an asset property.');
@@ -1086,18 +1095,18 @@ define([
 
         var statistics = this._statistics;
 
-        // Append the tileset version to the basePath
-        var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
-        if (!hasVersionQuery) {
-            var versionQuery = '?v=' + defaultValue(asset.tilesetVersion, '0.0');
-            this._basePath = joinUrls(this._basePath, versionQuery);
-            tilesetUrl = joinUrls(tilesetUrl, versionQuery, false);
+        // Append the tileset version to the tilesetResource
+        if (!defined(tilesetResource.queryParameters.v)) {
+            var versionQuery = {
+                v: defaultValue(asset.tilesetVersion, '0.0')
+            };
+            this._basePath += '?v=' + versionQuery.v;
+            tilesetResource.addQueryParameters(versionQuery);
         }
 
         // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
         // Get the basePath relative to the external tileset.
-        var basePath = getBaseUri(tilesetUrl, true);
-        var rootTile = new Cesium3DTile(this, basePath, tilesetJson.root, parentTile);
+        var rootTile = new Cesium3DTile(this, tilesetResource, tilesetJson.root, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -1122,7 +1131,7 @@ define([
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
-                    var childTile = new Cesium3DTile(this, basePath, childHeader, tile3D);
+                    var childTile = new Cesium3DTile(this, tilesetResource, childHeader, tile3D);
                     tile3D.children.push(childTile);
                     childTile._depth = tile3D._depth + 1;
                     ++statistics.numberOfTilesTotal;

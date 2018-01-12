@@ -3,6 +3,7 @@ define([
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
+        'Core/Resource',
         'Scene/Cesium3DTileContentFactory',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
@@ -12,6 +13,7 @@ define([
         Color,
         defaultValue,
         defined,
+        Resource,
         Cesium3DTileContentFactory,
         Cesium3DTileset,
         TileBoundingSphere,
@@ -119,7 +121,7 @@ define([
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var url = '';
+        var url = Resource.createIfNeeded('');
         expect(function() {
             return Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         }).toThrowRuntimeError();
@@ -127,7 +129,7 @@ define([
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var url = '';
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
         return content;
@@ -140,7 +142,7 @@ define([
         var tileset = {
             basePath : counter++
         };
-        var url = '';
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
 
