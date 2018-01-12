@@ -1,4 +1,5 @@
 define([
+        '../Core/appendForwardSlash',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -8,6 +9,7 @@ define([
         '../Core/WebMercatorTilingScheme',
         './UrlTemplateImageryProvider'
     ], function(
+        appendForwardSlash,
         Credit,
         defaultValue,
         defined,
@@ -18,7 +20,6 @@ define([
         UrlTemplateImageryProvider) {
     'use strict';
 
-    var trailingSlashRegex = /\/$/;
     var defaultCredit = new Credit({text: 'MapQuest, Open Street Map and contributors, CC-BY-SA'});
 
     /**
@@ -63,27 +64,14 @@ define([
     function createOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
-        var resource = options.url;
-        if (!defined(resource)) {
-            resource = 'https://a.tile.openstreetmap.org/'
-        }
-        if (typeof resource === 'string') {
-            resource = new Resource({
-                url: resource
-            });
-        }
+        var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
+        url = appendForwardSlash(url);
+        url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
 
-        var url = resource.url;
-        if (!trailingSlashRegex.test(url)) {
-            url += '/';
-        }
-
-        if (defined(options.proxy)) {
-            //TODO deprectaion warning
-            resource.proxy = options.proxy;
-        }
-
-        var fileExtension = defaultValue(options.fileExtension, 'png');
+        var resource = Resource.createIfNeeded(url, {
+            //TODO deprecation warning
+            proxy: options.proxy
+        });
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
@@ -111,9 +99,6 @@ define([
         if (typeof credit === 'string') {
             credit = new Credit({text: credit});
         }
-
-        var templateUrl = url + '{z}/{x}/{y}.' + fileExtension;
-        resource.url = templateUrl;
 
         return new UrlTemplateImageryProvider({
             url: resource,
