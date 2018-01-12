@@ -1058,8 +1058,8 @@ defineSuite([
         // load tileset to test
         return tileset.readyPromise.then(function() {
 
-            var boundingSphere = tileset.boundingSphere;
-            var offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
+            //var boundingSphere = tileset.boundingSphere;
+            //var offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
             return viewer.zoomTo(tileset).then(function() {
                 //expect(viewer.camera.viewBoundingSphere).toHaveBeenCalledWith(boundingSphere, offset);
 
@@ -1168,7 +1168,7 @@ defineSuite([
             var offsetVal = new HeadingPitchRange(3, 0.2, 2.3 * boundingSphere.radius);
             var options = {
                 offset : offsetVal
-            }
+            };
 
             var promise = viewer.flyTo(tileset, options);
             var wasCompleted = false;
