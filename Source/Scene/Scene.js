@@ -2936,7 +2936,7 @@ define([
         }
     }
 
-    function update(scene, time) {
+    function update(scene) {
         var frameState = scene._frameState;
 
         if (defined(scene.globe)) {
