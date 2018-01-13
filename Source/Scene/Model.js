@@ -1115,7 +1115,6 @@ define([
             headers : options.headers
         });
 
-
         // Setup basePath to get dependent files
         var basePath = defaultValue(options.basePath, modelResource.clone());
         var resource = Resource.createIfNeeded(basePath, {
@@ -1124,7 +1123,7 @@ define([
 
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(modelResource.url));
         if (defined(options.basePath) && !defined(options.cacheKey)) {
             cacheKey += resource.url;
         }

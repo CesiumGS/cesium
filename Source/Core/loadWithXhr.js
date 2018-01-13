@@ -108,12 +108,12 @@ define([
 
         return promise
             .otherwise(function(e) {
-                if (defined(optionsOrResource.retryOnError) && optionsOrResource.retryOnError()) {
+                if (defined(optionsOrResource.retryOnError) && optionsOrResource.retryOnError(e)) {
                     // Reset request so it can try again
                     request.state = RequestState.UNISSUED;
                     request.deferred = undefined;
 
-                    return makeRequest(optionsOrResource);
+                    return makeRequest(optionsOrResource, e);
                 }
 
                 throw e;

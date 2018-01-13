@@ -385,14 +385,18 @@ define([
 
     /**
      * Called when a resource fails to load. This will call the retryCallback function if defined until retryAttempts is reached.
+     *
+     * @param {Error} [error] The error that was encountered.
+     *
+     * @returns {Boolean} If true, the request will be retried.
      */
-    Resource.prototype.retryOnError = function() {
+    Resource.prototype.retryOnError = function(error) {
         var retryCallback = this.retryCallback;
         if ((typeof retryCallback !== 'function') || (this._retryCount > this.retryAttempts)) {
             return false;
         }
 
-        if (retryCallback(this)) {
+        if (retryCallback(this, error)) {
             ++this._retryCount;
             return true;
         }
