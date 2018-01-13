@@ -17,6 +17,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/Resource',
+        '../Renderer/Pass',
         '../ThirdParty/when',
         './ClassificationPrimitive',
         './ClassificationType',
@@ -40,6 +41,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         Resource,
+        Pass,
         when,
         ClassificationPrimitive,
         ClassificationType,
@@ -572,31 +574,7 @@ define([
     }
 
     function boundingVolumeIndex(commandIndex, length) {
-        return Math.floor((commandIndex % (length / 2)) / 3);
-    }
-
-    var scratchCommandIndices = {
-        start : 0,
-        end : 0
-    };
-
-    function getCommandIndices(classificationType, length) {
-        var startIndex;
-        var endIndex;
-        if (classificationType === ClassificationType.TERRAIN) {
-            startIndex = 0;
-            endIndex = length / 2;
-        } else if (classificationType === ClassificationType.CESIUM_3D_TILE) {
-            startIndex = length / 2;
-            endIndex = length;
-        } else {
-            startIndex = 0;
-            endIndex = length;
-        }
-
-        scratchCommandIndices.start = startIndex;
-        scratchCommandIndices.end = endIndex;
-        return scratchCommandIndices;
+        return Math.floor((commandIndex % length) / 3);
     }
 
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
@@ -607,39 +585,42 @@ define([
             boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
-        var indices;
-        var startIndex;
-        var endIndex;
-        var classificationType = groundPrimitive.classificationType;
+        var pass;
+        switch (groundPrimitive.classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
+        }
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
-            indices = getCommandIndices(classificationType, colorLength);
-            startIndex = indices.start;
-            endIndex = indices.end;
-
             var i;
             var colorCommand;
 
-            for (i = startIndex; i < endIndex; ++i) {
+            for (i = 0; i < colorLength; ++i) {
                 colorCommand = colorCommands[i];
                 colorCommand.owner = groundPrimitive;
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommand.pass = pass;
 
                 commandList.push(colorCommand);
             }
 
             if (frameState.invertClassification) {
                 var ignoreShowCommands = groundPrimitive._primitive._commandsIgnoreShow;
-                startIndex = 0;
-                endIndex = ignoreShowCommands.length;
+                var ignoreShowCommandsLength = ignoreShowCommands.length;
 
-                for (i = startIndex; i < endIndex; ++i) {
+                for (i = 0; i < ignoreShowCommandsLength; ++i) {
                     var bvIndex = Math.floor(i / 2);
                     colorCommand = ignoreShowCommands[i];
                     colorCommand.modelMatrix = modelMatrix;
@@ -654,13 +635,9 @@ define([
 
         if (passes.pick) {
             var pickLength = pickCommands.length;
-            indices = getCommandIndices(classificationType, pickLength);
-            startIndex = indices.start;
-            endIndex = indices.end;
-
             var primitive = groundPrimitive._primitive._primitive;
             var pickOffsets = primitive._pickOffsets;
-            for (var j = startIndex; j < endIndex; ++j) {
+            for (var j = 0; j < pickLength; ++j) {
                 var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
                 var bv = boundingVolumes[pickOffset.index];
 
@@ -669,6 +646,7 @@ define([
                 pickCommand.modelMatrix = modelMatrix;
                 pickCommand.boundingVolume = bv;
                 pickCommand.cull = cull;
+                pickCommand.pass = pass;
 
                 commandList.push(pickCommand);
             }

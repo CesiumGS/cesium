@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -43,6 +44,7 @@ define([
         Cartesian4,
         Cartographic,
         Color,
+        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -204,6 +206,17 @@ define([
 
         this._batchTable = undefined;
         this._createBatchTable = false;
+
+        // Only used by Vector3DTilePoints
+        this._useHighlightColor = false;
+        this._highlightColor = Color.clone(Color.WHITE);
+
+        var that = this;
+        this._uniformMap = {
+            u_highlightColor : function() {
+                return that._highlightColor;
+            }
+        };
     }
 
     defineProperties(PolylineCollection.prototype, {
@@ -597,6 +610,7 @@ define([
                 var currentMaterial;
                 var count = 0;
                 var command;
+                var uniformMap;
 
                 for (var s = 0; s < polylineLength; ++s) {
                     var polyline = polylines[s];
@@ -616,6 +630,8 @@ define([
 
                             ++commandIndex;
 
+                            uniformMap = combine(uniformCallback(currentMaterial._uniforms), polylineCollection._uniformMap);
+
                             command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                             command.modelMatrix = modelMatrix;
                             command.shaderProgram = sp;
@@ -624,7 +640,7 @@ define([
                             command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
                             command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
 
-                            command.uniformMap = uniformCallback(currentMaterial._uniforms);
+                            command.uniformMap = uniformMap;
                             command.count = count;
                             command.offset = offset;
 
@@ -683,6 +699,8 @@ define([
 
                     ++commandIndex;
 
+                    uniformMap = combine(uniformCallback(currentMaterial._uniforms), polylineCollection._uniformMap);
+
                     command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                     command.modelMatrix = modelMatrix;
                     command.shaderProgram = sp;
@@ -691,7 +709,7 @@ define([
                     command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
                     command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
 
-                    command.uniformMap = uniformCallback(currentMaterial._uniforms);
+                    command.uniformMap = uniformMap;
                     command.count = count;
                     command.offset = offset;
 
@@ -784,6 +802,7 @@ define([
         var indices = totalIndices[0];
 
         var batchTable = collection._batchTable;
+        var useHighlightColor = collection._useHighlightColor;
 
         //used to determine the vertexBuffer offset if the indicesArray goes over 64k.
         //if it's the same polyline while it goes over 64k, the offset needs to backtrack componentsPerAttribute * componentDatatype bytes
@@ -799,7 +818,7 @@ define([
         for (x in polylineBuckets) {
             if (polylineBuckets.hasOwnProperty(x)) {
                 bucket = polylineBuckets[x];
-                bucket.updateShader(context, batchTable);
+                bucket.updateShader(context, batchTable, useHighlightColor);
                 totalLength += bucket.lengthOfPositions;
             }
         }
@@ -1148,21 +1167,25 @@ define([
         p._bucket = this;
     };
 
-    PolylineBucket.prototype.updateShader = function(context, batchTable) {
+    PolylineBucket.prototype.updateShader = function(context, batchTable, useHighlightColor) {
         if (defined(this.shaderProgram)) {
             return;
         }
 
         var defines = ['DISTANCE_DISPLAY_CONDITION'];
-
-        var fs = new ShaderSource({
-            sources : [this.material.shaderSource, PolylineFS]
-        });
+        if (useHighlightColor) {
+            defines.push('VECTOR_TILE');
+        }
 
         // Check for use of v_polylineAngle in material shader
         if (this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
             defines.push('POLYLINE_DASH');
         }
+
+        var fs = new ShaderSource({
+            defines : defines,
+            sources : [this.material.shaderSource, PolylineFS]
+        });
 
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
         var vs = new ShaderSource({

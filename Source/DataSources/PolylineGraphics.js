@@ -36,7 +36,7 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      */
     function PolylineGraphics(options) {
         this._show = undefined;

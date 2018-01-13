@@ -661,6 +661,9 @@ define([
             var contentFactory = Cesium3DTileContentFactory[magic];
             var content;
 
+            // Vector and Geometry tile rendering do not support the skip LOD optimization.
+            tileset._disableSkipLevelOfDetail = tileset._disableSkipLevelOfDetail || magic === 'vctr' || magic === 'geom';
+
             if (defined(contentFactory)) {
                 content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
                 that.hasRenderableContent = true;

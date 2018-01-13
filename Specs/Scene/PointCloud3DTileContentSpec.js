@@ -740,7 +740,7 @@ defineSuite([
                 color = rgba;
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, 10.0);
+            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
@@ -763,7 +763,7 @@ defineSuite([
                 color = rgba;
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, 10.0);
+            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10.0);
             tileset.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -786,7 +786,7 @@ defineSuite([
 
             tileset.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, 10.0),
+                    new Plane(Cartesian3.UNIT_Z, -10.0),
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ],
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
