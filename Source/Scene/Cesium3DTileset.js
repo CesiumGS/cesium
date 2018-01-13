@@ -1348,7 +1348,7 @@ define([
             tileset.tileLoad.raiseEvent(tile);
         }).otherwise(function(error) {
             removeFunction();
-            var url = tile._contentUrl;
+            var url = tile._contentResource.url;
             var message = defined(error.message) ? error.message : error.toString();
             if (tileset.tileFailed.numberOfListeners > 0) {
                 tileset.tileFailed.raiseEvent({
