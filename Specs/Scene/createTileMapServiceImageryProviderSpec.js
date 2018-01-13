@@ -5,6 +5,7 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
+        'Core/getAbsoluteUri',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Math',
@@ -25,6 +26,7 @@ defineSuite([
         DefaultProxy,
         GeographicProjection,
         GeographicTilingScheme,
+        getAbsoluteUri,
         loadImage,
         loadWithXhr,
         CesiumMath,
@@ -158,15 +160,16 @@ defineSuite([
     });
 
     it('supports a slash at the end of the URL', function() {
+        var baseUrl = 'made/up/tms/server/';
         var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server/'
+            url : baseUrl
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).not.toContain('//');
+                expect(url).toStartWith(getAbsoluteUri(baseUrl));
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -202,15 +205,16 @@ defineSuite([
     });
 
     it('supports a query string at the end of the URL', function() {
+        var baseUrl = 'made/up/tms/server/';
         var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server/?a=some&b=query'
+            url : baseUrl + '?a=some&b=query'
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).not.toContain('//');
+                expect(url).toStartWith(getAbsoluteUri(baseUrl));
                 expect(url).toContain('?a=some&b=query');
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -231,7 +235,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.url).toEqual('made/up/tms/server/{z}/{x}/{reverseY}.png');
+            expect(provider.url).toEqual(getAbsoluteUri('made/up/tms/server/{z}/{x}/{reverseY}.png'));
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
@@ -288,7 +292,7 @@ defineSuite([
         });
 
         return requestMetadata.promise.then(function(url) {
-            expect(url.indexOf(proxy.getURL('server.invalid'))).toEqual(0);
+            expect(url.indexOf(proxy.getURL(getAbsoluteUri('server.invalid')))).toEqual(0);
         });
         /*eslint-enable no-unused-vars*/
     });
@@ -324,7 +328,7 @@ defineSuite([
             expect(provider.proxy).toEqual(proxy);
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/tms/server'))).toEqual(0);
+                expect(url.indexOf(proxy.getURL(getAbsoluteUri('made/up/tms/server')))).toEqual(0);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);

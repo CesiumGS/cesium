@@ -532,10 +532,7 @@ define([
             return undefined;
         }
 
-        var resource = sourceResource.getDerivedResource({
-            url: href
-        });
-
+        var resource;
         if (defined(uriResolver)) {
             var blob = uriResolver[href];
             if (defined(blob)) {
@@ -544,13 +541,21 @@ define([
                 });
             } else {
                 // Needed for multiple levels of KML files in a KMZ
-                blob = uriResolver[resource.getUrlComponent()];
+                var baseUri = new Uri(sourceResource.getUrlComponent());
+                var uri = new Uri(href);
+                blob = uriResolver[uri.resolve(baseUri)];
                 if (defined(blob)) {
                     resource = new Resource({
                         url: blob
                     });
                 }
             }
+        }
+
+        if (!defined(resource)) {
+            resource = sourceResource.getDerivedResource({
+                url: href
+            });
         }
 
         return resource;

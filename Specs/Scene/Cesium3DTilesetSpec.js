@@ -4,6 +4,7 @@ defineSuite([
         'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/CullingVolume',
+        'Core/getAbsoluteUri',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
         'Core/Intersect',
@@ -33,6 +34,7 @@ defineSuite([
         ClippingPlaneCollection,
         Color,
         CullingVolume,
+        getAbsoluteUri,
         getStringFromTypedArray,
         HeadingPitchRange,
         Intersect,
@@ -282,7 +284,7 @@ defineSuite([
             url : path
         });
         expect(tileset.url).toEqual(path);
-        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json');
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json'));
     });
 
     it('url and tilesetUrl set up correctly given directory with trailing slash', function() {
@@ -291,7 +293,7 @@ defineSuite([
             url : path
         });
         expect(tileset.url).toEqual(path);
-        expect(tileset._tilesetUrl).toEqual(path + 'tileset.json');
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + 'tileset.json'));
     });
 
     it('url and tilesetUrl set up correctly given path with query string', function() {
@@ -301,7 +303,7 @@ defineSuite([
             url : path + param
         });
         expect(tileset.url).toEqual(path + param);
-        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json' + param);
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json' + param));
     });
 
     it('resolves readyPromise', function() {
@@ -333,7 +335,7 @@ defineSuite([
 
     it('passes version in query string to tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            expect(tileset._root.content._resource.url).toEqual(tilesetUrl + 'parent.b3dm?v=1.2.3');
+            expect(tileset._root.content._resource.url).toEqual(getAbsoluteUri(tilesetUrl + 'parent.b3dm?v=1.2.3'));
         });
     });
 
@@ -1210,7 +1212,7 @@ defineSuite([
         spyOn(loadWithXhr, 'load').and.callThrough();
 
         var queryParams = 'a=1&b=boy';
-        var expectedUrl = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?' + queryParams;
+        var expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?' + queryParams);
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl + '?' + queryParams).then(function(tileset) {
             //Make sure tileset.json was requested with query parameters
             expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
@@ -1225,7 +1227,7 @@ defineSuite([
         }).then(function() {
             //Make sure tileset2.json was requested with query parameters and version
             var queryParamsWithVersion = 'v=0.0&' + queryParams;
-            expectedUrl = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?' + queryParamsWithVersion;
+            expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?' + queryParamsWithVersion);
             expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
         });
     });

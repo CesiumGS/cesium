@@ -156,22 +156,32 @@ define([
         }
         //>>includeEnd('debug');
 
-        var resource = options.url;
-        if (typeof resource === 'string') {
-            resource = new Resource({
-                url: resource,
-                queryParameters: defaultParameters
-            });
-        }
-        if (defined(options.proxy)) {
+        var resource = Resource.createIfNeeded(options.url, {
             //TODO deprecation warning
-            resource.proxy = options.proxy;
+            proxy: options.proxy
+        });
+
+        var style = options.style;
+        var tileMatrixSetID = options.tileMatrixSetID;
+        var url = resource.url;
+        if (url.indexOf('{') >= 0) {
+            var templateValues = {
+                style : style,
+                Style : style,
+                TileMatrixSet : tileMatrixSetID
+            };
+
+            resource.addTemplateValues(templateValues);
+            this._useKvp = false;
+        } else {
+            resource.addQueryParameters(defaultParameters);
+            this._useKvp = true;
         }
 
         this._resource = resource;
         this._layer = options.layer;
-        this._style = options.style;
-        this._tileMatrixSetID = options.tileMatrixSetID;
+        this._style = style;
+        this._tileMatrixSetID = tileMatrixSetID;
         this._tileMatrixLabels = options.tileMatrixLabels;
         this._format = defaultValue(options.format, 'image/jpeg');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
@@ -236,41 +246,30 @@ define([
         var labels = imageryProvider._tileMatrixLabels;
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
         var subdomains = imageryProvider._subdomains;
-        var key;
         var staticDimensions = imageryProvider._dimensions;
         var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
         var resource;
-        var url = imageryProvider._resource.url;
-        if (url.indexOf('{') >= 0) {
-            // resolve tile-URL template
-            url = url
-                .replace('{style}', imageryProvider._style)
-                .replace('{Style}', imageryProvider._style)
-                .replace('{TileMatrixSet}', imageryProvider._tileMatrixSetID)
-                .replace('{TileMatrix}', tileMatrix)
-                .replace('{TileRow}', row.toString())
-                .replace('{TileCol}', col.toString())
-                .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
+        if (!imageryProvider._useKvp) {
+            var templateValues = {
+                TileMatrix: tileMatrix,
+                TileRow: row.toString(),
+                TileCol: col.toString(),
+                s: subdomains[(col + row + level) % subdomains.length]
+            };
+
+            resource = imageryProvider._resource.getDerivedResource({
+                request: request
+            });
+            resource.addTemplateValues(templateValues);
 
             if (defined(staticDimensions)) {
-                for (key in staticDimensions) {
-                    if (staticDimensions.hasOwnProperty(key)) {
-                        url = url.replace('{' + key + '}', staticDimensions[key]);
-                    }
-                }
+                resource.addTemplateValues(staticDimensions);
             }
 
             if (defined(dynamicIntervalData)) {
-                for (key in dynamicIntervalData) {
-                    if (dynamicIntervalData.hasOwnProperty(key)) {
-                        url = url.replace('{' + key + '}', dynamicIntervalData[key]);
-                    }
-                }
+                resource.addTemplateValues(dynamicIntervalData);
             }
-            resource = imageryProvider._resource.clone();
-            resource.url = url;
-            resource.request = request;
         } else {
             // build KVP request
             var query = {};
@@ -283,19 +282,11 @@ define([
             query.format = imageryProvider._format;
 
             if (defined(staticDimensions)) {
-                for (key in staticDimensions) {
-                    if (staticDimensions.hasOwnProperty(key)) {
-                        query[key] = staticDimensions[key];
-                    }
-                }
+                query = combine(query, staticDimensions);
             }
 
             if (defined(dynamicIntervalData)) {
-                for (key in dynamicIntervalData) {
-                    if (dynamicIntervalData.hasOwnProperty(key)) {
-                        query[key] = dynamicIntervalData[key];
-                    }
-                }
+                query = combine(query, dynamicIntervalData);
             }
             resource = imageryProvider._resource.getDerivedResource({
                 queryParameters: query,

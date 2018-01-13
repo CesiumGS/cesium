@@ -337,7 +337,7 @@ define([
                 resource._queryParameters = combine(query, resource._queryParameters);
             }
 
-            resource._url = uri.resolve(new Uri(this._url)).toString();
+            resource._url = uri.resolve(new Uri(getAbsoluteUri(this._url))).toString();
         }
 
         if (defined(options.queryParameters)) {

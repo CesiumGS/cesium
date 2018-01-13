@@ -7,6 +7,7 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defined',
         'Core/GeographicTilingScheme',
+        'Core/getAbsoluteUri',
         'Core/loadImage',
         'Core/loadJsonp',
         'Core/loadWithXhr',
@@ -33,6 +34,7 @@ defineSuite([
         DefaultProxy,
         defined,
         GeographicTilingScheme,
+        getAbsoluteUri,
         loadImage,
         loadJsonp,
         loadWithXhr,
@@ -193,7 +195,7 @@ defineSuite([
                     // load blob url normally
                     loadImage.defaultCreateImage(url, crossOrigin, deferred);
                 } else {
-                    expect(url).toEqual(baseUrl + 'tile/0/0/0');
+                    expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
                     loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -201,7 +203,7 @@ defineSuite([
             };
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(baseUrl + 'tile/0/0/0');
+                expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                 // Just return any old image.
                 loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
@@ -270,7 +272,7 @@ defineSuite([
                     // load blob url normally
                     loadImage.defaultCreateImage(url, crossOrigin, deferred);
                 } else {
-                    expect(url).toEqual(baseUrl + 'tile/0/0/0');
+                    expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
                     loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -278,7 +280,7 @@ defineSuite([
             };
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(baseUrl + 'tile/0/0/0');
+                expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                 // Just return any old image.
                 loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
@@ -324,7 +326,7 @@ defineSuite([
                 var uriWithoutQuery = new Uri(uri);
                 uriWithoutQuery.query = '';
 
-                expect(uriWithoutQuery.toString()).toEqual(baseUrl + 'export');
+                expect(uriWithoutQuery.toString()).toEqual(getAbsoluteUri(baseUrl + 'export'));
 
                 expect(params.f).toEqual('image');
                 expect(params.bboxSR).toEqual('4326');
@@ -386,7 +388,7 @@ defineSuite([
                 var uriWithoutQuery = new Uri(uri);
                 uriWithoutQuery.query = '';
 
-                expect(uriWithoutQuery.toString()).toEqual(baseUrl + 'export');
+                expect(uriWithoutQuery.toString()).toEqual(getAbsoluteUri(baseUrl + 'export'));
 
                 expect(params.f).toEqual('image');
                 expect(params.bboxSR).toEqual('3857');
@@ -418,9 +420,9 @@ defineSuite([
             token : token
         });
 
-        var expectedTileUrl = baseUrl + 'tile/0/0/0?' + objectToQuery({
+        var expectedTileUrl = getAbsoluteUri(baseUrl + 'tile/0/0/0?' + objectToQuery({
             token: token
-        });
+        }));
 
         expect(provider.url).toEqual(baseUrl);
         expect(provider.token).toEqual(token);
@@ -494,7 +496,7 @@ defineSuite([
                     // load blob url normally
                     loadImage.defaultCreateImage(url, crossOrigin, deferred);
                 } else {
-                    expect(url).toEqual(baseUrl + 'tile/0/0/0');
+                    expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
                     loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -502,7 +504,7 @@ defineSuite([
             };
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(proxy.getURL(baseUrl + 'tile/0/0/0'));
+                expect(url).toEqual(proxy.getURL(getAbsoluteUri(baseUrl + 'tile/0/0/0')));
 
                 // Just return any old image.
                 loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);

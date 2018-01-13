@@ -13,6 +13,7 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
+        '../Core/Resource',
         './HeightReference',
         './HorizontalOrigin',
         './SceneMode',
@@ -33,6 +34,7 @@ define([
         DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
+        Resource,
         HeightReference,
         HorizontalOrigin,
         SceneMode,
@@ -868,6 +870,8 @@ define([
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {
                     this.setImage(value, value);
+                } else if (value instanceof Resource) {
+                    this.setImage(value.url, value);
                 } else if (defined(value.src)) {
                     this.setImage(value.src, value);
                 } else {
