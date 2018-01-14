@@ -113,7 +113,7 @@ define([
                     request.state = RequestState.UNISSUED;
                     request.deferred = undefined;
 
-                    return makeRequest(optionsOrResource, e);
+                    return makeRequest(optionsOrResource);
                 }
 
                 throw e;

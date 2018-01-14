@@ -7,6 +7,7 @@ define([
         './isDataUri',
         './Request',
         './RequestScheduler',
+        './RequestState',
         './Resource',
         './TrustedServers'
     ], function(
@@ -18,6 +19,7 @@ define([
         isDataUri,
         Request,
         RequestScheduler,
+        RequestState,
         Resource,
         TrustedServers) {
     'use strict';
@@ -56,25 +58,27 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
-        if (typeof urlOrResource === 'string') {
-            urlOrResource = new Resource({
-                url: urlOrResource,
-                allowCrossOrigin: allowCrossOrigin,
-                request: request
-            });
-        }
 
-        //TODO call loadImageViaBlob if `resource.headers` is defined
+        urlOrResource = defined(urlOrResource.clone) ? urlOrResource.clone() : urlOrResource;
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            allowCrossOrigin: allowCrossOrigin,
+            request: request
+        });
 
-        request = urlOrResource.request;
-        var url = urlOrResource.url;
-        request = defined(request) ? request : new Request();
+        resource.request = defaultValue(resource.request, new Request());
+
+        return makeRequest(resource);
+    }
+
+    function makeRequest(resource) {
+        var url = resource.url;
+        var request = resource.request;
         request.url = url;
         request.requestFunction = function() {
             var crossOrigin;
 
             // data URIs can't have allowCrossOrigin set.
-            if (isDataUri(url) || !urlOrResource.allowCrossOrigin) {
+            if (isDataUri(url) || !resource.allowCrossOrigin) {
                 crossOrigin = false;
             } else {
                 crossOrigin = isCrossOriginUrl(url);
@@ -87,7 +91,23 @@ define([
             return deferred.promise;
         };
 
-        return RequestScheduler.request(request);
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                if (resource.retryOnError(e)) {
+                    // Reset request so it can try again
+                    request.state = RequestState.UNISSUED;
+                    request.deferred = undefined;
+
+                    return makeRequest(resource);
+                }
+
+                throw e;
+            });
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
