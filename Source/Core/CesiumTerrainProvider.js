@@ -113,7 +113,7 @@ define([
             //TODO deprecation warning
             proxy: options.proxy
         });
-        resource._isDirectory = true;
+        resource.isDirectory = true;
 
         this._resource = resource;
 
