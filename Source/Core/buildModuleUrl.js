@@ -2,15 +2,13 @@ define([
         '../ThirdParty/Uri',
         './defined',
         './DeveloperError',
-        './getAbsoluteUri',
-        './joinUrls',
+        './Resource',
         'require'
     ], function(
         Uri,
         defined,
         DeveloperError,
-        getAbsoluteUri,
-        joinUrls,
+        Resource,
         require) {
     'use strict';
     /*global CESIUM_BASE_URL*/
@@ -28,10 +26,10 @@ define([
         return undefined;
     }
 
-    var baseUrl;
+    var baseResource;
     function getCesiumBaseUrl() {
-        if (defined(baseUrl)) {
-            return baseUrl;
+        if (defined(baseResource)) {
+            return baseResource;
         }
 
         var baseUrlString;
@@ -47,9 +45,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        baseUrl = new Uri(getAbsoluteUri(baseUrlString));
+        baseResource = new Resource({
+            url: baseUrlString
+        });
 
-        return baseUrl;
+        return baseResource;
     }
 
     function buildModuleUrlFromRequireToUrl(moduleID) {
@@ -58,7 +58,10 @@ define([
     }
 
     function buildModuleUrlFromBaseUrl(moduleID) {
-        return joinUrls(getCesiumBaseUrl(), moduleID);
+        var resource = getCesiumBaseUrl().getDerivedResource({
+            url: moduleID
+        });
+        return resource.url;
     }
 
     var implementation;
