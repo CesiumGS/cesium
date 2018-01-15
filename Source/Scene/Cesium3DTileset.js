@@ -161,7 +161,7 @@ define([
         var url = options.url;
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('options.url', url);
+        Check.defined('options.url', url);
         //>>includeEnd('debug');
 
         var resource = Resource.createIfNeeded(url);

@@ -111,9 +111,9 @@ define([
 
         var resource = Resource.createIfNeeded(options.url, {
             //TODO deprecation warning
-            proxy: options.proxy,
-            isDirectory: true
+            proxy: options.proxy
         });
+        resource._isDirectory = true;
 
         this._resource = resource;
 
