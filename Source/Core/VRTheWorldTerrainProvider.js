@@ -275,7 +275,7 @@ define([
             },
             request: request
         });
-        var promise = loadImage(resource, undefined, request);
+        var promise = loadImage(resource);
         if (!defined(promise)) {
             return undefined;
         }

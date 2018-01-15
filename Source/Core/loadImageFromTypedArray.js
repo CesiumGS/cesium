@@ -26,7 +26,6 @@ define([
         var blobUrl = window.URL.createObjectURL(blob);
         return loadImage(new Resource({
             url: blobUrl,
-            allowCrossOrigin: false,
             request: request
         })).then(function(image) {
             window.URL.revokeObjectURL(blobUrl);

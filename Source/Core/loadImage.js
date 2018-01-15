@@ -3,6 +3,7 @@ define([
         './Check',
         './defaultValue',
         './defined',
+        './isBlobUri',
         './isCrossOriginUrl',
         './isDataUri',
         './Request',
@@ -15,6 +16,7 @@ define([
         Check,
         defaultValue,
         defined,
+        isBlobUri,
         isCrossOriginUrl,
         isDataUri,
         Request,
@@ -61,16 +63,15 @@ define([
 
         urlOrResource = defined(urlOrResource.clone) ? urlOrResource.clone() : urlOrResource;
         var resource = Resource.createIfNeeded(urlOrResource, {
-            allowCrossOrigin: allowCrossOrigin,
             request: request
         });
 
         resource.request = defaultValue(resource.request, new Request());
 
-        return makeRequest(resource);
+        return makeRequest(resource, defaultValue(allowCrossOrigin, true));
     }
 
-    function makeRequest(resource) {
+    function makeRequest(resource, allowCrossOrigin) {
         var url = resource.url;
         var request = resource.request;
         request.url = url;
@@ -78,7 +79,7 @@ define([
             var crossOrigin;
 
             // data URIs can't have allowCrossOrigin set.
-            if (isDataUri(url) || !resource.allowCrossOrigin) {
+            if (isDataUri(url) || isBlobUri(url)) {
                 crossOrigin = false;
             } else {
                 crossOrigin = isCrossOriginUrl(url);
@@ -86,7 +87,7 @@ define([
 
             var deferred = when.defer();
 
-            loadImage.createImage(url, crossOrigin, deferred);
+            loadImage.createImage(url, crossOrigin && allowCrossOrigin, deferred);
 
             return deferred.promise;
         };

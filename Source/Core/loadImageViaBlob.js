@@ -88,8 +88,7 @@ define([
             }
             var blobUrl = window.URL.createObjectURL(blob);
             var blobResource = new Resource({
-                url: blobUrl,
-                allowCrossOrigin: false
+                url: blobUrl
             });
             return loadImage(blobResource).then(function(image) {
                 image.blob = blob;

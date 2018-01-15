@@ -74,28 +74,22 @@ define([
 
         var facePromises = [
             loadImage(new Resource({
-                url: urls.positiveX,
-                allowCrossOrigin: allowCrossOrigin
+                url: urls.positiveX
             })),
             loadImage(new Resource({
-                url: urls.negativeX,
-                allowCrossOrigin: allowCrossOrigin
+                url: urls.negativeX
             })),
             loadImage(new Resource({
-                url: urls.positiveY,
-                allowCrossOrigin: allowCrossOrigin
+                url: urls.positiveY
             })),
             loadImage(new Resource({
-                url: urls.negativeY,
-                allowCrossOrigin: allowCrossOrigin
+                url: urls.negativeY
             })),
             loadImage(new Resource({
-                url: urls.positiveZ,
-                allowCrossOrigin: allowCrossOrigin
+                url: urls.positiveZ
             })),
             loadImage(new Resource({
-                url: urls.negativeZ,
-                allowCrossOrigin: allowCrossOrigin
+                url: urls.negativeZ
             }))
         ];
 

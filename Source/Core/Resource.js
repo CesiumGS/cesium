@@ -83,15 +83,14 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {Request} [options.request] A Request object that will be used.
      * @param {String} [options.method='GET'] The method to use.
      * @param {Object} [options.data] Data that is sent with the resource request.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.allowCrossOrigin=true] Whether to allow Cross-Origin.
      * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
      * @param {Function} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      *
      * @constructor
      */
@@ -116,7 +115,6 @@ define([
         this.data = options.data;
         this.overrideMimeType = options.overrideMimeType;
         this.proxy = options.proxy;
-        this.allowCrossOrigin = defaultValue(options.allowCrossOrigin, true);
 
         this.retryCallback = options.retryCallback;
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
@@ -130,6 +128,8 @@ define([
      * @param {Object{ options If resource is a String, these are the options passed to the Resource constructor. It is ignored otherwise.
      *
      * @returns {Resource} If resource is a String, a Resource constructed with the url and options. Otherwise the resource parameter is returned.
+     *
+     * @private
      */
     Resource.createIfNeeded = function(resource, options) {
         if (!defined(resource)) {
@@ -310,15 +310,14 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be combined with those of the current instance.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {Request} [options.request] A Request object that will be used.
      * @param {String} [options.method] The method to use.
      * @param {Object} [options.data] Data that is sent with the request.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.allowCrossOrigin] Whether to allow Cross-Origin.
      * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
      * @param {Function} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      */
     Resource.prototype.getDerivedResource = function(options) {
         var resource = this.clone();
@@ -363,9 +362,6 @@ define([
         }
         if (defined(options.proxy)) {
             resource.proxy = options.proxy;
-        }
-        if (defined(options.allowCrossOrigin)) {
-            resource.allowCrossOrigin = options.allowCrossOrigin;
         }
         if (defined(options.request)) {
             resource.request = options.request;
@@ -429,7 +425,6 @@ define([
         result.data = this.data;
         result.overrideMimeType = this.overrideMimeType;
         result.proxy = this.proxy;
-        result.allowCrossOrigin = this.allowCrossOrigin;
         result._isDirectory = this._isDirectory;
         result.retryCallback = this.retryCallback;
         result.retryAttempts = this.retryAttempts;
