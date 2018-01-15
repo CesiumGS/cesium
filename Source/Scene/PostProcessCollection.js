@@ -53,6 +53,7 @@ define([
         this._bloom.enabled = false;
 
         this._processesRemoved = false;
+        this._cacheDirty = false;
 
         this._lastLength = undefined;
         this._aoEnabled = undefined;
@@ -196,6 +197,7 @@ define([
 
         postProcess._index = this._processes.length;
         this._processes.push(postProcess);
+        this._cacheDirty = true;
         return postProcess;
     };
 
@@ -222,6 +224,7 @@ define([
 
         this._processes[postProcess._index] = undefined;
         this._processesRemoved = true;
+        this._cacheDirty = true;
         postProcess.destroy();
         return true;
     };
@@ -280,7 +283,7 @@ define([
         var bloom = this._bloom;
         var fxaa = this._fxaa;
 
-        if (count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
+        if (this._cacheDirty || count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
             this._textureCache = this._textureCache && this._textureCache.destroy();
             this._textureCache = new PostProcessTextureCache(this);
 
@@ -288,6 +291,7 @@ define([
             this._aoEnabled = ao.enabled;
             this._bloomEnabled = bloom.enabled;
             this._fxaaEnabled = fxaa.enabled;
+            this._cacheDirty = false;
         }
 
         this._textureCache.update(context);

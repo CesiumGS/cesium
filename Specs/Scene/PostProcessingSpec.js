@@ -145,7 +145,7 @@ defineSuite([
         });
     });
 
-    it('brightness', function() {
+    it('eightBit', function() {
         var fs =
             'void main() { \n' +
             '    gl_FragColor = all(equal(floor(gl_FragCoord.xy), vec2(1.0, 1.0))) ? vec4(1.0, 0.0, 0.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0); \n' +
