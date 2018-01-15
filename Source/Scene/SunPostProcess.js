@@ -14,6 +14,7 @@ define([
         './PostProcess',
         './PostProcessComposite',
         './PostProcessSampleMode',
+        './PostProcessTextureCache',
         './SceneFramebuffer'
     ], function(
         BoundingRectangle,
@@ -31,6 +32,7 @@ define([
         PostProcess,
         PostProcessComposite,
         PostProcessSampleMode,
+        PostProcessTextureCache,
         SceneFramebuffer) {
     'use strict';
 
@@ -127,7 +129,35 @@ define([
         this._processes = new PostProcessComposite({
             processes : processes
         });
+
+        var length = processes.length;
+        for (var i = 0; i < length; ++i) {
+            processes[i]._collection = this;
+        }
+
+        this._textureCache = new PostProcessTextureCache(this);
+
+        this.length = processes.length;
     }
+
+    SunPostProcess.prototype.get = function(index) {
+        return this._processes.get(index);
+    };
+
+    SunPostProcess.prototype.getProcessByName = function(name) {
+        var length = this._processes.length;
+        for (var i = 0; i < length; ++i) {
+            var process = this._processes.get(i);
+            if (process.name === name) {
+                return process;
+            }
+        }
+        return undefined;
+    };
+
+    SunPostProcess.prototype.getFramebuffer = function(name) {
+        return this._textureCache.getFramebuffer(name);
+    };
 
     var sunPositionECScratch = new Cartesian4();
     var sunPositionWCScratch = new Cartesian2();
@@ -190,11 +220,7 @@ define([
 
     SunPostProcess.prototype.clear = function(context, passState, clearColor) {
         this._sceneFramebuffer.clear(context, passState, clearColor);
-
-        var length = this._processes.length;
-        for (var i = 0; i < length; ++i) {
-            this._processes.get(i).clear(context);
-        }
+        this._textureCache.clear(context);
     };
 
     SunPostProcess.prototype.update = function(passState) {
@@ -203,6 +229,8 @@ define([
         var sceneFramebuffer = this._sceneFramebuffer;
         sceneFramebuffer.update(context);
         var framebuffer = sceneFramebuffer.getFramebuffer();
+
+        this._textureCache.update(context);
 
         var processes = this._processes;
         processes.update(context);

@@ -2663,8 +2663,6 @@ define([
         environmentState.originalFramebuffer = passState.framebuffer;
 
         // Manage sun bloom post-processing effect.
-        // TODO:
-        scene.sunBloom = false;
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom && !useWebVR) {
                 scene._sunPostProcess = new SunPostProcess();

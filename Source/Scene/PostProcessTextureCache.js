@@ -95,14 +95,18 @@ define([
     function getDependencies(collection) {
         var dependencies = {};
 
-        var ao = collection.ambientOcclusion;
-        var bloom = collection.bloom;
-        var fxaa = collection.fxaa;
+        if (defined(collection.ambientOcclusion)) {
+            var ao = collection.ambientOcclusion;
+            var bloom = collection.bloom;
+            var fxaa = collection.fxaa;
 
-        var previousName = getCompositeDependencies(collection, dependencies, ao, undefined);
-        previousName = getCompositeDependencies(collection, dependencies, bloom, previousName);
-        previousName = getCompositeDependencies(collection, dependencies, collection, previousName);
-        getProcessDependencies(collection, dependencies, fxaa, previousName);
+            var previousName = getCompositeDependencies(collection, dependencies, ao, undefined);
+            previousName = getCompositeDependencies(collection, dependencies, bloom, previousName);
+            previousName = getCompositeDependencies(collection, dependencies, collection, previousName);
+            getProcessDependencies(collection, dependencies, fxaa, previousName);
+        } else {
+            getCompositeDependencies(collection, dependencies, collection, undefined);
+        }
 
         return dependencies;
     }
@@ -225,7 +229,7 @@ define([
 
     PostProcessTextureCache.prototype.update = function(context) {
         var collection = this._collection;
-        var needsUpdate = collection._activeProcesses.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
+        var needsUpdate = !defined(collection._activeProcesses) || collection._activeProcesses.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
         if (!needsUpdate && this._framebuffers.length > 0) {
             releaseResources(this);
             this._framebuffers.length = 0;
