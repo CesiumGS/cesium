@@ -12,7 +12,8 @@ define([
     './getExtensionFromUri',
     './objectToQuery',
     './queryToObject',
-    '../ThirdParty/Uri'
+    '../ThirdParty/Uri',
+    '../ThirdParty/when'
 ], function(appendForwardSlash,
             Check,
             clone,
@@ -26,7 +27,8 @@ define([
             getExtensionFromUri,
             objectToQuery,
             queryToObject,
-            Uri) {
+            Uri,
+            when) {
     'use strict';
 
     /**
@@ -384,21 +386,25 @@ define([
      *
      * @param {Error} [error] The error that was encountered.
      *
-     * @returns {Boolean} If true, the request will be retried.
+     * @returns {Promise<Boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
      */
     Resource.prototype.retryOnError = function(error) {
         var retryCallback = this.retryCallback;
         if ((typeof retryCallback !== 'function') || (this._retryCount > this.retryAttempts)) {
-            return false;
+            return when(false);
         }
 
-        if (retryCallback(this, error)) {
-            ++this._retryCount;
-            return true;
-        }
+        var that = this;
+        return when(retryCallback(this, error))
+            .then(function(result) {
+                if (result) {
+                    ++that._retryCount;
+                } else {
+                    that._retryCount = 0;
+                }
 
-        this._retryCount = 0;
-        return false;
+                return result;
+            });
     };
 
     /**

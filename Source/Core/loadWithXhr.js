@@ -108,15 +108,22 @@ define([
 
         return promise
             .otherwise(function(e) {
-                if (defined(optionsOrResource.retryOnError) && optionsOrResource.retryOnError(e)) {
-                    // Reset request so it can try again
-                    request.state = RequestState.UNISSUED;
-                    request.deferred = undefined;
+                if (defined(optionsOrResource.retryOnError)) {
+                    return optionsOrResource.retryOnError(e)
+                        .then(function(retry) {
+                            if (retry) {
+                                // Reset request so it can try again
+                                request.state = RequestState.UNISSUED;
+                                request.deferred = undefined;
 
-                    return makeRequest(optionsOrResource);
+                                return makeRequest(optionsOrResource);
+                            }
+
+                            return when.reject(e);
+                        });
                 }
 
-                throw e;
+                return when.reject(e);
             });
     }
 
