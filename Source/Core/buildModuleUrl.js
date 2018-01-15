@@ -104,7 +104,9 @@ define([
      * @param {String} value The new base URL.
      */
     buildModuleUrl.setBaseUrl = function(value) {
-        baseUrl = new Uri(value).resolve(new Uri(document.location.href));
+        baseResource = Resource.DEFAULT.getDerivedResource({
+            url: value
+        });
     };
 
     return buildModuleUrl;

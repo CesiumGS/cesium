@@ -17,14 +17,14 @@ defineSuite([
         expect(result).toEqual(getBaseUri(document.location.href) + 'awesome.png');
     });
 
-    it('works as expected', function() {
-        var old = document.baseUri;
-        document.baseUri = 'http://test.com/index.html';
+    it('document.baseURI is respected', function() {
+        var fakeDocument = {
+            baseURI : 'http://test.com/index.html',
+            location : document.location
+        };
 
-        var result = getAbsoluteUri('awesome.png');
+        var result = getAbsoluteUri._implementation('awesome.png', undefined, fakeDocument);
         expect(result).toEqual('http://test.com/awesome.png');
-
-        document.baseUri = old;
     });
 
 

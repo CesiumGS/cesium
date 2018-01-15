@@ -572,7 +572,7 @@ define([
                     url : buffer.uri
                 });
                 ++loadResources.pendingBufferLoads;
-                loadArrayBuffer(bufferResource).then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                loadArrayBuffer(bufferResource).then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.uri));
             }
         }
     }
