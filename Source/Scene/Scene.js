@@ -2730,14 +2730,18 @@ define([
                 }
             }
 
-            scene._invertClassification.previousFramebuffer = depthFramebuffer;
-            scene._invertClassification.update(context);
-            scene._invertClassification.clear(context, passState);
+            if (defined(depthFramebuffer) || context.depthTexture) {
+                scene._invertClassification.previousFramebuffer = depthFramebuffer;
+                scene._invertClassification.update(context);
+                scene._invertClassification.clear(context, passState);
 
-            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
-                var command = scene._invertClassification.unclassifiedCommand;
-                var derivedCommands = command.derivedCommands;
-                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+                if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                    var command = scene._invertClassification.unclassifiedCommand;
+                    var derivedCommands = command.derivedCommands;
+                    derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
+            } else {
+                environmentState.useInvertClassification = false;
             }
         }
     }
