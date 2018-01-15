@@ -30,7 +30,7 @@ define([
      *
      * @exports loadImage
      *
-     * @param {String} urlOrResource The source URL of the image.
+     * @param {Resource|String} urlOrResource The source URL of the image.
      * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
      *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
      *        Data URIs are never requested using CORS.
