@@ -11,6 +11,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -80,6 +81,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -2363,6 +2365,14 @@ define([
         var context = options.context;
         var query = options.query;
 
+        if (defined(options.query)) {
+            deprecationWarning('KmlDataSource.query', 'The options.query parameter has been deprecated. Specify data or options.sourceUri as a Resource instance and add query parameters there.');
+        }
+
+        if (defined(dataSource._proxy)) {
+            deprecationWarning('KmlDataSource.proxy', 'The options.proxy parameter has been deprecated. Specify data or options.sourceUri as a Resource instance and set the proxy property there.');
+        }
+
         var promise = data;
         if (typeof data === 'string' || (data instanceof Resource)) {
             data = Resource.createIfNeeded(data, {
@@ -2463,7 +2473,6 @@ define([
      * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
-     * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data. // TODO: Deprecate
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -2525,10 +2534,8 @@ define([
      * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
-     * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data. // TODO: Deprecate
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
-     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML. // TODO: Deprecate
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */

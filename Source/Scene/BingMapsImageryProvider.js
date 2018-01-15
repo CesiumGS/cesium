@@ -264,7 +264,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._resource.url;
+                return this._resource.proxy;
             }
         },
 

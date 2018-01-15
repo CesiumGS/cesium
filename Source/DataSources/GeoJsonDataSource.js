@@ -827,10 +827,9 @@ define([
         if (typeof data === 'string' || (data instanceof Resource)) {
             data = Resource.createIfNeeded(data);
 
-            if (!defined(sourceUri)) {
-                sourceUri = data.getUrlComponent(false, false);
-            }
             promise = loadJson(data);
+
+            sourceUri = defaultValue(sourceUri, data.getUrlComponent());
         }
 
         options = {
