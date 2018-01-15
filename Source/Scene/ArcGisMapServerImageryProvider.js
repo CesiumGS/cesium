@@ -132,7 +132,8 @@ define([
         this._maximumLevel = options.maximumLevel;
         this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid }));
         this._credit = undefined;
-        this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+        this._usePreCachedTilesIfAvailable = defaultValue(options.usePreCachedTilesIfAvailable, true);
+        this._useTiles = undefined;
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._layers = options.layers;
 
@@ -157,7 +158,7 @@ define([
 
         function metadataSuccess(data) {
             var tileInfo = data.tileInfo;
-            if (!defined(tileInfo)) {
+            if (!that._usePreCachedTilesIfAvailable || !defined(tileInfo)) {
                 that._useTiles = false;
             } else {
                 that._tileWidth = tileInfo.rows;
@@ -247,9 +248,10 @@ define([
             setTimeout(function() {
                 when(mapServerData, metadataSuccess, metadataFailure);
             });
-        } else if (this._useTiles) {
+        } else if (this._usePreCachedTilesIfAvailable) {
             requestMetadata();
         } else {
+            this._useTiles = false;
             this._ready = true;
             this._readyPromise.resolve(true);
         }
