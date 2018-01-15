@@ -158,13 +158,12 @@ define([
     function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var url = options.url;
-
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.url', url);
+        Check.defined('options.url', options.url);
         //>>includeEnd('debug');
 
-        var resource = Resource.createIfNeeded(url);
+        var resource = Resource.createIfNeeded(options.url);
+        var url = resource.url;
 
         var tilesetResource = resource;
         var basePath;
