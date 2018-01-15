@@ -28,7 +28,7 @@ define([
             throw new DeveloperError('relative uri is required.');
         }
         //>>includeEnd('debug');
-        base = defaultValue(base, document.location.href);
+        base = defaultValue(base, defaultValue(document.baseUri, document.location.href));
         var baseUri = new Uri(base);
         var relativeUri = new Uri(relative);
         return relativeUri.resolve(baseUri).toString();

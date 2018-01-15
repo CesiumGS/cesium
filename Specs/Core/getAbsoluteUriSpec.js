@@ -17,6 +17,17 @@ defineSuite([
         expect(result).toEqual(getBaseUri(document.location.href) + 'awesome.png');
     });
 
+    it('works as expected', function() {
+        var old = document.baseUri;
+        document.baseUri = 'http://test.com/index.html';
+
+        var result = getAbsoluteUri('awesome.png');
+        expect(result).toEqual('http://test.com/awesome.png');
+
+        document.baseUri = old;
+    });
+
+
     it('throws with undefined parameter', function() {
         expect(function() {
             getAbsoluteUri(undefined);
