@@ -1088,13 +1088,6 @@ defineSuite([
         });
     });
 
-    it('load works with a URL', function() {
-        var dataSource = new GeoJsonDataSource();
-        return dataSource.load('Data/test.geojson').then(function() {
-            expect(dataSource.name).toEqual('test.geojson');
-        });
-    });
-
     it('Fails when encountering unknown geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(featureUnknownGeometry).then(function() {

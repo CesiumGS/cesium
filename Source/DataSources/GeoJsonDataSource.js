@@ -521,7 +521,6 @@ define([
      *
      * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
      * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
      * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -797,7 +796,6 @@ define([
      *
      * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @param {GeoJsonDataSource~describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
      *                                                                                which converts the properties into an html description.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
@@ -821,11 +819,7 @@ define([
 
         var promise = data;
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var sourceUri = options.sourceUri;
         if (typeof data === 'string') {
-            if (!defined(sourceUri)) {
-                sourceUri = data;
-            }
             promise = loadJson(data);
         }
 
@@ -842,7 +836,7 @@ define([
 
         var that = this;
         return when(promise, function(geoJson) {
-            return load(that, geoJson, options, sourceUri);
+            return load(that, geoJson, options);
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
@@ -851,17 +845,7 @@ define([
         });
     };
 
-    function load(that, geoJson, options, sourceUri) {
-        var name;
-        if (defined(sourceUri)) {
-            name = getFilenameFromUri(sourceUri);
-        }
-
-        if (defined(name) && that._name !== name) {
-            that._name = name;
-            that._changed.raiseEvent(that);
-        }
-
+    function load(that, geoJson, options) {
         var typeHandler = geoJsonObjectTypes[geoJson.type];
         if (!defined(typeHandler)) {
             throw new RuntimeError('Unsupported GeoJSON object type: ' + geoJson.type);
