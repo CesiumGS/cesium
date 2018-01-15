@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
@@ -23,6 +24,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         freezeObject,
@@ -64,7 +66,6 @@ define([
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
@@ -156,8 +157,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('WebMapTileServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var resource = Resource.createIfNeeded(options.url, {
-            //TODO deprecation warning
             proxy: options.proxy
         });
 
@@ -318,7 +322,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecation warning
                 return this._resource.proxy;
             }
         },

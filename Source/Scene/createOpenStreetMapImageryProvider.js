@@ -3,6 +3,7 @@ define([
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -13,6 +14,7 @@ define([
         Credit,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         Rectangle,
         Resource,
@@ -33,7 +35,6 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
@@ -68,8 +69,11 @@ define([
         url = appendForwardSlash(url);
         url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('createOpenStreetMapImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var resource = Resource.createIfNeeded(url, {
-            //TODO deprecation warning
             proxy: options.proxy
         });
 

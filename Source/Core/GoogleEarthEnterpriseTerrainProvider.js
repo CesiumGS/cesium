@@ -4,6 +4,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
@@ -27,6 +28,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -103,7 +105,6 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
      * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
@@ -126,6 +127,10 @@ define([
             throw new DeveloperError('options.url or options.metadata is required.');
         }
         //>>includeEnd('debug');
+
+        if (defined(options.proxy)) {
+            deprecationWarning('GoogleEarthEnterpriseTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
 
         var metadata;
         if (defined(options.metadata)) {

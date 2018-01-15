@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -19,6 +20,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -77,7 +79,6 @@ define([
      *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
      *        a {@link NeverTileDiscardPolicy} for this parameter.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      *
      * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
      * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
@@ -113,10 +114,13 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('GoogleEarthEnterpriseMapsProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var url = options.url;
         var path = defaultValue(options.path, '/default_map');
         var resource = Resource.createIfNeeded(url + path, {
-            //TODO deprecation warning
             proxy: options.proxy,
             isDirectory: true
         });
@@ -274,7 +278,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecate
                 return this._resource.proxy;
             }
         },

@@ -7,6 +7,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
@@ -34,6 +35,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Matrix4,
@@ -75,7 +77,6 @@ define([
      * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
      * @param {Resource|String} [options.url] The url to the .gltf file.
-     * @param {Object} [options.headers] HTTP headers to send with the request. // TODO: Deprecate?
      * @param {Object} [options.requestType] The request type, used for request prioritization
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
      * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
@@ -105,6 +106,10 @@ define([
             throw new DeveloperError('Cannot pass in both options.gltf and options.url.');
         }
         //>>includeEnd('debug');
+
+        if (defined(options.headers)) {
+            deprecationWarning('ModelInstanceCollection.headers', 'The options.headers parameter has been deprecated. Specify options.url as a Resource instance and set the headers property there.');
+        }
 
         this.show = defaultValue(options.show, true);
 

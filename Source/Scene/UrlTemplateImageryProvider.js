@@ -8,6 +8,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -32,6 +33,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -140,7 +142,6 @@ define([
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Credit|String} [options.credit=''] A credit for the data source, which is displayed on the canvas.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -230,7 +231,6 @@ define([
         this._resource = undefined;
         this._urlSchemeZeroPadding = undefined;
         this._pickFeaturesResource = undefined;
-        this._proxy = undefined;
         this._tileWidth = undefined;
         this._tileHeight = undefined;
         this._maximumLevel = undefined;
@@ -349,7 +349,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecation warning
                 return this._resource.proxy;
             }
         },
@@ -588,17 +587,19 @@ define([
             }
             //>>includeEnd('debug');
 
+            if (defined(options.proxy)) {
+                deprecationWarning('UrlTemplateImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+            }
+
             var customTags = properties.customTags;
             var allTags = combine(tags, customTags);
             var allPickFeaturesTags = combine(pickFeaturesTags, customTags);
 
             var resource = Resource.createIfNeeded(properties.url, {
-                //TODO deprecation warning
                 proxy: properties.proxy
             });
 
             var pickFeaturesResource = Resource.createIfNeeded(properties.pickFeaturesUrl, {
-                //TODO deprecation warning
                 proxy: properties.proxy
             });
 
