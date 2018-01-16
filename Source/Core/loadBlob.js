@@ -1,9 +1,13 @@
 define([
         './Check',
+        './defined',
+        './deprecationWarning',
         './loadWithXhr',
         './Resource'
     ], function(
         Check,
+        defined,
+        deprecationWarning,
         loadWithXhr,
         Resource) {
     'use strict';
@@ -17,8 +21,6 @@ define([
      * @exports loadBlob
      *
      * @param {Resource|String} urlOrResource The URL of the data.
-     * @param {Object} [headers] HTTP headers to send with the requests. // TODO: Do we want to deprecate?
-     * @param {Request} [request] The request object. Intended for internal use only. // TODO: Do we want to deprecate?
      * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @example
@@ -36,6 +38,14 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
+
+        if (defined(headers)) {
+            deprecationWarning('loadBlob.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
+        }
+
+        if (defined(request)) {
+            deprecationWarning('loadBlob.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
 
         var resource = Resource.createIfNeeded(urlOrResource, {
             headers: headers,

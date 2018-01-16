@@ -17,12 +17,14 @@ defineSuite([
         'Core/JulianDate',
         'Core/loadArrayBuffer',
         'Core/loadJson',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
         'Core/Plane',
         'Core/PrimitiveType',
+        'Core/Resource',
         'Core/Transforms',
         'Core/WebGLConstants',
         'Renderer/Pass',
@@ -54,12 +56,14 @@ defineSuite([
         JulianDate,
         loadArrayBuffer,
         loadJson,
+        loadWithXhr,
         CesiumMath,
         Matrix3,
         Matrix4,
         PerspectiveFrustum,
         Plane,
         PrimitiveType,
+        Resource,
         Transforms,
         WebGLConstants,
         Pass,
@@ -289,6 +293,23 @@ defineSuite([
         });
         expect(model.basePath).toEndWith(basePath);
         expect(model._cacheKey).toEndWith(basePath);
+    });
+
+    it('fromGltf takes Resource as url and basePath parameters', function() {
+        spyOn(loadWithXhr, 'load').and.callThrough();
+
+        var url = new Resource({
+            url: texturedBoxUrl
+        });
+        var basePath = new Resource({
+            url: './Data/Models/Box-Textured-Separate/'
+        });
+        var model = Model.fromGltf({
+            url: url,
+            basePath: basePath
+        });
+        expect(model._resource).toBe(basePath);
+        expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(url.url);
     });
 
     it('renders', function() {

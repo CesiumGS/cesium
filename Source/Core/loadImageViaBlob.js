@@ -2,6 +2,7 @@ define([
         '../ThirdParty/when',
         './Check',
         './defined',
+        './deprecationWarning',
         './isDataUri',
         './loadBlob',
         './loadImage',
@@ -10,6 +11,7 @@ define([
         when,
         Check,
         defined,
+        deprecationWarning,
         isDataUri,
         loadBlob,
         loadImage,
@@ -42,7 +44,6 @@ define([
      * @exports loadImageViaBlob
      *
      * @param {Resource|String} urlOrResource The source URL of the image.
-     * @param {Request} [request] The request object. Intended for internal use only. // TODO: Do we want to deprecate?
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -67,6 +68,10 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
+
+        if (defined(request)) {
+            deprecationWarning('loadCRN.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
 
         var resource = Resource.createIfNeeded(urlOrResource, {
             request: request

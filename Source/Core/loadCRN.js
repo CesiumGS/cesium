@@ -2,6 +2,7 @@ define([
         '../ThirdParty/when',
         './CompressedTextureBuffer',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './loadArrayBuffer',
         './Resource',
@@ -10,6 +11,7 @@ define([
         when,
         CompressedTextureBuffer,
         defined,
+        deprecationWarning,
         DeveloperError,
         loadArrayBuffer,
         Resource,
@@ -28,8 +30,6 @@ define([
      * @exports loadCRN
      *
      * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
-     * @param {Object} [headers] HTTP headers to send with the requests.
-     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @exception {RuntimeError} Unsupported compressed format.
@@ -57,17 +57,23 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(headers)) {
+            deprecationWarning('loadCRN.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
+        }
+
+        if (defined(request)) {
+            deprecationWarning('loadCRN.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
+
         var loadPromise;
         if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
             loadPromise = when.resolve(resourceOrUrlOrBuffer);
         } else {
-            if (typeof resourceOrUrlOrBuffer === 'string') {
-                resourceOrUrlOrBuffer = new Resource({
-                    url: resourceOrUrlOrBuffer,
-                    headers: headers,
-                    request: request
-                });
-            }
+            resourceOrUrlOrBuffer = Resource.createIfNeeded(resourceOrUrlOrBuffer, {
+                headers: headers,
+                request: request
+            });
+
             loadPromise = loadArrayBuffer(resourceOrUrlOrBuffer);
         }
 
