@@ -386,7 +386,7 @@ define(['../Core/getWorkerUrl'], function(getWorkerUrl) {
 	}
 
 	function inflate(reader, writer, offset, size, computeCrc32, onend, onprogress, onreaderror, onwriteerror) {
-		var worker, crc32 = new Crc32();
+		var worker, url, crc32 = new Crc32();
 
 		function oninflateappend(sending, array) {
 			if (computeCrc32 && !sending)
@@ -399,7 +399,7 @@ define(['../Core/getWorkerUrl'], function(getWorkerUrl) {
 
 		if (obj.zip.useWebWorkers) {
 			url = getWorkerUrl(WORKER_DIRECTORY + INFLATE_JS);
-			worker = new Worker(url);	
+			worker = new Worker(url);
 			launchWorkerProcess(worker, reader, writer, offset, size, oninflateappend, onprogress, oninflateend, onreaderror, onwriteerror);
 		} else
 			launchProcess(new obj.zip.Inflater(), reader, writer, offset, size, oninflateappend, onprogress, oninflateend, onreaderror, onwriteerror);
@@ -407,7 +407,7 @@ define(['../Core/getWorkerUrl'], function(getWorkerUrl) {
 	}
 
 	function deflate(reader, writer, level, onend, onprogress, onreaderror, onwriteerror) {
-		var worker, crc32 = new Crc32();
+		var worker, url, crc32 = new Crc32();
 
 		function ondeflateappend(sending, array) {
 			if (sending)
