@@ -11,6 +11,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
         '../Core/Ellipsoid',
@@ -99,6 +100,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         DistanceDisplayCondition,
         Ellipsoid,
@@ -1970,6 +1972,11 @@ define([
         //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (defined(options.query)) {
+            deprecationWarning('CzmlDataSource.query', 'The options.query parameter has been deprecated. Specify czml or options.sourceUri as a Resource instance and add query parameters there.');
+        }
+
         var promise = czml;
         var sourceUri = options.sourceUri;
         var query = options.query;
@@ -2065,7 +2072,6 @@ define([
      * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML. // TODO: Deprecate
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
      */
     CzmlDataSource.load = function(czml, options) {
@@ -2214,7 +2220,6 @@ define([
      * @param {String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML. // TODO: deprecate
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.process = function(czml, options) {
@@ -2227,7 +2232,6 @@ define([
      * @param {String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
-     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML.  // TODO: deprecate
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.load = function(czml, options) {

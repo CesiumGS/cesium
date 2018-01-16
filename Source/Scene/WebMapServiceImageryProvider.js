@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
@@ -62,7 +64,6 @@ define([
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
@@ -100,8 +101,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('WebMapServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var resource = Resource.createIfNeeded(options.url, {
-            //TODO deprecation warning
             proxy: options.proxy
         });
 
@@ -189,7 +193,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecateion warning
                 return this._resource.proxy;
             }
         },

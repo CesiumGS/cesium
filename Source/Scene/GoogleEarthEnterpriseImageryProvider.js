@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -24,6 +25,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -74,7 +76,6 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
      * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded. If this value is not specified, a default
@@ -109,12 +110,15 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('GoogleEarthEnterpriseImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var metadata;
         if (defined(options.metadata)) {
             metadata = options.metadata;
         } else {
             var resource = Resource.createIfNeeded(options.url, {
-                //TODO deprecation warning
                 proxy: options.proxy
             });
             metadata = new GoogleEarthEnterpriseMetadata(resource);
@@ -188,7 +192,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprectaion warning
                 return this._metadata.proxy;
             }
         },

@@ -7,6 +7,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './GoogleEarthEnterpriseTileInformation',
         './isBitSet',
         './loadArrayBuffer',
@@ -24,6 +25,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         GoogleEarthEnterpriseTileInformation,
         isBitSet,
         loadArrayBuffer,
@@ -56,9 +58,6 @@ define([
      * @constructor
      *
      * @param {Resource|String} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery
-     * @param {Object} options Object with the following properties: //TODO deprecate
-     * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery. //TODO deprecate
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      *
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseTerrainProvider
@@ -71,11 +70,15 @@ define([
 
         var url = resourceOrUrl;
         var proxy;
-        if (!(url instanceof Resource)) {
+        if (typeof url !== 'string' && !(url instanceof Resource)) {
             //>>includeStart('debug', pragmas.debug);
-            Check.typeOf.string('options.url', resourceOrUrl.url);
+            Check.typeOf.string('resourceOrUrl.url', resourceOrUrl.url);
             //>>includeEnd('debug');
-            //TODO deprecation warning
+
+            if (defined(resourceOrUrl.proxy)) {
+                deprecationWarning('GoogleEarthEnterpriseMetadata', 'The options.url & options.proxy parameters have been deprecated. Specify a URL string or a Resource as the only parameter.');
+            }
+
             url = resourceOrUrl.url;
             proxy = resourceOrUrl.proxy;
         }
@@ -172,7 +175,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprectaion warning
                 return this._resource.proxy;
             }
         },

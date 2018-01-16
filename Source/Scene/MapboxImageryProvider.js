@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/MapboxApi',
         '../Core/Resource',
@@ -12,6 +13,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         MapboxApi,
         Resource,
@@ -39,7 +41,6 @@ define([
      * @param {String} options.mapId The Mapbox Map ID.
      * @param {String} [options.accessToken] The public access token for the imagery.
      * @param {String} [options.format='png'] The format of the image request.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -68,13 +69,19 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('MapboxImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var url = options.url;
         if (!defined(url)) {
             url = 'https://api.mapbox.com/v4/';
         }
         this._url = url;
 
-        var resource = Resource.createIfNeeded(url);
+        var resource = Resource.createIfNeeded(url, {
+            proxy: options.proxy
+        });
 
         var accessToken = MapboxApi.getAccessToken(options.accessToken);
         this._mapId = mapId;
@@ -86,17 +93,12 @@ define([
         }
         this._format = format;
 
-        var templateUrl = resource.url;
+        var templateUrl = resource.getUrlComponent();
         if (!trailingSlashRegex.test(templateUrl)) {
             templateUrl += '/';
         }
         templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
         resource.url = templateUrl;
-
-        if (defined(options.proxy)) {
-            //TODO deprecation warning
-            resource.proxy = options.proxy;
-        }
 
         resource.addQueryParameters({
             access_token: accessToken
@@ -292,7 +294,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecation warning
                 return this._imageryProvider.proxy;
             }
         },

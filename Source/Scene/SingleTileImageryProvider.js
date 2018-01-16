@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -17,6 +18,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -40,7 +42,6 @@ define([
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -59,8 +60,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('SingleTileImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var resource = Resource.createIfNeeded(options.url, {
-            //TODO deprecation warning
             proxy: options.proxy
         });
 
@@ -142,7 +146,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecation warning
                 return this._resource.proxy;
             }
         },

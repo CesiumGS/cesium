@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/loadJsonp',
@@ -25,6 +26,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         loadJsonp,
@@ -72,7 +74,6 @@ define([
      *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
      *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
      *        parameter.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -103,11 +104,14 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('BingMapsImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         this._key = BingMapsApi.getKey(options.key);
         this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
 
         var urlResource = Resource.createIfNeeded(options.url, {
-            //TODO deprecation warning
             proxy: options.proxy
         });
 
@@ -260,8 +264,7 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecation
-                return this._proxy;
+                return this._resource.proxy;
             }
         },
 

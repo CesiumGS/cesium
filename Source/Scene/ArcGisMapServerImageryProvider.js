@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -30,6 +31,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -69,7 +71,6 @@ define([
      *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
      *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
      *        parameter.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
@@ -118,8 +119,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('ArcGisMapServerImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var resource = Resource.createIfNeeded(options.url, {
-            //TODO deprecation warning
             proxy: options.proxy,
             isDirectory: true
         });
@@ -321,7 +325,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecation warning
                 return this._resource.proxy;
             }
         },
