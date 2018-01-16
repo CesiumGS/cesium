@@ -1041,25 +1041,6 @@ defineSuite([
     });
 
     it('zoomTo zooms to Cesium3DTileset with default offset when offset not defined', function() {
-        // viewer = createViewer(container);
-        // var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
-        // var tileset = new Cesium3DTileset({
-        //     url : path
-        // });
-        //
-        // // stored for movement check
-        // var camPos = Cartesian3.clone(viewer.camera.position);
-        // var camDir = Cartesian3.clone(viewer.camera.direction);
-        //
-        // // load tileset to test
-        // return tileset.readyPromise.then(function() {
-        //     return viewer.zoomTo(tileset).then(function() {
-        //         // moved to new location
-        //         expect(viewer.camera.position).not.toEqual(camPos);
-        //         expect(viewer.camera.direction).not.toEqual(camDir);
-        //     });
-        // });
-
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
@@ -1091,10 +1072,6 @@ defineSuite([
     it('zoomTo zooms to Cesium3DTileset with offset', function() {
         viewer = createViewer(container);
 
-        // stored for movement check
-        // var camPos = Cartesian3.clone(viewer.camera.position);
-        // var camDir = Cartesian3.clone(viewer.camera.direction);
-
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
         var tileset = new Cesium3DTileset({
             url : path
@@ -1104,13 +1081,6 @@ defineSuite([
         return tileset.readyPromise.then(function() {
             var expectedBoundingSphere = tileset.boundingSphere;
             var expectedOffset = new HeadingPitchRange(0.4, 1.2, 4.0 * expectedBoundingSphere.radius);
-
-            //     return viewer.zoomTo(tileset, offset).then(function() {
-            //         // moved to new location
-            //         expect(viewer.camera.position).not.toEqual(camPos);
-            //         expect(viewer.camera.direction).not.toEqual(camDir);
-            //     });
-            // });
 
             var promise = viewer.zoomTo(tileset, expectedOffset);
             var wasCompleted = false;
