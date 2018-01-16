@@ -11,6 +11,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Scene/DiscardMissingTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -32,6 +33,7 @@ defineSuite([
         loadWithXhr,
         Rectangle,
         RequestScheduler,
+        Resource,
         DiscardMissingTileImagePolicy,
         Imagery,
         ImageryLayer,
@@ -118,6 +120,24 @@ defineSuite([
     }
 
     it('resolves readyPromise', function() {
+        installMockGetQuadTreePacket();
+        var url = 'http://fake.fake.invalid';
+
+        var resource = new Resource({
+            url : url
+        });
+
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
+            url : resource
+        });
+
+        return imageryProvider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(imageryProvider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
         installMockGetQuadTreePacket();
         var url = 'http://fake.fake.invalid';
 

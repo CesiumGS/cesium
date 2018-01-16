@@ -12,6 +12,7 @@ defineSuite([
         'Core/Request',
         'Core/RequestScheduler',
         'Core/RequestState',
+        'Core/Resource',
         'Core/TimeIntervalCollection',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
@@ -34,6 +35,7 @@ defineSuite([
         Request,
         RequestScheduler,
         RequestState,
+        Resource,
         TimeIntervalCollection,
         WebMercatorTilingScheme,
         Imagery,
@@ -238,6 +240,24 @@ defineSuite([
             layer : 'someLayer',
             style : 'someStyle',
             url : 'http://wmts.invalid',
+            tileMatrixSetID : 'someTMS'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'http://wmts.invalid'
+        });
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : resource,
             tileMatrixSetID : 'someTMS'
         });
 

@@ -7,6 +7,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/queryToObject',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/BingMapsStyle',
         'Scene/DiscardMissingTileImagePolicy',
@@ -25,6 +26,7 @@ defineSuite([
         loadWithXhr,
         queryToObject,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
@@ -230,6 +232,28 @@ defineSuite([
 
         var provider = new BingMapsImageryProvider({
             url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var resource = new Resource({
+            url : url
+        });
+
+        var provider = new BingMapsImageryProvider({
+            url : resource,
             mapStyle : mapStyle
         });
 

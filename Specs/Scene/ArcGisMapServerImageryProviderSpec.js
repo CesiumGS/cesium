@@ -15,6 +15,7 @@ defineSuite([
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
         'Scene/DiscardMissingTileImagePolicy',
@@ -42,6 +43,7 @@ defineSuite([
         queryToObject,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
         DiscardMissingTileImagePolicy,
@@ -143,6 +145,25 @@ defineSuite([
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        stubJSONPCall(baseUrl, webMercatorResult);
+
+        var resource = new Resource({
+            url : baseUrl,
+            isDirectory: true
+        })
+        var provider = new ArcGisMapServerImageryProvider({
+            url : resource
         });
 
         return provider.readyPromise.then(function(result) {

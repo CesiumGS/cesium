@@ -421,6 +421,9 @@ defineSuite([
             .then(function(result) {
                 expect(result).toEqual([true, true, true, false, false, false]);
                 expect(cb.calls.count()).toEqual(3);
+                expect(resource._retryCount).toEqual(3);
+                resource.succeeded();
+                expect(resource._retryCount).toEqual(0);
             });
     });
 
@@ -446,6 +449,9 @@ defineSuite([
             .then(function(result) {
                 expect(result).toEqual([false, true, false, true, false, false]);
                 expect(cb.calls.count()).toEqual(4);
+                expect(resource._retryCount).toEqual(4);
+                resource.succeeded();
+                expect(resource._retryCount).toEqual(0);
             });
     });
 });

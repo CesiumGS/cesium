@@ -42,12 +42,12 @@ define([
      */
     var endUserOptions = queryToObject(window.location.search.substring(1));
 
-
-    var imageryProvider = createTileMapServiceImageryProvider({
-        url : 'https://cesiumjs.org/blackmarble',
-        credit : 'Black Marble imagery courtesy NASA Earth Observatory',
-        flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
-    });
+    var imageryProvider;
+    if (endUserOptions.tmsImageryUrl) {
+        imageryProvider = createTileMapServiceImageryProvider({
+            url : endUserOptions.tmsImageryUrl
+        });
+    }
 
     var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;

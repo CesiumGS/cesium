@@ -10,6 +10,7 @@ defineSuite([
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
@@ -31,6 +32,7 @@ defineSuite([
         queryToObject,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         GetFeatureInfoFormat,
         Imagery,
@@ -76,6 +78,22 @@ defineSuite([
     it('resolves readyPromise', function() {
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server',
+            layers : 'someLayer'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'made/up/wms/server'
+        });
+
+        var provider = new WebMapServiceImageryProvider({
+            url : resource,
             layers : 'someLayer'
         });
 
