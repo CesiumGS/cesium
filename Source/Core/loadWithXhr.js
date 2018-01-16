@@ -107,6 +107,13 @@ define([
         }
 
         return promise
+            .then(function(data) {
+                if (defined(optionsOrResource.succeeded)) {
+                    optionsOrResource.succeeded();
+                }
+
+                return data;
+            })
             .otherwise(function(e) {
                 if (defined(optionsOrResource.retryOnError)) {
                     return optionsOrResource.retryOnError(e)

@@ -98,6 +98,11 @@ define([
         }
 
         return promise
+            .then(function(data) {
+                resource.succeeded();
+
+                return data;
+            })
             .otherwise(function(e) {
                 return resource.retryOnError(e)
                     .then(function(retry) {
