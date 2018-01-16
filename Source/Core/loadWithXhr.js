@@ -115,7 +115,7 @@ define([
                 return data;
             })
             .otherwise(function(e) {
-                if (defined(optionsOrResource.retryOnError)) {
+                if ((request.state === RequestState.FAILED) && defined(optionsOrResource.retryOnError)) {
                     return optionsOrResource.retryOnError(e)
                         .then(function(retry) {
                             if (retry) {

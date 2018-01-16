@@ -245,9 +245,31 @@ defineSuite([
         });
     });
 
+    it('load works with a KML Resource', function() {
+        var dataSource = new KmlDataSource(options);
+        var resource = new Resource({
+            url: 'Data/KML/simple.kml'
+        });
+        return dataSource.load(resource, options).then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
     it('load works with a KMZ URL', function() {
         var dataSource = new KmlDataSource(options);
         return dataSource.load('Data/KML/simple.kmz').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load works with a KMZ Resource', function() {
+        var dataSource = new KmlDataSource(options);
+        var resource = new Resource({
+            url: 'Data/KML/simple.kmz'
+        });
+        return dataSource.load(resource).then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });

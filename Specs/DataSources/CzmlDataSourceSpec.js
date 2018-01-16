@@ -21,6 +21,7 @@ defineSuite([
         'Core/Quaternion',
         'Core/Rectangle',
         'Core/ReferenceFrame',
+        'Core/Resource',
         'Core/RuntimeError',
         'Core/Spherical',
         'Core/TimeInterval',
@@ -60,6 +61,7 @@ defineSuite([
         Quaternion,
         Rectangle,
         ReferenceFrame,
+        Resource,
         RuntimeError,
         Spherical,
         TimeInterval,
@@ -271,6 +273,15 @@ defineSuite([
     it('process loads expected data', function() {
         var dataSource = new CzmlDataSource();
         return dataSource.process(simple).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(10);
+        });
+    });
+
+    it('process loads expected data from Resource', function() {
+        var dataSource = new CzmlDataSource();
+        return dataSource.process(new Resource({
+            url: simpleUrl
+        })).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(10);
         });
     });

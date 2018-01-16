@@ -10,6 +10,7 @@ define([
     './getAbsoluteUri',
     './getBaseUri',
     './getExtensionFromUri',
+    './isDataUri',
     './objectToQuery',
     './queryToObject',
     '../ThirdParty/Uri',
@@ -25,6 +26,7 @@ define([
             getAbsoluteUri,
             getBaseUri,
             getExtensionFromUri,
+            isDataUri,
             objectToQuery,
             queryToObject,
             Uri,
@@ -294,6 +296,18 @@ define([
                     this._isDirectory = value;
                 }
             }
+        },
+
+        /**
+         * True if the Resource refers to a data URI.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
+        isDataUri: {
+            get: function() {
+                return isDataUri(this._url);
+            }
         }
     });
 
@@ -493,6 +507,17 @@ define([
      */
     Resource.prototype.succeeded = function() {
         this._retryCount = 0;
+    };
+
+    /**
+     * Returns the base path of the Resource.
+     *
+     * @param {Boolean} [includeQuery = false] Whether or not to include the query string and fragment form the uri
+     *
+     * @returns {String} The base URI of the resource
+     */
+    Resource.prototype.getBaseUri = function(includeQuery) {
+        return getBaseUri(this.getUrlComponent(includeQuery), includeQuery);
     };
 
     /**

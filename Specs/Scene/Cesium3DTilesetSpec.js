@@ -16,6 +16,7 @@ defineSuite([
         'Core/Plane',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
@@ -46,6 +47,7 @@ defineSuite([
         Plane,
         PrimitiveType,
         RequestScheduler,
+        Resource,
         ClearCommand,
         ContextLimits,
         Cesium3DTile,
@@ -253,6 +255,41 @@ defineSuite([
         });
     });
 
+    it('Constructor works with directory resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets',
+            isDirectory: true
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : resource
+        });
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+    it('Constructor works with file resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json'
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : resource
+        });
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
      it('rejects readyPromise with invalid tileset version', function() {
         var tilesetJson = {
             asset : {
@@ -286,7 +323,7 @@ defineSuite([
         var tileset = new Cesium3DTileset({
             url : path
         });
-        expect(tileset.url).toEqual(path);
+        expect(tileset.url).toEqual(path + '/');
         expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json'));
     });
 
@@ -305,7 +342,7 @@ defineSuite([
         var tileset = new Cesium3DTileset({
             url : path + param
         });
-        expect(tileset.url).toEqual(path + param);
+        expect(tileset.url).toEqual(path + '/' + param);
         expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json' + param));
     });
 

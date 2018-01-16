@@ -2217,7 +2217,7 @@ define([
     /**
      * Processes the provided url or CZML object without clearing any existing data.
      *
-     * @param {String|Object} czml A url or CZML object to be processed.
+     * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
@@ -2229,7 +2229,7 @@ define([
     /**
      * Loads the provided url or CZML object, replacing any existing data.
      *
-     * @param {String|Object} czml A url or CZML object to be processed.
+     * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.

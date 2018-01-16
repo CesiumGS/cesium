@@ -161,24 +161,23 @@ define([
         //>>includeEnd('debug');
 
         var resource = Resource.createIfNeeded(options.url);
-        var url = resource.url;
 
         var tilesetResource = resource;
         var basePath;
 
         if (resource.extension === 'json') {
-            basePath = getBaseUri(url, true);
-        } else if (isDataUri(url)) {
+            basePath = resource.getBaseUri(true);
+        } else if (resource.isDataUri) {
             basePath = '';
         } else {
             resource.isDirectory = true;
             tilesetResource = resource.getDerivedResource({
                 url: 'tileset.json'
             });
-            basePath = url;
+            basePath = resource.url;
         }
 
-        this._url = url;
+        this._url = resource.url;
         this._tilesetUrl = tilesetResource.url;
         this._basePath = basePath;
         this._root = undefined;
