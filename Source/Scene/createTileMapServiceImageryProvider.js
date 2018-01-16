@@ -3,6 +3,7 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/GeographicTilingScheme',
         '../Core/loadXML',
@@ -18,6 +19,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         GeographicTilingScheme,
         loadXML,
@@ -39,7 +41,6 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Resource|String} [options.url='.'] Path to image tiles on server.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Credit|String} [options.credit=''] A credit for the data source, which is displayed on the canvas.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -92,11 +93,14 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('createTileMapServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var resource = Resource.createIfNeeded(options.url, {
-            //TODO deprecation warning
-            proxy : options.proxy,
-            isDirectory: true
+            proxy : options.proxy
         });
+        resource.isDirectory = true;
 
         var xmlResource = resource.getDerivedResource({
             url: 'tilemapresource.xml'
