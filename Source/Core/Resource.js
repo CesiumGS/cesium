@@ -12,7 +12,8 @@ define([
     './getExtensionFromUri',
     './objectToQuery',
     './queryToObject',
-    '../ThirdParty/Uri'
+    '../ThirdParty/Uri',
+    '../ThirdParty/when'
 ], function(appendForwardSlash,
             Check,
             clone,
@@ -26,7 +27,8 @@ define([
             getExtensionFromUri,
             objectToQuery,
             queryToObject,
-            Uri) {
+            Uri,
+            when) {
     'use strict';
 
     /**
@@ -83,12 +85,13 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {String} [options.responseType] The type of response.
      * @param {String} [options.method='GET'] The method to use.
      * @param {Object} [options.data] Data that is sent with the resource request.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
-     * @param {Function} [options.retryCallback] The function to call when loading the resource fails.
+     * @param {Function} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      *
@@ -105,18 +108,69 @@ define([
         this._templateValues = encodeValues(defaultValue(options.templateValues, {}));
         this._queryParameters = defaultValue(options.queryParameters, {});
         this._isDirectory = defaultValue(options.isDirectory, false);
-
         this.url = options.url;
 
+        /**
+         * Additional HTTP headers that will be sent with the request.
+         *
+         * @type {Object}
+         */
         this.headers = defined(options.headers) ? clone(options.headers) : {};
+
+        /**
+         * A Request object that will be used. Intended for internal use only.
+         *
+         * @type {Request}
+         */
         this.request = options.request;
+
+        /**
+         * The type of response expected from the request.
+         *
+         * @type {String}
+         */
         this.responseType = options.responseType;
+
+        /**
+         * The method to use for the request.
+         *
+         * @type {String}
+         */
         this.method = defaultValue(options.method, 'GET');
+
+        /**
+         * Data to be sent with the request.
+         *
+         * @type {Object}
+         */
         this.data = options.data;
+
+        /**
+         * Overrides the MIME type returned by the server.
+         *
+         * @type {String}
+         */
         this.overrideMimeType = options.overrideMimeType;
+
+        /**
+         * A proxy to be used when loading the resource.
+         *
+         * @type {DefaultProxy}
+         */
         this.proxy = options.proxy;
 
+        /**
+         * Function to call when a request for this resource fails. If it returns true, the request will be retried.
+         *
+         * @type {Function}
+         */
         this.retryCallback = options.retryCallback;
+
+        /**
+         * The number of times the retryCallback should be called before giving up.
+         *
+         * @type {Number}
+         */
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
     }
@@ -310,6 +364,7 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be combined with those of the current instance.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {String} [options.responseType] The type of response.
      * @param {String} [options.method] The method to use.
      * @param {Object} [options.data] Data that is sent with the request.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
@@ -384,21 +439,21 @@ define([
      *
      * @param {Error} [error] The error that was encountered.
      *
-     * @returns {Boolean} If true, the request will be retried.
+     * @returns {Promise<Boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
      */
     Resource.prototype.retryOnError = function(error) {
         var retryCallback = this.retryCallback;
-        if ((typeof retryCallback !== 'function') || (this._retryCount > this.retryAttempts)) {
-            return false;
+        if ((typeof retryCallback !== 'function') || (this._retryCount >= this.retryAttempts)) {
+            return when(false);
         }
 
-        if (retryCallback(this, error)) {
-            ++this._retryCount;
-            return true;
-        }
+        var that = this;
+        return when(retryCallback(this, error))
+            .then(function(result) {
+                ++that._retryCount;
 
-        this._retryCount = 0;
-        return false;
+                return result;
+            });
     };
 
     /**
@@ -431,6 +486,13 @@ define([
         result._retryCount = 0;
 
         return result;
+    };
+
+    /**
+     * Called when a request succeeds
+     */
+    Resource.prototype.succeeded = function() {
+        this._retryCount = 0;
     };
 
     /**

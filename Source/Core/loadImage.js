@@ -104,16 +104,24 @@ define([
         }
 
         return promise
+            .then(function(data) {
+                resource.succeeded();
+
+                return data;
+            })
             .otherwise(function(e) {
-                if (resource.retryOnError(e)) {
-                    // Reset request so it can try again
-                    request.state = RequestState.UNISSUED;
-                    request.deferred = undefined;
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
 
-                    return makeRequest(resource);
-                }
+                            return makeRequest(resource);
+                        }
 
-                throw e;
+                        return when.reject(e);
+                    });
             });
     }
 

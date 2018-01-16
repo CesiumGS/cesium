@@ -107,16 +107,30 @@ define([
         }
 
         return promise
-            .otherwise(function(e) {
-                if (defined(optionsOrResource.retryOnError) && optionsOrResource.retryOnError(e)) {
-                    // Reset request so it can try again
-                    request.state = RequestState.UNISSUED;
-                    request.deferred = undefined;
-
-                    return makeRequest(optionsOrResource);
+            .then(function(data) {
+                if (defined(optionsOrResource.succeeded)) {
+                    optionsOrResource.succeeded();
                 }
 
-                throw e;
+                return data;
+            })
+            .otherwise(function(e) {
+                if (defined(optionsOrResource.retryOnError)) {
+                    return optionsOrResource.retryOnError(e)
+                        .then(function(retry) {
+                            if (retry) {
+                                // Reset request so it can try again
+                                request.state = RequestState.UNISSUED;
+                                request.deferred = undefined;
+
+                                return makeRequest(optionsOrResource);
+                            }
+
+                            return when.reject(e);
+                        });
+                }
+
+                return when.reject(e);
             });
     }
 
