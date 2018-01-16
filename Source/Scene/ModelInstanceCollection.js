@@ -107,10 +107,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.headers)) {
-            deprecationWarning('ModelInstanceCollection.headers', 'The options.headers parameter has been deprecated. Specify options.url as a Resource instance and set the headers property there.');
-        }
-
         this.show = defaultValue(options.show, true);
 
         this._instancingSupported = false;
@@ -152,14 +148,10 @@ define([
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
         // Passed on to Model
-        this._url = Resource.createIfNeeded(options.url, {
-            headers: options.headers
-        });
+        this._url = Resource.createIfNeeded(options.url);
         this._requestType = options.requestType;
         this._gltf = options.gltf;
-        this._basePath = Resource.createIfNeeded(options.basePath, {
-            headers: options.headers
-        });
+        this._basePath = Resource.createIfNeeded(options.basePath);
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
         this._upAxis = options.upAxis; // Undocumented option

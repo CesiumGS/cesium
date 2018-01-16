@@ -1,7 +1,6 @@
 define([
         '../Core/Check',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/Resource',
@@ -10,7 +9,6 @@ define([
     ], function(
         Check,
         defined,
-        deprecationWarning,
         DeveloperError,
         loadImage,
         Resource,
@@ -26,9 +24,6 @@ define([
      *
      * @param {Context} context The context to use to create the cube map.
      * @param {Object} urls The source URL of each image.  See the example below.
-     * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
-     *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
-     *        Data URIs are never requested using CORS.
      * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
      *
      * @exception {DeveloperError} context is required.
@@ -54,7 +49,7 @@ define([
      *
      * @private
      */
-    function loadCubeMap(context, urls, allowCrossOrigin) {
+    function loadCubeMap(context, urls) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('context', context);
         if ((!defined(urls)) ||
@@ -68,10 +63,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(allowCrossOrigin)) {
-            deprecationWarning('loadCubeMap.allowCrossOrigin', 'The allowCrossOrigin parameter has been deprecated. It no longer needs to be specified.');
-        }
-
         // PERFORMANCE_IDEA: Given the size of some cube maps, we should consider tiling them, which
         // would prevent hiccups when uploading, for example, six 4096x4096 textures to the GPU.
         //
@@ -81,22 +72,22 @@ define([
         var facePromises = [
             loadImage(new Resource({
                 url: urls.positiveX
-            }), allowCrossOrigin),
+            })),
             loadImage(new Resource({
                 url: urls.negativeX
-            }), allowCrossOrigin),
+            })),
             loadImage(new Resource({
                 url: urls.positiveY
-            }), allowCrossOrigin),
+            })),
             loadImage(new Resource({
                 url: urls.negativeY
-            }), allowCrossOrigin),
+            })),
             loadImage(new Resource({
                 url: urls.positiveZ
-            }), allowCrossOrigin),
+            })),
             loadImage(new Resource({
                 url: urls.negativeZ
-            }), allowCrossOrigin)
+            }))
         ];
 
         return when.all(facePromises, function(images) {
