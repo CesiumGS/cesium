@@ -48,7 +48,7 @@
     <table>
         <tr>
             <td>
-                Request render mode
+                <code>requestRender</code> mode enabled
             </td>
             <td>
                 <input type="checkbox" value="true" data-bind="checked: requestRenderMode, valueUpdate: 'input'">
@@ -85,16 +85,121 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+
+// Create a viewer that won't render a new frame unless
+// explicitly update to reduce overall CPU usage.
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    requestRenderMode : true
+    requestRenderMode : true,
+    maximumRenderTimeChange : Infinity
 });
 
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
 
+// Clear scene and set default view.
+var handler;
+function resetScene() {
+    viewer.trackedEntity = undefined;
+    viewer.entities.removeAll();
+    viewer.scene.primitives.removeAll();
+    handler = handler && handler.destroy();
+    scene.skyBox.show = true;
+    scene.camera.flyHome(0.0);
+    scene.requestRender();
+}
+
+// Load a tileset and set the view.
+// No need to call scene.requestRender()
+function loadTilesetScenario() {
+    resetScene();
+
+    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+        url : 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg'
+    }));
+
+    tileset.readyPromise.then(function() {
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }).otherwise(function(error) {
+        throw(error);
+    });
+}
+
+// Load CZML DataSource with a model and set the trackedEntity.
+// No need to call scene.requestRender()
+// Enable and adjust maximum simulation time change to see
+// animations at desired speed.
+function loadCzmlScenario() {
+    var czml = [{
+        "id" : "document",
+        "name" : "CZML Model",
+        "version" : "1.0"
+    }, {
+        "id" : "aircraft model",
+        "name" : "Cesium Air",
+        "position" : {
+            "cartographicDegrees" : [-77, 37, 10000]
+        },
+        "model": {
+            "gltf" : "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+            "scale" : 2.0,
+            "minimumPixelSize": 128
+        }
+    }];
+
+    var dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+
+    dataSourcePromise.then(function(dataSource){
+        viewer.trackedEntity = dataSource.entities.getById('aircraft model');
+    });
+}
+
+// Pick an entity, only rendering when needed.
+function pickingScenario() {
+    resetScene();
+
+    var entity = viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        box : {
+            dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 30000.0),
+            material : Cesium.Color.BLUE
+        }
+    });
+
+    scene.requestRender();
+
+    // If the mouse is over the billboard, change its scale and color,
+    // then request a new render frame.
+    var lastPicked;
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedObject = scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
+            entity.box.material = Cesium.Color.YELLOW;
+            scene.requestRender();
+            lastPicked = pickedObject;
+        } else if (Cesium.defined(lastPicked)) {
+            entity.box.material = Cesium.Color.BLUE;
+            scene.requestRender();
+            lastPicked = undefined;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+}
+
+// Changes to the scene with the API will require
+// calling requestRender() on change.
+function setScenePropertiesScenario() {
+    scene.skyBox.show = false;
+    scene.backgroundColor = Cesium.Color.CORNFLOWERBLUE;
+    scene.requestRender();
+}
+
+// BEGIN SANDCASTLE EXAMPLE UI SETUP
+
 var viewModel = {
     requestRenderMode : true,
-    timeChangeEnabled : true,
+    timeChangeEnabled : false,
     maximumRenderTimeChange : 0.5,
     lastRenderTime : ''
 };
@@ -115,26 +220,33 @@ Cesium.knockout.getObservable(viewModel, 'maximumRenderTimeChange').subscribe(fu
     scene.maximumRenderTimeChange = value;
 });
 
-Sandcastle.addToolbarButton('Request a new render frame', function() {
-    scene.requestRender();
-});
-
 scene.postRender.addEventListener(function() {
     var time = Cesium.JulianDate.toGregorianDate(scene.lastRenderTime);
     var value = time.hour + ':' + time.minute + ':' + time.second + ':' + time.millisecond.toFixed(0);
     Cesium.knockout.getObservable(viewModel, 'lastRenderTime')(value);
 });
 
-Sandcastle.addToolbarButton('Load a tileset', function() {
-    scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4'
-    })).readyPromise.then(function(tileset) {
-        var boundingSphere = tileset.boundingSphere;
-        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, boundingSphere.radius * 4.0));
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-    }).otherwise(function(error) {
-        throw(error);
-    });
+var scenarios = [{
+    text : 'Default view',
+    onselect : resetScene
+}, {
+    text : 'Load a 3D tileset and set the view',
+    onselect : loadTilesetScenario
+}, {
+    text : 'Mouseover picking',
+    onselect : pickingScenario
+}, {
+    text : 'Load CZML with model and set the view',
+    onselect : loadCzmlScenario
+}, {
+    text : 'Scene changes with API',
+    onselect : setScenePropertiesScenario
+}];
+
+Sandcastle.addToolbarMenu(scenarios);
+
+Sandcastle.addToolbarButton('Request a new render frame', function() {
+    scene.requestRender();
 });
 
 //Sandcastle_End
