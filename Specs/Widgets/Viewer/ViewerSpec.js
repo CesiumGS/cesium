@@ -1,12 +1,15 @@
 defineSuite([
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/ClockRange',
         'Core/ClockStep',
+        'Core/Color',
         'Core/EllipsoidTerrainProvider',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/WebMercatorProjection',
+        'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/DataSourceClock',
@@ -36,14 +39,17 @@ defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
     ], 'Widgets/Viewer/Viewer', function(
+        BoundingSphere,
         Cartesian3,
         ClockRange,
         ClockStep,
+        Color,
         EllipsoidTerrainProvider,
         HeadingPitchRange,
         JulianDate,
         Matrix4,
         WebMercatorProjection,
+        BoundingSphereState,
         ConstantPositionProperty,
         ConstantProperty,
         DataSourceClock,
@@ -1034,15 +1040,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('flyTo throws if target is not defined', function() {
-        viewer = createViewer(container);
-
-        expect(function() {
-            viewer.flyTo();
-        }).toThrowDeveloperError();
-    });
-
-    it('zoomTo when target is Cesium3DTileset and uses default offset when offset not defined', function() {
+    it('zoomTo zooms to Cesium3DTileset with default offset when offset not defined', function() {
         viewer = createViewer(container);
          var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
          var tileset = new Cesium3DTileset({
@@ -1053,23 +1051,113 @@ defineSuite([
         var camPos = Cartesian3.clone(viewer.camera.position);
         var camDir = Cartesian3.clone(viewer.camera.direction);
 
-        //spyOn(viewer.camera, 'viewBoundingSphere');
-
         // load tileset to test
         return tileset.readyPromise.then(function() {
-
-            //var boundingSphere = tileset.boundingSphere;
-            //var offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
             return viewer.zoomTo(tileset).then(function() {
-                //expect(viewer.camera.viewBoundingSphere).toHaveBeenCalledWith(boundingSphere, offset);
-
+                // moved to new location
                 expect(viewer.camera.position).not.toEqual(camPos);
                 expect(viewer.camera.direction).not.toEqual(camDir);
             });
         });
     });
 
-    it('flys to target when target is Cesium3DTileset and uses default offset when options is not defined', function() {
+    it('zoomTo zooms to Cesium3DTileset with offset', function() {
+        viewer = createViewer(container);
+
+        // stored for movement check
+        var camPos = Cartesian3.clone(viewer.camera.position);
+        var camDir = Cartesian3.clone(viewer.camera.direction);
+
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var tileset = new Cesium3DTileset({
+            url : path
+        });
+
+        // load the tileset then check tests
+        return tileset.readyPromise.then(function() {
+            var boundingSphere = tileset.boundingSphere;
+            var offset = new HeadingPitchRange(0.4, 1.2, 4 * boundingSphere.radius);
+
+            return viewer.zoomTo(tileset, offset).then(function() {
+                // moved to new location
+                expect(viewer.camera.position).not.toEqual(camPos);
+                expect(viewer.camera.direction).not.toEqual(camDir);
+            });
+        });
+    });
+
+    it('zoomTo zooms to entity with default offset when offset not defined', function() {
+        viewer = createViewer(container);
+        var blueBox = viewer.entities.add({
+            name : 'Blue box',
+            position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+            box : {
+                dimensions : new Cartesian3(400000.0, 300000.0, 500000.0),
+                material : Color.BLUE
+            }
+        });
+
+        var entities = viewer.entities;
+
+        // stored for movement check
+        var camPos = Cartesian3.clone(viewer.camera.position);
+        var camDir = Cartesian3.clone(viewer.camera.direction);
+
+        return viewer.zoomTo(entities).then(function() {
+            // moved to new location
+            expect(viewer.camera.position).not.toEqual(camPos);
+            expect(viewer.camera.direction).not.toEqual(camDir);
+        });
+    });
+
+    it('zoomTo zooms to entity with offset', function() {
+        viewer = createViewer(container);
+        var blueBox = viewer.entities.add({
+            name : 'Blue box',
+            position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+            box : {
+                dimensions : new Cartesian3(400000.0, 300000.0, 500000.0),
+                material : Color.BLUE
+            }
+        });
+
+        var entities = viewer.entities;
+
+        // stored for movement check
+        var camPos = Cartesian3.clone(viewer.camera.position);
+        var camDir = Cartesian3.clone(viewer.camera.direction);
+
+        var boundingSpheres = [];
+        var boundingSphereScratch = new BoundingSphere();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
+
+            if (state === BoundingSphereState.PENDING) {
+                return;
+            } else if (state !== BoundingSphereState.FAILED) {
+                boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+            }
+        }
+        var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        var offset = new HeadingPitchRange(3, 0.2, 2.3 * boundingSphere.radius);
+
+        return viewer.zoomTo(entities, offset).then(function() {
+            // moved to new location
+            expect(viewer.camera.position).not.toEqual(camPos);
+            expect(viewer.camera.direction).not.toEqual(camDir);
+        });
+    });
+
+
+    it('flyTo throws if target is not defined', function() {
+        viewer = createViewer(container);
+
+        expect(function() {
+            viewer.flyTo();
+        }).toThrowDeveloperError();
+    });
+
+    it('flyTo flys to Cesium3DTileset with default offset when options not defined', function() {
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
@@ -1096,7 +1184,7 @@ defineSuite([
 
     });
 
-    it('flys to when target is Cesium3DTileset and uses default offset when offset not defined in options', function() {
+    it('flyTo flys to Cesium3DTileset with default offset when offset not defined', function() {
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
@@ -1125,36 +1213,7 @@ defineSuite([
         });
     });
 
-    it('zooms to target when target is Cesium3DTileset and offset is defined', function() {
-        viewer = createViewer(container);
-
-        // stored for movement check
-        var camPos = Cartesian3.clone(viewer.camera.position);
-        var camDir = Cartesian3.clone(viewer.camera.direction);
-
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
-        var tileset = new Cesium3DTileset({
-            url : path
-        });
-
-        //spyOn(viewer.camera, 'viewBoundingSphere');
-
-        // load the tileset then check tests
-        return tileset.readyPromise.then(function() {
-            var boundingSphere = tileset.boundingSphere;
-            var offset = new HeadingPitchRange(0.4, 1.2, 4 * boundingSphere.radius);
-
-            return viewer.zoomTo(tileset, offset).then(function() {
-                // called with proper values
-                //expect(viewer.camera.viewBoundingSphere).toHaveBeenCalledWith(boundingSphere, offset);
-                // moved to new location
-                expect(viewer.camera.position).not.toEqual(camPos);
-                expect(viewer.camera.direction).not.toEqual(camDir);
-            });
-        });
-    });
-
-    it('flys to target when target is Cesium3DTileset and offset is defined', function() {
+    it('flyTo flys to target when target is Cesium3DTileset and options are defined', function() {
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
@@ -1167,7 +1226,9 @@ defineSuite([
             var boundingSphere = tileset.boundingSphere;
             var offsetVal = new HeadingPitchRange(3, 0.2, 2.3 * boundingSphere.radius);
             var options = {
-                offset : offsetVal
+                offset : offsetVal,
+                duration : 3.0,
+                maximumHeight : 5.0
             };
 
             var promise = viewer.flyTo(tileset, options);
@@ -1184,6 +1245,191 @@ defineSuite([
                 expect(wasCompleted).toEqual(true);
             });
 
+        });
+    });
+
+    it('flyTo flys to entity with default offset when options not defined', function() {
+        viewer = createViewer(container);
+
+        var blueBox = viewer.entities.add({
+            name : 'Blue box',
+            position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+            box : {
+                dimensions : new Cartesian3(400000.0, 300000.0, 500000.0),
+                material : Color.BLUE
+            }
+        });
+
+        var entities = viewer.entities;
+
+        var boundingSpheres = [];
+        var boundingSphereScratch = new BoundingSphere();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
+
+            if (state === BoundingSphereState.PENDING) {
+                return;
+            } else if (state !== BoundingSphereState.FAILED) {
+                boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+            }
+        }
+        var promise = viewer.flyTo(entities);
+        var wasCompleted = false;
+
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+        });
+
+        viewer.render();
+
+        return promise.then(function() {
+            expect(wasCompleted).toEqual(true);
+        });
+
+    });
+
+    it('flyTo flys to entity with default offset when offset not defined', function() {
+        viewer = createViewer(container);
+
+        var blueBox = viewer.entities.add({
+            name : 'Blue box',
+            position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+            box : {
+                dimensions : new Cartesian3(400000.0, 300000.0, 500000.0),
+                material : Color.BLUE
+            }
+        });
+
+        var entities = viewer.entities;
+
+        var boundingSpheres = [];
+        var boundingSphereScratch = new BoundingSphere();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
+
+            if (state === BoundingSphereState.PENDING) {
+                return;
+            } else if (state !== BoundingSphereState.FAILED) {
+                boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+            }
+        }
+        var options = {};
+
+        var promise = viewer.flyTo(entities, options);
+        var wasCompleted = false;
+
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+        });
+
+        viewer.render();
+
+        return promise.then(function() {
+            expect(wasCompleted).toEqual(true);
+        });
+    });
+
+    it('flyTo flys to entity when options are defined', function() {
+        viewer = createViewer(container);
+
+        var blueBox = viewer.entities.add({
+            name : 'Blue box',
+            position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+            box : {
+                dimensions : new Cartesian3(400000.0, 300000.0, 500000.0),
+                material : Color.BLUE
+            }
+        });
+
+        var entities = viewer.entities;
+
+        var boundingSpheres = [];
+        var boundingSphereScratch = new BoundingSphere();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
+
+            if (state === BoundingSphereState.PENDING) {
+                return;
+            } else if (state !== BoundingSphereState.FAILED) {
+                boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+            }
+        }
+        var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        var offsetVal = new HeadingPitchRange(3, 0.2, 2.3 * boundingSphere.radius);
+        var options = {
+            offset : offsetVal,
+            duration : 3.0,
+            maximumHeight : 5.0
+        };
+
+        var promise = viewer.flyTo(entities, options);
+        var wasCompleted = false;
+
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+            expect(options.duration).toBeDefined();
+            expect(options.maximumHeight).toBeDefined();
+            wasCompleted = true;
+            options.complete();
+        });
+
+        viewer.render();
+
+        return promise.then(function() {
+            expect(wasCompleted).toEqual(true);
+        });
+    });
+
+    it('flyTo flys to entity when offset is defined but other options for flyTo are not', function() {
+        viewer = createViewer(container);
+
+        var blueBox = viewer.entities.add({
+            name : 'Blue box',
+            position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+            box : {
+                dimensions : new Cartesian3(400000.0, 300000.0, 500000.0),
+                material : Color.BLUE
+            }
+        });
+
+        var entities = viewer.entities;
+
+        var boundingSpheres = [];
+        var boundingSphereScratch = new BoundingSphere();
+        for (var i = 0, len = entities.length; i < len; i++) {
+            var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
+
+            if (state === BoundingSphereState.PENDING) {
+                return;
+            } else if (state !== BoundingSphereState.FAILED) {
+                boundingSpheres.push(BoundingSphere.clone(boundingSphereScratch));
+            }
+        }
+        var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+        var offsetVal = new HeadingPitchRange(3, 0.2, 2.3 * boundingSphere.radius);
+        var options = {
+            offset : offsetVal
+        };
+
+        var promise = viewer.flyTo(entities, options);
+        var wasCompleted = false;
+
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+            expect(options.duration).toBeUndefined();
+            expect(options.maximumHeight).toBeUndefined();
+            wasCompleted = true;
+            options.complete();
+        });
+
+        viewer.render();
+
+        return promise.then(function() {
+            expect(wasCompleted).toEqual(true);
         });
     });
 }, 'WebGL');

@@ -1733,7 +1733,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      *
      * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset>} target The entity, array of entities, entity collection, data source, Cesium#DTileset, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
-     * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(target, offset) {
         var options = {
@@ -1762,7 +1762,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
-     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled. //TODO: Cleanup entity mentions
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the target is not currently visualized in the scene or the flight was cancelled. //TODO: Cleanup entity mentions
      */
     Viewer.prototype.flyTo = function(target, options) {
         return zoomToOrFly(this, target, options, true);
@@ -1787,7 +1787,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         that._zoomOptions = options;
 
         when(zoomTarget, function(zoomTarget) {
-
             //Only perform the zoom if it wasn't cancelled before the promise resolved.
             if (that._zoomPromise !== zoomPromise) {
                 return;
@@ -1805,7 +1804,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //If the zoom target is a Cesium3DTileset
-            if (defined(zoomTarget.readyPromise)) {
+            if (zoomTarget instanceof Cesium3DTileset) {
                 that._zoomTarget = zoomTarget;
                 return;
             }
@@ -1884,16 +1883,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var options;
 
         // If zoomTarget was Cesium3DTileset
-        if (defined(target.readyPromise)) {
+        if (target instanceof Cesium3DTileset) {
             return target.readyPromise.then(function() {
-                var bSphere = target.boundingSphere;
+                var boundingSphere = target.boundingSphere;
                 // if offset was originally undefined then give it base value instead of empty object
                 if (!defined(zoomOptions.offset)) {
-                    zoomOptions.offset = new HeadingPitchRange(0.0, 0.0, 2.0 * bSphere.radius);
+                    zoomOptions.offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
                 }
 
                 options = {
                     offset : zoomOptions.offset,
+                    duration : zoomOptions.duration,
+                    maximumHeight : zoomOptions.maximumHeight,
                     complete : function() {
                         zoomPromise.resolve(true);
                     },
@@ -1904,9 +1905,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
                 if (viewer._zoomIsFlight) {
                     camera.flyToBoundingSphere(target.boundingSphere, options);
-                    // zoomPromise.resolve(true);
                 } else {
-                    camera.viewBoundingSphere(bSphere, zoomOptions.offset);
+                    camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
                     camera.lookAtTransform(Matrix4.IDENTITY);
 
                     // finish the promise
@@ -1917,12 +1917,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             });
         }
 
-        var entities = target;
-
         //If zoomTarget was an ImageryLayer
-        if (entities instanceof Rectangle) {
+        if (target instanceof Rectangle) {
             options = {
-                destination : entities,
+                destination : target,
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {
@@ -1942,6 +1940,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             clearZoom(viewer);
             return;
         }
+
+        var entities = target;
 
         var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
