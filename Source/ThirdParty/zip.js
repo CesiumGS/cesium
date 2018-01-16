@@ -1,4 +1,9 @@
 /**
+  This third party dependency has been modified to allow cross domain workers
+  to be loaded in: https://github.com/AnalyticalGraphicsInc/cesium/pull/6114
+**/
+
+/**
 @license
  Copyright (c) 2013 Gildas Lormeau. All rights reserved.
 
