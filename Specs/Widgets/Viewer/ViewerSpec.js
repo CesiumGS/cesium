@@ -1088,7 +1088,7 @@ defineSuite([
 
     it('zoomTo zooms to entity with default offset when offset not defined', function() {
         viewer = createViewer(container);
-        var blueBox = viewer.entities.add({
+        viewer.entities.add({
             name : 'Blue box',
             position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
             box : {
@@ -1112,7 +1112,7 @@ defineSuite([
 
     it('zoomTo zooms to entity with offset', function() {
         viewer = createViewer(container);
-        var blueBox = viewer.entities.add({
+        viewer.entities.add({
             name : 'Blue box',
             position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
             box : {
@@ -1251,7 +1251,7 @@ defineSuite([
     it('flyTo flys to entity with default offset when options not defined', function() {
         viewer = createViewer(container);
 
-        var blueBox = viewer.entities.add({
+        viewer.entities.add({
             name : 'Blue box',
             position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
             box : {
@@ -1294,7 +1294,7 @@ defineSuite([
     it('flyTo flys to entity with default offset when offset not defined', function() {
         viewer = createViewer(container);
 
-        var blueBox = viewer.entities.add({
+        viewer.entities.add({
             name : 'Blue box',
             position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
             box : {
@@ -1338,7 +1338,7 @@ defineSuite([
     it('flyTo flys to entity when options are defined', function() {
         viewer = createViewer(container);
 
-        var blueBox = viewer.entities.add({
+        viewer.entities.add({
             name : 'Blue box',
             position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
             box : {
@@ -1388,7 +1388,7 @@ defineSuite([
     it('flyTo flys to entity when offset is defined but other options for flyTo are not', function() {
         viewer = createViewer(container);
 
-        var blueBox = viewer.entities.add({
+        viewer.entities.add({
             name : 'Blue box',
             position: Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
             box : {
