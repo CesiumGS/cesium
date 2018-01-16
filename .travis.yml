@@ -26,9 +26,9 @@ script:
   - npm pack
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
 
-   - echo 'buildApps' && echo -en 'travis_fold:start:script.buildApps\\r'
-   - npm run buildApps
-   - echo -en 'travis_fold:end:script.buildApps\\r'
+  - echo 'buildApps' && echo -en 'travis_fold:start:script.buildApps\\r'
+  - npm run buildApps
+  - echo -en 'travis_fold:end:script.buildApps\\r'
 
   - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
   - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
