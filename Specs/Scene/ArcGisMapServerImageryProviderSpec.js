@@ -161,7 +161,8 @@ defineSuite([
         var resource = new Resource({
             url : baseUrl,
             isDirectory: true
-        })
+        });
+
         var provider = new ArcGisMapServerImageryProvider({
             url : resource
         });
