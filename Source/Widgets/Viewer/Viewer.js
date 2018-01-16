@@ -1888,7 +1888,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 var boundingSphere = target.boundingSphere;
                 // if offset was originally undefined then give it base value instead of empty object
                 if (!defined(zoomOptions.offset)) {
-                    zoomOptions.offset = new HeadingPitchRange(0.0, 0.0, 2.0 * boundingSphere.radius);
+                    zoomOptions.offset = new HeadingPitchRange(0.0, -0.5, boundingSphere.radius);
                 }
 
                 options = {

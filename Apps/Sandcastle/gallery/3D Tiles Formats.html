@@ -112,7 +112,7 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
     scene.primitives.add(tileset);
     tileset.readyPromise.then(function(tileset) {
 
-        viewer.zoomToTileset(tileset, new Cesium.HeadingPitchRange(0, -2.0, Math.max(100.0 - tileset.boundingSphere.radius, 0.0)));
+        viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0, -2.0, Math.max(100.0 - tileset.boundingSphere.radius, 0.0)));
 
         var properties = tileset.properties;
         if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
