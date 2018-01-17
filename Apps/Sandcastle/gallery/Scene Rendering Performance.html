@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Enable request render mode to reduce frames rendered.">
+    <meta name="description" content="Use explicit rendering to improve app performance.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -26,12 +26,25 @@
         border-radius: 4px;
     }
 
+    #toolbar h3, h4 {
+        margin: 0 0 2px 0;
+    }
+
+    #toolbar i {
+        font-size: 85%;
+    }
+
     #toolbar table {
         margin: 2px 3px;
+        max-width: 280px;
     }
 
     #toolbar td {
-        padding: 3px 0;
+        padding-bottom: 10px;
+    }
+
+    #toolbar .cesium-button {
+        margin: 6px 0 0;
     }
 
     #toolbar input {
@@ -48,35 +61,36 @@
     <table>
         <tr>
             <td>
-                <code>requestRender</code> mode enabled
-            </td>
-            <td>
-                <input type="checkbox" value="true" data-bind="checked: requestRenderMode, valueUpdate: 'input'">
-            </td>
-        </tr>
-        <tr>
-            <td>
-                Render requested with simulation time changes
-            </td>
-            <td>
-                <input type="checkbox" value="true" data-bind="checked: timeChangeEnabled, valueUpdate: 'input'">
+                <h3>
+                    <code><span data-bind="text: lastRenderTime"></span></code>
+                </h3>
+                Simulation time at last render frame
+                <button type="button" class="cesium-button" data-bind="click: requestRender">Render new frame</button>
             </td>
         </tr>
         <tr>
             <td>
-                Maximum simulation time change
+                <h3>
+                    <input type="checkbox" value="true" data-bind="checked: requestRenderMode, valueUpdate: 'input'">
+                    <code>requestRenderMode</code> enabled
+                </h3>
+                <i>When enabled, a new frame is only rendered when scene updates occur, or a new frame is explicitly rendered.</i>
             </td>
+        </tr>
+        <tr>
             <td>
+                <h4>
+                    <input type="checkbox" value="true" data-bind="checked: timeChangeEnabled, valueUpdate: 'input'">
+                    Render when simulation time changes
+                </h4>
+                <i>Automatically render when the simulation time changes by "Max delta time". Adjust the simulation time on the animation widget and "Max delta time" value to see their relationship.</i>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h4>Max delta time</h4>
                 <input type="range" min="0" max="60" step="0.1" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled">
                 <input type="text" size="2" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled">
-            </td>
-        </tr>
-        <tr>
-            <td>
-                Simulation time of last render
-            </td>
-            <td>
-                <span data-bind="text: lastRenderTime"></span>
             </td>
         </tr>
     </table>
@@ -95,6 +109,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
+scene.globe.enableLighting = true;
+viewer.clockViewModel.multiplier = 200;
 
 // Clear scene and set default view.
 var handler;
@@ -165,11 +181,9 @@ function pickingScenario() {
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         box : {
             dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 30000.0),
-            material : Cesium.Color.BLUE
+            material : Cesium.Color.CORNFLOWERBLUE
         }
     });
-
-    scene.requestRender();
 
     // If the mouse is over the billboard, change its scale and color,
     // then request a new render frame.
@@ -178,11 +192,15 @@ function pickingScenario() {
     handler.setInputAction(function(movement) {
         var pickedObject = scene.pick(movement.endPosition);
         if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
+            if (Cesium.defined(lastPicked)) {
+                return;
+            }
+
             entity.box.material = Cesium.Color.YELLOW;
             scene.requestRender();
             lastPicked = pickedObject;
         } else if (Cesium.defined(lastPicked)) {
-            entity.box.material = Cesium.Color.BLUE;
+            entity.box.material = Cesium.Color.CORNFLOWERBLUE;
             scene.requestRender();
             lastPicked = undefined;
         }
@@ -204,8 +222,11 @@ function setScenePropertiesScenario() {
 var viewModel = {
     requestRenderMode : true,
     timeChangeEnabled : false,
-    maximumRenderTimeChange : 0.5,
-    lastRenderTime : ''
+    maximumRenderTimeChange : 30.0,
+    lastRenderTime : '',
+    requestRender : function () {
+        scene.requestRender();
+    }
 };
 
 var toolbar = document.getElementById('toolbar');
@@ -248,10 +269,6 @@ var scenarios = [{
 }];
 
 Sandcastle.addToolbarMenu(scenarios);
-
-Sandcastle.addToolbarButton('Request a new render frame', function() {
-    scene.requestRender();
-});
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

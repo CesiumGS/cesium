@@ -93,15 +93,14 @@ define([
      */
     PerformanceDisplay.prototype.update = function(renderedThisFrame) {
         var time = getTimestamp();
-        var updateFps = defaultValue(renderedThisFrame, true);
+        var updateDisplay = defaultValue(renderedThisFrame, true);
 
         this._fpsFrameCount++;
         var fpsElapsedTime = time - this._lastFpsSampleTime;
         if (fpsElapsedTime > 1000) {
             var fps = 'N/A';
-            if (updateFps) {
+            if (updateDisplay) {
                 fps = this._fpsFrameCount * 1000 / fpsElapsedTime | 0;
-                this._fpsText.nodeValue = fps + ' FPS';
             }
 
             this._fpsText.nodeValue = fps + ' FPS';
@@ -112,7 +111,12 @@ define([
         this._msFrameCount++;
         var msElapsedTime = time - this._lastMsSampleTime;
         if (msElapsedTime > 200) {
-            this._msText.nodeValue = (msElapsedTime / this._msFrameCount).toFixed(2) + ' MS';
+            var ms = 'N/A';
+            if (updateDisplay) {
+                ms = (msElapsedTime / this._msFrameCount).toFixed(2);
+            }
+
+            this._msText.nodeValue = ms + ' MS';
             this._lastMsSampleTime = time;
             this._msFrameCount = 0;
         }
