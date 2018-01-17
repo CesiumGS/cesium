@@ -318,6 +318,10 @@ define([
      * @param {Boolean{ [proxy=false] If true, the url is processed the proxy object if defined.
      */
     Resource.prototype.getUrlComponent = function(query, proxy) {
+        if(this.isDataUri) {
+            return this._url;
+        }
+
         var uri = new Uri(this._url);
 
         if (query) {

@@ -189,10 +189,15 @@ define([
         baseResource = Resource.createIfNeeded(baseResource);
 
         if (defined(contentHeader)) {
+            var contentHeaderUrl = contentHeader.url;
+            if (tileset._brokenUrlWorkaround && contentHeaderUrl.length > 0 && (contentHeaderUrl[0] === '/')) {
+                contentHeaderUrl = contentHeader.url = contentHeaderUrl.substring(1);
+            }
+
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentResource = baseResource.getDerivedResource({
-                url : contentHeader.url
+                url : contentHeaderUrl
             });
             serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
         } else {
