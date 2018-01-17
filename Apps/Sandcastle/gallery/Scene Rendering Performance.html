@@ -87,7 +87,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 // Create a viewer that won't render a new frame unless
-// explicitly update to reduce overall CPU usage.
+// updates to the scene require it to reduce overall CPU usage.
 var viewer = new Cesium.Viewer('cesiumContainer', {
     requestRenderMode : true,
     maximumRenderTimeChange : Infinity
