@@ -1,6 +1,7 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
+        '../../Core/Check',
         '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -9,6 +10,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/EventHelper',
+        '../../Core/HeadingPitchRange',
         '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -20,6 +22,7 @@ define([
         '../../DataSources/Entity',
         '../../DataSources/EntityView',
         '../../DataSources/Property',
+        '../../Scene/Cesium3DTileset',
         '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
@@ -46,6 +49,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Check,
         Clock,
         defaultValue,
         defined,
@@ -54,6 +58,7 @@ define([
         DeveloperError,
         Event,
         EventHelper,
+        HeadingPitchRange,
         isArray,
         Matrix4,
         Rectangle,
@@ -65,6 +70,7 @@ define([
         Entity,
         EntityView,
         Property,
+        Cesium3DTileset,
         ImageryLayer,
         SceneMode,
         knockout,
@@ -205,13 +211,13 @@ define([
         if (defined(homeButton)) {
             homeButton.container.style.visibility = visibility;
         }
-        if(defined(sceneModePicker)) {
+        if (defined(sceneModePicker)) {
             sceneModePicker.container.style.visibility = visibility;
         }
         if (defined(projectionPicker)) {
             projectionPicker.container.style.visibility = visibility;
         }
-        if(defined(baseLayerPicker)) {
+        if (defined(baseLayerPicker)) {
             baseLayerPicker.container.style.visibility = visibility;
         }
         if (defined(animation)) {
@@ -356,7 +362,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var createBaseLayerPicker = (!defined(options.globe) || options.globe !== false) &&
-            (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
+                                    (!defined(options.baseLayerPicker) || options.baseLayerPicker !== false);
 
         //>>includeStart('debug', pragmas.debug);
         // If using BaseLayerPicker, imageryProvider is an invalid option
@@ -431,7 +437,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
-            creditViewport: options.creditViewport,
+            creditViewport : options.creditViewport,
             scene3DOnly : scene3DOnly,
             terrainExaggeration : options.terrainExaggeration,
             shadows : options.shadows,
@@ -491,7 +497,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             geocoder = new Geocoder({
                 container : geocoderContainer,
-                geocoderServices: defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
+                geocoderServices : defined(options.geocoder) ? (isArray(options.geocoder) ? options.geocoder : [options.geocoder]) : undefined,
                 scene : cesiumWidget.scene
             });
             // Subscribe to search so that we can clear the trackedEntity when it is clicked.
@@ -1725,12 +1731,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer>} target The entity, array of entities, entity collection, data source or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset>} target The entity, array of entities, entity collection, data source, Cesium#DTileset, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
-     * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the target is not currently visualized in the scene or the zoom was cancelled.
      */
     Viewer.prototype.zoomTo = function(target, offset) {
-        return zoomToOrFly(this, target, offset, false);
+        var options = {
+            offset : offset
+        };
+        return zoomToOrFly(this, target, options, false);
     };
 
     /**
@@ -1748,12 +1757,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer>} target The entity, array of entities, entity collection, data source or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Cesium3DTileset>} target The entity, array of entities, entity collection, data source, Cesium3DTileset, or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
-     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the entity is not currently visualized in the scene or the flight was cancelled.
+     * @returns {Promise.<Boolean>} A Promise that resolves to true if the flight was successful or false if the target is not currently visualized in the scene or the flight was cancelled. //TODO: Cleanup entity mentions
      */
     Viewer.prototype.flyTo = function(target, options) {
         return zoomToOrFly(this, target, options, true);
@@ -1794,6 +1803,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return;
             }
 
+            //If the zoom target is a Cesium3DTileset
+            if (zoomTarget instanceof Cesium3DTileset) {
+                that._zoomTarget = zoomTarget;
+                return;
+            }
+
             //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
             if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
                 var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
@@ -1821,6 +1836,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 zoomTarget = zoomTarget.entities.values;
             }
 
+            //Zoom target is already an array, just copy it and return.
             if (isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);
             } else {
@@ -1855,8 +1871,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     };
 
     function updateZoomTarget(viewer) {
-        var entities = viewer._zoomTarget;
-        if (!defined(entities) || viewer.scene.mode === SceneMode.MORPHING) {
+        var target = viewer._zoomTarget;
+        if (!defined(target) || viewer.scene.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -1864,11 +1880,47 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var camera = scene.camera;
         var zoomPromise = viewer._zoomPromise;
         var zoomOptions = defaultValue(viewer._zoomOptions, {});
+        var options;
+
+        // If zoomTarget was Cesium3DTileset
+        if (target instanceof Cesium3DTileset) {
+            return target.readyPromise.then(function() {
+                var boundingSphere = target.boundingSphere;
+                // if offset was originally undefined then give it base value instead of empty object
+                if (!defined(zoomOptions.offset)) {
+                    zoomOptions.offset = new HeadingPitchRange(0.0, -0.5, boundingSphere.radius);
+                }
+
+                options = {
+                    offset : zoomOptions.offset,
+                    duration : zoomOptions.duration,
+                    maximumHeight : zoomOptions.maximumHeight,
+                    complete : function() {
+                        zoomPromise.resolve(true);
+                    },
+                    cancel : function() {
+                        zoomPromise.resolve(false);
+                    }
+                };
+
+                if (viewer._zoomIsFlight) {
+                    camera.flyToBoundingSphere(target.boundingSphere, options);
+                } else {
+                    camera.viewBoundingSphere(boundingSphere, zoomOptions.offset);
+                    camera.lookAtTransform(Matrix4.IDENTITY);
+
+                    // finish the promise
+                    zoomPromise.resolve(true);
+                }
+
+                clearZoom(viewer);
+            });
+        }
 
         //If zoomTarget was an ImageryLayer
-        if (entities instanceof Rectangle) {
-            var options = {
-                destination : entities,
+        if (target instanceof Rectangle) {
+            options = {
+                destination : target,
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {
@@ -1888,6 +1940,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             clearZoom(viewer);
             return;
         }
+
+        var entities = target;
 
         var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
@@ -1911,7 +1965,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
 
         if (!viewer._zoomIsFlight) {
-            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);
+            camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions.offset);
             camera.lookAtTransform(Matrix4.IDENTITY);
             clearZoom(viewer);
             zoomPromise.resolve(true);
