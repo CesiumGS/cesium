@@ -1455,8 +1455,8 @@ define([
      */
     Cesium3DTileStyle.prototype.getColorShaderFunction = function(functionName, attributePrefix, shaderState) {
         if (this._colorShaderFunctionReady) {
-            // Return the cached result, may be undefined
             shaderState.translucent = this._colorShaderTranslucent;
+            // Return the cached result, may be undefined
             return this._colorShaderFunction;
         }
 
