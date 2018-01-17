@@ -131,6 +131,8 @@ function loadTilesetScenario() {
 // Enable and adjust maximum simulation time change to see
 // animations at desired speed.
 function loadCzmlScenario() {
+    resetScene();
+
     var czml = [{
         "id" : "document",
         "name" : "CZML Model",
@@ -190,6 +192,8 @@ function pickingScenario() {
 // Changes to the scene with the API will require
 // calling requestRender() on change.
 function setScenePropertiesScenario() {
+    resetScene();
+
     scene.skyBox.show = false;
     scene.backgroundColor = Cesium.Color.CORNFLOWERBLUE;
     scene.requestRender();
