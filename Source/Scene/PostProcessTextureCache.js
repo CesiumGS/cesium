@@ -16,6 +16,16 @@ define([
         Texture) {
     'use strict';
 
+    /**
+     * Creates a minimal amount of textures and framebuffers.
+     *
+     * @alias PostProcessTextureCache
+     * @constructor
+     *
+     * @param {PostProcessCollection} postProcessCollection The post process collection.
+     *
+     * @private
+     */
     function PostProcessTextureCache(postProcessCollection) {
         this._collection = postProcessCollection;
 
@@ -74,11 +84,15 @@ define([
             } else {
                 currentName = getProcessDependencies(collection, dependencies, process, previousName);
             }
+            // Processes in a series only depend on the previous process
             if (inSeries) {
                 previousName = currentName;
             }
         }
 
+        // Processes not in a series depend on every process executed before it since it could reference it as a uniform.
+        // This prevents looking at the dependencies of each process in the composite, but might create mode framebuffers than necessary.
+        // In practice, there are only 2-3 processes in these composites.
         if (!inSeries) {
             for (var j = 1; j < length; ++j) {
                 var current = composite.get(j);
@@ -227,6 +241,11 @@ define([
         }
     }
 
+    /**
+     * Called before the processes in the collection are executed. Creates the minimum amount of framebuffers for a post-process collection.
+     *
+     * @param {Context} context The context.
+     */
     PostProcessTextureCache.prototype.update = function(context) {
         var collection = this._collection;
         var needsUpdate = !defined(collection._activeProcesses) || collection._activeProcesses.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
@@ -259,6 +278,11 @@ define([
         updateFramebuffers(this, context);
     };
 
+    /**
+     * Clears all of the framebuffers.
+     *
+     * @param {Context} context The context.
+     */
     PostProcessTextureCache.prototype.clear = function(context) {
         var framebuffers = this._framebuffers;
         var length = 0;
@@ -267,6 +291,12 @@ define([
         }
     };
 
+    /**
+     * Gets the framebuffer for a process with the given name in the collection.
+     *
+     * @param {String} name The name of the process.
+     * @return {Framebuffer|undefined} The framebuffer for the process with the given name.
+     */
     PostProcessTextureCache.prototype.getFramebuffer = function(name) {
         var framebuffer = this._processNameToFramebuffer[name];
         if (!defined(framebuffer)) {
@@ -275,10 +305,36 @@ define([
         return framebuffer.buffer;
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see PostProcessTextureCache#destroy
+     */
     PostProcessTextureCache.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see PostProcessTextureCache#isDestroyed
+     */
     PostProcessTextureCache.prototype.destroy = function() {
         releaseResources(this);
         return destroyObject(this);

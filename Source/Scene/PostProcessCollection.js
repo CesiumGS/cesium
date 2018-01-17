@@ -37,6 +37,22 @@ define([
 
     var stackScratch = [];
 
+    /**
+     * A collection of {@link PostProcess}es and/or {@link PostProcessComposite}s.
+     * <p>
+     * The texture modified by each post process is the texture rendered to by the scene or the texture rendered
+     * to by the previous post-process or composite in the collection.
+     * </p>
+     * <p>
+     * If the ambient occlusion or bloom post-processes are enabled, they will execute before all other post-processes.
+     * </p>
+     * <p>
+     * If the FXAA post-process is enabled, it will execute after all other post-processes.
+     * </p>
+     *
+     * @alias PostProcessCollection
+     * @constructor
+     */
     function PostProcessCollection() {
         this._processes = [];
         this._activeProcesses = [];
@@ -82,6 +98,13 @@ define([
     }
 
     defineProperties(PostProcessCollection.prototype, {
+        /**
+         * Determines if all of the post-processes in the collection are ready to be executed.
+         *
+         * @memberof PostProcessCollection.prototype
+         * @type {Boolean}
+         * @readonly
+         */
         ready : {
             get : function() {
                 var readyAndEnabled = false;
@@ -99,6 +122,71 @@ define([
                 return readyAndEnabled;
             }
         },
+        /**
+         * A post-process for Fast Approximate Anti-aliasing.
+         * <p>
+         * When enabled, this post-process will execute after all others.
+         * </p>
+         *
+         * @memberof PostProcessCollection.prototype
+         * @type {PostProcess}
+         * @readonly
+         */
+        fxaa : {
+            get : function() {
+                return this._fxaa;
+            }
+        },
+        /**
+         * A post-process for Horizon-based Ambient Occlusion.
+         * <p>
+         * When enabled, this post-process will execute before all others.
+         * </p>
+         *
+         * @memberof PostProcessCollection.protoype
+         * @type {PostProcessAmbientOcclusionStage}
+         * @readonly
+         */
+        ambientOcclusion : {
+            get : function() {
+                return this._ao;
+            }
+        },
+        /**
+         * A post-process for Bloom.
+         * <p>
+         * When enabled, this post-process will execute before all others.
+         * </p>
+         *
+         * @memberOf PostProcessCollection.prototype
+         * @type {PostProcessBloomStage}
+         * @readonly
+         */
+        bloom : {
+            get : function() {
+                return this._bloom;
+            }
+        },
+        /**
+         * The number of post-processes in this collection.
+         *
+         * @memberof PostProcessCollection.prototype
+         * @type {Number}
+         * @readonly
+         */
+        length : {
+            get : function() {
+                return this._processes.length;
+            }
+        },
+        /**
+         * A reference to the last texture written to when executing the post-processes in this collection.
+         *
+         * @memberof PostProcessCollection.prototype
+         * @type {Texture}
+         * @readonly
+         * @private
+         */
         outputTexture : {
             get : function() {
                 if (this._fxaa.enabled && this._fxaa.ready) {
@@ -124,26 +212,6 @@ define([
 
                 return undefined;
             }
-        },
-        fxaa : {
-            get : function() {
-                return this._fxaa;
-            }
-        },
-        ambientOcclusion : {
-            get : function() {
-                return this._ao;
-            }
-        },
-        bloom : {
-            get : function() {
-                return this._bloom;
-            }
-        },
-        length : {
-            get : function() {
-                return this._processes.length;
-            }
         }
     });
 
@@ -168,10 +236,18 @@ define([
         collection._processes = newProcesses;
     }
 
+    /**
+     * Adds the post-process to the collection.
+     *
+     * @param {PostProcess|PostProcessComposite} postProcess The post-process to add to the collection.
+     * @return {PostProcess|PostProcessComposite} The post-process that was added to the collection.
+     *
+     * @exception {DeveloperError} The process has already been added to the collection or does not have a unique name.
+     */
     PostProcessCollection.prototype.add = function(postProcess) {
-        if (!defined(postProcess)) {
-            return;
-        }
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('postProcess', postProcess);
+        //>>includeEnd('debug');
 
         var processNames = this._processNames;
 
@@ -201,6 +277,12 @@ define([
         return postProcess;
     };
 
+    /**
+     * Removes a post-process from the collection and destroys it.
+     *
+     * @param {PostProcess|PostProcessComposite} postProcess The post-process to remove from the collection.
+     * @return {Boolean} Whether the post-process was removed.
+     */
     PostProcessCollection.prototype.remove = function(postProcess) {
         if (!this.contains(postProcess)) {
             return false;
@@ -229,10 +311,22 @@ define([
         return true;
     };
 
+    /**
+     * Returns whether the collection contains a post-process.
+     *
+     * @param {PostProcess|PostProcessComposite} postProcess The post-process.
+     * @return {Boolean} Whether the collection contains the post-process.
+     */
     PostProcessCollection.prototype.contains = function(postProcess) {
         return defined(postProcess) && defined(postProcess._index) && postProcess._collection === this;
     };
 
+    /**
+     * Gets the post-process at <code>index</code>.
+     *
+     * @param {Number} index The index of the post-process.
+     * @return {PostProcess|PostProcessComposite} The post-process at index.
+     */
     PostProcessCollection.prototype.get = function(index) {
         removeProcesses(this);
         //>>includeStart('debug', pragmas.debug);
@@ -244,6 +338,9 @@ define([
         return this._processes[index];
     };
 
+    /**
+     * Removes all processes from the collection and destroys them.
+     */
     PostProcessCollection.prototype.removeAll = function() {
         var processes = this._processes;
         var length = processes.length;
@@ -253,14 +350,37 @@ define([
         processes.length = 0;
     };
 
+    /**
+     * Gets a post-process in the collection by its name.
+     *
+     * @param {String} name The name of the post-process.
+     * @return {PostProcess|PostProcessComposite} The post-process.
+     *
+     * @private
+     */
     PostProcessCollection.prototype.getProcessByName = function(name) {
         return this._processNames[name];
     };
 
+    /**
+     * Gets the framebuffer to be used for a post-process with the given name.
+     *
+     * @param {String} name The name of a post-process.
+     * @return {Framebuffer} The framebuffer to be used for a post-process with the given name.
+     *
+     * @private
+     */
     PostProcessCollection.prototype.getFramebuffer = function(name) {
         return this._textureCache.getFramebuffer(name);
     };
 
+    /**
+     * Called before the processes in the collection are executed. Calls update for each process and creates WebGL resources.
+     *
+     * @param {Context} context The context.
+     *
+     * @private
+     */
     PostProcessCollection.prototype.update = function(context) {
         removeProcesses(this);
 
@@ -284,6 +404,8 @@ define([
         var fxaa = this._fxaa;
 
         if (this._cacheDirty || count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
+            // The number of processes to execute has changed.
+            // Update dependencies and recreate framebuffers.
             this._textureCache = this._textureCache && this._textureCache.destroy();
             this._textureCache = new PostProcessTextureCache(this);
 
@@ -306,6 +428,13 @@ define([
         }
     };
 
+    /**
+     * Clears all of the framebuffers used by the processes.
+     *
+     * @param {Context} context The context.
+     *
+     * @private
+     */
     PostProcessCollection.prototype.clear = function(context) {
         this._textureCache.clear(context);
     };
@@ -317,6 +446,14 @@ define([
         return process.outputTexture;
     }
 
+    /**
+     * Gets the output texture of a process with the given name.
+     *
+     * @param {String} processName The name of the process.
+     * @return {Texture|undefined} The texture rendered to by the process with the given name.
+     *
+     * @private
+     */
     PostProcessCollection.prototype.getOutputTexture = function(processName) {
         var process = this.getProcessByName(processName);
         if (!defined(process)) {
@@ -346,6 +483,15 @@ define([
         }
     }
 
+    /**
+     * Executes all ready and enabled processes in the collection.
+     *
+     * @param {Context} context The context.
+     * @param {Texture} colorTexture The color texture rendered to by the scene.
+     * @param {Texture} depthTexture The depth texture written to by the scene.
+     *
+     * @private
+     */
     PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
         var activeProcesses = this._activeProcesses;
         var length = activeProcesses.length;
@@ -382,6 +528,14 @@ define([
         }
     };
 
+    /**
+     * Copies the output of all executed processes to the color texture of a framebuffer.
+     *
+     * @param {Context} context The context.
+     * @param {Framebuffer} framebuffer The framebuffer to copy to.
+     *
+     * @private
+     */
     PostProcessCollection.prototype.copy = function(context, framebuffer) {
         if (!defined(this._copyColorCommand)) {
             var that = this;
@@ -399,15 +553,42 @@ define([
         this._copyColorCommand.execute(context);
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see PostProcessCollection#destroy
+     */
     PostProcessCollection.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see PostProcessCollection#isDestroyed
+     */
     PostProcessCollection.prototype.destroy = function() {
         this._fxaa.destroy();
         this._ao.destroy();
         this._bloom.destroy();
         this.removeAll();
+        this._textureCache = this._textureCache && this._textureCache.destroy();
         return destroyObject(this);
     };
 

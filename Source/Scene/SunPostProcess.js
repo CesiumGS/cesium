@@ -272,6 +272,7 @@ define([
     };
 
     SunPostProcess.prototype.destroy = function() {
+        this._textureCache.destroy();
         this._processes.destroy();
         return destroyObject(this);
     };
