@@ -4,7 +4,7 @@ Thanks for contributing to Cesium.  You rock!  Are you
 * [getting started contributing](#getting-started-contributing), or
 * [opening a pull request](#opening-a-pull-request)?
 
-To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](CODE_OF_CONDUCT.md).
+To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](./CODE_OF_CONDUCT.md).
 
 # Submitting an Issue
 
@@ -82,4 +82,4 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
 
 # Code of Conduct
 
-Cesium's Code of Conduct is [here](CODE_OF_CONDUCT.md).
+Cesium's Code of Conduct is [here](./CODE_OF_CONDUCT.md).
