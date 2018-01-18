@@ -124,9 +124,9 @@ define([
         }
 
         var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy,
-            isDirectory: true
+            proxy: options.proxy
         });
+        resource.appendForwardSlash();
 
         if (defined(options.token)) {
             resource.addQueryParameters({

@@ -100,7 +100,7 @@ define([
         var resource = Resource.createIfNeeded(options.url, {
             proxy : options.proxy
         });
-        resource.isDirectory = true;
+        resource.appendForwardSlash();
 
         var xmlResource = resource.getDerivedResource({
             url: 'tilemapresource.xml'

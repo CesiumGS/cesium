@@ -257,8 +257,7 @@ defineSuite([
 
     it('Constructor works with directory resource', function() {
         var resource = new Resource({
-            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets',
-            isDirectory: true
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
         });
 
         // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)

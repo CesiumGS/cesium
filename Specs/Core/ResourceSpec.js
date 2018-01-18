@@ -11,23 +11,6 @@ defineSuite([
     'use strict';
 
     it('Constructor sets correct properties', function() {
-        /**
-         * @param {Object} options An object with the following properties
-         * @param {String} options. The url of the resource.
-         * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
-         * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
-         * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-         * @param {String} [options.responseType] The type of response.
-         * @param {String} [options.method='GET'] The method to use.
-         * @param {Object} [options.data] Data that is sent with the resource request.
-         * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-         * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-         * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
-         * @param {Function} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
-         * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
-         * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
-         */
-
         var proxy = new DefaultProxy('/proxy/');
         var request = new Request();
         function retryFunc() {
@@ -52,17 +35,16 @@ defineSuite([
                 stuff: 'more stuff'
             },
             proxy: proxy,
-            isDirectory: true,
             retryCallback: retryFunc,
             retryAttempts: 4,
             request: request
         });
 
-        expect(resource.getUrlComponent(false, false)).toEqual('http://test.com/tileset/');
-        expect(resource.getUrlComponent(true, false)).toEqual('http://test.com/tileset/?key1=value1&key2=value2');
-        expect(resource.getUrlComponent(false, true)).toEqual(proxy.getURL('http://test.com/tileset/'));
-        expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset/?key1=value1&key2=value2'));
-        expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset/?key1=value1&key2=value2'));
+        expect(resource.getUrlComponent(false, false)).toEqual('http://test.com/tileset');
+        expect(resource.getUrlComponent(true, false)).toEqual('http://test.com/tileset?key1=value1&key2=value2');
+        expect(resource.getUrlComponent(false, true)).toEqual(proxy.getURL('http://test.com/tileset'));
+        expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset?key1=value1&key2=value2'));
+        expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset?key1=value1&key2=value2'));
         expect(resource.queryParameters).toEqual({
             key1: 'value1',
             key2: 'value2'
@@ -80,30 +62,19 @@ defineSuite([
             stuff: 'more stuff'
         });
         expect(resource.proxy).toBe(proxy);
-        expect(resource.isDirectory).toEqual(true);
         expect(resource.retryCallback).toBe(retryFunc);
         expect(resource.retryAttempts).toEqual(4);
         expect(resource._retryCount).toEqual(0);
         expect(resource.request).toBe(request);
     });
 
-    it('Setting is directory to true appends a /', function() {
+    it('appendForwardSlash appends a /', function() {
         var resource = new Resource({
             url: 'http://test.com/tileset'
         });
         expect(resource.url).toEqual('http://test.com/tileset');
-        resource.isDirectory = true;
+        resource.appendForwardSlash();
         expect(resource.url).toEqual('http://test.com/tileset/');
-    });
-
-    it('Setting is directory to false removes a /', function() {
-        var resource = new Resource({
-            url: 'http://test.com/tileset',
-            isDirectory: true
-        });
-        expect(resource.url).toEqual('http://test.com/tileset/');
-        resource.isDirectory = false;
-        expect(resource.url).toEqual('http://test.com/tileset');
     });
 
     it('Setting a url with a query string sets queryParameters correctly', function() {
@@ -160,9 +131,9 @@ defineSuite([
             templateValues: {
                 key5: 'value5',
                 key6: 'value6'
-            },
-            isDirectory: true
+            }
         });
+        parent.appendForwardSlash();
 
         var resource = parent.getDerivedResource({
             url: 'tileset.json',
@@ -214,7 +185,6 @@ defineSuite([
             stuff: 'more stuff'
         });
         expect(resource.proxy).toBe(proxy);
-        expect(resource.isDirectory).toEqual(false);
         expect(resource.retryCallback).toBe(retryFunc);
         expect(resource.retryAttempts).toEqual(4);
         expect(resource._retryCount).toEqual(0);
@@ -223,8 +193,7 @@ defineSuite([
 
     it('getDerivedResource works with directory parent resource', function() {
         var parent = new Resource({
-            url: 'http://test.com/tileset',
-            isDirectory: true
+            url: 'http://test.com/tileset/'
         });
 
         expect(parent.url).toEqual('http://test.com/tileset/');

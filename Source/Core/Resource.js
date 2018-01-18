@@ -96,7 +96,6 @@ define([
      * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -143,7 +142,6 @@ define([
         this._url = undefined;
         this._templateValues = defaultClone(options.templateValues, {});
         this._queryParameters = defaultClone(options.queryParameters, {});
-        this._isDirectory = defaultValue(options.isDirectory, false);
 
         /**
          * Additional HTTP headers that will be sent with the request.
@@ -284,10 +282,6 @@ define([
                 uri.fragment = undefined;
 
                 this._url = uri.toString();
-
-                if (this._isDirectory) {
-                    this._url = appendForwardSlash(this._url);
-                }
             }
         },
 
@@ -302,30 +296,6 @@ define([
         extension: {
             get: function() {
                 return getExtensionFromUri(this._url);
-            }
-        },
-
-        /**
-         * True if the Resource refers to a directory. A trailing forward slash will be maintained.
-         *
-         * @memberof Resource.prototype
-         * @type {Boolean}
-         */
-        isDirectory: {
-            get: function() {
-                return this._isDirectory;
-            },
-            set: function(value) {
-                if (this._isDirectory !== value) {
-                    var url = this._url;
-                    if (value) {
-                        this._url = appendForwardSlash(url);
-                    } else if (url[url.length-1] === '/') {
-                        this._url = url.slice(0, -1);
-                    }
-
-                    this._isDirectory = value;
-                }
             }
         },
 
@@ -422,7 +392,6 @@ define([
      * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
      * @param {Resource~RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -431,7 +400,6 @@ define([
      */
     Resource.prototype.getDerivedResource = function(options) {
         var resource = this.clone();
-        resource._isDirectory = false; // By default derived resources aren't a directory, but this can be overridden
         resource._retryCount = 0;
 
         if (defined(options.url)) {
@@ -471,9 +439,6 @@ define([
         }
         if (defined(options.request)) {
             resource.request = options.request;
-        }
-        if (defined(options.isDirectory)) {
-            resource._isDirectory = options.isDirectory;
         }
         if (defined(options.retryCallback)) {
             resource.retryCallback = options.retryCallback;
@@ -530,7 +495,6 @@ define([
         result.data = this.data;
         result.overrideMimeType = this.overrideMimeType;
         result.proxy = this.proxy;
-        result._isDirectory = this._isDirectory;
         result.retryCallback = this.retryCallback;
         result.retryAttempts = this.retryAttempts;
         result._retryCount = 0;
@@ -552,6 +516,14 @@ define([
     Resource.prototype.getBaseUri = function(includeQuery) {
         return getBaseUri(this.getUrlComponent(includeQuery), includeQuery);
     };
+
+    /**
+     * Appends a forward slash to the URL.
+     */
+    Resource.prototype.appendForwardSlash = function() {
+        this._url = appendForwardSlash(this._url);
+    };
+
 
     /**
      * A resource instance initialized to the current browser location

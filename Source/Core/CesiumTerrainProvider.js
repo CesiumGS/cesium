@@ -118,7 +118,7 @@ define([
         var resource = Resource.createIfNeeded(options.url, {
             proxy: options.proxy
         });
-        resource.isDirectory = true;
+        resource.appendForwardSlash();
 
         this._resource = resource;
 
@@ -285,6 +285,7 @@ define([
                 lastResource = lastResource.getDerivedResource({
                     url: parentUrl
                 });
+                lastResource.appendForwardSlash(); // Terrain always expects a directory
                 metadataResource = lastResource.getDerivedResource({
                     url: 'layer.json'
                 });

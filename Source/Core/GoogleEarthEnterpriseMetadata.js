@@ -83,10 +83,11 @@ define([
             proxy = resourceOrUrl.proxy;
         }
 
-        this._resource = Resource.createIfNeeded(url, {
+        var resource = Resource.createIfNeeded(url, {
             proxy: proxy
         });
-        this._resource.isDirectory = true;
+        resource.appendForwardSlash();
+        this._resource = resource;
 
         /**
          * True if imagery is available.

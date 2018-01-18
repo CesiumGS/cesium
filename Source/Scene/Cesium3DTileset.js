@@ -174,7 +174,7 @@ define([
         } else if (resource.isDataUri) {
             basePath = '';
         } else {
-            resource.isDirectory = true;
+            resource.appendForwardSlash();
             tilesetResource = resource.getDerivedResource({
                 url: 'tileset.json'
             });

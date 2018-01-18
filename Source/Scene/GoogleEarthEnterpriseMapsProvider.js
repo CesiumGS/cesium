@@ -121,9 +121,9 @@ define([
         var url = options.url;
         var path = defaultValue(options.path, '/default_map');
         var resource = Resource.createIfNeeded(url + path, {
-            proxy: options.proxy,
-            isDirectory: true
+            proxy: options.proxy
         });
+        resource.appendForwardSlash();
 
         this._resource = resource;
         this._url = url;

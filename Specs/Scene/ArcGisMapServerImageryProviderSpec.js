@@ -159,8 +159,7 @@ defineSuite([
         stubJSONPCall(baseUrl, webMercatorResult);
 
         var resource = new Resource({
-            url : baseUrl,
-            isDirectory: true
+            url : baseUrl
         });
 
         var provider = new ArcGisMapServerImageryProvider({
