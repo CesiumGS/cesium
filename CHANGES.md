@@ -34,7 +34,7 @@ Change Log
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
 * Fixed sandcastle Particle System example for better visual
 * Fixed move forward and backward zooming for 2D camera.
-* Restricted access from calls to camera look functions while in 2D mode.
+* Restricted access from calls to camera look functions while in 2D mode for sandcastle camera tutorial.
 
 ### 1.41 - 2018-01-02
 

@@ -1650,7 +1650,7 @@ define([
 
         // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
         if (this._mode !== SceneMode.SCENE2D) {
-            this.look(this.up, amount);
+            this.look(this.right, amount);
         }
     };
 
