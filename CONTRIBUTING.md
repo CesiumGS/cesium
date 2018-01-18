@@ -82,4 +82,4 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
 
 # Code of Conduct
 
-View our current code of conduct [here](CODEOFCONDUCT.md)
+View our current code of conduct [here](CODEOFCONDUCT.md).
