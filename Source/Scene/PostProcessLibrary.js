@@ -3,9 +3,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         './PostProcess',
-        './PostProcessDepthOfFieldStage',
-        './PostProcessBloomStage',
         './PostProcessBlurStage',
+        './PostProcessDepthOfFieldStage',
         './PostProcessSilhouetteStage',
         '../Shaders/PostProcessFilters/BlackAndWhite',
         '../Shaders/PostProcessFilters/Brightness',
@@ -19,9 +18,8 @@ define([
         defineProperties,
         destroyObject,
         PostProcess,
-        PostProcessDepthOfFieldStage,
-        PostProcessBloomStage,
         PostProcessBlurStage,
+        PostProcessDepthOfFieldStage,
         PostProcessSilhouetteStage,
         BlackAndWhite,
         Brightness,
@@ -126,14 +124,6 @@ define([
             }
         },
         /**
-         * @private
-         */
-        bloom : {
-            get : function() {
-                return createBloomStage();
-            }
-        },
-        /**
          * lensFlare.
          *
          * @memberof PostProcessLibrary
@@ -227,10 +217,6 @@ define([
 
     function createDepthOfFieldStage() {
         return new PostProcessDepthOfFieldStage();
-    }
-
-    function createBloomStage() {
-        return new PostProcessBloomStage();
     }
 
     function createBlur() {

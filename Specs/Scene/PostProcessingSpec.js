@@ -1,21 +1,29 @@
 defineSuite([
-    'Core/defined',
-    'Core/destroyObject',
-    'Scene/PostProcessLibrary',
-    'Renderer/Pass',
-    'Renderer/RenderState',
-    'Specs/createCanvas',
-    'Specs/createScene',
-    'Specs/pollToPromise'
-], 'Scene/PostProcessing', function(
-    defined,
-    destroyObject,
-    PostProcessLibrary,
-    Pass,
-    RenderState,
-    createCanvas,
-    createScene,
-    pollToPromise) {
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/destroyObject',
+        'Core/HeadingPitchRoll',
+        'Core/Transforms',
+        'Scene/Model',
+        'Scene/PostProcessLibrary',
+        'Renderer/Pass',
+        'Renderer/RenderState',
+        'Specs/createCanvas',
+        'Specs/createScene',
+        'Specs/pollToPromise'
+    ], 'Scene/PostProcessing', function(
+        Cartesian3,
+        defined,
+        destroyObject,
+        HeadingPitchRoll,
+        Transforms,
+        Model,
+        PostProcessLibrary,
+        Pass,
+        RenderState,
+        createCanvas,
+        createScene,
+        pollToPromise) {
     'use strict';
 
     var scene;
@@ -336,4 +344,53 @@ defineSuite([
             expect(rgba[19]).toEqual(255);
         });
     });
+
+    it('depth of field', function() {
+        var origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, new HeadingPitchRoll());
+
+        var model = scene.primitives.add(Model.fromGltf({
+            url : './Data/Models/Box/CesiumBoxTest.gltf',
+            modelMatrix : modelMatrix,
+            scale : 40.0
+        }));
+
+        var ready = false;
+        model.readyPromise.then(function() {
+            ready = true;
+        });
+
+        var offset = new Cartesian3(-37.048378684557974, -24.852967044804245, 4.352023653686047);
+        scene.camera.lookAt(origin, offset);
+
+        return pollToPromise(function() {
+            scene.render();
+            return ready;
+        }).then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                for (var i = 0; i < rgba.length; i += 4) {
+                    expect(rgba[i]).toBeGreaterThan(0);
+                    expect(rgba[i + 1]).toEqual(0);
+                    expect(rgba[i + 2]).toEqual(0);
+                    expect(rgba[i + 3]).toEqual(255);
+                }
+
+                var dof = PostProcessLibrary.depthOfField;
+                dof.uniformValues.focalDistance = 87.0;
+
+                scene.postProcessCollection.add(PostProcessLibrary.depthOfField);
+                expect(scene).toRenderAndCall(function(rgba2) {
+                    for (var i = 0; i < rgba.length; i += 4) {
+                        expect(rgba2[i]).toBeGreaterThan(0);
+                        expect(rgba2[i + 1]).toEqual(0);
+                        expect(rgba2[i + 2]).toEqual(0);
+                        expect(rgba2[i + 3]).toEqual(255);
+
+                        expect(rgba2[i]).not.toEqual(rgba[i]);
+                    }
+                });
+            });
+        });
+    });
+
 }, 'WebGL');
