@@ -14,8 +14,10 @@ define([
         '../Core/Event',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
+        '../Core/getMagic',
         '../Core/isDataUri',
         '../Core/JulianDate',
+        '../Core/loadArrayBuffer',
         '../Core/loadJson',
         '../Core/ManagedArray',
         '../Core/Math',
@@ -55,8 +57,10 @@ define([
         Event,
         getBaseUri,
         getExtensionFromUri,
+        getMagic,
         isDataUri,
         JulianDate,
+        loadArrayBuffer,
         loadJson,
         ManagedArray,
         CesiumMath,
@@ -680,20 +684,87 @@ define([
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
+        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset.json. If the tiles aren't
+        //  at the root of the domain they will not load anymore. If we find a b3dm file with a leading slash, we test load a tile.
+        //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
+        this._brokenUrlWorkaround = false;
+
         var that = this;
 
         // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        Cesium3DTileset.loadJson(tilesetResource).then(function(tilesetJson) {
-            that._root = that.loadTileset(tilesetResource, tilesetJson);
-            var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
-            that._asset = tilesetJson.asset;
-            that._properties = tilesetJson.properties;
-            that._geometricError = tilesetJson.geometricError;
-            that._gltfUpAxis = gltfUpAxis;
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that._readyPromise.reject(error);
+        Cesium3DTileset.loadJson(tilesetResource)
+            .then(function(tilesetJson) {
+                return detectBrokenUrlWorkaround(that, tilesetResource, tilesetJson);
+            })
+            .then(function(tilesetJson) {
+                if (that._brokenUrlWorkaround) {
+                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset.json is deprecated.');
+                }
+
+                that._root = that.loadTileset(tilesetResource, tilesetJson);
+                var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
+                that._asset = tilesetJson.asset;
+                that._properties = tilesetJson.properties;
+                that._geometricError = tilesetJson.geometricError;
+                that._gltfUpAxis = gltfUpAxis;
+                that._readyPromise.resolve(that);
+            }).otherwise(function(error) {
+                that._readyPromise.reject(error);
+            });
+    }
+
+    function detectBrokenUrlWorkaround(tileset, tilesetResource, tilesetJson) {
+        var testUrl = findBrokenUrl(tilesetJson.root);
+
+        // If it's an empty string, we are good to load the tileset.
+        if (!defined(testUrl) || (testUrl.length === 0)) {
+            return tilesetJson;
+        }
+
+        var testResource = tilesetResource.getDerivedResource({
+            url : testUrl
         });
+
+        return loadArrayBuffer(testResource)
+            .then(function(buffer) {
+                var uint8Array = new Uint8Array(buffer);
+                var magic = getMagic(uint8Array);
+
+                // If its not a b3dm file, then use workaround
+                // This accounts for servers that return an error page with a 200 status code
+                tileset._brokenUrlWorkaround = (magic !== 'b3dm');
+
+                return tilesetJson;
+            })
+            .otherwise(function() {
+                // Tile failed to load, so use the workaround
+                tileset._brokenUrlWorkaround = true;
+                return tilesetJson;
+            });
+    }
+
+    var brokenUrlRegex = /^\/.+\.b3dm$/;
+
+    function findBrokenUrl(node) {
+        var content = node.content;
+        if (defined(content) && defined(content.url)) {
+            if (brokenUrlRegex.test(content.url)) {
+                return content.url;
+            }
+
+            return '';
+        }
+
+        var children = node.children;
+        if (!defined(children)) {
+            var count = children.length;
+            for (var i = 0; i < count; ++i) {
+                var result = findBrokenUrl(children[i]);
+                if (defined(result)) {
+                    return result;
+                }
+            }
+        }
     }
 
     defineProperties(Cesium3DTileset.prototype, {
