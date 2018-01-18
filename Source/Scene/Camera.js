@@ -1588,7 +1588,7 @@ define([
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the opposite direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1605,7 +1605,7 @@ define([
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1622,7 +1622,7 @@ define([
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1639,7 +1639,7 @@ define([
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the opposite direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
