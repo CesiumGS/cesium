@@ -768,6 +768,23 @@ require({
                         appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + gistId , true);
                         console.log(error);
                 });
+            } else if (defined(queryObject.code)) {
+                //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
+                var json = JSON.parse(window.atob(queryObject.code));
+                var code = json.code;
+                var html = json.html;
+
+                jsEditor.setValue(code);
+                htmlEditor.setValue(html);
+                demoCode = code;
+                demoHtml = html;
+                gistCode = code;
+                gistHtml = html;
+                previousCode = code;
+                previousHtml = html;
+                sandcastleUrl = getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&code=' + queryObject.code;
+                CodeMirror.commands.runCesium(jsEditor);
+                clearRun();
             } else {
                 jsEditor.setValue(scriptCode);
             }
