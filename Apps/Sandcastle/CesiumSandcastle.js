@@ -776,13 +776,13 @@ require({
 
                 jsEditor.setValue(code);
                 htmlEditor.setValue(html);
-                demoCode = code;
-                demoHtml = html;
+                demoCode = code.replace(/\s/g, '');
+                demoHtml = html.replace(/\s/g, '');
                 gistCode = code;
                 gistHtml = html;
                 previousCode = code;
                 previousHtml = html;
-                sandcastleUrl = getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&code=' + queryObject.code;
+                sandcastleUrl = getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&code=' + code;
                 CodeMirror.commands.runCesium(jsEditor);
                 clearRun();
             } else {
@@ -1227,6 +1227,7 @@ require({
                 window.open('gallery/' + demo.name + '.html');
             } else {
                 delete queryObject.gistId;
+                delete queryObject.code;
                 var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
                 var jsText = (jsEditor.getValue()).replace(/\s/g, '');
                 var confirmChange = true;
