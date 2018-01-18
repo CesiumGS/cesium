@@ -1599,7 +1599,6 @@ define([
 
         // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
         if (this._mode !== SceneMode.SCENE2D) {
-            // 3D mode
             this.look(this.up, -amount);
         }
     };
@@ -1617,7 +1616,6 @@ define([
 
         // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
         if (this._mode !== SceneMode.SCENE2D) {
-            // 3D mode
             this.look(this.up, amount);
         }
     };
@@ -1635,7 +1633,6 @@ define([
 
         // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
         if (this._mode !== SceneMode.SCENE2D) {
-            // 3D mode
             this.look(this.right, -amount);
         }
     };
@@ -1653,7 +1650,6 @@ define([
 
         // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
         if (this._mode !== SceneMode.SCENE2D) {
-            // 3D mode
             this.look(this.up, amount);
         }
     };
