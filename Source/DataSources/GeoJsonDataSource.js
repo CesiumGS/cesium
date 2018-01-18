@@ -819,7 +819,9 @@ define([
 
         var promise = data;
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var sourceUri;
         if (typeof data === 'string') {
+            sourceUri = data;
             promise = loadJson(data);
         }
 
@@ -836,7 +838,7 @@ define([
 
         var that = this;
         return when(promise, function(geoJson) {
-            return load(that, geoJson, options);
+            return load(that, geoJson, options, sourceUri);
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
