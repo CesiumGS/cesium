@@ -5,6 +5,9 @@ Change Log
 
 * Breaking changes
   *
+* Deprecated
+  * For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
+* Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, `Billboard`, along with all the low level `load*()` functions.
 * Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
 * Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
 * Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane` [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092) 
