@@ -1506,7 +1506,14 @@ define([
      */
     Camera.prototype.moveForward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, amount);
+
+        if (this._scene.mapMode2D === MapMode2D.ROTATE) {
+            // 3D mode
+            this.move(this.direction, amount);
+        } else {
+            // 2D mode
+            zoom2D(this, amount);
+        }
     };
 
     /**
@@ -1519,7 +1526,14 @@ define([
      */
     Camera.prototype.moveBackward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, -amount);
+
+        if (this._scene.mapMode2D === MapMode2D.ROTATE) {
+            // 3D mode
+            this.move(this.direction, -amount);
+        } else {
+            // 2D mode
+            zoom2D(this, -amount);
+        }
     };
 
     /**
