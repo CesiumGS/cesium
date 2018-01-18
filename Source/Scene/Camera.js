@@ -1507,12 +1507,12 @@ define([
     Camera.prototype.moveForward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
 
-        if (this._scene.mapMode2D === MapMode2D.ROTATE) {
-            // 3D mode
-            this.move(this.direction, amount);
-        } else {
+        if (this._mode === SceneMode.SCENE2D) {
             // 2D mode
             zoom2D(this, amount);
+        } else {
+            // 3D mode
+            this.move(this.direction, amount);
         }
     };
 
@@ -1527,12 +1527,12 @@ define([
     Camera.prototype.moveBackward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
 
-        if (this._scene.mapMode2D === MapMode2D.ROTATE) {
-            // 3D mode
-            this.move(this.direction, -amount);
-        } else {
+        if (this._mode === SceneMode.SCENE2D) {
             // 2D mode
             zoom2D(this, -amount);
+        } else {
+            // 3D mode
+            this.move(this.direction, -amount);
         }
     };
 
@@ -1596,7 +1596,12 @@ define([
      */
     Camera.prototype.lookLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            // 3D mode
+            this.look(this.up, -amount);
+        }
     };
 
     /**
@@ -1609,7 +1614,12 @@ define([
      */
     Camera.prototype.lookRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            // 3D mode
+            this.look(this.up, amount);
+        }
     };
 
     /**
@@ -1622,7 +1632,12 @@ define([
      */
     Camera.prototype.lookUp = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            // 3D mode
+            this.look(this.right, -amount);
+        }
     };
 
     /**
@@ -1635,7 +1650,12 @@ define([
      */
     Camera.prototype.lookDown = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            // 3D mode
+            this.look(this.up, amount);
+        }
     };
 
     var lookScratchQuaternion = new Quaternion();
