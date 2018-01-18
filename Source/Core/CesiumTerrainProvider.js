@@ -53,6 +53,7 @@ define([
     'use strict';
 
     function LayerInformation(layer) {
+        this.resource = layer.resource;
         this.version = layer.version;
         this.isHeightmap = layer.isHeightmap;
         this.tileUrlTemplates = layer.tileUrlTemplates;
@@ -120,8 +121,6 @@ define([
         });
         resource.appendForwardSlash();
 
-        this._resource = resource;
-
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1,
@@ -164,7 +163,7 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        var lastResource = this._resource;
+        var lastResource = resource;
         var metadataResource = lastResource.getDerivedResource({
             url: 'layer.json'
         });
@@ -267,6 +266,7 @@ define([
             }
 
             layers.push(new LayerInformation({
+                resource: lastResource,
                 version: data.version,
                 isHeightmap: isHeightmap,
                 tileUrlTemplates: tileUrlTemplates,
@@ -611,7 +611,7 @@ define([
             extensionList.push('watermask');
         }
 
-        var resource = this._resource.getDerivedResource({
+        var resource = layerToUse.resource.getDerivedResource({
             url: urlTemplates[(x + tmsY + level) % urlTemplates.length],
             templateValues: {
                 version: layerToUse.version,
