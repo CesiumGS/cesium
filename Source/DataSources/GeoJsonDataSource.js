@@ -845,7 +845,7 @@ define([
         });
     };
 
-    function load(that, geoJson, options) {
+    function load(that, geoJson, options, sourceUri) {
         var typeHandler = geoJsonObjectTypes[geoJson.type];
         if (!defined(typeHandler)) {
             throw new RuntimeError('Unsupported GeoJSON object type: ' + geoJson.type);
