@@ -25,6 +25,8 @@ Change Log
    * Only one node is supported.
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
+* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com. 
+* Updated 'Viewer.zoomTo' and 'Viewer.flyTo' to take in Cesium3DTilesets as a target and updated sandcastle 3DTileset examples to reflect this change
 * Added optional scene request render mode to reduce CPU usage. [#6065](https://github.com/AnalyticalGraphicsInc/cesium/pull/6065) and [#6107](https://github.com/AnalyticalGraphicsInc/cesium/pull/6107)
    * `Scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`. 
    * `Scene.requestRender` will explicitly request a new render frame when in request render mode.
@@ -33,8 +35,9 @@ Change Log
    * Added `Globe.imageryLayersUpdatedEvent`, which is raised when an imagery layer is added, shown, hidden, moved, or removed on the globe.
 * Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
 * Fixed a bug when creating billboard and model entities without a globe. [#6109](https://github.com/AnalyticalGraphicsInc/cesium/pull/6109)
-* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
+* Added separate file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
+* Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
 
 ### 1.41 - 2018-01-02
 

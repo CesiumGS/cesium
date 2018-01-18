@@ -94,6 +94,8 @@ define([
         this._showShaderFunctionReady = false;
         this._pointSizeShaderFunctionReady = false;
 
+        this._colorShaderTranslucent = false;
+
         var promise;
         if (typeof style === 'string') {
             promise = loadJson(style);
@@ -1453,12 +1455,14 @@ define([
      */
     Cesium3DTileStyle.prototype.getColorShaderFunction = function(functionName, attributePrefix, shaderState) {
         if (this._colorShaderFunctionReady) {
+            shaderState.translucent = this._colorShaderTranslucent;
             // Return the cached result, may be undefined
             return this._colorShaderFunction;
         }
 
         this._colorShaderFunctionReady = true;
         this._colorShaderFunction = defined(this.color) ? this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
+        this._colorShaderTranslucent = shaderState.translucent;
         return this._colorShaderFunction;
     };
 
