@@ -4,7 +4,7 @@ Thanks for contributing to Cesium.  You rock!  Are you
 * [getting started contributing](#getting-started-contributing), or
 * [opening a pull request](#opening-a-pull-request)?
 
-To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](#code-of-conduct).
+To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](CODEOFCONDUCT.md).
 
 # Submitting an Issue
 
@@ -79,7 +79,3 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
       * Include reference documentation with code examples.  Follow the [Documentation Guide](Documentation/Contributors/DocumentationGuide/README.md).
       * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
    * If you added third-party libraries, including new version of existing libraries, update [LICENSE.md](LICENSE.md).  Mention it in [CHANGES.md](CHANGES.md).  If you plan to add a third-party library, start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.
-
-# Code of Conduct
-
-View our current code of conduct [here](CODEOFCONDUCT.md).
