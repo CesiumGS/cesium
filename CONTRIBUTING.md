@@ -82,4 +82,4 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
 
 # Code of Conduct
 
-Cesium's Code of Conduct is [here](./CODE_OF_CONDUCT.md).
+To ensure an inclusive community, contributors and users in the Cesium community should follow the [code of conduct](./CODE_OF_CONDUCT.md).
