@@ -1,6 +1,8 @@
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/loadCRN',
         '../Core/loadImage',
@@ -8,8 +10,10 @@ define([
         '../Core/loadKTX',
         '../Core/Resource'
     ], function(
+        Check,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         loadCRN,
         loadImage,
@@ -329,31 +333,33 @@ define([
      *
      * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
      * @param {Resource|String} url The URL of the image.
-     * @param {Request} [request] The request object. Intended for internal use only. //TODO deprecate
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url, request) {
-        if (typeof url === 'string') {
-            url = new Resource({
-                url: url
-            });
-        }
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('url', url);
+        //>>includeEnd('debug');
+
         if (defined(request)) {
-            //TODO deprecation warning
-            url.request = request;
-        }
-        if (ktxRegex.test(url)) {
-            return loadKTX(url);
-        } else if (crnRegex.test(url)) {
-            return loadCRN(url);
-        } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return loadImageViaBlob(url);
+            deprecationWarning('ImageryProvider.loadImage.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
 
-        return loadImage(url);
+        var resource = Resource.createIfNeeded(url, {
+            request: request
+        });
+
+        if (ktxRegex.test(resource)) {
+            return loadKTX(resource);
+        } else if (crnRegex.test(resource)) {
+            return loadCRN(resource);
+        } else if (defined(imageryProvider.tileDiscardPolicy)) {
+            return loadImageViaBlob(resource);
+        }
+
+        return loadImage(resource);
     };
 
     return ImageryProvider;

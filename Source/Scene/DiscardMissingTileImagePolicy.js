@@ -24,7 +24,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.missingImageUrl The URL of the known missing image.
+     * @param {Resource|String} options.missingImageUrl The URL of the known missing image.
      * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.
      * @param {Boolean} [options.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
@@ -89,7 +89,9 @@ define([
             that._isReady = true;
         }
 
-        when(loadImageViaBlob(new Resource({url: options.missingImageUrl})), success, failure);
+        var resource = Resource.createIfNeeded(options.missingImageUrl);
+
+        when(loadImageViaBlob(resource), success, failure);
     }
 
     /**

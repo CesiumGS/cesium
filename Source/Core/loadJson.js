@@ -1,12 +1,14 @@
 define([
         './clone',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './loadText',
         './Resource'
     ], function(
         clone,
         defined,
+        deprecationWarning,
         DeveloperError,
         loadText,
         Resource) {
@@ -28,10 +30,6 @@ define([
      * @exports loadJson
      *
      * @param {Resource|String} urlOrResource The URL to request.
-     * @param {Object} [headers] HTTP headers to send with the request.
-     * 'Accept: application/json,&#42;&#47;&#42;;q=0.01' is added to the request headers automatically
-     * if not specified.
-     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -53,25 +51,22 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (typeof urlOrResource === 'string') {
-            urlOrResource = new Resource({
-                url: urlOrResource,
-                headers: headers,
-                request: request
-            });
+        if (defined(headers)) {
+            deprecationWarning('loadJson.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
         }
 
-        headers = urlOrResource.headers;
-        if (!defined(headers)) {
-            headers = defaultHeaders;
-        } else if (!defined(headers.Accept)) {
-            // clone before adding the Accept header
-            headers = clone(headers);
-            headers.Accept = defaultHeaders.Accept;
+        if (defined(request)) {
+            deprecationWarning('loadJson.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
-        urlOrResource.headers = headers;
 
-        var textPromise = loadText(urlOrResource);
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
+        });
+
+        resource.headers.Accept = defaultHeaders.Accept;
+
+        var textPromise = loadText(resource);
         if (!defined(textPromise)) {
             return undefined;
         }

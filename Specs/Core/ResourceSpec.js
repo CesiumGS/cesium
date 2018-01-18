@@ -126,7 +126,7 @@ defineSuite([
         var resource = new Resource({
             url: 'http://test.com/tileset'
         });
-        expect(Resource.createIfNeeded(resource)).toBe(resource);
+        expect(Resource.createIfNeeded(resource)).toEqual(resource);
     });
 
     it('createIfNeeded returns Resource, if parameter is a String', function() {
@@ -351,9 +351,9 @@ defineSuite([
         });
 
         expect(resource.templateValues).toEqual({
-            x: '1',
-            y: '2',
-            map: 'my%20map'
+            x: 1,
+            y: 2,
+            map: 'my map'
         });
 
         resource.addTemplateValues({
@@ -364,11 +364,11 @@ defineSuite([
         }, true);
 
         expect(resource.templateValues).toEqual({
-            x: '1',
-            y: '2',
-            map: 'my%20map',
-            z: '0',
-            style: 'my%20style'
+            x: 1,
+            y: 2,
+            map: 'my map',
+            z: 0,
+            style: 'my style'
         });
     });
 
@@ -383,9 +383,9 @@ defineSuite([
         });
 
         expect(resource.templateValues).toEqual({
-            x: '1',
-            y: '2',
-            map: 'my%20map'
+            x: 1,
+            y: 2,
+            map: 'my map'
         });
 
         resource.addTemplateValues({
@@ -396,11 +396,11 @@ defineSuite([
         }, false);
 
         expect(resource.templateValues).toEqual({
-            x: '3',
-            y: '4',
-            map: 'my%20map',
-            z: '0',
-            style: 'my%20style'
+            x: 3,
+            y: 4,
+            map: 'my map',
+            z: 0,
+            style: 'my style'
         });
     });
 
@@ -422,8 +422,6 @@ defineSuite([
                 expect(result).toEqual([true, true, true, false, false, false]);
                 expect(cb.calls.count()).toEqual(3);
                 expect(resource._retryCount).toEqual(3);
-                resource.succeeded();
-                expect(resource._retryCount).toEqual(0);
             });
     });
 
@@ -450,8 +448,6 @@ defineSuite([
                 expect(result).toEqual([false, true, false, true, false, false]);
                 expect(cb.calls.count()).toEqual(4);
                 expect(resource._retryCount).toEqual(4);
-                resource.succeeded();
-                expect(resource._retryCount).toEqual(0);
             });
     });
 });

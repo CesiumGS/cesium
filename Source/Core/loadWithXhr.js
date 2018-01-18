@@ -71,12 +71,17 @@ define([
         Check.defined('optionsOrResource', optionsOrResource);
         //>>includeEnd('debug');
 
-        optionsOrResource = defined(optionsOrResource.clone) ? optionsOrResource.clone() : clone(optionsOrResource);
+        var resource;
+        if (optionsOrResource instanceof Resource) {
+            resource = optionsOrResource.clone();
+        } else {
+            // Take advantage that the options are the same
+            resource = new Resource(optionsOrResource);
+        }
 
-        optionsOrResource.method = defaultValue(optionsOrResource.method, 'GET');
-        optionsOrResource.request = defaultValue(optionsOrResource.request, new Request());
+        resource.request = defaultValue(resource.request, new Request());
 
-        return makeRequest(optionsOrResource);
+        return makeRequest(resource);
     }
 
     function makeRequest(optionsOrResource) {
@@ -108,10 +113,6 @@ define([
 
         return promise
             .then(function(data) {
-                if (defined(optionsOrResource.succeeded)) {
-                    optionsOrResource.succeeded();
-                }
-
                 return data;
             })
             .otherwise(function(e) {

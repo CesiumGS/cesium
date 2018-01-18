@@ -756,7 +756,7 @@ define([
         }
 
         var children = node.children;
-        if (!defined(children)) {
+        if (defined(children)) {
             var count = children.length;
             for (var i = 0; i < count; ++i) {
                 var result = findBrokenUrl(children[i]);

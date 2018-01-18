@@ -308,7 +308,7 @@ defineSuite([
             url: url,
             basePath: basePath
         });
-        expect(model._resource).toBe(basePath);
+        expect(model._resource).toEqual(basePath);
         expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(url.url);
     });
 

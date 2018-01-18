@@ -67,11 +67,12 @@ define([
             deprecationWarning('loadImage.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
 
-        urlOrResource = defined(urlOrResource.clone) ? urlOrResource.clone() : urlOrResource;
+        // If the user specifies the request we should use it, not a cloned version, (createIfNeeded will clone the Resource).
+        request = defaultValue(urlOrResource.request, request);
+
         var resource = Resource.createIfNeeded(urlOrResource, {
             request: request
         });
-
         resource.request = defaultValue(resource.request, new Request());
 
         return makeRequest(resource, defaultValue(allowCrossOrigin, true));
@@ -104,11 +105,6 @@ define([
         }
 
         return promise
-            .then(function(data) {
-                resource.succeeded();
-
-                return data;
-            })
             .otherwise(function(e) {
                 return resource.retryOnError(e)
                     .then(function(retry) {

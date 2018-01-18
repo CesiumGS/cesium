@@ -1,26 +1,32 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './clone',
         './combine',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './objectToQuery',
         './queryToObject',
         './Request',
         './RequestScheduler',
+        './RequestState',
         './Resource'
     ], function(
         Uri,
         when,
+        clone,
         combine,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         objectToQuery,
         queryToObject,
         Request,
         RequestScheduler,
+        RequestState,
         Resource) {
     'use strict';
 
@@ -30,12 +36,7 @@ define([
      * @exports loadJsonp
      *
      * @param {Resource|String} urlOrResource The URL to request.
-     * @param {Object} [options] Object with the following properties: //TODO deprecated
-     * @param {Object} [options.parameters] Any extra query parameters to append to the URL.
-     * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
-     * @param {DefaultProxy} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
-     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -55,6 +56,24 @@ define([
             throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
+        if (defined(request)) {
+            deprecationWarning('loadJsonp.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
+
+        var proxy;
+        var queryParameters;
+        if (typeof callbackParameterName === 'object') {
+            deprecationWarning('loadJsonp.callbackParameterName', 'Passing an Object as the second parameter is deprecated. The proxy and parameters options should now be set on the Resource instance.');
+            var options = callbackParameterName;
+            if (defined(options.parameters)) {
+                queryParameters = clone(options.parameters);
+            }
+            if (defined(options.proxy)) {
+                proxy = options.proxy;
+            }
+            callbackParameterName = options.callbackParameterName;
+        }
+        callbackParameterName = defaultValue(callbackParameterName, 'callback');
 
         //generate a unique function name
         var functionName;
@@ -62,37 +81,23 @@ define([
             functionName = 'loadJsonp' + Math.random().toString().substring(2, 8);
         } while (defined(window[functionName]));
 
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            proxy : proxy,
+            queryParameters : queryParameters,
+            request: request
+        });
+        resource.request = defaultValue(resource.request, new Request());
 
+        return makeRequest(resource, callbackParameterName, functionName);
+    }
 
-        if (typeof urlOrResource === 'string') {
-            urlOrResource = new Resource({
-                url: urlOrResource,
-                request: request
-            });
-        }
-        if (typeof callbackParameterName === 'object') {
-            //TODO deprecation warning
-            var options = callbackParameterName;
-            if (defined(options.parameters)) {
-                urlOrResource.addQueryParameters(options.parameters);
-            }
-            if (defined(options.proxy)) {
-                urlOrResource.proxy = options.proxy;
-            }
-            callbackParameterName = options.callbackParameterName;
-        }
-        if (defined(request)) {
-            //TODO deprecate
-            urlOrResource.request = request;
-        }
-
+    function makeRequest(resource, callbackParameterName, functionName) {
         var callbackQuery = {};
-        callbackParameterName = defaultValue(callbackParameterName, 'callback');
         callbackQuery[callbackParameterName] = functionName;
-        urlOrResource.addQueryParameters(callbackQuery);
+        resource.addQueryParameters(callbackQuery);
 
-        request = defined(urlOrResource.request) ? urlOrResource.request : new Request();
-        var url = urlOrResource.url;
+        var request = resource.request;
+        var url = resource.url;
         request.url = url;
         request.requestFunction = function() {
             var deferred = when.defer();
@@ -112,7 +117,30 @@ define([
             return deferred.promise;
         };
 
-        return RequestScheduler.request(request);
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                if (request.state === RequestState.FAILED) {
+                    return resource.retryOnError(e)
+                        .then(function(retry) {
+                            if (retry) {
+                                // Reset request so it can try again
+                                request.state = RequestState.UNISSUED;
+                                request.deferred = undefined;
+
+                                return makeRequest(resource, callbackParameterName, functionName);
+                            }
+
+                            return when.reject(e);
+                        });
+                }
+
+                return when.reject(e);
+            });
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.

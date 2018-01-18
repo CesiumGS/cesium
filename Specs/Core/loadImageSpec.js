@@ -136,7 +136,7 @@ defineSuite([
     });
 
     describe('retries when Resource has the callback set', function() {
-        it('rejects after to many retries', function() {
+        it('rejects after too many retries', function() {
             var fakeImage = {};
             spyOn(window, 'Image').and.returnValue(fakeImage);
 

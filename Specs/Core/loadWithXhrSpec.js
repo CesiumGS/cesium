@@ -446,7 +446,7 @@ defineSuite([
         });
 
         describe('retries when Resource has the callback set', function() {
-            it('rejects after to many retries', function() {
+            it('rejects after too many retries', function() {
                 var cb = jasmine.createSpy('retry').and.returnValue(true);
 
                 var resource = new Resource({

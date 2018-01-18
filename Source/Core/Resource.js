@@ -36,51 +36,55 @@ define([
     /**
      * @private
      */
-    function parseQuery(queryString) {
-        if (queryString.length === 0) {
+    function parseQuery(uri, resource) {
+        var queryString = uri.query;
+        if (!defined(queryString) || (queryString.length === 0)) {
             return {};
         }
 
+        var query;
         // Special case we run into where the querystring is just a string, not key/value pairs
         if (queryString.indexOf('=') === -1) {
             var result = {};
             result[queryString] = undefined;
-            return result;
+            query = result;
+        } else {
+            query = queryToObject(queryString);
         }
 
-        return queryToObject(queryString);
+        resource._queryParameters = combine(resource._queryParameters, query);
+        uri.query = undefined;
     }
 
     /**
      * @private
      */
-    function stringifyQuery(queryObject) {
+    function stringifyQuery(uri, resource) {
+        var queryObject = resource._queryParameters;
+
         var keys = Object.keys(queryObject);
 
         // We have 1 key with an undefined value, so this is just a string, not key/value pairs
         if (keys.length === 1 && !defined(queryObject[keys[0]])) {
-            return keys[0];
+            uri.query = keys[0];
+        } else {
+            uri.query = objectToQuery(queryObject);
         }
-
-        return objectToQuery(queryObject);
     }
 
     /**
      * @private
      */
-    function encodeValues(object) {
-        var result = {};
-        for(var key in object) {
-            if (object.hasOwnProperty(key)) {
-                result[key] = encodeURIComponent(object[key]);
-            }
+    function defaultClone(obj, defaultVal) {
+        if (!defined(obj)) {
+            return defaultVal;
         }
 
-        return result;
+        return defined(obj.clone) ? obj.clone() : clone(obj);
     }
 
     /**
-     * A resource the location and any other parameters we need to retrieve it or create derived resources.
+     * A resource that includes the location and any other parameters we need to retrieve it or create derived resources. It also provides the ability to retry requests.
      *
      * @param {Object} options An object with the following properties
      * @param {String} options.url The url of the resource.
@@ -89,13 +93,43 @@ define([
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {String} [options.responseType] The type of response.
      * @param {String} [options.method='GET'] The method to use.
-     * @param {Object} [options.data] Data that is sent with the resource request.
+     * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
-     * @param {Function} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     *
+     * @example
+     * function refreshTokenRetryCallback(resource, error) {
+     *   if (error.statusCode === 403) {
+     *     // 403 status code means a new token should be generated
+     *     return getNewAccessToken()
+     *       .then(function(token) {
+     *         resource.queryParameters.access_token = token;
+     *         return true;
+     *       })
+     *       .otherwise(function() {
+     *         return false;
+     *       });
+     *   }
+     *
+     *   return false;
+     * }
+     *
+     * var resource = new Resource({
+     *    url: 'http://server.com/path/to/resource.json',
+     *    proxy: new DefaultProxy('/proxy/'),
+     *    headers: {
+     *      'X-My-Header': 'valueOfHeader'
+     *    },
+     *    queryParameters: {
+     *      'access_token': '123-435-456-000'
+     *    },
+     *    retryCallback: refreshTokenRetryCallback,
+     *    retryAttempts: 1
+     * });
      *
      * @constructor
      */
@@ -106,18 +140,17 @@ define([
         Check.typeOf.string('options.url', options.url);
         //>>includeEnd('debug');
 
-        this._url = '';
-        this._templateValues = encodeValues(defaultValue(options.templateValues, {}));
-        this._queryParameters = defaultValue(options.queryParameters, {});
+        this._url = undefined;
+        this._templateValues = defaultClone(options.templateValues, {});
+        this._queryParameters = defaultClone(options.queryParameters, {});
         this._isDirectory = defaultValue(options.isDirectory, false);
-        this.url = options.url;
 
         /**
          * Additional HTTP headers that will be sent with the request.
          *
          * @type {Object}
          */
-        this.headers = defined(options.headers) ? clone(options.headers) : {};
+        this.headers = defaultClone(options.headers, {});
 
         /**
          * A Request object that will be used. Intended for internal use only.
@@ -145,7 +178,7 @@ define([
          *
          * @type {Object}
          */
-        this.data = options.data;
+        this.data = defaultClone(options.data);
 
         /**
          * Overrides the MIME type returned by the server.
@@ -162,7 +195,7 @@ define([
         this.proxy = options.proxy;
 
         /**
-         * Function to call when a request for this resource fails. If it returns true, the request will be retried.
+         * Function to call when a request for this resource fails. If it returns true or a Promise that resolves to true, the request will be retried.
          *
          * @type {Function}
          */
@@ -175,30 +208,32 @@ define([
          */
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
+
+        this.url = options.url;
     }
 
     /**
      * A helper function to create a resource depending on whether we have a String or a Resource
      *
      * @param {Resource|String} resource A Resource or a String to use when creating a new Resource.
-     * @param {Object{ options If resource is a String, these are the options passed to the Resource constructor. It is ignored otherwise.
+     * @param {Object} options If resource is a String, these are the options passed to the Resource constructor. It is ignored otherwise.
      *
      * @returns {Resource} If resource is a String, a Resource constructed with the url and options. Otherwise the resource parameter is returned.
      *
      * @private
      */
     Resource.createIfNeeded = function(resource, options) {
-        if (!defined(resource)) {
-            return;
+        if (resource instanceof Resource) {
+            return resource.clone();
         }
 
-        if (typeof resource === 'string') {
-            var args = defined(options) ? clone(options) : {};
-            args.url = resource;
-            resource = new Resource(args);
+        if (typeof resource !== 'string') {
+            return resource;
         }
 
-        return resource;
+        var args = defaultClone(options, {});
+        args.url = resource;
+        return new Resource(args);
     };
 
     defineProperties(Resource.prototype, {
@@ -231,7 +266,7 @@ define([
         },
 
         /**
-         * The url to the resource.
+         * The url to the resource with template values replaced, query string appended and encoded by proxy if one was set.
          *
          * @memberof Resource.prototype
          * @type {String}
@@ -243,11 +278,7 @@ define([
             set: function(value) {
                 var uri = new Uri(value);
 
-                if (defined(uri.query)) {
-                    var query = parseQuery(uri.query);
-                    this._queryParameters = combine(this._queryParameters, query);
-                    uri.query = undefined;
-                }
+                parseQuery(uri, this);
 
                 // Remove the fragment as it's not sent with a request
                 uri.fragment = undefined;
@@ -315,7 +346,9 @@ define([
      * Returns the url, optional with the query string and processed by a proxy.
      *
      * @param {Boolean} [query=false] If true, the query string is included.
-     * @param {Boolean{ [proxy=false] If true, the url is processed the proxy object if defined.
+     * @param {Boolean} [proxy=false] If true, the url is processed the proxy object if defined.
+     *
+     * @returns {String} The url with all the requested components.
      */
     Resource.prototype.getUrlComponent = function(query, proxy) {
         if(this.isDataUri) {
@@ -325,7 +358,7 @@ define([
         var uri = new Uri(this._url);
 
         if (query) {
-            uri.query = stringifyQuery(this._queryParameters);
+            stringifyQuery(uri, this);
         }
 
         // objectToQuery escapes the placeholders.  Undo that.
@@ -337,7 +370,7 @@ define([
             for (var i = 0; i < keys.length; i++) {
                 var key = keys[i];
                 var value = template[key];
-                url = url.replace(new RegExp('{' + key + '}', 'g'), value);
+                url = url.replace(new RegExp('{' + key + '}', 'g'), encodeURIComponent(value));
             }
         }
         if (proxy && defined(this.proxy)) {
@@ -347,9 +380,10 @@ define([
     };
 
     /**
-     * Adds query parameters
+     * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
+     *  as opposed to adding them one at a time to the queryParameters property.
      *
-     * @param {Object{ params The query parameters
+     * @param {Object} params The query parameters
      * @param {Boolean} [useAsDefault=false] If true the params will be used as the default values, so they will only be set if they are undefined.
      */
     Resource.prototype.addQueryParameters = function(params, useAsDefault) {
@@ -361,16 +395,17 @@ define([
     };
 
     /**
-     * Adds template values
+     * Combines the specified object and the existing template values. This allows you to add many values at once,
+     *  as opposed to adding them one at a time to the templateValues property.
      *
-     * @param {Object{ params The template values
+     * @param {Object} params The template values
      * @param {Boolean} [useAsDefault=false] If true the values will be used as the default values, so they will only be set if they are undefined.
      */
     Resource.prototype.addTemplateValues = function(template, useAsDefault) {
         if (useAsDefault) {
-            this._templateValues = combine(this._templateValues, encodeValues(template));
+            this._templateValues = combine(this._templateValues, template);
         } else {
-            this._templateValues = combine(encodeValues(template), this._templateValues);
+            this._templateValues = combine(template, this._templateValues);
         }
     };
 
@@ -384,13 +419,15 @@ define([
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {String} [options.responseType] The type of response.
      * @param {String} [options.method] The method to use.
-     * @param {Object} [options.data] Data that is sent with the request.
+     * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Boolean} [options.isDirectory=false] The url should be a directory, so make sure there is a trailing slash.
-     * @param {Function} [options.retryCallback] The function to call when loading the resource fails.
+     * @param {Resource~RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     *
+     * @returns {Resource} The resource derived from the current one.
      */
     Resource.prototype.getDerivedResource = function(options) {
         var resource = this.clone();
@@ -400,14 +437,10 @@ define([
         if (defined(options.url)) {
             var uri = new Uri(options.url);
 
+            parseQuery(uri, resource);
+
             // Remove the fragment as it's not sent with a request
             uri.fragment = undefined;
-
-            if (defined(uri.query)) {
-                var query = parseQuery(uri.query);
-                uri.query = undefined;
-                resource._queryParameters = combine(query, resource._queryParameters);
-            }
 
             resource._url = uri.resolve(new Uri(getAbsoluteUri(this._url))).toString();
         }
@@ -416,7 +449,7 @@ define([
             resource._queryParameters = combine(options.queryParameters, resource._queryParameters);
         }
         if (defined(options.templateValues)) {
-            resource._templateValues = combine(encodeValues(options.templateValues), resource.templateValues);
+            resource._templateValues = combine(options.templateValues, resource.templateValues);
         }
         if (defined(options.headers)) {
             resource.headers = combine(options.headers, resource.headers);
@@ -489,10 +522,9 @@ define([
         }
 
         result._url = this._url;
-        result._queryParameters = this._queryParameters;
-        result._templateValues = this._templateValues;
-        result.headers = this.headers;
-        result.request = this.request;
+        result._queryParameters = clone(this._queryParameters);
+        result._templateValues = clone(this._templateValues);
+        result.headers = clone(this.headers);
         result.responseType = this.responseType;
         result.method = this.method;
         result.data = this.data;
@@ -503,14 +535,11 @@ define([
         result.retryAttempts = this.retryAttempts;
         result._retryCount = 0;
 
-        return result;
-    };
+        // In practice, we don't want this cloned. It usually not set, unless we purposely set it internally and not
+        //  using the request will break the request scheduler.
+        result.request = this.request;
 
-    /**
-     * Called when a request succeeds
-     */
-    Resource.prototype.succeeded = function() {
-        this._retryCount = 0;
+        return result;
     };
 
     /**
@@ -533,6 +562,15 @@ define([
     Resource.DEFAULT = freezeObject(new Resource({
         url: (typeof document === 'undefined') ? '' : document.location.href.split('?')[0]
     }));
+
+    /**
+     * A function that returns the value of the property.
+     * @callback Resource~RetryCallback
+     *
+     * @param {Resource} [resource] The resource that failed to load.
+     * @param {Error} [error] The error that occurred during the loading of the resource.
+     * @returns {Boolean|Promise<Boolean>} If true or a promise that resolved to true, the resource will be retried. Otherwise the failure will be returned.
+     */
 
     return Resource;
 });
