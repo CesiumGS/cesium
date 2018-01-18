@@ -86,6 +86,7 @@ define([
         this._resource = Resource.createIfNeeded(url, {
             proxy: proxy
         });
+        this._resource.isDirectory = true;
 
         /**
          * True if imagery is available.
@@ -179,6 +180,12 @@ define([
             }
         },
 
+        /**
+         * Gets the resource used for metadata requests.
+         * @memberof GoogleEarthEnterpriseMetadata.prototype
+         * @type {Resource}
+         * @readonly
+         */
         resource: {
             get: function() {
                 return this._resource;

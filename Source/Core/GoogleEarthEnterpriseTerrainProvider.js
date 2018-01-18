@@ -207,7 +207,6 @@ define([
          */
         proxy : {
             get : function() {
-                //TODO deprecate
                 return this._metadata.proxy;
             }
         },
@@ -451,7 +450,7 @@ define([
             sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
             sharedRequest = request;
-            var requestPromise = loadArrayBuffer(buildTerrainUrl(this, q, terrainVersion, sharedRequest));
+            var requestPromise = loadArrayBuffer(buildTerrainResource(this, q, terrainVersion, sharedRequest));
 
             if (!defined(requestPromise)) {
                 return undefined; // Throttled
@@ -594,11 +593,10 @@ define([
     //
     // Functions to handle imagery packets
     //
-    function buildTerrainUrl(terrainProvider, quadKey, version, request) {
+    function buildTerrainResource(terrainProvider, quadKey, version, request) {
         version = (defined(version) && version > 0) ? version : 1;
-        var terrainUrl = terrainProvider.url + 'flatfile?f1c-0' + quadKey + '-t.' + version.toString();
         return terrainProvider._metadata.resource.getDerivedResource({
-            url: terrainUrl,
+            url: 'flatfile?f1c-0' + quadKey + '-t.' + version.toString(),
             request: request
         });
     }

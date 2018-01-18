@@ -53,6 +53,7 @@ define([
     'use strict';
 
     function LayerInformation(layer) {
+        this.version = layer.version;
         this.isHeightmap = layer.isHeightmap;
         this.tileUrlTemplates = layer.tileUrlTemplates;
         this.availability = layer.availability;
