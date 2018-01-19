@@ -1,11 +1,9 @@
 define([
         './defaultValue',
-        './defined',
         './RequestState',
         './RequestType'
     ], function(
         defaultValue,
-        defined,
         RequestState,
         RequestType) {
     'use strict';
