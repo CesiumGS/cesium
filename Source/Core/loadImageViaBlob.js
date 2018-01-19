@@ -1,33 +1,14 @@
 define([
-        '../ThirdParty/when',
         './Check',
         './defined',
         './deprecationWarning',
-        './isDataUri',
-        './loadBlob',
-        './loadImage',
         './Resource'
     ], function(
-        when,
         Check,
         defined,
         deprecationWarning,
-        isDataUri,
-        loadBlob,
-        loadImage,
         Resource) {
     'use strict';
-
-    var xhrBlobSupported = (function() {
-        try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '#', true);
-            xhr.responseType = 'blob';
-            return xhr.responseType === 'blob';
-        } catch (e) {
-            return false;
-        }
-    })();
 
     /**
      * Asynchronously loads the given image URL by first downloading it as a blob using
@@ -70,40 +51,14 @@ define([
         //>>includeEnd('debug');
 
         if (defined(request)) {
-            deprecationWarning('loadCRN.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+            deprecationWarning('loadImageViaBlob.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
 
         var resource = Resource.createIfNeeded(urlOrResource, {
             request: request
         });
 
-        var url = resource.url;
-        if (!xhrBlobSupported || isDataUri(url)) {
-            return loadImage(resource);
-        }
-
-        var blobPromise = loadBlob(resource);
-        if (!defined(blobPromise)) {
-            return undefined;
-        }
-
-        return blobPromise.then(function(blob) {
-            if (!defined(blob)) {
-                return;
-            }
-            var blobUrl = window.URL.createObjectURL(blob);
-            var blobResource = new Resource({
-                url: blobUrl
-            });
-            return loadImage(blobResource).then(function(image) {
-                image.blob = blob;
-                window.URL.revokeObjectURL(blobUrl);
-                return image;
-            }, function(error) {
-                window.URL.revokeObjectURL(blobUrl);
-                return when.reject(error);
-            });
-        });
+        return resource.fetchImage(true);
     }
 
     return loadImageViaBlob;

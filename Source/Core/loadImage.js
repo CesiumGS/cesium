@@ -1,31 +1,15 @@
 define([
-        '../ThirdParty/when',
         './Check',
-        './defaultValue',
         './defined',
+        './defineProperties',
         './deprecationWarning',
-        './isBlobUri',
-        './isCrossOriginUrl',
-        './isDataUri',
-        './Request',
-        './RequestScheduler',
-        './RequestState',
-        './Resource',
-        './TrustedServers'
+        './Resource'
     ], function(
-        when,
         Check,
-        defaultValue,
         defined,
+        defineProperties,
         deprecationWarning,
-        isBlobUri,
-        isCrossOriginUrl,
-        isDataUri,
-        Request,
-        RequestScheduler,
-        RequestState,
-        Resource,
-        TrustedServers) {
+        Resource) {
     'use strict';
 
     /**
@@ -59,92 +43,34 @@ define([
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
 
-        if (defined(allowCrossOrigin)) {
-            deprecationWarning('loadImage.allowCrossOrigin', 'The allowCrossOrigin parameter has been deprecated. It no longer needs to be specified.');
-        }
-
         if (defined(request)) {
             deprecationWarning('loadImage.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
 
-        // If the user specifies the request we should use it, not a cloned version, (createIfNeeded will clone the Resource).
-        request = defaultValue(urlOrResource.request, request);
-
         var resource = Resource.createIfNeeded(urlOrResource, {
             request: request
         });
-        resource.request = defaultValue(resource.request, new Request());
 
-        return makeRequest(resource, defaultValue(allowCrossOrigin, true));
+        return resource.fetchImage(false, allowCrossOrigin);
     }
 
-    function makeRequest(resource, allowCrossOrigin) {
-        var url = resource.url;
-        var request = resource.request;
-        request.url = url;
-        request.requestFunction = function() {
-            var crossOrigin;
+    defineProperties(loadImage, {
 
-            // data URIs can't have allowCrossOrigin set.
-            if (isDataUri(url) || isBlobUri(url)) {
-                crossOrigin = false;
-            } else {
-                crossOrigin = isCrossOriginUrl(url);
+        createImage : {
+            get : function() {
+                return Resource._Implementations.createImage;
+            },
+            set : function(value) {
+                Resource._Implementations.createImage = value;
             }
+        },
 
-            var deferred = when.defer();
-
-            loadImage.createImage(url, crossOrigin && allowCrossOrigin, deferred);
-
-            return deferred.promise;
-        };
-
-        var promise = RequestScheduler.request(request);
-        if (!defined(promise)) {
-            return;
-        }
-
-        return promise
-            .otherwise(function(e) {
-                return resource.retryOnError(e)
-                    .then(function(retry) {
-                        if (retry) {
-                            // Reset request so it can try again
-                            request.state = RequestState.UNISSUED;
-                            request.deferred = undefined;
-
-                            return makeRequest(resource);
-                        }
-
-                        return when.reject(e);
-                    });
-            });
-    }
-
-    // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadImage.createImage = function(url, crossOrigin, deferred) {
-        var image = new Image();
-
-        image.onload = function() {
-            deferred.resolve(image);
-        };
-
-        image.onerror = function(e) {
-            deferred.reject(e);
-        };
-
-        if (crossOrigin) {
-            if (TrustedServers.contains(url)) {
-                image.crossOrigin = 'use-credentials';
-            } else {
-                image.crossOrigin = '';
+        defaultCreateImage : {
+            get : function() {
+                return Resource._DefaultImplementations.createImage;
             }
         }
-
-        image.src = url;
-    };
-
-    loadImage.defaultCreateImage = loadImage.createImage;
+    });
 
     return loadImage;
 });

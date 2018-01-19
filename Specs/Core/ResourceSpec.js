@@ -419,4 +419,32 @@ defineSuite([
                 expect(resource._retryCount).toEqual(4);
             });
     });
+
+    it('isDataUri returns correct values', function() {
+        var dataResource = new Resource({
+            url: 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3'
+        });
+
+        expect(dataResource.isDataUri).toBe(true);
+
+        var resource = new Resource({
+            url: 'http://invalid.uri/tileset'
+        });
+
+        expect(resource.isDataUri).toBe(false);
+    });
+
+    it('isBlobUri returns correct values', function() {
+        var dataResource = new Resource({
+            url: 'blob:d3958f5c-0777-0845-9dcf-2cb28783acaf'
+        });
+
+        expect(dataResource.isBlobUri).toBe(true);
+
+        var resource = new Resource({
+            url: 'http://invalid.uri/tileset'
+        });
+
+        expect(resource.isBlobUri).toBe(false);
+    });
 });

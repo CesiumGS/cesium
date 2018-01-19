@@ -9,7 +9,6 @@ define([
         './RequestErrorEvent',
         './RequestScheduler',
         './RequestState',
-        './Resource',
         './RuntimeError',
         './TrustedServers'
     ], function(
@@ -23,7 +22,6 @@ define([
         RequestErrorEvent,
         RequestScheduler,
         RequestState,
-        Resource,
         RuntimeError,
         TrustedServers) {
     'use strict';
@@ -71,14 +69,8 @@ define([
         Check.defined('optionsOrResource', optionsOrResource);
         //>>includeEnd('debug');
 
-        var resource;
-        if (optionsOrResource instanceof Resource) {
-            resource = optionsOrResource.clone();
-        } else {
-            // Take advantage that the options are the same
-            resource = new Resource(optionsOrResource);
-        }
-
+        var resource = defined(optionsOrResource.clone) ? optionsOrResource.clone() : optionsOrResource;
+        resource.method = defaultValue(resource.method, 'GET');
         resource.request = defaultValue(resource.request, new Request());
 
         return makeRequest(resource);

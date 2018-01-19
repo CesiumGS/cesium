@@ -6,13 +6,21 @@ define([
     './defaultValue',
     './defined',
     './defineProperties',
+    './deprecationWarning',
     './freezeObject',
     './getAbsoluteUri',
     './getBaseUri',
     './getExtensionFromUri',
+    './isBlobUri',
+    './isCrossOriginUrl',
     './isDataUri',
+    './loadBlob',
     './objectToQuery',
     './queryToObject',
+    './Request',
+    './RequestScheduler',
+    './RequestState',
+    './TrustedServers',
     '../ThirdParty/Uri',
     '../ThirdParty/when'
 ], function(appendForwardSlash,
@@ -22,16 +30,35 @@ define([
             defaultValue,
             defined,
             defineProperties,
+            deprecationWarning,
             freezeObject,
             getAbsoluteUri,
             getBaseUri,
             getExtensionFromUri,
+            isBlobUri,
+            isCrossOriginUrl,
             isDataUri,
+            loadBlob,
             objectToQuery,
             queryToObject,
+            Request,
+            RequestScheduler,
+            RequestState,
+            TrustedServers,
             Uri,
             when) {
     'use strict';
+
+    var xhrBlobSupported = (function() {
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '#', true);
+            xhr.responseType = 'blob';
+            return xhr.responseType === 'blob';
+        } catch (e) {
+            return false;
+        }
+    })();
 
     /**
      * @private
@@ -234,6 +261,22 @@ define([
         return new Resource(args);
     };
 
+    defineProperties(Resource, {
+        /**
+         * Returns true if blobs are supported.
+         *
+         * @memberof Resource
+         * @type {Boolean}
+         *
+         * @readonly
+         */
+        isBlobSupported : {
+            get : function() {
+                return xhrBlobSupported;
+            }
+        }
+    });
+
     defineProperties(Resource.prototype, {
         /**
          * Query parameters appended to the url.
@@ -308,6 +351,42 @@ define([
         isDataUri: {
             get: function() {
                 return isDataUri(this._url);
+            }
+        },
+
+        /**
+         * True if the Resource refers to a blob URI.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
+        isBlobUri: {
+            get: function() {
+                return isBlobUri(this._url);
+            }
+        },
+
+        /**
+         * True if the Resource refers to a cross origin URL.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
+        isCrossOriginUrl: {
+            get: function() {
+                return isCrossOriginUrl(this._url);
+            }
+        },
+
+        /**
+         * True if the Resource has request headers. This is equivalent to checking if the headers property has any keys.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
+        hasHeaders: {
+            get: function() {
+                return (Object.keys(this.headers).length > 0);
             }
         }
     });
@@ -524,6 +603,156 @@ define([
         this._url = appendForwardSlash(this._url);
     };
 
+    /**
+     * Fetches the resource as an image.
+     *
+     * @param {Boolean} [preferBlob = false]  If true, we will load the image via a blob.
+     *
+     * @returns {Promise<Image>|undefined} Returns a promise that resolved to an Image or undefined if the request was throttled.
+     *
+     * @private
+     */
+    Resource.prototype.fetchImage = function (preferBlob, allowCrossOrigin) {
+        if (defined(allowCrossOrigin)) {
+            deprecationWarning('Resource.fetchImage.allowCrossOrigin', 'The allowCrossOrigin parameter has been deprecated. It no longer needs to be specified.');
+        }
+
+        preferBlob = defaultValue(preferBlob, false);
+        allowCrossOrigin = defaultValue(allowCrossOrigin, true);
+
+        // We try to load the image normally if
+        // 1. Blobs aren't supported
+        // 2. It's a data URI
+        // 3. It's a blob URI
+        // 4. It doesn't have request headers and we preferBlob is false
+        if (!xhrBlobSupported || this.isDataUri || this.isBlobUri || (!this.hasHeaders && !preferBlob)) {
+            return internalLoadImage(this, allowCrossOrigin);
+        }
+
+        var blobPromise = loadBlob(this);
+        if (!defined(blobPromise)) {
+            return;
+        }
+
+        var generatedBlobResource;
+        var generatedBlob;
+        return blobPromise
+            .then(function(blob) {
+                if (!defined(blob)) {
+                    return;
+                }
+                generatedBlob = blob;
+                var blobUrl = window.URL.createObjectURL(blob);
+                generatedBlobResource = new Resource({
+                    url: blobUrl
+                });
+
+                return internalLoadImage(generatedBlobResource);
+            })
+            .then(function(image) {
+                if (!defined(image)) {
+                    return;
+                }
+                window.URL.revokeObjectURL(generatedBlobResource.url);
+
+                // This is because the blob object is needed for DiscardMissingTileImagePolicy
+                // See https://github.com/AnalyticalGraphicsInc/cesium/issues/1353
+                image.blob = generatedBlob;
+                return image;
+            })
+            .otherwise(function(error) {
+                if (defined(generatedBlobResource)) {
+                    window.URL.revokeObjectURL(generatedBlobResource.url);
+                }
+
+                return when.reject(error);
+            });
+    };
+
+    function internalLoadImage(resource, allowCrossOrigin) {
+        resource.request = defaultValue(resource.request, new Request());
+
+        var request = resource.request;
+        request.url = resource.url;
+        request.requestFunction = function() {
+            var url = resource.url;
+            var crossOrigin = false;
+
+            // data URIs can't have allowCrossOrigin set.
+            if (!resource.isDataUri && !resource.isBlobUri) {
+                crossOrigin = resource.isCrossOriginUrl;
+            }
+
+            var deferred = when.defer();
+
+            Resource._Implementations.createImage(url, crossOrigin && allowCrossOrigin, deferred);
+
+            return deferred.promise;
+        };
+
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                // Don't retry cancelled or otherwise aborted requests
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return internalLoadImage(resource, allowCrossOrigin);
+                        }
+
+                        return when.reject(e);
+                    });
+            });
+    }
+
+    /**
+     * Contains implementations of functions that can be replaced for testing
+     *
+     * @private
+     */
+    Resource._Implementations = {};
+
+    Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        var image = new Image();
+
+        image.onload = function() {
+            deferred.resolve(image);
+        };
+
+        image.onerror = function(e) {
+            deferred.reject(e);
+        };
+
+        if (crossOrigin) {
+            if (TrustedServers.contains(url)) {
+                image.crossOrigin = 'use-credentials';
+            } else {
+                image.crossOrigin = '';
+            }
+        }
+
+        image.src = url;
+    };
+
+    /**
+     * The default implementations
+     *
+     * @private
+     */
+    Resource._DefaultImplementations = {};
+    Resource._DefaultImplementations.createImage = Resource._Implementations.createImage;
 
     /**
      * A resource instance initialized to the current browser location

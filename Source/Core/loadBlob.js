@@ -2,14 +2,12 @@ define([
         './Check',
         './defined',
         './deprecationWarning',
-        './loadWithXhr',
-        './Resource'
+        './loadWithXhr'
     ], function(
         Check,
         defined,
         deprecationWarning,
-        loadWithXhr,
-        Resource) {
+        loadWithXhr) {
     'use strict';
 
     /**
@@ -47,10 +45,15 @@ define([
             deprecationWarning('loadBlob.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
 
-        var resource = Resource.createIfNeeded(urlOrResource, {
-            headers: headers,
-            request: request
-        });
+        // Do this without Resource.createIfNeeded because we need to prevent circular dependency
+        var resource = urlOrResource;
+        if (typeof urlOrResource === 'string') {
+            resource = {
+                url: urlOrResource,
+                headers : headers,
+                request : request
+            };
+        }
 
         resource.responseType = 'blob';
         return loadWithXhr(resource);
