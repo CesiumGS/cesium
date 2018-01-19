@@ -138,22 +138,25 @@ define([
 
     /**
      * A {@link Resource} instance that encapsulates Cesium ion asset
-     * creation and automatic refresh token handling.
+     * creation and automatic refresh token handling.  This object
+     * should not be created directly, use CesiumIonResource.create
      *
      * @private
      */
     function CesiumIonResource(options, endpoint, endpointResource) {
         Resource.call(this, options);
 
-        this.ionData = {
-            endpoint: endpoint,
-            _endpointResource: endpointResource,
-            _pendingPromise: undefined,
-            _root: this
-        };
+        // The asset endpoint data returned from ion.
+        this.ionEndpoint = endpoint;
+
+        // The endpoint resource to fetch when a new token is needed
+        this.ionEndpointResource = endpointResource;
+
+        // The primary CesiumIonResource from which an instance is derived
+        this.ionRoot = undefined;
     }
 
-    CesiumIonResource.create = function(endpoint, endpointResource) {
+    CesiumIonResource.create = function (endpoint, endpointResource) {
         var options = {
             url: endpoint.url,
             retryCallback: createRetryCallback(endpoint, endpointResource),
@@ -173,54 +176,68 @@ define([
     }
 
     CesiumIonResource.prototype.clone = function(result) {
+        var ionRoot = defaultValue(this.ionRoot, this);
+
         if (!defined(result)) {
-            result = new CesiumIonResource({
-                url: this._url
-            });
+            // We always want to use the root's information because it's the most up-to-date
+            result = new CesiumIonResource({ url: this._url }, ionRoot.ionEndpoint, ionRoot.ionEndpointResource);
         }
+
         result = Resource.prototype.clone.call(this, result);
-        result.ionData = this.ionData;
+        result.ionRoot = ionRoot;
+
+        // Same comment as above, use the root's access_token
+        result.queryParameters.access_token = ionRoot.queryParameters.access_token;
         return result;
     };
 
     function createRetryCallback(endpoint, endpointResource) {
-        return function(that, error) {
+        // We use a shared pending promise for all derived assets, since they share
+        // a common access_token.  If we're already requesting a new token for this
+        // asset, we wait on the same promise.
+        var pendingPromise;
+
+        var retryCallback = function(that, error) {
             // We only want to retry in the case of invalid credentials (401) or image
             // requests(since Image failures can not provide a status code)
             if (!defined(error) || (error.statusCode !== 401 && !(error.target instanceof Image))) {
                 return when.resolve(false);
             }
 
-            var ionData = that.ionData;
-
-            // We use a shared pending promise for all derived assets, since they share
-            // a common access_token.  If we're already requesting a new token for this
-            // asset, we wait on the same promise.
-            var pendingPromise = ionData._pendingPromise;
             if (!defined(pendingPromise)) {
                 pendingPromise = CesiumIon._loadJson(endpointResource)
-                    .then(function(endpoint) {
-                        //Set the token for root resource that this (and other) resources were derived
-                        ionData._root.queryParameters.access_token = endpoint.accessToken;
-                        return endpoint.accessToken;
+                    .then(function(newEndpoint) {
+                        console.log(newEndpoint);
+                        //Set the token for root resource so derived resources automatically pick it up
+                        var ionRoot = that.ionRoot;
+                        if (defined(ionRoot)) {
+                            ionRoot.ionEndpoint = newEndpoint;
+                            ionRoot.queryParameters.access_token = newEndpoint.accessToken;
+                        }
+                        return newEndpoint;
                     })
-                    .always(function(accessToken) {
+                    .always(function(newEndpoint) {
                         // Pass or fail, we're done with this promise, the next failure should use a new one.
-                        ionData._pendingPromise = undefined;
+                        pendingPromise = undefined;
 
                         // We need this return because our old busted version of when
                         // doesn't conform to spec of returning the result of the above `then`.
-                        return accessToken;
+                        return newEndpoint;
                     });
-                ionData._pendingPromise = pendingPromise;
             }
 
-            return pendingPromise.then(function(accessToken) {
-                // Set the new token for this resource
-                that.queryParameters.access_token = accessToken;
+            return pendingPromise.then(function(newEndpoint) {
+                // Set the new token and endpoint for this resource
+                that.ionEndpoint = newEndpoint;
+                that.queryParameters.access_token = newEndpoint.accessToken;
                 return true;
             });
         };
+
+        //Exposed for testing
+        retryCallback._pendingPromise = pendingPromise;
+
+        return retryCallback;
     }
 
     function createFactory(Type) {
@@ -244,7 +261,7 @@ define([
     };
 
     CesiumIonResource.prototype.createImageryProvider = function() {
-        var type = this.ionData.endpoint.type;
+        var type = this.ionEndpoint.type;
         if (type === 'IMAGERY') {
             return createTileMapServiceImageryProvider({ url: this });
         }
@@ -255,7 +272,7 @@ define([
             throw new RuntimeError('Unrecognized Cesium ion imagery type: ' + type);
         }
 
-        return factory(this.ionData.endpoint);
+        return factory(this.ionEndpoint);
     };
 
     //Exposed for testing

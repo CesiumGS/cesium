@@ -85,19 +85,17 @@ define([
     }
 
     function makeRequest(optionsOrResource) {
-        var url = optionsOrResource.url;
         var request = optionsOrResource.request;
-        request.url = url;
-
-        var responseType = optionsOrResource.responseType;
-        var method = optionsOrResource.method;
-        var data = optionsOrResource.data;
-        var headers = optionsOrResource.headers;
-        var overrideMimeType = optionsOrResource.overrideMimeType;
+        request.url = optionsOrResource.url;
 
         request.requestFunction = function() {
+            var responseType = optionsOrResource.responseType;
+            var method = optionsOrResource.method;
+            var data = optionsOrResource.data;
+            var headers = optionsOrResource.headers;
+            var overrideMimeType = optionsOrResource.overrideMimeType;
             var deferred = when.defer();
-            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = loadWithXhr.load(optionsOrResource.url, responseType, method, data, headers, deferred, overrideMimeType);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();

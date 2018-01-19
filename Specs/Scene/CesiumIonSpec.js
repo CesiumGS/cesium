@@ -26,13 +26,17 @@ defineSuite([
         when) {
     'use strict';
 
-    var assetId = 123890213;
+    var assetId;
+    var endpoint;
 
-    var endpoint = {
-        type: '3DTILES',
-        url: 'https://assets.cesium.com/' + assetId,
-        accessToken: 'not_really_a_refresh_token'
-    };
+    beforeEach(function() {
+        assetId = 123890213;
+        endpoint = {
+            type: '3DTILES',
+            url: 'https://assets.cesium.com/' + assetId,
+            accessToken: 'not_really_a_refresh_token'
+        };
+    });
 
     it('createResource calls CesiumIonResource.create with expected default parameters', function() {
         var mockResource = {};
@@ -85,21 +89,26 @@ defineSuite([
         it('constructs with expected values', function() {
             spyOn(Resource, 'call').and.callThrough();
 
-            var resourceOptions = { url: 'https://test.invalid' };
             var endpointResource = new Resource({ url: 'https://api.test.invalid' });
-            var resource = new CesiumIon._CesiumIonResource(resourceOptions, endpoint, endpointResource);
+            var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             expect(resource).toBeInstanceOf(Resource);
-            expect(resource.ionData.endpoint).toEqual(endpoint);
-            expect(Resource.call).toHaveBeenCalledWith(resource, resourceOptions);
+            expect(resource.ionEndpoint).toEqual(endpoint);
+            expect(Resource.call).toHaveBeenCalledWith(resource, {
+                url: endpoint.url,
+                retryCallback: resource.retryCallback,
+                retryAttempts: 1,
+                queryParameters: { access_token: endpoint.accessToken }
+            });
         });
 
         it('clone works', function() {
-            var resourceOptions = { url: 'https://test.invalid' };
             var endpointResource = new Resource({ url: 'https://api.test.invalid' });
-            var resource = new CesiumIon._CesiumIonResource(resourceOptions, endpoint, endpointResource);
+            var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             var cloned = resource.clone();
-            expect(cloned).toEqual(resource);
             expect(cloned).not.toBe(resource);
+            expect(cloned.ionRoot).toBe(resource);
+            cloned.ionRoot = undefined;
+            expect(cloned).toEqual(resource);
         });
 
         it('create creates the expected resource', function() {
@@ -107,45 +116,51 @@ defineSuite([
             var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             expect(resource.getUrlComponent()).toEqual('https://assets.cesium.com/123890213');
             expect(resource.queryParameters).toEqual({ access_token: 'not_really_a_refresh_token' });
-            expect(resource.ionData.endpoint).toBe(endpoint);
-            expect(resource.ionData._endpointResource).toEqual(endpointResource);
+            expect(resource.ionEndpoint).toBe(endpoint);
+            expect(resource.ionEndpointResource).toEqual(endpointResource);
             expect(resource.retryCallback).toBeDefined();
             expect(resource.retryAttempts).toBe(1);
         });
 
         function testImageryAsset(endpoint, ImageryClass) {
-            var resourceOptions = { url: 'https://test.invalid' };
             var endpointResource = new Resource({ url: 'https://api.test.invalid' });
-            var resource = new CesiumIon._CesiumIonResource(resourceOptions, endpoint, endpointResource);
+            var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             var imageryProvider = resource.createImageryProvider();
             expect(imageryProvider).toBeInstanceOf(ImageryClass);
         }
 
         it('createImageryProvider works', function() {
-            testImageryAsset({ type: 'IMAGERY' }, UrlTemplateImageryProvider);
-            testImageryAsset({ type: 'ARCGIS_MAPSERVER', url: '' }, ArcGisMapServerImageryProvider);
-            testImageryAsset({ type: 'BING', url: '' }, BingMapsImageryProvider);
-            testImageryAsset({ type: 'GOOGLE_EARTH', url: '', channel: 1 }, GoogleEarthEnterpriseMapsProvider);
-            testImageryAsset({ type: 'MAPBOX', mapId: 1 }, MapboxImageryProvider);
-            testImageryAsset({ type: 'SINGLE_TILE', url: '' }, SingleTileImageryProvider);
-            testImageryAsset({ type: 'TMS', url: '' }, UrlTemplateImageryProvider);
-            testImageryAsset({ type: 'URL_TEMPLATE', url: '' }, UrlTemplateImageryProvider);
-            testImageryAsset({ type: 'WMS', url: '', layers: [] }, WebMapServiceImageryProvider);
-            testImageryAsset({ type: 'WMTS', url: '', layer: '', style: '', tileMatrixSetID: 1 }, WebMapTileServiceImageryProvider);
+            var url = 'https://test.invalid';
+            testImageryAsset({ type: 'IMAGERY', url: url }, UrlTemplateImageryProvider);
+            testImageryAsset({ type: 'ARCGIS_MAPSERVER', url: url }, ArcGisMapServerImageryProvider);
+            testImageryAsset({ type: 'BING', url: url }, BingMapsImageryProvider);
+            testImageryAsset({ type: 'GOOGLE_EARTH', url: url, channel: 1 }, GoogleEarthEnterpriseMapsProvider);
+            testImageryAsset({ type: 'MAPBOX', url: url, mapId: 1 }, MapboxImageryProvider);
+            testImageryAsset({ type: 'SINGLE_TILE', url: url }, SingleTileImageryProvider);
+            testImageryAsset({ type: 'TMS', url: url }, UrlTemplateImageryProvider);
+            testImageryAsset({ type: 'URL_TEMPLATE', url: url }, UrlTemplateImageryProvider);
+            testImageryAsset({ type: 'WMS', url: url, layers: [] }, WebMapServiceImageryProvider);
+            testImageryAsset({ type: 'WMTS', url: url, layer: '', style: '', tileMatrixSetID: 1 }, WebMapTileServiceImageryProvider);
         });
 
         it('createImageryProvider throws with unknown asset type', function() {
-            var resourceOptions = { url: 'https://test.invalid' };
+            endpoint.type = 'ADSASDS';
             var endpointResource = new Resource({ url: 'https://api.test.invalid' });
-            var resource = new CesiumIon._CesiumIonResource(resourceOptions, { type: 'ADSASDS' }, endpointResource);
+            var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             expect(function() { resource.createImageryProvider(); }).toThrowRuntimeError();
         });
     });
 
     describe('retryCallback', function() {
-        var endpointResource = new Resource({ url: 'https://api.test.invalid', access_token: 'not_the_token' });
-        var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
-        var retryCallback = CesiumIon._createRetryCallback(endpoint, endpointResource);
+        var endpointResource;
+        var resource;
+        var retryCallback;
+
+        beforeEach(function() {
+            endpointResource = new Resource({ url: 'https://api.test.invalid', access_token: 'not_the_token' });
+            resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
+            retryCallback = CesiumIon._createRetryCallback(endpoint, endpointResource, resource);
+        });
 
         it('returns false when error is undefined', function() {
             return retryCallback(resource, undefined).then(function(result) {
@@ -177,15 +192,21 @@ defineSuite([
                 accessToken: 'not_not_really_a_refresh_token'
             };
 
-            retryCallback(resource, event).then(function(result) {
-                expect(resource.ionData._pendingPromise).toBeUndefined();
+            var promise = retryCallback(resource, event);
+            var resultPromise = promise.then(function(result) {
                 expect(resource.queryParameters.access_token).toEqual(newEndpoint.accessToken);
                 expect(result).toBe(true);
             });
 
             expect(CesiumIon._loadJson).toHaveBeenCalledWith(endpointResource);
-            expect(resource.ionData._pendingPromise).toBeDefined();
+
+            //A second retry should re-use the same pending promise
+            var promise2 = retryCallback(resource, event);
+            expect(promise._pendingPromise).toBe(promise2._pendingPromise);
+
             deferred.resolve(newEndpoint);
+
+            return resultPromise;
         }
 
         it('works when error is a 401', function() {
