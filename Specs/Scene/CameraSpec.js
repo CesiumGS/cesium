@@ -993,6 +993,53 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
+    it('moves forward in 2D mode', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera)
+
+        camera.moveForward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
+    it('moves backward in 2D mode', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera)
+
+        camera.moveBackward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
     it('move clamps position in 2D', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
