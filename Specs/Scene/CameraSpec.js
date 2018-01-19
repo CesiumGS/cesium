@@ -993,7 +993,7 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
-    it('moves forward in 2D mode', function() {
+    it('moves forward in 2D mode zooms in camera instead of moving it', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1017,7 +1017,7 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
-    it('moves backward in 2D mode', function() {
+    it('moves backward in 2D mode zooms out camera instead of moving it', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1114,7 +1114,7 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(dir, CesiumMath.EPSILON15);
     });
 
-    it('looks left in 2D mode', function() {
+    it('looks left in 2D mode does not modify the camera at all', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1136,7 +1136,7 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
     });
 
-    it('looks right in 2D mode', function() {
+    it('looks right in 2D mode does not modify the camera at all', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1158,7 +1158,7 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
     });
 
-    it('looks up in 2D mode', function() {
+    it('looks up in 2D mode does not modify the camera at all', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1180,7 +1180,7 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
     });
 
-    it('looks down in 2D mode', function() {
+    it('looks down in 2D mode does not modify the camera at all', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;

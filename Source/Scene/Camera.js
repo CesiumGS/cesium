@@ -1499,7 +1499,7 @@ define([
 
     /**
      * Translates the camera's position by <code>amount</code> along the camera's view vector.
-     * If in 2D mode, it uses zoom2D; otherwise, uses move.
+     * When in 2D mode, this will zoom in the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1520,7 +1520,7 @@ define([
     /**
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's view vector.
-     * If in 2D mode, it uses zoom2D; otherwise, uses move.
+     * When in 2D mode, this will zoom out the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
