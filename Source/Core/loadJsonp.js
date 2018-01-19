@@ -97,8 +97,7 @@ define([
         resource.addQueryParameters(callbackQuery);
 
         var request = resource.request;
-        var url = resource.url;
-        request.url = url;
+        request.url = resource.url;
         request.requestFunction = function() {
             var deferred = when.defer();
 
@@ -113,7 +112,7 @@ define([
                 }
             };
 
-            loadJsonp.loadAndExecuteScript(url, functionName, deferred);
+            loadJsonp.loadAndExecuteScript(resource.url, functionName, deferred);
             return deferred.promise;
         };
 
@@ -124,22 +123,21 @@ define([
 
         return promise
             .otherwise(function(e) {
-                if (request.state === RequestState.FAILED) {
-                    return resource.retryOnError(e)
-                        .then(function(retry) {
-                            if (retry) {
-                                // Reset request so it can try again
-                                request.state = RequestState.UNISSUED;
-                                request.deferred = undefined;
-
-                                return makeRequest(resource, callbackParameterName, functionName);
-                            }
-
-                            return when.reject(e);
-                        });
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
                 }
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
 
-                return when.reject(e);
+                            return makeRequest(resource, callbackParameterName, functionName);
+                        }
+
+                        return when.reject(e);
+                    });
             });
     }
 

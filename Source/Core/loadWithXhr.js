@@ -85,19 +85,17 @@ define([
     }
 
     function makeRequest(optionsOrResource) {
-        var url = optionsOrResource.url;
         var request = optionsOrResource.request;
-        request.url = url;
-
-        var responseType = optionsOrResource.responseType;
-        var method = optionsOrResource.method;
-        var data = optionsOrResource.data;
-        var headers = optionsOrResource.headers;
-        var overrideMimeType = optionsOrResource.overrideMimeType;
+        request.url = optionsOrResource.url;
 
         request.requestFunction = function() {
+            var responseType = optionsOrResource.responseType;
+            var method = optionsOrResource.method;
+            var data = optionsOrResource.data;
+            var headers = optionsOrResource.headers;
+            var overrideMimeType = optionsOrResource.overrideMimeType;
             var deferred = when.defer();
-            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = loadWithXhr.load(optionsOrResource.url, responseType, method, data, headers, deferred, overrideMimeType);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
@@ -116,22 +114,22 @@ define([
                 return data;
             })
             .otherwise(function(e) {
-                if ((request.state === RequestState.FAILED) && defined(optionsOrResource.retryOnError)) {
-                    return optionsOrResource.retryOnError(e)
-                        .then(function(retry) {
-                            if (retry) {
-                                // Reset request so it can try again
-                                request.state = RequestState.UNISSUED;
-                                request.deferred = undefined;
-
-                                return makeRequest(optionsOrResource);
-                            }
-
-                            return when.reject(e);
-                        });
+                if ((request.state !== RequestState.FAILED) || !defined(optionsOrResource.retryOnError)) {
+                    return when.reject(e);
                 }
 
-                return when.reject(e);
+                return optionsOrResource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return makeRequest(optionsOrResource);
+                        }
+
+                        return when.reject(e);
+                    });
             });
     }
 

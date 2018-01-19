@@ -79,11 +79,11 @@ define([
     }
 
     function makeRequest(resource, allowCrossOrigin) {
-        var url = resource.url;
         var request = resource.request;
-        request.url = url;
+        request.url = resource.url;
         request.requestFunction = function() {
             var crossOrigin;
+            var url = resource.url;
 
             // data URIs can't have allowCrossOrigin set.
             if (isDataUri(url) || isBlobUri(url)) {
@@ -106,6 +106,11 @@ define([
 
         return promise
             .otherwise(function(e) {
+                //Don't retry cancelled or otherwise aborted requests
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+
                 return resource.retryOnError(e)
                     .then(function(retry) {
                         if (retry) {
@@ -113,9 +118,8 @@ define([
                             request.state = RequestState.UNISSUED;
                             request.deferred = undefined;
 
-                            return makeRequest(resource);
+                            return makeRequest(resource, allowCrossOrigin);
                         }
-
                         return when.reject(e);
                     });
             });
