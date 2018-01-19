@@ -1114,6 +1114,94 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(dir, CesiumMath.EPSILON15);
     });
 
+    it('looks left in 2D mode', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookLeft(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks right in 2D mode', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookRight(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks up in 2D mode', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookUp(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks down in 2D mode', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookDown(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
     it('twists left', function() {
         camera.twistLeft(CesiumMath.PI_OVER_TWO);
         expect(camera.position).toEqual(position);
