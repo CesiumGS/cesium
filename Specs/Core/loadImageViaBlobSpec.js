@@ -2,11 +2,13 @@ defineSuite([
         'Core/loadImageViaBlob',
         'Core/Request',
         'Core/RequestScheduler',
+        'Core/Resource',
         'ThirdParty/when'
     ], function(
         loadImageViaBlob,
         Request,
         RequestScheduler,
+        Resource,
         when) {
     'use strict';
 
@@ -56,6 +58,34 @@ defineSuite([
         expect(failure).toEqual(false);
         expect(loadedImage).toBe(fakeImage);
     });
+
+    it('resolves the promise when the image loads with Resource', function() {
+        var fakeImage = {};
+        spyOn(window, 'Image').and.returnValue(fakeImage);
+
+        var success = false;
+        var failure = false;
+        var loadedImage;
+
+        when(loadImageViaBlob(new Resource({
+            url: dataUri
+        })), function(image) {
+            success = true;
+            loadedImage = image;
+        }, function() {
+            failure = true;
+        });
+
+        // neither callback has fired yet
+        expect(success).toEqual(false);
+        expect(failure).toEqual(false);
+
+        fakeImage.onload();
+        expect(success).toEqual(true);
+        expect(failure).toEqual(false);
+        expect(loadedImage).toBe(fakeImage);
+    });
+
 
     it('rejects the promise when the image errors', function() {
         var fakeImage = {};

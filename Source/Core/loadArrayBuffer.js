@@ -1,7 +1,15 @@
 define([
-        './loadWithXhr'
+        './Check',
+        './defined',
+        './deprecationWarning',
+        './loadWithXhr',
+        './Resource'
     ], function(
-        loadWithXhr) {
+        Check,
+        defined,
+        deprecationWarning,
+        loadWithXhr,
+        Resource) {
     'use strict';
 
     /**
@@ -12,9 +20,7 @@ define([
      *
      * @exports loadArrayBuffer
      *
-     * @param {String} url The URL of the binary data.
-     * @param {Object} [headers] HTTP headers to send with the requests.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} urlOrResource The URL of the binary data.
      * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @example
@@ -28,13 +34,26 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadArrayBuffer(url, headers, request) {
-        return loadWithXhr({
-            url : url,
-            responseType : 'arraybuffer',
-            headers : headers,
-            request : request
+    function loadArrayBuffer(urlOrResource, headers, request) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
+
+        if (defined(headers)) {
+            deprecationWarning('loadArrayBuffer.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
+        }
+
+        if (defined(request)) {
+            deprecationWarning('loadArrayBuffer.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
+
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
         });
+
+        resource.responseType = 'arraybuffer';
+        return loadWithXhr(resource);
     }
 
     return loadArrayBuffer;
