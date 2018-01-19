@@ -79,11 +79,11 @@ define([
     }
 
     function makeRequest(resource, allowCrossOrigin) {
-        var url = resource.url;
         var request = resource.request;
-        request.url = url;
+        request.url = resource.url;
         request.requestFunction = function() {
             var crossOrigin;
+            var url = resource.url;
 
             // data URIs can't have allowCrossOrigin set.
             if (isDataUri(url) || isBlobUri(url)) {

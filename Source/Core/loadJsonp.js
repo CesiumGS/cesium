@@ -97,8 +97,7 @@ define([
         resource.addQueryParameters(callbackQuery);
 
         var request = resource.request;
-        var url = resource.url;
-        request.url = url;
+        request.url = resource.url;
         request.requestFunction = function() {
             var deferred = when.defer();
 
@@ -113,7 +112,7 @@ define([
                 }
             };
 
-            loadJsonp.loadAndExecuteScript(url, functionName, deferred);
+            loadJsonp.loadAndExecuteScript(resource.url, functionName, deferred);
             return deferred.promise;
         };
 

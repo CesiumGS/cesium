@@ -207,7 +207,6 @@ define([
             if (!defined(pendingPromise)) {
                 pendingPromise = CesiumIon._loadJson(endpointResource)
                     .then(function(newEndpoint) {
-                        console.log(newEndpoint);
                         //Set the token for root resource so derived resources automatically pick it up
                         var ionRoot = that.ionRoot;
                         if (defined(ionRoot)) {
