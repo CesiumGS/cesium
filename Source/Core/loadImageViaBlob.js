@@ -1,15 +1,21 @@
 define([
         '../ThirdParty/when',
+        './Check',
         './defined',
+        './deprecationWarning',
         './isDataUri',
         './loadBlob',
-        './loadImage'
+        './loadImage',
+        './Resource'
     ], function(
         when,
+        Check,
         defined,
+        deprecationWarning,
         isDataUri,
         loadBlob,
-        loadImage) {
+        loadImage,
+        Resource) {
     'use strict';
 
     var xhrBlobSupported = (function() {
@@ -37,8 +43,7 @@ define([
      *
      * @exports loadImageViaBlob
      *
-     * @param {String} url The source URL of the image.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} urlOrResource The source URL of the image.
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -59,12 +64,25 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadImageViaBlob(url, request) {
-        if (!xhrBlobSupported || isDataUri(url)) {
-            return loadImage(url, undefined, request);
+    function loadImageViaBlob(urlOrResource, request) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
+
+        if (defined(request)) {
+            deprecationWarning('loadCRN.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
 
-        var blobPromise = loadBlob(url, undefined, request);
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            request: request
+        });
+
+        var url = resource.url;
+        if (!xhrBlobSupported || isDataUri(url)) {
+            return loadImage(resource);
+        }
+
+        var blobPromise = loadBlob(resource);
         if (!defined(blobPromise)) {
             return undefined;
         }
@@ -74,8 +92,10 @@ define([
                 return;
             }
             var blobUrl = window.URL.createObjectURL(blob);
-
-            return loadImage(blobUrl, false).then(function(image) {
+            var blobResource = new Resource({
+                url: blobUrl
+            });
+            return loadImage(blobResource).then(function(image) {
                 image.blob = blob;
                 window.URL.revokeObjectURL(blobUrl);
                 return image;

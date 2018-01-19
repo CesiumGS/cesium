@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -25,6 +26,7 @@ define([
         './BlendingState',
         './Cesium3DTileFeature'
     ], function(
+        arraySlice,
         Cartesian3,
         Color,
         ComponentDatatype,
@@ -211,11 +213,11 @@ define([
 
             if (!defined(packedBuffer)) {
                 // Copy because they may be the views on the same buffer.
-                positions = polylines._positions = positions.slice();
-                widths = polylines._widths = widths.slice();
-                counts = polylines._counts = counts.slice();
+                positions = polylines._positions = arraySlice(positions);
+                widths = polylines._widths = arraySlice(widths);
+                counts = polylines._counts = arraySlice(counts);
 
-                batchIds = polylines._transferrableBatchIds = polylines._batchIds.slice();
+                batchIds = polylines._transferrableBatchIds = arraySlice(polylines._batchIds);
 
                 packedBuffer = polylines._packedBuffer = packBuffer(polylines);
             }

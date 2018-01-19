@@ -93,10 +93,10 @@ define([
      *
      * @private
      */
-    function PointCloud3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function PointCloud3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
 
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
@@ -257,7 +257,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 

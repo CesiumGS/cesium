@@ -4,6 +4,7 @@ defineSuite([
         'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/CullingVolume',
+        'Core/getAbsoluteUri',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
         'Core/Intersect',
@@ -15,6 +16,7 @@ defineSuite([
         'Core/Plane',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
@@ -33,6 +35,7 @@ defineSuite([
         ClippingPlaneCollection,
         Color,
         CullingVolume,
+        getAbsoluteUri,
         getStringFromTypedArray,
         HeadingPitchRange,
         Intersect,
@@ -44,6 +47,7 @@ defineSuite([
         Plane,
         PrimitiveType,
         RequestScheduler,
+        Resource,
         ClearCommand,
         ContextLimits,
         Cesium3DTile,
@@ -63,68 +67,68 @@ defineSuite([
     var centerLatitude = 0.698874;
 
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/';
+    var tilesetUrl = 'Data/Cesium3DTiles/Tilesets/Tileset/';
 
     // Parent tile with no content and four child tiles with content
-    var tilesetEmptyRootUrl = './Data/Cesium3DTiles/Tilesets/TilesetEmptyRoot/';
+    var tilesetEmptyRootUrl = 'Data/Cesium3DTiles/Tilesets/TilesetEmptyRoot/';
 
-    var tilesetReplacement1Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement1/';
-    var tilesetReplacement2Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement2/';
-    var tilesetReplacement3Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement3/';
+    var tilesetReplacement1Url = 'Data/Cesium3DTiles/Tilesets/TilesetReplacement1/';
+    var tilesetReplacement2Url = 'Data/Cesium3DTiles/Tilesets/TilesetReplacement2/';
+    var tilesetReplacement3Url = 'Data/Cesium3DTiles/Tilesets/TilesetReplacement3/';
 
     // 3 level tree with mix of additive and replacement refinement
-    var tilesetRefinementMix = './Data/Cesium3DTiles/Tilesets/TilesetRefinementMix/';
+    var tilesetRefinementMix = 'Data/Cesium3DTiles/Tilesets/TilesetRefinementMix/';
 
     // tileset.json : root content points to tiles2.json
     // tiles2.json: root with b3dm content, three children with b3dm content, one child points to tiles3.json
     // tiles3.json: root with b3dm content
-    var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
+    var tilesetOfTilesetsUrl = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
 
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
+    var withoutBatchTableUrl = 'Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
+    var withBatchTableUrl = 'Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var noBatchIdsUrl = 'Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
 
-    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
-    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
-    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
-    var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
+    var withTransformBoxUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
+    var withTransformSphereUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
+    var withTransformRegionUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
+    var withBoundingSphereUrl = 'Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
 
-    var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
-    var instancedUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
-    var instancedRedMaterialUrl = './Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
+    var compositeUrl = 'Data/Cesium3DTiles/Composite/Composite/';
+    var instancedUrl = 'Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
+    var instancedRedMaterialUrl = 'Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
 
     // 1 tile where each feature is a different source color
-    var colorsUrl = './Data/Cesium3DTiles/Batched/BatchedColors/';
+    var colorsUrl = 'Data/Cesium3DTiles/Batched/BatchedColors/';
 
     // 1 tile where each feature has a reddish texture
-    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
+    var texturedUrl = 'Data/Cesium3DTiles/Batched/BatchedTextured/';
 
     // 1 tile with translucent features
-    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
+    var translucentUrl = 'Data/Cesium3DTiles/Batched/BatchedTranslucent/';
 
     // 1 tile with opaque and translucent features
-    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
+    var translucentOpaqueMixUrl = 'Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
 
     // Root tile is transformed from local space to wgs84, child tile is rotated, scaled, and translated locally
-    var tilesetWithTransformsUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithTransforms';
+    var tilesetWithTransformsUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithTransforms';
 
     // Root tile with 4 b3dm children and 1 pnts child with a viewer request volume
-    var tilesetWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume';
+    var tilesetWithViewerRequestVolumeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume';
 
     // Parent tile with content and four child tiles with content with viewer request volume for each child
-    var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
+    var tilesetReplacementWithViewerRequestVolumeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
-    var tilesetWithExternalResourcesUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
-    var tilesetSubtreeExpirationUrl = './Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration';
-    var tilesetSubtreeUrl = './Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
-    var batchedExpirationUrl = './Data/Cesium3DTiles/Batched/BatchedExpiration';
-    var batchedColorsB3dmUrl = './Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm';
-    var batchedVertexColorsUrl = './Data/Cesium3DTiles/Batched/BatchedWithVertexColors';
+    var tilesetWithExternalResourcesUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
+    var tilesetSubtreeExpirationUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration';
+    var tilesetSubtreeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
+    var batchedExpirationUrl = 'Data/Cesium3DTiles/Batched/BatchedExpiration';
+    var batchedColorsB3dmUrl = 'Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm';
+    var batchedVertexColorsUrl = 'Data/Cesium3DTiles/Batched/BatchedWithVertexColors';
 
-    var styleUrl = './Data/Cesium3DTiles/Style/style.json';
+    var styleUrl = 'Data/Cesium3DTiles/Style/style.json';
 
-    var pointCloudUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
-    var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
+    var pointCloudUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudRGB';
+    var pointCloudBatchedUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudBatched';
 
     var invalidTileset = './Data/Cesium3DTiles/Tilesets/TilesetInvalid/';
 
@@ -227,7 +231,7 @@ defineSuite([
     });
 
     it('static method loadJson is used in Cesium3DTileset constructor', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
 
         var originalLoadJson = Cesium3DTileset.loadJson;
 
@@ -243,6 +247,40 @@ defineSuite([
 
         // restore original version
         Cesium3DTileset.loadJson = originalLoadJson;
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+    it('Constructor works with directory resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : resource
+        });
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+    it('Constructor works with file resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json'
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : resource
+        });
 
         return tileset.readyPromise.then(function() {
             expect(tileset.ready).toEqual(true);
@@ -271,7 +309,7 @@ defineSuite([
     });
 
     it('url and tilesetUrl set up correctly given tileset.json path', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -280,31 +318,31 @@ defineSuite([
     });
 
     it('url and tilesetUrl set up correctly given directory without trailing slash', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
         var tileset = new Cesium3DTileset({
             url : path
         });
-        expect(tileset.url).toEqual(path);
-        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json');
+        expect(tileset.url).toEqual(path + '/');
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json'));
     });
 
     it('url and tilesetUrl set up correctly given directory with trailing slash', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
         var tileset = new Cesium3DTileset({
             url : path
         });
         expect(tileset.url).toEqual(path);
-        expect(tileset._tilesetUrl).toEqual(path + 'tileset.json');
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + 'tileset.json'));
     });
 
     it('url and tilesetUrl set up correctly given path with query string', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
         var param = '?param1=1&param2=2';
         var tileset = new Cesium3DTileset({
             url : path + param
         });
-        expect(tileset.url).toEqual(path + param);
-        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json' + param);
+        expect(tileset.url).toEqual(path + '/' + param);
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json' + param));
     });
 
     it('resolves readyPromise', function() {
@@ -336,7 +374,7 @@ defineSuite([
 
     it('passes version in query string to tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            expect(tileset._root.content._url).toEqual(tilesetUrl + 'parent.b3dm?v=1.2.3');
+            expect(tileset._root.content._resource.url).toEqual(getAbsoluteUri(tilesetUrl + 'parent.b3dm?v=1.2.3'));
         });
     });
 
@@ -756,7 +794,7 @@ defineSuite([
     function findTileByUrl(tiles, url) {
         var length = tiles.length;
         for (var i = 0; i < length; ++i) {
-            if (tiles[i].content._url.indexOf(url) >= 0) {
+            if (tiles[i].content._resource.url.indexOf(url) >= 0) {
                 return tiles[i];
             }
         }
@@ -1212,9 +1250,9 @@ defineSuite([
         //Spy on loadWithXhr so we can verify requested urls
         spyOn(loadWithXhr, 'load').and.callThrough();
 
-        var queryParams = '?a=1&b=boy';
-        var expectedUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json' + queryParams;
-        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl + queryParams).then(function(tileset) {
+        var queryParams = 'a=1&b=boy';
+        var expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?' + queryParams);
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl + '?' + queryParams).then(function(tileset) {
             //Make sure tileset.json was requested with query parameters
             expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
 
@@ -1227,8 +1265,8 @@ defineSuite([
             return tileset._root.contentReadyPromise;
         }).then(function() {
             //Make sure tileset2.json was requested with query parameters and version
-            var queryParamsWithVersion = queryParams + '&v=0.0';
-            expectedUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json' + queryParamsWithVersion;
+            var queryParamsWithVersion = 'v=0.0&' + queryParams;
+            expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?' + queryParamsWithVersion);
             expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
         });
     });

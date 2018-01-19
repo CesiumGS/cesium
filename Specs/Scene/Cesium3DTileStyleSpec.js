@@ -1,11 +1,13 @@
 defineSuite([
         'Scene/Cesium3DTileStyle',
         'Core/Color',
+        'Core/Resource',
         'Scene/ConditionsExpression',
         'Scene/Expression'
     ], function(
         Cesium3DTileStyle,
         Color,
+        Resource,
         ConditionsExpression,
         Expression) {
     'use strict';
@@ -66,6 +68,72 @@ defineSuite([
 
     it('loads style from uri', function() {
         var tileStyle = new Cesium3DTileStyle(styleUrl);
+
+        return tileStyle.readyPromise.then(function(style) {
+            expect(style.style).toEqual({
+                color : "color('red')",
+                show : "${id} < 100.0",
+                pointSize : "${id} / 100.0",
+                pointOutlineColor : "color('blue')",
+                pointOutlineWidth : "5.0",
+                labelColor : "color('yellow')",
+                labelOutlineColor : "color('orange')",
+                labelOutlineWidth : "6.0",
+                font : "'24px Helvetica'",
+                labelStyle : "1",
+                labelText : "'label text'",
+                backgroundColor : "color('coral')",
+                backgroundPadding : "vec2(1.0, 2.0)",
+                backgroundEnabled : "true",
+                scaleByDistance : "vec4(1.0, 2.0, 3.0, 4.0)",
+                translucencyByDistance : "vec4(5.0, 6.0, 7.0, 8.0)",
+                distanceDisplayCondition : "vec2(3.0, 4.0)",
+                heightOffset : "10.0",
+                anchorLineEnabled : "true",
+                anchorLineColor : "color('fuchsia')",
+                image : "'url/to/invalid/image'",
+                disableDepthTestDistance : "1000.0",
+                horizontalOrigin : "0",
+                verticalOrigin : "0",
+                labelHorizontalOrigin : "0",
+                labelVerticalOrigin : "0"
+            });
+            expect(style.color).toEqual(new Expression("color('red')"));
+            expect(style.show).toEqual(new Expression('${id} < 100.0'));
+            expect(style.pointSize).toEqual(new Expression('${id} / 100.0'));
+            expect(style.pointOutlineColor).toEqual(new Expression("color('blue')"));
+            expect(style.pointOutlineWidth).toEqual(new Expression("5.0"));
+            expect(style.labelColor).toEqual(new Expression("color('yellow')"));
+            expect(style.labelOutlineColor).toEqual(new Expression("color('orange')"));
+            expect(style.labelOutlineWidth).toEqual(new Expression("6.0"));
+            expect(style.font).toEqual(new Expression("'24px Helvetica'"));
+            expect(style.labelStyle).toEqual(new Expression("1"));
+            expect(style.labelText).toEqual(new Expression("'label text'"));
+            expect(style.backgroundColor).toEqual(new Expression("color('coral')"));
+            expect(style.backgroundPadding).toEqual(new Expression("vec2(1.0, 2.0)"));
+            expect(style.backgroundEnabled).toEqual(new Expression("true"));
+            expect(style.scaleByDistance).toEqual(new Expression("vec4(1.0, 2.0, 3.0, 4.0)"));
+            expect(style.translucencyByDistance).toEqual(new Expression("vec4(5.0, 6.0, 7.0, 8.0)"));
+            expect(style.distanceDisplayCondition).toEqual(new Expression("vec2(3.0, 4.0)"));
+            expect(style.heightOffset).toEqual(new Expression("10.0"));
+            expect(style.anchorLineEnabled).toEqual(new Expression("true"));
+            expect(style.anchorLineColor).toEqual(new Expression("color('fuchsia')"));
+            expect(style.image).toEqual(new Expression("'url/to/invalid/image'"));
+            expect(style.disableDepthTestDistance).toEqual(new Expression("1000.0"));
+            expect(style.horizontalOrigin).toEqual(new Expression("0"));
+            expect(style.verticalOrigin).toEqual(new Expression("0"));
+            expect(style.labelHorizontalOrigin).toEqual(new Expression("0"));
+            expect(style.labelVerticalOrigin).toEqual(new Expression("0"));
+            expect(tileStyle.ready).toEqual(true);
+        }).otherwise(function() {
+            fail('should load style.json');
+        });
+    });
+
+    it('loads style from Resource', function() {
+        var tileStyle = new Cesium3DTileStyle(new Resource({
+            url: styleUrl
+        }));
 
         return tileStyle.readyPromise.then(function(style) {
             expect(style.style).toEqual({

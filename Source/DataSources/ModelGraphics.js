@@ -38,7 +38,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.uri] A string Property specifying the URI of the glTF asset.
+     * @param {Property} [options.uri] A string or Resource Property specifying the URI of the glTF asset.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the model.
      * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.

@@ -10,6 +10,7 @@ defineSuite([
         'Core/QuantizedMeshTerrainData',
         'Core/Request',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -25,6 +26,7 @@ defineSuite([
         QuantizedMeshTerrainData,
         Request,
         RequestScheduler,
+        Resource,
         TerrainProvider,
         pollToPromise,
         when) {
@@ -129,6 +131,21 @@ defineSuite([
     it('resolves readyPromise', function() {
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'made/up/url'
+        });
+
+        var provider = new CesiumTerrainProvider({
+            url : resource
         });
 
         return provider.readyPromise.then(function (result) {

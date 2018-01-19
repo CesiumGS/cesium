@@ -7,6 +7,7 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
         'Scene/GetFeatureInfoFormat',
@@ -25,6 +26,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
         GetFeatureInfoFormat,
@@ -65,6 +67,22 @@ defineSuite([
             expect(provider.ready).toBe(true);
         });
     });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'made/up/tms/server/'
+        });
+
+        var provider = new UrlTemplateImageryProvider({
+            url: resource
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
 
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new UrlTemplateImageryProvider({
