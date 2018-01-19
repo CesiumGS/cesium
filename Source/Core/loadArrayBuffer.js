@@ -2,13 +2,11 @@ define([
         './Check',
         './defined',
         './deprecationWarning',
-        './loadWithXhr',
         './Resource'
     ], function(
         Check,
         defined,
         deprecationWarning,
-        loadWithXhr,
         Resource) {
     'use strict';
 
@@ -52,8 +50,7 @@ define([
             request: request
         });
 
-        resource.responseType = 'arraybuffer';
-        return loadWithXhr(resource);
+        return resource.fetchArrayBuffer();
     }
 
     return loadArrayBuffer;

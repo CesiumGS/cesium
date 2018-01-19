@@ -14,7 +14,7 @@ define([
     './isBlobUri',
     './isCrossOriginUrl',
     './isDataUri',
-    './loadBlob',
+    './loadWithXhr',
     './objectToQuery',
     './queryToObject',
     './Request',
@@ -38,7 +38,7 @@ define([
             isBlobUri,
             isCrossOriginUrl,
             isDataUri,
-            loadBlob,
+            loadWithXhr,
             objectToQuery,
             queryToObject,
             Request,
@@ -604,11 +604,82 @@ define([
     };
 
     /**
-     * Fetches the resource as an image.
+     * Asynchronously loads the resource as raw binary data.  Returns a promise that will resolve to
+     * an ArrayBuffer once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     * @example
+     * // load a single URL asynchronously
+     * resource.fetchArrayBuffer().then(function(arrayBuffer) {
+     *     // use the data
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @private
+     */
+    Resource.prototype.fetchArrayBuffer = function () {
+        this.responseType = 'arraybuffer';
+
+        return loadWithXhr(this);
+    };
+
+    /**
+     * Asynchronously loads the given resource as a blob.  Returns a promise that will resolve to
+     * a Blob once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     * @example
+     * // load a single URL asynchronously
+     * resource.fetchBlob().then(function(blob) {
+     *     // use the data
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @private
+     */
+    Resource.prototype.fetchBlob = function () {
+        this.responseType = 'blob';
+
+        return loadWithXhr(this);
+    };
+
+    /**
+     * Asynchronously loads the given image resource.  Returns a promise that will resolve to
+     * an {@link Image} once loaded, or reject if the image failed to load.
      *
      * @param {Boolean} [preferBlob = false]  If true, we will load the image via a blob.
+     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
-     * @returns {Promise<Image>|undefined} Returns a promise that resolved to an Image or undefined if the request was throttled.
+     *
+     * @example
+     * // load a single image asynchronously
+     * resource.fetchImage().then(function(image) {
+     *     // use the loaded image
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * // load several images in parallel
+     * when.all([resource1.fetchImage(), resource2.fetchImage()]).then(function(images) {
+     *     // images is an array containing all the loaded images
+     * });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @private
      */
@@ -629,7 +700,7 @@ define([
             return internalLoadImage(this, allowCrossOrigin);
         }
 
-        var blobPromise = loadBlob(this);
+        var blobPromise = this.fetchBlob();
         if (!defined(blobPromise)) {
             return;
         }
@@ -668,6 +739,7 @@ define([
                 return when.reject(error);
             });
     };
+
 
     function internalLoadImage(resource, allowCrossOrigin) {
         resource.request = defaultValue(resource.request, new Request());
