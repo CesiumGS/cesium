@@ -123,22 +123,21 @@ define([
 
         return promise
             .otherwise(function(e) {
-                if (request.state === RequestState.FAILED) {
-                    return resource.retryOnError(e)
-                        .then(function(retry) {
-                            if (retry) {
-                                // Reset request so it can try again
-                                request.state = RequestState.UNISSUED;
-                                request.deferred = undefined;
-
-                                return makeRequest(resource, callbackParameterName, functionName);
-                            }
-
-                            return when.reject(e);
-                        });
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
                 }
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
 
-                return when.reject(e);
+                            return makeRequest(resource, callbackParameterName, functionName);
+                        }
+
+                        return when.reject(e);
+                    });
             });
     }
 

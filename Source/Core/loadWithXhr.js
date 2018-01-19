@@ -114,22 +114,22 @@ define([
                 return data;
             })
             .otherwise(function(e) {
-                if ((request.state === RequestState.FAILED) && defined(optionsOrResource.retryOnError)) {
-                    return optionsOrResource.retryOnError(e)
-                        .then(function(retry) {
-                            if (retry) {
-                                // Reset request so it can try again
-                                request.state = RequestState.UNISSUED;
-                                request.deferred = undefined;
-
-                                return makeRequest(optionsOrResource);
-                            }
-
-                            return when.reject(e);
-                        });
+                if ((request.state !== RequestState.FAILED) || !defined(optionsOrResource.retryOnError)) {
+                    return when.reject(e);
                 }
 
-                return when.reject(e);
+                return optionsOrResource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return makeRequest(optionsOrResource);
+                        }
+
+                        return when.reject(e);
+                    });
             });
     }
 

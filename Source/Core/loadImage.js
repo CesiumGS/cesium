@@ -106,6 +106,11 @@ define([
 
         return promise
             .otherwise(function(e) {
+                //Don't retry cancelled or otherwise aborted requests
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+
                 return resource.retryOnError(e)
                     .then(function(retry) {
                         if (retry) {
@@ -113,9 +118,8 @@ define([
                             request.state = RequestState.UNISSUED;
                             request.deferred = undefined;
 
-                            return makeRequest(resource);
+                            return makeRequest(resource, allowCrossOrigin);
                         }
-
                         return when.reject(e);
                     });
             });
