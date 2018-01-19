@@ -1499,6 +1499,7 @@ define([
 
     /**
      * Translates the camera's position by <code>amount</code> along the camera's view vector.
+     * If in 2D mode, it uses zoom2D; otherwise, uses move.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1511,7 +1512,7 @@ define([
             // 2D mode
             zoom2D(this, amount);
         } else {
-            // 3D mode
+            // 3D or Columbus view mode
             this.move(this.direction, amount);
         }
     };
@@ -1519,6 +1520,7 @@ define([
     /**
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's view vector.
+     * If in 2D mode, it uses zoom2D; otherwise, uses move.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1531,7 +1533,7 @@ define([
             // 2D mode
             zoom2D(this, -amount);
         } else {
-            // 3D mode
+            // 3D or Columbus view mode
             this.move(this.direction, -amount);
         }
     };
