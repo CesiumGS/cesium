@@ -88,10 +88,8 @@ var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url : '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy'
 }));
 
-tileset.readyPromise.then(function() {
-    var boundingSphere = tileset.boundingSphere;
-    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.3, 0.0));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.3, 0.0)).otherwise(function(error) {
+    throw(error);
 });
 
 var styles = [];

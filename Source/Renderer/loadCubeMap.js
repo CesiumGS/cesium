@@ -3,6 +3,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/loadImage',
+        '../Core/Resource',
         '../ThirdParty/when',
         './CubeMap'
     ], function(
@@ -10,6 +11,7 @@ define([
         defined,
         DeveloperError,
         loadImage,
+        Resource,
         when,
         CubeMap) {
     'use strict';
@@ -22,9 +24,6 @@ define([
      *
      * @param {Context} context The context to use to create the cube map.
      * @param {Object} urls The source URL of each image.  See the example below.
-     * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
-     *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
-     *        Data URIs are never requested using CORS.
      * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
      *
      * @exception {DeveloperError} context is required.
@@ -50,7 +49,7 @@ define([
      *
      * @private
      */
-    function loadCubeMap(context, urls, allowCrossOrigin) {
+    function loadCubeMap(context, urls) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('context', context);
         if ((!defined(urls)) ||
@@ -71,12 +70,24 @@ define([
         // ideally, we would do it in the primitive's update function.
 
         var facePromises = [
-            loadImage(urls.positiveX, allowCrossOrigin),
-            loadImage(urls.negativeX, allowCrossOrigin),
-            loadImage(urls.positiveY, allowCrossOrigin),
-            loadImage(urls.negativeY, allowCrossOrigin),
-            loadImage(urls.positiveZ, allowCrossOrigin),
-            loadImage(urls.negativeZ, allowCrossOrigin)
+            loadImage(new Resource({
+                url: urls.positiveX
+            })),
+            loadImage(new Resource({
+                url: urls.negativeX
+            })),
+            loadImage(new Resource({
+                url: urls.positiveY
+            })),
+            loadImage(new Resource({
+                url: urls.negativeY
+            })),
+            loadImage(new Resource({
+                url: urls.positiveZ
+            })),
+            loadImage(new Resource({
+                url: urls.negativeZ
+            }))
         ];
 
         return when.all(facePromises, function(images) {

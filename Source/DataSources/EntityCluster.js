@@ -50,7 +50,7 @@ define([
      * @alias EntityCluster
      * @constructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
      */
     function EntityCluster(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

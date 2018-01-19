@@ -4,6 +4,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Event',
@@ -14,6 +15,7 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
+        './Resource',
         './TerrainProvider',
         './TileProviderError'
     ], function(
@@ -22,6 +24,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -32,6 +35,7 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        Resource,
         TerrainProvider,
         TileProviderError) {
     'use strict';
@@ -49,8 +53,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the VR-TheWorld TileMap.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Resource|String} options.url The URL of the VR-TheWorld TileMap.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
      *                    specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -72,16 +75,19 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
-            this._url += '/';
+        if (defined(options.proxy)) {
+            deprecationWarning('VRTheWorldTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
         }
+
+        var resource = Resource.createIfNeeded(options.url, {
+            proxy: options.proxy
+        });
+
+        this._resource = resource;
 
         this._errorEvent = new Event();
         this._ready = false;
         this._readyPromise = when.defer();
-
-        this._proxy = options.proxy;
 
         this._terrainDataStructure = {
                 heightScale : 1.0 / 1000.0,
@@ -140,12 +146,12 @@ define([
         }
 
         function metadataFailure(e) {
-            var message = defaultValue(e, 'An error occurred while accessing ' + that._url + '.');
+            var message = defaultValue(e, 'An error occurred while accessing ' + that._resource.url + '.');
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
         function requestMetadata() {
-            when(loadXML(that._url), metadataSuccess, metadataFailure);
+            when(loadXML(that._resource), metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
@@ -266,14 +272,14 @@ define([
         //>>includeEnd('debug');
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-        var url = this._url + level + '/' + x + '/' + (yTiles - y - 1) + '.tif?cesium=true';
-
-        var proxy = this._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        var promise = loadImage(url, undefined, request);
+        var resource = this._resource.getDerivedResource({
+            url: level + '/' + x + '/' + (yTiles - y - 1) + '.tif',
+            queryParameters: {
+                cesium: true
+            },
+            request: request
+        });
+        var promise = loadImage(resource);
         if (!defined(promise)) {
             return undefined;
         }

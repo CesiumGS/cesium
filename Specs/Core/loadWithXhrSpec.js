@@ -3,13 +3,15 @@ defineSuite([
         'Core/loadImage',
         'Core/Request',
         'Core/RequestErrorEvent',
-        'Core/RequestScheduler'
+        'Core/RequestScheduler',
+        'Core/Resource'
     ], function(
         loadWithXhr,
         loadImage,
         Request,
         RequestErrorEvent,
-        RequestScheduler) {
+        RequestScheduler,
+        Resource) {
     'use strict';
 
     it('throws with no url', function() {
@@ -439,6 +441,121 @@ defineSuite([
                 var responseText = 'hello world';
                 fakeXHR.simulateResponseTextLoad(responseText);
                 expect(resolvedValue).toEqual(responseText);
+                expect(rejectedError).toBeUndefined();
+            });
+        });
+
+        describe('retries when Resource has the callback set', function() {
+            it('rejects after too many retries', function() {
+                var cb = jasmine.createSpy('retry').and.returnValue(true);
+
+                var resource = new Resource({
+                    url : 'http://example.invalid',
+                    retryCallback: cb,
+                    retryAttempts: 1
+                });
+
+                var promise = loadWithXhr(resource);
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }).otherwise(function (error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateError(); // This should retry
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(true);
+
+                fakeXHR.simulateError(); // This fails because we only retry once
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+            });
+
+            it('rejects after callback returns false', function() {
+                var cb = jasmine.createSpy('retry').and.returnValue(false);
+
+                var resource = new Resource({
+                    url : 'http://example.invalid',
+                    retryCallback: cb,
+                    retryAttempts: 2
+                });
+
+                var promise = loadWithXhr(resource);
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }).otherwise(function (error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateError(); // This fails because the callback returns false
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(true);
+            });
+
+            it('resolves after retry', function() {
+                var cb = jasmine.createSpy('retry').and.returnValue(true);
+
+                var resource = new Resource({
+                    url : 'http://example.invalid',
+                    retryCallback: cb,
+                    retryAttempts: 1
+                });
+
+                var promise = loadWithXhr(resource);
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }).otherwise(function (error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateError(); // This should retry
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(true);
+
+                fakeXHR.simulateHttpResponse(200, 'OK');
+                expect(resolvedValue).toBeDefined();
                 expect(rejectedError).toBeUndefined();
             });
         });
