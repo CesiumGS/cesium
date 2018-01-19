@@ -52,11 +52,20 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+uniform float u_minimumBrightness;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
+
+#ifdef APPLY_MATERIAL
+varying float v_height;
+varying float v_slope;
+#endif
 
 #ifdef FOG
 varying float v_distance;
@@ -180,6 +189,16 @@ void main()
     }
 #endif
 
+#ifdef APPLY_MATERIAL
+    czm_materialInput materialInput;
+    materialInput.st = v_textureCoordinates.st;
+    materialInput.normalEC = normalize(v_normalEC);
+    materialInput.slope = v_slope;
+    materialInput.height = v_height;
+    czm_material material = czm_getMaterial(materialInput);
+    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+#endif
+
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
@@ -195,11 +214,15 @@ void main()
     vec4 finalColor = color;
 #endif
 
-
 #ifdef FOG
     const float fExposure = 2.0;
     vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+    fogColor *= darken;
+#endif
 
     gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
 #else

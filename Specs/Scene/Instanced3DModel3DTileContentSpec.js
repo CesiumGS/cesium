@@ -1,23 +1,17 @@
 defineSuite([
-        'Scene/Instanced3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Transforms',
-        'Scene/Cesium3DTileContentState',
-        'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Instanced3DModel3DTileContent,
         Cartesian3,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Transforms,
-        Cesium3DTileContentState,
-        TileBoundingSphere,
         Cesium3DTilesTester,
         createScene) {
     'use strict';

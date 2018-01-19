@@ -6,6 +6,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/Math',
         '../Core/RuntimeError',
@@ -19,6 +20,7 @@ define([
         Color,
         defined,
         defineProperties,
+        DeveloperError,
         isArray,
         CesiumMath,
         RuntimeError,
@@ -1716,6 +1718,11 @@ define([
                 }
                 break;
             case ExpressionNodeType.LITERAL_VECTOR:
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(left)) {
+                    throw new DeveloperError('left should always be defined for type ExpressionNodeType.LITERAL_VECTOR');
+                }
+                //>>includeEnd('debug');
                 var length = left.length;
                 var vectorExpression = value + '(';
                 for (var i = 0; i < length; ++i) {

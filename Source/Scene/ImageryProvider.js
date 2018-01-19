@@ -93,6 +93,22 @@ define([
          */
         this.defaultGamma = undefined;
 
+        /**
+         * The default texture minification filter to apply to this provider.
+         *
+         * @type {TextureMinificationFilter}
+         * @default undefined
+         */
+        this.defaultMinificationFilter = undefined;
+
+        /**
+         * The default texture magnification filter to apply to this provider.
+         *
+         * @type {TextureMagnificationFilter}
+         * @default undefined
+         */
+        this.defaultMagnificationFilter = undefined;
+
         DeveloperError.throwInstantiationError();
     }
 

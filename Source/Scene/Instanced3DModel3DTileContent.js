@@ -517,7 +517,7 @@ define([
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
         if ((commandStart < commandEnd) && frameState.passes.render) {
-            this._batchTable.addDerivedCommands(frameState, commandStart);
+            this._batchTable.addDerivedCommands(frameState, commandStart, false);
         }
     };
 

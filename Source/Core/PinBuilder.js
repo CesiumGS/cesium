@@ -18,7 +18,7 @@ define([
      * A utility class for generating custom map pins as canvas elements.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/PinBuilder.png' width='500'/><br />
+     * <img src='Images/PinBuilder.png' width='500'/><br />
      * Example pins generated using both the maki icon set, which ships with Cesium, and single character text.
      * </div>
      *

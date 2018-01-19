@@ -5,7 +5,6 @@ define([
         './defined',
         './FeatureDetection',
         './freezeObject',
-        './HeadingPitchRoll',
         './Math',
         './Matrix3'
     ], function(
@@ -15,7 +14,6 @@ define([
         defined,
         FeatureDetection,
         freezeObject,
-        HeadingPitchRoll,
         CesiumMath,
         Matrix3) {
     'use strict';

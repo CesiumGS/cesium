@@ -90,7 +90,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            credit = new Credit({text: credit});
         }
         this._credit = credit;
 

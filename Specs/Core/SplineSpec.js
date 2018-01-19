@@ -14,6 +14,48 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('wraps time that is out-of-bounds', function() {
+        var spline = HermiteSpline.createNaturalCubic({
+            points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
+            times : [0.0, 1.0, 2.0]
+        });
+
+        expect(spline.wrapTime(-0.5)).toEqual(1.5);
+        expect(spline.wrapTime(2.5)).toEqual(0.5);
+    });
+
+    it('clamps time that is out-of-bounds', function() {
+        var spline = HermiteSpline.createNaturalCubic({
+            points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
+            times : [0.0, 1.0, 2.0]
+        });
+
+        expect(spline.clampTime(-0.5)).toEqual(0.0);
+        expect(spline.clampTime(2.5)).toEqual(2.0);
+    });
+
+    it('wrapTime throws without a time', function() {
+        var spline = HermiteSpline.createNaturalCubic({
+            points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
+            times : [0.0, 1.0, 2.0]
+        });
+
+        expect(function() {
+            spline.wrapTime();
+        }).toThrowDeveloperError();
+    });
+
+    it('clampTime throws without a time', function() {
+        var spline = HermiteSpline.createNaturalCubic({
+            points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
+            times : [0.0, 1.0, 2.0]
+        });
+
+        expect(function() {
+            spline.clampTime();
+        }).toThrowDeveloperError();
+    });
+
     it('findTimeInterval throws without a time', function() {
         var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],

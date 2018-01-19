@@ -164,12 +164,15 @@ define([
         this._uniformMap = options._uniformMap;
 
         this._sp = undefined;
+        this._spStencil = undefined;
         this._spPick = undefined;
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
+
+        this._commandsIgnoreShow = [];
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -344,6 +347,12 @@ define([
         return scene.context.stencilBuffer;
     };
 
+    // The stencil mask only uses the least significant 4 bits.
+    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
+    // can be classified.
+    var stencilMask = 0x0F;
+    var stencilReference = 0;
+
     function getStencilPreloadRenderState(enableStencil) {
         return {
             colorMask : {
@@ -366,8 +375,8 @@ define([
                     zFail : StencilOperation.INCREMENT_WRAP,
                     zPass : StencilOperation.INCREMENT_WRAP
                 },
-                reference : 0,
-                mask : ~0
+                reference : stencilReference,
+                mask : stencilMask
             },
             depthTest : {
                 enabled : false
@@ -398,8 +407,8 @@ define([
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : 0,
-                mask : ~0
+                reference : stencilReference,
+                mask : stencilMask
             },
             depthTest : {
                 enabled : true,
@@ -426,8 +435,8 @@ define([
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.DECREMENT_WRAP
                 },
-                reference : 0,
-                mask : ~0
+                reference : stencilReference,
+                mask : stencilMask
             },
             depthTest : {
                 enabled : false
@@ -452,8 +461,8 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         depthTest : {
             enabled : false
@@ -510,7 +519,6 @@ define([
         var primitive = classificationPrimitive._primitive;
         var vs = ShadowVolumeVS;
         vs = classificationPrimitive._primitive._batchTable.getVertexShaderCallback()(vs);
-        vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
         vs = Primitive._modifyShaderPosition(classificationPrimitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
@@ -530,9 +538,9 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
-        classificationPrimitive._sp = ShaderProgram.replaceCache({
+        classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,
-            shaderProgram : classificationPrimitive._sp,
+            shaderProgram : classificationPrimitive._spStencil,
             vertexShaderSource : vsSource,
             fragmentShaderSource : fsSource,
             attributeLocations : attributeLocations
@@ -567,6 +575,20 @@ define([
                 attributeLocations : attributeLocations
             });
         }
+
+        vs = Primitive._appendShowToShader(primitive, vs);
+        vsSource = new ShaderSource({
+            defines : [extrudedDefine],
+            sources : [vs]
+        });
+
+        classificationPrimitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : classificationPrimitive._sp,
+            vertexShaderSource : vsSource,
+            fragmentShaderSource : fsSource,
+            attributeLocations : attributeLocations
+        });
     }
 
     function createColorCommands(classificationPrimitive, colorCommands) {
@@ -632,6 +654,24 @@ define([
             command = colorCommands[length + i] = DrawCommand.shallowClone(colorCommands[i], colorCommands[length + i]);
             command.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
         }
+
+        var commandsIgnoreShow = classificationPrimitive._commandsIgnoreShow;
+        var spStencil = classificationPrimitive._spStencil;
+
+        var commandIndex = 0;
+        length = commandsIgnoreShow.length = length / 3 * 2;
+
+        for (var j = 0; j < length; j += 2) {
+            var commandIgnoreShow = commandsIgnoreShow[j] = DrawCommand.shallowClone(colorCommands[commandIndex], commandsIgnoreShow[j]);
+            commandIgnoreShow.shaderProgram = spStencil;
+            commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+
+            commandIgnoreShow = commandsIgnoreShow[j + 1] = DrawCommand.shallowClone(colorCommands[commandIndex + 1], commandsIgnoreShow[j + 1]);
+            commandIgnoreShow.shaderProgram = spStencil;
+            commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
+
+            commandIndex += 3;
+        }
     }
 
     function createPickCommands(classificationPrimitive, pickCommands) {
@@ -665,7 +705,7 @@ define([
             command.offset = offset;
             command.count = count;
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
-            command.shaderProgram = classificationPrimitive._sp;
+            command.shaderProgram = classificationPrimitive._spStencil;
             command.uniformMap = uniformMap;
             command.pass = Pass.TERRAIN_CLASSIFICATION;
 
@@ -682,7 +722,7 @@ define([
             command.offset = offset;
             command.count = count;
             command.renderState = classificationPrimitive._rsStencilDepthPass;
-            command.shaderProgram = classificationPrimitive._sp;
+            command.shaderProgram = classificationPrimitive._spStencil;
             command.uniformMap = uniformMap;
             command.pass = Pass.TERRAIN_CLASSIFICATION;
 
@@ -761,25 +801,44 @@ define([
         var commandList = frameState.commandList;
         var passes = frameState.passes;
 
+        var i;
         var indices;
         var startIndex;
         var endIndex;
         var classificationType = classificationPrimitive.classificationType;
 
         if (passes.render) {
+            var colorCommand;
             var colorLength = colorCommands.length;
             indices = getCommandIndices(classificationType, colorLength);
             startIndex = indices.start;
             endIndex = indices.end;
 
-            for (var i = startIndex; i < endIndex; ++i) {
-                var colorCommand = colorCommands[i];
+            for (i = startIndex; i < endIndex; ++i) {
+                colorCommand = colorCommands[i];
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
 
                 commandList.push(colorCommand);
+            }
+
+            if (frameState.invertClassification) {
+                var ignoreShowCommands = classificationPrimitive._commandsIgnoreShow;
+                startIndex = 0;
+                endIndex = ignoreShowCommands.length;
+
+                for (i = startIndex; i < endIndex; ++i) {
+                    var bvIndex = Math.floor(i / 2);
+                    colorCommand = ignoreShowCommands[i];
+                    colorCommand.modelMatrix = modelMatrix;
+                    colorCommand.boundingVolume = boundingVolumes[bvIndex];
+                    colorCommand.cull = cull;
+                    colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+
+                    commandList.push(colorCommand);
+                }
             }
         }
 
@@ -790,9 +849,9 @@ define([
             endIndex = indices.end;
 
             var pickOffsets = primitive._pickOffsets;
-            for (var j = startIndex; j < endIndex; ++j) {
-                var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
-                var pickCommand = pickCommands[j];
+            for (i = startIndex; i < endIndex; ++i) {
+                var pickOffset = pickOffsets[boundingVolumeIndex(i, pickLength)];
+                var pickCommand = pickCommands[i];
                 pickCommand.modelMatrix = modelMatrix;
                 pickCommand.boundingVolume = boundingVolumes[pickOffset.index];
                 pickCommand.cull = cull;

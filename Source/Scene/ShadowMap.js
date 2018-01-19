@@ -1512,6 +1512,7 @@ define([
             var cullEnabled = command.renderState.cull.enabled;
             if (!cullEnabled) {
                 castRenderState = clone(castRenderState, false);
+                castRenderState.cull = clone(castRenderState.cull, false);
                 castRenderState.cull.enabled = false;
                 castRenderState = RenderState.fromCache(castRenderState);
             }

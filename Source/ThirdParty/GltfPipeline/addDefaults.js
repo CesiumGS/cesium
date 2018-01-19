@@ -57,13 +57,13 @@ define([
                         var defaults = {
                             ambient: [0.0, 0.0, 0.0, 1.0],
                             emission: [0.0, 0.0, 0.0, 1.0],
-                            transparency: [1.0]
+                            transparency: 1.0
                         };
                         if (technique !== 'CONSTANT') {
                             defaults.diffuse = [0.0, 0.0, 0.0, 1.0];
                             if (technique !== 'LAMBERT') {
                                 defaults.specular = [0.0, 0.0, 0.0, 1.0];
-                                defaults.shininess = [0.0];
+                                defaults.shininess = 0.0;
                             }
                         }
                         return {
@@ -219,6 +219,9 @@ define([
             emission : [
                 0.5, 0.5, 0.5, 1.0
             ]
+        },
+        extras : {
+            _pipeline: {}
         }
     };
 
@@ -357,7 +360,6 @@ define([
                 }
                 material.technique = defaultTechniqueId;
             }
-
         }
     }
 
