@@ -11,6 +11,7 @@ defineSuite([
         'Core/PerspectiveFrustum',
         'Core/Plane',
         'Core/Transforms',
+        'Renderer/Pass',
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
@@ -29,6 +30,7 @@ defineSuite([
         PerspectiveFrustum,
         Plane,
         Transforms,
+        Pass,
         Cesium3DTileStyle,
         Expression,
         Cesium3DTilesTester,
@@ -53,6 +55,7 @@ defineSuite([
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
     var pointCloudWithTransformUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithTransform';
+    var pointCloudTilesetUrl = './Data/Cesium3DTiles/Tilesets/TilesetPoints';
 
     function setCamera(longitude, latitude) {
         // Point the camera to the center of the tile
@@ -539,7 +542,7 @@ defineSuite([
     });
 
     it('rebuilds shader style when expression changes', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudTilesetUrl).then(function(tileset) {
             // Solid red color
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
@@ -549,6 +552,28 @@ defineSuite([
             tileset.style.color = new Expression('color("lime")');
             tileset.makeStyleDirty();
             expect(scene).toRender([0, 255, 0, 255]);
+
+            tileset.style.color = new Expression('color("blue", 0.5)');
+            tileset.makeStyleDirty();
+            expect(scene).toRender([0, 0, 255, 255]);
+
+            var i;
+            var commands = scene.frameState.commandList;
+            var commandsLength = commands.length;
+            expect(commandsLength).toBeGreaterThan(1); // Just check that at least some children are rendered
+            for (i = 0; i < commandsLength; ++i) {
+                expect(commands[i].pass).toBe(Pass.TRANSLUCENT);
+            }
+
+            tileset.style.color = new Expression('color("yellow")');
+            tileset.makeStyleDirty();
+            expect(scene).toRender([255, 255, 0, 255]);
+
+            commands = scene.frameState.commandList;
+            commandsLength = commands.length;
+            for (i = 0; i < commandsLength; ++i) {
+                expect(commands[i].pass).not.toBe(Pass.TRANSLUCENT);
+            }
         });
     });
 

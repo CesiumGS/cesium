@@ -8,17 +8,18 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
-        './joinUrls',
         './loadArrayBuffer',
         './loadJson',
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './Resource',
         './RuntimeError',
         './TerrainProvider',
         './TileAvailability',
@@ -33,17 +34,18 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
-        joinUrls,
         loadArrayBuffer,
         loadJson,
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        Resource,
         RuntimeError,
         TerrainProvider,
         TileAvailability,
@@ -51,6 +53,8 @@ define([
     'use strict';
 
     function LayerInformation(layer) {
+        this.resource = layer.resource;
+        this.version = layer.version;
         this.isHeightmap = layer.isHeightmap;
         this.tileUrlTemplates = layer.tileUrlTemplates;
         this.availability = layer.availability;
@@ -68,8 +72,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the Cesium terrain server.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Resource|String} options.url The URL of the Cesium terrain server.
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -109,8 +112,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        this._proxy = options.proxy;
+        if (defined(options.proxy)) {
+            deprecationWarning('CesiumTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
+        var resource = Resource.createIfNeeded(options.url, {
+            proxy: options.proxy
+        });
+        resource.appendForwardSlash();
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -154,11 +163,10 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        var lastUrl = this._url;
-        var metadataUrl = joinUrls(this._url, 'layer.json');
-        if (defined(this._proxy)) {
-            metadataUrl = this._proxy.getURL(metadataUrl);
-        }
+        var lastResource = resource;
+        var metadataResource = lastResource.getDerivedResource({
+            url: 'layer.json'
+        });
 
         var that = this;
         var metadataError;
@@ -209,15 +217,6 @@ define([
             }
 
             var tileUrlTemplates = data.tiles;
-            for (var i = 0; i < tileUrlTemplates.length; ++i) {
-                var template = new Uri(tileUrlTemplates[i]);
-                var baseUri = new Uri(lastUrl);
-                if (template.authority && !baseUri.authority) {
-                    baseUri.authority = template.authority;
-                    baseUri.scheme = template.scheme;
-                }
-                tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
-            }
 
             var availableTiles = data.available;
             var availability;
@@ -267,6 +266,8 @@ define([
             }
 
             layers.push(new LayerInformation({
+                resource: lastResource,
+                version: data.version,
                 isHeightmap: isHeightmap,
                 tileUrlTemplates: tileUrlTemplates,
                 availability: availability,
@@ -281,12 +282,14 @@ define([
                     console.log('A layer.json can\'t have a parentUrl if it does\'t have an available array.');
                     return when.resolve();
                 }
-                lastUrl = joinUrls(lastUrl, parentUrl);
-                metadataUrl = joinUrls(lastUrl, 'layer.json');
-                if (defined(that._proxy)) {
-                    metadataUrl = that._proxy.getURL(metadataUrl);
-                }
-                var parentMetadata = loadJson(metadataUrl);
+                lastResource = lastResource.getDerivedResource({
+                    url: parentUrl
+                });
+                lastResource.appendForwardSlash(); // Terrain always expects a directory
+                metadataResource = lastResource.getDerivedResource({
+                    url: 'layer.json'
+                });
+                var parentMetadata = loadJson(metadataResource);
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
             }
 
@@ -294,7 +297,7 @@ define([
         }
 
         function parseMetadataFailure(data) {
-            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
@@ -344,7 +347,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadJson(metadataUrl);
+            var metadata = loadJson(metadataResource);
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -600,13 +603,6 @@ define([
 
         var tmsY = (yTiles - y - 1);
 
-        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
-
-        var proxy = this._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
         var extensionList = [];
         if (this._requestVertexNormals && layerToUse.hasVertexNormals) {
             extensionList.push(layerToUse.littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
@@ -615,7 +611,19 @@ define([
             extensionList.push('watermask');
         }
 
-        var promise = loadArrayBuffer(url, getRequestHeader(extensionList), request);
+        var resource = layerToUse.resource.getDerivedResource({
+            url: urlTemplates[(x + tmsY + level) % urlTemplates.length],
+            templateValues: {
+                version: layerToUse.version,
+                z: level,
+                x: x,
+                y: tmsY
+            },
+            headers: getRequestHeader(extensionList),
+            request: request
+        });
+
+        var promise = loadArrayBuffer(resource);
 
         if (!defined(promise)) {
             return undefined;

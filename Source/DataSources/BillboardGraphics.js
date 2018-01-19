@@ -48,7 +48,7 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
      * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function BillboardGraphics(options) {
         this._image = undefined;

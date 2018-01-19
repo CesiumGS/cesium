@@ -27,10 +27,10 @@ define([
      *
      * @private
      */
-    function Tileset3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Tileset3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._readyPromise = when.defer();
 
         /**
@@ -137,7 +137,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
@@ -164,7 +164,7 @@ define([
             return;
         }
 
-        content._tileset.loadTileset(content._url, tilesetJson, content._tile);
+        content._tileset.loadTileset(content._resource, tilesetJson, content._tile);
         content._readyPromise.resolve(content);
     }
 

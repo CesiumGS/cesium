@@ -52,12 +52,15 @@ define([
         };
     };
 
-    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic) {
+    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId) {
         var techniques = gltf.techniques;
         var parameter;
         for (var techniqueName in techniques) {
             if (techniques.hasOwnProperty(techniqueName)) {
                 var technique = techniques[techniqueName];
+                if (defined(programId) && (technique.program !== programId)) {
+                    continue;
+                }
                 var parameters = technique.parameters;
                 var attributes = technique.attributes;
                 var uniforms = technique.uniforms;
@@ -80,6 +83,14 @@ define([
             }
         }
         return undefined;
+    };
+
+    ModelUtility.getDiffuseAttributeOrUniform = function(gltf, programId) {
+        var diffuseUniformName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'COLOR_0', programId);
+        if (!defined(diffuseUniformName)) {
+            diffuseUniformName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE', programId);
+        }
+        return diffuseUniformName;
     };
 
     var nodeTranslationScratch = new Cartesian3();

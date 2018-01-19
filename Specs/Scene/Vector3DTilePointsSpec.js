@@ -13,6 +13,7 @@ defineSuite([
         'Core/Rectangle',
         'Scene/Cesium3DTileBatchTable',
         'Scene/Cesium3DTileStyle',
+        'Scene/ColorBlendMode',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
@@ -33,6 +34,7 @@ defineSuite([
         Rectangle,
         Cesium3DTileBatchTable,
         Cesium3DTileStyle,
+        ColorBlendMode,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
@@ -61,7 +63,8 @@ defineSuite([
         _tileset : {
             _statistics : {
                 batchTableByteLength : 0
-            }
+            },
+            colorBlendMode : ColorBlendMode.HIGHLIGHT
         },
         tileset : {
             ellipsoid : Ellipsoid.WGS84

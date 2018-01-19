@@ -4,6 +4,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
@@ -17,6 +18,7 @@ define([
         './Request',
         './RequestState',
         './RequestType',
+        './Resource',
         './RuntimeError',
         './TaskProcessor',
         './TileProviderError'
@@ -26,6 +28,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -39,6 +42,7 @@ define([
         Request,
         RequestState,
         RequestType,
+        Resource,
         RuntimeError,
         TaskProcessor,
         TileProviderError) {
@@ -99,10 +103,8 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
+     * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
      * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
@@ -126,17 +128,21 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.proxy)) {
+            deprecationWarning('GoogleEarthEnterpriseTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
+        }
+
         var metadata;
         if (defined(options.metadata)) {
-            metadata = this._metadata = options.metadata;
+            metadata = options.metadata;
         } else {
-            metadata = this._metadata = new GoogleEarthEnterpriseMetadata({
-                url : options.url,
-                proxy : options.proxy
+            var resource = Resource.createIfNeeded(options.url, {
+                proxy: options.proxy
             });
+            metadata = new GoogleEarthEnterpriseMetadata(resource);
         }
-        this._proxy = defaultValue(options.proxy, this._metadata.proxy);
 
+        this._metadata = metadata;
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2,
@@ -201,7 +207,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._metadata.proxy;
             }
         },
 
@@ -437,7 +443,6 @@ define([
         // Load that terrain
         var terrainPromises = this._terrainPromises;
         var terrainRequests = this._terrainRequests;
-        var url = buildTerrainUrl(this, q, terrainVersion);
         var sharedPromise;
         var sharedRequest;
         if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
@@ -445,7 +450,7 @@ define([
             sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
             sharedRequest = request;
-            var requestPromise = loadArrayBuffer(url, undefined, sharedRequest);
+            var requestPromise = loadArrayBuffer(buildTerrainResource(this, q, terrainVersion, sharedRequest));
 
             if (!defined(requestPromise)) {
                 return undefined; // Throttled
@@ -588,16 +593,12 @@ define([
     //
     // Functions to handle imagery packets
     //
-    function buildTerrainUrl(terrainProvider, quadKey, version) {
+    function buildTerrainResource(terrainProvider, quadKey, version, request) {
         version = (defined(version) && version > 0) ? version : 1;
-        var terrainUrl = terrainProvider.url + 'flatfile?f1c-0' + quadKey + '-t.' + version.toString();
-
-        var proxy = terrainProvider._proxy;
-        if (defined(proxy)) {
-            terrainUrl = proxy.getURL(terrainUrl);
-        }
-
-        return terrainUrl;
+        return terrainProvider._metadata.resource.getDerivedResource({
+            url: 'flatfile?f1c-0' + quadKey + '-t.' + version.toString(),
+            request: request
+        });
     }
 
     return GoogleEarthEnterpriseTerrainProvider;
