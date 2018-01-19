@@ -244,7 +244,7 @@ var entity = viewer.entities.add({
 
     //Load the Cesium plane model to represent the entity
     model : {
-        uri : '../../../../Apps/SampleData/models/CesiumAir/Cesium_Air.gltf',
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
         minimumPixelSize : 64
     },
 
@@ -254,7 +254,7 @@ viewer.trackedEntity = entity;
 
 var scene = viewer.scene;
 var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
-    image : '../../../../Apps/SampleData/fire.png',
+    image : '../../SampleData/fire.png',
 
     startColor : Cesium.Color.RED.withAlpha(0.7),
     endColor : Cesium.Color.YELLOW.withAlpha(0.3),
@@ -407,7 +407,7 @@ var options = [{
 }, {
     text : 'Circle',
     onselect : function() {
-        particleSystem.emitter = new Cesium.CircleEmitter(0.5);
+        particleSystem.emitter = new Cesium.CircleEmitter(2.0);
     }
 }, {
     text : 'Cone',
