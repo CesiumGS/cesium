@@ -1004,7 +1004,7 @@ defineSuite([
         camera.frustum = frustum;
 
         camera.update(SceneMode.SCENE2D);
-        var oldCamera = Camera.clone(camera)
+        var oldCamera = Camera.clone(camera);
 
         camera.moveForward(moveAmount);
 
@@ -1028,7 +1028,7 @@ defineSuite([
         camera.frustum = frustum;
 
         camera.update(SceneMode.SCENE2D);
-        var oldCamera = Camera.clone(camera)
+        var oldCamera = Camera.clone(camera);
 
         camera.moveBackward(moveAmount);
 
