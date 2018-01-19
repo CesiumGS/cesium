@@ -399,14 +399,14 @@ Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
 });
 
 var options = [{
-    text : 'Sphere',
-    onselect : function() {
-        particleSystem.emitter = new Cesium.SphereEmitter(2.5);
-    }
-}, {
     text : 'Circle',
     onselect : function() {
         particleSystem.emitter = new Cesium.CircleEmitter(2.0);
+    }
+}, {
+    text : 'Sphere',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.SphereEmitter(2.5);
     }
 }, {
     text : 'Cone',
