@@ -7,6 +7,7 @@ define([
     './defined',
     './defineProperties',
     './deprecationWarning',
+    './DeveloperError',
     './freezeObject',
     './getAbsoluteUri',
     './getBaseUri',
@@ -14,12 +15,13 @@ define([
     './isBlobUri',
     './isCrossOriginUrl',
     './isDataUri',
-    './loadWithXhr',
     './objectToQuery',
     './queryToObject',
     './Request',
+    './RequestErrorEvent',
     './RequestScheduler',
     './RequestState',
+    './RuntimeError',
     './TrustedServers',
     '../ThirdParty/Uri',
     '../ThirdParty/when'
@@ -31,6 +33,7 @@ define([
             defined,
             defineProperties,
             deprecationWarning,
+            DeveloperError,
             freezeObject,
             getAbsoluteUri,
             getBaseUri,
@@ -38,12 +41,13 @@ define([
             isBlobUri,
             isCrossOriginUrl,
             isDataUri,
-            loadWithXhr,
             objectToQuery,
             queryToObject,
             Request,
+            RequestErrorEvent,
             RequestScheduler,
             RequestState,
+            RuntimeError,
             TrustedServers,
             Uri,
             when) {
@@ -118,10 +122,8 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {String} [options.responseType] The type of response.
      * @param {String} [options.method='GET'] The method to use.
      * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
-     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
@@ -185,13 +187,6 @@ define([
         this.request = options.request;
 
         /**
-         * The type of response expected from the request.
-         *
-         * @type {String}
-         */
-        this.responseType = options.responseType;
-
-        /**
          * The method to use for the request.
          *
          * @type {String}
@@ -204,13 +199,6 @@ define([
          * @type {Object}
          */
         this.data = defaultClone(options.data);
-
-        /**
-         * Overrides the MIME type returned by the server.
-         *
-         * @type {String}
-         */
-        this.overrideMimeType = options.overrideMimeType;
 
         /**
          * A proxy to be used when loading the resource.
@@ -466,10 +454,8 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be combined with those of the current instance.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {String} [options.responseType] The type of response.
      * @param {String} [options.method] The method to use.
      * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
-     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Resource~RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
@@ -501,17 +487,11 @@ define([
         if (defined(options.headers)) {
             resource.headers = combine(options.headers, resource.headers);
         }
-        if (defined(options.responseType)) {
-            resource.responseType = options.responseType;
-        }
         if (defined(options.method)) {
             resource.method = options.method;
         }
         if (defined(options.data)) {
             resource.data = options.data;
-        }
-        if (defined(options.overrideMimeType)) {
-            resource.overrideMimeType = options.overrideMimeType;
         }
         if (defined(options.proxy)) {
             resource.proxy = options.proxy;
@@ -569,10 +549,8 @@ define([
         result._queryParameters = clone(this._queryParameters);
         result._templateValues = clone(this._templateValues);
         result.headers = clone(this.headers);
-        result.responseType = this.responseType;
         result.method = this.method;
         result.data = this.data;
-        result.overrideMimeType = this.overrideMimeType;
         result.proxy = this.proxy;
         result.retryCallback = this.retryCallback;
         result.retryAttempts = this.retryAttempts;
@@ -625,9 +603,9 @@ define([
      * @private
      */
     Resource.prototype.fetchArrayBuffer = function () {
-        this.responseType = 'arraybuffer';
-
-        return loadWithXhr(this);
+        return this.fetch({
+            responseType : 'arraybuffer'
+        });
     };
 
     /**
@@ -652,9 +630,9 @@ define([
      * @private
      */
     Resource.prototype.fetchBlob = function () {
-        this.responseType = 'blob';
-
-        return loadWithXhr(this);
+        return this.fetch({
+            responseType : 'blob'
+        });
     };
 
     /**
@@ -818,8 +796,9 @@ define([
      * @private
      */
     Resource.prototype.fetchText = function() {
-        this.responseType = 'text';
-        return loadWithXhr(this);
+        return this.fetch({
+            responseType : 'text'
+        });
     };
 
     // note: &#42;&#47;&#42; below is */* but that ends the comment block early
@@ -847,26 +826,23 @@ define([
      * @private
      */
     Resource.prototype.fetchJson = function() {
-        var oldAccept = this.headers.Accept;
-        this.headers.Accept = 'application/json,*/*;q=0.01';
+        var promise = this.fetch({
+            responseType : 'text',
+            headers: {
+                Accept : 'application/json,*/*;q=0.01'
+            }
+        });
 
-        var textPromise = this.fetchText();
-        if (!defined(textPromise)) {
+        if (!defined(promise)) {
             return undefined;
         }
 
-        var that = this;
-        return textPromise
+        return promise
             .then(function(value) {
-                that.headers.Accept = oldAccept;
                 if (!defined(value)) {
                     return;
                 }
                 return JSON.parse(value);
-            })
-            .otherwise(function(error) {
-                that.headers.Accept = oldAccept;
-                return when.reject(error);
             });
     };
 
@@ -896,9 +872,10 @@ define([
      * @private
      */
     Resource.prototype.fetchXML = function() {
-        this.responseType = 'document';
-        this.overrideMimeType = 'text/xml';
-        return loadWithXhr(this);
+        return this.fetch({
+            responseType : 'document',
+            overrideMimeType : 'text/xml'
+        });
     };
 
     /**
@@ -928,27 +905,24 @@ define([
      *
      * @private
      */
-
     Resource.prototype.fetch = function(options) {
         this.request = defaultValue(this.request, new Request());
 
-        return makeRequest(this, options);
+        return fetch(this, options);
     };
 
-    function makeRequest(resource, options) {
-        var url = optionsOrResource.url;
-        var request = optionsOrResource.request;
-        request.url = url;
-
-        var responseType = optionsOrResource.responseType;
-        var method = optionsOrResource.method;
-        var data = optionsOrResource.data;
-        var headers = optionsOrResource.headers;
-        var overrideMimeType = optionsOrResource.overrideMimeType;
+    function fetch(resource, options) {
+        var request = resource.request;
+        request.url = resource.url;
 
         request.requestFunction = function() {
+            var responseType = options.responseType;
+            var method = resource.method;
+            var data = resource.data;
+            var headers = combine(resource.headers, options.headers);
+            var overrideMimeType = options.overrideMimeType;
             var deferred = when.defer();
-            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = Resource._Implementations.load(resource.url, responseType, method, data, headers, deferred, overrideMimeType);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
@@ -967,22 +941,22 @@ define([
                 return data;
             })
             .otherwise(function(e) {
-                if ((request.state === RequestState.FAILED) && defined(optionsOrResource.retryOnError)) {
-                    return optionsOrResource.retryOnError(e)
-                        .then(function(retry) {
-                            if (retry) {
-                                // Reset request so it can try again
-                                request.state = RequestState.UNISSUED;
-                                request.deferred = undefined;
-
-                                return makeRequest(optionsOrResource);
-                            }
-
-                            return when.reject(e);
-                        });
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
                 }
 
-                return when.reject(e);
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return fetch(resource, options);
+                        }
+
+                        return when.reject(e);
+                    });
             });
     }
 
@@ -1035,86 +1009,6 @@ define([
         }
     }
 
-    // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-        var dataUriRegexResult = dataUriRegex.exec(url);
-        if (dataUriRegexResult !== null) {
-            deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
-            return;
-        }
-
-        var xhr = new XMLHttpRequest();
-
-        if (TrustedServers.contains(url)) {
-            xhr.withCredentials = true;
-        }
-
-        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
-            xhr.overrideMimeType(overrideMimeType);
-        }
-
-        xhr.open(method, url, true);
-
-        if (defined(headers)) {
-            for (var key in headers) {
-                if (headers.hasOwnProperty(key)) {
-                    xhr.setRequestHeader(key, headers[key]);
-                }
-            }
-        }
-
-        if (defined(responseType)) {
-            xhr.responseType = responseType;
-        }
-
-        // While non-standard, file protocol always returns a status of 0 on success
-        var localFile = false;
-        if (typeof url === 'string') {
-            localFile = url.indexOf('file://') === 0;
-        }
-
-        xhr.onload = function() {
-            if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
-                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
-                return;
-            }
-
-            var response = xhr.response;
-            var browserResponseType = xhr.responseType;
-
-            //All modern browsers will go into either the first or second if block or last else block.
-            //Other code paths support older browsers that either do not support the supplied responseType
-            //or do not support the xhr.response property.
-            if (xhr.status === 204) {
-                // accept no content
-                deferred.resolve();
-            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
-                deferred.resolve(response);
-            } else if ((responseType === 'json') && typeof response === 'string') {
-                try {
-                    deferred.resolve(JSON.parse(response));
-                } catch (e) {
-                    deferred.reject(e);
-                }
-            } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                deferred.resolve(xhr.responseXML);
-            } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
-                deferred.resolve(xhr.responseText);
-            } else {
-                deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
-            }
-        };
-
-        xhr.onerror = function(e) {
-            deferred.reject(new RequestErrorEvent());
-        };
-
-        xhr.send(data);
-
-        return xhr;
-    };
-
-
     /**
      * Contains implementations of functions that can be replaced for testing
      *
@@ -1144,6 +1038,84 @@ define([
         image.src = url;
     };
 
+    Resource._Implementations.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            var dataUriRegexResult = dataUriRegex.exec(url);
+            if (dataUriRegexResult !== null) {
+                deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+                return;
+            }
+
+            var xhr = new XMLHttpRequest();
+
+            if (TrustedServers.contains(url)) {
+                xhr.withCredentials = true;
+            }
+
+            if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
+                xhr.overrideMimeType(overrideMimeType);
+            }
+
+            xhr.open(method, url, true);
+
+            if (defined(headers)) {
+                for (var key in headers) {
+                    if (headers.hasOwnProperty(key)) {
+                        xhr.setRequestHeader(key, headers[key]);
+                    }
+                }
+            }
+
+            if (defined(responseType)) {
+                xhr.responseType = responseType;
+            }
+
+            // While non-standard, file protocol always returns a status of 0 on success
+            var localFile = false;
+            if (typeof url === 'string') {
+                localFile = url.indexOf('file://') === 0;
+            }
+
+            xhr.onload = function() {
+                if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
+                    deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
+                    return;
+                }
+
+                var response = xhr.response;
+                var browserResponseType = xhr.responseType;
+
+                //All modern browsers will go into either the first or second if block or last else block.
+                //Other code paths support older browsers that either do not support the supplied responseType
+                //or do not support the xhr.response property.
+                if (xhr.status === 204) {
+                    // accept no content
+                    deferred.resolve();
+                } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+                    deferred.resolve(response);
+                } else if ((responseType === 'json') && typeof response === 'string') {
+                    try {
+                        deferred.resolve(JSON.parse(response));
+                    } catch (e) {
+                        deferred.reject(e);
+                    }
+                } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                    deferred.resolve(xhr.responseXML);
+                } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
+                    deferred.resolve(xhr.responseText);
+                } else {
+                    deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
+                }
+            };
+
+            xhr.onerror = function(e) {
+                deferred.reject(new RequestErrorEvent());
+            };
+
+            xhr.send(data);
+
+            return xhr;
+        };
+
     /**
      * The default implementations
      *
@@ -1151,6 +1123,7 @@ define([
      */
     Resource._DefaultImplementations = {};
     Resource._DefaultImplementations.createImage = Resource._Implementations.createImage;
+    Resource._DefaultImplementations.load = Resource._Implementations.load;
 
     /**
      * A resource instance initialized to the current browser location

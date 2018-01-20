@@ -29,7 +29,6 @@ defineSuite([
             headers: {
                 Accept: 'application/test-type'
             },
-            responseType: 'arraybuffer',
             method: 'POST',
             data: {
                 stuff: 'more stuff'
@@ -56,7 +55,6 @@ defineSuite([
         expect(resource.headers).toEqual({
             Accept: 'application/test-type'
         });
-        expect(resource.responseType).toEqual('arraybuffer');
         expect(resource.method).toEqual('POST');
         expect(resource.data).toEqual({
             stuff: 'more stuff'
@@ -148,7 +146,6 @@ defineSuite([
             headers: {
                 Accept: 'application/test-type'
             },
-            responseType: 'arraybuffer',
             method: 'POST',
             data: {
                 stuff: 'more stuff'
@@ -179,7 +176,6 @@ defineSuite([
         expect(resource.headers).toEqual({
             Accept: 'application/test-type'
         });
-        expect(resource.responseType).toEqual('arraybuffer');
         expect(resource.method).toEqual('POST');
         expect(resource.data).toEqual({
             stuff: 'more stuff'
