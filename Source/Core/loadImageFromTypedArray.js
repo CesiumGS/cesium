@@ -24,16 +24,18 @@ define([
         });
 
         var blobUrl = window.URL.createObjectURL(blob);
-        return loadImage(new Resource({
+        var resource = new Resource({
             url: blobUrl,
             request: request
-        })).then(function(image) {
-            window.URL.revokeObjectURL(blobUrl);
-            return image;
-        }, function(error) {
-            window.URL.revokeObjectURL(blobUrl);
-            return when.reject(error);
         });
+        return resource.fetchImage()
+            .then(function(image) {
+                window.URL.revokeObjectURL(blobUrl);
+                return image;
+            }, function(error) {
+                window.URL.revokeObjectURL(blobUrl);
+                return when.reject(error);
+            });
     }
 
     return loadImageFromTypedArray;

@@ -2,13 +2,11 @@ define([
         './Check',
         './defined',
         './deprecationWarning',
-        './loadWithXhr',
         './Resource'
     ], function(
         Check,
         defined,
         deprecationWarning,
-        loadWithXhr,
         Resource) {
     'use strict';
 
@@ -60,7 +58,7 @@ define([
             request: request
         });
 
-        return loadWithXhr(resource);
+        return resource.fetchText();
     }
 
     return loadText;

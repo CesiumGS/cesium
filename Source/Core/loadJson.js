@@ -3,20 +3,14 @@ define([
         './defined',
         './deprecationWarning',
         './DeveloperError',
-        './loadText',
         './Resource'
     ], function(
         clone,
         defined,
         deprecationWarning,
         DeveloperError,
-        loadText,
         Resource) {
     'use strict';
-
-    var defaultHeaders = {
-        Accept : 'application/json,*/*;q=0.01'
-    };
 
     // note: &#42;&#47;&#42; below is */* but that ends the comment block early
     /**
@@ -64,19 +58,7 @@ define([
             request: request
         });
 
-        resource.headers.Accept = defaultHeaders.Accept;
-
-        var textPromise = loadText(resource);
-        if (!defined(textPromise)) {
-            return undefined;
-        }
-
-        return textPromise.then(function(value) {
-            if (!defined(value)) {
-                return;
-            }
-            return JSON.parse(value);
-        });
+        return resource.fetchJson();
     }
 
     return loadJson;

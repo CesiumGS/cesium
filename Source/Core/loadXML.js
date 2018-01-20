@@ -1,10 +1,12 @@
 define([
         './Check',
-        './loadWithXhr',
+        './defined',
+        './deprecationWarning',
         './Resource'
     ], function(
         Check,
-        loadWithXhr,
+        defined,
+        deprecationWarning,
         Resource) {
     'use strict';
 
@@ -17,8 +19,6 @@ define([
      * @exports loadXML
      *
      * @param {Resource|String} urlOrResource The URL to request.
-     * @param {Object} [headers] HTTP headers to send with the request. // TODO: Do we want to deprecate?
-     * @param {Request} [request] The request object. Intended for internal use only. // TODO: Do we want to deprecate?
      * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -41,14 +41,20 @@ define([
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
 
+        if (defined(headers)) {
+            deprecationWarning('loadText.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
+        }
+
+        if (defined(request)) {
+            deprecationWarning('loadText.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
+
         var resource = Resource.createIfNeeded(urlOrResource, {
             headers: headers,
             request: request
         });
 
-        resource.responseType = 'document';
-        resource.overrideMimeType = 'text/xml';
-        return loadWithXhr(resource);
+        return resource.fetchXML();
     }
 
     return loadXML;
