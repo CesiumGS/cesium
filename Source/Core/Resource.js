@@ -879,6 +879,88 @@ define([
     };
 
     /**
+     * Requests a resource using JSONP.
+     *
+     * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // load a data asynchronously
+     * Cesium.loadJsonp('some/webservice').then(function(data) {
+     *     // use the loaded data
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchJsonp = function(callbackParameterName) {
+        callbackParameterName = defaultValue(callbackParameterName, 'callback');
+
+        this.request = defaultValue(this.request, new Request());
+
+        //generate a unique function name
+        var functionName;
+        do {
+            functionName = 'loadJsonp' + Math.random().toString().substring(2, 8);
+        } while (defined(window[functionName]));
+
+        return fetchJsonp(this, callbackParameterName, functionName);
+    };
+
+    function fetchJsonp(resource, callbackParameterName, functionName) {
+        var callbackQuery = {};
+        callbackQuery[callbackParameterName] = functionName;
+        resource.addQueryParameters(callbackQuery);
+
+        var request = resource.request;
+        request.url = resource.url;
+        request.requestFunction = function() {
+            var deferred = when.defer();
+
+            //assign a function with that name in the global scope
+            window[functionName] = function(data) {
+                deferred.resolve(data);
+
+                try {
+                    delete window[functionName];
+                } catch (e) {
+                    window[functionName] = undefined;
+                }
+            };
+
+            Resource._Implementations.loadAndExecuteScript(resource.url, functionName, deferred);
+            return deferred.promise;
+        };
+
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return fetchJsonp(resource, callbackParameterName, functionName);
+                        }
+
+                        return when.reject(e);
+                    });
+            });
+    }
+
+    /**
      * Asynchronously loads the given resource.  Returns a promise that will resolve to
      * the result once loaded, or reject if the resource failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
@@ -922,7 +1004,7 @@ define([
             var headers = combine(resource.headers, options.headers);
             var overrideMimeType = options.overrideMimeType;
             var deferred = when.defer();
-            var xhr = Resource._Implementations.load(resource.url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = Resource._Implementations.loadWithXhr(resource.url, responseType, method, data, headers, deferred, overrideMimeType);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
@@ -1038,83 +1120,100 @@ define([
         image.src = url;
     };
 
-    Resource._Implementations.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var dataUriRegexResult = dataUriRegex.exec(url);
-            if (dataUriRegexResult !== null) {
-                deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+    Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        var dataUriRegexResult = dataUriRegex.exec(url);
+        if (dataUriRegexResult !== null) {
+            deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+
+        if (TrustedServers.contains(url)) {
+            xhr.withCredentials = true;
+        }
+
+        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
+            xhr.overrideMimeType(overrideMimeType);
+        }
+
+        xhr.open(method, url, true);
+
+        if (defined(headers)) {
+            for (var key in headers) {
+                if (headers.hasOwnProperty(key)) {
+                    xhr.setRequestHeader(key, headers[key]);
+                }
+            }
+        }
+
+        if (defined(responseType)) {
+            xhr.responseType = responseType;
+        }
+
+        // While non-standard, file protocol always returns a status of 0 on success
+        var localFile = false;
+        if (typeof url === 'string') {
+            localFile = url.indexOf('file://') === 0;
+        }
+
+        xhr.onload = function() {
+            if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
+                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
                 return;
             }
 
-            var xhr = new XMLHttpRequest();
+            var response = xhr.response;
+            var browserResponseType = xhr.responseType;
 
-            if (TrustedServers.contains(url)) {
-                xhr.withCredentials = true;
-            }
-
-            if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
-                xhr.overrideMimeType(overrideMimeType);
-            }
-
-            xhr.open(method, url, true);
-
-            if (defined(headers)) {
-                for (var key in headers) {
-                    if (headers.hasOwnProperty(key)) {
-                        xhr.setRequestHeader(key, headers[key]);
-                    }
+            //All modern browsers will go into either the first or second if block or last else block.
+            //Other code paths support older browsers that either do not support the supplied responseType
+            //or do not support the xhr.response property.
+            if (xhr.status === 204) {
+                // accept no content
+                deferred.resolve();
+            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+                deferred.resolve(response);
+            } else if ((responseType === 'json') && typeof response === 'string') {
+                try {
+                    deferred.resolve(JSON.parse(response));
+                } catch (e) {
+                    deferred.reject(e);
                 }
+            } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                deferred.resolve(xhr.responseXML);
+            } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
+                deferred.resolve(xhr.responseText);
+            } else {
+                deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
             }
-
-            if (defined(responseType)) {
-                xhr.responseType = responseType;
-            }
-
-            // While non-standard, file protocol always returns a status of 0 on success
-            var localFile = false;
-            if (typeof url === 'string') {
-                localFile = url.indexOf('file://') === 0;
-            }
-
-            xhr.onload = function() {
-                if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
-                    deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
-                    return;
-                }
-
-                var response = xhr.response;
-                var browserResponseType = xhr.responseType;
-
-                //All modern browsers will go into either the first or second if block or last else block.
-                //Other code paths support older browsers that either do not support the supplied responseType
-                //or do not support the xhr.response property.
-                if (xhr.status === 204) {
-                    // accept no content
-                    deferred.resolve();
-                } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
-                    deferred.resolve(response);
-                } else if ((responseType === 'json') && typeof response === 'string') {
-                    try {
-                        deferred.resolve(JSON.parse(response));
-                    } catch (e) {
-                        deferred.reject(e);
-                    }
-                } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                    deferred.resolve(xhr.responseXML);
-                } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
-                    deferred.resolve(xhr.responseText);
-                } else {
-                    deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
-                }
-            };
-
-            xhr.onerror = function(e) {
-                deferred.reject(new RequestErrorEvent());
-            };
-
-            xhr.send(data);
-
-            return xhr;
         };
+
+        xhr.onerror = function(e) {
+            deferred.reject(new RequestErrorEvent());
+        };
+
+        xhr.send(data);
+
+        return xhr;
+    };
+
+    Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = url;
+
+        var head = document.getElementsByTagName('head')[0];
+        script.onload = function() {
+            script.onload = undefined;
+            head.removeChild(script);
+        };
+        script.onerror = function(e) {
+            deferred.reject(e);
+        };
+
+        head.appendChild(script);
+    };
 
     /**
      * The default implementations
@@ -1123,7 +1222,8 @@ define([
      */
     Resource._DefaultImplementations = {};
     Resource._DefaultImplementations.createImage = Resource._Implementations.createImage;
-    Resource._DefaultImplementations.load = Resource._Implementations.load;
+    Resource._DefaultImplementations.loadWithXhr = Resource._Implementations.loadWithXhr;
+    Resource._DefaultImplementations.loadAndExecuteScript = Resource._Implementations.loadAndExecuteScript;
 
     /**
      * A resource instance initialized to the current browser location

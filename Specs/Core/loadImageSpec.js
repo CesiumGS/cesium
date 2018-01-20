@@ -147,7 +147,7 @@ defineSuite([
             expect(headers).toEqual(expectedHeaders);
             expect(responseType).toEqual('blob');
 
-            var binary = atob(dataUri.split(',')[1])
+            var binary = atob(dataUri.split(',')[1]);
             var array = [];
             for(var i = 0; i < binary.length; i++) {
                 array.push(binary.charCodeAt(i));

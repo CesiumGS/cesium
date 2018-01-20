@@ -64,16 +64,16 @@ define([
     defineProperties(loadWithXhr, {
         load : {
             get : function() {
-                return Resource._Implementations.load;
+                return Resource._Implementations.loadWithXhr;
             },
             set : function(value) {
-                Resource._Implementations.load = value;
+                Resource._Implementations.loadWithXhr = value;
             }
         },
 
         defaultLoad : {
             get : function() {
-                return Resource._DefaultImplementations.load;
+                return Resource._DefaultImplementations.loadWithXhr;
             }
         }
     });
