@@ -1,5 +1,9 @@
 Change Log
 
+### TODO
+
+* Added ability to create partial ellipsoids using both the Entity API and CZML. New ellipsoid geometry properties: innerRadii, minimumClock, maximumClock, minimumCone, maximumCone. This affects both EllipsoidGeometry and EllipsoidOutlineGeometry. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Spheres%20and%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
+
 ### 1.42 - 2018-02-01
 
 * Breaking changes
@@ -28,7 +32,6 @@ Change Log
 * Fixed a bug when creating billboard and model entities without a globe. [#6109](https://github.com/AnalyticalGraphicsInc/cesium/pull/6109)
 * Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
-* Added ability to create partial ellipsoids using both the Entity API and CZML. New ellipsoid geometry properties: innerRadii, minimumClock, maximumClock, minimumCone, maximumCone. This affects both EllipsoidGeometry and EllipsoidOutlineGeometry. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Spheres%20and%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
 
 ### 1.41 - 2018-01-02
 
