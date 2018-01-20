@@ -55,7 +55,6 @@ define([
     }
 
     defineProperties(loadImage, {
-
         createImage : {
             get : function() {
                 return Resource._Implementations.createImage;
