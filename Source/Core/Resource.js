@@ -115,6 +115,18 @@ define([
     }
 
     /**
+     * @private
+     */
+    function checkAndResetRequest(request) {
+        if (request.state === RequestState.ISSUED || request.state === RequestState.ACTIVE) {
+            throw new RuntimeError('The Resource is already being fetched.');
+        }
+
+        request.state = RequestState.UNISSUED;
+        request.deferred = undefined;
+    }
+
+    /**
      * A resource that includes the location and any other parameters we need to retrieve it or create derived resources. It also provides the ability to retry requests.
      *
      * @param {Object} options An object with the following properties
@@ -184,7 +196,7 @@ define([
          *
          * @type {Request}
          */
-        this.request = options.request;
+        this.request = defaultValue(options.request, new Request());
 
         /**
          * The method to use for the request.
@@ -498,6 +510,9 @@ define([
         }
         if (defined(options.request)) {
             resource.request = options.request;
+        } else {
+            // Clone the resource so we keep all the throttle settings
+            resource.request = this.request.clone();
         }
         if (defined(options.retryCallback)) {
             resource.retryCallback = options.retryCallback;
@@ -669,6 +684,8 @@ define([
         preferBlob = defaultValue(preferBlob, false);
         allowCrossOrigin = defaultValue(allowCrossOrigin, true);
 
+        checkAndResetRequest(this.request);
+
         // We try to load the image normally if
         // 1. Blobs aren't supported
         // 2. It's a data URI
@@ -720,8 +737,6 @@ define([
 
 
     function fetchImage(resource, allowCrossOrigin) {
-        resource.request = defaultValue(resource.request, new Request());
-
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
@@ -887,7 +902,7 @@ define([
      *
      * @example
      * // load a data asynchronously
-     * Cesium.loadJsonp('some/webservice').then(function(data) {
+     * resource.loadJsonp().then(function(data) {
      *     // use the loaded data
      * }).otherwise(function(error) {
      *     // an error occurred
@@ -898,7 +913,7 @@ define([
     Resource.prototype.fetchJsonp = function(callbackParameterName) {
         callbackParameterName = defaultValue(callbackParameterName, 'callback');
 
-        this.request = defaultValue(this.request, new Request());
+        checkAndResetRequest(this.request);
 
         //generate a unique function name
         var functionName;
@@ -966,7 +981,7 @@ define([
      * using XMLHttpRequest, which means that in order to make requests to another origin,
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
      *
-     * @param {Object} options Object with the following properties:
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
@@ -975,7 +990,7 @@ define([
      *
      * @example
      * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
-     * resource.fetchWithXhr()
+     * resource.fetch()
      *   .then(function(blob) {
      *       // use the data
      *   }).otherwise(function(error) {
@@ -988,23 +1003,22 @@ define([
      * @private
      */
     Resource.prototype.fetch = function(options) {
-        this.request = defaultValue(this.request, new Request());
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        return fetch(this, options);
-    };
+        checkAndResetRequest(this.request);
 
-    function fetch(resource, options) {
-        var request = resource.request;
-        request.url = resource.url;
+        var request = this.request;
+        request.url = this.url;
 
+        var that = this;
         request.requestFunction = function() {
             var responseType = options.responseType;
-            var method = resource.method;
-            var data = resource.data;
-            var headers = combine(resource.headers, options.headers);
+            var method = that.method;
+            var data = that.data;
+            var headers = combine(that.headers, options.headers);
             var overrideMimeType = options.overrideMimeType;
             var deferred = when.defer();
-            var xhr = Resource._Implementations.loadWithXhr(resource.url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = Resource._Implementations.loadWithXhr(that.url, responseType, method, data, headers, deferred, overrideMimeType);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
@@ -1027,20 +1041,20 @@ define([
                     return when.reject(e);
                 }
 
-                return resource.retryOnError(e)
+                return that.retryOnError(e)
                     .then(function(retry) {
                         if (retry) {
                             // Reset request so it can try again
                             request.state = RequestState.UNISSUED;
                             request.deferred = undefined;
 
-                            return fetch(resource, options);
+                            return that.fetch(options);
                         }
 
                         return when.reject(e);
                     });
             });
-    }
+    };
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 
