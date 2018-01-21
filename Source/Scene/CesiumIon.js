@@ -91,7 +91,34 @@ define([
      *   });
      */
     CesiumIon.createResource = function(assetId, options) {
+        var endpointResource = CesiumIon.createEndpointResource(assetId, options);
+
+        return CesiumIon._loadJson(endpointResource)
+            .then(function (endpoint) {
+
+                var externalType = endpoint.externalType;
+                if (!defined(externalType)) {
+                    return CesiumIonResource.create(endpoint, endpointResource);
+                }
+
+                // 3D Tiles and STK Terrain Server external assets can still be represented as a resource
+                // object, just not the CesiumIonResource object.
+                if (externalType === '3DTILES' || externalType === 'STK_TERRAIN_SERVER') {
+                    return new Resource({ url: endpoint.options.url });
+                }
+
+                //External imagery assets have additional configuration that can't be represented as a Resource
+                throw new RuntimeError('CesiumIon.createResource does not support external imagery assets.');
+            });
+    };
+
+    /**
+     * @private
+     */
+    CesiumIon.createEndpointResource = function (assetId, options) {
+        //>>includeStart('debug', pragmas.debug);
         Check.defined('assetId', assetId);
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var serverUrl = defaultValue(options.serverUrl, CesiumIon.defaultServerUrl);
@@ -105,11 +132,27 @@ define([
             resourceOptions.queryParameters = { access_token: accessToken };
         }
 
-        var endpointResource = new Resource(resourceOptions);
-        return CesiumIon._loadJson(endpointResource)
-            .then(function(endpoint) {
-                return CesiumIonResource.create(endpoint, endpointResource);
-            });
+        return new Resource(resourceOptions);
+    };
+
+    function createFactory(Type) {
+        return function(options) {
+            return new Type(options);
+        };
+    }
+
+    // These values are the unofficial list of supported external imagery
+    // assets in the Cesium ion beta. They are subject to change.
+    var ImageryProviderMapping = {
+        ARCGIS_MAPSERVER: createFactory(ArcGisMapServerImageryProvider),
+        BING: createFactory(BingMapsImageryProvider),
+        GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
+        MAPBOX: createFactory(MapboxImageryProvider),
+        SINGLE_TILE: createFactory(SingleTileImageryProvider),
+        TMS: createTileMapServiceImageryProvider,
+        URL_TEMPLATE: createFactory(UrlTemplateImageryProvider),
+        WMS: createFactory(WebMapServiceImageryProvider),
+        WMTS: createFactory(WebMapTileServiceImageryProvider)
     };
 
     /**
@@ -130,16 +173,36 @@ define([
      *   });
      */
     CesiumIon.createImageryProvider = function(assetId, options) {
-        return CesiumIon.createResource(assetId, options)
-            .then(function(resource) {
-                return resource.createImageryProvider();
+        var endpointResource = CesiumIon.createEndpointResource(assetId, options);
+
+        return CesiumIon._loadJson(endpointResource)
+            .then(function(endpoint) {
+
+                if (endpoint.type !== 'IMAGERY') {
+                    throw new RuntimeError('Cesium ion asset ' + assetId + ' is not an imagery asset.');
+                }
+
+                var externalType = endpoint.externalType;
+                if (!defined(externalType)) {
+                    return createTileMapServiceImageryProvider({
+                        url: CesiumIonResource.create(endpoint, endpointResource)
+                    });
+                }
+
+                var factory = ImageryProviderMapping[externalType];
+
+                if (!defined(factory)) {
+                    throw new RuntimeError('Unrecognized Cesium ion imagery type: ' + externalType);
+                }
+
+                return factory(endpoint.options);
             });
     };
 
     /**
      * A {@link Resource} instance that encapsulates Cesium ion asset
-     * creation and automatic refresh token handling.  This object
-     * should not be created directly, use CesiumIonResource.create
+     * creation and automatic refresh token handling. This object
+     * should not be created directly, use CesiumIonResource.create.
      *
      * @private
      */
@@ -159,13 +222,10 @@ define([
     CesiumIonResource.create = function (endpoint, endpointResource) {
         var options = {
             url: endpoint.url,
-            retryCallback: createRetryCallback(endpoint, endpointResource),
-            retryAttempts: 1
+            retryAttempts: 1,
+            queryParameters: { access_token: endpoint.accessToken },
+            retryCallback: createRetryCallback(endpoint, endpointResource)
         };
-
-        if (defined(endpoint.accessToken)) {
-            options.queryParameters = { access_token: endpoint.accessToken };
-        }
 
         return new CesiumIonResource(options, endpoint, endpointResource);
     };
@@ -176,17 +236,15 @@ define([
     }
 
     CesiumIonResource.prototype.clone = function(result) {
+        // We always want to use the root's information because it's the most up-to-date
         var ionRoot = defaultValue(this.ionRoot, this);
 
         if (!defined(result)) {
-            // We always want to use the root's information because it's the most up-to-date
             result = new CesiumIonResource({ url: this._url }, ionRoot.ionEndpoint, ionRoot.ionEndpointResource);
         }
 
         result = Resource.prototype.clone.call(this, result);
         result.ionRoot = ionRoot;
-
-        // Same comment as above, use the root's access_token
         result.queryParameters.access_token = ionRoot.queryParameters.access_token;
         return result;
     };
@@ -238,41 +296,6 @@ define([
 
         return retryCallback;
     }
-
-    function createFactory(Type) {
-        return function(options) {
-            return new Type(options);
-        };
-    }
-
-    // These values are the unofficial list of supported external imagery
-    // assets in the Cesium ion beta. They are subject to change.
-    var ImageryProviderMapping = {
-        ARCGIS_MAPSERVER: createFactory(ArcGisMapServerImageryProvider),
-        BING: createFactory(BingMapsImageryProvider),
-        GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
-        MAPBOX: createFactory(MapboxImageryProvider),
-        SINGLE_TILE: createFactory(SingleTileImageryProvider),
-        TMS: createTileMapServiceImageryProvider,
-        URL_TEMPLATE: createFactory(UrlTemplateImageryProvider),
-        WMS: createFactory(WebMapServiceImageryProvider),
-        WMTS: createFactory(WebMapTileServiceImageryProvider)
-    };
-
-    CesiumIonResource.prototype.createImageryProvider = function() {
-        var type = this.ionEndpoint.type;
-        if (type === 'IMAGERY') {
-            return createTileMapServiceImageryProvider({ url: this });
-        }
-
-        var factory = ImageryProviderMapping[type];
-
-        if (!defined(factory)) {
-            throw new RuntimeError('Unrecognized Cesium ion imagery type: ' + type);
-        }
-
-        return factory(this.ionEndpoint);
-    };
 
     //Exposed for testing
     CesiumIon._CesiumIonResource = CesiumIonResource;
