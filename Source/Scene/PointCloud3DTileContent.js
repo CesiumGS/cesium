@@ -147,6 +147,10 @@ define([
         this._packedClippingPlanes = [];
         this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
+        this._clippingVolumesLength = 0;
+        this._clippingVolumesInside = undefined;
+        this._clippingVolumeTransforms = [];
+
         /**
          * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
@@ -551,6 +555,13 @@ define([
                 var style = Color.clone(clippingPlanes.edgeColor);
                 style.alpha = clippingPlanes.edgeWidth;
                 return style;
+            },
+            u_clipVolumeTransforms : function() {
+                if (!defined(content._clippingVolumeTransforms)) {
+                    return [];
+                }
+
+                return content._clippingVolumeTransforms;
             }
         };
 
@@ -1063,10 +1074,25 @@ define([
 
         var fs = 'varying vec4 v_color; \n';
 
+
         if (hasClippedContent) {
-            fs += 'uniform int u_clippingPlanesLength;' +
+            fs += 'uniform int u_clippingPlanesLength; \n' +
                   'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
+        }
+
+        var clippingVolumes = content._tileset.clippingVolumes;
+        var clippingVolumesLength = 0;
+        var hasClippingVolumes = defined(clippingVolumes) && defined(clippingVolumes.transforms);
+        if (hasClippingVolumes) {
+            clippingVolumesLength = clippingVolumes.transforms.length;
+        }
+
+        if (clippingVolumesLength > 0) {
+
+
+            fs +=   'const int length = ' + clippingVolumesLength + '; \n' +
+                    'uniform mat4 u_clipVolumeTransforms[length]; \n';
         }
 
         fs +=  'void main() \n' +
@@ -1083,6 +1109,26 @@ define([
                   '    { \n' +
                   '        gl_FragColor = clippingPlanesEdgeColor; \n' +
                   '    } \n';
+        }
+
+        if (clippingVolumesLength > 0) {
+            var inside = clippingVolumes.inside;
+            var operator = inside ? '&& !' : '|| ';
+
+            fs +=   '   mat4 transform; \n' +
+                    '   vec4 position; \n' +
+                    '   bool clipped = ' + inside + '; \n' +
+                    '   vec4 boxMin = vec4(-0.5, -0.5, -0.5, 1.0); \n' +
+                    '   vec4 boxMax = vec4(0.5, 0.5, 0.5, 1.0); \n' +
+                    '   for (int i = 0; i < length; ++i) \n' +
+                    '   { \n' +
+                    '      transform = u_clipVolumeTransforms[i]; \n' +
+                    '      vec4 min = boxMin; \n' +
+                    '      vec4 max = boxMax; \n' +
+                    '      position = transform * czm_windowToEyeCoordinates(gl_FragCoord); \n' + // position inside 1x1 cube
+                    '      clipped = clipped ' + operator + '(min.x < position.x && max.x > position.x && min.y < position.y && max.y > position.y && min.z < position.z && max.z > position.z); \n' + // check inside
+                    '   } \n' +
+                    '   if (clipped) discard; \n'
         }
 
         fs += '} \n';
@@ -1252,6 +1298,33 @@ define([
         if (this._isClipped !== clippingEnabled || this._unionClippingRegions !== unionClippingRegions) {
             this._isClipped = clippingEnabled;
             this._unionClippingRegions = unionClippingRegions;
+
+            createShaders(this, frameState, tileset.style);
+        }
+
+        var clippingVolumes = this._tileset.clippingVolumes;
+        var clippingVolumesLength = 0;
+        var clippingVolumesInside = false;
+
+        if (defined(clippingVolumes) && defined(clippingVolumes.transforms)) {
+            clippingVolumesLength = clippingVolumes.transforms.length;
+            clippingVolumesInside = clippingVolumes.inside;
+
+            this._clippingVolumeTransforms.length = clippingVolumesLength;
+            for (var i = 0; i < clippingVolumesLength; ++i) {
+                if (!defined(this._clippingVolumeTransforms[i])) {
+                    this._clippingVolumeTransforms[i] = new Matrix4();
+                }
+
+                var result = this._clippingVolumeTransforms[i];
+                Matrix4.multiply(context.uniformState.view, clippingVolumes.transforms[i], result);
+                Matrix4.inverse(result, result);
+            }
+        }
+
+        if (clippingVolumesLength !== this._clippingVolumesLength || clippingVolumesInside !== this._clippingVolumesInside) {
+            this._clippingVolumesLength = clippingVolumesLength;
+            this._clippingVolumesInside = clippingVolumesInside;
 
             createShaders(this, frameState, tileset.style);
         }
