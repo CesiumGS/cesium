@@ -843,7 +843,7 @@ defineSuite([
             requestFunction : requestCancelFunction
         });
 
-        var promise = RequestScheduler.request(requestToCancel);
+        RequestScheduler.request(requestToCancel);
 
         var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(function() {
             fail('should not be called');

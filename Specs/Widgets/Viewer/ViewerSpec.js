@@ -1028,26 +1028,6 @@ defineSuite([
         });
     });
 
-    it('removes data source listeners when destroyed', function() {
-        viewer = createViewer(container);
-
-        //one data source that is added before mixing in
-        var preMixinDataSource = new MockDataSource();
-        viewer.dataSources.add(preMixinDataSource);
-
-        //one data source that is added after mixing in
-        var postMixinDataSource = new MockDataSource();
-        viewer.dataSources.add(postMixinDataSource);
-
-        var preMixinListenerCount = preMixinDataSource.entities.collectionChanged._listeners.length;
-        var postMixinListenerCount = postMixinDataSource.entities.collectionChanged._listeners.length;
-
-        viewer = viewer.destroy();
-
-        expect(preMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
-        expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
-    });
-
     it('zoomTo throws if target is not defined', function() {
         viewer = createViewer(container);
 
@@ -1412,5 +1392,25 @@ defineSuite([
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
         });
+    });
+
+    it('removes data source listeners when destroyed', function() {
+        viewer = createViewer(container);
+
+        //one data source that is added before mixing in
+        var preMixinDataSource = new MockDataSource();
+        viewer.dataSources.add(preMixinDataSource);
+
+        //one data source that is added after mixing in
+        var postMixinDataSource = new MockDataSource();
+        viewer.dataSources.add(postMixinDataSource);
+
+        var preMixinListenerCount = preMixinDataSource.entities.collectionChanged._listeners.length;
+        var postMixinListenerCount = postMixinDataSource.entities.collectionChanged._listeners.length;
+
+        viewer = viewer.destroy();
+
+        expect(preMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
+        expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
     });
 }, 'WebGL');
