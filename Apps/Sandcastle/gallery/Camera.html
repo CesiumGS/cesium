@@ -173,7 +173,7 @@ function viewInICRF() {
     viewer.camera.flyHome(0);
 
     clock.multiplier = 3 * 60 * 60;
-    scene.preRender.addEventListener(icrf);
+    scene.postUpdate.addEventListener(icrf);
     scene.globe.enableLighting = true;
 }
 
@@ -387,7 +387,7 @@ Sandcastle.reset = function() {
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
-    scene.preRender.removeEventListener(icrf);
+    scene.postUpdate.removeEventListener(icrf);
     scene.globe.enableLighting = false;
 };
 

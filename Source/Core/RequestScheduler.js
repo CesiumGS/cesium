@@ -4,6 +4,7 @@ define([
         './Check',
         './defined',
         './defineProperties',
+        './Event',
         './Heap',
         './isBlobUri',
         './isDataUri',
@@ -14,6 +15,7 @@ define([
         Check,
         defined,
         defineProperties,
+        Event,
         Heap,
         isBlobUri,
         isDataUri,
@@ -44,6 +46,8 @@ define([
     var numberOfActiveRequestsByServer = {};
 
     var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
+
+    var requestLoadedEvent = new Event();
 
     /**
      * Tracks the number of active requests and prioritizes incoming requests.
@@ -82,6 +86,13 @@ define([
      * @default false
      */
     RequestScheduler.debugShowStatistics = false;
+
+    /**
+     * An event that's raised when a request is loaded successfully.
+     *
+     * @type {Event}
+     */
+    RequestScheduler.requestLoadedEvent = requestLoadedEvent;
 
     defineProperties(RequestScheduler, {
         /**
@@ -152,6 +163,7 @@ define([
             }
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.serverKey];
+            requestLoadedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             request.deferred.resolve(results);
         };
@@ -304,6 +316,7 @@ define([
         //>>includeEnd('debug');
 
         if (isDataUri(request.url) || isBlobUri(request.url)) {
+            requestLoadedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             return request.requestFunction();
         }

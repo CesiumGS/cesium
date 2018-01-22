@@ -698,4 +698,146 @@ defineSuite([
 
         RequestScheduler.debugShowStatistics = false;
     });
+
+    it('successful request causes requestLoadedEvent to be raised', function() {
+        var deferred;
+
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'https://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        var eventRaised = false;
+        var removeListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        deferred.resolve();
+
+        return promise.then(function() {
+            expect(eventRaised).toBe(true);
+        }).always(function() {
+            removeListenerCallback();
+        });
+    });
+
+    it('successful data request causes requestLoadedEvent to be raised', function() {
+        var deferred;
+
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D',
+            requestFunction : requestFunction
+        });
+
+        var eventRaised = false;
+        var removeListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        deferred.resolve();
+        RequestScheduler.update();
+
+        return promise.then(function() {
+            expect(eventRaised).toBe(true);
+        }).always(function() {
+            removeListenerCallback();
+        });
+    });
+
+    it('successful blob request causes requestLoadedEvent to be raised', function() {
+        var deferred;
+
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        var uint8Array = new Uint8Array(4);
+        var blob = new Blob([uint8Array], {
+            type : 'application/octet-stream'
+        });
+
+        var blobUrl = window.URL.createObjectURL(blob);
+
+        var request = new Request({
+            url : blobUrl,
+            requestFunction : requestFunction
+        });
+
+        var eventRaised = false;
+        var removeListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        deferred.resolve();
+        RequestScheduler.update();
+
+        return promise.then(function() {
+            expect(eventRaised).toBe(true);
+        }).always(function() {
+            removeListenerCallback();
+        });
+    });
+
+    it('unsuccessful or canceled requests do not cause requestLoadedEvent to be raised', function() {
+        var deferred;
+        var cancelDeferred;
+
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        function requestCancelFunction() {
+            cancelDeferred = when.defer();
+            return cancelDeferred.promise;
+        }
+
+        var request = new Request({
+            url : 'https://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var requestToCancel = new Request({
+            url : 'https://foo.com/1',
+            requestFunction : requestCancelFunction
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        RequestScheduler.request(requestToCancel);
+
+        var removeListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(function() {
+            fail('should not be called');
+        });
+
+        deferred.reject();
+        requestToCancel.cancel();
+        RequestScheduler.update();
+        cancelDeferred.resolve();
+
+        return promise.always(function() {
+            removeListenerCallback();
+        });
+    });
 });

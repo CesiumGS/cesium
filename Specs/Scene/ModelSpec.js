@@ -2759,6 +2759,7 @@ defineSuite([
                 removedCallback : false,
                 ellipsoid : Ellipsoid.WGS84,
                 update : function() {},
+                render : function() {},
                 getHeight : function() {
                     return 0.0;
                 },
@@ -2773,6 +2774,7 @@ defineSuite([
                         tilesWaitingForChildren : 0
                     }
                 },
+                tileLoadProgressEvent : new Event(),
                 destroy : function() {}
             };
 

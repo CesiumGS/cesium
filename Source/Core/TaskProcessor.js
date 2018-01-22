@@ -5,6 +5,7 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
+        './Event',
         './getAbsoluteUri',
         './isCrossOriginUrl',
         './RuntimeError',
@@ -16,6 +17,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        Event,
         getAbsoluteUri,
         isCrossOriginUrl,
         RuntimeError,
@@ -63,6 +65,8 @@ define([
         return TaskProcessor._canTransferArrayBuffer;
     }
 
+    var taskCompletedEvent = new Event();
+
     function completeTask(processor, data) {
         --processor._activeTasks;
 
@@ -86,6 +90,7 @@ define([
             }
             deferred.reject(error);
         } else {
+            taskCompletedEvent.raiseEvent();
             deferred.resolve(data.result);
         }
 
@@ -267,6 +272,15 @@ define([
         }
         return destroyObject(this);
     };
+
+    /**
+     * An event that's raised when a task is completed successfully.
+     *
+     * @type {Event}
+     *
+     * @private
+     */
+    TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 
     // exposed for testing purposes
     TaskProcessor._defaultWorkerModulePrefix = 'Workers/';
