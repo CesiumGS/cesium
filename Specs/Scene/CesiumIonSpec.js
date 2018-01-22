@@ -37,7 +37,7 @@ defineSuite([
         };
 
         var options = {};
-        var resourceEndpoint = CesiumIon.createEndpointResource(tilesAssetId, options);
+        var resourceEndpoint = CesiumIon._createEndpointResource(tilesAssetId, options);
         var expectedResource = CesiumIon._CesiumIonResource.create(tilesEndpoint, resourceEndpoint);
 
         spyOn(CesiumIon, '_loadJson').and.returnValue(when.resolve(tilesEndpoint));
@@ -47,7 +47,7 @@ defineSuite([
         return CesiumIon.createResource(tilesAssetId, options)
             .then(function(resource) {
                 expect(resource).toBe(expectedResource);
-                expect(CesiumIon.createEndpointResource).toHaveBeenCalledWith(tilesAssetId, options);
+                expect(CesiumIon._createEndpointResource).toHaveBeenCalledWith(tilesAssetId, options);
                 expect(CesiumIon._loadJson(resourceEndpoint));
                 expect(CesiumIon._CesiumIonResource.create).toHaveBeenCalledWith(tilesEndpoint, resourceEndpoint);
             });
@@ -95,7 +95,7 @@ defineSuite([
 
     it('createEndpointResource creates expected values with default parameters', function() {
         var assetId = 2348234;
-        var resource = CesiumIon.createEndpointResource(assetId);
+        var resource = CesiumIon._createEndpointResource(assetId);
         expect(resource.url).toBe(CesiumIon.defaultServerUrl + '/v1/assets/' + assetId + '/endpoint');
     });
 
@@ -104,7 +104,7 @@ defineSuite([
         var accessToken = 'not_a_token';
 
         var assetId = 2348234;
-        var resource = CesiumIon.createEndpointResource(assetId, { serverUrl: serverUrl, accessToken: accessToken });
+        var resource = CesiumIon._createEndpointResource(assetId, { serverUrl: serverUrl, accessToken: accessToken });
         expect(resource.url).toBe(serverUrl + '/v1/assets/' + assetId + '/endpoint?access_token=' + accessToken);
     });
 
@@ -116,7 +116,7 @@ defineSuite([
         CesiumIon.defaultAccessToken = 'not_a_token';
 
         var assetId = 2348234;
-        var resource = CesiumIon.createEndpointResource(assetId);
+        var resource = CesiumIon._createEndpointResource(assetId);
         expect(resource.url).toBe(CesiumIon.defaultServerUrl + '/v1/assets/' + assetId + '/endpoint?access_token=' + CesiumIon.defaultAccessToken);
 
         CesiumIon.defaultServerUrl = defaultServerUrl;
@@ -232,7 +232,7 @@ defineSuite([
         it('constructs with expected values', function() {
             spyOn(Resource, 'call').and.callThrough();
 
-            var endpointResource = CesiumIon.createEndpointResource(assetId);
+            var endpointResource = CesiumIon._createEndpointResource(assetId);
             var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             expect(resource).toBeInstanceOf(Resource);
             expect(resource.ionEndpoint).toEqual(endpoint);
@@ -245,7 +245,7 @@ defineSuite([
         });
 
         it('clone works', function() {
-            var endpointResource = CesiumIon.createEndpointResource(assetId);
+            var endpointResource = CesiumIon._createEndpointResource(assetId);
             var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             var cloned = resource.clone();
             expect(cloned).not.toBe(resource);
@@ -255,7 +255,7 @@ defineSuite([
         });
 
         it('create creates the expected resource', function() {
-            var endpointResource = CesiumIon.createEndpointResource(assetId);
+            var endpointResource = CesiumIon._createEndpointResource(assetId);
             var resource = CesiumIon._CesiumIonResource.create(endpoint, endpointResource);
             expect(resource.getUrlComponent()).toEqual(endpoint.url);
             expect(resource.queryParameters).toEqual({ access_token: 'not_really_a_refresh_token' });

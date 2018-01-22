@@ -91,7 +91,7 @@ define([
      *   });
      */
     CesiumIon.createResource = function(assetId, options) {
-        var endpointResource = CesiumIon.createEndpointResource(assetId, options);
+        var endpointResource = CesiumIon._createEndpointResource(assetId, options);
 
         return CesiumIon._loadJson(endpointResource)
             .then(function (endpoint) {
@@ -108,14 +108,14 @@ define([
                 }
 
                 //External imagery assets have additional configuration that can't be represented as a Resource
-                throw new RuntimeError('CesiumIon.createResource does not support external imagery assets.');
+                throw new RuntimeError('CesiumIon.createResource does not support external imagery assets; use CesiumIon.createImageryProvider instead.');
             });
     };
 
     /**
      * @private
      */
-    CesiumIon.createEndpointResource = function (assetId, options) {
+    CesiumIon._createEndpointResource = function (assetId, options) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('assetId', assetId);
         //>>includeEnd('debug');
@@ -173,7 +173,7 @@ define([
      *   });
      */
     CesiumIon.createImageryProvider = function(assetId, options) {
-        var endpointResource = CesiumIon.createEndpointResource(assetId, options);
+        var endpointResource = CesiumIon._createEndpointResource(assetId, options);
 
         return CesiumIon._loadJson(endpointResource)
             .then(function(endpoint) {
