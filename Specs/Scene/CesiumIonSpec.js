@@ -41,7 +41,7 @@ defineSuite([
         var expectedResource = CesiumIon._CesiumIonResource.create(tilesEndpoint, resourceEndpoint);
 
         spyOn(CesiumIon, '_loadJson').and.returnValue(when.resolve(tilesEndpoint));
-        spyOn(CesiumIon, 'createEndpointResource').and.returnValue(resourceEndpoint);
+        spyOn(CesiumIon, '_createEndpointResource').and.returnValue(resourceEndpoint);
         spyOn(CesiumIon._CesiumIonResource, 'create').and.returnValue(expectedResource);
 
         return CesiumIon.createResource(tilesAssetId, options)
