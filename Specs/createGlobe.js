@@ -25,7 +25,8 @@ define([
                 return 0.0;
             },
             _surface : {},
-            tileLoadProgressEvent : new Event(),
+            tileLoadedEvent : new Event(),
+            imageryLayersUpdatedEvent : new Event(),
             destroy : function() {}
         };
 

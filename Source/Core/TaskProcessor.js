@@ -88,6 +88,7 @@ define([
                 error = new DeveloperError(data.error.message);
                 error.stack = data.error.stack;
             }
+            taskCompletedEvent.raiseEvent(error);
             deferred.reject(error);
         } else {
             taskCompletedEvent.raiseEvent();
@@ -274,7 +275,8 @@ define([
     };
 
     /**
-     * An event that's raised when a task is completed successfully.
+     * An event that's raised when a task is completed successfully.  Event handlers are passed
+     * the error object is a task fails.
      *
      * @type {Event}
      *

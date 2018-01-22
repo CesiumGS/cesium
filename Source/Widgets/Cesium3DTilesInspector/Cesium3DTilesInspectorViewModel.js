@@ -324,6 +324,7 @@ define([
                 colorBlendMode(value);
                 if (defined(that._tileset)) {
                     that._tileset.colorBlendMode = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -373,6 +374,7 @@ define([
                         } else {
                             that._tileset.debugPickedTile = undefined;
                         }
+                        that._scene.requestRender();
                     }, ScreenSpaceEventType.MOUSE_MOVE);
                 } else {
                     that.feature = undefined;
@@ -398,6 +400,7 @@ define([
                 colorize(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugColorizeTiles = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -418,6 +421,7 @@ define([
                 wireframe(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugWireframe = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -438,6 +442,7 @@ define([
                 showBoundingVolumes(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowBoundingVolume = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -458,6 +463,7 @@ define([
                 showContentBoundingVolumes(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowContentBoundingVolume = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -478,6 +484,7 @@ define([
                 showRequestVolumes(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowViewerRequestVolume = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -499,6 +506,7 @@ define([
                 if (defined(that._tileset)) {
                     that._tileset.debugFreezeFrame = value;
                     that._scene.debugShowFrustumPlanes = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -519,6 +527,7 @@ define([
                 showOnlyPickedTileDebugLabel(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugPickedTileLabelOnly = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -539,6 +548,7 @@ define([
                 showGeometricError(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowGeometricError = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -559,6 +569,7 @@ define([
                 showRenderingStatistics(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowRenderingStatistics = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -579,6 +590,7 @@ define([
                 showMemoryUsage(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowMemoryUsage = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -599,6 +611,7 @@ define([
                 showUrl(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowUrl = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -986,6 +999,7 @@ define([
                     this.skipLevels = tileset.skipLevels;
                     this.immediatelyLoadDesiredLevelOfDetail = tileset.immediatelyLoadDesiredLevelOfDetail;
                     this.loadSiblings = tileset.loadSiblings;
+                    this._scene.requestRender();
                 } else {
                     this._properties({});
                 }
@@ -1018,11 +1032,13 @@ define([
                     } else {
                         currentFeature.color = oldColor;
                     }
+                    this._scene.requestRender();
                 }
                 if (defined(feature)) {
                     // Highlight new feature
                     Color.clone(feature.color, oldColor);
                     feature.color = highlightColor;
+                    this._scene.requestRender();
                 }
                 this._feature = feature;
             }
@@ -1046,12 +1062,14 @@ define([
                 if (defined(currentTile) && !currentTile.isDestroyed() && !hasFeatures(currentTile.content)) {
                     // Restore original color to tile that is no longer selected
                     currentTile.color = oldColor;
+                    this._scene.requestRender();
                 }
 
                 if (defined(tile) && !hasFeatures(tile.content)) {
                     // Highlight new tile
                     Color.clone(tile.color, oldColor);
                     tile.color = highlightColor;
+                    this._scene.requestRender();
                 }
                 this._tile = tile;
             }
@@ -1162,6 +1180,7 @@ define([
             }
             this._style = new Cesium3DTileStyle(JSON.parse(this.styleString));
             this._shouldStyle = true;
+            this._scene.requestRender();
         } catch (err) {
             this._editorError = err.toString();
         }

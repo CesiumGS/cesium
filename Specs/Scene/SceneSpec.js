@@ -1383,7 +1383,9 @@ defineSuite([
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
-        RequestScheduler.requestLoadedEvent.raiseEvent();
+        RequestScheduler.requestCompletedEvent.raiseEvent();
+
+        scene.renderForSpecs();
 
         expect(scene._renderRequested).toBe(true);
 
@@ -1406,6 +1408,8 @@ defineSuite([
         scene.maximumRenderTimeChange = undefined;
 
         TaskProcessor.taskCompletedEvent.raiseEvent();
+
+        scene.renderForSpecs();
 
         expect(scene._renderRequested).toBe(true);
 
@@ -1458,7 +1462,9 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
-        globe.tileLoadProgressEvent.raiseEvent();
+        globe.tileLoadedEvent.raiseEvent();
+
+        scene.renderForSpecs();
 
         expect(scene._renderRequested).toBe(true);
 
@@ -1484,6 +1490,8 @@ defineSuite([
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
         globe.imageryLayersUpdatedEvent.raiseEvent();
+
+        scene.renderForSpecs();
 
         expect(scene._renderRequested).toBe(true);
 

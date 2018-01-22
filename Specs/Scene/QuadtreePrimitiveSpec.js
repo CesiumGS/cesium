@@ -225,45 +225,6 @@ defineSuite([
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(4);
     });
 
-    it('continues to process load queue until a new render frame', function() {
-        var tileProvider = createSpyTileProvider();
-        tileProvider.getReady.and.returnValue(true);
-        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
-
-        var calls = 0;
-        tileProvider.loadTile.and.callFake(function(frameState, tile) {
-            ++calls;
-            tile.state = QuadtreeTileLoadState.DONE;
-        });
-
-        var quadtree = new QuadtreePrimitive({
-            tileProvider : tileProvider
-        });
-
-        // determine what tiles to load
-        quadtree.update(scene.frameState);
-        quadtree.beginFrame(scene.frameState);
-        quadtree.render(scene.frameState);
-        quadtree.endFrame(scene.frameState);
-
-        // load tiles
-        quadtree.update(scene.frameState);
-
-        expect(calls).toBe(2);
-
-        quadtree.update(scene.frameState);
-
-        expect(calls).toBe(4);
-
-        // determine what tiles to load
-        quadtree.beginFrame(scene.frameState);
-        quadtree.render(scene.frameState);
-        quadtree.endFrame(scene.frameState);
-        quadtree.update(scene.frameState);
-
-        expect(calls).toBe(4);
-    });
-
     it('forEachLoadedTile does not enumerate tiles in the START state', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);

@@ -262,57 +262,13 @@ define([
         return object.removeFunc;
     };
 
-    function createTileLoadProgressEventFunction(primitive, loadQueueLength) {
-        return function () {
-            primitive._tileLoadProgressEvent.raiseEvent(loadQueueLength);
-        };
-    }
-
-    /**
-     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
-     * a new change event at the end of the render cycle.
-     */
-    function updateTileLoadProgress(primitive, frameState) {
-        var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
-
-        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
-            frameState.afterRender.push(createTileLoadProgressEventFunction(primitive, currentLoadQueueLength));
-            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
-        }
-
-        var debug = primitive._debug;
-        if (debug.enableDebugOutput  && !debug.suspendLodUpdate) {
-            if (debug.tilesVisited !== debug.lastTilesVisited ||
-                debug.tilesRendered !== debug.lastTilesRendered ||
-                debug.tilesCulled !== debug.lastTilesCulled ||
-                debug.maxDepth !== debug.lastMaxDepth ||
-                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
-
-                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
-
-                debug.lastTilesVisited = debug.tilesVisited;
-                debug.lastTilesRendered = debug.tilesRendered;
-                debug.lastTilesCulled = debug.tilesCulled;
-                debug.lastMaxDepth = debug.maxDepth;
-                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
-            }
-        }
-    }
-
     /**
      * Updates the tile provider imagery and continues to process the tile load queue.
      * @private
      */
     QuadtreePrimitive.prototype.update = function(frameState) {
-        if (defined(this._tileProvider.updateImagery)) {
-            this._tileProvider.updateImagery();
-        }
-
-        // Don't process the load queue or update heights during the morph flights.
-        if (frameState.mode !== SceneMode.MORPHING) {
-            // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
-            processTileLoadQueue(this, frameState);
-            updateTileLoadProgress(this, frameState);
+        if (defined(this._tileProvider.update)) {
+            this._tileProvider.update(frameState);
         }
     };
 
@@ -373,16 +329,52 @@ define([
     };
 
     /**
+     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
+     * a new change event at the end of the render cycle.
+     */
+    function updateTileLoadProgress(primitive, frameState) {
+        var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
+
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+            frameState.afterRender.push(Event.prototype.raiseEvent.bind(primitive._tileLoadProgressEvent, currentLoadQueueLength));
+            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
+        }
+
+        var debug = primitive._debug;
+        if (debug.enableDebugOutput  && !debug.suspendLodUpdate) {
+            if (debug.tilesVisited !== debug.lastTilesVisited ||
+                debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.tilesCulled !== debug.lastTilesCulled ||
+                debug.maxDepth !== debug.lastMaxDepth ||
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
+
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
+
+                debug.lastTilesVisited = debug.tilesVisited;
+                debug.lastTilesRendered = debug.tilesRendered;
+                debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+            }
+        }
+    }
+
+    /**
      * Updates terrain heights.
      * @private
      */
     QuadtreePrimitive.prototype.endFrame = function(frameState) {
         var passes = frameState.passes;
-        if (!passes.render) {
+        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
+            // Only process the load queue for a single pass.
+            // Don't process the load queue or update heights during the morph flights.
             return;
         }
 
+        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
+        processTileLoadQueue(this, frameState);
         updateHeights(this, frameState);
+        updateTileLoadProgress(this, frameState);
     };
 
     /**

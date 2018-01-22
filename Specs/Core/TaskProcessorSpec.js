@@ -135,7 +135,7 @@ defineSuite([
             }
         };
         var eventRaised = false;
-        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function () {
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function() {
             eventRaised = true;
         });
 
@@ -146,19 +146,26 @@ defineSuite([
         });
     });
 
-    it('unsuccessful tasks do not raise the taskCompletedEvent', function() {
-        taskProcessor = new TaskProcessor('throwError');
+    it('unsuccessful task raises the taskCompletedEvent with error', function() {
+        taskProcessor = new TaskProcessor('returnNonCloneable');
 
         var message = 'foo';
         var parameters = {
             message : message
         };
 
-        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function () {
-            fail('should not be called');
+        var eventRaised = false;
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function(error) {
+            eventRaised = true;
+            expect(error).toBeDefined();
         });
 
-        return taskProcessor.scheduleTask(parameters).always(function () {
+        return taskProcessor.scheduleTask(parameters).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(eventRaised).toBe(true);
+
+        }).always(function () {
             removeListenerCallback();
         });
     });

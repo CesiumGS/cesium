@@ -158,9 +158,11 @@ define([
         TweenCollection) {
     'use strict';
 
-    var requestRenderListener = function (scene) {
+    var requestRenderAfterFrame = function (scene) {
         return function () {
-            scene.requestRender();
+            scene.frameState.afterRender.push(function() {
+                scene.requestRender();
+            });
         };
     };
 
@@ -753,10 +755,9 @@ define([
         this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.5);
         this._lastRenderTime = undefined;
 
-        this._removeRequestListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(requestRenderListener(this));
-        this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderListener(this));
-        this._removeGlobeTileLoadCallback = undefined;
-        this._removeGlobeImageryUpdateCallback = undefined;
+        this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(requestRenderAfterFrame(this));
+        this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
+        this._removeGlobeCallbacks = [];
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -772,24 +773,17 @@ define([
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     function updateGlobeListeners(scene, globe) {
-        if (defined(scene._removeGlobeTileLoadCallback)) {
-            scene._removeGlobeTileLoadCallback();
+        for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
+            scene._removeGlobeCallbacks[i]();
         }
-        if (defined(scene._removeGlobeImageryUpdateCallback)) {
-            scene._removeGlobeImageryUpdateCallback();
-        }
+        scene._removeGlobeCallbacks.length = 0;
 
-        var removeGlobeTileLoadCallback;
-        var removeGlobeImageryUpdateCallback;
+        var removeGlobeCallbacks = [];
         if (defined(globe)) {
-            removeGlobeTileLoadCallback = globe.tileLoadProgressEvent.addEventListener(requestRenderListener(scene));
-
-            if (defined(globe.imageryLayersUpdatedEvent)) {
-                removeGlobeImageryUpdateCallback = globe.imageryLayersUpdatedEvent.addEventListener(requestRenderListener(scene));
-            }
+            removeGlobeCallbacks.push(globe.tileLoadedEvent.addEventListener(requestRenderAfterFrame(scene)));
+            removeGlobeCallbacks.push(globe.imageryLayersUpdatedEvent.addEventListener(requestRenderAfterFrame(scene)));
         }
-        scene._removeGlobeTileLoadCallback = removeGlobeTileLoadCallback;
-        scene._removeGlobeImageryUpdateCallback = removeGlobeImageryUpdateCallback;
+        scene._removeGlobeCallbacks = removeGlobeCallbacks;
     }
 
     defineProperties(Scene.prototype, {
@@ -3058,10 +3052,11 @@ define([
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, time, render);
             this._postRender.raiseEvent(this, time);
+
+            RequestScheduler.update();
         }
 
         updateDebugShowFramesPerSecond(this, shouldRender);
-        RequestScheduler.update();
         callAfterRenderFunctions(this);
     };
 
@@ -3768,12 +3763,10 @@ define([
 
         this._removeRequestListenerCallback();
         this._removeTaskProcessorListenerCallback();
-        if (defined(this._removeGlobeTileLoadCallback)) {
-            this._removeGlobeTileLoadCallback();
+        for (var i = 0; i < this._removeGlobeCallbacks.length; ++i) {
+            this._removeGlobeCallbacks[i]();
         }
-        if (defined(this._removeGlobeImageryUpdateCallback)) {
-            this._removeGlobeImageryUpdateCallback();
-        }
+        this._removeGlobeCallbacks.length = 0;
 
         return destroyObject(this);
     };
