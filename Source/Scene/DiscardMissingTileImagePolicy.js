@@ -3,7 +3,6 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/getImagePixels',
-        '../Core/loadImageViaBlob',
         '../Core/Resource',
         '../ThirdParty/when'
     ], function(
@@ -11,7 +10,6 @@ define([
         defined,
         DeveloperError,
         getImagePixels,
-        loadImageViaBlob,
         Resource,
         when) {
     'use strict';
@@ -91,7 +89,7 @@ define([
 
         var resource = Resource.createIfNeeded(options.missingImageUrl);
 
-        when(loadImageViaBlob(resource), success, failure);
+        when(resource.fetchImage(true), success, failure);
     }
 
     /**

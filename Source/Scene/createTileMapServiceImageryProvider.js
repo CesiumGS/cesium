@@ -6,7 +6,6 @@ define([
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/GeographicTilingScheme',
-        '../Core/loadXML',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -22,7 +21,6 @@ define([
         deprecationWarning,
         DeveloperError,
         GeographicTilingScheme,
-        loadXML,
         Rectangle,
         Resource,
         RuntimeError,
@@ -281,7 +279,7 @@ define([
 
         function requestMetadata() {
             // Try to load remaining parameters from XML
-            loadXML(xmlResource).then(metadataSuccess).otherwise(metadataFailure);
+            xmlResource.fetchXML().then(metadataSuccess).otherwise(metadataFailure);
         }
 
         requestMetadata();

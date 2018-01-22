@@ -21,6 +21,7 @@ define([
      *
      * @param {Resource|String} urlOrResource The URL to request.
      * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -33,6 +34,8 @@ define([
      * });
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
     function loadJsonp(urlOrResource, callbackParameterName, request) {
         //>>includeStart('debug', pragmas.debug);
@@ -40,14 +43,12 @@ define([
             throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
-        if (defined(request)) {
-            deprecationWarning('loadJsonp.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
-        }
+
+        deprecationWarning('loadJsonp', 'loadJsonp is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchJsonp instead.');
 
         var proxy;
         var queryParameters;
         if (typeof callbackParameterName === 'object') {
-            deprecationWarning('loadJsonp.callbackParameterName', 'Passing an Object as the second parameter is deprecated. The proxy and parameters options should now be set on the Resource instance.');
             var options = callbackParameterName;
             if (defined(options.parameters)) {
                 queryParameters = clone(options.parameters);

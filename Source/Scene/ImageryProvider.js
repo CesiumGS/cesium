@@ -5,8 +5,6 @@ define([
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/loadCRN',
-        '../Core/loadImage',
-        '../Core/loadImageViaBlob',
         '../Core/loadKTX',
         '../Core/Resource'
     ], function(
@@ -16,8 +14,6 @@ define([
         deprecationWarning,
         DeveloperError,
         loadCRN,
-        loadImage,
-        loadImageViaBlob,
         loadKTX,
         Resource) {
     'use strict';
@@ -356,10 +352,10 @@ define([
         } else if (crnRegex.test(resource)) {
             return loadCRN(resource);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return loadImageViaBlob(resource);
+            return resource.fetchImage(true);
         }
 
-        return loadImage(resource);
+        return resource.fetchImage();
     };
 
     return ImageryProvider;

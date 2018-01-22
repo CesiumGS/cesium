@@ -25,6 +25,7 @@ define([
      * @exports loadImageViaBlob
      *
      * @param {Resource|String} urlOrResource The source URL of the image.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -44,15 +45,15 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
     function loadImageViaBlob(urlOrResource, request) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
 
-        if (defined(request)) {
-            deprecationWarning('loadImageViaBlob.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
-        }
+        deprecationWarning('loadImageViaBlob', 'loadImageViaBlob is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchImage instead.');
 
         var resource = Resource.createIfNeeded(urlOrResource, {
             request: request

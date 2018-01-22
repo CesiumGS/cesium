@@ -13,10 +13,6 @@ define([
         '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/isArray',
-        '../Core/loadJson',
-        '../Core/loadText',
-        '../Core/loadWithXhr',
-        '../Core/loadXML',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -38,10 +34,6 @@ define([
         Event,
         GeographicTilingScheme,
         isArray,
-        loadJson,
-        loadText,
-        loadWithXhr,
-        loadXML,
         CesiumMath,
         Rectangle,
         Resource,
@@ -727,14 +719,15 @@ define([
             ++formatIndex;
 
             if (format.type === 'json') {
-                return loadJson(resource).then(format.callback).otherwise(doRequest);
+                return resource.fetchJson().then(format.callback).otherwise(doRequest);
             } else if (format.type === 'xml') {
-                return loadXML(resource).then(format.callback).otherwise(doRequest);
+                return resource.fetchXML().then(format.callback).otherwise(doRequest);
             } else if (format.type === 'text' || format.type === 'html') {
-                return loadText(resource).then(format.callback).otherwise(doRequest);
+                return resource.fetchText().then(format.callback).otherwise(doRequest);
             }
-            resource.responseType = format.format;
-            return loadWithXhr(resource).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+            return resource.fetch({
+                responseType: format.format
+            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
         return doRequest();

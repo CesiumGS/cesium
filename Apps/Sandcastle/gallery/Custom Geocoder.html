@@ -53,8 +53,11 @@ function OpenStreetMapNominatimGeocoder() {
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
     var endpoint = 'https://nominatim.openstreetmap.org/search?';
     var query = 'format=json&q=' + input;
-    var requestString = endpoint + query;
-    return Cesium.loadJson(requestString)
+    var resource = new Cesium.Resource({
+        url: endpoint + query
+    });
+
+    return resource.fetchJson()
         .then(function (results) {
             var bboxDegrees;
             return results.map(function (resultObject) {

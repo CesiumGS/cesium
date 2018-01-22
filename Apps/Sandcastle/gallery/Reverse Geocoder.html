@@ -73,12 +73,13 @@ handler.setInputAction(function (click) {
         var longitudeDegrees = Cesium.Math.toDegrees(cartographic.longitude);
         var latitudeDegrees = Cesium.Math.toDegrees(cartographic.latitude);
         var url = baseUrl + latitudeDegrees + "," +longitudeDegrees;
-        var promise = Cesium.loadJsonp(url, {
-            parameters : {
+        var resource = new Cesium.Resource({
+            url: url,
+            queryParameters: {
                 key : Cesium.BingMapsApi.getKey()
-            },
-            callbackParameterName : 'jsonp'
+            }
         });
+        var promise = resource.fetchJsonp('jsonp');
 
         promise.then(function(result) {
             var resources = result.resourceSets[0].resources;

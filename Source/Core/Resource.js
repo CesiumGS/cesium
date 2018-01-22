@@ -678,7 +678,7 @@ define([
      */
     Resource.prototype.fetchImage = function (preferBlob, allowCrossOrigin) {
         if (defined(allowCrossOrigin)) {
-            deprecationWarning('Resource.fetchImage.allowCrossOrigin', 'The allowCrossOrigin parameter has been deprecated. It no longer needs to be specified.');
+            deprecationWarning('Resource.fetchImage.allowCrossOrigin', 'The allowCrossOrigin parameter has been deprecated and will be removed in Cesium 1.44. It no longer needs to be specified.');
         }
 
         preferBlob = defaultValue(preferBlob, false);

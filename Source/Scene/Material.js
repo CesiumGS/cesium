@@ -11,7 +11,6 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/loadCRN',
-        '../Core/loadImage',
         '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
@@ -49,7 +48,6 @@ define([
         DeveloperError,
         isArray,
         loadCRN,
-        loadImage,
         loadKTX,
         Matrix2,
         Matrix3,
@@ -803,7 +801,7 @@ define([
                     } else if (crnRegex.test(uniformValue)) {
                         promise = loadCRN(resource);
                     } else {
-                        promise = loadImage(resource);
+                        promise = resource.fetchImage();
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
@@ -853,12 +851,12 @@ define([
 
             if (path !== material._texturePaths[uniformId]) {
                 var promises = [
-                    loadImage(new Resource({url: uniformValue.positiveX})),
-                    loadImage(new Resource({url: uniformValue.negativeX})),
-                    loadImage(new Resource({url: uniformValue.positiveY})),
-                    loadImage(new Resource({url: uniformValue.negativeY})),
-                    loadImage(new Resource({url: uniformValue.positiveZ})),
-                    loadImage(new Resource({url: uniformValue.negativeZ}))
+                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
                 ];
 
                 when.all(promises).then(function(images) {

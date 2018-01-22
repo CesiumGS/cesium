@@ -19,6 +19,10 @@ define([
      * @exports loadImage
      *
      * @param {Resource|String} urlOrResource The source URL of the image.
+     * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
+     *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
+     *        Data URIs are never requested using CORS.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -37,15 +41,15 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
     function loadImage(urlOrResource, allowCrossOrigin, request) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
 
-        if (defined(request)) {
-            deprecationWarning('loadImage.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
-        }
+        deprecationWarning('loadImage', 'loadImage is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchImage instead.');
 
         var resource = Resource.createIfNeeded(urlOrResource, {
             request: request

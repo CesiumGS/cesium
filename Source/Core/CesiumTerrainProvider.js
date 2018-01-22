@@ -14,8 +14,6 @@ define([
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
-        './loadArrayBuffer',
-        './loadJson',
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
@@ -40,8 +38,6 @@ define([
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
-        loadArrayBuffer,
-        loadJson,
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
@@ -289,7 +285,7 @@ define([
                 metadataResource = lastResource.getDerivedResource({
                     url: 'layer.json'
                 });
-                var parentMetadata = loadJson(metadataResource);
+                var parentMetadata = metadataResource.fetchJson();
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
             }
 
@@ -347,7 +343,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadJson(metadataResource);
+            var metadata = metadataResource.fetchJson();
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -623,7 +619,7 @@ define([
             request: request
         });
 
-        var promise = loadArrayBuffer(resource);
+        var promise = resource.fetchArrayBuffer();
 
         if (!defined(promise)) {
             return undefined;

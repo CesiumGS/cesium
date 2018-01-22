@@ -11,7 +11,6 @@ define([
         '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/loadJson',
         '../Core/Resource',
         '../Core/RuntimeError',
         '../ThirdParty/when'
@@ -28,7 +27,6 @@ define([
         Check,
         defaultValue,
         defined,
-        loadJson,
         Resource,
         RuntimeError,
         when) {
@@ -276,7 +274,9 @@ define([
 
     //Exposed for testing
     CesiumIon._CesiumIonResource = CesiumIonResource;
-    CesiumIon._loadJson = loadJson;
+    CesiumIon._loadJson = function(resource) {
+        return resource.fetchJson();
+    };
     CesiumIon._createRetryCallback = createRetryCallback;
 
     return CesiumIon;

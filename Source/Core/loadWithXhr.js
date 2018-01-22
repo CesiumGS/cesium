@@ -2,11 +2,13 @@ define([
         '../ThirdParty/when',
         './Check',
         './defineProperties',
+        './deprecationWarning',
         './Resource'
     ], function(
         when,
         Check,
         defineProperties,
+        deprecationWarning,
         Resource) {
     'use strict';
 
@@ -46,11 +48,15 @@ define([
      * @see loadText
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
     function loadWithXhr(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
         //>>includeEnd('debug');
+
+        deprecationWarning('loadWithXhr', 'loadWithXhr is deprecated and will be removed in Cesium 1.44. Please use Resource.fetch instead.');
 
         // Take advantage that most parameters are the same
         var resource = new Resource(options);

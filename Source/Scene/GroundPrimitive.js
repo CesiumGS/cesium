@@ -12,7 +12,6 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/GeometryInstance',
         '../Core/isArray',
-        '../Core/loadJson',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
@@ -36,7 +35,6 @@ define([
         GeographicTilingScheme,
         GeometryInstance,
         isArray,
-        loadJson,
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
@@ -669,7 +667,7 @@ define([
             return initPromise;
         }
 
-        GroundPrimitive._initPromise = loadJson(terrainHeightsResource).then(function(json) {
+        GroundPrimitive._initPromise = terrainHeightsResource.fetchJson().then(function(json) {
             GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });

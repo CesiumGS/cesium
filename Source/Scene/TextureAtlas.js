@@ -7,7 +7,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/loadImage',
         '../Core/PixelFormat',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -23,7 +22,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        loadImage,
         PixelFormat,
         Resource,
         RuntimeError,
@@ -359,11 +357,10 @@ define([
                 throw new DeveloperError('image is required.');
             }
             //>>includeEnd('debug');
-        } else if (typeof image === 'string') {
-            // if image is a string, load it as an image
-            image = loadImage(new Resource({url: image}));
-        } else if (image instanceof Resource) {
-            image = loadImage(image);
+        } else if ((typeof image === 'string') || (image instanceof Resource)) {
+            // Get a resource
+            var resource = Resource.createIfNeeded(image);
+            image = resource.fetchImage();
         }
 
         var that = this;

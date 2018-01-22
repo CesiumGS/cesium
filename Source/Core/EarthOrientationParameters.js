@@ -7,7 +7,6 @@ define([
         './freezeObject',
         './JulianDate',
         './LeapSecond',
-        './loadJson',
         './Resource',
         './RuntimeError',
         './TimeConstants',
@@ -21,7 +20,6 @@ define([
         freezeObject,
         JulianDate,
         LeapSecond,
-        loadJson,
         Resource,
         RuntimeError,
         TimeConstants,
@@ -99,7 +97,7 @@ define([
 
             // Download EOP data.
             var that = this;
-            this._downloadPromise = when(loadJson(resource), function(eopData) {
+            this._downloadPromise = when(resource.fetchJson(), function(eopData) {
                 onDataReady(that, eopData);
             }, function() {
                 that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + resource.url + '.';
