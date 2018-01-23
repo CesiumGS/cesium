@@ -1161,7 +1161,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('flyTo flys to Cesium3DTileset with default offset when options not defined', function() {
+    it('flyTo flies to Cesium3DTileset with default offset when options not defined', function() {
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
@@ -1191,7 +1191,7 @@ defineSuite([
 
     });
 
-    it('flyTo flys to Cesium3DTileset with default offset when offset not defined', function() {
+    it('flyTo flies to Cesium3DTileset with default offset when offset not defined', function() {
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
@@ -1223,7 +1223,7 @@ defineSuite([
         });
     });
 
-    it('flyTo flys to target when target is Cesium3DTileset and options are defined', function() {
+    it('flyTo flies to target when target is Cesium3DTileset and options are defined', function() {
         viewer = createViewer(container);
 
         var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
@@ -1259,7 +1259,7 @@ defineSuite([
         });
     });
 
-    it('flyTo flys to entity with default offset when options not defined', function() {
+    it('flyTo flies to entity with default offset when options not defined', function() {
         viewer = createViewer(container);
 
         viewer.entities.add({
@@ -1275,7 +1275,7 @@ defineSuite([
         var promise = viewer.flyTo(entities);
         var wasCompleted = false;
 
-        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
@@ -1308,7 +1308,7 @@ defineSuite([
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
 
-        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
@@ -1322,7 +1322,7 @@ defineSuite([
         });
     });
 
-    it('flyTo flys to entity when options are defined', function() {
+    it('flyTo flies to entity when options are defined', function() {
         viewer = createViewer(container);
 
         viewer.entities.add({
@@ -1345,7 +1345,7 @@ defineSuite([
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
 
-        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
             expect(options.duration).toBeDefined();
             expect(options.maximumHeight).toBeDefined();
             wasCompleted = true;
@@ -1359,7 +1359,7 @@ defineSuite([
         });
     });
 
-    it('flyTo flys to entity when offset is defined but other options for flyTo are not', function() {
+    it('flyTo flies to entity when offset is defined but other options for flyTo are not', function() {
         viewer = createViewer(container);
 
         viewer.entities.add({
@@ -1380,7 +1380,7 @@ defineSuite([
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
 
-        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
