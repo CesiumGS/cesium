@@ -37,6 +37,7 @@ Change Log
 * Added separate file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
 * Fixed Sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
+* Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox.
 
 ### 1.41 - 2018-01-02
 
