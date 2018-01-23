@@ -1,13 +1,17 @@
 define([
         './clone',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
-        './loadText'
+        './loadText',
+        './Resource'
     ], function(
         clone,
         defined,
+        deprecationWarning,
         DeveloperError,
-        loadText) {
+        loadText,
+        Resource) {
     'use strict';
 
     var defaultHeaders = {
@@ -25,11 +29,7 @@ define([
      *
      * @exports loadJson
      *
-     * @param {String} url The URL to request.
-     * @param {Object} [headers] HTTP headers to send with the request.
-     * 'Accept: application/json,&#42;&#47;&#42;;q=0.01' is added to the request headers automatically
-     * if not specified.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} urlOrResource The URL to request.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -44,22 +44,29 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadJson(url, headers, request) {
+    function loadJson(urlOrResource, headers, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(urlOrResource)) {
+            throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
 
-        if (!defined(headers)) {
-            headers = defaultHeaders;
-        } else if (!defined(headers.Accept)) {
-            // clone before adding the Accept header
-            headers = clone(headers);
-            headers.Accept = defaultHeaders.Accept;
+        if (defined(headers)) {
+            deprecationWarning('loadJson.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
         }
 
-        var textPromise = loadText(url, headers, request);
+        if (defined(request)) {
+            deprecationWarning('loadJson.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
+
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
+        });
+
+        resource.headers.Accept = defaultHeaders.Accept;
+
+        var textPromise = loadText(resource);
         if (!defined(textPromise)) {
             return undefined;
         }

@@ -8,7 +8,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
         '../Core/RequestType',
@@ -17,8 +16,9 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './getAttributeOrUniformBySemantic',
-        './Model'
+        './ClassificationModel',
+        './Model',
+        './ModelUtility'
     ], function(
         ClippingPlaneCollection,
         Color,
@@ -29,7 +29,6 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getAbsoluteUri,
         getBaseUri,
         getStringFromTypedArray,
         RequestType,
@@ -38,8 +37,9 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        getAttributeOrUniformBySemantic,
-        Model) {
+        ClassificationModel,
+        Model,
+        ModelUtility) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -61,10 +61,10 @@ define([
      *
      * @private
      */
-    function Batched3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Batched3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._model = undefined;
         this._batchTable = undefined;
         this._features = undefined;
@@ -176,7 +176,7 @@ define([
          */
         url: {
             get: function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
@@ -193,9 +193,9 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     function getBatchIdAttributeName(gltf) {
-        var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, '_BATCHID');
+        var batchIdAttributeName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_BATCHID');
         if (!defined(batchIdAttributeName)) {
-            batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            batchIdAttributeName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'BATCHID');
             if (defined(batchIdAttributeName)) {
                 Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-batchid', 'The glTF in this b3dm uses the semantic `BATCHID`. Application-specific semantics should be prefixed with an underscore: `_BATCHID`.');
             }
@@ -204,11 +204,13 @@ define([
     }
 
     function getVertexShaderCallback(content) {
-        return function(vs) {
+        return function(vs, programId) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
+            var handleTranslucent = !defined(content._tileset.classificationType);
             var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
+            var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+            var callback = batchTable.getVertexShaderCallback(handleTranslucent, batchIdAttributeName, diffuseAttributeOrUniformName);
             return defined(callback) ? callback(vs) : vs;
         };
     }
@@ -224,19 +226,34 @@ define([
     }
 
     function getFragmentShaderCallback(content) {
-        return function(fs) {
+        return function(fs, programId) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
-            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-            var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
+            var handleTranslucent = !defined(content._tileset.classificationType);
+            var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+            var callback = batchTable.getFragmentShaderCallback(handleTranslucent, diffuseAttributeOrUniformName);
             return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
+    function getClassificationFragmentShaderCallback(content) {
+        return function(fs) {
+            var batchTable = content._batchTable;
+            var callback = batchTable.getClassificationFragmentShaderCallback();
+            return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
+    function createColorChangedCallback(content) {
+        return function(batchId, color) {
+            content._model.updateCommands(batchId, color);
         };
     }
 
     function initialize(content, arrayBuffer, byteOffset) {
         var tileset = content._tileset;
         var tile = content._tile;
-        var basePath = getAbsoluteUri(getBaseUri(content._url, true));
+        var resource = content._resource;
 
         var byteStart = defaultValue(byteOffset, 0);
         byteOffset = byteStart;
@@ -334,7 +351,12 @@ define([
             }
         }
 
-        var batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
+        var colorChangedCallback;
+        if (defined(tileset.classificationType)) {
+            colorChangedCallback = createColorChangedCallback(content);
+        }
+
+        var batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary, colorChangedCallback);
         content._batchTable = batchTable;
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
@@ -356,45 +378,69 @@ define([
             primitive : tileset
         };
 
-        // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-        // The pick shader still needs to be patched.
-        content._model = new Model({
-            gltf : gltfView,
-            cull : false,           // The model is already culled by 3D Tiles
-            releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
-            basePath : basePath,
-            requestType : RequestType.TILES3D,
-            modelMatrix : tile.computedTransform,
-            upAxis : tileset._gltfUpAxis,
-            shadows: tileset.shadows,
-            debugWireframe: tileset.debugWireframe,
-            incrementallyLoadTextures : false,
-            vertexShaderLoaded : getVertexShaderCallback(content),
-            fragmentShaderLoaded : getFragmentShaderCallback(content),
-            uniformMapLoaded : batchTable.getUniformMapCallback(),
-            pickVertexShaderLoaded : getPickVertexShaderCallback(content),
-            pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-            pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
-            addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-            pickObject : pickObject,
-            clippingPlanes : new ClippingPlaneCollection({
-                enabled : false
-            })
-        });
+        if (!defined(tileset.classificationType)) {
+            var clippingPlanes;
+            if (defined(tileset.clippingPlanes)) {
+                clippingPlanes = tileset.clippingPlanes.clone();
+            } else {
+                clippingPlanes = new ClippingPlaneCollection({
+                    enabled : false
+                });
+            }
 
-        if (defined(tileset.clippingPlanes)) {
-            content._model.clippingPlanes = tileset.clippingPlanes.clone();
+            // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
+            // The pick shader still needs to be patched.
+            content._model = new Model({
+                gltf : gltfView,
+                cull : false,           // The model is already culled by 3D Tiles
+                releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+                opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
+                basePath : resource,
+                requestType : RequestType.TILES3D,
+                modelMatrix : tile.computedTransform,
+                upAxis : tileset._gltfUpAxis,
+                shadows: tileset.shadows,
+                debugWireframe: tileset.debugWireframe,
+                incrementallyLoadTextures : false,
+                vertexShaderLoaded : getVertexShaderCallback(content),
+                fragmentShaderLoaded : getFragmentShaderCallback(content),
+                uniformMapLoaded : batchTable.getUniformMapCallback(),
+                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
+                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
+                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
+                pickObject : pickObject,
+                clippingPlanes : clippingPlanes
+            });
+        } else {
+            // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
+            // For a list of limitations on the input glTF, see the documentation for classificationType of Cesium3DTileset.
+            content._model = new ClassificationModel({
+                gltf : gltfView,
+                cull : false,           // The model is already culled by 3D Tiles
+                basePath : resource,
+                requestType : RequestType.TILES3D,
+                modelMatrix : tile.computedTransform,
+                upAxis : tileset._gltfUpAxis,
+                debugWireframe : tileset.debugWireframe,
+                vertexShaderLoaded : getVertexShaderCallback(content),
+                classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
+                uniformMapLoaded : batchTable.getUniformMapCallback(),
+                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
+                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
+                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                classificationType : tileset._classificationType,
+                batchTable : batchTable
+            });
         }
     }
 
     function createFeatures(content) {
-        var tileset = content._tileset;
         var featuresLength = content.featuresLength;
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
+                features[i] = new Cesium3DTileFeature(content, i);
             }
             content._features = features;
         }
@@ -469,7 +515,7 @@ define([
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && frameState.passes.render) {
+        if ((commandStart < commandEnd) && frameState.passes.render && !defined(tileset.classificationType)) {
             var finalResolution = this._tile._finalResolution;
             this._batchTable.addDerivedCommands(frameState, commandStart, finalResolution);
         }

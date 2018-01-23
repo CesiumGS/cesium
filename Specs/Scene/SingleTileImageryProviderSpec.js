@@ -5,6 +5,7 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/Rectangle',
+        'Core/Resource',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
@@ -18,6 +19,7 @@ defineSuite([
         GeographicTilingScheme,
         loadImage,
         Rectangle,
+        Resource,
         Imagery,
         ImageryLayer,
         ImageryProvider,
@@ -44,6 +46,22 @@ defineSuite([
             expect(provider.ready).toBe(true);
         });
     });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        var provider = new SingleTileImageryProvider({
+            url : resource
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
 
     it('rejects readyPromise on error', function() {
         var provider = new SingleTileImageryProvider({

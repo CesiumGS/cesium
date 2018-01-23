@@ -33,11 +33,7 @@ var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url : 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM'
 }));
 
-tileset.readyPromise.then(function() {
-    var boundingSphere = tileset.boundingSphere;
-    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-}).otherwise(function(error) {
+viewer.zoomTo(tileset).otherwise(function(error) {
     throw(error);
 });
 //Sandcastle_End

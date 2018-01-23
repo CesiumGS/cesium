@@ -2,12 +2,14 @@ defineSuite([
         'Core/loadArrayBuffer',
         'Core/Request',
         'Core/RequestErrorEvent',
-        'Core/RequestScheduler'
+        'Core/RequestScheduler',
+        'Core/Resource'
     ], function(
         loadArrayBuffer,
         Request,
         RequestErrorEvent,
-        RequestScheduler) {
+        RequestScheduler,
+        Resource) {
     'use strict';
 
     var fakeXHR;
@@ -70,6 +72,31 @@ defineSuite([
     it('returns a promise that resolves when the request loads', function() {
         var testUrl = 'http://example.invalid/testuri';
         var promise = loadArrayBuffer(testUrl);
+
+        expect(promise).toBeDefined();
+
+        var resolvedValue;
+        var rejectedError;
+        promise.then(function(value) {
+            resolvedValue = value;
+        }, function(error) {
+            rejectedError = error;
+        });
+
+        expect(resolvedValue).toBeUndefined();
+        expect(rejectedError).toBeUndefined();
+
+        var response = 'some response';
+        fakeXHR.simulateLoad(response);
+        expect(resolvedValue).toEqual(response);
+        expect(rejectedError).toBeUndefined();
+    });
+
+    it('returns a promise that resolves when the request loads with Resource', function() {
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadArrayBuffer(new Resource({
+            url: testUrl
+        }));
 
         expect(promise).toBeDefined();
 

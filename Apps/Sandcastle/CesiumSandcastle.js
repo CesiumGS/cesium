@@ -768,6 +768,23 @@ require({
                         appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + gistId , true);
                         console.log(error);
                 });
+            } else if (defined(queryObject.code)) {
+                //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
+                var json = JSON.parse(window.atob(queryObject.code));
+                var code = json.code;
+                var html = json.html;
+
+                jsEditor.setValue(code);
+                htmlEditor.setValue(html);
+                demoCode = code.replace(/\s/g, '');
+                demoHtml = html.replace(/\s/g, '');
+                gistCode = code;
+                gistHtml = html;
+                previousCode = code;
+                previousHtml = html;
+                sandcastleUrl = getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&code=' + code;
+                CodeMirror.commands.runCesium(jsEditor);
+                clearRun();
             } else {
                 jsEditor.setValue(scriptCode);
             }
@@ -1210,6 +1227,7 @@ require({
                 window.open('gallery/' + demo.name + '.html');
             } else {
                 delete queryObject.gistId;
+                delete queryObject.code;
                 var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
                 var jsText = (jsEditor.getValue()).replace(/\s/g, '');
                 var confirmChange = true;
