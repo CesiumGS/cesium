@@ -1280,15 +1280,10 @@ defineSuite([
         var entities = viewer.entities;
         var promise = viewer.flyTo(entities);
         var wasCompleted = false;
-<<<<<<< HEAD
-
-        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
-=======
         spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
              return new BoundingSphere();
          });
         spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
->>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
@@ -1320,15 +1315,10 @@ defineSuite([
 
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
-<<<<<<< HEAD
-
-        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
-=======
         spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
             return new BoundingSphere();
         });
         spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
->>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
@@ -1364,15 +1354,10 @@ defineSuite([
 
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
-<<<<<<< HEAD
-
-        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
-=======
         spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
             return new BoundingSphere();
         });
         spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
->>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeDefined();
             expect(options.maximumHeight).toBeDefined();
             wasCompleted = true;
@@ -1406,15 +1391,10 @@ defineSuite([
 
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
-<<<<<<< HEAD
-
-        spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
-=======
         spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
             return new BoundingSphere();
         });
         spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
->>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
