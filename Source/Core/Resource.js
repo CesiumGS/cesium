@@ -234,6 +234,8 @@ define([
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
 
+        this._lastResponse = undefined;
+
         this.url = options.url;
     }
 
@@ -387,6 +389,18 @@ define([
         hasHeaders: {
             get: function() {
                 return (Object.keys(this.headers).length > 0);
+            }
+        },
+
+        /**
+         * Returns the last response received when this resource was requested. Contains status and headers properties. Header keys are all lower case.
+         *
+         * @memberof Resource.prototype
+         * @type {Object}
+         */
+        lastResponse: {
+            get: function() {
+                return this._lastResponse;
             }
         }
     });
@@ -1018,7 +1032,7 @@ define([
             var headers = combine(that.headers, options.headers);
             var overrideMimeType = options.overrideMimeType;
             var deferred = when.defer();
-            var xhr = Resource._Implementations.loadWithXhr(that.url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = Resource._Implementations.loadWithXhr(that.url, responseType, method, data, headers, deferred, overrideMimeType, that);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
@@ -1134,7 +1148,7 @@ define([
         image.src = url;
     };
 
-    Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+    Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType, resource) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
@@ -1179,6 +1193,37 @@ define([
 
             var response = xhr.response;
             var browserResponseType = xhr.responseType;
+
+            if (defined(resource)) {
+                // Parse response headers
+                var responseHeadersString = xhr.getAllResponseHeaders();
+                var responseHeaders = {};
+                if (defined(responseHeadersString)) {
+                    var arr = responseHeadersString.trim().split(/[\r\n]+/);
+                    arr.forEach(function(line) {
+                        var parts = line.split(': ');
+                        var header = parts.shift().toLowerCase();
+                        var value = parts.join(': ');
+                        if (!isNaN(value)) {
+                            value = parseFloat(value);
+                        }
+                        if (defined(responseHeaders[header])) {
+                            if (Array.isArray(responseHeaders[header])) {
+                                responseHeaders[header].push(value);
+                            } else {
+                                responseHeaders[header] = [responseHeaders[header]];
+                            }
+                        } else {
+                            responseHeaders[header] = value;
+                        }
+                    });
+                }
+
+                resource._lastResponse = {
+                    status : xhr.status,
+                    headers : responseHeaders
+                };
+            }
 
             //All modern browsers will go into either the first or second if block or last else block.
             //Other code paths support older browsers that either do not support the supplied responseType

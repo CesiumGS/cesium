@@ -47,6 +47,8 @@ define([
         this._missingImageByteLength = undefined;
         this._isReady = false;
 
+        var resource = Resource.createIfNeeded(options.missingImageUrl);
+
         var that = this;
 
         function success(image) {
@@ -86,8 +88,6 @@ define([
             that._missingImagePixels = undefined;
             that._isReady = true;
         }
-
-        var resource = Resource.createIfNeeded(options.missingImageUrl);
 
         when(resource.fetchImage(true), success, failure);
     }
