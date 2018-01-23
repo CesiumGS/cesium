@@ -712,6 +712,162 @@ define([
                 }
             }
         });
+
+        var pointCloudShading = knockout.observable();
+        knockout.defineProperty(this, 'pointCloudShading', {
+            get : function() {
+                return pointCloudShading();
+            },
+            set : function(value) {
+                pointCloudShading(value);
+                if (defined(that._tileset)) {
+                    that._tileset.pointShading.geometricErrorAttenuation = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to enable point cloud shading. This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.pointCloudShading = false;
+
+        var geometricErrorScale = knockout.observable();
+        knockout.defineProperty(this, 'geometricErrorScale', {
+            get : function() {
+                return geometricErrorScale();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    geometricErrorScale(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointShading.geometricErrorScale = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the geometric error scale.  This property is observable.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.geometricErrorScale = 1.0;
+
+        var maximumAttenuation = knockout.observable();
+        knockout.defineProperty(this, 'maximumAttenuation', {
+            get : function() {
+                return maximumAttenuation();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    maximumAttenuation(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointShading.maximumAttenuation = value === 0 ? undefined : value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the maximum attenuation.  This property is observable.
+         *
+         * @type {Number}
+         * @default 0
+         */
+        this.maximumAttenuation = 0;
+
+        var baseResolution = knockout.observable();
+        knockout.defineProperty(this, 'baseResolution', {
+            get : function() {
+                return baseResolution();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    baseResolution(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointShading.baseResolution = value === 0 ? undefined : value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the base resolution.  This property is observable.
+         *
+         * @type {Number}
+         * @default 0
+         */
+        this.baseResolution = 0;
+
+        var eyeDomeLighting = knockout.observable();
+        knockout.defineProperty(this, 'eyeDomeLighting', {
+            get : function() {
+                return eyeDomeLighting();
+            },
+            set : function(value) {
+                eyeDomeLighting(value);
+                if (defined(that._tileset)) {
+                    that._tileset.pointShading.eyeDomeLighting = value;
+                }
+            }
+        });
+         /**
+         * Gets or sets the flag to enable eye dome lighting. This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.eyeDomeLighting = false;
+
+        var eyeDomeLightingStrength = knockout.observable();
+        knockout.defineProperty(this, 'eyeDomeLightingStrength', {
+            get : function() {
+                return eyeDomeLightingStrength();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    eyeDomeLightingStrength(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointShading.eyeDomeLightingStrength = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the eye dome lighting strength.  This property is observable.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.eyeDomeLightingStrength = 1.0;
+
+        var eyeDomeLightingRadius = knockout.observable();
+        knockout.defineProperty(this, 'eyeDomeLightingRadius', {
+            get : function() {
+                return eyeDomeLightingRadius();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    eyeDomeLightingRadius(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointShading.eyeDomeLightingRadius = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the eye dome lighting radius.  This property is observable.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.eyeDomeLightingRadius = 1.0;
+
         /**
          * Gets or sets the pick state
          *
@@ -851,7 +1007,8 @@ define([
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
                                    'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLevelOfDetail', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
-                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage', 'showUrl'];
+                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage', 'showUrl',
+                                    'pointCloudShading', 'geometricErrorScale', 'maximumAttenuation', 'baseResolution', 'eyeDomeLighting', 'eyeDomeLightingStrength', 'eyeDomeLightingRadius'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -986,6 +1143,16 @@ define([
                     this.skipLevels = tileset.skipLevels;
                     this.immediatelyLoadDesiredLevelOfDetail = tileset.immediatelyLoadDesiredLevelOfDetail;
                     this.loadSiblings = tileset.loadSiblings;
+
+                    var pointShading = tileset.pointShading;
+                    this.pointCloudShading = pointShading.geometricErrorAttenuation;
+                    this.geometricErrorScale = pointShading.geometricErrorScale;
+                    this.maximumAttenuation = pointShading.maximumAttenuation ? pointShading.maximumAttenuation: 0.0;
+                    this.baseResolution = pointShading.baseResolution ? pointShading.baseResolution : 0.0;
+                    this.eyeDomeLighting = pointShading.eyeDomeLighting;
+                    this.eyeDomeLightingStrength = pointShading.eyeDomeLightingStrength;
+                    this.eyeDomeLightingRadius = pointShading.eyeDomeLightingRadius;
+
                 } else {
                     this._properties({});
                 }

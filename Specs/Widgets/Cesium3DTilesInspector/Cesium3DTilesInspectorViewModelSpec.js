@@ -161,6 +161,55 @@ defineSuite([
             viewModel.showUrl = false;
             expect(viewModel.tileset.debugShowUrl).toBe(false);
         });
+
+        it('pointCloudShading', function() {
+            viewModel.pointCloudShading = true;
+            expect(viewModel.tileset.pointShading.geometricErrorAttenuation).toBe(true);
+            viewModel.pointCloudShading = false;
+            expect(viewModel.tileset.pointShading.geometricErrorAttenuation).toBe(false);
+        });
+
+        it('geometricErrorScale', function() {
+            viewModel.geometricErrorScale = 1.0;
+            expect(viewModel.tileset.pointShading.geometricErrorScale).toBe(1.0);
+            viewModel.geometricErrorScale = 0.0;
+            expect(viewModel.tileset.pointShading.geometricErrorScale).toBe(0.0);
+        });
+
+        it('maximumAttenuation', function() {
+            viewModel.maximumAttenuation = 1.0;
+            expect(viewModel.tileset.pointShading.maximumAttenuation).toBe(1.0);
+            viewModel.maximumAttenuation = 0.0;
+            expect(viewModel.tileset.pointShading.maximumAttenuation).not.toBeDefined();
+        });
+
+        it('baseResolution', function() {
+            viewModel.baseResolution = 1.0;
+            expect(viewModel.tileset.pointShading.baseResolution).toBe(1.0);
+            viewModel.baseResolution = 0.0;
+            expect(viewModel.tileset.pointShading.baseResolution).not.toBeDefined();
+        });
+
+        it('eyeDomeLighting', function() {
+            viewModel.eyeDomeLighting = true;
+            expect(viewModel.tileset.pointShading.eyeDomeLighting).toBe(true);
+            viewModel.eyeDomeLighting = false;
+            expect(viewModel.tileset.pointShading.eyeDomeLighting).toBe(false);
+        });
+
+        it('eyeDomeLightingStrength', function() {
+            viewModel.eyeDomeLightingStrength = 1.0;
+            expect(viewModel.tileset.pointShading.eyeDomeLightingStrength).toBe(1.0);
+            viewModel.eyeDomeLightingStrength = 0.0;
+            expect(viewModel.tileset.pointShading.eyeDomeLightingStrength).toBe(0.0);
+        });
+
+        it('eyeDomeLightingRadius', function() {
+            viewModel.eyeDomeLightingRadius = 1.0;
+            expect(viewModel.tileset.pointShading.eyeDomeLightingRadius).toBe(1.0);
+            viewModel.eyeDomeLightingRadius = 0.0;
+            expect(viewModel.tileset.pointShading.eyeDomeLightingRadius).toBe(0.0);
+        });
     });
 
     describe('update options', function() {
