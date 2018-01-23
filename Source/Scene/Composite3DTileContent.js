@@ -37,10 +37,10 @@ define([
      *
      * @private
      */
-    function Composite3DTileContent(tileset, tile, url, arrayBuffer, byteOffset, factory) {
+    function Composite3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset, factory) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._contents = [];
         this._readyPromise = when.defer();
 
@@ -173,7 +173,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
@@ -220,7 +220,7 @@ define([
             var contentFactory = factory[tileType];
 
             if (defined(contentFactory)) {
-                var innerContent = contentFactory(content._tileset, content._tile, content._url, arrayBuffer, byteOffset);
+                var innerContent = contentFactory(content._tileset, content._tile, content._resource, arrayBuffer, byteOffset);
                 content._contents.push(innerContent);
                 contentPromises.push(innerContent.readyPromise);
             } else {

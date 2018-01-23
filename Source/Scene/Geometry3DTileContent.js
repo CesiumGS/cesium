@@ -52,10 +52,10 @@ define([
      *
      * @private
      */
-    function Geometry3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Geometry3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._geometries = undefined;
 
         this._contentReadyPromise = undefined;
@@ -174,7 +174,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 

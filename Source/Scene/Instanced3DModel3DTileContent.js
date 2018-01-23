@@ -12,10 +12,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
-        '../Core/joinUrls',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
@@ -42,10 +40,8 @@ define([
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
-        getAbsoluteUri,
         getBaseUri,
         getStringFromTypedArray,
-        joinUrls,
         Matrix3,
         Matrix4,
         Quaternion,
@@ -79,10 +75,10 @@ define([
      *
      * @private
      */
-    function Instanced3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Instanced3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._modelInstanceCollection = undefined;
         this._batchTable = undefined;
         this._features = undefined;
@@ -206,7 +202,7 @@ define([
          */
         url: {
             get: function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
@@ -329,10 +325,12 @@ define([
             // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
             // This removes all white space and null characters from the end of the string.
             gltfUrl = gltfUrl.replace(/[\s\0]+$/, '');
-            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(content._url, true), gltfUrl));
+            collectionOptions.url = content._resource.getDerivedResource({
+                url: gltfUrl
+            });
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getAbsoluteUri(getBaseUri(content._url, true));
+            collectionOptions.basePath = content._resource.clone();
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');

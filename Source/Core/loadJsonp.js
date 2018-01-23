@@ -1,25 +1,33 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './clone',
         './combine',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './objectToQuery',
         './queryToObject',
         './Request',
-        './RequestScheduler'
+        './RequestScheduler',
+        './RequestState',
+        './Resource'
     ], function(
         Uri,
         when,
+        clone,
         combine,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         objectToQuery,
         queryToObject,
         Request,
-        RequestScheduler) {
+        RequestScheduler,
+        RequestState,
+        Resource) {
     'use strict';
 
     /**
@@ -27,12 +35,8 @@ define([
      *
      * @exports loadJsonp
      *
-     * @param {String} url The URL to request.
-     * @param {Object} [options] Object with the following properties:
-     * @param {Object} [options.parameters] Any extra query parameters to append to the URL.
-     * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
-     * @param {Proxy} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} urlOrResource The URL to request.
+     * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -46,14 +50,30 @@ define([
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadJsonp(url, options, request) {
+    function loadJsonp(urlOrResource, callbackParameterName, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(urlOrResource)) {
+            throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
+        if (defined(request)) {
+            deprecationWarning('loadJsonp.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var proxy;
+        var queryParameters;
+        if (typeof callbackParameterName === 'object') {
+            deprecationWarning('loadJsonp.callbackParameterName', 'Passing an Object as the second parameter is deprecated. The proxy and parameters options should now be set on the Resource instance.');
+            var options = callbackParameterName;
+            if (defined(options.parameters)) {
+                queryParameters = clone(options.parameters);
+            }
+            if (defined(options.proxy)) {
+                proxy = options.proxy;
+            }
+            callbackParameterName = options.callbackParameterName;
+        }
+        callbackParameterName = defaultValue(callbackParameterName, 'callback');
 
         //generate a unique function name
         var functionName;
@@ -61,28 +81,23 @@ define([
             functionName = 'loadJsonp' + Math.random().toString().substring(2, 8);
         } while (defined(window[functionName]));
 
-        var uri = new Uri(url);
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            proxy : proxy,
+            queryParameters : queryParameters,
+            request: request
+        });
+        resource.request = defaultValue(resource.request, new Request());
 
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
+        return makeRequest(resource, callbackParameterName, functionName);
+    }
 
-        if (defined(options.parameters)) {
-            queryOptions = combine(options.parameters, queryOptions);
-        }
+    function makeRequest(resource, callbackParameterName, functionName) {
+        var callbackQuery = {};
+        callbackQuery[callbackParameterName] = functionName;
+        resource.addQueryParameters(callbackQuery);
 
-        var callbackParameterName = defaultValue(options.callbackParameterName, 'callback');
-        queryOptions[callbackParameterName] = functionName;
-
-        uri.query = objectToQuery(queryOptions);
-
-        url = uri.toString();
-
-        var proxy = options.proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        request = defined(request) ? request : new Request();
-        request.url = url;
+        var request = resource.request;
+        request.url = resource.url;
         request.requestFunction = function() {
             var deferred = when.defer();
 
@@ -97,11 +112,33 @@ define([
                 }
             };
 
-            loadJsonp.loadAndExecuteScript(url, functionName, deferred);
+            loadJsonp.loadAndExecuteScript(resource.url, functionName, deferred);
             return deferred.promise;
         };
 
-        return RequestScheduler.request(request);
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return makeRequest(resource, callbackParameterName, functionName);
+                        }
+
+                        return when.reject(e);
+                    });
+            });
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.

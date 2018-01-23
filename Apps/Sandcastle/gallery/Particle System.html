@@ -244,7 +244,11 @@ var entity = viewer.entities.add({
 
     //Load the Cesium plane model to represent the entity
     model : {
+<<<<<<< HEAD
         uri : '../../../../Apps/SampleData/models/CesiumAir/Cesium_Air.gltf',
+=======
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+>>>>>>> master
         minimumPixelSize : 64
     },
 
@@ -254,7 +258,7 @@ viewer.trackedEntity = entity;
 
 var scene = viewer.scene;
 var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
-    image : '../../../../Apps/SampleData/fire.png',
+    image : '../../SampleData/fire.png',
 
     startColor : Cesium.Color.RED.withAlpha(0.7),
     endColor : Cesium.Color.YELLOW.withAlpha(0.3),
@@ -286,9 +290,7 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
 
     lifeTime : 16.0,
 
-    //emitter : new Cesium.SphereEmitter(5.0),
-    emitter : new Cesium.CircleEmitter(0.5),
-
+    emitter : new Cesium.CircleEmitter(2.0),
     emitterModelMatrix : computeEmitterModelMatrix(),
 
     forces : [applyGravity]
@@ -400,14 +402,14 @@ Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
 });
 
 var options = [{
+    text : 'Circle',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.CircleEmitter(2.0);
+    }
+}, {
     text : 'Sphere',
     onselect : function() {
         particleSystem.emitter = new Cesium.SphereEmitter(2.5);
-    }
-}, {
-    text : 'Circle',
-    onselect : function() {
-        particleSystem.emitter = new Cesium.CircleEmitter(0.5);
     }
 }, {
     text : 'Cone',
