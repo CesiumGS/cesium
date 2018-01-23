@@ -13,13 +13,12 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/getBaseUri',
         '../Core/IndexDatatype',
-        '../Core/joinUrls',
         '../Core/loadArrayBuffer',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
@@ -50,13 +49,12 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getBaseUri,
         IndexDatatype,
-        joinUrls,
         loadArrayBuffer,
         Matrix4,
         PrimitiveType,
         Quaternion,
+        Resource,
         RuntimeError,
         Transforms,
         WebGLConstants,
@@ -102,7 +100,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Object|ArrayBuffer|Uint8Array} options.gltf The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
-     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
@@ -163,9 +161,8 @@ define([
 
         this._gltf = gltf;
 
-        this._basePath = defaultValue(options.basePath, '');
-        var baseUri = getBaseUri(document.location.href);
-        this._baseUri = joinUrls(baseUri, this._basePath);
+        var basePath = defaultValue(options.basePath, '');
+        this._resource = Resource.createIfNeeded(basePath);
 
         /**
          * Determines if the model primitive will be shown.
@@ -303,7 +300,7 @@ define([
          */
         basePath : {
             get : function() {
-                return this._basePath;
+                return this._resource.url;
             }
         },
 
@@ -571,9 +568,11 @@ define([
             if (defined(buffer.extras._pipeline.source)) {
                 loadResources.buffers[i] = buffer.extras._pipeline.source;
             } else {
-                var bufferPath = joinUrls(model._baseUri, buffer.uri);
+                var bufferResource = model._resource.getDerivedResource({
+                    url : buffer.uri
+                });
                 ++loadResources.pendingBufferLoads;
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                loadArrayBuffer(bufferResource).then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.uri));
             }
         }
     }

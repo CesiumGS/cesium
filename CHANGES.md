@@ -5,10 +5,14 @@ Change Log
 
 * Breaking changes
   *
+* Deprecated
+  * For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
+* Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, `Billboard`, along with all the low level `load*()` functions.
 * Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
+* Added new `CesiumIon` utility class for working with the Cesium ion beta API.
 * Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
-* Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane` [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092) 
-* Added `Cartesian3.projectVector` for projecting one vector to another [#6093](https://github.com/AnalyticalGraphicsInc/cesium/pull/6093) 
+* Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane` [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092)
+* Added `Cartesian3.projectVector` for projecting one vector to another [#6093](https://github.com/AnalyticalGraphicsInc/cesium/pull/6093)
 * Added `Cesium3DTileset.tileFailed` event that will be raised when a tile fails to load. The object passed to the event listener will have a url and message property. If there are no event listeners, error messages will be logged to the console. [#6088](https://github.com/AnalyticalGraphicsInc/cesium/pull/6088)
 * Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
 * Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
@@ -25,7 +29,7 @@ Change Log
    * Only one node is supported.
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
-* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com. 
+* Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
 * Updated 'Viewer.zoomTo' and 'Viewer.flyTo' to take in Cesium3DTilesets as a target and updated sandcastle 3DTileset examples to reflect this change
 * Added optional scene request render mode to reduce CPU usage. [#6065](https://github.com/AnalyticalGraphicsInc/cesium/pull/6065) and [#6107](https://github.com/AnalyticalGraphicsInc/cesium/pull/6107)
    * `Scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`. 

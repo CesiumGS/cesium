@@ -5,6 +5,7 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -18,6 +19,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
@@ -48,6 +50,32 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
+    it('supports a Resource for the url', function() {
+        var resource = new Resource({
+            url : 'made/up/osm/server/'
+        });
+
+        var provider = createOpenStreetMapImageryProvider({
+            url : resource
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).not.toContain('//');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
         });
     });
 

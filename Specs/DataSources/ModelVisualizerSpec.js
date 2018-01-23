@@ -9,6 +9,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/Plane',
         'Core/Quaternion',
+        'Core/Resource',
         'Core/Transforms',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
@@ -30,6 +31,7 @@ defineSuite([
         Matrix4,
         Plane,
         Quaternion,
+        Resource,
         Transforms,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -176,6 +178,39 @@ defineSuite([
 
             var transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
             expect(node.matrix).toEqual(transformationMatrix);
+        });
+    });
+
+    it('A ModelGraphics with a Resource causes a primitive to be created.', function() {
+        var time = JulianDate.now();
+        var entityCollection = new EntityCollection();
+        visualizer = new ModelVisualizer(scene, entityCollection);
+
+        var model = new ModelGraphics();
+        model.show = new ConstantProperty(true);
+        model.uri = new ConstantProperty(new Resource({
+            url: boxUrl
+        }));
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
+        testObject.model = model;
+
+        visualizer.update(time);
+
+        expect(scene.primitives.length).toEqual(1);
+
+        var primitive = scene.primitives.get(0);
+
+        // wait till the model is loaded before we can check node transformations
+        return pollToPromise(function() {
+            scene.render();
+            return primitive.ready;
+        }).then(function() {
+            visualizer.update(time);
+
+            var node = primitive.getNode('Mesh');
+            expect(node).toBeDefined();
         });
     });
 

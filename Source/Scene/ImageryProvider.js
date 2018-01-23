@@ -1,19 +1,25 @@
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/loadKTX'
+        '../Core/loadKTX',
+        '../Core/Resource'
     ], function(
+        Check,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         loadCRN,
         loadImage,
         loadImageViaBlob,
-        loadKTX) {
+        loadKTX,
+        Resource) {
     'use strict';
 
     /**
@@ -326,23 +332,34 @@ define([
      * that the request should be retried later.
      *
      * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
-     * @param {String} url The URL of the image.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} url The URL of the image.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url, request) {
-        if (ktxRegex.test(url)) {
-            return loadKTX(url, undefined, request);
-        } else if (crnRegex.test(url)) {
-            return loadCRN(url, undefined, request);
-        } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return loadImageViaBlob(url, request);
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('url', url);
+        //>>includeEnd('debug');
+
+        if (defined(request)) {
+            deprecationWarning('ImageryProvider.loadImage.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
         }
 
-        return loadImage(url, undefined, request);
+        var resource = Resource.createIfNeeded(url, {
+            request: request
+        });
+
+        if (ktxRegex.test(resource)) {
+            return loadKTX(resource);
+        } else if (crnRegex.test(resource)) {
+            return loadCRN(resource);
+        } else if (defined(imageryProvider.tileDiscardPolicy)) {
+            return loadImageViaBlob(resource);
+        }
+
+        return loadImage(resource);
     };
 
     return ImageryProvider;
