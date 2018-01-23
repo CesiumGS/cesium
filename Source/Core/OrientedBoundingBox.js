@@ -42,7 +42,7 @@ define([
      *
      * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
      * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
-     *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
+     *                                          Equivalently, the transformation matrix, to rotate and scale a 1x1x1
      *                                          cube centered at the origin.
      *
      *
@@ -68,7 +68,7 @@ define([
          * @type {Matrix3}
          * @default {@link Matrix3.IDENTITY}
          */
-        this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
+        this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.IDENTITY));
     }
 
     /**
