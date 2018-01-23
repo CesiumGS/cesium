@@ -37,8 +37,7 @@ Change Log
 * Added separate file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
 * Fixed sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
-* Modified move forward and backward camera functions to allow for proper zooming for a 2D camera. [#6133](https://github.com/AnalyticalGraphicsInc/cesium/pull/6133)
-* Restricted access from calls to camera lookDirection functions while in 2D mode. [#6133](https://github.com/AnalyticalGraphicsInc/cesium/pull/6133)
+* Fixed camera movement and look functions for 2D mode [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
 
 ### 1.41 - 2018-01-02
 
