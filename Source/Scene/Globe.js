@@ -228,6 +228,18 @@ define([
             }
         },
         /**
+         * Gets an event that's raised when a surface tile is loaded and ready to be rendered.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        tileLoadedEvent : {
+            get : function() {
+                return this._surface.tileProvider.tileLoadedEvent;
+            }
+        },
+        /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof Globe.prototype
          * @type {Color}
@@ -545,6 +557,15 @@ define([
             return;
         }
 
+        if (frameState.passes.render) {
+            this._surface.update(frameState);
+        }
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.beginFrame = function(frameState) {
         var surface = this._surface;
         var tileProvider = surface.tileProvider;
         var terrainProvider = this.terrainProvider;
@@ -574,28 +595,8 @@ define([
             }
         }
 
-        surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
-        surface.tileCacheSize = this.tileCacheSize;
-
-        tileProvider.terrainProvider = terrainProvider;
-        tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
-        tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
-        tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
-        tileProvider.hasWaterMask = hasWaterMask;
-        tileProvider.oceanNormalMap = this._oceanNormalMap;
-        tileProvider.enableLighting = this.enableLighting;
-        tileProvider.shadows = this.shadows;
-
-        surface.update(frameState);
-    };
-
-    /**
-     * @private
-     */
-    Globe.prototype.beginFrame = function(frameState) {
-        var surface = this._surface;
-        var mode = frameState.mode;
         var pass = frameState.passes;
+        var mode = frameState.mode;
 
         if (pass.render) {
             // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
@@ -604,6 +605,18 @@ define([
             } else {
                 this._zoomedOutOceanSpecularIntensity = 0.0;
             }
+
+            surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
+            surface.tileCacheSize = this.tileCacheSize;
+
+            tileProvider.terrainProvider = this.terrainProvider;
+            tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
+            tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
+            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.hasWaterMask = hasWaterMask;
+            tileProvider.oceanNormalMap = this._oceanNormalMap;
+            tileProvider.enableLighting = this.enableLighting;
+            tileProvider.shadows = this.shadows;
 
             surface.beginFrame(frameState);
         }

@@ -47,7 +47,7 @@ define([
 
     var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
 
-    var requestLoadedEvent = new Event();
+    var requestCompletedEvent = new Event();
 
     /**
      * Tracks the number of active requests and prioritizes incoming requests.
@@ -88,11 +88,13 @@ define([
     RequestScheduler.debugShowStatistics = false;
 
     /**
-     * An event that's raised when a request is loaded successfully.
+     * An event that's raised when a request is completed.  Event handlers are passed
+     * the error object if the request fails.
      *
      * @type {Event}
+     * @default Event()
      */
-    RequestScheduler.requestLoadedEvent = requestLoadedEvent;
+    RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
     defineProperties(RequestScheduler, {
         /**
@@ -163,7 +165,7 @@ define([
             }
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.serverKey];
-            requestLoadedEvent.raiseEvent();
+            requestCompletedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             request.deferred.resolve(results);
         };
@@ -178,6 +180,7 @@ define([
             ++statistics.numberOfFailedRequests;
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.serverKey];
+            requestCompletedEvent.raiseEvent(error);
             request.state = RequestState.FAILED;
             request.deferred.reject(error);
         };
@@ -316,7 +319,7 @@ define([
         //>>includeEnd('debug');
 
         if (isDataUri(request.url) || isBlobUri(request.url)) {
-            requestLoadedEvent.raiseEvent();
+            requestCompletedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             return request.requestFunction();
         }
