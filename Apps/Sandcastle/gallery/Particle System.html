@@ -137,8 +137,8 @@
 </div>
 
 <script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
+    function startup(Cesium) {
+        'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
@@ -164,19 +164,19 @@ var viewModel = {
     gravity : 0.0,
     minimumLife : 1.0,
     maximumLife : 1.0,
-    minimumSpeed : 5.0,
-    maximumSpeed : 5.0,
+    minimumSpeed : 1.0,
+    maximumSpeed : 4.0,
     startScale : 1.0,
-    endScale : 4.0,
-    particleSize : 20.0,
+    endScale : 5.0,
+    particleSize : 25.0,
     transX : 2.5,
     transY : 4.0,
     transZ : 1.0,
     heading : 0.0,
     pitch : 0.0,
     roll : 0.0,
-    fly : false,
-    spin : false,
+    fly : true,
+    spin : true,
     show : true
 };
 
@@ -278,14 +278,15 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
     rate : viewModel.rate,
 
     bursts : [
-        new Cesium.ParticleBurst({time : 5.0, minimum : 300, maximum : 500}),
+        // these burst will occasionally sync to create a multicolored effect
+        new Cesium.ParticleBurst({time : 5.0, minimum : 10, maximum : 100}),
         new Cesium.ParticleBurst({time : 10.0, minimum : 50, maximum : 100}),
         new Cesium.ParticleBurst({time : 15.0, minimum : 200, maximum : 300})
     ],
 
     lifeTime : 16.0,
 
-    emitter : new Cesium.CircleEmitter(0.5),
+    emitter : new Cesium.CircleEmitter(2.0),
 
     emitterModelMatrix : computeEmitterModelMatrix(),
 
@@ -400,7 +401,12 @@ Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
 var options = [{
     text : 'Circle',
     onselect : function() {
-        particleSystem.emitter = new Cesium.CircleEmitter(0.5);
+        particleSystem.emitter = new Cesium.CircleEmitter(2.0);
+    }
+}, {
+    text : 'Sphere',
+    onselect : function() {
+        particleSystem.emitter = new Cesium.SphereEmitter(2.5);
     }
 }, {
     text : 'Cone',
@@ -412,23 +418,19 @@ var options = [{
     onselect : function() {
         particleSystem.emitter = new Cesium.BoxEmitter(new Cesium.Cartesian3(10.0, 10.0, 10.0));
     }
-}, {
-    text : 'Sphere',
-    onselect : function() {
-        particleSystem.emitter = new Cesium.SphereEmitter(5.0);
-    }
 }];
 
 Sandcastle.addToolbarMenu(options);
 
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== "undefined") {
+    //Sandcastle_End
+    Sandcastle.finishedLoading();
+    }
+
+    if (typeof Cesium !== "undefined") {
     startup(Cesium);
-} else if (typeof require === "function") {
+    } else if (typeof require === "function") {
     require(["Cesium"], startup);
-}
+    }
 </script>
 
 </body>
