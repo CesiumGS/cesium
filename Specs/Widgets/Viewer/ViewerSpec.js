@@ -1057,7 +1057,7 @@ defineSuite([
                 wasCompleted = true;
             });
 
-            viewer.render();
+            viewer._postRender();
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
@@ -1086,7 +1086,7 @@ defineSuite([
                 wasCompleted = true;
             });
 
-            viewer.render();
+            viewer._postRender();
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
@@ -1109,15 +1109,18 @@ defineSuite([
 
         var promise = viewer.zoomTo(entities);
         var wasCompleted = false;
+        spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
+             return new BoundingSphere();
+         });
 
         spyOn(viewer.camera, 'viewBoundingSphere').and.callFake(function(boundingSphere, offset) {
             expect(boundingSphere).toBeDefined();
-            // expect offset to be undefined - doesnt use default bc of how zoomTo for entities is set up
+            // expect offset to be undefined - doesn't use default bc of how zoomTo for entities is set up
             expect(offset).toBeUndefined();
             wasCompleted = true;
         });
 
-        viewer.render();
+        viewer._postRender();
 
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
@@ -1141,12 +1144,15 @@ defineSuite([
 
         var promise = viewer.zoomTo(entities, expectedOffset);
         var wasCompleted = false;
+        spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
+             return new BoundingSphere();
+         });
         spyOn(viewer.camera, 'viewBoundingSphere').and.callFake(function(boundingSphere, offset) {
             expect(expectedOffset).toEqual(offset);
             wasCompleted = true;
         });
 
-        viewer.render();
+        viewer._postRender();
 
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
@@ -1182,7 +1188,7 @@ defineSuite([
                 options.complete();
             });
 
-            viewer.render();
+            viewer._postRender();
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
@@ -1214,7 +1220,7 @@ defineSuite([
                 options.complete();
             });
 
-            viewer.render();
+            viewer._postRender();
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
@@ -1250,7 +1256,7 @@ defineSuite([
                 options.complete();
             });
 
-            viewer.render();
+            viewer._postRender();
 
             return promise.then(function() {
                 expect(wasCompleted).toEqual(true);
@@ -1274,15 +1280,22 @@ defineSuite([
         var entities = viewer.entities;
         var promise = viewer.flyTo(entities);
         var wasCompleted = false;
+<<<<<<< HEAD
 
         spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
+=======
+        spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
+             return new BoundingSphere();
+         });
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+>>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
             options.complete();
         });
 
-        viewer.render();
+        viewer._postRender();
 
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
@@ -1307,15 +1320,22 @@ defineSuite([
 
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
+<<<<<<< HEAD
 
         spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
+=======
+        spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
+            return new BoundingSphere();
+        });
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+>>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
             options.complete();
         });
 
-        viewer.render();
+        viewer._postRender();
 
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
@@ -1344,15 +1364,22 @@ defineSuite([
 
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
+<<<<<<< HEAD
 
         spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
+=======
+        spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
+            return new BoundingSphere();
+        });
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+>>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeDefined();
             expect(options.maximumHeight).toBeDefined();
             wasCompleted = true;
             options.complete();
         });
 
-        viewer.render();
+        viewer._postRender();
 
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
@@ -1379,15 +1406,22 @@ defineSuite([
 
         var promise = viewer.flyTo(entities, options);
         var wasCompleted = false;
+<<<<<<< HEAD
 
         spyOn(viewer.camera, 'flyTo').and.callFake(function(options) {
+=======
+        spyOn(viewer._dataSourceDisplay, 'getBoundingSphere').and.callFake(function() {
+            return new BoundingSphere();
+        });
+        spyOn(viewer.camera, 'flyToBoundingSphere').and.callFake(function(target, options) {
+>>>>>>> 7510574... Cleanup specs
             expect(options.duration).toBeUndefined();
             expect(options.maximumHeight).toBeUndefined();
             wasCompleted = true;
             options.complete();
         });
 
-        viewer.render();
+        viewer._postRender();
 
         return promise.then(function() {
             expect(wasCompleted).toEqual(true);
