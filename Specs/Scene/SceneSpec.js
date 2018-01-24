@@ -1069,6 +1069,7 @@ defineSuite([
 
         var spyListener = jasmine.createSpy('listener');
         s.camera.moveStart.addEventListener(spyListener);
+        s._cameraStartFired = false; // reset this value after camera changes for initial render trigger the event
 
         s.camera.moveLeft();
         s.render();
@@ -1564,12 +1565,15 @@ defineSuite([
 
         scene.requestRenderMode = true;
 
-        scene.renderForSpecs();
+        scene.renderForSpecs(lastRenderTime);
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
-        scene.maximumRenderTimeChange = 0.0;
+        scene.maximumRenderTimeChange = 100.0;
 
-        scene.renderForSpecs();
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.0, new JulianDate()));
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.1, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
