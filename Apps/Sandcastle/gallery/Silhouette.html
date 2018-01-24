@@ -59,11 +59,11 @@ for (var name in viewModel) {
     }
 }
 
-var silhouette = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.silhouette);
+var silhouette = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.createSilhouetteStage());
 
 function updatePostProcess() {
     silhouette.enabled = Boolean(viewModel.show);
-    silhouette.edgeDetectionUniformValues.color = Cesium.Color.YELLOW;
+    silhouette.uniformValues.color = Cesium.Color.YELLOW;
 }
 updatePostProcess();
 //Sandcastle_End

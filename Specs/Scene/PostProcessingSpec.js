@@ -89,7 +89,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.blackAndWhite);
+        scene.postProcessCollection.add(PostProcessLibrary.createBlackAndWhiteStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[1]).toEqual(rgba[0]);
@@ -134,7 +134,7 @@ defineSuite([
             blue = rgba[2];
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.brightness);
+        scene.postProcessCollection.add(PostProcessLibrary.createBrightnessStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(red);
             expect(rgba[1]).not.toEqual(green);
@@ -175,7 +175,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.eightBit);
+        scene.postProcessCollection.add(PostProcessLibrary.createEightBitStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[1]).toEqual(0);
@@ -213,7 +213,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.nightVision);
+        scene.postProcessCollection.add(PostProcessLibrary.createNightVisionStage());
         expect(scene).toRenderAndCall(function(rgba) {
             for (var i = 0; i < 3; ++i) {
                 for (var j = 0; j < 3; ++j) {
@@ -253,7 +253,7 @@ defineSuite([
         context.fillStyle = '#0000FF';
         context.fillRect(0, 0, 1, 1);
 
-        var textureOverlay = scene.postProcessCollection.add(PostProcessLibrary.textureOverlay);
+        var textureOverlay = scene.postProcessCollection.add(PostProcessLibrary.createTextureOverlayStage());
         var uniforms = textureOverlay.uniformValues;
         uniforms.alpha = 1.0;
         uniforms.texture = canvas.toDataURL();
@@ -295,7 +295,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.depthView);
+        scene.postProcessCollection.add(PostProcessLibrary.createDepthViewStage());
         expect(scene).toRenderAndCall(function(rgba) {
             for (var i = 0; i < 3; ++i) {
                 for (var j = 0; j < 3; ++j) {
@@ -336,7 +336,7 @@ defineSuite([
             expect(rgba[19]).toEqual(255);
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.blur);
+        scene.postProcessCollection.add(PostProcessLibrary.createBlurStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[16]).toBeGreaterThan(0);
             expect(rgba[17]).toEqual(0);
@@ -375,10 +375,10 @@ defineSuite([
                     expect(rgba[i + 3]).toEqual(255);
                 }
 
-                var dof = PostProcessLibrary.depthOfField;
-                dof.uniformValues.focalDistance = 87.0;
+                //var dof = PostProcessLibrary.depthOfField;
+                //dof.uniformValues.focalDistance = 87.0;
 
-                scene.postProcessCollection.add(PostProcessLibrary.depthOfField);
+                scene.postProcessCollection.add(PostProcessLibrary.createDepthOfFieldStage());
                 expect(scene).toRenderAndCall(function(rgba2) {
                     for (var i = 0; i < rgba.length; i += 4) {
                         expect(rgba2[i]).toBeGreaterThan(0);

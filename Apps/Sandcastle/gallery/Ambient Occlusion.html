@@ -49,8 +49,8 @@
         <td><input type="range" min="0" max="1" step="0.01" data-bind="value: bias, valueUpdate: 'input'"></td>
     </tr>
     <tr>
-        <td>Kernel Size</td>
-        <td><input type="range" min="0" max="4" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'"></td>
+        <td>Blur Step Size</td>
+        <td><input type="range" min="0" max="4" step="0.01" data-bind="value: blurStepSize, valueUpdate: 'input'"></td>
     </tr>
 </tbody></table>
 </div>
@@ -71,7 +71,7 @@ var viewModel = {
     bias : 0.1,
     lengthCap : 0.26,
     stepSize : 1.95,
-    kernelSize : 0.86
+    blurStepSize : 0.86
 };
 
 Cesium.knockout.track(viewModel);
@@ -87,11 +87,11 @@ function updatePostProcess() {
     var ambientOcclusion = viewer.scene.postProcessCollection.ambientOcclusion;
     ambientOcclusion.enabled = Boolean(viewModel.show);
     ambientOcclusion.uniformValues.ambientOcclusionOnly = Boolean(viewModel.ambientOcclusionOnly);
-    ambientOcclusion.generateUniformValues.intensity = Number(viewModel.intensity);
-    ambientOcclusion.generateUniformValues.bias = Number(viewModel.bias);
-    ambientOcclusion.generateUniformValues.lenCap = Number(viewModel.lengthCap);
-    ambientOcclusion.generateUniformValues.stepSize = Number(viewModel.stepSize);
-    ambientOcclusion.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
+    ambientOcclusion.uniformValues.intensity = Number(viewModel.intensity);
+    ambientOcclusion.uniformValues.bias = Number(viewModel.bias);
+    ambientOcclusion.uniformValues.lengthCap = Number(viewModel.lengthCap);
+    ambientOcclusion.uniformValues.stepSize = Number(viewModel.stepSize);
+    ambientOcclusion.uniformValues.blurStepSize = Number(viewModel.blurStepSize);
 }
 updatePostProcess();
 

@@ -30,17 +30,18 @@ define([
      * @param {Array} options.processes An array of {@link PostProcess}es or composites to be executed in order.
      * @param {Boolean} [options.executeInSeries=true] Whether to execute each post-process where the input to one post-process is the output of the previous. Otherwise, the input to each contained post-process is the output of the post-process that executed before the composite.
      * @param {String} [options.name=createGuid()] The unique name of this post-process for reference by other composites. If a name is not supplied, a GUID will be generated.
+     * @param {Object} [options.uniformValues] An alias to the uniforms of processes.
      *
      * @exception {DeveloperError} options.processes.length must be greater than 0.0.
      *
      * @see PostProcess
      *
      * @example
-     * // Example 1: seperable blur filter
+     * // Example 1: separable blur filter
      * // The input to blurXDirection is the texture rendered to by the scene or the output of the previous process.
      * // The input to blurYDirection is the texture rendered to by blurXDirection.
      * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
-     *     processes : [blurXDirection, blurYDirection],
+     *     processes : [blurXDirection, blurYDirection]
      * }));
      *
      * @example
@@ -63,6 +64,24 @@ define([
      *         })
      *     ]
      * });
+     *
+     * @example
+     * // Example 3: create a uniform alias
+     * var uniforms = {};
+     * Cesium.defineProperties(uniforms, {
+     *     filterSize : {
+     *         get : function() {
+     *             return blurXDirection.uniformValues.filterSize;
+     *         },
+     *         set : function(value) {
+     *             blurXDirection.uniformValues.filterSize = blurYDirection.uniformValues.filterSize = value;
+     *         }
+     *     }
+     * });
+     * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
+     *     processes : [blurXDirection, blurYDirection],
+     *     uniformValues : uniforms
+     * }));
      */
     function PostProcessComposite(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -79,6 +98,8 @@ define([
         if (!defined(this._name)) {
             this._name = createGuid();
         }
+
+        this._uniforms = options.uniformValues;
 
         // used by PostProcessCollection
         this._collection = undefined;
@@ -133,6 +154,16 @@ define([
                 for (var i = 0; i < length; ++i) {
                     processes[i].enabled = value;
                 }
+            }
+        },
+        /**
+         * An alias to the uniform values of the processes. May be <code>undefined</code>; in which case, get each process to set uniform values.
+         * @memberof PostPostProcessComposite.prototype
+         * @type {Object}
+         */
+        uniformValues : {
+            get : function() {
+                return this._uniforms;
             }
         },
         /**

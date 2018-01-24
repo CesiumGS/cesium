@@ -29,6 +29,10 @@
             <td><input type="checkbox" data-bind="checked: show"></td>
         </tr>
         <tr>
+            <td>Glow only</td>
+            <td><input type="checkbox" data-bind="checked: glowOnly"></td>
+        </tr>
+        <tr>
             <td>Contrast</td>
             <td><input type="range" min="-255.0" max="255.0" step="0.01" data-bind="value: contrast, valueUpdate: 'input'"></td>
         </tr>
@@ -37,8 +41,16 @@
             <td><input type="range" min="-1.0" max="1.0" step="0.01" data-bind="value: brightness, valueUpdate: 'input'"></td>
         </tr>
         <tr>
-            <td>Kernel Size</td>
-            <td><input type="range" min="0" max="7" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'"></td>
+            <td>Delta</td>
+            <td><input type="range" min="1" max="5" step="0.01" data-bind="value: delta, valueUpdate: 'input'"/></td>
+        </tr>
+        <tr>
+            <td>Sigma</td>
+            <td><input type="range" min="1" max="10" step="0.01" data-bind="value: sigma, valueUpdate: 'input'"/></td>
+        </tr>
+        <tr>
+            <td>Step Size</td>
+            <td><input type="range" min="0" max="7" step="0.01" data-bind="value: stepSize, valueUpdate: 'input'"/></td>
         </tr>
     </tbody></table>
 </div>
@@ -74,9 +86,12 @@ for (var i = 0; i < numberOfBalloons; ++i) {
 
 var viewModel = {
     show : true,
+    glowOnly : false,
     contrast : 128,
     brightness : -0.3,
-    kernelSize : 5
+    delta : 1.0,
+    sigma : 3.78,
+    stepSize : 5.0
 };
 
 Cesium.knockout.track(viewModel);
@@ -91,9 +106,12 @@ for (var name in viewModel) {
 function updatePostProcess() {
     var bloom = viewer.scene.postProcessCollection.bloom;
     bloom.enabled = Boolean(viewModel.show);
-    bloom.contrastBiasUniformValues.contrast = Number(viewModel.contrast);
-    bloom.contrastBiasUniformValues.brightness = Number(viewModel.brightness);
-    bloom.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
+    bloom.uniformValues.glowOnly = Boolean(viewModel.glowOnly);
+    bloom.uniformValues.contrast = Number(viewModel.contrast);
+    bloom.uniformValues.brightness = Number(viewModel.brightness);
+    bloom.uniformValues.delta = Number(viewModel.delta);
+    bloom.uniformValues.sigma = Number(viewModel.sigma);
+    bloom.uniformValues.stepSize = Number(viewModel.stepSize);
 }
 updatePostProcess();
 

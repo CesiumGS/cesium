@@ -6,8 +6,8 @@ uniform float direction; // 0.0 for x direction, 1.0 for y direction
 
 uniform sampler2D colorTexture;
 
-#ifdef USE_KERNEL_SIZE
-uniform float kernelSize;
+#ifdef USE_STEP_SIZE
+uniform float stepSize;
 #else
 uniform vec2 step;
 #endif
@@ -15,15 +15,15 @@ uniform vec2 step;
 varying vec2 v_textureCoordinates;
 
 //  Incremental Computation of the Gaussian:
-//  http://http.developer.nvidia.com/GPUGems3/gpugems3_ch40.html
+//  https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch40.html
 
 void main()
 {
     vec2 st = v_textureCoordinates;
     vec2 dir = vec2(1.0 - direction, direction);
 
-#ifdef USE_KERNEL_SIZE
-    vec2 step = vec2(kernelSize / czm_viewport.zw);
+#ifdef USE_STEP_SIZE
+    vec2 step = vec2(stepSize / czm_viewport.zw);
 #else
     vec2 step = step;
 #endif

@@ -5,12 +5,16 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Shaders/PostProcessFilters/FXAA',
+        '../Core/PixelFormat',
+        '../Renderer/PixelDatatype',
+        '../Renderer/Sampler',
+        '../Renderer/Texture',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         '../Shaders/PostProcessFilters/PassThrough',
-        '../ThirdParty/Shaders/FXAA3_11',
         './PostProcess',
-        './PostProcessAmbientOcclusionStage',
-        './PostProcessBloomStage',
+        './PostProcessLibrary',
         './PostProcessSampleMode',
         './PostProcessTextureCache'
     ], function(
@@ -20,20 +24,19 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        FXAAFS,
+        PixelFormat,
+        PixelDatatype,
+        Sampler,
+        Texture,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         PassThrough,
-        FXAA3_11,
         PostProcess,
-        PostProcessAmbientOcclusionStage,
-        PostProcessBloomStage,
+        PostProcessLibrary,
         PostProcessSampleMode,
         PostProcessTextureCache) {
     'use strict';
-
-    var fxaaFS =
-        '#define FXAA_QUALITY_PRESET 39 \n' +
-        FXAA3_11 + '\n' +
-        FXAAFS;
 
     var stackScratch = [];
 
@@ -57,16 +60,14 @@ define([
         this._processes = [];
         this._activeProcesses = [];
 
-        this._fxaa = new PostProcess({
-            name : 'czm_FXAA',
-            fragmentShader : fxaaFS,
-            sampleMode : PostProcessSampleMode.LINEAR
-        });
-        this._ao = new PostProcessAmbientOcclusionStage();
-        this._bloom = new PostProcessBloomStage();
+        this._fxaa = PostProcessLibrary.createFXAAStage();
+        this._ao = PostProcessLibrary.createAmbientOcclusionStage();
+        this._bloom = PostProcessLibrary.createBloomStage();
 
         this._ao.enabled = false;
         this._bloom.enabled = false;
+
+        this._randomTexture = undefined; // For AO
 
         this._processesRemoved = false;
         this._cacheDirty = false;
@@ -95,6 +96,11 @@ define([
                 }
             }
         }
+
+        var that = this;
+        this._ao.uniformValues.randomTexture = function() {
+            return that._randomTexture;
+        };
     }
 
     defineProperties(PostProcessCollection.prototype, {
@@ -138,13 +144,38 @@ define([
             }
         },
         /**
-         * A post-process for Horizon-based Ambient Occlusion.
+         * A post-process stage that applies Horizon-based Ambient Occlusion (HBAO) to the input texture.
+         * <p>
+         * Ambient occlusion simulates shadows from ambient light. These shadows would always be present when the
+         * surface receives light and regardless of the light's position.
+         * </p>
+         * <p>
+         * The uniforms have the following properties: <code>intensity</code>, <code>bias</code>, <code>lengthCap</code>,
+         * <code>stepSize</code>, <code>frustumLength</code>, <code>ambientOcclusionOnly</code>,
+         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code>.
+         * </p>
+         * <p>
+         * <code>intensity</code> is a scalar value used to lighten or darken the shadows exponentially. Higher values make the shadows darker. The default value is <code>3.0</code>.
+         * <code>bias</code> is a scalar value representing an angle in radians. If the dot product between the normal of the sample and the vector to the camera is less than this value,
+         * sampling stops in the current direction. This is used to remove shadows from near planar edges. The default value is <code>0.1</code>.
+         * <code>lengthCap</code> is a scalar value representing a length in meters. If the distance from the current sample to first sample is greater than this value,
+         * sampling stops in the current direction. The default value is <code>0.26</code>.
+         * <code>stepSize</code> is a scalar value indicating the distance to the next texel sample in the current direction. The default value is <code>1.95</code>.
+         * <code>frustumLength</code> is a scalar value in meters. If the current fragment has a distance from the camera greater than this value, ambient occlusion is not computed for the fragment.
+         * The default value is <code>1000.0</code>.
+         * <code>ambientOcclusionOnly</code> is a boolean value. When <code>true</code>, only the shadows generated are written to the output. When <code>false</code>, the input texture is modulated
+         * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.
+         * </p>
+         * <p>
+         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessLibrary#createBlurStage}.
+         * The blur is applied to the shadows generated from the image to make them smoother.
+         * </p>
          * <p>
          * When enabled, this post-process will execute before all others.
          * </p>
          *
-         * @memberof PostProcessCollection.protoype
-         * @type {PostProcessAmbientOcclusionStage}
+         * @memberof PostProcessCollection.prototype
+         * @type {PostProcessComposite}
          * @readonly
          */
         ambientOcclusion : {
@@ -153,13 +184,31 @@ define([
             }
         },
         /**
-         * A post-process for Bloom.
+         * A post-process for a bloom effect.
+         * <p>
+         * A bloom effect adds glow effect, makes bright areas brighter, and dark areas darker.
+         * </p>
+         * <p>
+         * This post-process stage has the following uniforms: <code>contrast</code>, <code>brightness</code>, <code>glowOnly</code>,
+         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code>.
+         * </p>
+         * <p>
+         * <code>contrast</code> is a scalar value in the range [-255.0, 255.0] and affects the contract of the effect. The default value is <code>128.0</code>.
+         * <code>brightness</code> is a scalar value. The input texture RGB value is converted to hue, saturation, and brightness (HSB) then this value is
+         * added to the brightness. The default value is <code>-0.3</code>.
+         * <code>glowOnly</code> is a boolean value. When <code>true</code>, only the glow effect will be shown. When <code>false</code>, the glow will be added to the input texture.
+         * The default value is <code>false</code>. This is a debug option for viewing the effects when changing the other uniform values.
+         * </p>
+         * <p>
+         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessLibrary#createBlurStage}.
+         * The blur is applied to the shadows generated from the image to make them smoother.
+         * </p>
          * <p>
          * When enabled, this post-process will execute before all others.
          * </p>
          *
          * @memberOf PostProcessCollection.prototype
-         * @type {PostProcessBloomStage}
+         * @type {PostProcessComposite}
          * @readonly
          */
         bloom : {
@@ -416,15 +465,45 @@ define([
             this._cacheDirty = false;
         }
 
+        if (defined(this._randomTexture) && !ao.enabled) {
+            this._randomTexture.destroy();
+            this._randomTexture = undefined;
+        }
+
+        if (!defined(this._randomTexture) && ao.enabled) {
+            length = 256 * 256 * 3;
+            var random = new Uint8Array(length);
+            for (i = 0; i < length; i += 3) {
+                random[i] = Math.floor(Math.random() * 255.0);
+            }
+
+            this._randomTexture = new Texture({
+                context : context,
+                pixelFormat : PixelFormat.RGB,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    arrayBufferView : random,
+                    width : 256,
+                    height : 256
+                },
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
+            });
+        }
+
         this._textureCache.update(context);
 
         fxaa.update(context);
         ao.update(context);
         bloom.update(context);
 
+        length = activeProcesses.length;
         for (i = 0; i < length; ++i) {
-            process = processes[i];
-            process.update(context);
+            processes[i].update(context);
         }
     };
 
