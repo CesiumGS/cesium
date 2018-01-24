@@ -504,10 +504,10 @@ define([
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
         GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
         var tileLoadedEvent = this._tileLoadedEvent;
-        tile._loadedCallbacks.push(function (tile) {
+        tile._loadedCallbacks['tileLoadedEvent'] = function (tile) {
             tileLoadedEvent.raiseEvent();
             return true;
-        });
+        };
     };
 
     var boundingSphereScratch = new BoundingSphere();
