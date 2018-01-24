@@ -79,7 +79,9 @@ define([
             resource = new Resource(optionsOrResource);
         }
 
-        resource.request = defaultValue(resource.request, new Request());
+        if (!defined(resource.request)) {
+            resource.request = new Request();
+        }
 
         return makeRequest(resource);
     }

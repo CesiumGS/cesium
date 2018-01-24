@@ -17,7 +17,7 @@ Change Log
 * Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
 * Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
 * Added `Cesium3DTileset.ellipsoid` determining the size and shape of the globe. This can be set at construction and defaults to a WGS84 ellipsoid.
-* Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
+* Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
    * `Cesium3DTileStyle` has expanded for styling point features. See the [styling specification](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
    * `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, and geometry features.
    * `Cesium3DTilePointFeature` can modify the styling options for a point feature.
@@ -42,6 +42,8 @@ Change Log
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
 * Added separate file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
+* Fixed sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
+* Fixed camera movement and look functions for 2D mode [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
 
 ### 1.41 - 2018-01-02
 
