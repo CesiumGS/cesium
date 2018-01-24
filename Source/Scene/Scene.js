@@ -3022,42 +3022,63 @@ define([
         }
     }
 
-    /**
-     * @private
-     */
-    Scene.prototype.render = function (time) {
-        if (!defined(time)) {
-            time = JulianDate.now();
-        }
-
-        this._jobScheduler.resetBudgets();
+    function updateAndRenderScene(scene, time, forceRender) {
+        scene._jobScheduler.resetBudgets();
 
         // Update
-        this._preUpdate.raiseEvent(this, time);
-        tryAndCatchError(this, time, update);
-        this._postUpdate.raiseEvent(this, time);
+        scene._preUpdate.raiseEvent(scene, time);
+        tryAndCatchError(scene, time, update);
+        scene._postUpdate.raiseEvent(scene, time);
 
-        var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
-        if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
-            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
-            shouldRender = shouldRender || difference >= this.maximumRenderTimeChange;
+        var cameraChanged = checkForCameraUpdates(scene);
+        var shouldRender = !scene.requestRenderMode || forceRender || scene._renderRequested || cameraChanged || (scene.mode === SceneMode.MORPHING);
+        if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
+            var difference = Math.abs(JulianDate.secondsDifference(scene._lastRenderTime, time));
+            shouldRender = shouldRender || difference >= scene.maximumRenderTimeChange;
         }
 
         if (shouldRender) {
-            this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
-            this._renderRequested = false;
+            scene._lastRenderTime = JulianDate.clone(time, scene._lastRenderTime);
+            scene._renderRequested = false;
 
             // Render
-            this._preRender.raiseEvent(this, time);
-            tryAndCatchError(this, time, render);
-            this._postRender.raiseEvent(this, time);
+            scene._preRender.raiseEvent(scene, time);
+            tryAndCatchError(scene, time, render);
+            scene._postRender.raiseEvent(scene, time);
 
             RequestScheduler.update();
         }
 
-        updateDebugShowFramesPerSecond(this, shouldRender);
-        callAfterRenderFunctions(this);
+        updateDebugShowFramesPerSecond(scene, shouldRender);
+        callAfterRenderFunctions(scene);
+    }
+
+    /**
+     * Updates and renders the scene.
+     * @param {JulianDate} [time] The simulation time to render.
+     *
+     * @private
+     */
+    Scene.prototype.render = function(time) {
+        if (!defined(time)) {
+            time = JulianDate.now();
+        }
+
+        updateAndRenderScene(this, time, false);
+    };
+
+    /**
+     * Updates and renders the scene. Always forces a new render frame regardless of if a render was requested.
+     * @param {JulianDate} [time] The simulation time to render.
+     *
+     * @private
+     */
+    Scene.prototype.forceRender = function(time) {
+        if (!defined(time)) {
+            time = JulianDate.now();
+        }
+
+        updateAndRenderScene(this, time, true);
     };
 
     /**

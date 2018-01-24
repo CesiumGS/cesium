@@ -1596,4 +1596,22 @@ defineSuite([
 
         scene.destroyForSpecs();
     });
+
+    it('forceRender renders a scene regardless of whether a render was requested', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.forceRender();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
 }, 'WebGL');
