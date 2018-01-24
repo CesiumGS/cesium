@@ -57,6 +57,7 @@ var czml = [{
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.clockViewModel.shouldAnimate = true;cz,
 viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
 //Sandcastle_End

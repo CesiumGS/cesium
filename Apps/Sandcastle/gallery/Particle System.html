@@ -141,6 +141,7 @@
         'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.clockViewModel.shouldAnimate = true;
 
 //Set the random number seed for consistent results.
 Cesium.Math.setRandomNumberSeed(3);
@@ -287,7 +288,7 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
     lifeTime : 16.0,
 
     emitter : new Cesium.CircleEmitter(2.0),
-    
+
     emitterModelMatrix : computeEmitterModelMatrix(),
 
     forces : [applyGravity]

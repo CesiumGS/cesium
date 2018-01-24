@@ -93,6 +93,7 @@ var czml = [{
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.clockViewModel.shouldAnimate = true;
 var dataSource = new Cesium.CzmlDataSource();
 
 function scaleProperty(property, scalingFactor) {

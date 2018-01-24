@@ -1873,6 +1873,8 @@ terrainProvider : terrainProvider,
 baseLayerPicker : false
 });
 
+viewer.clockViewModel.shouldAnimate = true;
+
 viewer.dataSources.add(Cesium.CzmlDataSource.load(czml)).then(function(ds) {
 viewer.trackedEntity = ds.entities.getById('path');
 });

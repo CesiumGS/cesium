@@ -33,6 +33,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true
 });
 
+viewer.clockViewModel.shouldAnimate = true;
+
 function createModel(url, height) {
     viewer.entities.removeAll();
 

@@ -44,6 +44,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {showRenderLoopErrors : false});
+viewer.clockViewModel.shouldAnimate = true;
 
 var videoElement = document.getElementById('trailer');
 
