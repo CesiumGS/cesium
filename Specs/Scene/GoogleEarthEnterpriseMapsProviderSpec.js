@@ -6,6 +6,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -20,6 +21,7 @@ defineSuite([
         loadWithXhr,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
@@ -68,6 +70,31 @@ defineSuite([
 
         var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
+            channel : channel,
+            path : path
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var path = '';
+        var url = 'http://example.invalid';
+        var channel = 1234;
+
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/good.json', responseType, method, data, headers, deferred);
+        };
+
+        var resource = new Resource({
+            url : url
+        });
+
+        var provider = new GoogleEarthEnterpriseMapsProvider({
+            url : resource,
             channel : channel,
             path : path
         });

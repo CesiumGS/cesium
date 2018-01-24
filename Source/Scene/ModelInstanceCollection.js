@@ -7,10 +7,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/Buffer',
@@ -33,10 +35,12 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Matrix4,
         PrimitiveType,
+        Resource,
         RuntimeError,
         Transforms,
         Buffer,
@@ -72,11 +76,10 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
-     * @param {String} [options.url] The url to the .gltf file.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Resource|String} [options.url] The url to the .gltf file.
      * @param {Object} [options.requestType] The request type, used for request prioritization
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
-     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.
      * @param {Boolean} [options.show=true] Determines if the collection will be shown.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each instance is pickable with {@link Scene#pick}.
@@ -145,11 +148,10 @@ define([
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
         // Passed on to Model
-        this._url = options.url;
-        this._headers = options.headers;
+        this._url = Resource.createIfNeeded(options.url);
         this._requestType = options.requestType;
         this._gltf = options.gltf;
-        this._basePath = options.basePath;
+        this._basePath = Resource.createIfNeeded(options.basePath);
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
         this._upAxis = options.upAxis; // Undocumented option
@@ -595,7 +597,6 @@ define([
 
         var modelOptions = {
             url : collection._url,
-            headers : collection._headers,
             requestType : collection._requestType,
             gltf : collection._gltf,
             basePath : collection._basePath,
@@ -695,7 +696,7 @@ define([
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
 
             if (defined(collection._url)) {
-                modelOptions.cacheKey = collection._url + '#instanced';
+                modelOptions.cacheKey = collection._url.getUrlComponent() + '#instanced';
             }
         } else {
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);

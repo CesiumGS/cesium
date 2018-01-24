@@ -4,6 +4,7 @@ define([
         './defined',
         './DeveloperError',
         './loadImage',
+        './Resource',
         './writeTextToCanvas'
     ], function(
         buildModuleUrl,
@@ -11,6 +12,7 @@ define([
         defined,
         DeveloperError,
         loadImage,
+        Resource,
         writeTextToCanvas) {
     'use strict';
 
@@ -53,7 +55,7 @@ define([
     /**
      * Creates a pin with the specified icon, color, and size.
      *
-     * @param {String} url The url of the image to be stamped onto the pin.
+     * @param {Resource|String} url The url of the image to be stamped onto the pin.
      * @param {Color} color The color of the pin.
      * @param {Number} size The size of the pin, in pixels.
      * @returns {Canvas|Promise.<Canvas>} The canvas element or a Promise to the canvas element that represents the generated pin.
@@ -213,8 +215,10 @@ define([
         drawPin(context2D, color, size);
 
         if (defined(url)) {
+            var resource = Resource.createIfNeeded(url);
+
             //If we have an image url, load it and then stamp the pin.
-            var promise = loadImage(url).then(function(image) {
+            var promise = loadImage(resource).then(function(image) {
                 drawIcon(context2D, image, size);
                 cache[id] = canvas;
                 return canvas;

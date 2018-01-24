@@ -22,6 +22,7 @@ defineSuite([
         'Core/NearFarScalar',
         'Core/Rectangle',
         'Core/RequestErrorEvent',
+        'Core/Resource',
         'Core/RuntimeError',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
@@ -60,6 +61,7 @@ defineSuite([
         NearFarScalar,
         Rectangle,
         RequestErrorEvent,
+        Resource,
         RuntimeError,
         HeadingPitchRange,
         HeadingPitchRoll,
@@ -118,9 +120,16 @@ defineSuite([
     var uberIconScale = 3;
     var uberIconHeading = CesiumMath.toRadians(-45);
     var uberIconHotspot = new Cartesian2(45, -42);
+    var uberIconHref = Resource.DEFAULT.getDerivedResource({
+        url: 'test.png'
+    }).url;
 
     var uberLabelColor = Color.fromBytes(0xee, 0xee, 0xee, 0xee);
     var uberLabelScale = 4;
+
+    var expectedRefreshLinkHref = Resource.DEFAULT.getDerivedResource({
+        url: './Data/KML/refresh.kml'
+    }).url;
 
     var options = {
         camera : {
@@ -236,9 +245,31 @@ defineSuite([
         });
     });
 
+    it('load works with a KML Resource', function() {
+        var dataSource = new KmlDataSource(options);
+        var resource = new Resource({
+            url: 'Data/KML/simple.kml'
+        });
+        return dataSource.load(resource, options).then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
     it('load works with a KMZ URL', function() {
         var dataSource = new KmlDataSource(options);
         return dataSource.load('Data/KML/simple.kmz').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load works with a KMZ Resource', function() {
+        var dataSource = new KmlDataSource(options);
+        var resource = new Resource({
+            url: 'Data/KML/simple.kmz'
+        });
+        return dataSource.load(resource).then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });
@@ -824,11 +855,11 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
-            expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(entity.rectangle.material.image.getValue().url).toEqual('http://test.invalid/image.png');
         });
     });
 
-    it('GroundOverlay: Sets rectangle image material', function() {
+    it('GroundOverlay: Sets rectangle image material with color', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <GroundOverlay>\
             <color>7F0000FF</color>\
@@ -840,7 +871,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
-            expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(entity.rectangle.material.image.getValue().url).toEqual('http://test.invalid/image.png');
             expect(entity.rectangle.material.color.getValue()).toEqual(new Color(1.0, 0.0, 0.0, 127/255));
         });
     });
@@ -951,7 +982,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.polygon.material).toBeInstanceOf(ImageMaterialProperty);
-            expect(entity.polygon.material.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(entity.polygon.material.image.getValue().url).toEqual('http://test.invalid/image.png');
         });
     });
 
@@ -1061,7 +1092,7 @@ defineSuite([
             var billboard = entities[0].billboard;
             expect(billboard.scale.getValue()).toEqual(2.0);
             expect(billboard.rotation.getValue()).toEqual(CesiumMath.toRadians(-4.0));
-            expect(billboard.image.getValue()).toEqual('http://test.invalid');
+            expect(billboard.image.getValue().url).toEqual('http://test.invalid');
         });
     });
 
@@ -1150,7 +1181,7 @@ defineSuite([
             expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
             expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
             expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
-            expect(entity.billboard.image.getValue()).toEqual('test.png');
+            expect(entity.billboard.image.getValue().url).toEqual(uberIconHref);
             expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
             expect(entity.polyline).toBeUndefined();
@@ -1181,7 +1212,7 @@ defineSuite([
             expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
             expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
             expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
-            expect(entity.billboard.image.getValue()).toEqual('test.png');
+            expect(entity.billboard.image.getValue().url).toEqual(uberIconHref);
             expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
             expect(entity.polyline.material).toBeInstanceOf(ColorMaterialProperty);
@@ -1306,7 +1337,7 @@ defineSuite([
             expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
             expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
             expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
-            expect(entity.billboard.image.getValue()).toEqual('test.png');
+            expect(entity.billboard.image.getValue().url).toEqual(uberIconHref);
             expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
             expect(entity.path).toBeDefined();
@@ -1345,7 +1376,7 @@ defineSuite([
             expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
             expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
             expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
-            expect(entity.billboard.image.getValue()).toEqual('test.png');
+            expect(entity.billboard.image.getValue().url).toEqual(uberIconHref);
             expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
             expect(entity.path).toBeDefined();
@@ -1388,7 +1419,7 @@ defineSuite([
             expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
             expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
             expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
-            expect(entity.billboard.image.getValue()).toEqual('test.png');
+            expect(entity.billboard.image.getValue().url).toEqual(uberIconHref);
             expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
             expect(entity.path).toBeDefined();
@@ -1429,7 +1460,7 @@ defineSuite([
             expect(entity.billboard.color.getValue()).toEqual(uberIconColor);
             expect(entity.billboard.scale.getValue()).toEqual(uberIconScale);
             expect(entity.billboard.rotation.getValue()).toEqual(uberIconHeading);
-            expect(entity.billboard.image.getValue()).toEqual('test.png');
+            expect(entity.billboard.image.getValue().url).toEqual(uberIconHref);
             expect(entity.billboard.pixelOffset.getValue()).toEqual(uberIconHotspot);
 
             expect(entity.path).toBeDefined();
@@ -1572,7 +1603,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(billboard.image.getValue().url).toEqual('http://test.invalid/image.png');
         });
     });
 
@@ -1591,7 +1622,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual('https://maps.google.com/mapfiles/kml/pal3/icon56.png');
+            expect(billboard.image.getValue().url).toEqual('https://maps.google.com/mapfiles/kml/pal3/icon56.png');
         });
     });
 
@@ -1614,7 +1645,7 @@ defineSuite([
         }).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(billboard.image.getValue().url).toEqual('http://test.invalid/image.png');
         });
     });
 
@@ -1622,7 +1653,7 @@ defineSuite([
         return KmlDataSource.load('Data/KML/simple.kmz', options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual(image);
+            expect(billboard.image.getValue().url).toEqual(image);
         });
     });
 
@@ -1638,15 +1669,16 @@ defineSuite([
               </Style>\
           </Placemark>';
 
+        var proxy = new DefaultProxy('/proxy/');
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
             camera : options.camera,
             canvas : options.canvas,
             sourceUri : 'http://test.invalid',
-            proxy : new DefaultProxy('/proxy/')
+            proxy : proxy
         }).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual(dataSource._proxy.getURL('http://test.invalid/image.png'));
+            expect(billboard.image.getValue().url).toEqual(proxy.getURL('http://test.invalid/image.png'));
         });
     });
 
@@ -1672,7 +1704,7 @@ defineSuite([
         }).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png?test=true');
+            expect(billboard.image.getValue().url).toEqual('http://test.invalid/image.png?test=true');
         });
     });
 
@@ -1693,9 +1725,13 @@ defineSuite([
             </Style>\
           </Placemark>';
 
+        var expectedIconHref = Resource.DEFAULT.getDerivedResource({
+            url: 'whiteShapes.png'
+        }).url;
+
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var billboard = dataSource.entities.values[0].billboard;
-            expect(billboard.image.getValue()).toEqual('whiteShapes.png');
+            expect(billboard.image.getValue().url).toEqual(expectedIconHref);
             expect(billboard.imageSubRegion.getValue()).toEqual(new BoundingRectangle(49, 43, 18, 18));
         });
     });
@@ -3372,7 +3408,7 @@ defineSuite([
         });
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?password=Passw0rd&token=32940&BBOX=-180,-90,180,90');
+            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&password=Passw0rd&token=32940');
         });
     });
 
@@ -3403,7 +3439,7 @@ defineSuite([
                 dataSource.update(0);
                 return (spy.calls.count() > 0);
             }).then(function() {
-                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/refresh.kml');
+                expect(spy).toHaveBeenCalledWith(dataSource, expectedRefreshLinkHref);
 
                 expect(entities.length).toEqual(3);
                 var link2 = entities[0];
@@ -3445,7 +3481,7 @@ defineSuite([
             return pollToPromise(function() {
                 return (spy.calls.count() > 0);
             }).then(function() {
-                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/refresh.kml');
+                expect(spy).toHaveBeenCalledWith(dataSource, expectedRefreshLinkHref);
 
                 expect(entities.length).toEqual(3);
                 var link2 = entities[0];
@@ -3490,7 +3526,7 @@ defineSuite([
             return pollToPromise(function() {
                 return (spy.calls.count() > 0);
             }).then(function() {
-                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/refresh.kml?BBOX=-180,-90,180,90');
+                expect(spy).toHaveBeenCalledWith(dataSource, expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90');
 
                 expect(entities.length).toEqual(3);
                 var link2 = entities[0];
@@ -3523,7 +3559,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml');
+            expect(url).toEqual(expectedRefreshLinkHref);
         });
     });
 
@@ -3544,7 +3580,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml');
+            expect(url).toEqual(expectedRefreshLinkHref);
         });
     });
 
@@ -3566,7 +3602,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?BBOX=-180,-90,180,90');
+            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90');
         });
     });
 
@@ -3589,7 +3625,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?client=Cesium-v1&v=2.2&lang=English');
+            expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English');
         });
     });
 
@@ -3612,7 +3648,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?client=Cesium-v1&v=2.2&lang=English');
+            expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English');
         });
     });
 
@@ -3642,7 +3678,7 @@ defineSuite([
         });
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?test=false&token=39&client=Cesium-v1&v=2.2&lang=English');
+            expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English&test=false&token=39');
         });
     });
 
@@ -3671,7 +3707,7 @@ defineSuite([
         });
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?test=true&client=Cesium-v1&v=2.2&lang=English');
+            expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English&test=true');
         });
     });
 
@@ -3696,7 +3732,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?BBOX=-180,-90,180,90;CAMERA=0,0,6378137,0,0;VIEW=45,45,512,512,1');
+            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1');
         });
     });
 
@@ -3721,7 +3757,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?BBOX=-180,-90,180,90;CAMERA=0,0,6378137,0,0;VIEW=45,45,512,512,1');
+            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1');
         });
     });
 
@@ -3752,7 +3788,7 @@ defineSuite([
         });
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?test=true&BBOX=-180,-90,180,90;CAMERA=0,0,6378137,0,0;VIEW=45,45,512,512,1');
+            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1&test=true');
         });
     });
 
@@ -3783,7 +3819,7 @@ defineSuite([
         });
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?test=true&BBOX=-180,-90,180,90;CAMERA=0,0,6378137,0,0;VIEW=45,45,512,512,1');
+            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1&test=true');
         });
     });
 
@@ -3807,7 +3843,7 @@ defineSuite([
         KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?vf=1&hq=1');
+            expect(url).toEqual(expectedRefreshLinkHref + '?hq=1&vf=1');
         });
     });
 
@@ -3837,7 +3873,7 @@ defineSuite([
         });
 
         return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('./Data/KML/refresh.kml?test=true&vf=1&hq=1');
+            expect(url).toEqual(expectedRefreshLinkHref + '?hq=1&vf=1&test=true');
         });
     });
 
@@ -3891,7 +3927,7 @@ defineSuite([
             return pollToPromise(function() {
                 return (spy.calls.count() > 0);
             }).then(function() {
-                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/refresh.kml?BBOX=0,0,0,0');
+                expect(spy).toHaveBeenCalledWith(dataSource, expectedRefreshLinkHref + '?BBOX=0%2C0%2C0%2C0');
 
                 expect(entities.length).toEqual(3);
                 var link2 = entities[0];

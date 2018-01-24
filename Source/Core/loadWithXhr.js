@@ -1,23 +1,29 @@
 define([
         '../ThirdParty/when',
         './Check',
+        './clone',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Request',
         './RequestErrorEvent',
         './RequestScheduler',
+        './RequestState',
+        './Resource',
         './RuntimeError',
         './TrustedServers'
     ], function(
         when,
         Check,
+        clone,
         defaultValue,
         defined,
         DeveloperError,
         Request,
         RequestErrorEvent,
         RequestScheduler,
+        RequestState,
+        Resource,
         RuntimeError,
         TrustedServers) {
     'use strict';
@@ -30,14 +36,14 @@ define([
      *
      * @exports loadWithXhr
      *
-     * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the data.
-     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
-     * @param {String} [options.method='GET'] The HTTP method to use.
-     * @param {String} [options.data] The data to send with the request, if any.
-     * @param {Object} [options.headers] HTTP headers to send with the request, if any.
-     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-     * @param {Request} [options.request] The request object.
+     * @param {Resource|Object} optionsOrResource Object with the following properties:
+     * @param {String} optionsOrResource.url The URL of the data.
+     * @param {String} [optionsOrResource.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [optionsOrResource.method='GET'] The HTTP method to use.
+     * @param {String} [optionsOrResource.data] The data to send with the request, if any.
+     * @param {Object} [optionsOrResource.headers] HTTP headers to send with the request, if any.
+     * @param {String} [optionsOrResource.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Request} [optionsOrResource.request] The request object.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -59,27 +65,37 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadWithXhr(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+    function loadWithXhr(optionsOrResource) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.url', options.url);
+        Check.defined('optionsOrResource', optionsOrResource);
         //>>includeEnd('debug');
 
-        var url = options.url;
+        var resource;
+        if (optionsOrResource instanceof Resource) {
+            resource = optionsOrResource.clone();
+        } else {
+            // Take advantage that the options are the same
+            resource = new Resource(optionsOrResource);
+        }
 
-        var responseType = options.responseType;
-        var method = defaultValue(options.method, 'GET');
-        var data = options.data;
-        var headers = options.headers;
-        var overrideMimeType = options.overrideMimeType;
-        url = defaultValue(url, options.url);
+        resource.request = defaultValue(resource.request, new Request());
 
-        var request = defined(options.request) ? options.request : new Request();
-        request.url = url;
+        return makeRequest(resource);
+    }
+
+    function makeRequest(optionsOrResource) {
+        var request = optionsOrResource.request;
+        request.url = optionsOrResource.url;
+
         request.requestFunction = function() {
+            var responseType = optionsOrResource.responseType;
+            var method = optionsOrResource.method;
+            var data = optionsOrResource.data;
+            var headers = optionsOrResource.headers;
+            var overrideMimeType = optionsOrResource.overrideMimeType;
             var deferred = when.defer();
-            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = loadWithXhr.load(optionsOrResource.url, responseType, method, data, headers, deferred, overrideMimeType);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
@@ -88,7 +104,33 @@ define([
             return deferred.promise;
         };
 
-        return RequestScheduler.request(request);
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .then(function(data) {
+                return data;
+            })
+            .otherwise(function(e) {
+                if ((request.state !== RequestState.FAILED) || !defined(optionsOrResource.retryOnError)) {
+                    return when.reject(e);
+                }
+
+                return optionsOrResource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return makeRequest(optionsOrResource);
+                        }
+
+                        return when.reject(e);
+                    });
+            });
     }
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;

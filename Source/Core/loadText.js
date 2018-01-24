@@ -1,7 +1,15 @@
 define([
-        './loadWithXhr'
+        './Check',
+        './defined',
+        './deprecationWarning',
+        './loadWithXhr',
+        './Resource'
     ], function(
-        loadWithXhr) {
+        Check,
+        defined,
+        deprecationWarning,
+        loadWithXhr,
+        Resource) {
     'use strict';
 
     /**
@@ -12,17 +20,19 @@ define([
      *
      * @exports loadText
      *
-     * @param {String} url The URL to request.
-     * @param {Object} [headers] HTTP headers to send with the request.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} urlOrResource The URL to request.
      * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
      * // load text from a URL, setting a custom header
-     * Cesium.loadText('http://someUrl.com/someJson.txt', {
-     *   'X-Custom-Header' : 'some value'
-     * }).then(function(text) {
+     * var resource = new Resource({
+     *   url: 'http://someUrl.com/someJson.txt',
+     *   headers: {
+     *     'X-Custom-Header' : 'some value'
+     *   }
+     * });
+     * Cesium.loadText(resource).then(function(text) {
      *     // Do something with the text
      * }).otherwise(function(error) {
      *     // an error occurred
@@ -32,12 +42,25 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadText(url, headers, request) {
-        return loadWithXhr({
-            url : url,
-            headers : headers,
-            request : request
+    function loadText(urlOrResource, headers, request) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
+
+        if (defined(headers)) {
+            deprecationWarning('loadText.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
+        }
+
+        if (defined(request)) {
+            deprecationWarning('loadText.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
+
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
         });
+
+        return loadWithXhr(resource);
     }
 
     return loadText;

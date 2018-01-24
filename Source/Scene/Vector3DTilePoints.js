@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -19,6 +20,7 @@ define([
         './PolylineCollection',
         './VerticalOrigin'
     ], function(
+        arraySlice,
         Cartesian2,
         Cartesian3,
         Color,
@@ -158,8 +160,8 @@ define([
 
             if (!defined(packedBuffer)) {
                 // Copy because they may be the views on the same buffer.
-                positions = points._positions = positions.slice();
-                points._batchIds = points._batchIds.slice();
+                positions = points._positions = arraySlice(positions);
+                points._batchIds = arraySlice(points._batchIds);
 
                 packedBuffer = points._packedBuffer = packBuffer(points, ellipsoid);
             }
