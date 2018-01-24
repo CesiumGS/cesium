@@ -79,9 +79,9 @@ define([
             resource = new Resource(optionsOrResource);
         }
 
-		if (!defined(resource.request)) {
-			resource.request = new Request();
-		}
+        if (!defined(resource.request)) {
+            resource.request = new Request();
+        }
 
         return makeRequest(resource);
     }
