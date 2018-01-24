@@ -29,13 +29,15 @@ function startup(Cesium) {
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM'
-}));
+Cesium.CesiumIon.create3DTileset(1460, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM' })
+    .then(function(tileset) {
+        viewer.scene.primitives.add(tileset);
+        viewer.zoomTo(tileset);
+    })
+    .otherwise(function(error) {
+        console.log(error);
+    });
 
-viewer.zoomTo(tileset).otherwise(function(error) {
-    throw(error);
-});
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

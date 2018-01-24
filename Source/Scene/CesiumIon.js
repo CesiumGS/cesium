@@ -1,5 +1,6 @@
 define([
         '../Core/Check',
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/loadJson',
@@ -8,6 +9,7 @@ define([
         '../ThirdParty/when',
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
+        './Cesium3DTileset',
         './CesiumIonResource',
         './createTileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
@@ -18,6 +20,7 @@ define([
         './WebMapTileServiceImageryProvider'
     ], function(
         Check,
+        clone,
         defaultValue,
         defined,
         loadJson,
@@ -26,6 +29,7 @@ define([
         when,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
+        Cesium3DTileset,
         CesiumIonResource,
         createTileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
@@ -158,14 +162,15 @@ define([
     };
 
     /**
-     * Creates an {@link ImageryProvider} representing a Cesium ion imagery asset.
-     * Unlike {@link CesiumIon.createResource}, this function supports external asset functionality.
+     * Asynchronously creates an {@link ImageryProvider} representing a Cesium ion imagery asset and
+     * waits for it to become ready. Unlike {@link CesiumIon.createResource}, this function supports
+     * external asset functionality.
      *
      * @param {Number} assetId The Cesium ion asset id.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.accessToken=CesiumIon.defaultAccessToken] The access token to use.
      * @param {String} [options.serverUrl=CesiumIon.defaultServerUrl] The url to the Cesium ion API server.
-     * @returns {Promise<ImageryProvider>} A promise to an imagery provider presenting the requested Cesium ion Asset.
+     * @returns {Promise<ImageryProvider>} A promise to a ready imagery provider representing the requested Cesium ion Asset.
      *
      * @example
      * //Load an ImageryProvider with asset ID of 2347923
@@ -198,6 +203,71 @@ define([
                 }
 
                 return factory(endpoint.options);
+            })
+            .then(function(imageryProvider) {
+                return imageryProvider.readyPromise
+                    .then(function() { return imageryProvider; });
+            });
+    };
+
+    /**
+     * Asynchronously creates a {@link Cesium3DTileset} representing a Cesium ion 3D Tiles asset and
+     * waits for it to become ready.
+     *
+     * @param {Number} assetId The Cesium ion asset id.
+     * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.accessToken=CesiumIon.defaultAccessToken] The access token to use.
+     * @param {String} [options.serverUrl=CesiumIon.defaultServerUrl] The url to the Cesium ion API server.
+     * @param {String} [options.tilesetOptions] Additional options to be passed to the {@link Cesium3DTileset} constructor.
+     * @returns {Promise<Cesium3DTileset>} A promise to the ready tileset representing the requested Cesium ion Asset.
+     *
+     * @example
+     * //Load a tileset with asset ID of 2347923
+     * Cesium.CesiumIon.create3DTileset(2347923)
+     *   .then(function (tileset) {
+     *     viewer.scene.primitives.add(tileset);
+     *   });
+     *
+     * //Load a tileset with asset ID of 2347923 for 3D Tile classification
+     * Cesium.CesiumIon.create3DTileset(2347923, { tilesetOptions: { classificationType: Cesium.ClassificationType.CESIUM_3D_TILE } })
+     *   .then(function (tileset) {
+     *     viewer.scene.primitives.add(tileset);
+     *   });
+     */
+    CesiumIon.create3DTileset = function(assetId, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var endpointResource = CesiumIon._createEndpointResource(assetId, options);
+
+        return CesiumIon._loadJson(endpointResource)
+            .then(function(endpoint) {
+
+                if (endpoint.type !== '3DTILES') {
+                    throw new RuntimeError('Cesium ion asset ' + assetId + ' is not a 3D Tiles asset.');
+                }
+
+                var externalType = endpoint.externalType;
+
+                var resource;
+                if (!defined(externalType)) {
+                    resource = CesiumIonResource.create(endpoint, endpointResource);
+                } else if (externalType === '3DTILES') {
+                    resource = new Resource({ url: endpoint.options.url });
+                } else {
+                    throw new RuntimeError('Unrecognized Cesium ion external 3DTILES type: ' + externalType);
+                }
+
+                var tilesetOptions = options.tilesetOptions;
+                if (defined(tilesetOptions)) {
+                    tilesetOptions = clone(tilesetOptions);
+                    tilesetOptions.url = resource;
+                } else {
+                    tilesetOptions = {
+                        url: resource
+                    };
+                }
+
+                var tileset = new Cesium3DTileset(tilesetOptions);
+                return tileset.readyPromise;
             });
     };
 

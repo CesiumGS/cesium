@@ -68,16 +68,19 @@ viewer.scene.camera.setView({
     endTransform: Cesium.Matrix4.IDENTITY
 });
 
-// Load the NYC buildings tileset.
-var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://beta.cesium.com/api/assets/1461?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkYWJmM2MzNS02OWM5LTQ3OWItYjEyYS0xZmNlODM5ZDNkMTYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjFdLCJpYXQiOjE0OTkyNjQ3NDN9.vuR75SqPDKcggvUrG_vpx0Av02jdiAxnnB1fNf-9f7s'
-}));
+var tileset;
 
-tileset.style = new Cesium.Cesium3DTileStyle({
-    meta: {
-        description: "'Building id ${id} has height ${height}.'"
-    }
-});
+// Load the NYC buildings tileset.
+Cesium.CesiumIon.create3DTileset(1461, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkYWJmM2MzNS02OWM5LTQ3OWItYjEyYS0xZmNlODM5ZDNkMTYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjFdLCJpYXQiOjE0OTkyNjQ3NDN9.vuR75SqPDKcggvUrG_vpx0Av02jdiAxnnB1fNf-9f7s' })
+    .then(function(result) {
+        tileset = result;
+        scene.primitives.add(tileset);
+        tileset.style = new Cesium.Cesium3DTileStyle({
+            meta: {
+                description: "'Building id ${id} has height ${height}.'"
+            }
+        });
+    });
 
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
