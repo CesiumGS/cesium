@@ -139,6 +139,11 @@ define([
         Check.typeOf.string('options.url', options.url);
         //>>includeEnd('debug');
 
+        var data = options.data;
+        if (!(options.data instanceof FormData)) {
+            data = defaultClone(options.data);
+        }
+
         this._url = undefined;
         this._templateValues = defaultClone(options.templateValues, {});
         this._queryParameters = defaultClone(options.queryParameters, {});
@@ -176,7 +181,7 @@ define([
          *
          * @type {Object}
          */
-        this.data = defaultClone(options.data);
+        this.data = data;
 
         /**
          * Overrides the MIME type returned by the server.
