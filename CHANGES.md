@@ -4,7 +4,7 @@ Change Log
 ### 1.42 - 2018-02-01
 
 * Breaking changes
-  * The clock does not animate by default. Set the viewer `ClockViewModel.shouldAnimate` property to `true` to enable animation.
+  * The clock does not animate by default. Set the `viewer.clock.shouldAnimate` property to `true` to enable animation.
 * Deprecated
   * For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
 * Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, `Billboard`, along with all the low level `load*()` functions.
