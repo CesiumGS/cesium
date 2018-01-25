@@ -38,7 +38,7 @@ Change Log
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
 * Fixed sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
 * Fixed camera movement and look functions for 2D mode [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
-* Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox.
+* Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
 
 ### 1.41 - 2018-01-02
 
