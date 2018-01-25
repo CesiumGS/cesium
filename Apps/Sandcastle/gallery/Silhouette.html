@@ -63,7 +63,7 @@ var silhouette = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrar
 
 function updatePostProcess() {
     silhouette.enabled = Boolean(viewModel.show);
-    silhouette.uniformValues.color = Cesium.Color.YELLOW;
+    silhouette.uniforms.color = Cesium.Color.YELLOW;
 }
 updatePostProcess();
 //Sandcastle_End

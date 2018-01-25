@@ -43,69 +43,72 @@ define([
     /**
      * A collection of {@link PostProcess}es and/or {@link PostProcessComposite}s.
      * <p>
-     * The texture modified by each post process is the texture rendered to by the scene or the texture rendered
-     * to by the previous post-process or composite in the collection.
+     * The input texture for each post-process stage is the texture rendered to by the scene or the texture rendered
+     * to by the previous stage in the collection.
      * </p>
      * <p>
-     * If the ambient occlusion or bloom post-processes are enabled, they will execute before all other post-processes.
+     * If the ambient occlusion or bloom stages are enabled, they will execute before all other stages.
      * </p>
      * <p>
-     * If the FXAA post-process is enabled, it will execute after all other post-processes.
+     * If the FXAA stage is enabled, it will execute after all other stages.
      * </p>
      *
      * @alias PostProcessCollection
      * @constructor
      */
     function PostProcessCollection() {
-        this._processes = [];
-        this._activeProcesses = [];
+        var fxaa = PostProcessLibrary.createFXAAStage();
+        var ao = PostProcessLibrary.createAmbientOcclusionStage();
+        var bloom = PostProcessLibrary.createBloomStage();
 
-        this._fxaa = PostProcessLibrary.createFXAAStage();
-        this._ao = PostProcessLibrary.createAmbientOcclusionStage();
-        this._bloom = PostProcessLibrary.createBloomStage();
+        ao.enabled = false;
+        bloom.enabled = false;
 
-        this._ao.enabled = false;
-        this._bloom.enabled = false;
+        var stageNames = {};
+        var stack = stackScratch;
+        stack.push(fxaa, ao, bloom);
+        while (stack.length > 0) {
+            var stage = stack.pop();
+            stageNames[stage.name] = stage;
+            stage._collection = this;
+
+            var length = stage.length;
+            if (defined(length)) {
+                for (var i = 0; i < length; ++i) {
+                    stack.push(stage.get(i));
+                }
+            }
+        }
+
+        this._stages = [];
+        this._activeStages = [];
 
         this._randomTexture = undefined; // For AO
 
-        this._processesRemoved = false;
-        this._cacheDirty = false;
+        var that = this;
+        ao.uniforms.randomTexture = function() {
+            return that._randomTexture;
+        };
+
+        this._ao = ao;
+        this._bloom = bloom;
+        this._fxaa = fxaa;
 
         this._lastLength = undefined;
         this._aoEnabled = undefined;
         this._bloomEnabled = undefined;
         this._fxaaEnabled = undefined;
 
-        this._processNames = {};
+        this._stagesRemoved = false;
+        this._textureCacheDirty = false;
+
+        this._stageNames = stageNames;
         this._textureCache = undefined;
-
-        var processNames = this._processNames;
-
-        var stack = stackScratch;
-        stack.push(this._fxaa, this._ao, this._bloom);
-        while (stack.length > 0) {
-            var process = stack.pop();
-            processNames[process.name] = process;
-            process._collection = this;
-
-            var length = process.length;
-            if (defined(length)) {
-                for (var i = 0; i < length; ++i) {
-                    stack.push(process.get(i));
-                }
-            }
-        }
-
-        var that = this;
-        this._ao.uniformValues.randomTexture = function() {
-            return that._randomTexture;
-        };
     }
 
     defineProperties(PostProcessCollection.prototype, {
         /**
-         * Determines if all of the post-processes in the collection are ready to be executed.
+         * Determines if all of the post-process stages in the collection are ready to be executed.
          *
          * @memberof PostProcessCollection.prototype
          * @type {Boolean}
@@ -114,24 +117,28 @@ define([
         ready : {
             get : function() {
                 var readyAndEnabled = false;
-                var processes = this._processes;
-                var length = processes.length;
+                var stages = this._stages;
+                var length = stages.length;
                 for (var i = length - 1; i >= 0; --i) {
-                    var process = processes[i];
-                    readyAndEnabled = readyAndEnabled || (process.ready && process.enabled);
+                    var stage = stages[i];
+                    readyAndEnabled = readyAndEnabled || (stage.ready && stage.enabled);
                 }
 
-                readyAndEnabled = readyAndEnabled || (this._fxaa.ready && this._fxaa.enabled);
-                readyAndEnabled = readyAndEnabled || (this._ao.ready && this._ao.enabled);
-                readyAndEnabled = readyAndEnabled || (this._bloom.ready && this._bloom.enabled);
+                var fxaa = this._fxaa;
+                var ao = this._ao;
+                var bloom = this._bloom;
+
+                readyAndEnabled = readyAndEnabled || (fxaa.ready && fxaa.enabled);
+                readyAndEnabled = readyAndEnabled || (ao.ready && ao.enabled);
+                readyAndEnabled = readyAndEnabled || (bloom.ready && bloom.enabled);
 
                 return readyAndEnabled;
             }
         },
         /**
-         * A post-process for Fast Approximate Anti-aliasing.
+         * A post-process stage for Fast Approximate Anti-aliasing.
          * <p>
-         * When enabled, this post-process will execute after all others.
+         * When enabled, this stage will execute after all others.
          * </p>
          *
          * @memberof PostProcessCollection.prototype
@@ -171,7 +178,7 @@ define([
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
-         * When enabled, this post-process will execute before all others.
+         * When enabled, this stage will execute before all others.
          * </p>
          *
          * @memberof PostProcessCollection.prototype
@@ -184,12 +191,12 @@ define([
             }
         },
         /**
-         * A post-process for a bloom effect.
+         * A post-process stage for a bloom effect.
          * <p>
          * A bloom effect adds glow effect, makes bright areas brighter, and dark areas darker.
          * </p>
          * <p>
-         * This post-process stage has the following uniforms: <code>contrast</code>, <code>brightness</code>, <code>glowOnly</code>,
+         * This stage has the following uniforms: <code>contrast</code>, <code>brightness</code>, <code>glowOnly</code>,
          * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code>.
          * </p>
          * <p>
@@ -204,7 +211,7 @@ define([
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
-         * When enabled, this post-process will execute before all others.
+         * When enabled, this stage will execute before all others.
          * </p>
          *
          * @memberOf PostProcessCollection.prototype
@@ -217,7 +224,7 @@ define([
             }
         },
         /**
-         * The number of post-processes in this collection.
+         * The number of post-process stages in this collection.
          *
          * @memberof PostProcessCollection.prototype
          * @type {Number}
@@ -225,11 +232,11 @@ define([
          */
         length : {
             get : function() {
-                return this._processes.length;
+                return this._stages.length;
             }
         },
         /**
-         * A reference to the last texture written to when executing the post-processes in this collection.
+         * A reference to the last texture written to when executing the post-process stages in this collection.
          *
          * @memberof PostProcessCollection.prototype
          * @type {Texture}
@@ -238,25 +245,28 @@ define([
          */
         outputTexture : {
             get : function() {
-                if (this._fxaa.enabled && this._fxaa.ready) {
-                    return this.getOutputTexture(this._fxaa.name);
+                var fxaa = this._fxaa;
+                if (fxaa.enabled && fxaa.ready) {
+                    return this.getOutputTexture(fxaa.name);
                 }
 
-                var processes = this._processes;
-                var length = processes.length;
+                var stages = this._stages;
+                var length = stages.length;
                 for (var i = length - 1; i >= 0; --i) {
-                    var process = processes[i];
-                    if (process.ready && process.enabled) {
-                        return this.getOutputTexture(process.name);
+                    var stage = stages[i];
+                    if (stage.ready && stage.enabled) {
+                        return this.getOutputTexture(stage.name);
                     }
                 }
 
-                if (this._bloom.enabled && this._bloom.ready) {
-                    return this.getOutputTexture(this._bloom.name);
+                var bloom = this._bloom;
+                if (bloom.enabled && bloom.ready) {
+                    return this.getOutputTexture(bloom.name);
                 }
 
-                if (this._ao.enabled && this._ao.ready) {
-                    return this.getOutputTexture(this._ao.name);
+                var ao = this._ao;
+                if (ao.enabled && ao.ready) {
+                    return this.getOutputTexture(ao.name);
                 }
 
                 return undefined;
@@ -264,158 +274,160 @@ define([
         }
     });
 
-    function removeProcesses(collection) {
-        if (!collection._processesRemoved) {
+    function removeStages(collection) {
+        if (!collection._stagesRemoved) {
             return;
         }
 
-        collection._processesRemoved = false;
+        collection._stagesRemoved = false;
 
-        var newProcesses = [];
-        var processes = collection._processes;
-        var length = processes.length;
+        var newStages = [];
+        var stages = collection._stages;
+        var length = stages.length;
         for (var i = 0, j = 0; i < length; ++i) {
-            var process = processes[i];
-            if (process) {
-                process._index = j++;
-                newProcesses.push(process);
+            var stage = stages[i];
+            if (stage) {
+                stage._index = j++;
+                newStages.push(stage);
             }
         }
 
-        collection._processes = newProcesses;
+        collection._stages = newStages;
     }
 
     /**
-     * Adds the post-process to the collection.
+     * Adds the post-process stage to the collection.
      *
-     * @param {PostProcess|PostProcessComposite} postProcess The post-process to add to the collection.
-     * @return {PostProcess|PostProcessComposite} The post-process that was added to the collection.
+     * @param {PostProcess|PostProcessComposite} stage The post-process stage to add to the collection.
+     * @return {PostProcess|PostProcessComposite} The post-process stage that was added to the collection.
      *
-     * @exception {DeveloperError} The process has already been added to the collection or does not have a unique name.
+     * @exception {DeveloperError} The post-process stage has already been added to the collection or does not have a unique name.
      */
-    PostProcessCollection.prototype.add = function(postProcess) {
+    PostProcessCollection.prototype.add = function(stage) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('postProcess', postProcess);
+        Check.typeOf.object('stage', stage);
         //>>includeEnd('debug');
 
-        var processNames = this._processNames;
+        var stageNames = this._stageNames;
 
         var stack = stackScratch;
-        stack.push(postProcess);
+        stack.push(stage);
         while (stack.length > 0) {
-            var process = stack.pop();
+            var currentStage = stack.pop();
             //>>includeStart('debug', pragmas.debug);
-            if (defined(processNames[process.name])) {
-                throw new DeveloperError(process.name + ' has already been added to the collection or does not have a unique name.');
+            if (defined(stageNames[currentStage.name])) {
+                throw new DeveloperError(currentStage.name + ' has already been added to the collection or does not have a unique name.');
             }
             //>>includeEnd('debug');
-            processNames[process.name] = process;
-            process._collection = this;
+            stageNames[currentStage.name] = currentStage;
+            currentStage._collection = this;
 
-            var length = process.length;
+            var length = currentStage.length;
             if (defined(length)) {
                 for (var i = 0; i < length; ++i) {
-                    stack.push(process.get(i));
+                    stack.push(currentStage.get(i));
                 }
             }
         }
 
-        postProcess._index = this._processes.length;
-        this._processes.push(postProcess);
-        this._cacheDirty = true;
-        return postProcess;
+        var stages = this._stages;
+        stage._index = stages.length;
+        stages.push(stage);
+        this._textureCacheDirty = true;
+        return stage;
     };
 
     /**
-     * Removes a post-process from the collection and destroys it.
+     * Removes a post-process stage from the collection and destroys it.
      *
-     * @param {PostProcess|PostProcessComposite} postProcess The post-process to remove from the collection.
-     * @return {Boolean} Whether the post-process was removed.
+     * @param {PostProcess|PostProcessComposite} stage The post-process stage to remove from the collection.
+     * @return {Boolean} Whether the post-process stage was removed.
      */
-    PostProcessCollection.prototype.remove = function(postProcess) {
-        if (!this.contains(postProcess)) {
+    PostProcessCollection.prototype.remove = function(stage) {
+        if (!this.contains(stage)) {
             return false;
         }
 
-        var processNames = this._processNames;
+        var stageNames = this._stageNames;
 
         var stack = stackScratch;
-        stack.push(postProcess);
+        stack.push(stage);
         while (stack.length > 0) {
-            var process = stack.pop();
-            delete processNames[process.name];
+            var currentStage = stack.pop();
+            delete stageNames[currentStage.name];
 
-            var length = process.length;
+            var length = currentStage.length;
             if (defined(length)) {
                 for (var i = 0; i < length; ++i) {
-                    stack.push(process.get(i));
+                    stack.push(currentStage.get(i));
                 }
             }
         }
 
-        this._processes[postProcess._index] = undefined;
-        this._processesRemoved = true;
-        this._cacheDirty = true;
-        postProcess.destroy();
+        this._stages[stage._index] = undefined;
+        this._stagesRemoved = true;
+        this._textureCacheDirty = true;
+        stage.destroy();
         return true;
     };
 
     /**
-     * Returns whether the collection contains a post-process.
+     * Returns whether the collection contains a post-process stage.
      *
-     * @param {PostProcess|PostProcessComposite} postProcess The post-process.
-     * @return {Boolean} Whether the collection contains the post-process.
+     * @param {PostProcess|PostProcessComposite} stage The post-process stage.
+     * @return {Boolean} Whether the collection contains the post-process stage.
      */
-    PostProcessCollection.prototype.contains = function(postProcess) {
-        return defined(postProcess) && defined(postProcess._index) && postProcess._collection === this;
+    PostProcessCollection.prototype.contains = function(stage) {
+        return defined(stage) && defined(stage._index) && stage._collection === this;
     };
 
     /**
-     * Gets the post-process at <code>index</code>.
+     * Gets the post-process stage at <code>index</code>.
      *
-     * @param {Number} index The index of the post-process.
-     * @return {PostProcess|PostProcessComposite} The post-process at index.
+     * @param {Number} index The index of the post-process stage.
+     * @return {PostProcess|PostProcessComposite} The post-process stage at index.
      */
     PostProcessCollection.prototype.get = function(index) {
-        removeProcesses(this);
+        removeStages(this);
+        var stages = this._stages;
         //>>includeStart('debug', pragmas.debug);
-        var length = this._processes.length;
-        Check.typeOf.number.greaterThanOrEquals('processes length', length, 0);
+        var length = stages.length;
+        Check.typeOf.number.greaterThanOrEquals('stages length', length, 0);
         Check.typeOf.number.greaterThanOrEquals('index', index, 0);
         Check.typeOf.number.lessThan('index', index, length);
         //>>includeEnd('debug');
-        return this._processes[index];
+        return stages[index];
     };
 
     /**
-     * Removes all processes from the collection and destroys them.
+     * Removes all post-process stages from the collection and destroys them.
      */
     PostProcessCollection.prototype.removeAll = function() {
-        var processes = this._processes;
-        var length = processes.length;
+        var stages = this._stages;
+        var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            this.remove(processes[i]);
+            this.remove(stages[i]);
         }
-        processes.length = 0;
+        stages.length = 0;
     };
 
     /**
-     * Gets a post-process in the collection by its name.
+     * Gets a post-process stage in the collection by its name.
      *
-     * @param {String} name The name of the post-process.
-     * @return {PostProcess|PostProcessComposite} The post-process.
+     * @param {String} name The name of the post-process stage.
+     * @return {PostProcess|PostProcessComposite} The post-process stage.
      *
      * @private
      */
-    PostProcessCollection.prototype.getProcessByName = function(name) {
-        return this._processNames[name];
+    PostProcessCollection.prototype.getStageByName = function(name) {
+        return this._stageNames[name];
     };
 
     /**
-     * Gets the framebuffer to be used for a post-process with the given name.
+     * Gets the framebuffer to be used for a post-process stage with the given name.
      *
-     * @param {String} name The name of a post-process.
-     * @return {Framebuffer} The framebuffer to be used for a post-process with the given name.
+     * @param {String} name The name of a post-process stage.
+     * @return {Framebuffer} The framebuffer to be used for a post-process stage with the given name.
      *
      * @private
      */
@@ -424,36 +436,36 @@ define([
     };
 
     /**
-     * Called before the processes in the collection are executed. Calls update for each process and creates WebGL resources.
+     * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
      *
      * @param {Context} context The context.
      *
      * @private
      */
     PostProcessCollection.prototype.update = function(context) {
-        removeProcesses(this);
+        removeStages(this);
 
-        var activeProcesses = this._activeProcesses;
-        var processes = this._processes;
-        var length = activeProcesses.length = processes.length;
+        var activeStages = this._activeStages;
+        var stages = this._stages;
+        var length = activeStages.length = stages.length;
 
         var i;
-        var process;
+        var stage;
         var count = 0;
         for (i = 0; i < length; ++i) {
-            process = processes[i];
-            if (process.ready && process.enabled) {
-                activeProcesses[count++] = process;
+            stage = stages[i];
+            if (stage.ready && stage.enabled) {
+                activeStages[count++] = stage;
             }
         }
-        activeProcesses.length = count;
+        activeStages.length = count;
 
         var ao = this._ao;
         var bloom = this._bloom;
         var fxaa = this._fxaa;
 
-        if (this._cacheDirty || count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
-            // The number of processes to execute has changed.
+        if (this._textureCacheDirty || count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
+            // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
             this._textureCache = this._textureCache && this._textureCache.destroy();
             this._textureCache = new PostProcessTextureCache(this);
@@ -462,7 +474,7 @@ define([
             this._aoEnabled = ao.enabled;
             this._bloomEnabled = bloom.enabled;
             this._fxaaEnabled = fxaa.enabled;
-            this._cacheDirty = false;
+            this._textureCacheDirty = false;
         }
 
         if (defined(this._randomTexture) && !ao.enabled) {
@@ -501,14 +513,14 @@ define([
         ao.update(context);
         bloom.update(context);
 
-        length = activeProcesses.length;
+        length = stages.length;
         for (i = 0; i < length; ++i) {
-            processes[i].update(context);
+            stages[i].update(context);
         }
     };
 
     /**
-     * Clears all of the framebuffers used by the processes.
+     * Clears all of the framebuffers used by the stages.
      *
      * @param {Context} context The context.
      *
@@ -518,52 +530,52 @@ define([
         this._textureCache.clear(context);
     };
 
-    function getOutputTexture(process) {
-        while (defined(process.length)) {
-            process = process.get(process.length - 1);
+    function getOutputTexture(stage) {
+        while (defined(stage.length)) {
+            stage = stage.get(stage.length - 1);
         }
-        return process.outputTexture;
+        return stage.outputTexture;
     }
 
     /**
-     * Gets the output texture of a process with the given name.
+     * Gets the output texture of a stage with the given name.
      *
-     * @param {String} processName The name of the process.
-     * @return {Texture|undefined} The texture rendered to by the process with the given name.
+     * @param {String} stageName The name of the stage.
+     * @return {Texture|undefined} The texture rendered to by the stage with the given name.
      *
      * @private
      */
-    PostProcessCollection.prototype.getOutputTexture = function(processName) {
-        var process = this.getProcessByName(processName);
-        if (!defined(process)) {
+    PostProcessCollection.prototype.getOutputTexture = function(stageName) {
+        var stage = this.getStageByName(stageName);
+        if (!defined(stage)) {
             return undefined;
         }
-        return getOutputTexture(process);
+        return getOutputTexture(stage);
     };
 
-    function execute(process, context, colorTexture, depthTexture) {
-        if (defined(process.execute)) {
-            process.execute(context, colorTexture, depthTexture);
+    function execute(stage, context, colorTexture, depthTexture) {
+        if (defined(stage.execute)) {
+            stage.execute(context, colorTexture, depthTexture);
             return;
         }
 
-        var length = process.length;
+        var length = stage.length;
         var i;
 
-        if (process.executeInSeries) {
-            execute(process.get(0), context, colorTexture, depthTexture);
+        if (stage.executeInSeries) {
+            execute(stage.get(0), context, colorTexture, depthTexture);
             for (i = 1; i < length; ++i) {
-                execute(process.get(i), context, getOutputTexture(process.get(i - 1)), depthTexture);
+                execute(stage.get(i), context, getOutputTexture(stage.get(i - 1)), depthTexture);
             }
         } else {
             for (i = 0; i < length; ++i) {
-                execute(process.get(i), context, colorTexture, depthTexture);
+                execute(stage.get(i), context, colorTexture, depthTexture);
             }
         }
     }
 
     /**
-     * Executes all ready and enabled processes in the collection.
+     * Executes all ready and enabled stages in the collection.
      *
      * @param {Context} context The context.
      * @param {Texture} colorTexture The color texture rendered to by the scene.
@@ -572,8 +584,8 @@ define([
      * @private
      */
     PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
-        var activeProcesses = this._activeProcesses;
-        var length = activeProcesses.length;
+        var activeStages = this._activeStages;
+        var length = activeStages.length;
 
         var fxaa = this._fxaa;
         var ao = this._ao;
@@ -595,11 +607,11 @@ define([
         var lastTexture = initialTexture;
 
         if (length > 0) {
-            execute(activeProcesses[0], context, initialTexture, depthTexture);
+            execute(activeStages[0], context, initialTexture, depthTexture);
             for (var i = 1; i < length; ++i) {
-                execute(activeProcesses[i], context, getOutputTexture(activeProcesses[i - 1]), depthTexture);
+                execute(activeStages[i], context, getOutputTexture(activeStages[i - 1]), depthTexture);
             }
-            lastTexture = getOutputTexture(activeProcesses[length - 1]);
+            lastTexture = getOutputTexture(activeStages[length - 1]);
         }
 
         if (fxaa.enabled && fxaa.ready) {
@@ -608,7 +620,7 @@ define([
     };
 
     /**
-     * Copies the output of all executed processes to the color texture of a framebuffer.
+     * Copies the output of all executed stages to the color texture of a framebuffer.
      *
      * @param {Context} context The context.
      * @param {Framebuffer} framebuffer The framebuffer to copy to.

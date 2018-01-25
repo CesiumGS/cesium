@@ -40,18 +40,18 @@ define([
         this._sceneFramebuffer = new SceneFramebuffer();
 
         var scale = 0.125;
-        var processes = new Array(6);
+        var stages = new Array(6);
 
-        processes[0] = new PostProcess({
+        stages[0] = new PostProcess({
             fragmentShader : PassThrough,
             textureScale : scale,
             forcePowerOfTwo : true,
             samplingMode : PostProcessSampleMode.LINEAR
         });
 
-        var brightPass = processes[1] = new PostProcess({
+        var brightPass = stages[1] = new PostProcess({
             fragmentShader : BrightPass,
-            uniformValues : {
+            uniforms : {
                 avgLuminance : 0.5, // A guess at the average luminance across the entire scene
                 threshold : 0.25,
                 offset : 0.1
@@ -65,9 +65,9 @@ define([
         this._sigma = 2.0;
         this._blurStep = new Cartesian2();
 
-        processes[2] = new PostProcess({
+        stages[2] = new PostProcess({
             fragmentShader : GaussianBlur1D,
-            uniformValues : {
+            uniforms : {
                 step : function() {
                     that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
                     return that._blurStep;
@@ -84,9 +84,9 @@ define([
             forcePowerOfTwo : true
         });
 
-        processes[3] = new PostProcess({
+        stages[3] = new PostProcess({
             fragmentShader : GaussianBlur1D,
-            uniformValues : {
+            uniforms : {
                 step : function() {
                     that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
                     return that._blurStep;
@@ -103,7 +103,7 @@ define([
             forcePowerOfTwo : true
         });
 
-        processes[4] = new PostProcess({
+        stages[4] = new PostProcess({
             fragmentShader : PassThrough,
             samplingMode : PostProcessSampleMode.LINEAR
         });
@@ -111,9 +111,9 @@ define([
         this._uCenter = new Cartesian2();
         this._uRadius = undefined;
 
-        processes[5] = new PostProcess({
+        stages[5] = new PostProcess({
             fragmentShader : AdditiveBlend,
-            uniformValues : {
+            uniforms : {
                 center : function() {
                     return that._uCenter;
                 },
@@ -126,30 +126,30 @@ define([
             }
         });
 
-        this._processes = new PostProcessComposite({
-            processes : processes
+        this._stages = new PostProcessComposite({
+            stages : stages
         });
 
-        var length = processes.length;
+        var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            processes[i]._collection = this;
+            stages[i]._collection = this;
         }
 
         this._textureCache = new PostProcessTextureCache(this);
 
-        this.length = processes.length;
+        this.length = stages.length;
     }
 
     SunPostProcess.prototype.get = function(index) {
-        return this._processes.get(index);
+        return this._stages.get(index);
     };
 
     SunPostProcess.prototype.getProcessByName = function(name) {
-        var length = this._processes.length;
+        var length = this._stages.length;
         for (var i = 0; i < length; ++i) {
-            var process = this._processes.get(i);
-            if (process.name === name) {
-                return process;
+            var stage = this._stages.get(i);
+            if (stage.name === name) {
+                return stage;
             }
         }
         return undefined;
@@ -190,11 +190,11 @@ define([
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
-        var processes = postProcess._processes;
-        var firstProcess = processes.get(0);
+        var stages = postProcess._stages;
+        var firstStage = stages.get(0);
 
-        var downSampleWidth = firstProcess.outputTexture.width;
-        var downSampleHeight = firstProcess.outputTexture.height;
+        var downSampleWidth = firstStage.outputTexture.width;
+        var downSampleHeight = firstStage.outputTexture.height;
 
         var downSampleViewport = new BoundingRectangle();
         downSampleViewport.width = downSampleWidth;
@@ -207,14 +207,14 @@ define([
         size.x *= downSampleWidth / width;
         size.y *= downSampleHeight / height;
 
-        var scissorRectangle = firstProcess.scissorRectangle;
+        var scissorRectangle = firstStage.scissorRectangle;
         scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
         scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
         for (var i = 1; i < 4; ++i) {
-            BoundingRectangle.clone(scissorRectangle, processes.get(i).scissorRectangle);
+            BoundingRectangle.clone(scissorRectangle, stages.get(i).scissorRectangle);
         }
     }
 
@@ -231,9 +231,7 @@ define([
         var framebuffer = sceneFramebuffer.getFramebuffer();
 
         this._textureCache.update(context);
-
-        var processes = this._processes;
-        processes.update(context);
+        this._stages.update(context);
 
         var viewport = passState.viewport;
         updateSunPosition(this, context, viewport);
@@ -243,10 +241,11 @@ define([
 
     SunPostProcess.prototype.execute = function(context) {
         var colorTexture = this._sceneFramebuffer.getFramebuffer().getColorTexture(0);
-        var length = this._processes.length;
-        this._processes.get(0).execute(context, colorTexture);
+        var stages = this._stages;
+        var length = stages.length;
+        stages.get(0).execute(context, colorTexture);
         for (var i = 1; i < length; ++i) {
-            this._processes.get(i).execute(context, this._processes.get(i - 1).outputTexture);
+            stages.get(i).execute(context, stages.get(i - 1).outputTexture);
         }
     };
 
@@ -256,7 +255,7 @@ define([
             this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
                     colorTexture : function() {
-                        return that._processes.get(that._processes.length - 1).outputTexture;
+                        return that._stages.get(that._stages.length - 1).outputTexture;
                     }
                 },
                 owner : this
@@ -273,7 +272,7 @@ define([
 
     SunPostProcess.prototype.destroy = function() {
         this._textureCache.destroy();
-        this._processes.destroy();
+        this._stages.destroy();
         return destroyObject(this);
     };
 

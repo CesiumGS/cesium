@@ -49,22 +49,22 @@ define([
     'use strict';
 
     /**
-     * Runs a post-process on either the texture rendered by the scene or the output of a previous post-process.
+     * Runs a post-process stage on either the texture rendered by the scene or the output of a previous post-process stage.
      *
      * @alias PostProcess
      * @constructor
      *
      * @param {Object} options An object with the following properties:
-     * @param {String} options.fragmentShader The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous post-process. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.
-     * @param {Object} [options.uniformValues] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
-     * @param {Number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process to a texture the size of the viewport.
+     * @param {String} options.fragmentShader The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.
+     * @param {Object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
+     * @param {Number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process stage  to a texture the size of the viewport.
      * @param {Boolean} [options.forcePowerOfTwo=false] Whether or not to force the texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
      * @param {PostProcessSampleMode} [options.samplingMode=PostProcessSampleMode.NEAREST] How to sample the input color texture.
-     * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The color pixel format of the texture.
-     * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The pixel data type of the texture.
-     * @param {Color} [options.clearColor=Color.BLACK] The color to clear the texture to.
+     * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The color pixel format of the output texture.
+     * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The pixel data type of the output texture.
+     * @param {Color} [options.clearColor=Color.BLACK] The color to clear the output texture to.
      * @param {BoundingRectangle} [options.scissorRectangle] The rectangle to use for the scissor test.
-     * @param {String} [options.name=createGuid()] The unique name of this post-process for reference by other processes in a composite. If a name is not supplied, a GUID will be generated.
+     * @param {String} [options.name=createGuid()] The unique name of this post-process stage for reference by other stages in a composite. If a name is not supplied, a GUID will be generated.
      *
      * @exception {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
      * @exception {DeveloperError} options.pixelFormat must be a color format.
@@ -84,7 +84,7 @@ define([
      *     '}\n';
      * scene.postProcessCollection.add(new Cesium.PostProcess({
      *     fragmentShader : fs,
-     *     uniformValues : {
+     *     uniforms : {
      *         scale : 1.1,
      *         offset : function() {
      *             return new Cesium.Cartesian3(0.1, 0.2, 0.3);
@@ -108,7 +108,7 @@ define([
         //>>includeEnd('debug');
 
         this._fragmentShader = fragmentShader;
-        this._uniformValues = options.uniformValues;
+        this._uniforms = options.uniforms;
         this._textureScale = textureScale;
         this._forcePowerOfTwo = defaultValue(options.forcePowerOfTwo, false);
         this._sampleMode = defaultValue(options.samplingMode, PostProcessSampleMode.NEAREST);
@@ -122,41 +122,45 @@ define([
         this._colorTexture = undefined;
         this._depthTexture = undefined;
 
-        this._actualUniformValues = {};
+        this._actualUniforms = {};
         this._dirtyUniforms = [];
         this._texturesToRelease = [];
         this._texturesToCreate = [];
         this._texturePromise = undefined;
 
-        this._passState = new PassState();
-        this._passState.scissorTest = {
+        var passState = new PassState();
+        passState.scissorTest = {
             enabled : true,
             rectangle : defined(options.scissorRectangle) ? BoundingRectangle.clone(options.scissorRectangle) : new BoundingRectangle()
         };
+        this._passState = passState;
 
         this._ready = true;
 
-        this._name = options.name;
-        if (!defined(this._name)) {
-            this._name = createGuid();
+        var name = options.name;
+        if (!defined(name)) {
+            name = createGuid();
         }
+        this._name = name;
 
         // set by PostProcessCollection
         this._collection = undefined;
         this._index = undefined;
 
         /**
-         * Whether or not to execute this post-process when ready.
+         * Whether or not to execute this post-process stage when ready.
          *
          * @type {Boolean}
          */
         this.enabled = true;
-        this._enabled = this.enabled;
+        this._enabled = true;
     }
 
     defineProperties(PostProcess.prototype, {
         /**
-         * Determines if this post-process is ready to be executed.
+         * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
+         * and {@link PostProcess#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
+         * to load.
          *
          * @memberof PostProcess.prototype
          * @type {Boolean}
@@ -168,7 +172,7 @@ define([
             }
         },
         /**
-         * The unique name of this post-process for reference by other processes in a {@link PostProcessComposite}.
+         * The unique name of this post-process stage for reference by other stages in a {@link PostProcessComposite}.
          *
          * @memberof PostProcess.prototype
          * @type {String}
@@ -180,7 +184,7 @@ define([
             }
         },
         /**
-         * The fragment shader to use when execute this post-process.
+         * The fragment shader to use when execute this post-process stage.
          * <p>
          * The shader must contain a sampler uniform declaration for <code>colorTexture</code>, <code>depthTexture</code>,
          * or both.
@@ -193,14 +197,6 @@ define([
          * @memberof PostProcess.prototype
          * @type {String}
          * @readonly
-         *
-         * @example
-         * // Pass through shader
-         * uniform sample2D colorTexture;
-         * varying vec2 v_textureCoordinates;
-         * void main() {
-         *     gl_FragColor = texture2D(colorTexture, v_textureCoordinates);
-         * }
          */
         fragmentShader : {
             get : function() {
@@ -211,23 +207,23 @@ define([
          * An object whose properties are used to set the uniforms of the fragment shader.
          * <p>
          * The object property values can be either a constant or a function. The function will be called
-         * each frame before the post-process is executed.
+         * each frame before the post-process stage is executed.
          * </p>
          * <p>
          * A constant value can also be a URI to an image, a data URI, or an HTML element that can be used as a texture, such as HTMLImageElement or HTMLCanvasElement.
          * </p>
          * <p>
-         * If this post-process is part of a {@link PostProcessComposite} that does not execute in series, the constant value can also be
-         * the name of another post-process in the composite. This will set the uniform to the output texture the post-process with that name.
+         * If this post-process stage is part of a {@link PostProcessComposite} that does not execute in series, the constant value can also be
+         * the name of another stage in a composite. This will set the uniform to the output texture the stage with that name.
          * </p>
          *
          * @memberof PostProcess.prototype
          * @type {Object}
          * @readonly
          */
-        uniformValues : {
+        uniforms : {
             get : function() {
-                return this._uniformValues;
+                return this._uniforms;
             }
         },
         /**
@@ -243,7 +239,7 @@ define([
             }
         },
         /**
-         * A reference to the texture written to when executing this post process.
+         * A reference to the texture written to when executing this post process stage.
          *
          * @memberof PostProcess.prototype
          * @type {Texture}
@@ -258,103 +254,103 @@ define([
         }
     });
 
-    function getUniformValueGetterAndSetter(postProcess, uniformValues, name) {
-        var currentValue = uniformValues[name];
+    function getUniformValueGetterAndSetter(stage, uniforms, name) {
+        var currentValue = uniforms[name];
         var newType = typeof currentValue;
         if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
             newType === HTMLVideoElement || newType === ImageData) {
-            postProcess._dirtyUniforms.push(name);
+            stage._dirtyUniforms.push(name);
         }
 
         return {
             get : function() {
-                return uniformValues[name];
+                return uniforms[name];
             },
             set : function(value) {
-                var currentValue = uniformValues[name];
-                uniformValues[name] = value;
+                var currentValue = uniforms[name];
+                uniforms[name] = value;
 
-                var actualUniformValues = postProcess._actualUniformValues;
-                var actualValue = actualUniformValues[name];
-                if (defined(actualValue) && actualValue !== currentValue && typeof actualValue === Texture && !defined(postProcess._collection.getProcessByName(name))) {
-                    postProcess._texturesToRelease.push(actualValue);
-                    delete actualUniformValues[name];
+                var actualUniforms = stage._actualUniforms;
+                var actualValue = actualUniforms[name];
+                if (defined(actualValue) && actualValue !== currentValue && typeof actualValue === Texture && !defined(stage._collection.getStageByName(name))) {
+                    stage._texturesToRelease.push(actualValue);
+                    delete actualUniforms[name];
                 }
 
                 if (typeof currentValue === Texture) {
-                    postProcess._texturesToRelease.push(currentValue);
+                    stage._texturesToRelease.push(currentValue);
                 }
 
                 var newType = typeof value;
                 if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
                     newType === HTMLVideoElement || newType === ImageData) {
-                    postProcess._dirtyUniforms.push(name);
+                    stage._dirtyUniforms.push(name);
                 } else {
-                    actualUniformValues[name] = value;
+                    actualUniforms[name] = value;
                 }
             }
         };
     }
 
-    function getUniformMapFunction(postProcess, name) {
+    function getUniformMapFunction(stage, name) {
         return function() {
-            var value = postProcess._actualUniformValues[name];
+            var value = stage._actualUniforms[name];
             if (typeof value === 'function') {
                 return value();
             }
-            return postProcess._actualUniformValues[name];
+            return stage._actualUniforms[name];
         };
     }
 
-    function createUniformMap(postProcess) {
-        if (defined(postProcess._uniformMap)) {
+    function createUniformMap(stage) {
+        if (defined(stage._uniformMap)) {
             return;
         }
 
         var uniformMap = {};
-        var newUniformValues = {};
-        var uniformValues = postProcess._uniformValues;
-        var actualUniformValues = postProcess._actualUniformValues;
-        for (var name in uniformValues) {
-            if (uniformValues.hasOwnProperty(name)) {
-                if (uniformValues.hasOwnProperty(name) && typeof uniformValues[name] !== 'function') {
-                    uniformMap[name] = getUniformMapFunction(postProcess, name);
-                    newUniformValues[name] = getUniformValueGetterAndSetter(postProcess, uniformValues, name);
+        var newUniforms = {};
+        var uniforms = stage._uniforms;
+        var actualUniforms = stage._actualUniforms;
+        for (var name in uniforms) {
+            if (uniforms.hasOwnProperty(name)) {
+                if (uniforms.hasOwnProperty(name) && typeof uniforms[name] !== 'function') {
+                    uniformMap[name] = getUniformMapFunction(stage, name);
+                    newUniforms[name] = getUniformValueGetterAndSetter(stage, uniforms, name);
                 } else {
-                    uniformMap[name] = uniformValues[name];
-                    newUniformValues[name] = uniformValues[name];
+                    uniformMap[name] = uniforms[name];
+                    newUniforms[name] = uniforms[name];
                 }
 
-                actualUniformValues[name] = uniformValues[name];
+                actualUniforms[name] = uniforms[name];
             }
         }
 
-        postProcess._uniformValues = {};
-        defineProperties(postProcess._uniformValues, newUniformValues);
+        stage._uniforms = {};
+        defineProperties(stage._uniforms, newUniforms);
 
-        postProcess._uniformMap = combine(uniformMap, {
+        stage._uniformMap = combine(uniformMap, {
             colorTexture : function() {
-                return postProcess._colorTexture;
+                return stage._colorTexture;
             },
             depthTexture : function() {
-                return postProcess._depthTexture;
+                return stage._depthTexture;
             }
         });
     }
 
-    function createDrawCommand(postProcess, context) {
-        if (defined(postProcess._command)) {
+    function createDrawCommand(stage, context) {
+        if (defined(stage._command)) {
             return;
         }
 
-        postProcess._command = context.createViewportQuadCommand(postProcess._fragmentShader, {
-            uniformMap : postProcess._uniformMap,
-            owner : postProcess
+        stage._command = context.createViewportQuadCommand(stage._fragmentShader, {
+            uniformMap : stage._uniformMap,
+            owner : stage
         });
     }
 
-    function createSampler(postProcess) {
-        var mode = postProcess._sampleMode;
+    function createSampler(stage) {
+        var mode = stage._sampleMode;
 
         var minFilter;
         var magFilter;
@@ -367,9 +363,9 @@ define([
             magFilter = TextureMagnificationFilter.NEAREST;
         }
 
-        var sampler = postProcess._sampler;
+        var sampler = stage._sampler;
         if (!defined(sampler) || sampler.minificationFilter !== minFilter || sampler.magnificationFilter !== magFilter) {
-            postProcess._sampler = new Sampler({
+            stage._sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : minFilter,
@@ -378,27 +374,27 @@ define([
         }
     }
 
-    function createLoadImageFunction(postProcess, name) {
+    function createLoadImageFunction(stage, name) {
         return function(image) {
-            postProcess._texturesToCreate.push({
+            stage._texturesToCreate.push({
                 name : name,
                 source : image
             });
         };
     }
 
-    function createProcessOutputTextureFunction(postProcess, name) {
+    function createStageOutputTextureFunction(stage, name) {
         return function() {
-            return postProcess._collection.getOutputTexture(name);
+            return stage._collection.getOutputTexture(name);
         };
     }
 
-    function updateUniformTextures(postProcess, context) {
+    function updateUniformTextures(stage, context) {
         var i;
         var texture;
         var name;
 
-        var texturesToRelease = postProcess._texturesToRelease;
+        var texturesToRelease = stage._texturesToRelease;
         var length = texturesToRelease.length;
         for (i = 0; i < length; ++i) {
             texture = texturesToRelease[i];
@@ -406,66 +402,66 @@ define([
         }
         texturesToRelease.length = 0;
 
-        var texturesToCreate = postProcess._texturesToCreate;
+        var texturesToCreate = stage._texturesToCreate;
         length = texturesToCreate.length;
         for (i = 0; i < length; ++i) {
             var textureToCreate = texturesToCreate[i];
             name = textureToCreate.name;
             var source = textureToCreate.source;
-            postProcess._actualUniformValues[name] = new Texture({
+            stage._actualUniforms[name] = new Texture({
                 context : context,
                 source : source
             });
         }
         texturesToCreate.length = 0;
 
-        var dirtyUniforms = postProcess._dirtyUniforms;
-        if (dirtyUniforms.length === 0 || defined(postProcess._texturePromise)) {
+        var dirtyUniforms = stage._dirtyUniforms;
+        if (dirtyUniforms.length === 0 || defined(stage._texturePromise)) {
             return;
         }
 
         length = dirtyUniforms.length;
-        var uniformValues = postProcess._uniformValues;
+        var uniforms = stage._uniforms;
         var promises = [];
         for (i = 0; i < length; ++i) {
             name = dirtyUniforms[i];
-            var processNameOrUrl = uniformValues[name];
-            var process = postProcess._collection.getProcessByName(processNameOrUrl);
-            if (defined(process)) {
-                postProcess._actualUniformValues[name] = createProcessOutputTextureFunction(postProcess, processNameOrUrl);
+            var stageNameOrUrl = uniforms[name];
+            var stageWithName = stage._collection.getStageByName(stageNameOrUrl);
+            if (defined(stageWithName)) {
+                stage._actualUniforms[name] = createStageOutputTextureFunction(stage, stageNameOrUrl);
             } else {
-                promises.push(loadImage(processNameOrUrl).then(createLoadImageFunction(postProcess, name)));
+                promises.push(loadImage(stageNameOrUrl).then(createLoadImageFunction(stage, name)));
             }
         }
 
         dirtyUniforms.length = 0;
 
         if (promises.length > 0) {
-            postProcess._ready = false;
-            postProcess._texturePromise = when.all(promises).then(function() {
-                postProcess._ready = true;
-                postProcess._texturePromise = undefined;
+            stage._ready = false;
+            stage._texturePromise = when.all(promises).then(function() {
+                stage._ready = true;
+                stage._texturePromise = undefined;
             });
         } else {
-            postProcess._ready = true;
+            stage._ready = true;
         }
     }
 
-    function releaseResources(postProcess) {
-        if (defined(postProcess._command)) {
-            postProcess._command.shaderProgram = postProcess._command.shaderProgram && postProcess._command.shaderProgram.destroy();
-            postProcess._command = undefined;
+    function releaseResources(stage) {
+        if (defined(stage._command)) {
+            stage._command.shaderProgram = stage._command.shaderProgram && stage._command.shaderProgram.destroy();
+            stage._command = undefined;
         }
 
-        var uniformValues = postProcess._uniformValues;
-        var actualUniformValues = postProcess._actualUniformValues;
-        for (var name in actualUniformValues) {
-            if (actualUniformValues.hasOwnProperty(name)) {
-                if (actualUniformValues[name] instanceof Texture) {
-                    if (!defined(postProcess._collection.getProcessByName(uniformValues[name]))) {
-                        actualUniformValues[name].destroy();
+        var uniforms = stage._uniforms;
+        var actualUniforms = stage._actualUniforms;
+        for (var name in actualUniforms) {
+            if (actualUniforms.hasOwnProperty(name)) {
+                if (actualUniforms[name] instanceof Texture) {
+                    if (!defined(stage._collection.getStageByName(uniforms[name]))) {
+                        actualUniforms[name].destroy();
                     }
-                    postProcess._dirtyUniforms.push(name);
+                    stage._dirtyUniforms.push(name);
                 }
             }
         }
@@ -505,7 +501,7 @@ define([
     };
 
     /**
-     * Executes the post-process. The color texture is the texture rendered to by the scene or from the previous post-process.
+     * Executes the post-process stage. The color texture is the texture rendered to by the scene or from the previous stage.
      * @param {Context} context The context.
      * @param {Texture} colorTexture The input color texture.
      * @param {Texture} depthTexture The input depth texture.

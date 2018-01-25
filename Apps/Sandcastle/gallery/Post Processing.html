@@ -93,22 +93,22 @@ for (var name in viewModel) {
 }
 
 var collection = viewer.scene.postProcessCollection;
-var blackAndWhite = collection.add(Cesium.PostProcessLibrary.blackAndWhite);
-var brightness = collection.add(Cesium.PostProcessLibrary.brightness);
-var eightBit = collection.add(Cesium.PostProcessLibrary.eightBit);
-var nightVision = collection.add(Cesium.PostProcessLibrary.nightVision);
-var textureOverlay = collection.add(Cesium.PostProcessLibrary.textureOverlay);
-var depthView = collection.add(Cesium.PostProcessLibrary.depthView);
+var blackAndWhite = collection.add(Cesium.PostProcessLibrary.createBlackAndWhiteStage());
+var brightness = collection.add(Cesium.PostProcessLibrary.createBrightnessStage());
+var eightBit = collection.add(Cesium.PostProcessLibrary.createEightBitStage());
+var nightVision = collection.add(Cesium.PostProcessLibrary.createNightVisionStage());
+var textureOverlay = collection.add(Cesium.PostProcessLibrary.createTextureOverlayStage());
+var depthView = collection.add(Cesium.PostProcessLibrary.createDepthViewStage());
 
 function updatePostProcess() {
     blackAndWhite.enabled = Boolean(viewModel.blackAndWhiteShow);
-    blackAndWhite.uniformValues.gradations = Number(viewModel.blackAndWhiteGradations);
+    blackAndWhite.uniforms.gradations = Number(viewModel.blackAndWhiteGradations);
     brightness.enabled = Boolean(viewModel.brightnessShow);
-    brightness.uniformValues.brightness = Number(viewModel.brightnessValue);
+    brightness.uniforms.brightness = Number(viewModel.brightnessValue);
     eightBit.enabled = Boolean(viewModel.eightBitShow);
     nightVision.enabled = Boolean(viewModel.nightVisionShow);
     textureOverlay.enabled = Boolean(viewModel.textureOverlayShow);
-    textureOverlay.uniformValues.alpha = Number(viewModel.textureOverlayAlpha);
+    textureOverlay.uniforms.alpha = Number(viewModel.textureOverlayAlpha);
     depthView.enabled = Boolean(viewModel.depthViewShow);
 
     collection.ambientOcclusion.enabled = Boolean(viewModel.ambientOcclusionShow);

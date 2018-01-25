@@ -106,12 +106,12 @@ for (var name in viewModel) {
 function updatePostProcess() {
     var bloom = viewer.scene.postProcessCollection.bloom;
     bloom.enabled = Boolean(viewModel.show);
-    bloom.uniformValues.glowOnly = Boolean(viewModel.glowOnly);
-    bloom.uniformValues.contrast = Number(viewModel.contrast);
-    bloom.uniformValues.brightness = Number(viewModel.brightness);
-    bloom.uniformValues.delta = Number(viewModel.delta);
-    bloom.uniformValues.sigma = Number(viewModel.sigma);
-    bloom.uniformValues.stepSize = Number(viewModel.stepSize);
+    bloom.uniforms.glowOnly = Boolean(viewModel.glowOnly);
+    bloom.uniforms.contrast = Number(viewModel.contrast);
+    bloom.uniforms.brightness = Number(viewModel.brightness);
+    bloom.uniforms.delta = Number(viewModel.delta);
+    bloom.uniforms.sigma = Number(viewModel.sigma);
+    bloom.uniforms.stepSize = Number(viewModel.stepSize);
 }
 updatePostProcess();
 

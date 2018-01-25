@@ -81,15 +81,15 @@ for (var name in viewModel) {
     }
 }
 
-var lensFlare = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.lensFlare);
+var lensFlare = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.createLensFlarStage());
 
 function updatePostProcess() {
     lensFlare.enabled = Boolean(viewModel.show);
-    lensFlare.uniformValues.intensity = Number(viewModel.intensity);
-    lensFlare.uniformValues.distortion = Number(viewModel.distortion);
-    lensFlare.uniformValues.ghostDispersal = Number(viewModel.dispersion);
-    lensFlare.uniformValues.haloWidth = Number(viewModel.haloWidth);
-    lensFlare.uniformValues.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
+    lensFlare.uniforms.intensity = Number(viewModel.intensity);
+    lensFlare.uniforms.distortion = Number(viewModel.distortion);
+    lensFlare.uniforms.ghostDispersal = Number(viewModel.dispersion);
+    lensFlare.uniforms.haloWidth = Number(viewModel.haloWidth);
+    lensFlare.uniforms.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
 }
 updatePostProcess();
 

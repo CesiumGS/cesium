@@ -254,7 +254,7 @@ defineSuite([
         context.fillRect(0, 0, 1, 1);
 
         var textureOverlay = scene.postProcessCollection.add(PostProcessLibrary.createTextureOverlayStage());
-        var uniforms = textureOverlay.uniformValues;
+        var uniforms = textureOverlay.uniforms;
         uniforms.alpha = 1.0;
         uniforms.texture = canvas.toDataURL();
 
@@ -374,9 +374,6 @@ defineSuite([
                     expect(rgba[i + 2]).toEqual(0);
                     expect(rgba[i + 3]).toEqual(255);
                 }
-
-                //var dof = PostProcessLibrary.depthOfField;
-                //dof.uniformValues.focalDistance = 87.0;
 
                 scene.postProcessCollection.add(PostProcessLibrary.createDepthOfFieldStage());
                 expect(scene).toRenderAndCall(function(rgba2) {

@@ -70,7 +70,7 @@ define([
         var blurX = new PostProcess({
             name : name + '_x_direction',
             fragmentShader : blurShader,
-            uniformValues: {
+            uniforms: {
                 delta : delta,
                 sigma : sigma,
                 stepSize : stepSize,
@@ -81,7 +81,7 @@ define([
         var blurY = new PostProcess({
             name : name + '_y_direction',
             fragmentShader : blurShader,
-            uniformValues: {
+            uniforms: {
                 delta : delta,
                 sigma : sigma,
                 stepSize : stepSize,
@@ -94,39 +94,39 @@ define([
         defineProperties(uniforms, {
             delta : {
                 get : function() {
-                    return blurX.uniformValues.delta;
+                    return blurX.uniforms.delta;
                 },
                 set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
+                    var blurXUniforms = blurX.uniforms;
+                    var blurYUniforms = blurY.uniforms;
                     blurXUniforms.delta = blurYUniforms.delta = value;
                 }
             },
             sigma : {
                 get : function() {
-                    return blurX.uniformValues.sigma;
+                    return blurX.uniforms.sigma;
                 },
                 set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
+                    var blurXUniforms = blurX.uniforms;
+                    var blurYUniforms = blurY.uniforms;
                     blurXUniforms.sigma = blurYUniforms.sigma = value;
                 }
             },
             stepSize : {
                 get : function() {
-                    return blurX.uniformValues.stepSize;
+                    return blurX.uniforms.stepSize;
                 },
                 set : function(value) {
-                    var blurXUniforms = blurX.uniformValues;
-                    var blurYUniforms = blurY.uniformValues;
+                    var blurXUniforms = blurX.uniforms;
+                    var blurYUniforms = blurY.uniforms;
                     blurXUniforms.stepSize = blurYUniforms.stepSize = value;
                 }
             }
         });
         return new PostProcessComposite({
             name : name,
-            processes : [blurX, blurY],
-            uniformValues : uniforms
+            stages : [blurX, blurY],
+            uniforms : uniforms
         });
     }
 
@@ -169,7 +169,7 @@ define([
         var dof = new PostProcess({
             name : 'czm_depth_of_field_composite',
             fragmentShader : DepthOfField,
-            uniformValues : {
+            uniforms : {
                 focalDistance : 5.0,
                 blurTexture : blur.name
             }
@@ -179,42 +179,42 @@ define([
         defineProperties(uniforms, {
             focalDistance : {
                 get : function() {
-                    return dof.uniformValues.focalDistance;
+                    return dof.uniforms.focalDistance;
                 },
                 set : function(value) {
-                    dof.uniformValues.focalDistance = value;
+                    dof.uniforms.focalDistance = value;
                 }
             },
             delta : {
                 get : function() {
-                    return blur.uniformValues.delta;
+                    return blur.uniforms.delta;
                 },
                 set : function(value) {
-                    blur.uniformValues.delta = value;
+                    blur.uniforms.delta = value;
                 }
             },
             sigma : {
                 get : function() {
-                    return blur.uniformValues.sigma;
+                    return blur.uniforms.sigma;
                 },
                 set : function(value) {
-                    blur.uniformValues.sigma = value;
+                    blur.uniforms.sigma = value;
                 }
             },
             stepSize : {
                 get : function() {
-                    return blur.uniformValues.stepSize;
+                    return blur.uniforms.stepSize;
                 },
                 set : function(value) {
-                    blur.uniformValues.stepSize = value;
+                    blur.uniforms.stepSize = value;
                 }
             }
         });
         return new PostProcessComposite({
             name : 'czm_depth_of_field',
-            processes : [blur, dof],
+            stages : [blur, dof],
             executeInSeries : false,
-            uniformValues : uniforms
+            uniforms : uniforms
         });
     };
 
@@ -240,19 +240,19 @@ define([
         var edgeDetection = new PostProcess({
             name : 'czm_silhouette_edge_detection',
             fragmentShader : EdgeDetection,
-            uniformValues : {
+            uniforms : {
                 length : 0.5,
                 color : Color.clone(Color.BLACK)
             }
         });
         var silhouetteGenerateProcess = new PostProcessComposite({
             name : 'czm_silhouette_generate',
-            processes : [silhouetteDepth, edgeDetection]
+            stages : [silhouetteDepth, edgeDetection]
         });
         var silhouetteProcess = new PostProcess({
             name : 'czm_silhouette_composite',
             fragmentShader : SilhouetteComposite,
-            uniformValues : {
+            uniforms : {
                 silhouetteTexture : silhouetteGenerateProcess.name
             }
         });
@@ -261,26 +261,26 @@ define([
         defineProperties(uniforms, {
             length : {
                 get : function() {
-                    return edgeDetection.uniformValues.length;
+                    return edgeDetection.uniforms.length;
                 },
                 set : function(value) {
-                    edgeDetection.uniformValues = value;
+                    edgeDetection.uniforms.length = value;
                 }
             },
             color : {
                 get : function() {
-                    return edgeDetection.uniformValues.color;
+                    return edgeDetection.uniforms.color;
                 },
                 set : function(value) {
-                    edgeDetection.uniformValues.color = value;
+                    edgeDetection.uniforms.color = value;
                 }
             }
         });
         return new PostProcessComposite({
             name : 'czm_silhouette',
-            processes : [silhouetteGenerateProcess, silhouetteProcess],
+            stages : [silhouetteGenerateProcess, silhouetteProcess],
             executeInSeries : false,
-            uniformValues : uniforms
+            uniforms : uniforms
         });
     };
 
@@ -311,7 +311,7 @@ define([
         var contrastBias = new PostProcess({
             name : 'czm_bloom_contrast_bias',
             fragmentShader : ContrastBias,
-            uniformValues : {
+            uniforms : {
                 contrast : 128.0,
                 brightness : -0.3
             }
@@ -319,75 +319,75 @@ define([
         var blur = createBlur('czm_bloom_blur');
         var generateComposite = new PostProcessComposite({
             name : 'czm_bloom_contrast_bias_blur',
-            processes : [contrastBias, blur]
+            stages : [contrastBias, blur]
         });
 
         var bloomComposite = new PostProcess({
             name : 'czm_bloom_generate_composite',
             fragmentShader : BloomComposite,
-            uniformValues : {
+            uniforms : {
                 glowOnly : false,
                 bloomTexture : generateComposite.name
             }
         });
 
-        var uniformValues = {};
-        defineProperties(uniformValues, {
+        var uniforms = {};
+        defineProperties(uniforms, {
             glowOnly : {
                 get : function() {
-                    return bloomComposite.uniformValues.glowOnly;
+                    return bloomComposite.uniforms.glowOnly;
                 },
                 set : function(value) {
-                    bloomComposite.uniformValues.glowOnly = value;
+                    bloomComposite.uniforms.glowOnly = value;
                 }
             },
             contrast : {
                 get : function() {
-                    return contrastBias.uniformValues.contrast;
+                    return contrastBias.uniforms.contrast;
                 },
                 set : function(value) {
-                    contrastBias.uniformValues.contrast = value;
+                    contrastBias.uniforms.contrast = value;
                 }
             },
             brightness : {
                 get : function() {
-                    return contrastBias.uniformValues.brightness;
+                    return contrastBias.uniforms.brightness;
                 },
                 set : function(value) {
-                    contrastBias.uniformValues.brightness = value;
+                    contrastBias.uniforms.brightness = value;
                 }
             },
             delta : {
                 get : function() {
-                    return blur.uniformValues.delta;
+                    return blur.uniforms.delta;
                 },
                 set : function(value) {
-                    blur.uniformValues.delta = value;
+                    blur.uniforms.delta = value;
                 }
             },
             sigma : {
                 get : function() {
-                    return blur.uniformValues.sigma;
+                    return blur.uniforms.sigma;
                 },
                 set : function(value) {
-                    blur.uniformValues.sigma = value;
+                    blur.uniforms.sigma = value;
                 }
             },
             stepSize : {
                 get : function() {
-                    return blur.uniformValues.stepSize;
+                    return blur.uniforms.stepSize;
                 },
                 set : function(value) {
-                    blur.uniformValues.stepSize = value;
+                    blur.uniforms.stepSize = value;
                 }
             }
         });
 
         return new PostProcessComposite({
             name : 'czm_bloom',
-            processes : [generateComposite, bloomComposite],
+            stages : [generateComposite, bloomComposite],
             executeInSeries : false,
-            uniformValues : uniformValues
+            uniforms : uniforms
         });
     };
 
@@ -427,7 +427,7 @@ define([
         var generate = new PostProcess({
             name : 'czm_ambient_occlusion_generate',
             fragmentShader : AmbientOcclusionGenerate,
-            uniformValues : {
+            uniforms : {
                 intensity : 3.0,
                 bias : 0.1,
                 lengthCap : 0.26,
@@ -437,110 +437,110 @@ define([
             }
         });
         var blur = createBlur('czm_ambient_occlusion_blur');
-        blur.uniformValues.stepSize = 0.86;
+        blur.uniforms.stepSize = 0.86;
         var generateAndBlur = new PostProcessComposite({
             name : 'czm_ambient_occlusion_generate_blur',
-            processes : [generate, blur]
+            stages : [generate, blur]
         });
 
         var ambientOcclusionModulate = new PostProcess({
             name : 'czm_ambient_occlusion_composite',
             fragmentShader : AmbientOcclusion,
-            uniformValues : {
+            uniforms : {
                 ambientOcclusionOnly : false,
                 ambientOcclusionTexture : generateAndBlur.name
             }
         });
 
-        var uniformValues = {};
-        defineProperties(uniformValues, {
+        var uniforms = {};
+        defineProperties(uniforms, {
             intensity : {
                 get : function() {
-                    return generate.uniformValues.intensity;
+                    return generate.uniforms.intensity;
                 },
                 set : function(value) {
-                    generate.uniformValues.intensity = value;
+                    generate.uniforms.intensity = value;
                 }
             },
             bias : {
                 get : function() {
-                    return generate.uniformValues.bias;
+                    return generate.uniforms.bias;
                 },
                 set : function(value) {
-                    generate.uniformValues.bias = value;
+                    generate.uniforms.bias = value;
                 }
             },
             lengthCap : {
                 get : function() {
-                    return generate.uniformValues.lengthCap;
+                    return generate.uniforms.lengthCap;
                 },
                 set : function(value) {
-                    generate.uniformValues.lengthCap = value;
+                    generate.uniforms.lengthCap = value;
                 }
             },
             stepSize : {
                 get : function() {
-                    return generate.uniformValues.stepSize;
+                    return generate.uniforms.stepSize;
                 },
                 set : function(value) {
-                    generate.uniformValues.stepSize = value;
+                    generate.uniforms.stepSize = value;
                 }
             },
             frustumLength : {
                 get : function() {
-                    return generate.uniformValues.frustumLength;
+                    return generate.uniforms.frustumLength;
                 },
                 set : function(value) {
-                    generate.uniformValues.frustumLength = value;
+                    generate.uniforms.frustumLength = value;
                 }
             },
             randomTexture : {
                 get : function() {
-                    return generate.uniformValues.randomTexture;
+                    return generate.uniforms.randomTexture;
                 },
                 set : function(value) {
-                    generate.uniformValues.randomTexture = value;
+                    generate.uniforms.randomTexture = value;
                 }
             },
             delta : {
                 get : function() {
-                    return blur.uniformValues.delta;
+                    return blur.uniforms.delta;
                 },
                 set : function(value) {
-                    blur.uniformValues.delta = value;
+                    blur.uniforms.delta = value;
                 }
             },
             sigma : {
                 get : function() {
-                    return blur.uniformValues.sigma;
+                    return blur.uniforms.sigma;
                 },
                 set : function(value) {
-                    blur.uniformValues.sigma = value;
+                    blur.uniforms.sigma = value;
                 }
             },
             blurStepSize : {
                 get : function() {
-                    return blur.uniformValues.stepSize;
+                    return blur.uniforms.stepSize;
                 },
                 set : function(value) {
-                    blur.uniformValues.stepSize = value;
+                    blur.uniforms.stepSize = value;
                 }
             },
             ambientOcclusionOnly : {
                 get : function() {
-                    return ambientOcclusionModulate.uniformValues.ambientOcclusionOnly;
+                    return ambientOcclusionModulate.uniforms.ambientOcclusionOnly;
                 },
                 set : function(value) {
-                    ambientOcclusionModulate.uniformValues.ambientOcclusionOnly = value;
+                    ambientOcclusionModulate.uniforms.ambientOcclusionOnly = value;
                 }
             }
         });
 
         return new PostProcessComposite({
             name : 'czm_ambient_occlusion',
-            processes : [generateAndBlur, ambientOcclusionModulate],
+            stages : [generateAndBlur, ambientOcclusionModulate],
             executeInSeries : false,
-            uniformValues : uniformValues
+            uniforms : uniforms
         });
     };
 
@@ -574,7 +574,7 @@ define([
         return new PostProcess({
             name : 'czm_black_and_white',
             fragmentShader : BlackAndWhite,
-            uniformValues : {
+            uniforms : {
                 gradations : 5.0
             }
         });
@@ -591,7 +591,7 @@ define([
         return new PostProcess({
             name : 'czm_brightness',
             fragmentShader : Brightness,
-            uniformValues : {
+            uniforms : {
                 brightness : 0.5
             }
         });
@@ -632,7 +632,7 @@ define([
         // not supplying a name means more than one effect can be added
         return new PostProcess({
             fragmentShader : TextureOverlay,
-            uniformValues : {
+            uniforms : {
                 alpha : 0.5,
                 // data uri for a 1x1 white canvas
                 texture : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQYV2P4////fwAJ+wP9BUNFygAAAABJRU5ErkJggg=='
@@ -670,7 +670,7 @@ define([
         return new PostProcess({
             name : 'czm_lens_flare',
             fragmentShader : LensFlare,
-            uniformValues : {
+            uniforms : {
                 dirtTexture : buildModuleUrl('Assets/Textures/LensFlare/DirtMask.jpg'),
                 starTexture : buildModuleUrl('Assets/Textures/LensFlare/StarBurst.jpg'),
                 intensity : 2.0,

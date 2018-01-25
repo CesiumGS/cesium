@@ -15,50 +15,50 @@ define([
     'use strict';
 
     /**
-     * A collection of {@link PostProcess}es or other post-process composites that execute together logically.
+     * A collection of {@link PostProcess}es or other post-process composite stages that execute together logically.
      * <p>
-     * All processes are executed in the order of the array. The input texture changes based on the value of <code>executeInSeries</code>.
-     * If <code>executeInSeries</code> is <code>true</code>, the input to each post-process is the output texture rendered to by the scene or of the process that executed before it.
-     * If <code>executeInseries</code> is <code>false</code>, the input texture is the same for each post-process in the composite. The input texture is the texture rendered to by the scene
-     * or the output texture of the previous process or composite.
+     * All stages are executed in the order of the array. The input texture changes based on the value of <code>executeInSeries</code>.
+     * If <code>executeInSeries</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
+     * If <code>executeInseries</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
+     * or the output texture of the previous stage.
      * </p>
      *
      * @alias PostProcessComposite
      * @constructor
      *
      * @param {Object} options An object with the following properties:
-     * @param {Array} options.processes An array of {@link PostProcess}es or composites to be executed in order.
-     * @param {Boolean} [options.executeInSeries=true] Whether to execute each post-process where the input to one post-process is the output of the previous. Otherwise, the input to each contained post-process is the output of the post-process that executed before the composite.
-     * @param {String} [options.name=createGuid()] The unique name of this post-process for reference by other composites. If a name is not supplied, a GUID will be generated.
-     * @param {Object} [options.uniformValues] An alias to the uniforms of processes.
+     * @param {Array} options.stages An array of {@link PostProcess}es or composites to be executed in order.
+     * @param {Boolean} [options.executeInSeries=true] Whether to execute each post-process stage where the input to one stage is the output of the previous. Otherwise, the input to each contained stage is the output of the stage that executed before the composite.
+     * @param {String} [options.name=createGuid()] The unique name of this post-process stage for reference by other composites. If a name is not supplied, a GUID will be generated.
+     * @param {Object} [options.uniforms] An alias to the uniforms of post-process stages.
      *
-     * @exception {DeveloperError} options.processes.length must be greater than 0.0.
+     * @exception {DeveloperError} options.stages.length must be greater than 0.0.
      *
      * @see PostProcess
      *
      * @example
      * // Example 1: separable blur filter
-     * // The input to blurXDirection is the texture rendered to by the scene or the output of the previous process.
+     * // The input to blurXDirection is the texture rendered to by the scene or the output of the previous stage.
      * // The input to blurYDirection is the texture rendered to by blurXDirection.
      * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
-     *     processes : [blurXDirection, blurYDirection]
+     *     stages : [blurXDirection, blurYDirection]
      * }));
      *
      * @example
-     * // Example 2: referencing the output of another post-process
+     * // Example 2: referencing the output of another post-process stage
      * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
      *     executeInSeries : false,
-     *     processes : [
+     *     stages : [
      *         // The same as Example 1.
      *         new Cesium.PostProcessComposite({
      *             executeInSeries : true
-     *             processes : [blurXDirection, blurYDirection],
+     *             stages : [blurXDirection, blurYDirection],
      *             name : 'blur'
      *         }),
-     *         // The input texture for this process is the same input texture to blurXDirection since executeInSeries is false
+     *         // The input texture for this stage is the same input texture to blurXDirection since executeInSeries is false
      *         new Cesium.PostProcess({
      *             fragmentShader : compositeShader,
-     *             uniformValues : {
+     *             uniforms : {
      *                 blurTexture : 'blur' // The output of the composite with name 'blur' (the texture that blurYDirection rendered to).
      *             }
      *         })
@@ -71,35 +71,36 @@ define([
      * Cesium.defineProperties(uniforms, {
      *     filterSize : {
      *         get : function() {
-     *             return blurXDirection.uniformValues.filterSize;
+     *             return blurXDirection.uniforms.filterSize;
      *         },
      *         set : function(value) {
-     *             blurXDirection.uniformValues.filterSize = blurYDirection.uniformValues.filterSize = value;
+     *             blurXDirection.uniforms.filterSize = blurYDirection.uniforms.filterSize = value;
      *         }
      *     }
      * });
      * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
-     *     processes : [blurXDirection, blurYDirection],
-     *     uniformValues : uniforms
+     *     stages : [blurXDirection, blurYDirection],
+     *     uniforms : uniforms
      * }));
      */
     function PostProcessComposite(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
-        Check.defined('options.processes', options.processes);
-        Check.typeOf.number.greaterThan('options.processes.length', options.processes.length, 0);
+        Check.defined('options.stages', options.stages);
+        Check.typeOf.number.greaterThan('options.stages.length', options.stages.length, 0);
         //>>includeEnd('debug');
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._processes = options.processes;
+        this._stages = options.stages;
         this._executeInSeries = defaultValue(options.executeInSeries, true);
 
-        this._name = options.name;
-        if (!defined(this._name)) {
-            this._name = createGuid();
+        var name = options.name;
+        if (!defined(name)) {
+            name = createGuid();
         }
+        this._name = name;
 
-        this._uniforms = options.uniformValues;
+        this._uniforms = options.uniforms;
 
         // used by PostProcessCollection
         this._collection = undefined;
@@ -108,7 +109,7 @@ define([
 
     defineProperties(PostProcessComposite.prototype, {
         /**
-         * Determines if this post-process is ready to be executed.
+         * Determines if this post-process stage is ready to be executed.
          *
          * @memberof PostProcessComposite.prototype
          * @type {Boolean}
@@ -116,10 +117,10 @@ define([
          */
         ready : {
             get : function() {
-                var processes = this._processes;
-                var length = processes.length;
+                var stages = this._stages;
+                var length = stages.length;
                 for (var i = 0; i < length; ++i) {
-                    if (!processes[i].ready) {
+                    if (!stages[i].ready) {
                         return false;
                     }
                 }
@@ -127,7 +128,7 @@ define([
             }
         },
         /**
-         * The unique name of this post-process for reference by other processes in a PostProcessComposite.
+         * The unique name of this post-process stage for reference by other stages in a PostProcessComposite.
          *
          * @memberof PostProcessComposite.prototype
          * @type {String}
@@ -139,38 +140,38 @@ define([
             }
         },
         /**
-         * Whether or not to execute this post-process when ready.
+         * Whether or not to execute this post-process stage when ready.
          *
          * @memberof PostProcessComposite.prototype
          * @type {Boolean}
          */
         enabled : {
             get : function() {
-                return this._processes[0].enabled;
+                return this._stages[0].enabled;
             },
             set : function(value) {
-                var processes = this._processes;
-                var length = processes.length;
+                var stages = this._stages;
+                var length = stages.length;
                 for (var i = 0; i < length; ++i) {
-                    processes[i].enabled = value;
+                    stages[i].enabled = value;
                 }
             }
         },
         /**
-         * An alias to the uniform values of the processes. May be <code>undefined</code>; in which case, get each process to set uniform values.
+         * An alias to the uniform values of the post-process stages. May be <code>undefined</code>; in which case, get each stages to set uniform values.
          * @memberof PostPostProcessComposite.prototype
          * @type {Object}
          */
-        uniformValues : {
+        uniforms : {
             get : function() {
                 return this._uniforms;
             }
         },
         /**
-         * All processes are executed in the order of the array. The input texture changes based on the value of <code>executeInSeries</code>.
-         * If <code>executeInSeries</code> is <code>true</code>, the input to each post-process is the output texture rendered to by the scene or of the process that executed before it.
-         * If <code>executeInseries</code> is <code>false</code>, the input texture is the same for each post-process in the composite. The input texture is the texture rendered to by the scene
-         * or the output texture of the previous process or composite.
+         * All post-process stages are executed in the order of the array. The input texture changes based on the value of <code>executeInSeries</code>.
+         * If <code>executeInSeries</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
+         * If <code>executeInseries</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
+         * or the output texture of the previous stage.
          *
          * @memberof PostProcessComposite.prototype
          * @type {Boolean}
@@ -182,7 +183,7 @@ define([
             }
         },
         /**
-         * The number of post-processes in this composite.
+         * The number of post-process stages in this composite.
          *
          * @memberof PostProcessComposite.prototype
          * @type {Number}
@@ -190,16 +191,16 @@ define([
          */
         length : {
             get : function() {
-                return this._processes.length;
+                return this._stages.length;
             }
         }
     });
 
     /**
-     * Gets the post-process at <code>index</code>
+     * Gets the post-process stage at <code>index</code>
      *
-     * @param {Number} index The index of the post-process or composite.
-     * @return {PostProcess|PostProcessComposite} The post-process or composite at index.
+     * @param {Number} index The index of the post-process stage or composite.
+     * @return {PostProcess|PostProcessComposite} The post-process stage or composite at index.
      *
      * @exception {DeveloperError} index must be greater than or equal to 0.
      * @exception {DeveloperError} index must be less than {@link PostProcessComposite#length}.
@@ -209,19 +210,19 @@ define([
         Check.typeOf.number.greaterThanOrEquals('index', index, 0);
         Check.typeOf.number.lessThan('index', index, this.length);
         //>>includeEnd('debug');
-        return this._processes[index];
+        return this._stages[index];
     };
 
     /**
-     * A function that will be called before execute. Updates each post-process in the composite.
+     * A function that will be called before execute. Updates each post-process stage in the composite.
      * @param {Context} context The context.
      * @private
      */
     PostProcessComposite.prototype.update = function(context) {
-        var processes = this._processes;
-        var length = processes.length;
+        var stages = this._stages;
+        var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            processes[i].update(context);
+            stages[i].update(context);
         }
     };
 
@@ -256,10 +257,10 @@ define([
      * @see PostProcessComposite#isDestroyed
      */
     PostProcessComposite.prototype.destroy = function() {
-        var processes = this._processes;
-        var length = processes.length;
+        var stages = this._stages;
+        var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            processes[i].destroy();
+            stages[i].destroy();
         }
         return destroyObject(this);
     };

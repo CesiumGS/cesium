@@ -52,7 +52,7 @@ void main(void)
     float depthR = texture2D(depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0)).r;
     vec3 normalInCamera = getNormalXEdge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize);
 
-    float AO = 0.0;
+    float ao = 0.0;
     vec2 sampleDirection = vec2(1.0, 0.0);
     float gapAngle = 90.0 * czm_radiansPerDegree;
 
@@ -102,7 +102,7 @@ void main(void)
             float weight = len / lengthCap;
             weight = 1.0 - weight * weight;
 
-            if(dotVal < bias)
+            if (dotVal < bias)
             {
                 dotVal = 0.0;
             }
@@ -110,11 +110,11 @@ void main(void)
             localAO = max(localAO, dotVal * weight);
             localStepSize += stepSize;
         }
-        AO += localAO;
+        ao += localAO;
     }
 
-    AO /= float(4);
-    AO = 1.0 - clamp(AO, 0.0, 1.0);
-    AO = pow(AO, intensity);
-    gl_FragColor = vec4(vec3(AO), 1.0);
+    ao /= 4.0;
+    ao = 1.0 - clamp(ao, 0.0, 1.0);
+    ao = pow(ao, intensity);
+    gl_FragColor = vec4(vec3(ao), 1.0);
 }

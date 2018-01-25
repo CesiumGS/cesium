@@ -86,12 +86,12 @@ for (var name in viewModel) {
 function updatePostProcess() {
     var ambientOcclusion = viewer.scene.postProcessCollection.ambientOcclusion;
     ambientOcclusion.enabled = Boolean(viewModel.show);
-    ambientOcclusion.uniformValues.ambientOcclusionOnly = Boolean(viewModel.ambientOcclusionOnly);
-    ambientOcclusion.uniformValues.intensity = Number(viewModel.intensity);
-    ambientOcclusion.uniformValues.bias = Number(viewModel.bias);
-    ambientOcclusion.uniformValues.lengthCap = Number(viewModel.lengthCap);
-    ambientOcclusion.uniformValues.stepSize = Number(viewModel.stepSize);
-    ambientOcclusion.uniformValues.blurStepSize = Number(viewModel.blurStepSize);
+    ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(viewModel.ambientOcclusionOnly);
+    ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);
+    ambientOcclusion.uniforms.bias = Number(viewModel.bias);
+    ambientOcclusion.uniforms.lengthCap = Number(viewModel.lengthCap);
+    ambientOcclusion.uniforms.stepSize = Number(viewModel.stepSize);
+    ambientOcclusion.uniforms.blurStepSize = Number(viewModel.blurStepSize);
 }
 updatePostProcess();
 

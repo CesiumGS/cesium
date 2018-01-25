@@ -39,7 +39,7 @@ define([
         this._colorTexture = undefined;
         this._depthStencilTexture = undefined;
         this._depthStencilRenderbuffer = undefined;
-        this._fbo = undefined;
+        this._framebuffer = undefined;
 
         this._clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -49,12 +49,12 @@ define([
     }
 
     function destroyResources(post) {
-        post._fbo = post._fbo && post._fbo.destroy();
+        post._framebuffer = post._framebuffer && post._framebuffer.destroy();
         post._colorTexture = post._colorTexture && post._colorTexture.destroy();
         post._depthStencilTexture = post._depthStencilTexture && post._depthStencilTexture.destroy();
         post._depthStencilRenderbuffer = post._depthStencilRenderbuffer && post._depthStencilRenderbuffer.destroy();
 
-        post._fbo = undefined;
+        post._framebuffer = undefined;
         post._colorTexture = undefined;
         post._depthStencilTexture = undefined;
         post._depthStencilRenderbuffer = undefined;
@@ -103,10 +103,10 @@ define([
             }
         }
 
-        if (!defined(this._fbo) || textureChanged) {
-            this._fbo = this._fbo && this._fbo.destroy();
+        if (!defined(this._framebuffer) || textureChanged) {
+            this._framebuffer = this._framebuffer && this._framebuffer.destroy();
 
-            this._fbo = new Framebuffer({
+            this._framebuffer = new Framebuffer({
                 context : context,
                 colorTextures : [this._colorTexture],
                 depthStencilTexture : this._depthStencilTexture,
@@ -119,7 +119,7 @@ define([
     SceneFramebuffer.prototype.clear = function(context, passState, clearColor) {
         var framebuffer = passState.framebuffer;
 
-        passState.framebuffer = this._fbo;
+        passState.framebuffer = this._framebuffer;
         Color.clone(clearColor, this._clearCommand.color);
         this._clearCommand.execute(context, passState);
 
@@ -127,7 +127,7 @@ define([
     };
 
     SceneFramebuffer.prototype.getFramebuffer = function() {
-        return this._fbo;
+        return this._framebuffer;
     };
 
     SceneFramebuffer.prototype.isDestroyed = function() {

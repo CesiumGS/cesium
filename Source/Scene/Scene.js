@@ -13,6 +13,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidGeometry',
@@ -92,6 +93,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         EllipsoidGeometry,
@@ -1243,12 +1245,15 @@ define([
          * @memberof Scene.prototype
          * @type {Boolean}
          * @default true
+         * @deprecated
          */
         fxaa : {
             get : function() {
+                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessCollection.fxaa.');
                 return this.postProcessCollection.fxaa.enabled;
             },
             set : function(value) {
+                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessCollection.fxaa.');
                 this.postProcessCollection.fxaa.enabled = value;
             }
         }

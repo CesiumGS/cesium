@@ -30,43 +30,43 @@ define([
         this._collection = postProcessCollection;
 
         this._framebuffers = [];
-        this._processNameToFramebuffer = {};
+        this._stageNameToFramebuffer = {};
 
         this._width = undefined;
         this._height = undefined;
     }
 
-    function getLastProcessName(process) {
-        while (defined(process.length)) {
-            process = process.get(process.length - 1);
+    function getLastStageName(stage) {
+        while (defined(stage.length)) {
+            stage = stage.get(stage.length - 1);
         }
-        return process.name;
+        return stage.name;
     }
 
-    function getProcessDependencies(collection, dependencies, process, previousName) {
-        if (!process.enabled) {
+    function getStageDependencies(collection, dependencies, stage, previousName) {
+        if (!stage.enabled) {
             return previousName;
         }
 
-        var processDependencies = dependencies[process.name] = {};
+        var stageDependencies = dependencies[stage.name] = {};
         if (defined(previousName)) {
-            var previous = collection.getProcessByName(previousName);
-            processDependencies[getLastProcessName(previous)] = true;
+            var previous = collection.getStageByName(previousName);
+            stageDependencies[getLastStageName(previous)] = true;
         }
-        var uniforms = process.uniformValues;
+        var uniforms = stage.uniforms;
         for (var name in uniforms) {
             if (uniforms.hasOwnProperty(name)) {
                 var value = uniforms[name];
                 if (typeof value === 'string') {
-                    var dependent = collection.getProcessByName(value);
+                    var dependent = collection.getStageByName(value);
                     if (defined(dependent)) {
-                        processDependencies[getLastProcessName(dependent)] = true;
+                        stageDependencies[getLastStageName(dependent)] = true;
                     }
                 }
             }
         }
 
-        return process.name;
+        return stage.name;
     }
 
     function getCompositeDependencies(collection, dependencies, composite, previousName) {
@@ -78,27 +78,27 @@ define([
         var currentName = previousName;
         var length = composite.length;
         for (var i = 0; i < length; ++i) {
-            var process = composite.get(i);
-            if (defined(process.length)) {
-                currentName = getCompositeDependencies(collection, dependencies, process, previousName);
+            var stage = composite.get(i);
+            if (defined(stage.length)) {
+                currentName = getCompositeDependencies(collection, dependencies, stage, previousName);
             } else {
-                currentName = getProcessDependencies(collection, dependencies, process, previousName);
+                currentName = getStageDependencies(collection, dependencies, stage, previousName);
             }
-            // Processes in a series only depend on the previous process
+            // Stages in a series only depend on the previous stage
             if (inSeries) {
                 previousName = currentName;
             }
         }
 
-        // Processes not in a series depend on every process executed before it since it could reference it as a uniform.
-        // This prevents looking at the dependencies of each process in the composite, but might create mode framebuffers than necessary.
-        // In practice, there are only 2-3 processes in these composites.
+        // Stages not in a series depend on every stage executed before it since it could reference it as a uniform.
+        // This prevents looking at the dependencies of each stage in the composite, but might create mode framebuffers than necessary.
+        // In practice, there are only 2-3 stages in these composites.
         if (!inSeries) {
             for (var j = 1; j < length; ++j) {
                 var current = composite.get(j);
                 var currentDependencies = dependencies[current.name];
                 for (var k = 0; k < j; ++k) {
-                    currentDependencies[getLastProcessName(composite.get(k))] = true;
+                    currentDependencies[getLastStageName(composite.get(k))] = true;
                 }
             }
         }
@@ -117,7 +117,7 @@ define([
             var previousName = getCompositeDependencies(collection, dependencies, ao, undefined);
             previousName = getCompositeDependencies(collection, dependencies, bloom, previousName);
             previousName = getCompositeDependencies(collection, dependencies, collection, previousName);
-            getProcessDependencies(collection, dependencies, fxaa, previousName);
+            getStageDependencies(collection, dependencies, fxaa, previousName);
         } else {
             getCompositeDependencies(collection, dependencies, collection, undefined);
         }
@@ -125,15 +125,15 @@ define([
         return dependencies;
     }
 
-    function getFramebuffer(cache, processName, dependencies) {
+    function getFramebuffer(cache, stageName, dependencies) {
         var collection = cache._collection;
-        var process = collection.getProcessByName(processName);
+        var stage = collection.getStageByName(stageName);
 
-        var textureScale = process._textureScale;
-        var forcePowerOfTwo = process._forcePowerOfTwo;
-        var pixelFormat = process._pixelFormat;
-        var pixelDatatype = process._pixelDatatype;
-        var clearColor = process._clearColor;
+        var textureScale = stage._textureScale;
+        var forcePowerOfTwo = stage._forcePowerOfTwo;
+        var pixelFormat = stage._pixelFormat;
+        var pixelDatatype = stage._pixelDatatype;
+        var clearColor = stage._clearColor;
 
         var i;
         var framebuffer;
@@ -148,11 +148,11 @@ define([
                 continue;
             }
 
-            var processNames = framebuffer.processes;
-            var processesLength = processNames.length;
+            var stageNames = framebuffer.stages;
+            var stagesLength = stageNames.length;
             var foundConflict = false;
-            for (var j = 0; j < processesLength; ++j) {
-                if (dependencies[processNames[j]]) {
+            for (var j = 0; j < stagesLength; ++j) {
+                if (dependencies[stageNames[j]]) {
                     foundConflict = true;
                     break;
                 }
@@ -164,7 +164,7 @@ define([
         }
 
         if (defined(framebuffer) && i < length) {
-            framebuffer.processes.push(processName);
+            framebuffer.stages.push(stageName);
             return framebuffer;
         }
 
@@ -174,7 +174,7 @@ define([
             pixelFormat : pixelFormat,
             pixelDatatype : pixelDatatype,
             clearColor : clearColor,
-            processes : [processName],
+            stages : [stageName],
             buffer : undefined,
             clear : undefined
         };
@@ -185,9 +185,9 @@ define([
 
     function createFramebuffers(cache) {
         var dependencies = getDependencies(cache._collection);
-        for (var processName in dependencies) {
-            if (dependencies.hasOwnProperty(processName)) {
-                cache._processNameToFramebuffer[processName] = getFramebuffer(cache, processName, dependencies[processName]);
+        for (var stageName in dependencies) {
+            if (dependencies.hasOwnProperty(stageName)) {
+                cache._stageNameToFramebuffer[stageName] = getFramebuffer(cache, stageName, dependencies[stageName]);
             }
         }
     }
@@ -242,17 +242,17 @@ define([
     }
 
     /**
-     * Called before the processes in the collection are executed. Creates the minimum amount of framebuffers for a post-process collection.
+     * Called before the stages in the collection are executed. Creates the minimum amount of framebuffers for a post-process collection.
      *
      * @param {Context} context The context.
      */
     PostProcessTextureCache.prototype.update = function(context) {
         var collection = this._collection;
-        var needsUpdate = !defined(collection._activeProcesses) || collection._activeProcesses.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
+        var needsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
         if (!needsUpdate && this._framebuffers.length > 0) {
             releaseResources(this);
             this._framebuffers.length = 0;
-            this._processNameToFramebuffer = {};
+            this._stageNameToFramebuffer = {};
             this._width = undefined;
             this._height = undefined;
         }
@@ -292,13 +292,13 @@ define([
     };
 
     /**
-     * Gets the framebuffer for a process with the given name in the collection.
+     * Gets the framebuffer for a stage with the given name in the collection.
      *
-     * @param {String} name The name of the process.
-     * @return {Framebuffer|undefined} The framebuffer for the process with the given name.
+     * @param {String} name The name of the stage.
+     * @return {Framebuffer|undefined} The framebuffer for the stage with the given name.
      */
     PostProcessTextureCache.prototype.getFramebuffer = function(name) {
-        var framebuffer = this._processNameToFramebuffer[name];
+        var framebuffer = this._stageNameToFramebuffer[name];
         if (!defined(framebuffer)) {
             return undefined;
         }

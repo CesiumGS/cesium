@@ -97,10 +97,10 @@ var depthOfField = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibr
 
 function updatePostProcess() {
     depthOfField.enabled = Boolean(viewModel.show);
-    depthOfField.uniformValues.focalDistance = Number(viewModel.focalDistance);
-    depthOfField.uniformValues.delta = Number(viewModel.delta);
-    depthOfField.uniformValues.sigma = Number(viewModel.sigma);
-    depthOfField.uniformValues.stepSize = Number(viewModel.stepSize);
+    depthOfField.uniforms.focalDistance = Number(viewModel.focalDistance);
+    depthOfField.uniforms.delta = Number(viewModel.delta);
+    depthOfField.uniforms.sigma = Number(viewModel.sigma);
+    depthOfField.uniforms.stepSize = Number(viewModel.stepSize);
 }
 updatePostProcess();
 
