@@ -88,9 +88,9 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
     selectionIndicator : false,
-    shadows : true
+    shadows : true,
+    shouldAnimate : true
 });
-viewer.clock.shouldAnimate = true;
 
 var entity;
 

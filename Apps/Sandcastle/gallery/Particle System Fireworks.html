@@ -28,8 +28,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.clock.shouldAnimate = true;
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
 
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;

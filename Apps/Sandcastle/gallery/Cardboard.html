@@ -33,7 +33,6 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 // Click the VR button in the bottom right of the screen to switch to VR mode.
 
 viewer.scene.globe.enableLighting = true;
-viewer.clock.shouldAnimate = true;
 
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
@@ -53,6 +52,7 @@ viewer.clock.stopTime = stop.clone();
 viewer.clock.currentTime = start.clone();
 viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 viewer.clock.multiplier = 1.0;
+viewer.clock.shouldAnimate = true;
 
 function computeCirclularFlight(lon, lat, radius) {
     var property = new Cesium.SampledPositionProperty();
