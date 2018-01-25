@@ -33,7 +33,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
     selectionIndicator : false,
     shadows : true,
-    terrainShadows : Cesium.ShadowMode.ENABLED
+    terrainShadows : Cesium.ShadowMode.ENABLED,
+    shouldAnimate : true
 });
 
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({

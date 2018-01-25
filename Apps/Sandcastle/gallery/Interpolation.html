@@ -32,7 +32,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProviderViewModels : [], //Disable terrain changing
     infoBox : false, //Disable InfoBox widget
-    selectionIndicator : false //Disable selection indicator
+    selectionIndicator : false, //Disable selection indicator
+    shouldAnimate : true // Enable animations
 });
 
 //Enable lighting based on sun/moon positions
