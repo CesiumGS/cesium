@@ -60,13 +60,15 @@ define([
         ao.enabled = false;
         bloom.enabled = false;
 
+        var textureCache = new PostProcessStageTextureCache(this);
+
         var stageNames = {};
         var stack = stackScratch;
         stack.push(fxaa, ao, bloom);
         while (stack.length > 0) {
             var stage = stack.pop();
             stageNames[stage.name] = stage;
-            stage._collection = this;
+            stage._textureCache = textureCache;
 
             var length = stage.length;
             if (defined(length)) {
@@ -99,7 +101,7 @@ define([
         this._textureCacheDirty = false;
 
         this._stageNames = stageNames;
-        this._textureCache = undefined;
+        this._textureCache = textureCache;
     }
 
     defineProperties(PostProcessStageCollection.prototype, {
@@ -316,7 +318,7 @@ define([
             }
             //>>includeEnd('debug');
             stageNames[currentStage.name] = currentStage;
-            currentStage._collection = this;
+            currentStage._textureCache = this._textureCache;
 
             var length = currentStage.length;
             if (defined(length)) {
@@ -374,7 +376,7 @@ define([
      * @return {Boolean} Whether the collection contains the post-process stage.
      */
     PostProcessStageCollection.prototype.contains = function(stage) {
-        return defined(stage) && defined(stage._index) && stage._collection === this;
+        return defined(stage) && defined(stage._index) && stage._textureCache === this._textureCache;
     };
 
     /**
@@ -420,18 +422,6 @@ define([
     };
 
     /**
-     * Gets the framebuffer to be used for a post-process stage with the given name.
-     *
-     * @param {String} name The name of a post-process stage.
-     * @return {Framebuffer} The framebuffer to be used for a post-process stage with the given name.
-     *
-     * @private
-     */
-    PostProcessStageCollection.prototype.getFramebuffer = function(name) {
-        return this._textureCache.getFramebuffer(name);
-    };
-
-    /**
      * Called before the post-process stages in the collection are executed. Calls update for each stage and creates WebGL resources.
      *
      * @param {Context} context The context.
@@ -463,8 +453,7 @@ define([
         if (this._textureCacheDirty || count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
-            this._textureCache = this._textureCache && this._textureCache.destroy();
-            this._textureCache = new PostProcessStageTextureCache(this);
+            this._textureCache.updateDependencies();
 
             this._lastLength = count;
             this._aoEnabled = ao.enabled;

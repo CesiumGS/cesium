@@ -34,6 +34,7 @@ define([
 
         this._width = undefined;
         this._height = undefined;
+        this._updateDependencies = false;
     }
 
     function getLastStageName(stage) {
@@ -241,6 +242,10 @@ define([
         }
     }
 
+    PostProcessStageTextureCache.prototype.updateDependencies = function() {
+        this._updateDependencies = true;
+    };
+
     /**
      * Called before the stages in the collection are executed. Creates the minimum amount of framebuffers for a post-process collection.
      *
@@ -248,8 +253,9 @@ define([
      */
     PostProcessStageTextureCache.prototype.update = function(context) {
         var collection = this._collection;
-        var needsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
-        if (!needsUpdate && this._framebuffers.length > 0) {
+        var updateDependencies = this._updateDependencies;
+        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
+        if (updateDependencies || (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)) {
             releaseResources(this);
             this._framebuffers.length = 0;
             this._stageNameToFramebuffer = {};
@@ -257,7 +263,7 @@ define([
             this._height = undefined;
         }
 
-        if (!needsUpdate) {
+        if (!updateDependencies && !needsCheckDimensionsUpdate) {
             return;
         }
 
@@ -268,12 +274,13 @@ define([
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
         var dimensionsChanged = this._width !== width || this._height !== height;
-        if (!dimensionsChanged) {
+        if (!updateDependencies && !dimensionsChanged) {
             return;
         }
 
         this._width = width;
         this._height = height;
+        this._updateDependencies = false;
         releaseResources(this);
         updateFramebuffers(this, context);
     };
@@ -292,7 +299,25 @@ define([
     };
 
     /**
-     * Gets the framebuffer for a stage with the given name in the collection.
+     * Gets the stage with the given name.
+     * @param {String} name The name of the stage.
+     * @return {PostProcessStage|PostProcessStageComposite}
+     */
+    PostProcessStageTextureCache.prototype.getStageByName = function(name) {
+        return this._collection.getStageByName(name);
+    };
+
+    /**
+     * Gets the output texture for a stage with the given name.
+     * @param {String} name The name of the stage.
+     * @return {Texture|undefined} The output texture of the stage with the given name.
+     */
+    PostProcessStageTextureCache.prototype.getOutputTexture = function(name) {
+        return this._collection.getOutputTexture(name);
+    };
+
+    /**
+     * Gets the framebuffer for a stage with the given name.
      *
      * @param {String} name The name of the stage.
      * @return {Framebuffer|undefined} The framebuffer for the stage with the given name.

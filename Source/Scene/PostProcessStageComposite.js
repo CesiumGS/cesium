@@ -103,7 +103,7 @@ define([
         this._uniforms = options.uniforms;
 
         // used by PostProcessStageCollection
-        this._collection = undefined;
+        this._textureCache = undefined;
         this._index = undefined;
     }
 

@@ -144,7 +144,7 @@ define([
         this._name = name;
 
         // set by PostProcessStageCollection
-        this._collection = undefined;
+        this._textureCache = undefined;
         this._index = undefined;
 
         /**
@@ -248,7 +248,7 @@ define([
          */
         outputTexture : {
             get : function() {
-                var framebuffer = this._collection.getFramebuffer(this._name);
+                var framebuffer = this._textureCache.getFramebuffer(this._name);
                 return framebuffer.getColorTexture(0);
             }
         }
@@ -272,7 +272,7 @@ define([
 
                 var actualUniforms = stage._actualUniforms;
                 var actualValue = actualUniforms[name];
-                if (defined(actualValue) && actualValue !== currentValue && typeof actualValue === Texture && !defined(stage._collection.getStageByName(name))) {
+                if (defined(actualValue) && actualValue !== currentValue && typeof actualValue === Texture && !defined(stage._textureCache.getStageByName(name))) {
                     stage._texturesToRelease.push(actualValue);
                     delete actualUniforms[name];
                 }
@@ -385,7 +385,7 @@ define([
 
     function createStageOutputTextureFunction(stage, name) {
         return function() {
-            return stage._collection.getOutputTexture(name);
+            return stage._textureCache.getOutputTexture(name);
         };
     }
 
@@ -426,7 +426,7 @@ define([
         for (i = 0; i < length; ++i) {
             name = dirtyUniforms[i];
             var stageNameOrUrl = uniforms[name];
-            var stageWithName = stage._collection.getStageByName(stageNameOrUrl);
+            var stageWithName = stage._textureCache.getStageByName(stageNameOrUrl);
             if (defined(stageWithName)) {
                 stage._actualUniforms[name] = createStageOutputTextureFunction(stage, stageNameOrUrl);
             } else {
@@ -458,7 +458,7 @@ define([
         for (var name in actualUniforms) {
             if (actualUniforms.hasOwnProperty(name)) {
                 if (actualUniforms[name] instanceof Texture) {
-                    if (!defined(stage._collection.getStageByName(uniforms[name]))) {
+                    if (!defined(stage._textureCache.getStageByName(uniforms[name]))) {
                         actualUniforms[name].destroy();
                     }
                     stage._dirtyUniforms.push(name);
@@ -487,7 +487,7 @@ define([
         createDrawCommand(this, context);
         createSampler(this);
 
-        var framebuffer = this._collection.getFramebuffer(this._name);
+        var framebuffer = this._textureCache.getFramebuffer(this._name);
         var colorTexture = framebuffer.getColorTexture(0);
         var renderState = this._renderState;
         if (!defined(renderState) || colorTexture.width !== renderState.viewport.width || colorTexture.height !== renderState.viewport.height) {

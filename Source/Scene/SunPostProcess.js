@@ -130,13 +130,13 @@ define([
             stages : stages
         });
 
+        var textureCache = new PostProcessStageTextureCache(this);
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            stages[i]._collection = this;
+            stages[i]._textureCache = textureCache;
         }
 
-        this._textureCache = new PostProcessStageTextureCache(this);
-
+        this._textureCache = textureCache;
         this.length = stages.length;
     }
 
@@ -153,10 +153,6 @@ define([
             }
         }
         return undefined;
-    };
-
-    SunPostProcess.prototype.getFramebuffer = function(name) {
-        return this._textureCache.getFramebuffer(name);
     };
 
     var sunPositionECScratch = new Cartesian4();
