@@ -52,6 +52,7 @@ viewer.clock.stopTime = stop.clone();
 viewer.clock.currentTime = start.clone();
 viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
 viewer.clock.multiplier = 1.0;
+viewer.clock.shouldAnimate = true;
 
 function computeCirclularFlight(lon, lat, radius) {
     var property = new Cesium.SampledPositionProperty();

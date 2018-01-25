@@ -27,7 +27,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
 
 function dataCallback(interval, index) {
     var time;
