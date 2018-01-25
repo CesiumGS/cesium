@@ -13,9 +13,9 @@ define([
         '../Renderer/TextureWrap',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
-        '../Shaders/PostProcessFilters/DepthViewPacked',
-        '../Shaders/PostProcessFilters/PassThrough',
-        '../Shaders/PostProcessFilters/PassThroughDepth'
+        '../Shaders/PostProcessStages/DepthViewPacked',
+        '../Shaders/PostProcessStages/PassThrough',
+        '../Shaders/PostProcessStages/PassThroughDepth'
     ], function(
         BoundingRectangle,
         Color,

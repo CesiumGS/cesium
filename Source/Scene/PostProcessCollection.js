@@ -12,7 +12,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Shaders/PostProcessFilters/PassThrough',
+        '../Shaders/PostProcessStages/PassThrough',
         './PostProcess',
         './PostProcessLibrary',
         './PostProcessSampleMode',

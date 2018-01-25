@@ -7,10 +7,10 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Transforms',
-        '../Shaders/PostProcessFilters/AdditiveBlend',
-        '../Shaders/PostProcessFilters/BrightPass',
-        '../Shaders/PostProcessFilters/GaussianBlur1D',
-        '../Shaders/PostProcessFilters/PassThrough',
+        '../Shaders/PostProcessStages/AdditiveBlend',
+        '../Shaders/PostProcessStages/BrightPass',
+        '../Shaders/PostProcessStages/GaussianBlur1D',
+        '../Shaders/PostProcessStages/PassThrough',
         './PostProcess',
         './PostProcessComposite',
         './PostProcessSampleMode',
@@ -144,7 +144,7 @@ define([
         return this._stages.get(index);
     };
 
-    SunPostProcess.prototype.getProcessByName = function(name) {
+    SunPostProcess.prototype.getStageByName = function(name) {
         var length = this._stages.length;
         for (var i = 0; i < length; ++i) {
             var stage = this._stages.get(i);

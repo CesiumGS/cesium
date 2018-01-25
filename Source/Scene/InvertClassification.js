@@ -14,7 +14,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Shaders/PostProcessFilters/PassThrough',
+        '../Shaders/PostProcessStages/PassThrough',
         './BlendingState',
         './StencilFunction',
         './StencilOperation'

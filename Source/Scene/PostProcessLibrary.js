@@ -4,23 +4,23 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
-        '../Shaders/PostProcessFilters/AmbientOcclusionGenerate',
-        '../Shaders/PostProcessFilters/AmbientOcclusion',
-        '../Shaders/PostProcessFilters/BlackAndWhite',
-        '../Shaders/PostProcessFilters/BloomComposite',
-        '../Shaders/PostProcessFilters/Brightness',
-        '../Shaders/PostProcessFilters/ContrastBias',
-        '../Shaders/PostProcessFilters/DepthOfField',
-        '../Shaders/PostProcessFilters/DepthView',
-        '../Shaders/PostProcessFilters/EdgeDetection',
-        '../Shaders/PostProcessFilters/EightBit',
-        '../Shaders/PostProcessFilters/FXAA',
-        '../Shaders/PostProcessFilters/GaussianBlur1D',
-        '../Shaders/PostProcessFilters/LensFlare',
-        '../Shaders/PostProcessFilters/NightVision',
-        '../Shaders/PostProcessFilters/Silhouette',
-        '../Shaders/PostProcessFilters/SilhouetteComposite',
-        '../Shaders/PostProcessFilters/TextureOverlay',
+        '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
+        '../Shaders/PostProcessStages/AmbientOcclusionModulate',
+        '../Shaders/PostProcessStages/BlackAndWhite',
+        '../Shaders/PostProcessStages/BloomComposite',
+        '../Shaders/PostProcessStages/Brightness',
+        '../Shaders/PostProcessStages/ContrastBias',
+        '../Shaders/PostProcessStages/DepthOfField',
+        '../Shaders/PostProcessStages/DepthView',
+        '../Shaders/PostProcessStages/EdgeDetection',
+        '../Shaders/PostProcessStages/EightBit',
+        '../Shaders/PostProcessStages/FXAA',
+        '../Shaders/PostProcessStages/GaussianBlur1D',
+        '../Shaders/PostProcessStages/LensFlare',
+        '../Shaders/PostProcessStages/LinearDepth',
+        '../Shaders/PostProcessStages/NightVision',
+        '../Shaders/PostProcessStages/Silhouette',
+        '../Shaders/PostProcessStages/TextureOverlay',
         '../ThirdParty/Shaders/FXAA3_11',
         './PostProcess',
         './PostProcessComposite',
@@ -32,7 +32,7 @@ define([
         destroyObject,
         Ellipsoid,
         AmbientOcclusionGenerate,
-        AmbientOcclusion,
+        AmbientOcclusionModulate,
         BlackAndWhite,
         BloomComposite,
         Brightness,
@@ -44,9 +44,9 @@ define([
         FXAA,
         GaussianBlur1D,
         LensFlare,
+        LinearDepth,
         NightVision,
         Silhouette,
-        SilhouetteComposite,
         TextureOverlay,
         FXAA3_11,
         PostProcess,
@@ -235,7 +235,7 @@ define([
     PostProcessLibrary.createSilhouetteStage = function() {
         var silhouetteDepth = new PostProcess({
             name : 'czm_silhouette_depth',
-            fragmentShader : Silhouette
+            fragmentShader : LinearDepth
         });
         var edgeDetection = new PostProcess({
             name : 'czm_silhouette_edge_detection',
@@ -250,8 +250,8 @@ define([
             stages : [silhouetteDepth, edgeDetection]
         });
         var silhouetteProcess = new PostProcess({
-            name : 'czm_silhouette_composite',
-            fragmentShader : SilhouetteComposite,
+            name : 'czm_silhouette_color_edges',
+            fragmentShader : Silhouette,
             uniforms : {
                 silhouetteTexture : silhouetteGenerateProcess.name
             }
@@ -445,7 +445,7 @@ define([
 
         var ambientOcclusionModulate = new PostProcess({
             name : 'czm_ambient_occlusion_composite',
-            fragmentShader : AmbientOcclusion,
+            fragmentShader : AmbientOcclusionModulate,
             uniforms : {
                 ambientOcclusionOnly : false,
                 ambientOcclusionTexture : generateAndBlur.name
