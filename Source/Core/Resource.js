@@ -176,7 +176,7 @@ define([
          *
          * @type {Object}
          */
-        this.data = defaultClone(options.data);
+        this.data = options.data;
 
         /**
          * Overrides the MIME type returned by the server.
