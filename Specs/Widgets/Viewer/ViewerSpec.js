@@ -168,6 +168,7 @@ defineSuite([
         }));
 
         viewer = createViewer(container, {
+            clockViewModel : clockViewModel,
             shouldAnimate : true
         });
 
