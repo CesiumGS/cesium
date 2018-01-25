@@ -67,7 +67,7 @@ define([
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
-        './PostProcessCollection',
+        './PostProcessStageCollection',
         './Primitive',
         './PrimitiveCollection',
         './SceneFramebuffer',
@@ -147,7 +147,7 @@ define([
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
-        PostProcessCollection,
+        PostProcessStageCollection,
         Primitive,
         PrimitiveCollection,
         SceneFramebuffer,
@@ -663,9 +663,9 @@ define([
 
         /**
          * Post processing effects applied to the final render.
-         * @type {PostProcessCollection}
+         * @type {PostProcessStageCollection}
          */
-        this.postProcessCollection = new PostProcessCollection();
+        this.postProcessStages = new PostProcessStageCollection();
 
         this._brdfLutGenerator = new BrdfLutGenerator();
 
@@ -1249,12 +1249,12 @@ define([
          */
         fxaa : {
             get : function() {
-                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessCollection.fxaa.');
-                return this.postProcessCollection.fxaa.enabled;
+                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
+                return this.postProcessStages.fxaa.enabled;
             },
             set : function(value) {
-                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessCollection.fxaa.');
-                this.postProcessCollection.fxaa.enabled = value;
+                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
+                this.postProcessStages.fxaa.enabled = value;
             }
         }
     });
@@ -2701,7 +2701,7 @@ define([
             environmentState.useOIT = scene._oit.isSupported();
         }
 
-        var postProcess = scene.postProcessCollection;
+        var postProcess = scene.postProcessStages;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
@@ -2781,7 +2781,7 @@ define([
         if (usePostProcess && (useOIT || defined(globeFramebuffer))) {
             var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
 
-            var postProcess = scene.postProcessCollection;
+            var postProcess = scene.postProcessStages;
             var colorTexture = inputFramebuffer.getColorTexture(0);
             var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
             postProcess.execute(context, colorTexture, depthTexture);
@@ -3598,7 +3598,7 @@ define([
         }
 
         this._sceneFramebuffer = this._sceneFramebuffer && this._sceneFramebuffer.destroy();
-        this.postProcessCollection = this.postProcessCollection && this.postProcessCollection.destroy();
+        this.postProcessStages = this.postProcessStages && this.postProcessStages.destroy();
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();

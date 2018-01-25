@@ -19,15 +19,15 @@ define([
     /**
      * Creates a minimal amount of textures and framebuffers.
      *
-     * @alias PostProcessTextureCache
+     * @alias PostProcessStageTextureCache
      * @constructor
      *
-     * @param {PostProcessCollection} postProcessCollection The post process collection.
+     * @param {PostProcessStageCollection} postProcessStageCollection The post process collection.
      *
      * @private
      */
-    function PostProcessTextureCache(postProcessCollection) {
-        this._collection = postProcessCollection;
+    function PostProcessStageTextureCache(postProcessStageCollection) {
+        this._collection = postProcessStageCollection;
 
         this._framebuffers = [];
         this._stageNameToFramebuffer = {};
@@ -246,7 +246,7 @@ define([
      *
      * @param {Context} context The context.
      */
-    PostProcessTextureCache.prototype.update = function(context) {
+    PostProcessStageTextureCache.prototype.update = function(context) {
         var collection = this._collection;
         var needsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
         if (!needsUpdate && this._framebuffers.length > 0) {
@@ -283,7 +283,7 @@ define([
      *
      * @param {Context} context The context.
      */
-    PostProcessTextureCache.prototype.clear = function(context) {
+    PostProcessStageTextureCache.prototype.clear = function(context) {
         var framebuffers = this._framebuffers;
         var length = 0;
         for (var i = 0; i < length; ++i) {
@@ -297,7 +297,7 @@ define([
      * @param {String} name The name of the stage.
      * @return {Framebuffer|undefined} The framebuffer for the stage with the given name.
      */
-    PostProcessTextureCache.prototype.getFramebuffer = function(name) {
+    PostProcessStageTextureCache.prototype.getFramebuffer = function(name) {
         var framebuffer = this._stageNameToFramebuffer[name];
         if (!defined(framebuffer)) {
             return undefined;
@@ -314,9 +314,9 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see PostProcessTextureCache#destroy
+     * @see PostProcessStageTextureCache#destroy
      */
-    PostProcessTextureCache.prototype.isDestroyed = function() {
+    PostProcessStageTextureCache.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -333,12 +333,12 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PostProcessTextureCache#isDestroyed
+     * @see PostProcessStageTextureCache#isDestroyed
      */
-    PostProcessTextureCache.prototype.destroy = function() {
+    PostProcessStageTextureCache.prototype.destroy = function() {
         releaseResources(this);
         return destroyObject(this);
     };
 
-    return PostProcessTextureCache;
+    return PostProcessStageTextureCache;
 });

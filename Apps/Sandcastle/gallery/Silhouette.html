@@ -59,7 +59,7 @@ for (var name in viewModel) {
     }
 }
 
-var silhouette = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.createSilhouetteStage());
+var silhouette = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
 
 function updatePostProcess() {
     silhouette.enabled = Boolean(viewModel.show);

@@ -11,10 +11,10 @@ define([
         '../Shaders/PostProcessStages/BrightPass',
         '../Shaders/PostProcessStages/GaussianBlur1D',
         '../Shaders/PostProcessStages/PassThrough',
-        './PostProcess',
-        './PostProcessComposite',
-        './PostProcessSampleMode',
-        './PostProcessTextureCache',
+        './PostProcessStage',
+        './PostProcessStageComposite',
+        './PostProcessStageSampleMode',
+        './PostProcessStageTextureCache',
         './SceneFramebuffer'
     ], function(
         BoundingRectangle,
@@ -29,10 +29,10 @@ define([
         BrightPass,
         GaussianBlur1D,
         PassThrough,
-        PostProcess,
-        PostProcessComposite,
-        PostProcessSampleMode,
-        PostProcessTextureCache,
+        PostProcessStage,
+        PostProcessStageComposite,
+        PostProcessStageSampleMode,
+        PostProcessStageTextureCache,
         SceneFramebuffer) {
     'use strict';
 
@@ -42,14 +42,14 @@ define([
         var scale = 0.125;
         var stages = new Array(6);
 
-        stages[0] = new PostProcess({
+        stages[0] = new PostProcessStage({
             fragmentShader : PassThrough,
             textureScale : scale,
             forcePowerOfTwo : true,
-            samplingMode : PostProcessSampleMode.LINEAR
+            samplingMode : PostProcessStageSampleMode.LINEAR
         });
 
-        var brightPass = stages[1] = new PostProcess({
+        var brightPass = stages[1] = new PostProcessStage({
             fragmentShader : BrightPass,
             uniforms : {
                 avgLuminance : 0.5, // A guess at the average luminance across the entire scene
@@ -65,7 +65,7 @@ define([
         this._sigma = 2.0;
         this._blurStep = new Cartesian2();
 
-        stages[2] = new PostProcess({
+        stages[2] = new PostProcessStage({
             fragmentShader : GaussianBlur1D,
             uniforms : {
                 step : function() {
@@ -84,7 +84,7 @@ define([
             forcePowerOfTwo : true
         });
 
-        stages[3] = new PostProcess({
+        stages[3] = new PostProcessStage({
             fragmentShader : GaussianBlur1D,
             uniforms : {
                 step : function() {
@@ -103,15 +103,15 @@ define([
             forcePowerOfTwo : true
         });
 
-        stages[4] = new PostProcess({
+        stages[4] = new PostProcessStage({
             fragmentShader : PassThrough,
-            samplingMode : PostProcessSampleMode.LINEAR
+            samplingMode : PostProcessStageSampleMode.LINEAR
         });
 
         this._uCenter = new Cartesian2();
         this._uRadius = undefined;
 
-        stages[5] = new PostProcess({
+        stages[5] = new PostProcessStage({
             fragmentShader : AdditiveBlend,
             uniforms : {
                 center : function() {
@@ -126,7 +126,7 @@ define([
             }
         });
 
-        this._stages = new PostProcessComposite({
+        this._stages = new PostProcessStageComposite({
             stages : stages
         });
 
@@ -135,7 +135,7 @@ define([
             stages[i]._collection = this;
         }
 
-        this._textureCache = new PostProcessTextureCache(this);
+        this._textureCache = new PostProcessStageTextureCache(this);
 
         this.length = stages.length;
     }

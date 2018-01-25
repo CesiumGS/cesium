@@ -21,7 +21,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../ThirdParty/when',
-        './PostProcessSampleMode'
+        './PostProcessStageSampleMode'
     ], function(
         BoundingRectangle,
         Check,
@@ -45,13 +45,13 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         when,
-        PostProcessSampleMode) {
+        PostProcessStageSampleMode) {
     'use strict';
 
     /**
      * Runs a post-process stage on either the texture rendered by the scene or the output of a previous post-process stage.
      *
-     * @alias PostProcess
+     * @alias PostProcessStage
      * @constructor
      *
      * @param {Object} options An object with the following properties:
@@ -59,7 +59,7 @@ define([
      * @param {Object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
      * @param {Number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process stage  to a texture the size of the viewport.
      * @param {Boolean} [options.forcePowerOfTwo=false] Whether or not to force the texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
-     * @param {PostProcessSampleMode} [options.samplingMode=PostProcessSampleMode.NEAREST] How to sample the input color texture.
+     * @param {PostProcessStageSampleMode} [options.samplingMode=PostProcessStageSampleMode.NEAREST] How to sample the input color texture.
      * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The color pixel format of the output texture.
      * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The pixel data type of the output texture.
      * @param {Color} [options.clearColor=Color.BLACK] The color to clear the output texture to.
@@ -70,7 +70,7 @@ define([
      * @exception {DeveloperError} options.pixelFormat must be a color format.
      * @exception {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
      *
-     * @see PostProcessComposite
+     * @see PostProcessStageComposite
      *
      * @example
      * var fs =
@@ -82,7 +82,7 @@ define([
      *     '    vec4 color = texture2D(colorTexture, v_textureCoordinates);\n' +
      *     '    gl_FragColor = vec4(color.rgb * scale + offset, 1.0);\n' +
      *     '}\n';
-     * scene.postProcessCollection.add(new Cesium.PostProcess({
+     * scene.postProcessStages.add(new Cesium.PostProcessStage({
      *     fragmentShader : fs,
      *     uniforms : {
      *         scale : 1.1,
@@ -92,7 +92,7 @@ define([
      *     }
      * }));
      */
-    function PostProcess(options) {
+    function PostProcessStage(options) {
         var fragmentShader = options.fragmentShader;
         var textureScale = defaultValue(options.textureScale, 1.0);
         var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
@@ -111,7 +111,7 @@ define([
         this._uniforms = options.uniforms;
         this._textureScale = textureScale;
         this._forcePowerOfTwo = defaultValue(options.forcePowerOfTwo, false);
-        this._sampleMode = defaultValue(options.samplingMode, PostProcessSampleMode.NEAREST);
+        this._sampleMode = defaultValue(options.samplingMode, PostProcessStageSampleMode.NEAREST);
         this._pixelFormat = pixelFormat;
         this._pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         this._clearColor = defaultValue(options.clearColor, Color.BLACK);
@@ -143,7 +143,7 @@ define([
         }
         this._name = name;
 
-        // set by PostProcessCollection
+        // set by PostProcessStageCollection
         this._collection = undefined;
         this._index = undefined;
 
@@ -156,13 +156,13 @@ define([
         this._enabled = true;
     }
 
-    defineProperties(PostProcess.prototype, {
+    defineProperties(PostProcessStage.prototype, {
         /**
          * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
-         * and {@link PostProcess#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
+         * and {@link PostProcessStage#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
          * to load.
          *
-         * @memberof PostProcess.prototype
+         * @memberof PostProcessStage.prototype
          * @type {Boolean}
          * @readonly
          */
@@ -172,9 +172,9 @@ define([
             }
         },
         /**
-         * The unique name of this post-process stage for reference by other stages in a {@link PostProcessComposite}.
+         * The unique name of this post-process stage for reference by other stages in a {@link PostProcessStageComposite}.
          *
-         * @memberof PostProcess.prototype
+         * @memberof PostProcessStage.prototype
          * @type {String}
          * @readonly
          */
@@ -194,7 +194,7 @@ define([
          * the texture uniforms.
          * </p>
          *
-         * @memberof PostProcess.prototype
+         * @memberof PostProcessStage.prototype
          * @type {String}
          * @readonly
          */
@@ -213,11 +213,11 @@ define([
          * A constant value can also be a URI to an image, a data URI, or an HTML element that can be used as a texture, such as HTMLImageElement or HTMLCanvasElement.
          * </p>
          * <p>
-         * If this post-process stage is part of a {@link PostProcessComposite} that does not execute in series, the constant value can also be
+         * If this post-process stage is part of a {@link PostProcessStageComposite} that does not execute in series, the constant value can also be
          * the name of another stage in a composite. This will set the uniform to the output texture the stage with that name.
          * </p>
          *
-         * @memberof PostProcess.prototype
+         * @memberof PostProcessStage.prototype
          * @type {Object}
          * @readonly
          */
@@ -229,7 +229,7 @@ define([
         /**
          * The {@link BoundingRectangle} to use for the scissor test. A default bounding rectangle will disable the scissor test.
          *
-         * @memberof PostProcess.prototype
+         * @memberof PostProcessStage.prototype
          * @type {BoundingRectangle}
          * @readonly
          */
@@ -241,7 +241,7 @@ define([
         /**
          * A reference to the texture written to when executing this post process stage.
          *
-         * @memberof PostProcess.prototype
+         * @memberof PostProcessStage.prototype
          * @type {Texture}
          * @readonly
          * @private
@@ -355,7 +355,7 @@ define([
         var minFilter;
         var magFilter;
 
-        if (mode === PostProcessSampleMode.LINEAR) {
+        if (mode === PostProcessStageSampleMode.LINEAR) {
             minFilter = TextureMinificationFilter.LINEAR;
             magFilter = TextureMagnificationFilter.LINEAR;
         } else {
@@ -472,7 +472,7 @@ define([
      * @param {Context} context The context.
      * @private
      */
-    PostProcess.prototype.update = function(context) {
+    PostProcessStage.prototype.update = function(context) {
         if (this.enabled !== this._enabled && !this.enabled) {
             releaseResources(this);
         }
@@ -507,7 +507,7 @@ define([
      * @param {Texture} depthTexture The input depth texture.
      * @private
      */
-    PostProcess.prototype.execute = function(context, colorTexture, depthTexture) {
+    PostProcessStage.prototype.execute = function(context, colorTexture, depthTexture) {
         if (!defined(this._command) || !this._ready || !this._enabled) {
             return;
         }
@@ -536,9 +536,9 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see PostProcess#destroy
+     * @see PostProcessStage#destroy
      */
-    PostProcess.prototype.isDestroyed = function() {
+    PostProcessStage.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -555,12 +555,12 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PostProcess#isDestroyed
+     * @see PostProcessStage#isDestroyed
      */
-    PostProcess.prototype.destroy = function() {
+    PostProcessStage.prototype.destroy = function() {
         releaseResources(this);
         return destroyObject(this);
     };
 
-    return PostProcess;
+    return PostProcessStage;
 });

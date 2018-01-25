@@ -13,10 +13,8 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessStages/PassThrough',
-        './PostProcess',
-        './PostProcessLibrary',
-        './PostProcessSampleMode',
-        './PostProcessTextureCache'
+        './PostProcessStageLibrary',
+        './PostProcessStageTextureCache'
     ], function(
         Check,
         defaultValue,
@@ -32,16 +30,14 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         PassThrough,
-        PostProcess,
-        PostProcessLibrary,
-        PostProcessSampleMode,
-        PostProcessTextureCache) {
+        PostProcessStageLibrary,
+        PostProcessStageTextureCache) {
     'use strict';
 
     var stackScratch = [];
 
     /**
-     * A collection of {@link PostProcess}es and/or {@link PostProcessComposite}s.
+     * A collection of {@link PostProcessStage}s and/or {@link PostProcessStageComposite}s.
      * <p>
      * The input texture for each post-process stage is the texture rendered to by the scene or the texture rendered
      * to by the previous stage in the collection.
@@ -53,13 +49,13 @@ define([
      * If the FXAA stage is enabled, it will execute after all other stages.
      * </p>
      *
-     * @alias PostProcessCollection
+     * @alias PostProcessStageCollection
      * @constructor
      */
-    function PostProcessCollection() {
-        var fxaa = PostProcessLibrary.createFXAAStage();
-        var ao = PostProcessLibrary.createAmbientOcclusionStage();
-        var bloom = PostProcessLibrary.createBloomStage();
+    function PostProcessStageCollection() {
+        var fxaa = PostProcessStageLibrary.createFXAAStage();
+        var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
+        var bloom = PostProcessStageLibrary.createBloomStage();
 
         ao.enabled = false;
         bloom.enabled = false;
@@ -106,11 +102,11 @@ define([
         this._textureCache = undefined;
     }
 
-    defineProperties(PostProcessCollection.prototype, {
+    defineProperties(PostProcessStageCollection.prototype, {
         /**
          * Determines if all of the post-process stages in the collection are ready to be executed.
          *
-         * @memberof PostProcessCollection.prototype
+         * @memberof PostProcessStageCollection.prototype
          * @type {Boolean}
          * @readonly
          */
@@ -141,8 +137,8 @@ define([
          * When enabled, this stage will execute after all others.
          * </p>
          *
-         * @memberof PostProcessCollection.prototype
-         * @type {PostProcess}
+         * @memberof PostProcessStageCollection.prototype
+         * @type {PostProcessStage}
          * @readonly
          */
         fxaa : {
@@ -174,15 +170,15 @@ define([
          * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.
          * </p>
          * <p>
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessLibrary#createBlurStage}.
+         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
          * When enabled, this stage will execute before all others.
          * </p>
          *
-         * @memberof PostProcessCollection.prototype
-         * @type {PostProcessComposite}
+         * @memberof PostProcessStageCollection.prototype
+         * @type {PostProcessStageComposite}
          * @readonly
          */
         ambientOcclusion : {
@@ -207,15 +203,15 @@ define([
          * The default value is <code>false</code>. This is a debug option for viewing the effects when changing the other uniform values.
          * </p>
          * <p>
-         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessLibrary#createBlurStage}.
+         * <code>delta</code>, <code>sigma</code>, and <code>kernelSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
          * The blur is applied to the shadows generated from the image to make them smoother.
          * </p>
          * <p>
          * When enabled, this stage will execute before all others.
          * </p>
          *
-         * @memberOf PostProcessCollection.prototype
-         * @type {PostProcessComposite}
+         * @memberOf PostProcessStageCollection.prototype
+         * @type {PostProcessStageComposite}
          * @readonly
          */
         bloom : {
@@ -226,7 +222,7 @@ define([
         /**
          * The number of post-process stages in this collection.
          *
-         * @memberof PostProcessCollection.prototype
+         * @memberof PostProcessStageCollection.prototype
          * @type {Number}
          * @readonly
          */
@@ -238,7 +234,7 @@ define([
         /**
          * A reference to the last texture written to when executing the post-process stages in this collection.
          *
-         * @memberof PostProcessCollection.prototype
+         * @memberof PostProcessStageCollection.prototype
          * @type {Texture}
          * @readonly
          * @private
@@ -298,12 +294,12 @@ define([
     /**
      * Adds the post-process stage to the collection.
      *
-     * @param {PostProcess|PostProcessComposite} stage The post-process stage to add to the collection.
-     * @return {PostProcess|PostProcessComposite} The post-process stage that was added to the collection.
+     * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to add to the collection.
+     * @return {PostProcessStage|PostProcessStageComposite} The post-process stage that was added to the collection.
      *
      * @exception {DeveloperError} The post-process stage has already been added to the collection or does not have a unique name.
      */
-    PostProcessCollection.prototype.add = function(stage) {
+    PostProcessStageCollection.prototype.add = function(stage) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('stage', stage);
         //>>includeEnd('debug');
@@ -340,10 +336,10 @@ define([
     /**
      * Removes a post-process stage from the collection and destroys it.
      *
-     * @param {PostProcess|PostProcessComposite} stage The post-process stage to remove from the collection.
+     * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage to remove from the collection.
      * @return {Boolean} Whether the post-process stage was removed.
      */
-    PostProcessCollection.prototype.remove = function(stage) {
+    PostProcessStageCollection.prototype.remove = function(stage) {
         if (!this.contains(stage)) {
             return false;
         }
@@ -374,10 +370,10 @@ define([
     /**
      * Returns whether the collection contains a post-process stage.
      *
-     * @param {PostProcess|PostProcessComposite} stage The post-process stage.
+     * @param {PostProcessStage|PostProcessStageComposite} stage The post-process stage.
      * @return {Boolean} Whether the collection contains the post-process stage.
      */
-    PostProcessCollection.prototype.contains = function(stage) {
+    PostProcessStageCollection.prototype.contains = function(stage) {
         return defined(stage) && defined(stage._index) && stage._collection === this;
     };
 
@@ -385,9 +381,9 @@ define([
      * Gets the post-process stage at <code>index</code>.
      *
      * @param {Number} index The index of the post-process stage.
-     * @return {PostProcess|PostProcessComposite} The post-process stage at index.
+     * @return {PostProcessStage|PostProcessStageComposite} The post-process stage at index.
      */
-    PostProcessCollection.prototype.get = function(index) {
+    PostProcessStageCollection.prototype.get = function(index) {
         removeStages(this);
         var stages = this._stages;
         //>>includeStart('debug', pragmas.debug);
@@ -402,7 +398,7 @@ define([
     /**
      * Removes all post-process stages from the collection and destroys them.
      */
-    PostProcessCollection.prototype.removeAll = function() {
+    PostProcessStageCollection.prototype.removeAll = function() {
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
@@ -415,11 +411,11 @@ define([
      * Gets a post-process stage in the collection by its name.
      *
      * @param {String} name The name of the post-process stage.
-     * @return {PostProcess|PostProcessComposite} The post-process stage.
+     * @return {PostProcessStage|PostProcessStageComposite} The post-process stage.
      *
      * @private
      */
-    PostProcessCollection.prototype.getStageByName = function(name) {
+    PostProcessStageCollection.prototype.getStageByName = function(name) {
         return this._stageNames[name];
     };
 
@@ -431,7 +427,7 @@ define([
      *
      * @private
      */
-    PostProcessCollection.prototype.getFramebuffer = function(name) {
+    PostProcessStageCollection.prototype.getFramebuffer = function(name) {
         return this._textureCache.getFramebuffer(name);
     };
 
@@ -442,7 +438,7 @@ define([
      *
      * @private
      */
-    PostProcessCollection.prototype.update = function(context) {
+    PostProcessStageCollection.prototype.update = function(context) {
         removeStages(this);
 
         var activeStages = this._activeStages;
@@ -468,7 +464,7 @@ define([
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
             this._textureCache = this._textureCache && this._textureCache.destroy();
-            this._textureCache = new PostProcessTextureCache(this);
+            this._textureCache = new PostProcessStageTextureCache(this);
 
             this._lastLength = count;
             this._aoEnabled = ao.enabled;
@@ -526,7 +522,7 @@ define([
      *
      * @private
      */
-    PostProcessCollection.prototype.clear = function(context) {
+    PostProcessStageCollection.prototype.clear = function(context) {
         this._textureCache.clear(context);
     };
 
@@ -545,7 +541,7 @@ define([
      *
      * @private
      */
-    PostProcessCollection.prototype.getOutputTexture = function(stageName) {
+    PostProcessStageCollection.prototype.getOutputTexture = function(stageName) {
         var stage = this.getStageByName(stageName);
         if (!defined(stage)) {
             return undefined;
@@ -583,7 +579,7 @@ define([
      *
      * @private
      */
-    PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
+    PostProcessStageCollection.prototype.execute = function(context, colorTexture, depthTexture) {
         var activeStages = this._activeStages;
         var length = activeStages.length;
 
@@ -627,7 +623,7 @@ define([
      *
      * @private
      */
-    PostProcessCollection.prototype.copy = function(context, framebuffer) {
+    PostProcessStageCollection.prototype.copy = function(context, framebuffer) {
         if (!defined(this._copyColorCommand)) {
             var that = this;
             this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
@@ -653,9 +649,9 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see PostProcessCollection#destroy
+     * @see PostProcessStageCollection#destroy
      */
-    PostProcessCollection.prototype.isDestroyed = function() {
+    PostProcessStageCollection.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -672,9 +668,9 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PostProcessCollection#isDestroyed
+     * @see PostProcessStageCollection#isDestroyed
      */
-    PostProcessCollection.prototype.destroy = function() {
+    PostProcessStageCollection.prototype.destroy = function() {
         this._fxaa.destroy();
         this._ao.destroy();
         this._bloom.destroy();
@@ -683,5 +679,5 @@ define([
         return destroyObject(this);
     };
 
-    return PostProcessCollection;
+    return PostProcessStageCollection;
 });

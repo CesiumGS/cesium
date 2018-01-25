@@ -22,9 +22,9 @@ define([
         '../Shaders/PostProcessStages/Silhouette',
         '../Shaders/PostProcessStages/TextureOverlay',
         '../ThirdParty/Shaders/FXAA3_11',
-        './PostProcess',
-        './PostProcessComposite',
-        './PostProcessSampleMode'
+        './PostProcessStage',
+        './PostProcessStageComposite',
+        './PostProcessStageSampleMode'
     ], function(
         buildModuleUrl,
         Color,
@@ -49,17 +49,17 @@ define([
         Silhouette,
         TextureOverlay,
         FXAA3_11,
-        PostProcess,
-        PostProcessComposite,
-        PostProcessSampleMode) {
+        PostProcessStage,
+        PostProcessStageComposite,
+        PostProcessStageSampleMode) {
     'use strict';
 
     /**
      * Contains functions for creating common post-process stages.
      *
-     * @exports PostProcessLibrary
+     * @exports PostProcessStageLibrary
      */
-    var PostProcessLibrary = {};
+    var PostProcessStageLibrary = {};
 
     function createBlur(name) {
         var delta = 1.0;
@@ -67,7 +67,7 @@ define([
         var stepSize = 1.0;
 
         var blurShader = '#define USE_STEP_SIZE\n' + GaussianBlur1D;
-        var blurX = new PostProcess({
+        var blurX = new PostProcessStage({
             name : name + '_x_direction',
             fragmentShader : blurShader,
             uniforms: {
@@ -76,9 +76,9 @@ define([
                 stepSize : stepSize,
                 direction : 0.0
             },
-            samplingMode : PostProcessSampleMode.LINEAR
+            samplingMode : PostProcessStageSampleMode.LINEAR
         });
-        var blurY = new PostProcess({
+        var blurY = new PostProcessStage({
             name : name + '_y_direction',
             fragmentShader : blurShader,
             uniforms: {
@@ -87,7 +87,7 @@ define([
                 stepSize : stepSize,
                 direction : 1.0
             },
-            samplingMode : PostProcessSampleMode.LINEAR
+            samplingMode : PostProcessStageSampleMode.LINEAR
         });
 
         var uniforms = {};
@@ -123,7 +123,7 @@ define([
                 }
             }
         });
-        return new PostProcessComposite({
+        return new PostProcessStageComposite({
             name : name,
             stages : [blurX, blurY],
             uniforms : uniforms
@@ -140,9 +140,9 @@ define([
      * The default value for <code>delta</code> is <code>1.0</code>. The default value for <code>sigma</code> is <code>2.0</code>.
      * <code>stepSize</code> is the distance to the next texel. The default is <code>1.0</code>.
      * </p>
-     * @return {PostProcessComposite} A post-process stage that applies a Gaussian blur to the input texture.
+     * @return {PostProcessStageComposite} A post-process stage that applies a Gaussian blur to the input texture.
      */
-    PostProcessLibrary.createBlurStage = function() {
+    PostProcessStageLibrary.createBlurStage = function() {
         return createBlur('czm_blur');
     };
 
@@ -159,14 +159,14 @@ define([
      * <code>focalDistance</code> is the distance in meters from the camera to set the camera focus.
      * </p>
      * <p>
-     * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessLibrary#createBlurStage}.
+     * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
      * The blur is applied to the areas out of focus.
      * </p>
-     * @return {PostProcessComposite} A post-process stage that applies a depth of field effect.
+     * @return {PostProcessStageComposite} A post-process stage that applies a depth of field effect.
      */
-    PostProcessLibrary.createDepthOfFieldStage = function() {
+    PostProcessStageLibrary.createDepthOfFieldStage = function() {
         var blur = createBlur('czm_depth_of_field_blur');
-        var dof = new PostProcess({
+        var dof = new PostProcessStage({
             name : 'czm_depth_of_field_composite',
             fragmentShader : DepthOfField,
             uniforms : {
@@ -210,7 +210,7 @@ define([
                 }
             }
         });
-        return new PostProcessComposite({
+        return new PostProcessStageComposite({
             name : 'czm_depth_of_field',
             stages : [blur, dof],
             executeInSeries : false,
@@ -230,14 +230,14 @@ define([
      * <code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.
      * <code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.
      * </p>
-     * @return {PostProcessComposite} A post-process stage that applies a silhouette effect.
+     * @return {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
      */
-    PostProcessLibrary.createSilhouetteStage = function() {
-        var silhouetteDepth = new PostProcess({
+    PostProcessStageLibrary.createSilhouetteStage = function() {
+        var silhouetteDepth = new PostProcessStage({
             name : 'czm_silhouette_depth',
             fragmentShader : LinearDepth
         });
-        var edgeDetection = new PostProcess({
+        var edgeDetection = new PostProcessStage({
             name : 'czm_silhouette_edge_detection',
             fragmentShader : EdgeDetection,
             uniforms : {
@@ -245,11 +245,11 @@ define([
                 color : Color.clone(Color.BLACK)
             }
         });
-        var silhouetteGenerateProcess = new PostProcessComposite({
+        var silhouetteGenerateProcess = new PostProcessStageComposite({
             name : 'czm_silhouette_generate',
             stages : [silhouetteDepth, edgeDetection]
         });
-        var silhouetteProcess = new PostProcess({
+        var silhouetteProcess = new PostProcessStage({
             name : 'czm_silhouette_color_edges',
             fragmentShader : Silhouette,
             uniforms : {
@@ -276,7 +276,7 @@ define([
                 }
             }
         });
-        return new PostProcessComposite({
+        return new PostProcessStageComposite({
             name : 'czm_silhouette',
             stages : [silhouetteGenerateProcess, silhouetteProcess],
             executeInSeries : false,
@@ -301,14 +301,14 @@ define([
      * The default value is <code>false</code>. This is a debug option for viewing the effects when changing the other uniform values.
      * </p>
      * <p>
-     * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessLibrary#createBlurStage}.
+     * <code>delta</code>, <code>sigma</code>, and <code>stepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
      * </p>
-     * @return {PostProcessComposite} A post-process stage to applies a bloom effect.
+     * @return {PostProcessStageComposite} A post-process stage to applies a bloom effect.
      *
      * @private
      */
-    PostProcessLibrary.createBloomStage = function() {
-        var contrastBias = new PostProcess({
+    PostProcessStageLibrary.createBloomStage = function() {
+        var contrastBias = new PostProcessStage({
             name : 'czm_bloom_contrast_bias',
             fragmentShader : ContrastBias,
             uniforms : {
@@ -317,12 +317,12 @@ define([
             }
         });
         var blur = createBlur('czm_bloom_blur');
-        var generateComposite = new PostProcessComposite({
+        var generateComposite = new PostProcessStageComposite({
             name : 'czm_bloom_contrast_bias_blur',
             stages : [contrastBias, blur]
         });
 
-        var bloomComposite = new PostProcess({
+        var bloomComposite = new PostProcessStage({
             name : 'czm_bloom_generate_composite',
             fragmentShader : BloomComposite,
             uniforms : {
@@ -383,7 +383,7 @@ define([
             }
         });
 
-        return new PostProcessComposite({
+        return new PostProcessStageComposite({
             name : 'czm_bloom',
             stages : [generateComposite, bloomComposite],
             executeInSeries : false,
@@ -416,15 +416,15 @@ define([
      * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.
      * </p>
      * <p>
-     * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessLibrary#createBlurStage}.
+     * <code>delta</code>, <code>sigma</code>, and <code>blurStepSize</code> are the same properties as {@link PostProcessStageLibrary#createBlurStage}.
      * The blur is applied to the shadows generated from the image to make them smoother.
      * </p>
-     * @return {PostProcessComposite} A post-process stage that applies an ambient occlusion effect.
+     * @return {PostProcessStageComposite} A post-process stage that applies an ambient occlusion effect.
      *
      * @private
      */
-    PostProcessLibrary.createAmbientOcclusionStage = function() {
-        var generate = new PostProcess({
+    PostProcessStageLibrary.createAmbientOcclusionStage = function() {
+        var generate = new PostProcessStage({
             name : 'czm_ambient_occlusion_generate',
             fragmentShader : AmbientOcclusionGenerate,
             uniforms : {
@@ -438,12 +438,12 @@ define([
         });
         var blur = createBlur('czm_ambient_occlusion_blur');
         blur.uniforms.stepSize = 0.86;
-        var generateAndBlur = new PostProcessComposite({
+        var generateAndBlur = new PostProcessStageComposite({
             name : 'czm_ambient_occlusion_generate_blur',
             stages : [generate, blur]
         });
 
-        var ambientOcclusionModulate = new PostProcess({
+        var ambientOcclusionModulate = new PostProcessStage({
             name : 'czm_ambient_occlusion_composite',
             fragmentShader : AmbientOcclusionModulate,
             uniforms : {
@@ -536,7 +536,7 @@ define([
             }
         });
 
-        return new PostProcessComposite({
+        return new PostProcessStageComposite({
             name : 'czm_ambient_occlusion',
             stages : [generateAndBlur, ambientOcclusionModulate],
             executeInSeries : false,
@@ -551,15 +551,15 @@ define([
 
     /**
      * Creates a post-process stage that applies Fast Approximate Anti-aliasing (FXAA) to the input texture.
-     * @return {PostProcess} A post-process stage that applies Fast Approximate Anti-aliasing to the input texture.
+     * @return {PostProcessStage} A post-process stage that applies Fast Approximate Anti-aliasing to the input texture.
      *
      * @private
      */
-    PostProcessLibrary.createFXAAStage = function() {
-        return new PostProcess({
+    PostProcessStageLibrary.createFXAAStage = function() {
+        return new PostProcessStage({
             name : 'czm_FXAA',
             fragmentShader : fxaaFS,
-            sampleMode : PostProcessSampleMode.LINEAR
+            sampleMode : PostProcessStageSampleMode.LINEAR
         });
     };
 
@@ -568,10 +568,10 @@ define([
      * <p>
      * This stage has one uniform value, <code>gradations</code>, which scales the luminance of each pixel.
      * </p>
-     * @return {PostProcess} A post-process stage that renders the input texture with black and white gradations.
+     * @return {PostProcessStage} A post-process stage that renders the input texture with black and white gradations.
      */
-    PostProcessLibrary.createBlackAndWhiteStage = function() {
-        return new PostProcess({
+    PostProcessStageLibrary.createBlackAndWhiteStage = function() {
+        return new PostProcessStage({
             name : 'czm_black_and_white',
             fragmentShader : BlackAndWhite,
             uniforms : {
@@ -585,10 +585,10 @@ define([
      * <p>
      * This stage has one uniform value, <code>brightness</code>, which scales the saturation of each pixel.
      * </p>
-     * @return {PostProcess} A post-process stage that saturates the input texture.
+     * @return {PostProcessStage} A post-process stage that saturates the input texture.
      */
-    PostProcessLibrary.createBrightnessStage = function() {
-        return new PostProcess({
+    PostProcessStageLibrary.createBrightnessStage = function() {
+        return new PostProcessStage({
             name : 'czm_brightness',
             fragmentShader : Brightness,
             uniforms : {
@@ -599,10 +599,10 @@ define([
 
     /**
      * Creates a post-process stage that transforms the input texture to a pixelated eight-vit style image.
-     * @return {PostProcess} A post-process stage that transforms the input texture to a pixelated eight-vit style image.
+     * @return {PostProcessStage} A post-process stage that transforms the input texture to a pixelated eight-vit style image.
      */
-    PostProcessLibrary.createEightBitStage = function() {
-        return new PostProcess({
+    PostProcessStageLibrary.createEightBitStage = function() {
+        return new PostProcessStage({
             name : 'czm_eight_bit',
             fragmentShader : EightBit
         });
@@ -610,10 +610,10 @@ define([
 
     /**
      * Creates a post-process stage that adds a night vision effect to the input texture.
-     * @return {PostProcess} A post-process stage that adds a night vision effect to the input texture.
+     * @return {PostProcessStage} A post-process stage that adds a night vision effect to the input texture.
      */
-    PostProcessLibrary.createNightVisionStage = function() {
-        return new PostProcess({
+    PostProcessStageLibrary.createNightVisionStage = function() {
+        return new PostProcessStage({
             name : 'czm_night_vision',
             fragmentShader : NightVision
         });
@@ -626,11 +626,11 @@ define([
      * <code>texture</code> is the texture to overlay and defaults to an all white image.
      * <code>alpha</code> is the alpha for each texel of <code>texture</code> and defaults to 0.5.
      * </p>
-     * @return {PostProcess} A post-process stage that overlays a texture on the input texture.
+     * @return {PostProcessStage} A post-process stage that overlays a texture on the input texture.
      */
-    PostProcessLibrary.createTextureOverlayStage = function() {
+    PostProcessStageLibrary.createTextureOverlayStage = function() {
         // not supplying a name means more than one effect can be added
-        return new PostProcess({
+        return new PostProcessStage({
             fragmentShader : TextureOverlay,
             uniforms : {
                 alpha : 0.5,
@@ -642,12 +642,12 @@ define([
 
     /**
      * Creates a post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
-     * @return {PostProcess} A post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
+     * @return {PostProcessStage} A post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
      *
      * @private
      */
-    PostProcessLibrary.createDepthViewStage = function() {
-        return new PostProcess({
+    PostProcessStageLibrary.createDepthViewStage = function() {
+        return new PostProcessStage({
             name : 'czm_depth_view',
             fragmentShader : DepthView
         });
@@ -664,10 +664,10 @@ define([
      * <code>haloWidth</code> is a scalar representing the width of the halo  from the ghost dispersal. The default value is <code>0.4</code>.
      * <code>earthRadius</code> is the maximum radius of the earth. The default value is <code>Ellipsoid.WGS84.maximumRadius</code>.
      * </p>
-     * @return {PostProcess} A post-process stage for applying a lens flare effect.
+     * @return {PostProcessStage} A post-process stage for applying a lens flare effect.
      */
-    PostProcessLibrary.createLensFlarStage = function() {
-        return new PostProcess({
+    PostProcessStageLibrary.createLensFlarStage = function() {
+        return new PostProcessStage({
             name : 'czm_lens_flare',
             fragmentShader : LensFlare,
             uniforms : {
@@ -682,5 +682,5 @@ define([
         });
     };
 
-    return PostProcessLibrary;
+    return PostProcessStageLibrary;
 });

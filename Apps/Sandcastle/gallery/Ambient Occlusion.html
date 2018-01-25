@@ -84,7 +84,7 @@ for (var name in viewModel) {
 }
 
 function updatePostProcess() {
-    var ambientOcclusion = viewer.scene.postProcessCollection.ambientOcclusion;
+    var ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
     ambientOcclusion.enabled = Boolean(viewModel.show);
     ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(viewModel.ambientOcclusionOnly);
     ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);

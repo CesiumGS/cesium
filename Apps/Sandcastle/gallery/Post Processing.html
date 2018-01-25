@@ -92,13 +92,13 @@ for (var name in viewModel) {
     }
 }
 
-var collection = viewer.scene.postProcessCollection;
-var blackAndWhite = collection.add(Cesium.PostProcessLibrary.createBlackAndWhiteStage());
-var brightness = collection.add(Cesium.PostProcessLibrary.createBrightnessStage());
-var eightBit = collection.add(Cesium.PostProcessLibrary.createEightBitStage());
-var nightVision = collection.add(Cesium.PostProcessLibrary.createNightVisionStage());
-var textureOverlay = collection.add(Cesium.PostProcessLibrary.createTextureOverlayStage());
-var depthView = collection.add(Cesium.PostProcessLibrary.createDepthViewStage());
+var collection = viewer.scene.postProcessStages;
+var blackAndWhite = collection.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
+var brightness = collection.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
+var eightBit = collection.add(Cesium.PostProcessStageLibrary.createEightBitStage());
+var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
+var textureOverlay = collection.add(Cesium.PostProcessStageLibrary.createTextureOverlayStage());
+var depthView = collection.add(Cesium.PostProcessStageLibrary.createDepthViewStage());
 
 function updatePostProcess() {
     blackAndWhite.enabled = Boolean(viewModel.blackAndWhiteShow);

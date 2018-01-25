@@ -1,10 +1,10 @@
 define(function() {
     'use strict';
 
-    var PostProcessSampleMode = {
+    var PostProcessStageSampleMode = {
         NEAREST : 0,
         LINEAR : 1
     };
 
-    return PostProcessSampleMode;
+    return PostProcessStageSampleMode;
 });

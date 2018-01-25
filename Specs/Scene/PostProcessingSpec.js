@@ -5,7 +5,7 @@ defineSuite([
         'Core/HeadingPitchRoll',
         'Core/Transforms',
         'Scene/Model',
-        'Scene/PostProcessLibrary',
+        'Scene/PostProcessStageLibrary',
         'Renderer/Pass',
         'Renderer/RenderState',
         'Specs/createCanvas',
@@ -18,7 +18,7 @@ defineSuite([
         HeadingPitchRoll,
         Transforms,
         Model,
-        PostProcessLibrary,
+        PostProcessStageLibrary,
         Pass,
         RenderState,
         createCanvas,
@@ -32,7 +32,7 @@ defineSuite([
         scene = createScene({
             canvas : createCanvas(3, 3)
         });
-        scene.postProcessCollection.fxaa.enabled = false;
+        scene.postProcessStages.fxaa.enabled = false;
     });
 
     afterAll(function() {
@@ -40,7 +40,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        scene.postProcessCollection.removeAll();
+        scene.postProcessStages.removeAll();
         scene.primitives.removeAll();
     });
 
@@ -89,7 +89,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.createBlackAndWhiteStage());
+        scene.postProcessStages.add(PostProcessStageLibrary.createBlackAndWhiteStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[1]).toEqual(rgba[0]);
@@ -134,7 +134,7 @@ defineSuite([
             blue = rgba[2];
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.createBrightnessStage());
+        scene.postProcessStages.add(PostProcessStageLibrary.createBrightnessStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(red);
             expect(rgba[1]).not.toEqual(green);
@@ -175,7 +175,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.createEightBitStage());
+        scene.postProcessStages.add(PostProcessStageLibrary.createEightBitStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(0);
             expect(rgba[1]).toEqual(0);
@@ -213,7 +213,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.createNightVisionStage());
+        scene.postProcessStages.add(PostProcessStageLibrary.createNightVisionStage());
         expect(scene).toRenderAndCall(function(rgba) {
             for (var i = 0; i < 3; ++i) {
                 for (var j = 0; j < 3; ++j) {
@@ -253,14 +253,14 @@ defineSuite([
         context.fillStyle = '#0000FF';
         context.fillRect(0, 0, 1, 1);
 
-        var textureOverlay = scene.postProcessCollection.add(PostProcessLibrary.createTextureOverlayStage());
+        var textureOverlay = scene.postProcessStages.add(PostProcessStageLibrary.createTextureOverlayStage());
         var uniforms = textureOverlay.uniforms;
         uniforms.alpha = 1.0;
         uniforms.texture = canvas.toDataURL();
 
         return pollToPromise(function() {
             scene.renderForSpecs();
-            return scene.postProcessCollection.ready;
+            return scene.postProcessStages.ready;
         }).then(function() {
             expect(scene).toRenderAndCall(function(rgba) {
                 for (var i = 0; i < 3; ++i) {
@@ -295,7 +295,7 @@ defineSuite([
             }
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.createDepthViewStage());
+        scene.postProcessStages.add(PostProcessStageLibrary.createDepthViewStage());
         expect(scene).toRenderAndCall(function(rgba) {
             for (var i = 0; i < 3; ++i) {
                 for (var j = 0; j < 3; ++j) {
@@ -336,7 +336,7 @@ defineSuite([
             expect(rgba[19]).toEqual(255);
         });
 
-        scene.postProcessCollection.add(PostProcessLibrary.createBlurStage());
+        scene.postProcessStages.add(PostProcessStageLibrary.createBlurStage());
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[16]).toBeGreaterThan(0);
             expect(rgba[17]).toEqual(0);
@@ -375,7 +375,7 @@ defineSuite([
                     expect(rgba[i + 3]).toEqual(255);
                 }
 
-                scene.postProcessCollection.add(PostProcessLibrary.createDepthOfFieldStage());
+                scene.postProcessStages.add(PostProcessStageLibrary.createDepthOfFieldStage());
                 expect(scene).toRenderAndCall(function(rgba2) {
                     for (var i = 0; i < rgba.length; i += 4) {
                         expect(rgba2[i]).toBeGreaterThan(0);

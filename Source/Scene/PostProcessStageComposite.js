@@ -15,7 +15,7 @@ define([
     'use strict';
 
     /**
-     * A collection of {@link PostProcess}es or other post-process composite stages that execute together logically.
+     * A collection of {@link PostProcessStage}s or other post-process composite stages that execute together logically.
      * <p>
      * All stages are executed in the order of the array. The input texture changes based on the value of <code>executeInSeries</code>.
      * If <code>executeInSeries</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
@@ -23,40 +23,40 @@ define([
      * or the output texture of the previous stage.
      * </p>
      *
-     * @alias PostProcessComposite
+     * @alias PostProcessStageComposite
      * @constructor
      *
      * @param {Object} options An object with the following properties:
-     * @param {Array} options.stages An array of {@link PostProcess}es or composites to be executed in order.
+     * @param {Array} options.stages An array of {@link PostProcessStage}s or composites to be executed in order.
      * @param {Boolean} [options.executeInSeries=true] Whether to execute each post-process stage where the input to one stage is the output of the previous. Otherwise, the input to each contained stage is the output of the stage that executed before the composite.
      * @param {String} [options.name=createGuid()] The unique name of this post-process stage for reference by other composites. If a name is not supplied, a GUID will be generated.
      * @param {Object} [options.uniforms] An alias to the uniforms of post-process stages.
      *
      * @exception {DeveloperError} options.stages.length must be greater than 0.0.
      *
-     * @see PostProcess
+     * @see PostProcessStage
      *
      * @example
      * // Example 1: separable blur filter
      * // The input to blurXDirection is the texture rendered to by the scene or the output of the previous stage.
      * // The input to blurYDirection is the texture rendered to by blurXDirection.
-     * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
+     * scene.postProcessStages.add(new Cesium.PostProcessStageComposite({
      *     stages : [blurXDirection, blurYDirection]
      * }));
      *
      * @example
      * // Example 2: referencing the output of another post-process stage
-     * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
+     * scene.postProcessStages.add(new Cesium.PostProcessStageComposite({
      *     executeInSeries : false,
      *     stages : [
      *         // The same as Example 1.
-     *         new Cesium.PostProcessComposite({
+     *         new Cesium.PostProcessStageComposite({
      *             executeInSeries : true
      *             stages : [blurXDirection, blurYDirection],
      *             name : 'blur'
      *         }),
      *         // The input texture for this stage is the same input texture to blurXDirection since executeInSeries is false
-     *         new Cesium.PostProcess({
+     *         new Cesium.PostProcessStage({
      *             fragmentShader : compositeShader,
      *             uniforms : {
      *                 blurTexture : 'blur' // The output of the composite with name 'blur' (the texture that blurYDirection rendered to).
@@ -78,12 +78,12 @@ define([
      *         }
      *     }
      * });
-     * scene.postProcessCollection.add(new Cesium.PostProcessComposite({
+     * scene.postProcessStages.add(new Cesium.PostProcessStageComposite({
      *     stages : [blurXDirection, blurYDirection],
      *     uniforms : uniforms
      * }));
      */
-    function PostProcessComposite(options) {
+    function PostProcessStageComposite(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
         Check.defined('options.stages', options.stages);
@@ -102,16 +102,16 @@ define([
 
         this._uniforms = options.uniforms;
 
-        // used by PostProcessCollection
+        // used by PostProcessStageCollection
         this._collection = undefined;
         this._index = undefined;
     }
 
-    defineProperties(PostProcessComposite.prototype, {
+    defineProperties(PostProcessStageComposite.prototype, {
         /**
          * Determines if this post-process stage is ready to be executed.
          *
-         * @memberof PostProcessComposite.prototype
+         * @memberof PostProcessStageComposite.prototype
          * @type {Boolean}
          * @readonly
          */
@@ -128,9 +128,9 @@ define([
             }
         },
         /**
-         * The unique name of this post-process stage for reference by other stages in a PostProcessComposite.
+         * The unique name of this post-process stage for reference by other stages in a PostProcessStageComposite.
          *
-         * @memberof PostProcessComposite.prototype
+         * @memberof PostProcessStageComposite.prototype
          * @type {String}
          * @readonly
          */
@@ -142,7 +142,7 @@ define([
         /**
          * Whether or not to execute this post-process stage when ready.
          *
-         * @memberof PostProcessComposite.prototype
+         * @memberof PostProcessStageComposite.prototype
          * @type {Boolean}
          */
         enabled : {
@@ -159,7 +159,7 @@ define([
         },
         /**
          * An alias to the uniform values of the post-process stages. May be <code>undefined</code>; in which case, get each stages to set uniform values.
-         * @memberof PostPostProcessComposite.prototype
+         * @memberof PostProcessStageComposite.prototype
          * @type {Object}
          */
         uniforms : {
@@ -173,7 +173,7 @@ define([
          * If <code>executeInseries</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
          * or the output texture of the previous stage.
          *
-         * @memberof PostProcessComposite.prototype
+         * @memberof PostProcessStageComposite.prototype
          * @type {Boolean}
          * @readonly
          */
@@ -185,7 +185,7 @@ define([
         /**
          * The number of post-process stages in this composite.
          *
-         * @memberof PostProcessComposite.prototype
+         * @memberof PostProcessStageComposite.prototype
          * @type {Number}
          * @readonly
          */
@@ -200,12 +200,12 @@ define([
      * Gets the post-process stage at <code>index</code>
      *
      * @param {Number} index The index of the post-process stage or composite.
-     * @return {PostProcess|PostProcessComposite} The post-process stage or composite at index.
+     * @return {PostProcessStage|PostProcessStageComposite} The post-process stage or composite at index.
      *
      * @exception {DeveloperError} index must be greater than or equal to 0.
-     * @exception {DeveloperError} index must be less than {@link PostProcessComposite#length}.
+     * @exception {DeveloperError} index must be less than {@link PostProcessStageComposite#length}.
      */
-    PostProcessComposite.prototype.get = function(index) {
+    PostProcessStageComposite.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number.greaterThanOrEquals('index', index, 0);
         Check.typeOf.number.lessThan('index', index, this.length);
@@ -218,7 +218,7 @@ define([
      * @param {Context} context The context.
      * @private
      */
-    PostProcessComposite.prototype.update = function(context) {
+    PostProcessStageComposite.prototype.update = function(context) {
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
@@ -235,9 +235,9 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see PostProcessComposite#destroy
+     * @see PostProcessStageComposite#destroy
      */
-    PostProcessComposite.prototype.isDestroyed = function() {
+    PostProcessStageComposite.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -254,9 +254,9 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PostProcessComposite#isDestroyed
+     * @see PostProcessStageComposite#isDestroyed
      */
-    PostProcessComposite.prototype.destroy = function() {
+    PostProcessStageComposite.prototype.destroy = function() {
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
@@ -265,5 +265,5 @@ define([
         return destroyObject(this);
     };
 
-    return PostProcessComposite;
+    return PostProcessStageComposite;
 });

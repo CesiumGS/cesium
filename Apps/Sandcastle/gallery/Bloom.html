@@ -104,7 +104,7 @@ for (var name in viewModel) {
 }
 
 function updatePostProcess() {
-    var bloom = viewer.scene.postProcessCollection.bloom;
+    var bloom = viewer.scene.postProcessStages.bloom;
     bloom.enabled = Boolean(viewModel.show);
     bloom.uniforms.glowOnly = Boolean(viewModel.glowOnly);
     bloom.uniforms.contrast = Number(viewModel.contrast);
