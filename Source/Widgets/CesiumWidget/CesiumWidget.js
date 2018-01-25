@@ -697,10 +697,7 @@ define([
         configureCanvasSize(this);
         configureCameraFrustum(this);
 
-        var scene = this._scene;
-        if (scene.requestRenderMode) {
-            scene.requestRender();
-        }
+        this._scene.requestRender();
     };
 
     /**

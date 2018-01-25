@@ -1246,6 +1246,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     }
 
                     this._trackedEntityChanged.raiseEvent(value);
+                    this.scene.requestRender();
                 }
             }
         },
@@ -1854,6 +1855,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         });
 
+        that.scene.requestRender();
         return zoomPromise.promise;
     }
 

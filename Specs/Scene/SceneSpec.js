@@ -1513,9 +1513,8 @@ defineSuite([
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
-        scene.morphTo2D(0.1);
-        scene.renderForSpecs();
-        scene.renderForSpecs();
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
@@ -1526,9 +1525,8 @@ defineSuite([
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
-        scene.morphToColumbusView(0.1);
-        scene.renderForSpecs();
-        scene.renderForSpecs();
+        scene.morphToColumbusView(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
@@ -1539,9 +1537,8 @@ defineSuite([
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
-        scene.morphTo3D(0.1);
-        scene.renderForSpecs();
-        scene.renderForSpecs();
+        scene.morphTo3D(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
