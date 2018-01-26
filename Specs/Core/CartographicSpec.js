@@ -27,7 +27,7 @@ defineSuite([
         expect(c.height).toEqual(3);
     });
 
-    it('toCartesian3', function(){
+    it('toCartesian3 conversion from Cartographic input to Cartesian3 output', function(){
         var lon = CesiumMath.toRadians(150);
         var lat = CesiumMath.toRadians(-40);
         var height = 100000;
