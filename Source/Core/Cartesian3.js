@@ -1,5 +1,6 @@
 define([
         './Check',
+        './Core/Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -7,6 +8,7 @@ define([
         './Math'
     ], function(
         Check,
+        Cartographic,
         defaultValue,
         defined,
         DeveloperError,
@@ -776,6 +778,20 @@ define([
         result.y = y;
         result.z = z;
         return result;
+    };
+
+    /**
+     * Returns a Cartesian3 position from a {@link Cartographic} input.
+     *
+     * @param {Cartographic} Cartographic input to be converted into a Cartesian3 output.
+     * @returns {Cartesian3} The position
+     */
+    Cartesian3.fromCartographic = function(cartographicLocation, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('cartographicLocation', Cartographic);
+        //>>includeEnd('debug');
+
+        return Cartesian3.fromRadians(cartographicLocation.longitude, cartographicLocation.latitude, cartographicLocation.height, ellipsoid, result);
     };
 
     /**
