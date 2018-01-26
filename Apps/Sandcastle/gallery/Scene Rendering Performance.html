@@ -110,6 +110,17 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
 
+var viewModel = {
+    requestRenderMode : true,
+    showTimeOptions : false,
+    timeChangeEnabled : false,
+    maximumRenderTimeChange : 0.0,
+    lastRenderTime : '',
+    requestRender : function () {
+        scene.requestRender();
+    }
+};
+
 // Clear scene and set default view.
 var handler;
 function resetScene() {
@@ -224,17 +235,6 @@ function setScenePropertiesScenario() {
 }
 
 // BEGIN SANDCASTLE EXAMPLE UI SETUP
-
-var viewModel = {
-    requestRenderMode : true,
-    showTimeOptions : false,
-    timeChangeEnabled : false,
-    maximumRenderTimeChange : 0.0,
-    lastRenderTime : '',
-    requestRender : function () {
-        scene.requestRender();
-    }
-};
 
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.track(viewModel);
