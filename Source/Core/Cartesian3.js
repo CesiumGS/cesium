@@ -1,14 +1,14 @@
 define([
-        './Check',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './freezeObject',
         './Math'
     ], function(
-        Check,
         Cartographic,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
