@@ -98,6 +98,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
+     * @param {Boolean} [options.enableLighting=true] Enable lighting the tileset with the sun as a light source.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
@@ -222,6 +223,8 @@ define([
         this._styleEngine = new Cesium3DTileStyleEngine();
 
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
+
+        this._enableLighting = defaultValue(options.enableLighting, true);
 
         this._statistics = new Cesium3DTilesetStatistics();
         this._statisticsLastColor = new Cesium3DTilesetStatistics();

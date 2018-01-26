@@ -555,6 +555,24 @@ defineSuite([
         });
     });
 
+    it('enableLighting', function() {
+        return when.all([
+            loadCollection({
+                gltf : boxGltf,
+                instances : createInstances(4),
+                enableLighting : true
+            }),
+            loadCollection({
+                gltf : boxGltf,
+                instances : createInstances(4),
+                enableLighting : false
+            })
+        ]).then(function(collections) {
+            expect(collections[0]._model._enableLighting).toBe(true);
+            expect(collections[1]._model._enableLighting).toBe(false);
+        });
+    });
+
     it('picks', function() {
         return loadCollection({
             gltf : boxGltf,

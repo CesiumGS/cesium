@@ -236,6 +236,76 @@ defineSuite([
         model.show = false;
     }
 
+    function verifyDoubleSided(model, doubleSided) {
+        var camera = scene.camera;
+        var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
+        var range = 4.0 * model.boundingSphere.radius;
+
+        camera.lookAt(center, new HeadingPitchRange(0, -CesiumMath.PI_OVER_TWO, range));
+        expect(scene).notToRender([0, 0, 0, 255]);
+        camera.lookAt(center, new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, range));
+        if (doubleSided) {
+            expect(scene).notToRender([0, 0, 0, 255]);
+        } else {
+            expect(scene).toRender([0, 0, 0, 255]);
+        }
+    }
+
+    function verifyVertexColors(model) {
+        model.zoomTo();
+        scene.camera.moveUp(0.1);
+        // Red
+        scene.camera.moveLeft(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[2]).toBeLessThan(10);
+        });
+        // Green
+        scene.camera.moveRight(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[1]).toBeGreaterThan(20);
+            expect(rgba[2]).toBeLessThan(10);
+        });
+        // Blue
+        scene.camera.moveRight(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[2]).toBeGreaterThan(20);
+        });
+    }
+
+    function verifyEnableLighting(modelUrl) {
+        return when.all([
+            loadModel(boxLambertUrl, {enableLighting : true, cacheKey : modelUrl + '-enableLighting-true'}),
+            loadModel(boxLambertUrl, {enableLighting : false, cacheKey : modelUrl + '-enableLighting-false'})
+        ]).then(function(models) {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 23:30:00 UTC'));
+            var renderOptions = {
+                scene : scene,
+                time : time
+            };
+            var rgbaLighting;
+            models[0].show = true;
+            models[0].zoomTo();
+            expect(renderOptions).toRenderAndCall(function(rgba) {
+                rgbaLighting = rgba;
+            });
+            models[0].show = false;
+            models[1].show = true;
+            models[1].zoomTo();
+            expect(renderOptions).toRenderAndCall(function(rgbaNoLighting) {
+                expect(rgbaLighting).not.toEqual([0, 0, 0, 255]);
+                expect(rgbaNoLighting).not.toEqual([0, 0, 0, 255]);
+                expect(rgbaLighting).not.toEqual(rgbaNoLighting);
+            });
+            primitives.remove(models[0]);
+            primitives.remove(models[1]);
+        });
+    }
+
     it('fromGltf throws without options', function() {
         expect(function() {
             Model.fromGltf();
@@ -1942,6 +2012,10 @@ defineSuite([
         });
     });
 
+    it('loads a glTF with KHR_material_common with enableLighting true and false', function() {
+        return verifyEnableLighting(boxLambertUrl);
+    });
+
     it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL', function() {
         return loadModel(boxQuantizedUrl).then(function(m) {
             verifyRender(m);
@@ -2089,53 +2163,12 @@ defineSuite([
         });
     });
 
-    function checkDoubleSided(model, doubleSided) {
-        var camera = scene.camera;
-        var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
-        var range = 4.0 * model.boundingSphere.radius;
-
-        camera.lookAt(center, new HeadingPitchRange(0, -CesiumMath.PI_OVER_TWO, range));
-        expect(scene).notToRender([0, 0, 0, 255]);
-        camera.lookAt(center, new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, range));
-        if (doubleSided) {
-            expect(scene).notToRender([0, 0, 0, 255]);
-        } else {
-            expect(scene).toRender([0, 0, 0, 255]);
-        }
-    }
-
-    function checkVertexColors(model) {
-        model.zoomTo();
-        scene.camera.moveUp(0.1);
-        // Red
-        scene.camera.moveLeft(0.5);
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeGreaterThan(10);
-            expect(rgba[1]).toBeLessThan(10);
-            expect(rgba[2]).toBeLessThan(10);
-        });
-        // Green
-        scene.camera.moveRight(0.5);
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(10);
-            expect(rgba[1]).toBeGreaterThan(20);
-            expect(rgba[2]).toBeLessThan(10);
-        });
-        // Blue
-        scene.camera.moveRight(0.5);
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(10);
-            expect(rgba[1]).toBeLessThan(10);
-            expect(rgba[2]).toBeGreaterThan(20);
-        });
-    }
-
     it('loads a glTF 2.0 with doubleSided set to false', function() {
         return loadJson(twoSidedPlaneUrl).then(function(gltf) {
             gltf.materials[0].doubleSided = false;
             return loadModelJson(gltf).then(function(m) {
                 m.show = true;
-                checkDoubleSided(m, false);
+                verifyDoubleSided(m, false);
                 primitives.remove(m);
             });
         });
@@ -2145,7 +2178,7 @@ defineSuite([
     it('loads a glTF 2.0 with doubleSided set to true', function() {
         return loadModel(twoSidedPlaneUrl).then(function(m) {
             m.show = true;
-            checkDoubleSided(m, true);
+            verifyDoubleSided(m, true);
             primitives.remove(m);
         });
     });
@@ -2153,9 +2186,13 @@ defineSuite([
     it('load a glTF 2.0 with vertex colors', function() {
         return loadModel(vertexColorTestUrl).then(function(m) {
             m.show = true;
-            checkVertexColors(m);
+            verifyVertexColors(m);
             primitives.remove(m);
         });
+    });
+
+    it('loads a glTF 2.0 with enableLighting true and false', function() {
+        return verifyEnableLighting(boxPbrUrl);
     });
 
     function testBoxSideColors(m) {

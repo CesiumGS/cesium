@@ -8,7 +8,8 @@ defineSuite([
         'Core/Transforms',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
+        'Specs/createScene',
+        'ThirdParty/when'
     ], 'Scene/Instanced3DModel3DTileContent', function(
         Cartesian3,
         ClippingPlaneCollection,
@@ -19,7 +20,8 @@ defineSuite([
         Transforms,
         TileBoundingSphere,
         Cesium3DTilesTester,
-        createScene) {
+        createScene,
+        when) {
     'use strict';
 
     var scene;
@@ -333,6 +335,16 @@ defineSuite([
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes.enabled).toBe(false);
+        });
+    });
+
+    it('sets enableLighting', function() {
+        return when.all([
+            Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {enableLighting : true}),
+            Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {enableLighting : false})
+        ]).then(function(tilesets) {
+            expect(tilesets[0]._root.content._modelInstanceCollection._model._enableLighting).toBe(true);
+            expect(tilesets[1]._root.content._modelInstanceCollection._model._enableLighting).toBe(false);
         });
     });
 

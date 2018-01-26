@@ -70,7 +70,7 @@ define([
             ForEach.material(gltf, function(material) {
                 if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
                     var khrMaterialsCommon = material.extensions.KHR_materials_common;
-                    var techniqueKey = getTechniqueKey(khrMaterialsCommon);
+                    var techniqueKey = getTechniqueKey(khrMaterialsCommon, options);
                     var technique = techniques[techniqueKey];
                     if (!defined(technique)) {
                         technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options);
@@ -228,6 +228,7 @@ define([
 
     function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
         var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
+        var enableLighting = defaultValue(options.enableLighting, true);
         var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
@@ -547,7 +548,7 @@ define([
         }
 
         if (!hasNonAmbientLights && (lightingModel !== 'CONSTANT')) {
-            if (optimizeForCesium) {
+            if (optimizeForCesium && enableLighting) {
                 fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
             } else {
                 fragmentLightingBlock += '  vec3 l = vec3(0.0, 0.0, 1.0);\n';
@@ -766,7 +767,7 @@ define([
         }
     }
 
-    function getTechniqueKey(khrMaterialsCommon) {
+    function getTechniqueKey(khrMaterialsCommon, options) {
         var techniqueKey = '';
         techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
 
@@ -792,7 +793,8 @@ define([
         if (jointCount > 0) {
             techniqueKey += skinningInfo.type + ';';
         }
-        techniqueKey += primitiveInfo.hasVertexColors;
+        techniqueKey += primitiveInfo.hasVertexColors + ';';
+        techniqueKey += options.enableLighting;
 
         return techniqueKey;
     }
