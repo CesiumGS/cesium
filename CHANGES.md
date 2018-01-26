@@ -4,7 +4,7 @@ Change Log
 ### 1.42 - 2018-02-01
 
 * Breaking changes
-  *
+  * The clock does not animate by default. Set the `shouldAnimate` option to `true` when creating the Viewer to enable animation.
 * Deprecated
   * For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
 * Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, `Billboard`, along with all the low level `load*()` functions.
@@ -17,7 +17,7 @@ Change Log
 * Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
 * Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
 * Added `Cesium3DTileset.ellipsoid` determining the size and shape of the globe. This can be set at construction and defaults to a WGS84 ellipsoid.
-* Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
+* Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
    * `Cesium3DTileStyle` has expanded for styling point features. See the [styling specification](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
    * `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, and geometry features.
    * `Cesium3DTilePointFeature` can modify the styling options for a point feature.
@@ -40,8 +40,12 @@ Change Log
 * Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
 * Fixed a bug when creating billboard and model entities without a globe. [#6109](https://github.com/AnalyticalGraphicsInc/cesium/pull/6109)
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
+* Added `shouldAnimate` option to the `Viewer` constructor to indicate if the clock should begin animating immediately.[#6154](https://github.com/AnalyticalGraphicsInc/cesium/pull/6154)
 * Added separate file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
+* Fixed sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
+* Fixed camera movement and look functions for 2D mode [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
+* Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
 
 ### 1.41 - 2018-01-02
 

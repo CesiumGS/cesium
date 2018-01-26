@@ -1069,6 +1069,7 @@ defineSuite([
 
         var spyListener = jasmine.createSpy('listener');
         s.camera.moveStart.addEventListener(spyListener);
+        s._cameraStartFired = false; // reset this value after camera changes for initial render trigger the event
 
         s.camera.moveLeft();
         s.render();
@@ -1512,9 +1513,8 @@ defineSuite([
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
-        scene.morphTo2D(0.1);
-        scene.renderForSpecs();
-        scene.renderForSpecs();
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
@@ -1525,9 +1525,8 @@ defineSuite([
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
-        scene.morphToColumbusView(0.1);
-        scene.renderForSpecs();
-        scene.renderForSpecs();
+        scene.morphToColumbusView(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
@@ -1538,9 +1537,8 @@ defineSuite([
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
-        scene.morphTo3D(0.1);
-        scene.renderForSpecs();
-        scene.renderForSpecs();
+        scene.morphTo3D(1.0);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.completeMorph();
@@ -1564,12 +1562,15 @@ defineSuite([
 
         scene.requestRenderMode = true;
 
-        scene.renderForSpecs();
+        scene.renderForSpecs(lastRenderTime);
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
 
-        scene.maximumRenderTimeChange = 0.0;
+        scene.maximumRenderTimeChange = 100.0;
 
-        scene.renderForSpecs();
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.0, new JulianDate()));
+        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.1, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
@@ -1593,6 +1594,24 @@ defineSuite([
         scene.renderForSpecs(farFuture);
 
         expect(scene.lastRenderTime).toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('forceRender renders a scene regardless of whether a render was requested', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        scene.forceRender();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
     });

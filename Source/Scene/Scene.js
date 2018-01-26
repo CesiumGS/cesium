@@ -220,8 +220,8 @@ define([
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
-     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API.
-     * @param {Number} [options.maximumRenderTimeChange=0.5] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+     * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -730,6 +730,7 @@ define([
          * to render a new frame explicitly in this mode. This will be necessary in many cases after making changes
          * to the scene in other parts of the API.
          *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
          * @see Scene#maximumRenderTimeChange
          * @see Scene#requestRender
          *
@@ -747,12 +748,13 @@ define([
          * This value impacts the rate of rendering for changes in the scene like lighting, entity property updates,
          * and animations.
          *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
          * @see Scene#requestRenderMode
          *
          * @type {Number}
          * @default 0.5
          */
-        this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.5);
+        this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.0);
         this._lastRenderTime = undefined;
 
         this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(requestRenderAfterFrame(this));
@@ -1051,6 +1053,7 @@ define([
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
          *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
          * @see Scene#postUpdate
          * @see Scene#preRender
          * @see Scene#postRender
@@ -1070,6 +1073,7 @@ define([
          * parameter.
          * @memberof Scene.prototype
          *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
          * @see Scene#preUpdate
          * @see Scene#preRender
          * @see Scene#postRender
@@ -1105,6 +1109,7 @@ define([
          * parameter.
          * @memberof Scene.prototype
          *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
          * @see Scene#preUpdate
          * @see Scene#postUpdate
          * @see Scene#postRender
@@ -1123,6 +1128,7 @@ define([
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
          *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
          * @see Scene#preUpdate
          * @see Scene#postUpdate
          * @see Scene#postRender
@@ -1386,15 +1392,15 @@ define([
         return Math.max(Math.max(x, y), z);
     }
 
-    function cameraEqual(camera0, camera1, epsilon) {
+    function cameraEqual(camera0, camera1) {
         var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
         Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
         Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
-        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
-               Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
-               Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
-               Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
-               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+        return Cartesian3.equals(scratchPosition0, scratchPosition1) &&
+               Cartesian3.equals(camera0.direction, camera1.direction) &&
+               Cartesian3.equals(camera0.up, camera1.up) &&
+               Cartesian3.equals(camera0.right, camera1.right) &&
+               Matrix4.equals(camera0.transform, camera1.transform);
     }
 
     function updateDerivedCommands(scene, command) {
@@ -2909,7 +2915,7 @@ define([
 
     function checkForCameraUpdates(scene) {
         var camera = scene._camera;
-        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+        if (!cameraEqual(camera, scene._cameraClone)) {
             if (!scene._cameraStartFired) {
                 camera.moveStart.raiseEvent();
                 scene._cameraStartFired = true;
@@ -3023,9 +3029,12 @@ define([
     }
 
     /**
+     * Update and render the scene.
+     * @param {JulianDate} [time] The simulation time at which to render.
+     *
      * @private
      */
-    Scene.prototype.render = function (time) {
+    Scene.prototype.render = function(time) {
         if (!defined(time)) {
             time = JulianDate.now();
         }
@@ -3041,7 +3050,7 @@ define([
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
-            shouldRender = shouldRender || difference >= this.maximumRenderTimeChange;
+            shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
         }
 
         if (shouldRender) {
@@ -3058,6 +3067,18 @@ define([
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         callAfterRenderFunctions(this);
+    };
+
+    /**
+     * Update and render the scene. Always forces a new render frame regardless of whether a render was
+     * previously requested.
+     * @param {JulianDate} [time] The simulation time at which to render.
+     *
+     * @private
+     */
+    Scene.prototype.forceRender = function(time) {
+        this._renderRequested = true;
+        this.render(time);
     };
 
     /**

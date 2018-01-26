@@ -1,37 +1,43 @@
 define([
+        '../Core/Check',
+        '../Core/clone',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/loadJson',
+        '../Core/Resource',
+        '../Core/RuntimeError',
+        '../ThirdParty/when',
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
+        './Cesium3DTileset',
+        './CesiumIonResource',
         './createTileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
         './SingleTileImageryProvider',
         './UrlTemplateImageryProvider',
         './WebMapServiceImageryProvider',
-        './WebMapTileServiceImageryProvider',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/loadJson',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../ThirdParty/when'
+        './WebMapTileServiceImageryProvider'
     ], function(
+        Check,
+        clone,
+        defaultValue,
+        defined,
+        loadJson,
+        Resource,
+        RuntimeError,
+        when,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
+        Cesium3DTileset,
+        CesiumIonResource,
         createTileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
         SingleTileImageryProvider,
         UrlTemplateImageryProvider,
         WebMapServiceImageryProvider,
-        WebMapTileServiceImageryProvider,
-        Check,
-        defaultValue,
-        defined,
-        loadJson,
-        Resource,
-        RuntimeError,
-        when) {
+        WebMapTileServiceImageryProvider) {
     'use strict';
 
     /**
@@ -91,7 +97,34 @@ define([
      *   });
      */
     CesiumIon.createResource = function(assetId, options) {
+        var endpointResource = CesiumIon._createEndpointResource(assetId, options);
+
+        return CesiumIon._loadJson(endpointResource)
+            .then(function (endpoint) {
+
+                var externalType = endpoint.externalType;
+                if (!defined(externalType)) {
+                    return CesiumIonResource.create(endpoint, endpointResource);
+                }
+
+                // 3D Tiles and STK Terrain Server external assets can still be represented as a resource
+                // object, just not the CesiumIonResource object.
+                if (externalType === '3DTILES' || externalType === 'STK_TERRAIN_SERVER') {
+                    return new Resource({ url: endpoint.options.url });
+                }
+
+                //External imagery assets have additional configuration that can't be represented as a Resource
+                throw new RuntimeError('CesiumIon.createResource does not support external imagery assets; use CesiumIon.createImageryProvider instead.');
+            });
+    };
+
+    /**
+     * @private
+     */
+    CesiumIon._createEndpointResource = function (assetId, options) {
+        //>>includeStart('debug', pragmas.debug);
         Check.defined('assetId', assetId);
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var serverUrl = defaultValue(options.serverUrl, CesiumIon.defaultServerUrl);
@@ -105,139 +138,8 @@ define([
             resourceOptions.queryParameters = { access_token: accessToken };
         }
 
-        var endpointResource = new Resource(resourceOptions);
-        return CesiumIon._loadJson(endpointResource)
-            .then(function(endpoint) {
-                return CesiumIonResource.create(endpoint, endpointResource);
-            });
+        return new Resource(resourceOptions);
     };
-
-    /**
-     * Creates an {@link ImageryProvider} representing a Cesium ion imagery asset.
-     * Unlike {@link CesiumIon.createResource}, this function supports external asset functionality.
-     *
-     * @param {Number} assetId The Cesium ion asset id.
-     * @param {Object} [options] An object with the following properties:
-     * @param {String} [options.accessToken=CesiumIon.defaultAccessToken] The access token to use.
-     * @param {String} [options.serverUrl=CesiumIon.defaultServerUrl] The url to the Cesium ion API server.
-     * @returns {Promise<ImageryProvider>} A promise to an imagery provider presenting the requested Cesium ion Asset.
-     *
-     * @example
-     * //Load an ImageryProvider with asset ID of 2347923
-     * Cesium.CesiumIon.createImageryProvider(2347923)
-     *   .then(function (imageryProvider) {
-     *     viewer.imageryLayers.addProvider(imageryProvider);
-     *   });
-     */
-    CesiumIon.createImageryProvider = function(assetId, options) {
-        return CesiumIon.createResource(assetId, options)
-            .then(function(resource) {
-                return resource.createImageryProvider();
-            });
-    };
-
-    /**
-     * A {@link Resource} instance that encapsulates Cesium ion asset
-     * creation and automatic refresh token handling.  This object
-     * should not be created directly, use CesiumIonResource.create
-     *
-     * @private
-     */
-    function CesiumIonResource(options, endpoint, endpointResource) {
-        Resource.call(this, options);
-
-        // The asset endpoint data returned from ion.
-        this.ionEndpoint = endpoint;
-
-        // The endpoint resource to fetch when a new token is needed
-        this.ionEndpointResource = endpointResource;
-
-        // The primary CesiumIonResource from which an instance is derived
-        this.ionRoot = undefined;
-    }
-
-    CesiumIonResource.create = function (endpoint, endpointResource) {
-        var options = {
-            url: endpoint.url,
-            retryCallback: createRetryCallback(endpoint, endpointResource),
-            retryAttempts: 1
-        };
-
-        if (defined(endpoint.accessToken)) {
-            options.queryParameters = { access_token: endpoint.accessToken };
-        }
-
-        return new CesiumIonResource(options, endpoint, endpointResource);
-    };
-
-    if (defined(Object.create)) {
-        CesiumIonResource.prototype = Object.create(Resource.prototype);
-        CesiumIonResource.prototype.constructor = CesiumIonResource;
-    }
-
-    CesiumIonResource.prototype.clone = function(result) {
-        var ionRoot = defaultValue(this.ionRoot, this);
-
-        if (!defined(result)) {
-            // We always want to use the root's information because it's the most up-to-date
-            result = new CesiumIonResource({ url: this._url }, ionRoot.ionEndpoint, ionRoot.ionEndpointResource);
-        }
-
-        result = Resource.prototype.clone.call(this, result);
-        result.ionRoot = ionRoot;
-
-        // Same comment as above, use the root's access_token
-        result.queryParameters.access_token = ionRoot.queryParameters.access_token;
-        return result;
-    };
-
-    function createRetryCallback(endpoint, endpointResource) {
-        // We use a shared pending promise for all derived assets, since they share
-        // a common access_token.  If we're already requesting a new token for this
-        // asset, we wait on the same promise.
-        var pendingPromise;
-
-        var retryCallback = function(that, error) {
-            // We only want to retry in the case of invalid credentials (401) or image
-            // requests(since Image failures can not provide a status code)
-            if (!defined(error) || (error.statusCode !== 401 && !(error.target instanceof Image))) {
-                return when.resolve(false);
-            }
-
-            if (!defined(pendingPromise)) {
-                pendingPromise = CesiumIon._loadJson(endpointResource)
-                    .then(function(newEndpoint) {
-                        //Set the token for root resource so derived resources automatically pick it up
-                        var ionRoot = that.ionRoot;
-                        if (defined(ionRoot)) {
-                            ionRoot.ionEndpoint = newEndpoint;
-                            ionRoot.queryParameters.access_token = newEndpoint.accessToken;
-                        }
-                        return newEndpoint;
-                    })
-                    .always(function(newEndpoint) {
-                        // Pass or fail, we're done with this promise, the next failure should use a new one.
-                        pendingPromise = undefined;
-
-                        // We need this return because our old busted version of when
-                        // doesn't conform to spec of returning the result of the above `then`.
-                        return newEndpoint;
-                    });
-            }
-
-            return pendingPromise.then(function(newEndpoint) {
-                // Set the new token and endpoint for this resource
-                that.ionEndpoint = newEndpoint;
-                that.queryParameters.access_token = newEndpoint.accessToken;
-                return true;
-            });
-        };
-
-        //Exposed for testing
-        retryCallback._pendingPromise = pendingPromise;
-
-        return retryCallback;
-    }
 
     function createFactory(Type) {
         return function(options) {
@@ -259,25 +161,118 @@ define([
         WMTS: createFactory(WebMapTileServiceImageryProvider)
     };
 
-    CesiumIonResource.prototype.createImageryProvider = function() {
-        var type = this.ionEndpoint.type;
-        if (type === 'IMAGERY') {
-            return createTileMapServiceImageryProvider({ url: this });
-        }
+    /**
+     * Asynchronously creates an {@link ImageryProvider} representing a Cesium ion imagery asset and
+     * waits for it to become ready. Unlike {@link CesiumIon.createResource}, this function supports
+     * external asset functionality.
+     *
+     * @param {Number} assetId The Cesium ion asset id.
+     * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.accessToken=CesiumIon.defaultAccessToken] The access token to use.
+     * @param {String} [options.serverUrl=CesiumIon.defaultServerUrl] The url to the Cesium ion API server.
+     * @returns {Promise<ImageryProvider>} A promise to a ready imagery provider representing the requested Cesium ion Asset.
+     *
+     * @example
+     * //Load an ImageryProvider with asset ID of 2347923
+     * Cesium.CesiumIon.createImageryProvider(2347923)
+     *   .then(function (imageryProvider) {
+     *     viewer.imageryLayers.addProvider(imageryProvider);
+     *   });
+     */
+    CesiumIon.createImageryProvider = function(assetId, options) {
+        var endpointResource = CesiumIon._createEndpointResource(assetId, options);
 
-        var factory = ImageryProviderMapping[type];
+        return CesiumIon._loadJson(endpointResource)
+            .then(function(endpoint) {
 
-        if (!defined(factory)) {
-            throw new RuntimeError('Unrecognized Cesium ion imagery type: ' + type);
-        }
+                if (endpoint.type !== 'IMAGERY') {
+                    throw new RuntimeError('Cesium ion asset ' + assetId + ' is not an imagery asset.');
+                }
 
-        return factory(this.ionEndpoint);
+                var externalType = endpoint.externalType;
+                if (!defined(externalType)) {
+                    return createTileMapServiceImageryProvider({
+                        url: CesiumIonResource.create(endpoint, endpointResource)
+                    });
+                }
+
+                var factory = ImageryProviderMapping[externalType];
+
+                if (!defined(factory)) {
+                    throw new RuntimeError('Unrecognized Cesium ion imagery type: ' + externalType);
+                }
+
+                return factory(endpoint.options);
+            })
+            .then(function(imageryProvider) {
+                return imageryProvider.readyPromise
+                    .then(function() { return imageryProvider; });
+            });
+    };
+
+    /**
+     * Asynchronously creates a {@link Cesium3DTileset} representing a Cesium ion 3D Tiles asset and
+     * waits for it to become ready.
+     *
+     * @param {Number} assetId The Cesium ion asset id.
+     * @param {Object} [options] An object with the following properties:
+     * @param {String} [options.accessToken=CesiumIon.defaultAccessToken] The access token to use.
+     * @param {String} [options.serverUrl=CesiumIon.defaultServerUrl] The url to the Cesium ion API server.
+     * @param {String} [options.tilesetOptions] Additional options to be passed to the {@link Cesium3DTileset} constructor.
+     * @returns {Promise<Cesium3DTileset>} A promise to the ready tileset representing the requested Cesium ion Asset.
+     *
+     * @example
+     * //Load a tileset with asset ID of 2347923
+     * Cesium.CesiumIon.create3DTileset(2347923)
+     *   .then(function (tileset) {
+     *     viewer.scene.primitives.add(tileset);
+     *   });
+     *
+     * //Load a tileset with asset ID of 2347923 for 3D Tile classification
+     * Cesium.CesiumIon.create3DTileset(2347923, { tilesetOptions: { classificationType: Cesium.ClassificationType.CESIUM_3D_TILE } })
+     *   .then(function (tileset) {
+     *     viewer.scene.primitives.add(tileset);
+     *   });
+     */
+    CesiumIon.create3DTileset = function(assetId, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var endpointResource = CesiumIon._createEndpointResource(assetId, options);
+
+        return CesiumIon._loadJson(endpointResource)
+            .then(function(endpoint) {
+
+                if (endpoint.type !== '3DTILES') {
+                    throw new RuntimeError('Cesium ion asset ' + assetId + ' is not a 3D Tiles asset.');
+                }
+
+                var externalType = endpoint.externalType;
+
+                var resource;
+                if (!defined(externalType)) {
+                    resource = CesiumIonResource.create(endpoint, endpointResource);
+                } else if (externalType === '3DTILES') {
+                    resource = new Resource({ url: endpoint.options.url });
+                } else {
+                    throw new RuntimeError('Unrecognized Cesium ion external 3DTILES type: ' + externalType);
+                }
+
+                var tilesetOptions = options.tilesetOptions;
+                if (defined(tilesetOptions)) {
+                    tilesetOptions = clone(tilesetOptions);
+                    tilesetOptions.url = resource;
+                } else {
+                    tilesetOptions = {
+                        url: resource
+                    };
+                }
+
+                var tileset = new Cesium3DTileset(tilesetOptions);
+                return tileset.readyPromise;
+            });
     };
 
     //Exposed for testing
-    CesiumIon._CesiumIonResource = CesiumIonResource;
     CesiumIon._loadJson = loadJson;
-    CesiumIon._createRetryCallback = createRetryCallback;
 
     return CesiumIon;
 });

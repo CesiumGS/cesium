@@ -28,13 +28,15 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg'
-}));
+Cesium.CesiumIon.create3DTileset(1458, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg' })
+    .then(function(tileset) {
+        viewer.scene.primitives.add(tileset);
+        viewer.zoomTo(tileset);
+    })
+    .otherwise(function(error) {
+        console.log(error);
+    });
 
-viewer.zoomTo(tileset).otherwise(function(error) {
-    throw(error);
-});
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
