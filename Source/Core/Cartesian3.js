@@ -1,6 +1,6 @@
 define([
         './Check',
-        './Core/Cartographic',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
