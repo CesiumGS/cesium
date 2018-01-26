@@ -57,7 +57,7 @@ define([
         //>>includeEnd('debug');
 
         deprecationWarning('loadWithXhr', 'loadWithXhr is deprecated and will be removed in Cesium 1.44. Please use Resource.fetch instead.');
-        
+
         // Take advantage that most parameters are the same
         var resource = new Resource(options);
 
