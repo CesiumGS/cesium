@@ -27,12 +27,12 @@ defineSuite([
         expect(c.height).toEqual(3);
     });
 
-    it('toCartesian3 conversion from Cartographic input to Cartesian3 output', function(){
+    it('toCartesian conversion from Cartographic input to Cartesian3 output', function(){
         var lon = CesiumMath.toRadians(150);
         var lat = CesiumMath.toRadians(-40);
         var height = 100000;
         var ellipsoid = Ellipsoid.WGS84;
-        var actual = Cartographic.toCartesian3(new Cartographic(lon, lat, height));
+        var actual = Cartographic.toCartesian(new Cartographic(lon, lat, height));
         var expected = ellipsoid.cartographicToCartesian(new Cartographic(lon, lat, height));
         expect(actual).toEqual(expected);
     });
