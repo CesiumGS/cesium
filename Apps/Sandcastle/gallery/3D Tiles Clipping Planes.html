@@ -125,7 +125,8 @@ function loadTileset(url) {
         })
     }));
 
-    tileset.readyPromise.then(function() {
+    tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
+    return tileset.readyPromise.then(function() {
         var boundingSphere = tileset.boundingSphere;
         var radius = boundingSphere.radius;
 
@@ -147,10 +148,8 @@ function loadTileset(url) {
             planeEntities.push(planeEntity);
         }
     }).otherwise(function(error) {
-        throw(error);
+        console.log(error);
     });
-
-    tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
 }
 
 var modelEntityClippingPlanes;
@@ -206,12 +205,14 @@ function loadModel(url) {
 }
 
 // Power Plant design model provided by Bentley Systems
-var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4';
-var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
+var bimUrl = Cesium.CesiumIon.createResource(1459, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4' });
+var pointCloudUrl = Cesium.CesiumIon.createResource(1460, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM' });
 var instancedUrl = '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/';
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
-loadTileset(bimUrl);
+bimUrl.then(function(resource) {
+    return loadTileset(resource);
+});
 
 // Track and create the bindings for the view model
 var toolbar = document.getElementById('toolbar');
@@ -222,15 +223,17 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     reset();
 
     if (newValue === clipObjects[0]) {
-        loadTileset(bimUrl);
+        bimUrl.then(function(resource) {
+            return loadTileset(resource);
+        });
     } else if (newValue === clipObjects[1]) {
-        loadTileset(pointCloudUrl);
-        tileset.readyPromise.then(function () {
+        pointCloudUrl.then(function(resource) {
+            return loadTileset(resource);
+        }).then(function() {
             tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
     } else if (newValue === clipObjects[2]) {
-        loadTileset(instancedUrl);
-        tileset.readyPromise.then(function () {
+        loadTileset(instancedUrl).then(function() {
             tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
     } else {

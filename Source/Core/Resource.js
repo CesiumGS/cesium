@@ -210,7 +210,7 @@ define([
          *
          * @type {Object}
          */
-        this.data = defaultClone(options.data);
+        this.data = options.data;
 
         /**
          * A proxy to be used when loading the resource.

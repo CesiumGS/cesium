@@ -43,7 +43,8 @@ function startup(Cesium) {
 // Clipping planes are not currently supported in Internet Explorer.
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    skyAtmosphere: false
+    skyAtmosphere: false,
+    shouldAnimate : true
 });
 
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
