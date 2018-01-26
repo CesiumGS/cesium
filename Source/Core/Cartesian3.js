@@ -1,5 +1,4 @@
 define([
-        './Cartographic',
         './Check',
         './defaultValue',
         './defined',
@@ -7,7 +6,6 @@ define([
         './freezeObject',
         './Math'
     ], function(
-        Cartographic,
         Check,
         defaultValue,
         defined,
@@ -778,22 +776,6 @@ define([
         result.y = y;
         result.z = z;
         return result;
-    };
-
-    /**
-     * Returns a Cartesian3 position from a {@link Cartographic} input.
-     *
-     * @param {Cartographic} Cartographic input to be converted into a Cartesian3 output.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The position
-     */
-    Cartesian3.fromCartographic = function(cartographicLocation, ellipsoid, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('cartographicLocation', Cartographic);
-        //>>includeEnd('debug');
-
-        return Cartesian3.fromRadians(cartographicLocation.longitude, cartographicLocation.latitude, cartographicLocation.height, ellipsoid, result);
     };
 
     /**

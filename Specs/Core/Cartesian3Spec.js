@@ -960,16 +960,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fromCartographic', function(){
-        var lon = CesiumMath.toRadians(150);
-        var lat = CesiumMath.toRadians(-40);
-        var height = 100000;
-        var ellipsoid = Ellipsoid.WGS84;
-        var actual = Cartesian3.fromCartographic(new Cartographic(lon, lat, height));
-        var expected = ellipsoid.cartographicToCartesian(new Cartographic(lon, lat, height));
-        expect(actual).toEqual(expected);
-    });
-
     it('fromRadians', function(){
         var lon = CesiumMath.toRadians(150);
         var lat = CesiumMath.toRadians(-40);

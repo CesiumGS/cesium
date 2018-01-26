@@ -147,6 +147,22 @@ define([
     };
 
     /**
+     * Returns a Cartesian3 position from a {@link Cartographic} input.
+     *
+     * @param {Cartographic} Cartographic input to be converted into a Cartesian3 output.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The position
+     */
+    Cartographic.toCartesian3 = function(cartographicLocation, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('cartographicLocation', Cartographic);
+        //>>includeEnd('debug');
+
+        return Cartesian3.fromRadians(cartographicLocation.longitude, cartographicLocation.latitude, cartographicLocation.height, ellipsoid, result);
+    };
+
+    /**
      * Duplicates a Cartographic instance.
      *
      * @param {Cartographic} cartographic The cartographic to duplicate.
