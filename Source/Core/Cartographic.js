@@ -147,7 +147,7 @@ define([
     };
 
     /**
-     * Returns a Cartesian3 position from a {@link Cartographic} input.
+     * Returns a Cartesian3 position from a Cartographic input.
      *
      * @param {Cartographic} cartographic Input to be converted into a Cartesian3 output.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
