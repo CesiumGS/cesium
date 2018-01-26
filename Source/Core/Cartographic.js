@@ -3,6 +3,7 @@ define([
         './Check',
         './defaultValue',
         './defined',
+        './DeveloperError',
         './freezeObject',
         './Math',
         './scaleToGeodeticSurface'
@@ -11,6 +12,7 @@ define([
         Check,
         defaultValue,
         defined,
+        DeveloperError,
         freezeObject,
         CesiumMath,
         scaleToGeodeticSurface) {
@@ -154,12 +156,14 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The position
      */
-    Cartographic.toCartesian3 = function(cartographicLocation, ellipsoid, result) {
+    Cartographic.toCartesian3 = function(cartographic, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('cartographicLocation', Cartographic);
+        if (!defined(cartographic)) {
+            throw new DeveloperError('cartographic is required.');
+        }
         //>>includeEnd('debug');
 
-        return Cartesian3.fromRadians(cartographicLocation.longitude, cartographicLocation.latitude, cartographicLocation.height, ellipsoid, result);
+        return Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, cartographic.height, ellipsoid, result);
     };
 
     /**
