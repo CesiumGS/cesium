@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defined',
         './getTimestamp'
@@ -62,8 +61,8 @@ define([
      *   Cesium.requestAnimationFrame(tick);
      * }
      * tick();
-     * 
-     * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
+     *
+     * @see {@link https://www.w3.org/TR/html51/webappapis.html#animation-frames|The Web API Animation Frames interface}
      */
     function requestAnimationFrame(callback) {
         // we need this extra wrapper function because the native requestAnimationFrame

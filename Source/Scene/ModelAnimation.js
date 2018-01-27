@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
@@ -31,7 +30,7 @@ define([
      * @see ModelAnimationCollection#add
      */
     function ModelAnimation(options, model, runtimeAnimation) {
-        this._name = options.name;
+        this._name = runtimeAnimation.name;
         this._startTime = JulianDate.clone(options.startTime);
         this._delay = defaultValue(options.delay, 0.0); // in seconds
         this._stopTime = options.stopTime;

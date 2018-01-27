@@ -1,18 +1,23 @@
-/*global define*/
 define([
         '../ThirdParty/when',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Request',
         './RequestErrorEvent',
+        './RequestScheduler',
         './RuntimeError',
         './TrustedServers'
     ], function(
         when,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
+        Request,
         RequestErrorEvent,
+        RequestScheduler,
         RuntimeError,
         TrustedServers) {
     'use strict';
@@ -26,7 +31,7 @@ define([
      * @exports loadWithXhr
      *
      * @param {Object} options Object with the following properties:
-     * @param {String|Promise.<String>} options.url The URL of the data, or a promise for the URL.
+     * @param {String} options.url The URL of the data.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
      * @param {String} [options.data] The data to send with the request, if any.
@@ -35,6 +40,7 @@ define([
      * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
      *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
      *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
+     * @param {Request} [options.request] The request object.
      *
      * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
@@ -61,26 +67,34 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.defined('options.url', options.url);
         //>>includeEnd('debug');
+
+        var url = options.url;
 
         var responseType = options.responseType;
         var method = defaultValue(options.method, 'GET');
         var data = options.data;
         var headers = options.headers;
         var overrideMimeType = options.overrideMimeType;
-        var preferText = options.preferText;
         var timeout = options.timeout;
 
-        return when(options.url, function(url) {
+        url = defaultValue(url, options.url);
+
+        var request = defined(options.request) ? options.request : new Request();
+        request.url = url;
+        request.requestFunction = function() {
             var deferred = when.defer();
-
-            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType, preferText, timeout);
-
+            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType, timeout);
+            if (defined(xhr) && defined(xhr.abort)) {
+                request.cancelFunction = function() {
+                    xhr.abort();
+                };
+            }
             return deferred.promise;
-        });
+        };
+
+        return RequestScheduler.request(request);
     }
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
@@ -133,7 +147,7 @@ define([
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType, preferText, timeout) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType, timeout) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
@@ -146,18 +160,9 @@ define([
             xhr.withCredentials = true;
         }
 
-        var weWantXml = false;
-
         if (defined(overrideMimeType)) {
             if (defined(xhr.overrideMimeType)) {
                 xhr.overrideMimeType(overrideMimeType);
-            } else if (overrideMimeType === 'text/xml' && responseType === 'document') {
-                // This is an old browser without support for overrideMimeType, and we're asking for XML.
-                // Many XML documents are returned without the 'text/xml' MIME type, such as OGC servers,
-                // so our request will fail if we set the responseType without having a way to override the MIME
-                // type.  So request text instead and then parse out the XML from the text.
-                weWantXml = true;
-                responseType = 'text';
             }
         }
 
@@ -179,38 +184,41 @@ define([
             xhr.timeout = timeout;
         }
 
+        // While non-standard, file protocol always returns a status of 0 on success
+        var localFile = false;
+        if (typeof url === 'string') {
+            localFile = url.indexOf('file://') === 0;
+        }
+
         xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                var parser;
-                if (typeof xhr.response !== 'undefined') {
-                    if (weWantXml) {
-                        try {
-                            parser = new DOMParser();
-                            deferred.resolve(parser.parseFromString(xhr.response, 'text/xml'));
-                        } catch (ex) {
-                            deferred.reject(ex);
-                        }
-                    } else {
-                        deferred.resolve(xhr.response);
-                    }
-                } else {
-                    // busted old browsers.
-                    if (weWantXml) {
-                        try {
-                            parser = new DOMParser();
-                            deferred.resolve(parser.parseFromString(xhr.responseText, 'text/xml'));
-                        } catch (ex) {
-                            deferred.reject(ex);
-                        }
-                    } else {
-                        if (!defaultValue(preferText, false) && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                            deferred.resolve(xhr.responseXML);
-                        } else if (defined(xhr.responseText)) {
-                            deferred.resolve(xhr.responseText);
-                        } else {
-                            deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
-                        }
-                    }
+            if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
+                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
+                return;
+            }
+
+            var response = typeof xhr.response !== 'undefined' ? xhr.response : xhr.responseText;
+            var browserResponseType = xhr.responseType;
+
+            //All modern browsers will go into either the first or second if block or last else block.
+            //Other code paths support older browsers that either do not support the supplied responseType
+            //or do not support the xhr.response property.
+            if (xhr.status === 204) {
+                // accept no content
+                deferred.resolve();
+            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+                deferred.resolve(response);
+            } else if ((responseType === 'json') && typeof response === 'string') {
+                try {
+                    deferred.resolve(JSON.parse(response));
+                } catch (e) {
+                    deferred.reject(e);
+                }
+            } else if ((responseType === 'document') && typeof response === 'string') {
+                try {
+                    parser = new DOMParser();
+                    deferred.resolve(parser.parseFromString(xhr.responseText, 'text/xml'));
+                } catch (e) {
+                    deferred.reject(e);
                 }
             } else {
                 deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
@@ -228,6 +236,8 @@ define([
         };
 
         xhr.send(data);
+
+        return xhr;
     };
 
     loadWithXhr.defaultLoad = loadWithXhr.load;

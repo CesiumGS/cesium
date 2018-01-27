@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/BoxGeometryUpdater',
         'Core/Cartesian3',

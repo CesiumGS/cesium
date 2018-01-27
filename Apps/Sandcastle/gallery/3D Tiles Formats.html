@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Showcase of different 3D Tiles formats.">
+    <meta name="cesium-sandcastle-labels" content="3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <select data-bind="options: tilesets, optionsText: 'name', value: selectedTileset, optionsCaption: 'Choose a Tileset...'"></select>
+    <div><input type="checkbox" data-bind="checked: shadows"> Shadows</div>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shadows : true
+});
+viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
+var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
+
+viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
+
+var scene = viewer.scene;
+var tileset;
+
+var viewModel = {
+    tilesets: [
+        {
+            name: 'Tileset',
+            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
+        }, {
+            name: 'Translucent',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
+        }, {
+            name: 'Translucent/Opaque',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
+        }, {
+            name: 'Multi-color',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/'
+        }, {
+            name: 'Request Volume',
+            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+        }, {
+            name: 'Batched',
+            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
+        }, {
+            name: 'Instanced',
+            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
+        }, {
+            name: 'Instanced/Orientation',
+            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/'
+        }, {
+            name: 'Composite',
+            url: '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
+        }, {
+            name: 'PointCloud',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/'
+        }, {
+            name: 'PointCloudConstantColor',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/'
+        }, {
+            name: 'PointCloudNormals',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/'
+        }, {
+            name: 'PointCloudBatched',
+            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
+        }
+    ],
+    selectedTileset: undefined,
+    shadows: true
+};
+
+Cesium.knockout.track(viewModel);
+
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(function(enabled) {
+    viewer.shadows = enabled;
+});
+
+Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(options) {
+    if (Cesium.defined(tileset)) {
+        scene.primitives.remove(tileset);
+    }
+    if (!Cesium.defined(options)) {
+        inspectorViewModel.tileset = undefined;
+        return;
+    }
+    tileset = new Cesium.Cesium3DTileset({
+        url: options.url
+    });
+    inspectorViewModel.tileset = tileset;
+    scene.primitives.add(tileset);
+    tileset.readyPromise.then(function(tileset) {
+        var boundingSphere = tileset.boundingSphere;
+        var range = Math.max(100.0 - boundingSphere.radius, 0.0); // Set a minimum offset of 100 meters
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, range));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+        var properties = tileset.properties;
+        if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
+            tileset.style = new Cesium.Cesium3DTileStyle({
+                color: {
+                    conditions: [
+                        ["${Height} >= 83", "color('purple', 0.5)"],
+                        ["${Height} >= 80", "color('red')"],
+                        ["${Height} >= 70", "color('orange')"],
+                        ["${Height} >= 12", "color('yellow')"],
+                        ["${Height} >= 7", "color('lime')"],
+                        ["${Height} >= 1", "color('cyan')"],
+                        ["true", "color('blue')"]
+                    ]
+                }
+            });
+        }
+    }).otherwise(function(error) {
+        throw(error);
+    });
+});
+
+viewModel.selectedTileset = viewModel.tilesets[0];
+
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+
+handler.setInputAction(function(movement) {
+    var feature = inspectorViewModel.feature;
+    if (Cesium.defined(feature)) {
+        var propertyNames = feature.getPropertyNames();
+        var length = propertyNames.length;
+        for (var i = 0; i < length; ++i) {
+            var propertyName = propertyNames[i];
+            console.log(propertyName + ': ' + feature.getProperty(propertyName));
+        }
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+handler.setInputAction(function(movement) {
+    var feature = inspectorViewModel.feature;
+    if (Cesium.defined(feature)) {
+        feature.show = false;
+    }
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

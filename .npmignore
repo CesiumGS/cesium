@@ -1,8 +1,15 @@
+/.concierge
+/.eslintcache
 /.externalToolBuilders
 /.gitattributes
 /.github
 /.idea
 /.metadata
+/.npmignore
+/.project
+/.settings
+/.travis.yml
+/.vscode
 /Apps
 /Build
 /Documentation

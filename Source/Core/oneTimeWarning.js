@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -7,7 +6,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     var warnings = {};
 

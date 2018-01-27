@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Primitive',
         'Core/BoundingSphere',
@@ -17,6 +16,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PolygonGeometry',
         'Core/PrimitiveType',
         'Core/Rectangle',
@@ -26,7 +26,6 @@ defineSuite([
         'Scene/Camera',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
-        'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
         'Specs/BadGeometry',
         'Specs/createContext',
@@ -51,6 +50,7 @@ defineSuite([
         HeadingPitchRange,
         CesiumMath,
         Matrix4,
+        PerspectiveFrustum,
         PolygonGeometry,
         PrimitiveType,
         Rectangle,
@@ -60,7 +60,6 @@ defineSuite([
         Camera,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
         SceneMode,
         BadGeometry,
         createContext,
@@ -489,6 +488,63 @@ defineSuite([
         scene.renderForSpecs();
 
         expect(scene).toRender([255, 0, 255, 255]);
+    });
+
+    it('pick with depth fail appearance', function() {
+        var rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(Rectangle.center(rect)), new Cartesian3()), 100.0, new Cartesian3());
+        var rectInstance = new GeometryInstance({
+            geometry : new RectangleGeometry({
+                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                ellipsoid : ellipsoid,
+                rectangle : rect
+            }),
+            modelMatrix : Matrix4.fromTranslation(translation, new Matrix4()),
+            id : 'rect',
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+            }
+        });
+        var p0 = new Primitive({
+            geometryInstances : rectInstance,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false
+            }),
+            asynchronous : false
+        });
+
+        var rectInstance2 = new GeometryInstance({
+            geometry : new RectangleGeometry({
+                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                ellipsoid : ellipsoid,
+                rectangle : rect
+            }),
+            id : 'rect2',
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0),
+                depthFailColor : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0)
+            }
+        });
+        var p1 = new Primitive({
+            geometryInstances : rectInstance2,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false
+            }),
+            depthFailAppearance : new PerInstanceColorAppearance({
+                translucent : false
+            }),
+            asynchronous : false
+        });
+
+        scene.primitives.add(p0);
+        scene.primitives.add(p1);
+        scene.camera.setView({ destination : rect });
+        scene.renderForSpecs();
+
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p1);
+            expect(result.id).toEqual('rect2');
+        });
     });
 
     it('RTC throws with more than one instance', function() {

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -41,7 +40,7 @@ define([
      *     })
      *   }
      * });
-     * 
+     *
      * @see ColorGeometryInstanceAttribute
      * @see ShowGeometryInstanceAttribute
      * @see DistanceDisplayConditionGeometryInstanceAttribute

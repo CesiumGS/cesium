@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Iau2000Orientation',
         'Core/JulianDate',

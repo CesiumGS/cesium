@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
@@ -6,7 +5,10 @@ defineSuite([
         'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/Rectangle',
+        'Core/RequestScheduler',
         'Renderer/ComputeEngine',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
         'Scene/createTileMapServiceImageryProvider',
@@ -28,7 +30,10 @@ defineSuite([
         loadJsonp,
         loadWithXhr,
         Rectangle,
+        RequestScheduler,
         ComputeEngine,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         createTileMapServiceImageryProvider,
@@ -104,6 +109,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -166,6 +172,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -184,6 +191,9 @@ defineSuite([
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
                         expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture.sampler).toBeDefined();
+                        expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                        expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                         imagery.releaseReference();
                     });
@@ -202,6 +212,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 1, 3);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -237,6 +248,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 1, 3);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -264,6 +276,9 @@ defineSuite([
                             return imagery.state === ImageryState.READY;
                         }).then(function() {
                             expect(imagery.texture).toBeDefined();
+                            expect(imagery.texture.sampler).toBeDefined();
+                            expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                            expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                             expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                             imagery.releaseReference();
                         });
@@ -292,6 +307,7 @@ defineSuite([
             var imagery = new Imagery(layer, 4400, 2686, 13);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -309,6 +325,9 @@ defineSuite([
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
                         expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture.sampler).toBeDefined();
+                        expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                        expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                         expect(imagery.texture).toBe(imagery.textureWebMercator);
                         imagery.releaseReference();
                     });
@@ -327,6 +346,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -360,6 +380,60 @@ defineSuite([
         expect(layer.isDestroyed()).toEqual(true);
     });
 
+    it('allows setting texture filter properties', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        // expect default LINEAR
+        var layer = new ImageryLayer(provider);
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
+        layer.destroy();
+
+        // change to NEAREST
+        layer = new ImageryLayer(provider, {
+            minificationFilter: TextureMinificationFilter.NEAREST,
+            magnificationFilter: TextureMagnificationFilter.NEAREST
+        });
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+                var sampler = imagery.texture.sampler;
+                expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                imagery.releaseReference();
+                layer.destroy();
+            });
+        });
+    });
+
+    it('uses default texture filter properties of ImageryProvider', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        provider.defaultMinificationFilter = TextureMinificationFilter.NEAREST;
+        provider.defaultMagnificationFilter = TextureMinificationFilter.NEAREST;
+
+        var layer = new ImageryLayer(provider);
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+        layer.destroy();
+    });
+
     it('returns HTTP status code information in TileProviderError', function() {
         // Web browsers unfortunately provide very little information about what went wrong when an Image fails
         // to load.  But when an imagery provider is configured to use a TileDiscardPolicy, Cesium downloads the image
@@ -386,6 +460,7 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             imageryLayer._requestImagery(new Imagery(imageryLayer, 0, 0, 0));
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return errorRaised;

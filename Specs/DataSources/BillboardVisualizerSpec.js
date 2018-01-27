@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/BillboardVisualizer',
         'Core/BoundingRectangle',
@@ -6,6 +5,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/NearFarScalar',
@@ -27,6 +27,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         DistanceDisplayCondition,
         JulianDate,
         NearFarScalar,
@@ -62,7 +63,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
         entityCluster.destroy();
     });
 

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PolygonGeometryUpdater',
         'Core/Cartesian3',

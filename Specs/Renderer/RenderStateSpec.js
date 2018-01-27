@@ -1,14 +1,13 @@
-/*global defineSuite*/
 defineSuite([
+        'Renderer/RenderState',
         'Core/WebGLConstants',
         'Core/WindingOrder',
-        'Renderer/RenderState',
         'Renderer/ContextLimits',
         'Specs/createContext'
     ], function(
+        RenderState,
         WebGLConstants,
         WindingOrder,
-        RenderState,
         ContextLimits,
         createContext) {
     'use strict';
@@ -406,6 +405,11 @@ defineSuite([
 
         expect(cache[undefinedKey]).not.toBeDefined();
         expect(cache[fullKey]).not.toBeDefined();
+    });
+
+    it('freezes render states', function() {
+        var rs = RenderState.fromCache();
+        expect(Object.isFrozen(rs)).toBe(!window.specsUsingRelease);
     });
 
     it('fails to create (frontFace)', function() {

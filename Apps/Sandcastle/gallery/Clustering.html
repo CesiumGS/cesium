@@ -10,10 +10,10 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -93,6 +93,7 @@ dataSourcePromise.then(function(dataSource) {
             removeListener = dataSource.clustering.clusterEvent.addEventListener(function(clusteredEntities, cluster) {
                 cluster.label.show = false;
                 cluster.billboard.show = true;
+                cluster.billboard.id = cluster.label.id;
                 cluster.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
 
                 if (clusteredEntities.length >= 50) {
@@ -155,14 +156,14 @@ dataSourcePromise.then(function(dataSource) {
             var ids = pickedLabel.id;
             if (Cesium.isArray(ids)) {
                 for (var i = 0; i < ids.length; ++i) {
-                    ids[i].label.fillColor = Cesium.Color.RED;
+                    ids[i].billboard.color = Cesium.Color.RED;
                 }
             }
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 });
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

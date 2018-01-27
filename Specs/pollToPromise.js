@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/defaultValue',
         'Core/getTimestamp',
@@ -32,12 +31,10 @@ define([
 
             if (result) {
                 deferred.resolve();
+            } else if (getTimestamp() > endTimestamp) {
+                deferred.reject();
             } else {
-                if (getTimestamp() > endTimestamp) {
-                    deferred.reject();
-                } else {
-                    setTimeout(poller, pollInterval);
-                }
+                setTimeout(poller, pollInterval);
             }
         }
 

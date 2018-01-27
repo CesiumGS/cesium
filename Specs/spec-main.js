@@ -21,6 +21,7 @@
     }
 
     var built = getQueryParameter('built');
+    var release = getQueryParameter('release');
 
     var toRequire = ['Cesium'];
 
@@ -72,6 +73,8 @@
          * Require Jasmine's core files. Specifically, this requires and attaches all of Jasmine's code to the `jasmine` reference.
          */
         window.jasmine = jasmineRequire.core(jasmineRequire);
+
+        window.specsUsingRelease = release;
 
         window.defineSuite = function(deps, name, suite, categories) {
             /*global define,describe*/

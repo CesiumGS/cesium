@@ -1,0 +1,24 @@
+{{#if claEnabled}}
+{{#if askForCla}}
+[![Please sign the CLA before we review this PR.](https://img.shields.io/badge/CLA-required-red.svg)](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla)
+
+Welcome to the Cesium community @{{ userName }}!
+
+Can you please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) so that we can review and merge this pull request?
+{{else}}
+![Signed CLA is on file.](https://img.shields.io/badge/CLA-signed-brightgreen.svg)
+
+@{{ userName }}, thanks for the pull request! Maintainers, we have a signed CLA from @{{ userName }}, so you can review this at any time.
+{{/if}}
+{{else}}
+@{{ userName }}, thanks for the pull request!
+{{/if}}
+
+{{#if askAboutChanges}}
+:warning: I noticed that [CHANGES.md]({{ repository_url }}/blob/master/CHANGES.md) has not been updated. If this change updates the public API in any way, fixes a bug, or makes any non-trivial update, please add a bullet point to `CHANGES.md` and comment on this pull request so we know it was updated. For more info, see the [Pull Request Guidelines]( https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#pull-request-guidelines).
+
+{{/if}}
+{{#if askAboutThirdParty}}
+:warning: I noticed that a file in one of our ThirdParty folders (`{{ thirdPartyFolders }}`) has been added or modified. Please verify that it has a section in [LICENSE.md]({{ repository_url }}/blob/master/LICENSE.md) and that its license information is up to date with this new version. Once you do, please confirm by commenting on this pull request.
+
+{{/if}}

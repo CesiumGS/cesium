@@ -27,7 +27,7 @@
 ## Build the Code
 
 Prerequisites:
- * Install [Node.js](http://nodejs.org/) on your system.  Building Cesium requires Node 4.x or newer.
+ * Install [Node.js](http://nodejs.org/) on your system.  Building Cesium requires Node 6.x or newer.
 
 Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 
@@ -45,7 +45,7 @@ Cesium ships with a simple HTTP server for testing, run `npm start` after buildi
 
 ```
 npm start
-``` 
+```
 
 Then browse to [http://localhost:8080/](http://localhost:8080/). The landing page includes apps and tools commonly used during development, including:
 
@@ -56,7 +56,7 @@ Then browse to [http://localhost:8080/](http://localhost:8080/). The landing pag
 
 Cesium can be used in two different ways. Cesium can be either a set of modules using [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD), or it can be built as one combined file containing all modules. The basics:
 
-* `npm run build` will build AMD Cesium. This also builds Cesium Viewer and Sandcastle. 
+* `npm run build` will build AMD Cesium. This also builds Cesium Viewer and Sandcastle.
 * `npm run minifyRelease` creates the built version of Cesium. This also builds Hello World.
 
 Read the complete list of build scripts below for more details.
@@ -92,7 +92,7 @@ Here's the full set of scripts and what they do.
 
    * **Build scripts** -- build and package the source code and documentation
       * `build` - A fast, developer-oriented build that prepares the source tree for use as standard [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD) modules, suitable for running tests and most examples (some Sandcastle examples require running `combine`).   Run this when a GLSL shader is changed since the .glsl file is converted to a .js file with a string for the GLSL source. This runs automatically when saving files in Eclipse.
-      * `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed. 
+      * `build-watch` - A never-ending task that watches your file system for changes to Cesium and runs `build` on the source code as needed.
       * `combine` - Runs `build`, plus the [the RequireJS optimizer](http://requirejs.org/docs/optimization.html) to combine Cesium and [the Almond AMD loader](http://requirejs.org/docs/faq-optimization.html#wrap) to produce all-in-one files in the `Build/Cesium` directory that exposes the entire Cesium API attached to a single global `Cesium` object.  This version is useful if you don't want to use the modules directly with a standard AMD loader.
       * `minify` - Runs `combine`, plus [minifies](http://en.wikipedia.org/wiki/Minification_\(programming\)) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
       * `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors.  The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
@@ -104,8 +104,8 @@ Here's the full set of scripts and what they do.
       * `makeZipFile` - Builds a zip file containing all release files.  This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
    * **Utility scripts** -- code coverage, static code analysis, and other utilities
       * `instrumentForCoverage` - Runs [JSCoverage](http://siliconforks.com/jscoverage/) on the source tree to allow running tests with coverage information.  Use the link in index.html.  Currently Windows only.
-      * `jsHint` - Runs [JSHint](http://www.jshint.com/), a static code analysis tool, on the entire source tree.
-      * `jsHint-watch` - A never-ending task that watches your file system for changes to Cesium and runs JSHint on any changed source files.  
+      * `eslint` - Runs [ESLint](http://eslint.org/), a static code analysis tool, on the entire source tree.
+      * `eslint-watch` - A never-ending task that watches your file system for changes to Cesium and runs ESLint on any changed source files.  
       * `clean` - Removes all generated build artifacts.
       * `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories.  This requires [Perl](http://www.perl.org/) to execute.
       * `sortRequires` - Alphabetically sorts the list of required modules in every `js` file.  It also makes sure that the top of every source file uses the same formatting.

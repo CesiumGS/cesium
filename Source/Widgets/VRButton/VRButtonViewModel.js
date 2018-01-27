@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -7,7 +6,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
         '../../Core/Fullscreen',
-        '../../Scene/OrthographicFrustum',
+        '../../Core/OrthographicFrustum',
         '../../ThirdParty/knockout',
         '../../ThirdParty/NoSleep',
         '../createCommand',

@@ -1,32 +1,25 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseTerrainData',
-    'Core/BoundingSphere',
-    'Core/Cartesian3',
-    'Core/Cartographic',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/Math',
-    'Core/Matrix4',
-    'Core/Rectangle',
-    'Core/TerrainData',
-    'Core/TerrainMesh',
-    'Core/Transforms',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseTerrainData,
-    BoundingSphere,
-    Cartesian3,
-    Cartographic,
-    Ellipsoid,
-    GeographicTilingScheme,
-    CesiumMath,
-    Matrix4,
-    Rectangle,
-    TerrainData,
-    TerrainMesh,
-    Transforms,
-    when) {
+        'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/TerrainData',
+        'Core/TerrainMesh',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseTerrainData,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        GeographicTilingScheme,
+        CesiumMath,
+        Rectangle,
+        TerrainData,
+        TerrainMesh,
+        when) {
     'use strict';
 
     var sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
@@ -107,7 +100,8 @@ defineSuite([
             offset += sizeOfInt32;
 
             // Points
-            for (var j = 0; j < 4; ++j) {
+            var j;
+            for (j = 0; j < 4; ++j) {
                 var xPos = 0;
                 var yPos = 0;
                 var altitude = altitudeStart;
@@ -143,14 +137,16 @@ defineSuite([
     describe('upsample', function() {
         it('works for all four children of a simple quad', function() {
             var maxShort = 32767;
-            tilingScheme = new GeographicTilingScheme();
+            var tilingScheme = new GeographicTilingScheme();
             var buffer = getBuffer(tilingScheme, 0, 0, 0);
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
-                childTileMask : 15
+                childTileMask : 15,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
-            var tilingScheme = new GeographicTilingScheme();
+            tilingScheme = new GeographicTilingScheme();
             var childRectangles = [
                 tilingScheme.tileXYToRectangle(0, 0, 1),
                 tilingScheme.tileXYToRectangle(1, 0, 1),
@@ -230,7 +226,9 @@ defineSuite([
             buffer = getBuffer(tilingScheme, 0, 0, 0);
             data = new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
-                childTileMask : 15
+                childTileMask : 15,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
         });
 
@@ -323,7 +321,9 @@ defineSuite([
             var buffer = getBuffer(tilingScheme, 7, 6, 5);
             mesh = new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
-                childTileMask : 15
+                childTileMask : 15,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
         });
 
@@ -361,7 +361,9 @@ defineSuite([
         beforeEach(function() {
             data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
-                childTileMask : 15
+                childTileMask : 15,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
         });
 
@@ -391,7 +393,9 @@ defineSuite([
 
         it('returns true for all children when child mask is not explicitly specified', function() {
             data = new GoogleEarthEnterpriseTerrainData({
-                buffer : new ArrayBuffer(1)
+                buffer : new ArrayBuffer(1),
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(true);
@@ -403,7 +407,9 @@ defineSuite([
         it('works when only southwest child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
-                childTileMask : 1
+                childTileMask : 1,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(false);
@@ -415,7 +421,9 @@ defineSuite([
         it('works when only southeast child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
-                childTileMask : 2
+                childTileMask : 2,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(false);
@@ -427,7 +435,9 @@ defineSuite([
         it('works when only northeast child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
-                childTileMask : 4
+                childTileMask : 4,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(false);
@@ -439,7 +449,9 @@ defineSuite([
         it('works when only northwest child is available', function() {
             data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
-                childTileMask : 8
+                childTileMask : 8,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(true);
@@ -447,5 +459,41 @@ defineSuite([
             expect(data.isChildAvailable(10, 20, 20, 41)).toBe(false);
             expect(data.isChildAvailable(10, 20, 21, 41)).toBe(false);
         });
+    });
+
+    it('requires buffer', function() {
+        expect(function() {
+            /*eslint-disable no-unused-vars*/
+            var data = new GoogleEarthEnterpriseTerrainData({
+                childTileMask : 8,
+                negativeAltitudeExponentBias : 32,
+                negativeElevationThreshold : CesiumMath.EPSILON12
+            });
+            /*eslint-enable no-unused-vars*/
+        }).toThrowDeveloperError();
+    });
+
+    it('requires negativeAltitudeExponentBias', function() {
+        expect(function() {
+            /*eslint-disable no-unused-vars*/
+            var data = new GoogleEarthEnterpriseTerrainData({
+                buffer : new ArrayBuffer(1),
+                childTileMask : 8,
+                negativeElevationThreshold : CesiumMath.EPSILON12
+            });
+            /*eslint-enable no-unused-vars*/
+        }).toThrowDeveloperError();
+    });
+
+    it('requires negativeElevationThreshold', function() {
+        expect(function() {
+            /*eslint-disable no-unused-vars*/
+            var data = new GoogleEarthEnterpriseTerrainData({
+                buffer : new ArrayBuffer(1),
+                childTileMask : 8,
+                negativeAltitudeExponentBias : 32
+            });
+            /*eslint-enable no-unused-vars*/
+        }).toThrowDeveloperError();
     });
 });

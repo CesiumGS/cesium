@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -21,7 +20,7 @@ define([
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/BaseLayerPicker.png" width="264" height="287" alt="" />
+     * <img src="Images/BaseLayerPicker.png" width="264" height="287" alt="" />
      * <br />BaseLayerPicker with its drop-panel open.
      * </span>
      * <br /><br />
@@ -100,7 +99,7 @@ define([
      *     globe : cesiumWidget.scene.globe,
      *     imageryProviderViewModels : imageryViewModels
      * });
-     * 
+     *
      * @see TerrainProvider
      * @see ImageryProvider
      * @see ImageryLayerCollection

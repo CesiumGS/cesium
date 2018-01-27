@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/defined',
@@ -25,7 +24,6 @@ define([
          * @default true
          */
         this.enabled = true;
-
         /**
          * A scalar that determines the density of the fog. Terrain that is in full fog are culled.
          * The density of the fog increases as this number approaches 1.0 and becomes less dense as it approaches zero.
@@ -45,6 +43,13 @@ define([
          * @default 2.0
          */
         this.screenSpaceErrorFactor = 2.0;
+        /**
+         * The minimum brightness of the fog color from lighting. A value of 0.0 can cause the fog to be completely black. A value of 1.0 will not affect
+         * the brightness at all.
+         * @type {Number}
+         * @default 0.1
+         */
+        this.minimumBrightness = 0.1;
     }
 
     // These values were found by sampling the density at certain views and finding at what point culled tiles impacted the view at the horizon.
@@ -131,11 +136,12 @@ define([
 
         // Fade fog in as the camera tilts toward the horizon.
         var positionNormal = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
-        var dot = CesiumMath.clamp(Cartesian3.dot(camera.directionWC, positionNormal), 0.0, 1.0);
+        var dot = Math.abs(Cartesian3.dot(camera.directionWC, positionNormal));
         density *= 1.0 - dot;
 
         frameState.fog.density = density;
         frameState.fog.sse = this.screenSpaceErrorFactor;
+        frameState.fog.minimumBrightness = this.minimumBrightness;
     };
 
     return Fog;

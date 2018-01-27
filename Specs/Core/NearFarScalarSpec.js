@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/NearFarScalar',
         'Specs/createPackableSpecs'

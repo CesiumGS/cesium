@@ -1,12 +1,12 @@
 /*global define*/
 define([
-        './DataSourceDisplayWithoutVisualizers',
-        './createCesiumVisualizers'
-    ], function(
-        DataSourceDisplay,
-        createCesiumVisualizers) {
-    'use strict';
+    './DataSourceDisplayWithoutVisualizers',
+    './createCesiumVisualizers'
+], function(
+    DataSourceDisplay,
+    createCesiumVisualizers) {
+'use strict';
 
-    DataSourceDisplay.defaultVisualizersCallback = createCesiumVisualizers;
-    return DataSourceDisplay;
+DataSourceDisplay.defaultVisualizersCallback = createCesiumVisualizers;
+return DataSourceDisplay;
 });

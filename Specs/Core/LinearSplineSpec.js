@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/LinearSpline',
         'Core/Cartesian3'

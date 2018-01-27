@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/CameraEventAggregator',
         'Core/Cartesian2',

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian2',
         './Cartesian3',
@@ -85,6 +84,9 @@ define([
         heights.push(h1);
         return heights;
     }
+
+    var nextScratch = new Cartesian3();
+    var prevScratch = new Cartesian3();
 
     function computeRotationAngle(start, end, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
@@ -252,8 +254,6 @@ define([
         return cleanedPositions;
     };
 
-    var nextScratch = new Cartesian3();
-    var prevScratch = new Cartesian3();
     PolylineVolumeGeometryLibrary.angleIsGreaterThanPi = function(forward, backward, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);

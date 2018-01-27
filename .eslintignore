@@ -1,0 +1,9 @@
+Apps/HelloWorld.html
+Apps/Sandcastle/ThirdParty/**
+Build/**
+Documentation/**
+Source/Shaders/**
+Source/ThirdParty/**
+Source/Workers/cesiumWorkerBootstrapper.js
+ThirdParty/**
+Tools/**

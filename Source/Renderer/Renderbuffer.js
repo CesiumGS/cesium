@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -8,6 +8,7 @@ define([
         './ContextLimits',
         './RenderbufferFormat'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -24,9 +25,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
@@ -42,17 +41,13 @@ define([
             throw new DeveloperError('Invalid format.');
         }
 
-        if (width <= 0) {
-            throw new DeveloperError('Width must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('width', width, 0);
 
         if (width > maximumRenderbufferSize) {
             throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
         }
 
-        if (height <= 0) {
-            throw new DeveloperError('Height must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('height', height, 0);
 
         if (height > maximumRenderbufferSize) {
             throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
