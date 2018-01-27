@@ -30,7 +30,7 @@ Change Log
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
 * Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
-* Updated 'Viewer.zoomTo' and 'Viewer.flyTo' to take in Cesium3DTilesets as a target and updated sandcastle 3DTileset examples to reflect this change
+* Updated `Viewer.zoomTo` and `Viewer.flyTo` to take in Cesium3DTilesets as a target and updated sandcastle 3DTileset examples to reflect this change
 * Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
 * Fixed a bug when creating billboard and model entities without a globe. [#6109](https://github.com/AnalyticalGraphicsInc/cesium/pull/6109)
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
@@ -40,6 +40,7 @@ Change Log
 * Fixed sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
 * Fixed camera movement and look functions for 2D mode [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
 * Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
+* Added `sunLighting` option to `Cesium3DTileset`, `Model`, and `Model.fromGltf` to control whether the tileset or model is shaded based on the sun direction. This option is ignored if the model has built-in shaders. [#6160](https://github.com/AnalyticalGraphicsInc/cesium/pull/6160)
 * Added `Cartographic.toCartesian` to convert from Cartographic to Cartesian3. [#6163](https://github.com/AnalyticalGraphicsInc/cesium/pull/6163)
 
 ### 1.41 - 2018-01-02

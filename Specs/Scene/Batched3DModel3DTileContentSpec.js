@@ -8,7 +8,8 @@ defineSuite([
         'Core/Plane',
         'Core/Transforms',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
+        'Specs/createScene',
+        'ThirdParty/when'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
@@ -19,7 +20,8 @@ defineSuite([
         Plane,
         Transforms,
         Cesium3DTilesTester,
-        createScene) {
+        createScene,
+        when) {
     'use strict';
 
     var scene;
@@ -320,6 +322,16 @@ defineSuite([
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes.enabled).toBe(false);
+        });
+    });
+
+    it('sets sunLighting', function() {
+        return when.all([
+            Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl, {sunLighting : true}),
+            Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl, {sunLighting : false})
+        ]).then(function(tilesets) {
+            expect(tilesets[0]._root.content._model._sunLighting).toBe(true);
+            expect(tilesets[1]._root.content._model._sunLighting).toBe(false);
         });
     });
 

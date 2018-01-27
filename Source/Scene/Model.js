@@ -263,6 +263,7 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
+     * @param {Boolean} [options.sunLighting=true] Enable lighting the model with the sun as a light source. This value is ignored if the model has built-in shaders.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
@@ -474,6 +475,7 @@ define([
 
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
+        this._sunLighting = defaultValue(options.sunLighting, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
@@ -1056,6 +1058,7 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
+     * @param {Boolean} [options.sunLighting=true] Enable lighting the model with the sun as a light source. This value is ignored if the model has built-in shaders.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
@@ -4102,6 +4105,7 @@ define([
                 if (!this._updatedGltfVersion) {
                     var options = {
                         optimizeForCesium: true,
+                        sunLighting: this._sunLighting,
                         addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
                     };
                     frameState.brdfLutGenerator.update(frameState);

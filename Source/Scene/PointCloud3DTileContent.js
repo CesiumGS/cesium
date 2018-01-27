@@ -818,6 +818,7 @@ define([
         var backFaceCulling = content._backFaceCulling;
         var vertexArray = content._drawCommand.vertexArray;
         var clippingPlanes = content._tileset.clippingPlanes;
+        var sunLighting = content._tileset._sunLighting;
 
         var colorStyleFunction;
         var showStyleFunction;
@@ -1039,8 +1040,13 @@ define([
         vs += '    color = color * u_highlightColor; \n';
 
         if (hasNormals) {
-            vs += '    normal = czm_normal * normal; \n' +
-                  '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
+            vs += '    normal = czm_normal * normal; \n';
+            if (sunLighting) {
+                vs += '  vec3 lightDirection = normalize(czm_sunDirectionEC);\n';
+            } else {
+                vs += '  vec3 lightDirection = vec3(0.0, 0.0, 1.0);\n';
+            }
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(lightDirection, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
                   '    color *= diffuseStrength; \n';
         }

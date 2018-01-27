@@ -37,6 +37,7 @@ define([
     var defaultIncrementallyLoadTextures = true;
     var defaultClampAnimations = true;
     var defaultShadows = ShadowMode.ENABLED;
+    var defaultSunLighting = true;
     var defaultHeightReference = HeightReference.NONE;
     var defaultSilhouetteColor = Color.RED;
     var defaultSilhouetteSize = 0.0;
@@ -124,6 +125,7 @@ define([
                 model = Model.fromGltf({
                     url : resource,
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
+                    sunLighting : Property.getValueOrDefault(modelGraphics._sunLighting, time, defaultSunLighting),
                     scene : this._scene
                 });
 
@@ -148,6 +150,7 @@ define([
             model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
             model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
+            model.sunLighting = Property.getValueOrDefault(modelGraphics._sunLighting, time, defaultSunLighting);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
             model.distanceDisplayCondition = Property.getValueOrUndefined(modelGraphics._distanceDisplayCondition, time);
             model.silhouetteColor = Property.getValueOrDefault(modelGraphics._silhouetteColor, time, defaultSilhouetteColor, model._silhouetteColor);

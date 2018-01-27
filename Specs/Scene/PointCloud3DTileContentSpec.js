@@ -6,6 +6,7 @@ defineSuite([
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
+        'Core/JulianDate',
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
@@ -25,6 +26,7 @@ defineSuite([
         defined,
         HeadingPitchRange,
         HeadingPitchRoll,
+        JulianDate,
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
@@ -823,6 +825,32 @@ defineSuite([
             tileset.clippingPlanes.unionClippingRegions = false;
 
             expect(scene).toRender(color);
+        });
+    });
+
+    it('sets sunLighting', function() {
+        return when.all([
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, {sunLighting : true}),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, {sunLighting : false})
+        ]).then(function(tilesets) {
+            var time = JulianDate.fromDate(new Date('January 1, 2014 12:30:00 UTC'));
+            var renderOptions = {
+                scene : scene,
+                time : time
+            };
+            tilesets[0].show = true;
+            tilesets[1].show = false;
+            var rgbaLighting;
+            expect(renderOptions).toRenderAndCall(function(rgba) {
+                rgbaLighting = rgba;
+            });
+            tilesets[0].show = false;
+            tilesets[1].show = true;
+            expect(renderOptions).toRenderAndCall(function(rgbaNoLighting) {
+                expect(rgbaLighting).not.toEqual([0, 0, 0, 255]);
+                expect(rgbaNoLighting).not.toEqual([0, 0, 0, 255]);
+                expect(rgbaLighting).not.toEqual(rgbaNoLighting);
+            });
         });
     });
 
