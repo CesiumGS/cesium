@@ -39,6 +39,7 @@ defineSuite([
             runAnimations : false,
             clampAnimations : false,
             shadows : ShadowMode.DISABLED,
+            sunLighting : false,
             heightReference : HeightReference.CLAMP_TO_GROUND,
             distanceDisplayCondition : new DistanceDisplayCondition(),
             silhouetteColor : new Color(1.0, 0.0, 0.0, 1.0),
@@ -64,6 +65,7 @@ defineSuite([
         expect(model.maximumScale).toBeInstanceOf(ConstantProperty);
         expect(model.incrementallyLoadTextures).toBeInstanceOf(ConstantProperty);
         expect(model.shadows).toBeInstanceOf(ConstantProperty);
+        expect(model.sunLighting).toBeInstanceOf(ConstantProperty);
         expect(model.heightReference).toBeInstanceOf(ConstantProperty);
         expect(model.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
         expect(model.silhouetteColor).toBeInstanceOf(ConstantProperty);
@@ -84,6 +86,7 @@ defineSuite([
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
         expect(model.incrementallyLoadTextures.getValue()).toEqual(options.incrementallyLoadTextures);
         expect(model.shadows.getValue()).toEqual(options.shadows);
+        expect(model.sunLighting.getValue()).toEqual(options.sunLighting);
         expect(model.heightReference.getValue()).toEqual(options.heightReference);
         expect(model.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
         expect(model.silhouetteColor.getValue()).toEqual(options.silhouetteColor);
@@ -113,6 +116,7 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.sunLighting = new ConstantProperty(true);
         source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.silhouetteColor = new ConstantProperty(new Color(1.0, 0.0, 0.0, 1.0));
@@ -144,6 +148,7 @@ defineSuite([
         expect(target.maximumScale).toBe(source.maximumScale);
         expect(target.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
         expect(target.shadows).toBe(source.shadows);
+        expect(target.sunLighting).toBe(source.sunLighting);
         expect(target.heightReference).toBe(source.heightReference);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(target.silhouetteColor).toEqual(source.silhouetteColor);
@@ -166,6 +171,7 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.sunLighting = new ConstantProperty(true);
         source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.silhouetteColor = new ConstantProperty(new Color());
@@ -187,6 +193,7 @@ defineSuite([
         var maximumScale = new ConstantProperty(200.0);
         var incrementallyLoadTextures = new ConstantProperty(true);
         var shadows = new ConstantProperty(ShadowMode.ENABLED);
+        var sunLighting = new ConstantProperty(true);
         var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         var silhouetteColor = new ConstantProperty(new Color());
@@ -209,6 +216,7 @@ defineSuite([
         target.maximumScale = maximumScale;
         target.incrementallyLoadTextures = incrementallyLoadTextures;
         target.shadows = shadows;
+        target.sunLighting = sunLighting;
         target.heightReference = heightReference;
         target.distanceDisplayCondition = distanceDisplayCondition;
         target.silhouetteColor = silhouetteColor;
@@ -230,6 +238,7 @@ defineSuite([
         expect(target.maximumScale).toBe(maximumScale);
         expect(target.incrementallyLoadTextures).toBe(incrementallyLoadTextures);
         expect(target.shadows).toBe(shadows);
+        expect(target.sunLighting).toBe(sunLighting);
         expect(target.heightReference).toBe(heightReference);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
         expect(target.silhouetteColor).toBe(silhouetteColor);
@@ -252,6 +261,7 @@ defineSuite([
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.sunLighting = new ConstantProperty(true);
         source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.silhouetteColor = new ConstantProperty(new Color());
@@ -275,6 +285,7 @@ defineSuite([
         expect(result.maximumScale).toBe(source.maximumScale);
         expect(result.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
         expect(result.shadows).toBe(source.shadows);
+        expect(result.sunLighting).toBe(source.sunLighting);
         expect(result.heightReference).toBe(source.heightReference);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(result.silhouetteColor).toEqual(source.silhouetteColor);

@@ -48,6 +48,7 @@ define([
      * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
+     * @param {Property} [options.sunLighting=true] An boolean Property specifying whether to enable lighting the model with the sun as a light source. This value is ignored if the model has built-in shaders.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      * @param {Property} [options.silhouetteColor=Color.RED] A Property specifying the {@link Color} of the silhouette.
@@ -73,6 +74,8 @@ define([
         this._incrementallyLoadTexturesSubscription = undefined;
         this._shadows = undefined;
         this._shadowsSubscription = undefined;
+        this._sunLighting = undefined;
+        this._sunLightingSubsciption = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
@@ -168,6 +171,16 @@ define([
          * @default ShadowMode.ENABLED
          */
         shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Get or sets the boolean Property specifying whether to
+         * enable lighting the model with the sun as a light source.
+         * This value is ignored if the model has built-in shaders.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default true
+         */
+        sunLighting : createPropertyDescriptor('sunLighting'),
 
         /**
          * Gets or sets the string Property specifying the URI of the glTF asset.
@@ -281,6 +294,7 @@ define([
         result.maximumScale = this.maximumScale;
         result.incrementallyLoadTextures = this.incrementallyLoadTextures;
         result.shadows = this.shadows;
+        result.sunLighting = this.sunLighting;
         result.uri = this.uri;
         result.runAnimations = this.runAnimations;
         result.clampAnimations = this.clampAnimations;
@@ -316,6 +330,7 @@ define([
         this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
         this.incrementallyLoadTextures = defaultValue(this.incrementallyLoadTextures, source.incrementallyLoadTextures);
         this.shadows = defaultValue(this.shadows, source.shadows);
+        this.sunLighting = defaultValue(this.sunLighting, source.sunLighting);
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.clampAnimations = defaultValue(this.clampAnimations, source.clampAnimations);
