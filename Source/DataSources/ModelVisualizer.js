@@ -122,7 +122,6 @@ define([
                     primitives.removeAndDestroy(model);
                     delete modelHash[entity.id];
                 }
-
                 model = Model.fromGltf({
                     url : resource,
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
