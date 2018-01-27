@@ -402,7 +402,7 @@ define([
                 shadows: tileset.shadows,
                 debugWireframe: tileset.debugWireframe,
                 incrementallyLoadTextures : false,
-                enableLighting : tileset._enableLighting,
+                sunLighting : tileset._sunLighting,
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 fragmentShaderLoaded : getFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),

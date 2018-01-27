@@ -86,7 +86,7 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from each light source.
-     * @param {Boolean} [options.enableLighting=true] Enable lighting the instances with the sun as a light source.
+     * @param {Boolean} [options.sunLighting=true] Enable lighting the instances with the sun as a light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for the collection.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the instances in wireframe.
      *
@@ -156,7 +156,7 @@ define([
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
         this._upAxis = options.upAxis; // Undocumented option
-        this._enableLighting = defaultValue(options.enableLighting, true);
+        this._sunLighting = defaultValue(options.sunLighting, true);
 
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
@@ -607,7 +607,7 @@ define([
             asynchronous : collection._asynchronous,
             allowPicking : allowPicking,
             incrementallyLoadTextures : collection._incrementallyLoadTextures,
-            enableLighting : collection._enableLighting,
+            sunLighting : collection._sunLighting,
             upAxis : collection._upAxis,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,

@@ -325,13 +325,13 @@ defineSuite([
         });
     });
 
-    it('sets enableLighting', function() {
+    it('sets sunLighting', function() {
         return when.all([
-            Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl, {enableLighting : true}),
-            Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl, {enableLighting : false})
+            Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl, {sunLighting : true}),
+            Cesium3DTilesTester.loadTileset(scene, withKHRMaterialsCommonUrl, {sunLighting : false})
         ]).then(function(tilesets) {
-            expect(tilesets[0]._root.content._model._enableLighting).toBe(true);
-            expect(tilesets[1]._root.content._model._enableLighting).toBe(false);
+            expect(tilesets[0]._root.content._model._sunLighting).toBe(true);
+            expect(tilesets[1]._root.content._model._sunLighting).toBe(false);
         });
     });
 

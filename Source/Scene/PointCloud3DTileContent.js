@@ -818,7 +818,7 @@ define([
         var backFaceCulling = content._backFaceCulling;
         var vertexArray = content._drawCommand.vertexArray;
         var clippingPlanes = content._tileset.clippingPlanes;
-        var enableLighting = content._tileset._enableLighting;
+        var sunLighting = content._tileset._sunLighting;
 
         var colorStyleFunction;
         var showStyleFunction;
@@ -1041,7 +1041,7 @@ define([
 
         if (hasNormals) {
             vs += '    normal = czm_normal * normal; \n';
-            if (enableLighting) {
+            if (sunLighting) {
                 vs += '  vec3 lightDirection = normalize(czm_sunDirectionEC);\n';
             } else {
                 vs += '  vec3 lightDirection = vec3(0.0, 0.0, 1.0);\n';

@@ -828,10 +828,10 @@ defineSuite([
         });
     });
 
-    it('sets enableLighting', function() {
+    it('sets sunLighting', function() {
         return when.all([
-            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, {enableLighting : true}),
-            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, {enableLighting : false})
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, {sunLighting : true}),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, {sunLighting : false})
         ]).then(function(tilesets) {
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:30:00 UTC'));
             var renderOptions = {

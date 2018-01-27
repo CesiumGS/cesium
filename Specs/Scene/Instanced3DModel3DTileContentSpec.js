@@ -338,13 +338,13 @@ defineSuite([
         });
     });
 
-    it('sets enableLighting', function() {
+    it('sets sunLighting', function() {
         return when.all([
-            Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {enableLighting : true}),
-            Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {enableLighting : false})
+            Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {sunLighting : true}),
+            Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {sunLighting : false})
         ]).then(function(tilesets) {
-            expect(tilesets[0]._root.content._modelInstanceCollection._model._enableLighting).toBe(true);
-            expect(tilesets[1]._root.content._modelInstanceCollection._model._enableLighting).toBe(false);
+            expect(tilesets[0]._root.content._modelInstanceCollection._model._sunLighting).toBe(true);
+            expect(tilesets[1]._root.content._modelInstanceCollection._model._sunLighting).toBe(false);
         });
     });
 

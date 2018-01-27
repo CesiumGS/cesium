@@ -228,7 +228,7 @@ define([
 
     function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
         var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
-        var enableLighting = defaultValue(options.enableLighting, true);
+        var sunLighting = defaultValue(options.sunLighting, true);
         var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
@@ -548,7 +548,7 @@ define([
         }
 
         if (!hasNonAmbientLights && (lightingModel !== 'CONSTANT')) {
-            if (optimizeForCesium && enableLighting) {
+            if (optimizeForCesium && sunLighting) {
                 fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
             } else {
                 fragmentLightingBlock += '  vec3 l = vec3(0.0, 0.0, 1.0);\n';
@@ -794,7 +794,7 @@ define([
             techniqueKey += skinningInfo.type + ';';
         }
         techniqueKey += primitiveInfo.hasVertexColors + ';';
-        techniqueKey += options.enableLighting;
+        techniqueKey += options.sunLighting;
 
         return techniqueKey;
     }

@@ -555,21 +555,21 @@ defineSuite([
         });
     });
 
-    it('enableLighting', function() {
+    it('sunLighting', function() {
         return when.all([
             loadCollection({
                 gltf : boxGltf,
                 instances : createInstances(4),
-                enableLighting : true
+                sunLighting : true
             }),
             loadCollection({
                 gltf : boxGltf,
                 instances : createInstances(4),
-                enableLighting : false
+                sunLighting : false
             })
         ]).then(function(collections) {
-            expect(collections[0]._model._enableLighting).toBe(true);
-            expect(collections[1]._model._enableLighting).toBe(false);
+            expect(collections[0]._model._sunLighting).toBe(true);
+            expect(collections[1]._model._sunLighting).toBe(false);
         });
     });
 

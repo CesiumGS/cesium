@@ -277,10 +277,10 @@ defineSuite([
         });
     }
 
-    function verifyEnableLighting(modelUrl) {
+    function verifySunLighting(modelUrl) {
         return when.all([
-            loadModel(boxLambertUrl, {enableLighting : true, cacheKey : modelUrl + '-enableLighting-true'}),
-            loadModel(boxLambertUrl, {enableLighting : false, cacheKey : modelUrl + '-enableLighting-false'})
+            loadModel(boxLambertUrl, {sunLighting : true, cacheKey : modelUrl + '-sunLighting-true'}),
+            loadModel(boxLambertUrl, {sunLighting : false, cacheKey : modelUrl + '-sunLighting-false'})
         ]).then(function(models) {
             var time = JulianDate.fromDate(new Date('January 1, 2014 23:30:00 UTC'));
             var renderOptions = {
@@ -2012,8 +2012,8 @@ defineSuite([
         });
     });
 
-    it('loads a glTF with KHR_material_common with enableLighting true and false', function() {
-        return verifyEnableLighting(boxLambertUrl);
+    it('loads a glTF with KHR_material_common with sunLighting true and false', function() {
+        return verifySunLighting(boxLambertUrl);
     });
 
     it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL', function() {
@@ -2191,8 +2191,8 @@ defineSuite([
         });
     });
 
-    it('loads a glTF 2.0 with enableLighting true and false', function() {
-        return verifyEnableLighting(boxPbrUrl);
+    it('loads a glTF 2.0 with sunLighting true and false', function() {
+        return verifySunLighting(boxPbrUrl);
     });
 
     function testBoxSideColors(m) {

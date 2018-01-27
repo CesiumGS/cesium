@@ -313,7 +313,7 @@ define([
             url : undefined,
             requestType : RequestType.TILES3D,
             gltf : undefined,
-            enableLighting : content._tileset._enableLighting,
+            sunLighting : content._tileset._sunLighting,
             basePath : undefined,
             incrementallyLoadTextures : false,
             upAxis : content._tileset._gltfUpAxis,
