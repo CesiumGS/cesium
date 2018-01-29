@@ -36,6 +36,7 @@
     "almond": "^0.3.3",
     "aws-sdk": "^2.18.0",
     "bluebird": "^3.4.6",
+    "cloc": "^2.3.3",
     "compressible": "^2.0.9",
     "compression": "^1.6.2",
     "electron": "^1.6.1",
