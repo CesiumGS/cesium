@@ -40,13 +40,15 @@ Change Log
 * Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
 * Fixed a bug when creating billboard and model entities without a globe. [#6109](https://github.com/AnalyticalGraphicsInc/cesium/pull/6109)
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
-* Added `shouldAnimate` option to the `Viewer` constructor to indicate if the clock should begin animating immediately.[#6154](https://github.com/AnalyticalGraphicsInc/cesium/pull/6154)
+* Fixed a bug that could cause tiles to be missing from the globe surface, especially when starting with the camera zoomed close to the surface.
+* Added `shouldAnimate` option to the `Viewer` constructor to indicate if the clock should begin animating immediately. [#6154](https://github.com/AnalyticalGraphicsInc/cesium/pull/6154)
 * Added separate file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
 * Fixed sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
 * Fixed camera movement and look functions for 2D mode [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
 * Fixed `Camera.moveStart` and `Camera.moveEnd` events not being raised when camera is close to the ground. [#4753](https://github.com/AnalyticalGraphicsInc/cesium/issues/4753)
 * Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
+* Added `Cartographic.toCartesian` to convert from Cartographic to Cartesian3. [#6163](https://github.com/AnalyticalGraphicsInc/cesium/pull/6163)
 
 ### 1.41 - 2018-01-02
 
