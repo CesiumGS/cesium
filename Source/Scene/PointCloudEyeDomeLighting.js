@@ -70,7 +70,7 @@ define([
     'use strict';
 
     /**
-     * Eye dome lighting.
+     * Eye dome lighting. Does not support points with per-point translucency, but does allow translucent styling against the globe.
      * Requires support for EXT_frag_depth, OES_texture_float, and WEBGL_draw_buffers extensions in WebGL 1.0.
      *
      * @private
@@ -295,7 +295,7 @@ define([
 
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
-            if (command.primitiveType !== PrimitiveType.POINTS) {
+            if (command.primitiveType !== PrimitiveType.POINTS || command.pass === Pass.TRANSLUCENT) {
                 continue;
             }
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
@@ -308,8 +308,6 @@ define([
                 derivedCommand.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
-
-                derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
             }
 
             commandList[i] = derivedCommand;

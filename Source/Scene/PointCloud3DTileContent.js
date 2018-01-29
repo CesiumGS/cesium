@@ -1095,7 +1095,7 @@ define([
             vs += '    normal = czm_normal * normal; \n' +
                   '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
-                  '    color *= diffuseStrength; \n';
+                  '    color.xyz *= diffuseStrength; \n';
         }
 
         vs += '    v_color = color; \n' +
