@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/BillboardCollection',
         'Core/BoundingRectangle',
@@ -11,16 +10,15 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/OrthographicOffCenterFrustum',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Scene/Billboard',
         'Scene/BlendOption',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
-        'Scene/OrthographicOffCenterFrustum',
-        'Scene/PerspectiveFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
-        'Specs/createCanvas',
         'Specs/createGlobe',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -37,16 +35,15 @@ defineSuite([
         loadImage,
         CesiumMath,
         NearFarScalar,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Rectangle,
         Billboard,
         BlendOption,
         HeightReference,
         HorizontalOrigin,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
         TextureAtlas,
         VerticalOrigin,
-        createCanvas,
         createGlobe,
         createScene,
         pollToPromise,
@@ -1877,6 +1874,10 @@ defineSuite([
             scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
             cartographic = scene.globe.ellipsoid.cartesianToCartographic(b._clampedPosition);
             expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+
+            //Setting position to zero should clear the clamped position.
+            b.position = Cartesian3.ZERO;
+            expect(b._clampedPosition).toBeUndefined();
         });
 
         it('changing the terrain provider', function() {

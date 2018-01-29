@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -363,7 +362,7 @@ define([
         scissorRectangle.height = Math.min(size.y, height);
 
         this._uCenter = Cartesian2.clone(sunPositionWC, this._uCenter);
-        this._uRadius = Math.max(size.x, size.y) * 0.5;
+        this._uRadius = Math.max(size.x, size.y) * 0.15;
 
         // create down sampled render state
         viewportTransformation = Matrix4.computeViewportTransformation(downSampleViewport, 0.0, 1.0, postProcessMatrix4Scratch);

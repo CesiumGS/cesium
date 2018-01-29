@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -9,9 +8,9 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
         '../Core/Transforms',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
         './SceneMode'
     ], function(
         BoundingRectangle,
@@ -23,9 +22,9 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
-        Transforms,
         OrthographicFrustum,
         OrthographicOffCenterFrustum,
+        Transforms,
         SceneMode) {
     'use strict';
 

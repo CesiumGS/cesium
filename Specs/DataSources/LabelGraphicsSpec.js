@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/LabelGraphics',
         'Core/Cartesian2',

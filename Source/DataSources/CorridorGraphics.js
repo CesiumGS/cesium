@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -185,7 +184,7 @@ define([
          * @default CornerType.ROUNDED
          */
         cornerType : createPropertyDescriptor('cornerType'),
-        
+
         /**
          * Get or sets the enum Property specifying whether the corridor
          * casts or receives shadows from each light source.

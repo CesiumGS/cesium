@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
@@ -97,8 +96,8 @@ define([
             });
         }
 
-        var vertexShaderText = vertexShaderSource.createCombinedVertexShader();
-        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader();
+        var vertexShaderText = vertexShaderSource.createCombinedVertexShader(this._context);
+        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(this._context);
 
         var keyword = vertexShaderText + fragmentShaderText + JSON.stringify(attributeLocations);
         var cachedShader;
@@ -170,10 +169,11 @@ define([
             });
         }
 
-        var vertexShaderText = vertexShaderSource.createCombinedVertexShader();
-        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader();
-
         var context = this._context;
+
+        var vertexShaderText = vertexShaderSource.createCombinedVertexShader(context);
+        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(context);
+
         var derivedShaderProgram = new ShaderProgram({
             gl : context._gl,
             logShaderCompilation : context.logShaderCompilation,

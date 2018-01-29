@@ -80,13 +80,13 @@ function changeBillboardProperties() {
 
 function sizeBillboardInMeters() {
     Sandcastle.declare(sizeBillboardInMeters);
-    
+
     var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
     var heading = Cesium.Math.toRadians(50.0);
     var pitch = Cesium.Math.toRadians(-20.0);
     var range = 100.0;
     viewer.camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
-    
+
     var billboards = scene.primitives.add(new Cesium.BillboardCollection());
     billboards.add({
         image : '../images/Cesium_Logo_overlay.png',

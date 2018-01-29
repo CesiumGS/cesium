@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/ShaderProgram',
         'Renderer/ContextLimits',
@@ -66,13 +65,13 @@ defineSuite([
 
         var expectedVSText = new ShaderSource({
             sources : [vs]
-        }).createCombinedVertexShader();
+        }).createCombinedVertexShader(context);
 
         expect(sp._vertexShaderText).toEqual(expectedVSText);
 
         var expectedFSText = new ShaderSource({
             sources : [fs]
-        }).createCombinedFragmentShader();
+        }).createCombinedFragmentShader(context);
 
         expect(sp._fragmentShaderText).toEqual(expectedFSText);
     });

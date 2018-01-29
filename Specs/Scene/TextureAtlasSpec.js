@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TextureAtlas',
         'Core/BoundingRectangle',

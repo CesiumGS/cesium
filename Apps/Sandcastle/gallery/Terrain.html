@@ -37,7 +37,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.scene.globe.enableLighting = true;
 
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestWaterMask : true,
     requestVertexNormals : true
 });
@@ -61,14 +61,14 @@ Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain - no effects',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/world'
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
         });
     }
 }, {
     text : 'CesiumTerrainProvider - STK World Terrain w/ Lighting',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/world',
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
             requestVertexNormals : true
         });
         viewer.scene.globe.enableLighting = true;
@@ -77,7 +77,7 @@ Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain w/ Water',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/world',
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
             requestWaterMask : true
         });
     }

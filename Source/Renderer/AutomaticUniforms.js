@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Matrix4',
@@ -1438,6 +1437,51 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform containing the BRDF look up texture used for image-based lighting computations.
+         *
+         * @alias czm_brdfLut
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform sampler2D czm_brdfLut;
+         *
+         * // Example: For a given roughness and NdotV value, find the material's BRDF information in the red and green channels
+         * float roughness = 0.5;
+         * float NdotV = dot(normal, view);
+         * vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;
+         */
+        czm_brdfLut : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.brdfLut;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing the environment map used within the scene.
+         *
+         * @alias czm_environmentMap
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform samplerCube czm_environmentMap;
+         *
+         * // Example: Create a perfect reflection of the environment map on a  model
+         * float reflected = reflect(view, normal);
+         * vec4 reflectedColor = textureCube(czm_environmentMap, reflected);
+         */
+        czm_environmentMap : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_CUBE,
+            getValue : function(uniformState) {
+                return uniformState.environmentMap;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
          *
@@ -1543,6 +1587,20 @@ define([
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.minimumDisableDepthTestDistance;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that will be the highlight color of unclassified 3D Tiles.
+         *
+         * @alias czm_invertClassificationColor
+         * @glslUniform
+         */
+        czm_invertClassificationColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.invertClassificationColor;
             }
         })
     };

@@ -1,8 +1,6 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Globe',
         'Core/CesiumTerrainProvider',
-        'Core/defined',
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Scene/SingleTileImageryProvider',
@@ -11,7 +9,6 @@ defineSuite([
     ], function(
         Globe,
         CesiumTerrainProvider,
-        defined,
         loadWithXhr,
         Rectangle,
         SingleTileImageryProvider,

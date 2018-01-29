@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/CesiumInspector/CesiumInspectorViewModel',
         'Core/defined',

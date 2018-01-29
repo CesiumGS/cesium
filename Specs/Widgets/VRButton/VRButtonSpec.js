@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/VRButton/VRButton',
         'Specs/createScene'

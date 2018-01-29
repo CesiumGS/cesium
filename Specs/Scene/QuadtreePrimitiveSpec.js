@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/QuadtreePrimitive',
         'Core/Cartesian3',
@@ -7,7 +6,6 @@ defineSuite([
         'Core/EventHelper',
         'Core/GeographicTilingScheme',
         'Core/Visibility',
-        'Scene/QuadtreeTile',
         'Scene/QuadtreeTileLoadState',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -19,7 +17,6 @@ defineSuite([
         EventHelper,
         GeographicTilingScheme,
         Visibility,
-        QuadtreeTile,
         QuadtreeTileLoadState,
         createScene,
         pollToPromise) {

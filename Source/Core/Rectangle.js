@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartographic',
         './Check',
@@ -177,7 +176,7 @@ define([
     };
 
     /**
-     * Creates an rectangle given the boundary longitude and latitude in degrees.
+     * Creates a rectangle given the boundary longitude and latitude in degrees.
      *
      * @param {Number} [west=0.0] The westernmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [south=0.0] The southernmost latitude in degrees in the range [-90.0, 90.0].
@@ -208,7 +207,7 @@ define([
     };
 
     /**
-     * Creates an rectangle given the boundary longitude and latitude in radians.
+     * Creates a rectangle given the boundary longitude and latitude in radians.
      *
      * @param {Number} [west=0.0] The westernmost longitude in radians in the range [-Math.PI, Math.PI].
      * @param {Number} [south=0.0] The southernmost latitude in radians in the range [-Math.PI/2, Math.PI/2].
@@ -290,7 +289,7 @@ define([
     /**
      * Creates the smallest possible Rectangle that encloses all positions in the provided array.
      *
-     * @param {Cartesian[]} cartesians The list of Cartesian instances.
+     * @param {Cartesian3[]} cartesians The list of Cartesian instances.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid the cartesians are on.
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
@@ -299,6 +298,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var west = Number.MAX_VALUE;
         var east = -Number.MAX_VALUE;
@@ -343,7 +343,7 @@ define([
     };
 
     /**
-     * Duplicates an Rectangle.
+     * Duplicates a Rectangle.
      *
      * @param {Rectangle} rectangle The rectangle to clone.
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
@@ -426,7 +426,7 @@ define([
     };
 
     /**
-     * Checks an Rectangle's properties and throws if they are not in valid ranges.
+     * Checks a Rectangle's properties and throws if they are not in valid ranges.
      *
      * @param {Rectangle} rectangle The rectangle to validate
      *
@@ -458,7 +458,7 @@ define([
     };
 
     /**
-     * Computes the southwest corner of an rectangle.
+     * Computes the southwest corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -479,7 +479,7 @@ define([
     };
 
     /**
-     * Computes the northwest corner of an rectangle.
+     * Computes the northwest corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -500,7 +500,7 @@ define([
     };
 
     /**
-     * Computes the northeast corner of an rectangle.
+     * Computes the northeast corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -521,7 +521,7 @@ define([
     };
 
     /**
-     * Computes the southeast corner of an rectangle.
+     * Computes the southeast corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -542,7 +542,7 @@ define([
     };
 
     /**
-     * Computes the center of an rectangle.
+     * Computes the center of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the center
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -776,7 +776,7 @@ define([
 
     var subsampleLlaScratch = new Cartographic();
     /**
-     * Samples an rectangle so that it includes a list of Cartesian points suitable for passing to
+     * Samples a rectangle so that it includes a list of Cartesian points suitable for passing to
      * {@link BoundingSphere#fromPoints}.  Sampling is necessary to account
      * for rectangles that cover the poles or cross the equator.
      *

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -8,8 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Math',
-        './PerspectiveFrustum',
-        './PerspectiveOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
+        '../Core/PerspectiveOffCenterFrustum',
         './SceneMode'
     ], function(
         Cartesian2,

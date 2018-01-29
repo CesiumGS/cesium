@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian3',
         'Core/ClockRange',
@@ -26,6 +25,7 @@ defineSuite([
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Widgets/BaseLayerPicker/ProviderViewModel',
         'Widgets/CesiumWidget/CesiumWidget',
+        'Widgets/ClockViewModel',
         'Widgets/FullscreenButton/FullscreenButton',
         'Widgets/Geocoder/Geocoder',
         'Widgets/HomeButton/HomeButton',
@@ -60,6 +60,7 @@ defineSuite([
         BaseLayerPicker,
         ProviderViewModel,
         CesiumWidget,
+        ClockViewModel,
         FullscreenButton,
         Geocoder,
         HomeButton,
@@ -114,6 +115,8 @@ defineSuite([
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
         expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.clockViewModel).toBeInstanceOf(ClockViewModel);
+        expect(viewer.animation.viewModel.clockViewModel).toBe(viewer.clockViewModel);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
         expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
@@ -128,6 +131,16 @@ defineSuite([
         expect(viewer.isDestroyed()).toEqual(false);
         viewer.destroy();
         expect(viewer.isDestroyed()).toEqual(true);
+    });
+
+    it('can specify custom clockViewModel', function() {
+        var clockViewModel = new ClockViewModel();
+        viewer = createViewer(container, {clockViewModel : clockViewModel});
+        expect(viewer.clockViewModel).toBe(clockViewModel);
+        expect(viewer.animation.viewModel.clockViewModel).toBe(viewer.clockViewModel);
+        viewer.destroy();
+        expect(clockViewModel.isDestroyed()).toBe(false);
+        clockViewModel.destroy();
     });
 
     it('renders without errors', function() {

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
         'Core/FeatureDetection',

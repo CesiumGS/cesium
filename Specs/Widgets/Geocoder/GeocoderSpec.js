@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Geocoder/Geocoder',
         'Core/Cartesian3',

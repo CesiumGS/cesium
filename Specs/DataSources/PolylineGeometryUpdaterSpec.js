@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PolylineGeometryUpdater',
         'Core/BoundingSphere',
@@ -8,6 +7,7 @@ defineSuite([
         'Core/DistanceDisplayCondition',
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
+        'Core/PolylinePipeline',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
@@ -34,6 +34,7 @@ defineSuite([
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
+        PolylinePipeline,
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
@@ -575,5 +576,19 @@ defineSuite([
 
         updater.destroy();
         scene.primitives.removeAll();
+    });
+
+    it('followSurface true with undefined globe does not call generateCartesianArc', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        scene.globe = undefined;
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        spyOn(PolylinePipeline, 'generateCartesianArc').and.callThrough();
+        dynamicUpdater.update(time);
+        expect(PolylinePipeline.generateCartesianArc).not.toHaveBeenCalled();
+        updater.destroy();
+        scene.primitives.removeAll();
+        scene.globe = new Globe();
     });
 }, 'WebGL');

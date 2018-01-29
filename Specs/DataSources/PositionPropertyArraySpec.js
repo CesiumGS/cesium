@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PositionPropertyArray',
         'Core/Cartesian3',

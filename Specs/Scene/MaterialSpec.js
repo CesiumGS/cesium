@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Material',
         'Core/Cartesian3',

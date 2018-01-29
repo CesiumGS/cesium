@@ -1,6 +1,4 @@
-/*global define*/
 define([
-        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -12,7 +10,6 @@ define([
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
-        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -83,6 +80,16 @@ define([
         }
     });
 
+    function add(collection, index, options) {
+        var model = collection._model;
+        var animations = model._runtime.animations;
+        var animation = animations[index];
+        var scheduledAnimation = new ModelAnimation(options, model, animation);
+        collection._scheduledAnimations.push(scheduledAnimation);
+        collection.animationAdded.raiseEvent(model, scheduledAnimation);
+        return scheduledAnimation;
+    }
+
     /**
      * Creates and adds an animation with the specified initial properties to the collection.
      * <p>
@@ -90,7 +97,8 @@ define([
      * </p>
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.name The glTF animation name that identifies the animation.
+     * @param {String} [options.name] The glTF animation name that identifies the animation. Must be defined if <code>options.id</code> is <code>undefined</code>.
+     * @param {Number} [options.index] The glTF animation index that identifies the animation. Must be defined if <code>options.name</code> is <code>undefined</code>.
      * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
      * @param {Number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing.
      * @param {JulianDate} [options.stopTime] The scene time to stop playing the animation.  When this is <code>undefined</code>, the animation is played for its full duration.
@@ -102,16 +110,23 @@ define([
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
      * @exception {DeveloperError} options.name must be a valid animation name.
+     * @exception {DeveloperError} options.index must be a valid animation index.
+     * @exception {DeveloperError} Either options.name or options.index must be defined.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
      * @example
-     * // Example 1. Add an animation
+     * // Example 1. Add an animation by name
      * model.activeAnimations.add({
      *   name : 'animation name'
      * });
      *
+     * // Example 2. Add an animation by index
+     * model.activeAnimations.add({
+     *   index : 0
+     * });
+     *
      * @example
-     * // Example 2. Add an animation and provide all properties and events
+     * // Example 3. Add an animation and provide all properties and events
      * var startTime = Cesium.JulianDate.now();
      *
      * var animation = model.activeAnimations.add({
@@ -145,24 +160,38 @@ define([
         if (!defined(animations)) {
             throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
         }
-        //>>includeEnd('debug');
-
-        var animation = animations[options.name];
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(animation)) {
-            throw new DeveloperError('options.name must be a valid animation name.');
+        if (!defined(options.name) && !defined(options.index)) {
+            throw new DeveloperError('Either options.name or options.index must be defined.');
         }
-
         if (defined(options.speedup) && (options.speedup <= 0.0)) {
             throw new DeveloperError('options.speedup must be greater than zero.');
         }
+        if (defined(options.index) && (options.index >= animations.length || options.index < 0)) {
+            throw new DeveloperError('options.index must be a valid animation index.');
+        }
         //>>includeEnd('debug');
 
-        var scheduledAnimation = new ModelAnimation(options, model, animation);
-        this._scheduledAnimations.push(scheduledAnimation);
-        this.animationAdded.raiseEvent(model, scheduledAnimation);
-        return scheduledAnimation;
+        if (defined(options.index)) {
+            return add(this, options.index, options);
+        }
+
+        // Find the index of the animation with the given name
+        var index;
+        var length = animations.length;
+        for (var i = 0; i < length; ++i) {
+            if (animations[i].name === options.name) {
+                index = i;
+                break;
+            }
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(index)) {
+            throw new DeveloperError('options.name must be a valid animation name.');
+        }
+        //>>includeEnd('debug');
+
+        return add(this, index, options);
     };
 
     /**
@@ -204,16 +233,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        options = clone(options);
-
         var scheduledAnimations = [];
-        var animationIds = this._model._animationIds;
-        var length = animationIds.length;
+        var model = this._model;
+        var animations = model._runtime.animations;
+        var length = animations.length;
         for (var i = 0; i < length; ++i) {
-            options.name = animationIds[i];
-            scheduledAnimations.push(this.add(options));
+            scheduledAnimations.push(add(this, i, options));
         }
-
         return scheduledAnimations;
     };
 
@@ -415,17 +441,15 @@ define([
                     frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
                 }
                 animationOccured = true;
-            } else {
+            } else if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                 // ANIMATING -> STOPPED state transition?
-                if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
-                    scheduledAnimation._state = ModelAnimationState.STOPPED;
-                    if (scheduledAnimation.stop.numberOfListeners > 0) {
-                        frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
-                    }
+                scheduledAnimation._state = ModelAnimationState.STOPPED;
+                if (scheduledAnimation.stop.numberOfListeners > 0) {
+                    frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
+                }
 
-                    if (scheduledAnimation.removeOnStop) {
-                        animationsToRemove.push(scheduledAnimation);
-                    }
+                if (scheduledAnimation.removeOnStop) {
+                    animationsToRemove.push(scheduledAnimation);
                 }
             }
         }

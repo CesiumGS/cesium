@@ -1,18 +1,39 @@
-/*global defineSuite*/
 defineSuite([
         'Core/loadWithXhr',
         'Core/loadImage',
-        'Core/RequestErrorEvent'
+        'Core/Request',
+        'Core/RequestErrorEvent',
+        'Core/RequestScheduler'
     ], function(
         loadWithXhr,
         loadImage,
-        RequestErrorEvent) {
+        Request,
+        RequestErrorEvent,
+        RequestScheduler) {
     'use strict';
 
     it('throws with no url', function() {
         expect(function() {
             loadWithXhr();
         }).toThrowDeveloperError();
+    });
+
+    it('returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var request = new Request({
+            throttle : true
+        });
+
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadWithXhr({
+            url : testUrl,
+            request : request
+        });
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 
     describe('data URI loading', function() {
@@ -221,7 +242,7 @@ defineSuite([
                     fakeXHR.onerror();
                 }
             };
-            fakeXHR.simulateHttpError = function(statusCode, response) {
+            fakeXHR.simulateHttpResponse = function(statusCode, response) {
                 fakeXHR.status = statusCode;
                 fakeXHR.response = response;
                 if (typeof fakeXHR.onload === 'function') {
@@ -236,11 +257,7 @@ defineSuite([
                 }
             };
             fakeXHR.simulateResponseTextLoad = function(responseText) {
-                fakeXHR.status = 200;
-                fakeXHR.responseText = responseText;
-                if (typeof fakeXHR.onload === 'function') {
-                    fakeXHR.onload();
-                }
+                fakeXHR.simulateHttpResponse(200, responseText);
             };
 
             spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
@@ -288,9 +305,35 @@ defineSuite([
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError).toBeUndefined();
 
-                fakeXHR.simulateHttpError(199);
+                fakeXHR.simulateHttpResponse(199);
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+            });
+
+            it('resolves undefined for status code 204', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolved = false;
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolved = true;
+                    resolvedValue = value;
+                }).otherwise(function (error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateHttpResponse(204);
+                expect(resolved).toBe(true);
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
             });
         });
 

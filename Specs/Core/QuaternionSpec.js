@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Quaternion',
         'Core/Cartesian3',
@@ -156,16 +155,6 @@ defineSuite([
         var expected = Quaternion.fromRotationMatrix(Matrix3.fromRotationX(angle));
         expect(quaternion).toBe(result);
         expect(quaternion).toEqualEpsilon(expected, CesiumMath.EPSILON11);
-    });
-
-    it('fromHeadingPitchRoll works with individual angle parameters', function() {
-        var heading =  CesiumMath.toRadians(180.0);
-        var pitch = CesiumMath.toRadians(-45.0);
-        var roll = CesiumMath.toRadians(45.0);
-        var hpr = new HeadingPitchRoll( heading, pitch, roll);
-        var quaternion1 = Quaternion.fromHeadingPitchRoll(hpr);
-        var quaternion2 = Quaternion.fromHeadingPitchRoll(heading, pitch, roll);
-        expect(quaternion1).toEqual(quaternion2);
     });
 
     it('clone without a result parameter', function() {

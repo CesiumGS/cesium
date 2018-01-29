@@ -1,10 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/LabelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/NearFarScalar',
@@ -24,6 +24,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         DistanceDisplayCondition,
         JulianDate,
         NearFarScalar,
@@ -58,7 +59,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
         entityCluster.destroy();
     });
 
@@ -87,10 +90,11 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new LabelVisualizer(entityCluster, entityCollection);
+        visualizer = new LabelVisualizer(entityCluster, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no label does not create a label.', function() {

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -107,19 +106,23 @@ define([
         if (defined(billboard)) {
             billboard.show = false;
             billboard.image = undefined;
+            if (defined(billboard._removeCallbackFunc)) {
+                billboard._removeCallbackFunc();
+                billboard._removeCallbackFunc = undefined;
+            }
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
     }
 
     function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
-        textureAtlas.addImage(id, canvas).then(function(index, id) {
+        textureAtlas.addImage(id, canvas).then(function(index) {
             glyphTextureInfo.index = index;
         });
     }
 
     function rebindAllGlyphs(labelCollection, label) {
-        var text = label._text;
+        var text = label._renderedText;
         var textLength = text.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
@@ -219,12 +222,10 @@ define([
                     // no texture, and therefore no billboard, for this glyph.
                     // so, completely unbind glyph.
                     unbindGlyph(labelCollection, glyph);
-                } else {
+                } else if (defined(glyph.textureInfo)) {
                     // we have a texture and billboard.  If we had one before, release
                     // our reference to that texture info, but reuse the billboard.
-                    if (defined(glyph.textureInfo)) {
-                        glyph.textureInfo = undefined;
-                    }
+                    glyph.textureInfo = undefined;
                 }
             } else {
                 // create a glyph object
@@ -289,7 +290,7 @@ define([
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
-        var text = label._text;
+        var text = label._renderedText;
         var glyph;
         var dimensions;
         var lastLineWidth = 0;
@@ -430,7 +431,7 @@ define([
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />

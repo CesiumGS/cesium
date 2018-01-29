@@ -156,7 +156,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
         },
         set : function(value) {
             this._seriesToDisplay = value;
-            
+
             //Iterate over all entities and set their show property
             //to true only if they are part of the current series.
             var collection = this._entityCollection;
@@ -241,9 +241,9 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
     return Cesium.when(Cesium.loadJson(url), function(json) {
         return that.load(json, url);
     }).otherwise(function(error) {
-        //Otherwise will catch any errors or exceptions that occur 
-        //during the promise processing. When this happens, 
-        //we raise the error event and reject the promise. 
+        //Otherwise will catch any errors or exceptions that occur
+        //during the promise processing. When this happens,
+        //we raise the error event and reject the promise.
         this._setLoading(false);
         that._error.raiseEvent(that, error);
         return Cesium.when.reject(error);
@@ -269,7 +269,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
     var heightScale = this.heightScale;
     var entities = this._entityCollection;
 
-    //It's a good idea to suspend events when making changes to a 
+    //It's a good idea to suspend events when making changes to a
     //large amount of entities.  This will cause events to be batched up
     //into the minimal amount of function calls and all take place at the
     //end of processing (when resumeEvents is called).
@@ -353,7 +353,7 @@ WebGLGlobeDataSource.prototype._setLoading = function(isLoading) {
 var dataSource = new WebGLGlobeDataSource();
 dataSource.loadUrl('../../SampleData/population909500.json').then(function() {
 
-    //After the initial load, create buttons to let the user switch among series. 
+    //After the initial load, create buttons to let the user switch among series.
     function createSeriesSetter(seriesName) {
         return function() {
             dataSource.seriesToDisplay = seriesName;

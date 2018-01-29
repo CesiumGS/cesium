@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/ClockViewModel',
         'Core/Clock',

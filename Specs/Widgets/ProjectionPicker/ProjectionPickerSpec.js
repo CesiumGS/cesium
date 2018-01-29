@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/ProjectionPicker/ProjectionPicker',
         'Core/FeatureDetection',

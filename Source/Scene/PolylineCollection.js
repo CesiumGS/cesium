@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -27,6 +26,7 @@ define([
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
@@ -64,6 +64,7 @@ define([
         RenderState,
         ShaderProgram,
         ShaderSource,
+        Texture,
         VertexArray,
         PolylineCommon,
         PolylineFS,
@@ -105,7 +106,7 @@ define([
      * A renderable collection of polylines.
      * <br /><br />
      * <div align="center">
-     * <img src="images/Polyline.png" width="400" height="300" /><br />
+     * <img src="Images/Polyline.png" width="400" height="300" /><br />
      * Example polylines
      * </div>
      * <br /><br />
@@ -244,7 +245,7 @@ define([
            Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
      *   width : 1
      * });
-     * 
+     *
      * @see PolylineCollection#remove
      * @see PolylineCollection#removeAll
      * @see PolylineCollection#update
@@ -276,7 +277,7 @@ define([
      * @example
      * var p = polylines.add(...);
      * polylines.remove(p);  // Returns true
-     * 
+     *
      * @see PolylineCollection#add
      * @see PolylineCollection#removeAll
      * @see PolylineCollection#update
@@ -313,7 +314,7 @@ define([
      * polylines.add(...);
      * polylines.add(...);
      * polylines.removeAll();
-     * 
+     *
      * @see PolylineCollection#add
      * @see PolylineCollection#remove
      * @see PolylineCollection#update
@@ -502,7 +503,7 @@ define([
                             var distanceDisplayCondition = polyline.distanceDisplayCondition;
                             if (defined(distanceDisplayCondition)) {
                                 nearFarCartesian.x = distanceDisplayCondition.near;
-                                nearFarCartesian.x = distanceDisplayCondition.far;
+                                nearFarCartesian.y = distanceDisplayCondition.far;
                             }
 
                             this._batchTable.setBatchedAttribute(polyline._index, 4, nearFarCartesian);
@@ -735,7 +736,7 @@ define([
      *
      * @example
      * polylines = polylines && polylines.destroy();
-     * 
+     *
      * @see PolylineCollection#isDestroyed
      */
     PolylineCollection.prototype.destroy = function() {
@@ -758,14 +759,12 @@ define([
             } else {
                 bufferUsage.frameCount = 100;
             }
-        } else {
-            if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
-                if (bufferUsage.frameCount === 0) {
-                    usageChanged = true;
-                    bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
-                } else {
-                    bufferUsage.frameCount--;
-                }
+        } else if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
+            if (bufferUsage.frameCount === 0) {
+                usageChanged = true;
+                bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
+            } else {
+                bufferUsage.frameCount--;
             }
         }
 
@@ -1013,6 +1012,14 @@ define([
         }
     }
 
+    function replacer(key, value) {
+        if (value instanceof Texture) {
+            return value.id;
+        }
+
+        return value;
+    }
+
     var scratchUniformArray = [];
     function createMaterialId(material) {
         var uniforms = Material._uniformList[material.type];
@@ -1027,7 +1034,7 @@ define([
             index += 2;
         }
 
-        return material.type + ':' + JSON.stringify(scratchUniformArray);
+        return material.type + ':' + JSON.stringify(scratchUniformArray, replacer);
     }
 
     function sortPolylinesIntoBuckets(collection) {
@@ -1147,14 +1154,22 @@ define([
         }
 
         var defines = ['DISTANCE_DISPLAY_CONDITION'];
+
+        var fs = new ShaderSource({
+            sources : [this.material.shaderSource, PolylineFS]
+        });
+
+        // Check for use of v_polylineAngle in material shader
+        if (this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
+            defines.push('POLYLINE_DASH');
+        }
+
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
         var vs = new ShaderSource({
             defines : defines,
             sources : [PolylineCommon, vsSource]
         });
-        var fs = new ShaderSource({
-            sources : [this.material.shaderSource, PolylineFS]
-        });
+
         var fsPick = new ShaderSource({
             sources : fs.sources,
             pickColorQualifier : 'varying'
@@ -1452,7 +1467,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                        if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1484,7 +1499,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);

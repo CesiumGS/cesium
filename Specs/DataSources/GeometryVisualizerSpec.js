@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/GeometryVisualizer',
         'Core/BoundingSphere',
@@ -17,13 +16,13 @@ defineSuite([
         'DataSources/Entity',
         'DataSources/EntityCollection',
         'DataSources/GridMaterialProperty',
+        'DataSources/PolylineGeometryUpdater',
+        'DataSources/PolylineGraphics',
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryColorBatch',
         'DataSources/StaticGeometryPerMaterialBatch',
         'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
-        'DataSources/PolylineGeometryUpdater',
-        'DataSources/PolylineGraphics',
         'Scene/GroundPrimitive',
         'Scene/ShadowMode',
         'Specs/createDynamicProperty',
@@ -47,13 +46,13 @@ defineSuite([
         Entity,
         EntityCollection,
         GridMaterialProperty,
+        PolylineGeometryUpdater,
+        PolylineGraphics,
         SampledProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
         StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
-        PolylineGeometryUpdater,
-        PolylineGraphics,
         GroundPrimitive,
         ShadowMode,
         createDynamicProperty,
@@ -700,7 +699,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 

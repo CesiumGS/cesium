@@ -1,17 +1,23 @@
 {
   "accessors": {
     "accessor_21": {
-      "bufferView": "bufferView_29",
+      "bufferView": "bufferView_1",
       "byteOffset": 0,
       "byteStride": 0,
       "componentType": 5123,
       "count": 36,
-      "type": "SCALAR"
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        23
+      ]
     },
     "accessor_23": {
-      "bufferView": "bufferView_30",
+      "bufferView": "bufferView_0",
       "byteOffset": 0,
-      "byteStride": 12,
+      "byteStride": 0,
       "componentType": 5126,
       "count": 24,
       "max": [
@@ -27,22 +33,41 @@
       "type": "VEC3"
     },
     "accessor_27": {
-      "bufferView": "bufferView_30",
-      "byteOffset": 288,
-      "byteStride": 12,
-      "componentType": 5126,
+      "bufferView": "bufferView_0",
+      "byteOffset": 576,
+      "byteStride": 0,
+      "componentType": 5121,
       "count": 24,
       "max": [
-        1,
-        1,
-        1
+        255,
+        255,
+        255
       ],
       "min": [
         0,
         0,
         0
       ],
-      "type": "VEC3"
+      "type": "VEC3",
+      "normalized": true
+    },
+    "accessor_normal_generated": {
+      "bufferView": "bufferView_0",
+      "byteOffset": 288,
+      "byteStride": 0,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3",
+      "min": [
+        -1,
+        -1,
+        -1
+      ],
+      "max": [
+        1,
+        1,
+        1
+      ]
     }
   },
   "animations": {},
@@ -56,24 +81,24 @@
     "version": "1.0"
   },
   "bufferViews": {
-    "bufferView_29": {
-      "buffer": "Box",
-      "byteLength": 72,
+    "bufferView_0": {
+      "buffer": "buffer_0",
+      "byteLength": 648,
       "byteOffset": 0,
-      "target": 34963
-    },
-    "bufferView_30": {
-      "buffer": "Box",
-      "byteLength": 576,
-      "byteOffset": 72,
       "target": 34962
+    },
+    "bufferView_1": {
+      "buffer": "buffer_0",
+      "byteLength": 72,
+      "byteOffset": 648,
+      "target": 34963
     }
   },
   "buffers": {
-    "Box": {
-      "byteLength": 648,
+    "buffer_0": {
       "type": "arraybuffer",
-      "uri": "data:application/octet-stream;base64,AAABAAIAAwACAAEABAAFAAYABwAGAAUACAAJAAoACwAKAAkADAANAA4ADwAOAA0AEAARABIAEwASABEAFAAVABYAFwAWABUAAAAAvwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAC/AACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAD8AAAAAAACAPwAAAD8AAAAAAACAPwAAAD8AAAAAAACAPwAAAD8AAAAAAACAPwAAgD8AAAAAAACAPwAAgD8AAAAAAACAPwAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/lZaWPgAAAACCggI/lZaWPgAAAACCggI/lZaWPgAAAACCggI/lZaWPgAAAACCggI/"
+      "byteLength": 720,
+      "uri": "data:application/octet-stream;base64,AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAC/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC//wAA/wAA/wAA/wAA/38A/38A/38A/38A//8A//8A//8A//8AAP8AAP8AAP8AAP8AAAD/AAD/AAD/AAD/SgCBSgCBSgCBSgCBAAABAAIAAwACAAEABAAFAAYABwAGAAUACAAJAAoACwAKAAkADAANAA4ADwAOAA0AEAARABIAEwASABEAFAAVABYAFwAWABUA"
     }
   },
   "materials": {
@@ -100,43 +125,20 @@
     }
   },
   "nodes": {
-    "Geometry-mesh002Node": {
+    "rootNode": {
       "children": [],
-      "matrix": [
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1
-      ],
       "meshes": [
         "Geometry-mesh002"
       ],
-      "name": "Mesh"
-    },
-    "node_1": {
-      "children": [
-        "Geometry-mesh002Node"
-      ],
       "matrix": [
         1,
         0,
         0,
         0,
         0,
+        1,
         0,
-        -1,
+        0,
         0,
         0,
         1,
@@ -144,10 +146,8 @@
         0,
         0,
         0,
-        0,
         1
-      ],
-      "name": "Y_UP_Transform"
+      ]
     }
   },
   "programs": {
@@ -164,7 +164,7 @@
   "scenes": {
     "defaultScene": {
       "nodes": [
-        "node_1"
+        "rootNode"
       ]
     }
   },

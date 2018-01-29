@@ -1,14 +1,15 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
         'Core/Math',
+        'Core/PerspectiveFrustum',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -27,28 +28,29 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
-        'Scene/PerspectiveFrustum',
+        'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
+        'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
-        'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene',
-        'Specs/equals',
         'Specs/pollToPromise',
         'Specs/render'
     ], 'Scene/Scene', function(
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        CesiumTerrainProvider,
         Color,
         defined,
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
         CesiumMath,
+        PerspectiveFrustum,
         PixelFormat,
         Rectangle,
         RectangleGeometry,
@@ -67,16 +69,15 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
-        PerspectiveFrustum,
+        Material,
         Primitive,
         PrimitiveCollection,
         Scene,
+        SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
-        SceneTransforms,
         createCanvas,
         createScene,
-        equals,
         pollToPromise,
         render) {
     'use strict';
@@ -384,23 +385,6 @@ defineSuite([
         });
     });
 
-    it('renders fast path with no translucent primitives', function() {
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
-
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
-
-        scene.camera.setView({ destination : rectangle });
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).not.toEqual(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toEqual(0);
-        });
-    });
-
     it('renders with OIT and without FXAA', function() {
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -503,21 +487,85 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    it('renders a globe', function() {
-        var s = createScene();
+    describe('render tests', function() {
+        var s;
 
-        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
-        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+        beforeEach(function() {
+            s = createScene();
+        });
 
-        // To avoid Jasmine's spec has no expectations error
-        expect(true).toEqual(true);
+        afterEach(function() {
+            s.destroyForSpecs();
+        });
 
-        return expect(s).toRenderAndCall(function() {
-            return pollToPromise(function() {
-                render(s.frameState, s.globe);
-                return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+        it('renders a globe', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
+            });
+        });
+
+        it('renders a globe with an ElevationContour', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('ElevationContour');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
+            });
+        });
+
+        it('renders a globe with a SlopeRamp', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('SlopeRamp');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
+            });
+        });
+
+        it('renders a globe with a ElevationRamp', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('ElevationRamp');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
             });
         });
     });
@@ -1120,6 +1168,89 @@ defineSuite([
         expect(function() {
             scene.minimumDisableDepthTestDistance = -1.0;
         }).toThrowDeveloperError();
+    });
+
+    it('converts to canvas coordinates',function(){
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.cartesianToCanvasCoordinates(mockPosition);
+
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, undefined);
+    });
+
+    it('converts to canvas coordinates and return it in a variable',function(){
+        var result = new Cartesian2();
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.cartesianToCanvasCoordinates(mockPosition, result);
+
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, result);
+    });
+
+    it('Gets imageryLayers', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.imageryLayers).toBe(globe.imageryLayers);
+
+        scene.globe = undefined;
+        expect(scene.imageryLayers).toBeUndefined();
+
+        scene.destroyForSpecs();
+    });
+
+    it('Gets terrainProvider', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.terrainProvider).toBe(globe.terrainProvider);
+
+        scene.globe = undefined;
+        expect(scene.terrainProvider).toBeUndefined();
+
+        scene.destroyForSpecs();
+    });
+
+    it('Sets terrainProvider', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        scene.terrainProvider = new CesiumTerrainProvider({
+            url: '//terrain/tiles'
+        });
+
+        expect(scene.terrainProvider).toBe(globe.terrainProvider);
+
+        scene.globe = undefined;
+        expect(function() {
+            scene.terrainProvider = new CesiumTerrainProvider({
+                url: '//newTerrain/tiles'
+            });
+        }).not.toThrow();
+
+        scene.destroyForSpecs();
+    });
+
+    it('Gets terrainProviderChanged', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.terrainProviderChanged).toBe(globe.terrainProviderChanged);
+
+        scene.globe = undefined;
+        expect(scene.terrainProviderChanged).toBeUndefined();
+
+        scene.destroyForSpecs();
+    });
+
+
+    it('Sets material', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        var material = Material.fromType('ElevationContour');
+        globe.material = material;
+        expect(globe.material).toBe(material);
+
+        globe.material = undefined;
+        expect(globe.material).toBeUndefined();
+
+        scene.destroyForSpecs();
     });
 
 }, 'WebGL');

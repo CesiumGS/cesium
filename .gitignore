@@ -6,6 +6,7 @@
 /cesium-*.tgz
 .DS_Store
 Thumbs.db
+.eslintcache
 
 /Apps/CesiumViewer/Gallery/gallery-index.js
 
@@ -23,6 +24,8 @@ Thumbs.db
 
 /node_modules
 npm-debug.log
+npm-debug.log.*
+package-lock.json
 
 # WebStorm user-specific
 .idea/workspace.xml

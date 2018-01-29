@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './buildModuleUrl',
         './Color',
@@ -19,7 +18,7 @@ define([
      * A utility class for generating custom map pins as canvas elements.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/PinBuilder.png' width='500'/><br />
+     * <img src='Images/PinBuilder.png' width='500'/><br />
      * Example pins generated using both the maki icon set, which ships with Cesium, and single character text.
      * </div>
      *
@@ -210,7 +209,7 @@ define([
         canvas.width = size;
         canvas.height = size;
 
-        var context2D = canvas.getContext("2d");
+        var context2D = canvas.getContext('2d');
         drawPin(context2D, color, size);
 
         if (defined(url)) {
