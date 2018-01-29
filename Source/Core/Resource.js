@@ -628,8 +628,6 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
-     *
-     * @private
      */
     Resource.prototype.fetchArrayBuffer = function () {
         return this.fetch({
@@ -655,8 +653,6 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
-     *
-     * @private
      */
     Resource.prototype.fetchBlob = function () {
         return this.fetch({
@@ -687,8 +683,6 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
-     *
-     * @private
      */
     Resource.prototype.fetchImage = function (preferBlob, allowCrossOrigin) {
         if (defined(allowCrossOrigin)) {
@@ -821,8 +815,6 @@ define([
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
-     *
-     * @private
      */
     Resource.prototype.fetchText = function() {
         return this.fetch({
@@ -851,8 +843,6 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
-     *
-     * @private
      */
     Resource.prototype.fetchJson = function() {
         var promise = this.fetch({
@@ -897,8 +887,6 @@ define([
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
-     *
-     * @private
      */
     Resource.prototype.fetchXML = function() {
         return this.fetch({
@@ -1013,8 +1001,6 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
-     *
-     * @private
      */
     Resource.prototype.fetch = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
