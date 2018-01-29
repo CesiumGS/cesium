@@ -241,40 +241,6 @@ define([
                 };
             },
 
-            toRenderPixelCount : function(util, customEqualityTesters) {
-                return {
-                    compare : function(actual, expected) {
-                        var actualRgba = renderAndReadPixels(actual);
-
-                        var webglStub = !!window.webglStub;
-                        if (!webglStub) {
-                            return {pass : countRenderedPixels(actualRgba) === expected};
-                        }
-
-                        return {
-                            pass : true
-                        };
-                    }
-                };
-            },
-
-            toRenderPixelCountGreaterThan : function(util, customEqualityTesters) {
-                return {
-                    compare : function(actual, expected) {
-                        var actualRgba = renderAndReadPixels(actual);
-
-                        var webglStub = !!window.webglStub;
-                        if (!webglStub) {
-                            return {pass : countRenderedPixels(actualRgba) > expected};
-                        }
-
-                        return {
-                            pass : true
-                        };
-                    }
-                };
-            },
-
             toRenderAndCall : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expected) {
@@ -286,6 +252,26 @@ define([
                             // spec fail, as we desired, even though this matcher sets pass to true.
                             var callback = expected;
                             callback(actualRgba);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toRenderPixelCountAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected) {
+                        var actualRgba = renderAndReadPixels(actual);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(countRenderedPixels(actualRgba));
                         }
 
                         return {

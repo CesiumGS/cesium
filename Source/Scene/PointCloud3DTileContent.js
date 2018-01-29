@@ -155,8 +155,7 @@ define([
         this.featurePropertiesDirty = false;
 
         // Options for geometric error based attenuation
-        this.attenuation = false;
-        this._geometricErrorAttenuation = false;
+        this._attenuation = false;
         this._geometricErrorScale = undefined;
         this._maximumAttenuation = undefined;
         this._baseResolution = undefined;
@@ -470,8 +469,7 @@ define([
         content._baseResolutionApproximation = Math.cbrt(sphereVolume / pointsLength);
     }
 
-    var scratchPointSizeAndTilesetTime = new Cartesian2();
-    var scratchGeometricErrorAndDepthMultiplier = new Cartesian2();
+    var scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier = new Cartesian4();
 
     var positionLocation = 0;
     var colorLocation = 1;
@@ -543,10 +541,30 @@ define([
         }
 
         var uniformMap = {
-            u_pointSizeAndTilesetTime : function() {
-                scratchPointSizeAndTilesetTime.x = content._geometricErrorAttenuation ? content._maximumAttenuation : content._pointSize;
-                scratchPointSizeAndTilesetTime.y = content._tileset.timeSinceLoad;
-                return scratchPointSizeAndTilesetTime;
+            u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier : function() {
+                var scratch = scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier;
+                scratch.x = content._attenuation ? content._maximumAttenuation : content._pointSize;
+                scratch.y = content._tileset.timeSinceLoad;
+
+                if (content._attenuation) {
+                    var geometricError = content.tile.geometricError;
+                    if (geometricError === 0) {
+                        geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+                    }
+                    var frustum = frameState.camera.frustum;
+                    var depthMultiplier;
+                    // Attenuation is maximumAttenuation in 2D/ortho
+                    if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
+                        depthMultiplier = Number.POSITIVE_INFINITY;
+                    } else {
+                        depthMultiplier = context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
+                    }
+
+                    scratch.z = geometricError * content._geometricErrorScale;
+                    scratch.w = depthMultiplier;
+                }
+
+                return scratch;
             },
             u_highlightColor : function() {
                 return content._highlightColor;
@@ -570,24 +588,6 @@ define([
                 var style = Color.clone(clippingPlanes.edgeColor);
                 style.alpha = clippingPlanes.edgeWidth;
                 return style;
-            },
-            u_geometricErrorAndDepthMultiplier : function() {
-                var geometricError = content.tile.geometricError;
-                if (geometricError === 0) {
-                    geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
-                }
-                var frustum = frameState.camera.frustum;
-                var depthMultiplier;
-                // Attenuation is maximumAttenuation in 2D/ortho
-                if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
-                    depthMultiplier = Number.POSITIVE_INFINITY;
-                } else {
-                    depthMultiplier = context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
-                }
-
-                scratchGeometricErrorAndDepthMultiplier.x = geometricError * content._geometricErrorScale;
-                scratchGeometricErrorAndDepthMultiplier.y = depthMultiplier;
-                return scratchGeometricErrorAndDepthMultiplier;
             }
         };
 
@@ -855,7 +855,7 @@ define([
         var backFaceCulling = content._backFaceCulling;
         var vertexArray = content._drawCommand.vertexArray;
         var clippingPlanes = content._tileset.clippingPlanes;
-        var geometricErrorAttenuation = content._geometricErrorAttenuation;
+        var attenuation = content._attenuation;
 
         var colorStyleFunction;
         var showStyleFunction;
@@ -968,16 +968,13 @@ define([
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
-                 'uniform vec2 u_pointSizeAndTilesetTime; \n' +
+                 'uniform vec4 u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n';
-        if (geometricErrorAttenuation) {
-            vs += 'uniform vec2 u_geometricErrorAndDepthMultiplier; \n';
-        }
         vs += 'float u_pointSize; \n' +
               'float u_tilesetTime; \n';
 
-        if (geometricErrorAttenuation) {
+        if (attenuation) {
             vs += 'float u_geometricError; \n' +
                   'float u_depthMultiplier; \n';
         }
@@ -1029,12 +1026,12 @@ define([
 
         vs += 'void main() \n' +
               '{ \n' +
-              '    u_pointSize = u_pointSizeAndTilesetTime.x; \n' +
-              '    u_tilesetTime = u_pointSizeAndTilesetTime.y; \n';
+              '    u_pointSize = u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier.x; \n' +
+              '    u_tilesetTime = u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier.y; \n';
 
-        if (geometricErrorAttenuation) {
-            vs += '    u_geometricError = u_geometricErrorAndDepthMultiplier.x; \n' +
-                  '    u_depthMultiplier = u_geometricErrorAndDepthMultiplier.y; \n';
+        if (attenuation) {
+            vs += '    u_geometricError = u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier.z; \n' +
+                  '    u_depthMultiplier = u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier.w; \n';
         }
 
         if (usesColors) {
@@ -1083,9 +1080,8 @@ define([
 
         if (hasPointSizeStyle) {
             vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
-        } else if (geometricErrorAttenuation) {
-            vs += '    vec3 positionWC = vec3(czm_model * vec4(position, 1.0)); \n' +
-                  '    vec4 positionEC = czm_view * vec4(positionWC, 1.0); \n' +
+        } else if (attenuation) {
+            vs += '    vec4 positionEC = czm_modelView * vec4(position, 1.0); \n' +
                   '    float depth = -positionEC.z; \n' +
                   // compute SSE for this point
                   '    gl_PointSize = min((u_geometricError / depth) * u_depthMultiplier, u_pointSize); \n';
@@ -1314,14 +1310,14 @@ define([
         }
 
         // Update attenuation
-        var pointShading = this._tileset.pointShading;
-        if (defined(pointShading)) {
-            this.attenuation = pointShading.attenuation;
-            this._geometricErrorScale = pointShading.geometricErrorScale;
-            this._maximumAttenuation = defined(pointShading.maximumAttenuation) ? pointShading.maximumAttenuation : tileset.maximumScreenSpaceError;
-            this._baseResolution = pointShading.baseResolution;
-            if (this.attenuation !== this._geometricErrorAttenuation) {
-                this._geometricErrorAttenuation = this.attenuation;
+        var pointCloudShading = this._tileset.pointCloudShading;
+        if (defined(pointCloudShading)) {
+            var formerAttenuation = this._attenuation;
+            this._attenuation = pointCloudShading.attenuation;
+            this._geometricErrorScale = pointCloudShading.geometricErrorScale;
+            this._maximumAttenuation = defined(pointCloudShading.maximumAttenuation) ? pointCloudShading.maximumAttenuation : tileset.maximumScreenSpaceError;
+            this._baseResolution = pointCloudShading.baseResolution;
+            if (this._attenuation !== formerAttenuation) {
                 createShaders(this, frameState, tileset.style);
             }
         }

@@ -1,6 +1,5 @@
 define([
         '../Core/Cartesian3',
-        '../Core/Math',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -35,7 +34,6 @@ define([
         '../Shaders/PostProcessFilters/PointCloudEyeDomeLighting'
     ], function(
         Cartesian3,
-        CesiumMath,
         clone,
         Color,
         combine,
@@ -78,27 +76,15 @@ define([
      * @private
      */
     function PointCloudEyeDomeLighting() {
-        this._framebuffers = undefined;
+        this._framebuffer = undefined;
         this._colorTexture = undefined; // color gbuffer
         this._ecAndLogDepthTexture = undefined; // depth gbuffer
         this._depthTexture = undefined; // needed to write depth so camera based on depth works
-        this._drawCommands = undefined;
-        this._clearCommands = undefined;
+        this._drawCommand = undefined;
+        this._clearCommand = undefined;
 
         this._strength = 1.0;
         this._radius = 1.0;
-    }
-
-    function addConstants(sourceFS, constantName, value) {
-        var finalSource = sourceFS;
-        if (typeof(value) === 'boolean') {
-            if (value !== false) {
-                finalSource = '#define ' + constantName + '\n' + sourceFS;
-            }
-        } else {
-            finalSource = '#define ' + constantName + ' ' + value + '\n' + sourceFS;
-        }
-        return finalSource;
     }
 
     function createSampler() {
@@ -110,30 +96,26 @@ define([
         });
     }
 
-    function destroyFramebuffers(processor) {
-        var framebuffers = processor._framebuffers;
-        if (!defined(framebuffers)) {
+    function destroyFramebuffer(processor) {
+        var framebuffer = processor._framebuffer;
+        if (!defined(framebuffer)) {
             return;
         }
 
         processor._colorTexture.destroy();
         processor._ecAndLogDepthTexture.destroy();
         processor._depthTexture.destroy();
-        for (var name in framebuffers) {
-            if (framebuffers.hasOwnProperty(name)) {
-                framebuffers[name].destroy();
-            }
-        }
+        framebuffer.destroy();
 
-        processor._framebuffers = undefined;
+        processor._framebuffer = undefined;
         processor._colorTexture = undefined;
         processor._ecAndLogDepthTexture = undefined;
         processor._depthTexture = undefined;
-        processor._drawCommands = undefined;
-        processor._clearCommands = undefined;
+        processor._drawCommand = undefined;
+        processor._clearCommand = undefined;
     }
 
-    function createFramebuffers(processor, context) {
+    function createFramebuffer(processor, context) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
 
@@ -165,17 +147,15 @@ define([
             sampler : createSampler()
         });
 
-        processor._framebuffers = {
-            prior : new Framebuffer({
-                context : context,
-                colorTextures : [
-                    colorTexture,
-                    ecTexture
-                ],
-                depthTexture : depthTexture,
-                destroyAttachments : false
-            })
-        };
+        processor._framebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [
+                colorTexture,
+                ecTexture
+            ],
+            depthTexture : depthTexture,
+            destroyAttachments : false
+        });
         processor._colorTexture = colorTexture;
         processor._ecAndLogDepthTexture = ecTexture;
         processor._depthTexture = depthTexture;
@@ -184,9 +164,7 @@ define([
     var distancesAndEdlStrengthScratch = new Cartesian3();
 
     function createCommands(processor, context) {
-        processor._drawCommands = {};
-
-        var blendFS = addConstants(PointCloudEyeDomeLightingShader, 'epsilon8', CesiumMath.EPSILON8);
+        var blendFS = PointCloudEyeDomeLightingShader;
 
         var blendUniformMap = {
             u_pointCloud_colorTexture : function() {
@@ -211,34 +189,24 @@ define([
             }
         });
 
-        var blendCommand = context.createViewportQuadCommand(blendFS, {
+        processor._drawCommand = context.createViewportQuadCommand(blendFS, {
             uniformMap : blendUniformMap,
             renderState : blendRenderState,
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
         });
 
-        // set up clear commands for all frame buffers
-        var framebuffers = processor._framebuffers;
-        var clearCommands = {};
-        for (var name in framebuffers) {
-            if (framebuffers.hasOwnProperty(name)) {
-                clearCommands[name] = new ClearCommand({
-                    framebuffer : framebuffers[name],
-                    color : new Color(0.0, 0.0, 0.0, 0.0),
-                    depth : 1.0,
-                    renderState : RenderState.fromCache(),
-                    pass : Pass.CESIUM_3D_TILE,
-                    owner : processor
-                });
-            }
-        }
-
-        processor._drawCommands.blendCommand = blendCommand;
-        processor._clearCommands = clearCommands;
+        processor._clearCommand = new ClearCommand({
+            framebuffer : processor._framebuffer,
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            depth : 1.0,
+            renderState : RenderState.fromCache(),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
     }
 
-    function createResources(processor, context, dirty) {
+    function createResources(processor, context) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
         var colorTexture = processor._colorTexture;
@@ -247,20 +215,20 @@ define([
                       ((colorTexture.width !== screenWidth) ||
                        (colorTexture.height !== screenHeight));
 
-        if (!defined(colorTexture) || resized || dirty) {
-            destroyFramebuffers(processor);
-            createFramebuffers(processor, context);
+        if (!defined(colorTexture) || resized) {
+            destroyFramebuffer(processor);
+            createFramebuffer(processor, context);
             createCommands(processor, context);
             nowDirty = true;
         }
         return nowDirty;
     }
 
-    function processingSupported(context) {
+    function isSupported(context) {
         return context.floatingPointTexture && context.drawBuffers && context.fragmentDepth;
     }
 
-    PointCloudEyeDomeLighting.processingSupported = processingSupported;
+    PointCloudEyeDomeLighting.isSupported = isSupported;
 
     function getECShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'EC');
@@ -282,20 +250,20 @@ define([
             });
 
             vs.sources.push(
-                'varying vec3 v_positionECPS; \n' +
+                'varying vec3 v_positionEC; \n' +
                 'void main() \n' +
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
-                '    v_positionECPS = (czm_inverseProjection * gl_Position).xyz; \n' +
+                '    v_positionEC = (czm_inverseProjection * gl_Position).xyz; \n' +
                 '}');
             fs.sources.unshift('#extension GL_EXT_draw_buffers : enable \n');
             fs.sources.push(
-                'varying vec3 v_positionECPS; \n' +
+                'varying vec3 v_positionEC; \n' +
                 'void main() \n' +
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
                 // Write log base 2 depth to alpha for EDL
-                '    gl_FragData[1] = vec4(v_positionECPS, log2(-v_positionECPS.z)); \n' +
+                '    gl_FragData[1] = vec4(v_positionEC, log2(-v_positionEC.z)); \n' +
                 '}');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
@@ -311,14 +279,14 @@ define([
     PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, tileset) {
         var passes = frameState.passes;
         var isPick = (passes.pick && !passes.render);
-        if (!processingSupported(frameState.context) || isPick) {
+        if (!isSupported(frameState.context) || isPick) {
             return;
         }
 
-        this._strength = tileset.pointShading.eyeDomeLightingStrength;
-        this._radius = tileset.pointShading.eyeDomeLightingRadius;
+        this._strength = tileset.pointCloudShading.eyeDomeLightingStrength;
+        this._radius = tileset.pointCloudShading.eyeDomeLightingRadius;
 
-        var dirty = createResources(this, frameState.context, false);
+        var dirty = createResources(this, frameState.context);
 
         // Hijack existing point commands to render into an offscreen FBO.
         var i;
@@ -332,19 +300,14 @@ define([
             }
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
             if (!defined(derivedCommand) || command.dirty || dirty ||
-                (derivedCommand.framebuffer !== this._framebuffers.prior)) { // Prevent crash when tiles out-of-view come in-view during context size change
+                (derivedCommand.framebuffer !== this._framebuffer)) { // Prevent crash when tiles out-of-view come in-view during context size change
                 derivedCommand = DrawCommand.shallowClone(command);
                 command.derivedCommands.pointCloudProcessor = derivedCommand;
 
-                derivedCommand.framebuffer = this._framebuffers.prior;
+                derivedCommand.framebuffer = this._framebuffer;
                 derivedCommand.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
-
-                var derivedCommandRenderState = clone(derivedCommand.renderState);
-                derivedCommand.renderState = RenderState.fromCache(
-                    derivedCommandRenderState
-                );
 
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
             }
@@ -352,12 +315,12 @@ define([
             commandList[i] = derivedCommand;
         }
 
-        var clearCommands = this._clearCommands;
-        var blendCommand = this._drawCommands.blendCommand;
+        var clearCommand = this._clearCommand;
+        var blendCommand = this._drawCommand;
 
         // Blend EDL into the main FBO
         commandList.push(blendCommand);
-        commandList.push(clearCommands.prior);
+        commandList.push(clearCommand);
     };
 
     /**
@@ -392,7 +355,7 @@ define([
      * @see PointCloudEyeDomeLighting#isDestroyed
      */
     PointCloudEyeDomeLighting.prototype.destroy = function() {
-        destroyFramebuffers(this);
+        destroyFramebuffer(this);
         return destroyObject(this);
     };
 

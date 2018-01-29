@@ -1,29 +1,29 @@
 defineSuite([
-    'Core/Cartesian3',
-    'Core/Color',
-    'Core/defined',
-    'Core/HeadingPitchRange',
-    'Core/HeadingPitchRoll',
-    'Core/Math',
-    'Core/Transforms',
-    'Core/PerspectiveFrustum',
-    'Scene/PointCloud3DTileContent',
-    'Scene/PointCloudEyeDomeLighting',
-    'Specs/Cesium3DTilesTester',
-    'Specs/createScene'
-], 'Scene/PointCloudEyeDomeLighting', function(
-    Cartesian3,
-    Color,
-    defined,
-    HeadingPitchRange,
-    HeadingPitchRoll,
-    CesiumMath,
-    Transforms,
-    PerspectiveFrustum,
-    PointCloud3DTileContent,
-    PointCloudEyeDomeLighting,
-    Cesium3DTilesTester,
-    createScene) {
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/defined',
+        'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
+        'Core/Math',
+        'Core/Transforms',
+        'Core/PerspectiveFrustum',
+        'Scene/PointCloud3DTileContent',
+        'Scene/PointCloudEyeDomeLighting',
+        'Specs/Cesium3DTilesTester',
+        'Specs/createScene'
+    ], 'Scene/PointCloudEyeDomeLighting', function(
+        Cartesian3,
+        Color,
+        defined,
+        HeadingPitchRange,
+        HeadingPitchRoll,
+        CesiumMath,
+        Transforms,
+        PerspectiveFrustum,
+        PointCloud3DTileContent,
+        PointCloudEyeDomeLighting,
+        Cesium3DTilesTester,
+        createScene) {
     'use strict';
 
     var scene;
@@ -40,7 +40,6 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        scene.frameState.passes.render = true;
     });
 
     afterAll(function() {
@@ -62,16 +61,16 @@ defineSuite([
 
     it('adds a clear command and a post-processing draw call', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
-            if (!PointCloudEyeDomeLighting.processingSupported(scene.frameState.context)) {
+            if (!PointCloudEyeDomeLighting.isSupported(scene.frameState.context)) {
                 return;
             }
 
-            tileset.pointShading.eyeDomeLighting = true;
+            tileset.pointCloudShading.eyeDomeLighting = true;
 
             scene.renderForSpecs();
             var originalLength = scene.frameState.commandList.length;
 
-            tileset.pointShading.attenuation = true;
+            tileset.pointCloudShading.attenuation = true;
             scene.renderForSpecs();
             var newLength = scene.frameState.commandList.length;
             expect(newLength).toEqual(originalLength + 2);
@@ -80,12 +79,12 @@ defineSuite([
 
     it('does not change commands for pick calls', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
-            tileset.pointShading.eyeDomeLighting = true;
+            tileset.pointCloudShading.eyeDomeLighting = true;
 
             scene.pickForSpecs();
             var originalLength = scene.frameState.commandList.length;
 
-            tileset.pointShading.attenuation = true;
+            tileset.pointCloudShading.attenuation = true;
             scene.pickForSpecs();
             var newLength = scene.frameState.commandList.length;
             expect(newLength).toEqual(originalLength);

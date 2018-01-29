@@ -36,7 +36,7 @@ define([
         './Cesium3DTileStyleEngine',
         './ClassificationType',
         './LabelCollection',
-        './PointShading',
+        './PointCloudShading',
         './PointCloudEyeDomeLighting',
         './SceneMode',
         './ShadowMode',
@@ -81,7 +81,7 @@ define([
         Cesium3DTileStyleEngine,
         ClassificationType,
         LabelCollection,
-        PointShading,
+        PointCloudShading,
         PointCloudEyeDomeLighting,
         SceneMode,
         ShadowMode,
@@ -128,7 +128,7 @@ define([
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
-     * @param {Object} [options.pointShading] Options for constructing a PointShading object to control point attenuation based on geometric error and lighting.
+     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
@@ -341,9 +341,9 @@ define([
 
         /**
          * Options for controlling point size based on geometric error and eye dome lighting.
-         * @type {PointShading}
+         * @type {PointCloudShading}
          */
-        this.pointShading = new PointShading(options.pointShading);
+        this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
 
         this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
 
@@ -1694,8 +1694,8 @@ define([
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
         // Only run EDL if simple attenuation is on
-        if (tileset.pointShading.attenuation &&
-            tileset.pointShading.eyeDomeLighting &&
+        if (tileset.pointCloudShading.attenuation &&
+            tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
             tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset);
         }

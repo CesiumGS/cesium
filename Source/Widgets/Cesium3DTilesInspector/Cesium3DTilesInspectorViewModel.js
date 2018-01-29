@@ -721,7 +721,7 @@ define([
             set : function(value) {
                 pointCloudShading(value);
                 if (defined(that._tileset)) {
-                    that._tileset.pointShading.attenuation = value;
+                    that._tileset.pointCloudShading.attenuation = value;
                 }
             }
         });
@@ -743,7 +743,7 @@ define([
                 if (!isNaN(value)) {
                     geometricErrorScale(value);
                     if (defined(that._tileset)) {
-                        that._tileset.pointShading.geometricErrorScale = value;
+                        that._tileset.pointCloudShading.geometricErrorScale = value;
                     }
                 }
             }
@@ -766,7 +766,7 @@ define([
                 if (!isNaN(value)) {
                     maximumAttenuation(value);
                     if (defined(that._tileset)) {
-                        that._tileset.pointShading.maximumAttenuation = value === 0 ? undefined : value;
+                        that._tileset.pointCloudShading.maximumAttenuation = value === 0 ? undefined : value;
                     }
                 }
             }
@@ -789,7 +789,7 @@ define([
                 if (!isNaN(value)) {
                     baseResolution(value);
                     if (defined(that._tileset)) {
-                        that._tileset.pointShading.baseResolution = value === 0 ? undefined : value;
+                        that._tileset.pointCloudShading.baseResolution = value === 0 ? undefined : value;
                     }
                 }
             }
@@ -810,7 +810,7 @@ define([
             set : function(value) {
                 eyeDomeLighting(value);
                 if (defined(that._tileset)) {
-                    that._tileset.pointShading.eyeDomeLighting = value;
+                    that._tileset.pointCloudShading.eyeDomeLighting = value;
                 }
             }
         });
@@ -832,7 +832,7 @@ define([
                 if (!isNaN(value)) {
                     eyeDomeLightingStrength(value);
                     if (defined(that._tileset)) {
-                        that._tileset.pointShading.eyeDomeLightingStrength = value;
+                        that._tileset.pointCloudShading.eyeDomeLightingStrength = value;
                     }
                 }
             }
@@ -855,7 +855,7 @@ define([
                 if (!isNaN(value)) {
                     eyeDomeLightingRadius(value);
                     if (defined(that._tileset)) {
-                        that._tileset.pointShading.eyeDomeLightingRadius = value;
+                        that._tileset.pointCloudShading.eyeDomeLightingRadius = value;
                     }
                 }
             }
@@ -1144,14 +1144,14 @@ define([
                     this.immediatelyLoadDesiredLevelOfDetail = tileset.immediatelyLoadDesiredLevelOfDetail;
                     this.loadSiblings = tileset.loadSiblings;
 
-                    var pointShading = tileset.pointShading;
-                    this.pointCloudShading = pointShading.attenuation;
-                    this.geometricErrorScale = pointShading.geometricErrorScale;
-                    this.maximumAttenuation = pointShading.maximumAttenuation ? pointShading.maximumAttenuation: 0.0;
-                    this.baseResolution = pointShading.baseResolution ? pointShading.baseResolution : 0.0;
-                    this.eyeDomeLighting = pointShading.eyeDomeLighting;
-                    this.eyeDomeLightingStrength = pointShading.eyeDomeLightingStrength;
-                    this.eyeDomeLightingRadius = pointShading.eyeDomeLightingRadius;
+                    var pointCloudShading = tileset.pointCloudShading;
+                    this.pointCloudShading = pointCloudShading.attenuation;
+                    this.geometricErrorScale = pointCloudShading.geometricErrorScale;
+                    this.maximumAttenuation = pointCloudShading.maximumAttenuation ? pointCloudShading.maximumAttenuation: 0.0;
+                    this.baseResolution = pointCloudShading.baseResolution ? pointCloudShading.baseResolution : 0.0;
+                    this.eyeDomeLighting = pointCloudShading.eyeDomeLighting;
+                    this.eyeDomeLightingStrength = pointCloudShading.eyeDomeLightingStrength;
+                    this.eyeDomeLightingRadius = pointCloudShading.eyeDomeLightingRadius;
 
                 } else {
                     this._properties({});

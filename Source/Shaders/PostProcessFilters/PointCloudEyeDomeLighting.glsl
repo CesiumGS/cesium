@@ -21,7 +21,7 @@ vec2 neighborContribution(float log2Depth, vec2 padding)
 void main()
 {
     vec4 ecAlphaDepth = texture2D(u_pointCloud_ecAndLogDepthTexture, v_textureCoordinates);
-    if (length(ecAlphaDepth.xyz) < epsilon8)
+    if (length(ecAlphaDepth.xyz) < czm_epsilon7)
     {
         discard;
     }
