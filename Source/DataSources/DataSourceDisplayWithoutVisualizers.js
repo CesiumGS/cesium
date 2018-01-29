@@ -8,7 +8,8 @@ define([
     '../Core/DeveloperError',
     '../Core/EventHelper',
     '../Scene/GroundPrimitive',
-    './BoundingSphereState'
+    './BoundingSphereState',
+    './CustomDataSource'
 ], function(
     BoundingSphere,
     Check,
@@ -19,7 +20,8 @@ define([
     DeveloperError,
     EventHelper,
     GroundPrimitive,
-    BoundingSphereState) {
+    BoundingSphereState,
+    CustomDataSource) {
 'use strict';
 
 /**
@@ -305,26 +307,43 @@ DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, r
 DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
     var scene = this._scene;
 
-    var entityCluster = dataSource.clustering;
-    entityCluster._initialize(scene);
+    var entityCluster;
+    if (defined(dataSource.clustering) && defined(scene.primitives)) {
+        entityCluster = dataSource.clustering;
+        entityCluster._initialize(scene);
 
-    scene.primitives.add(entityCluster);
+        scene.primitives.add(entityCluster);
+    }
 
-    dataSource._visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
+    var visualizers = this._visualizersCallback(this._scene, entityCluster, dataSource);
+
+    dataSource._visualizersByDisplayID = dataSource._visualizersByDisplayID || {};
+    dataSource._visualizersByDisplayID[this._displayID] = visualizers;
+
+    dataSource._visualizers = dataSource._visualizers || [];
+    dataSource._visualizers = dataSource._visualizers.concat(visualizers);
 };
 
 DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
     var scene = this._scene;
-    var entityCluster = dataSource.clustering;
-    scene.primitives.remove(entityCluster);
-
-    var visualizers = dataSource._visualizers;
-    var length = visualizers.length;
-    for (var i = 0; i < length; i++) {
-        visualizers[i].destroy();
+    if (defined(dataSource.clustering) && defined(scene.primitives)) {
+        var entityCluster = dataSource.clustering;
+        scene.primitives.remove(entityCluster);
     }
 
-    dataSource._visualizers = undefined;
+    var visualizers = dataSource._visualizersByDisplayID[this._displayID];
+    if (!defined(visualizers)) {
+        return;
+    }
+
+    var length = visualizers.length;
+    for (var i = 0; i < length; i++) {
+        var visualizer = visualizers[i];
+        visualizer.destroy();
+
+        var index = dataSource._visualizers.indexOf(visualizer);
+        dataSource._visualizers.splice(index, 1);
+    }
 };
 
 /**

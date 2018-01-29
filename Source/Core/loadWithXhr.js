@@ -205,7 +205,7 @@ define([
             if (xhr.status === 204) {
                 // accept no content
                 deferred.resolve();
-            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+            } else if (defined(xhr.response) && (!defined(responseType) || (browserResponseType === responseType))) {
                 deferred.resolve(response);
             } else if ((responseType === 'json') && typeof response === 'string') {
                 try {
@@ -215,11 +215,13 @@ define([
                 }
             } else if ((responseType === 'document') && typeof response === 'string') {
                 try {
-                    parser = new DOMParser();
-                    deferred.resolve(parser.parseFromString(xhr.responseText, 'text/xml'));
+                    var parser = new DOMParser();
+                    deferred.resolve(parser.parseFromString(response, 'text/xml'));
                 } catch (e) {
                     deferred.reject(e);
                 }
+            } else if (typeof response === 'string') {
+                deferred.resolve(response);
             } else {
                 deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
             }
