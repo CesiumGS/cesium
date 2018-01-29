@@ -147,7 +147,7 @@ function loadStHelens() {
         tileset.pointShading.maximumAttenuation = undefined; // Will be based on maximumScreenSpaceError instead
         tileset.pointShading.baseResolution = undefined;
         tileset.pointShading.geometricErrorScale = 1.0;
-        tileset.pointShading.geometricErrorAttenuation = true;
+        tileset.pointShading.attenuation = true;
         tileset.pointShading.eyeDomeLighting = true;
 
         tilesetToViewModel(tileset);
@@ -171,7 +171,7 @@ function loadChurch() {
         tileset.pointShading.maximumAttenuation = 8.0; // Don't allow points larger than 8 pixels.
         tileset.pointShading.baseResolution = 0.05; // Assume an original capture resolution of 5 centimeters between neighboring points.
         tileset.pointShading.geometricErrorScale = 1.0; // Applies to both geometric error and the base resolution.
-        tileset.pointShading.geometricErrorAttenuation = true;
+        tileset.pointShading.attenuation = true;
         tileset.pointShading.eyeDomeLighting = true;
 
         tilesetToViewModel(tileset);
@@ -251,7 +251,7 @@ Cesium.knockout.getObservable(viewModel, 'eyeDomeLightingRadius').subscribe(
 
 Sandcastle.addToggleButton('Enable Attenuation', true, function(checked) {
     if (Cesium.defined(tileset)) {
-        tileset.pointShading.geometricErrorAttenuation = checked;
+        tileset.pointShading.attenuation = checked;
     }
 });
 

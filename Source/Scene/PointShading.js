@@ -10,7 +10,7 @@ define([
      * pointclouds using 3D Tiles.
      *
      * @param {Object} [options] Object with the following properties:
-     * {Boolean} [options.geometricErrorAttenuation=false] Perform point attenuation based on geometric error.
+     * {Boolean} [options.attenuation=false] Perform point attenuation based on geometric error.
      * {Number} [options.geometricErrorScale=1.0] Scale to be applied to each tile's geometric error.
      * {Number} [options.maximumAttenuation] Maximum attenuation in pixels. Defaults to the Cesium3DTileset's maximumScreenSpaceError.
      * {Number} [options.baseResolution] Average base resolution for the dataset in meters. Substitute for Geometric Error when not available.
@@ -27,7 +27,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.geometricErrorAttenuation = defaultValue(pointShading.geometricErrorAttenuation, false);
+        this.attenuation = defaultValue(pointShading.attenuation, false);
 
         /**
          * Scale to be applied to the geometric error before computing attenuation.

@@ -71,7 +71,7 @@ defineSuite([
             scene.renderForSpecs();
             var originalLength = scene.frameState.commandList.length;
 
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             scene.renderForSpecs();
             var newLength = scene.frameState.commandList.length;
             expect(newLength).toEqual(originalLength + 2);
@@ -85,7 +85,7 @@ defineSuite([
             scene.pickForSpecs();
             var originalLength = scene.frameState.commandList.length;
 
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             scene.pickForSpecs();
             var newLength = scene.frameState.commandList.length;
             expect(newLength).toEqual(originalLength);

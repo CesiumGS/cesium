@@ -155,7 +155,7 @@ define([
         this.featurePropertiesDirty = false;
 
         // Options for geometric error based attenuation
-        this.geometricErrorAttenuation = false;
+        this.attenuation = false;
         this._geometricErrorAttenuation = false;
         this._geometricErrorScale = undefined;
         this._maximumAttenuation = undefined;
@@ -1316,12 +1316,12 @@ define([
         // Update attenuation
         var pointShading = this._tileset.pointShading;
         if (defined(pointShading)) {
-            this.geometricErrorAttenuation = pointShading.geometricErrorAttenuation;
+            this.attenuation = pointShading.attenuation;
             this._geometricErrorScale = pointShading.geometricErrorScale;
             this._maximumAttenuation = defined(pointShading.maximumAttenuation) ? pointShading.maximumAttenuation : tileset.maximumScreenSpaceError;
             this._baseResolution = pointShading.baseResolution;
-            if (this.geometricErrorAttenuation !== this._geometricErrorAttenuation) {
-                this._geometricErrorAttenuation = this.geometricErrorAttenuation;
+            if (this.attenuation !== this._geometricErrorAttenuation) {
+                this._geometricErrorAttenuation = this.attenuation;
                 createShaders(this, frameState, tileset.style);
             }
         }

@@ -453,7 +453,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             var noAttenuationPixelCount = 16;
 
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             tileset.pointShading.geometricErrorScale = 1.0;
             tileset.pointShading.maximumAttenuation = undefined;
             tileset.pointShading.baseResolution = undefined;
@@ -476,7 +476,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             var noAttenuationPixelCount = 16;
 
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             tileset.pointShading.geometricErrorScale = 1.0;
             tileset.pointShading.maximumAttenuation = undefined;
             tileset.pointShading.baseResolution = undefined;
@@ -499,7 +499,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             var noAttenuationPixelCount = 16;
 
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             tileset.pointShading.geometricErrorScale = 1.0;
             tileset.pointShading.maximumAttenuation = 1;
             tileset.pointShading.baseResolution = undefined;
@@ -522,7 +522,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             var noAttenuationPixelCount = 16;
 
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             tileset.pointShading.geometricErrorScale = 1.0;
             tileset.pointShading.maximumAttenuation = undefined;
             tileset.pointShading.baseResolution = CesiumMath.EPSILON20;
@@ -547,7 +547,7 @@ defineSuite([
 
             // pointCloudNoColorUrl is a single tile with GeometricError = 0,
             // which results in default baseResolution being computed
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             tileset.pointShading.geometricErrorScale = 1.0;
             tileset.pointShading.maximumAttenuation = undefined;
             tileset.pointShading.baseResolution = CesiumMath.EPSILON20;
@@ -570,7 +570,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             var noAttenuationPixelCount = 16;
 
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             tileset.pointShading.geometricErrorScale = 0.0;
             tileset.pointShading.maximumAttenuation = undefined;
             tileset.pointShading.baseResolution = undefined;
@@ -596,7 +596,7 @@ defineSuite([
             var noAttenuationPixelCount = 16;
 
             scene.morphTo2D(0);
-            tileset.pointShading.geometricErrorAttenuation = true;
+            tileset.pointShading.attenuation = true;
             tileset.pointShading.geometricErrorScale = 1.0;
             tileset.pointShading.maximumAttenuation = undefined;
             tileset.pointShading.baseResolution = undefined;

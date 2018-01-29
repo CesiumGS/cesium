@@ -7,7 +7,7 @@ defineSuite([
 
     it('creates expected instance from raw assignment and construction', function() {
         var pointShading = new PointShading();
-        expect(pointShading.geometricErrorAttenuation).toEqual(false);
+        expect(pointShading.attenuation).toEqual(false);
         expect(pointShading.geometricErrorScale).toEqual(1.0);
         expect(pointShading.maximumAttenuation).not.toBeDefined();
         expect(pointShading.baseResolution).not.toBeDefined();
@@ -23,7 +23,7 @@ defineSuite([
             eyeDomeLightingRadius : 2.0
         };
         pointShading = new PointShading(options);
-        expect(pointShading.geometricErrorAttenuation).toEqual(false);
+        expect(pointShading.attenuation).toEqual(false);
         expect(pointShading.geometricErrorScale).toEqual(options.geometricErrorScale);
         expect(pointShading.maximumAttenuation).toEqual(options.maximumAttenuation);
         expect(pointShading.baseResolution).toEqual(options.baseResolution);

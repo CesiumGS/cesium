@@ -68,6 +68,7 @@ define([
     var fromPointsMinBoxPt = new Cartesian3();
     var fromPointsMaxBoxPt = new Cartesian3();
     var fromPointsNaiveCenterScratch = new Cartesian3();
+    var volumeConstant = (4.0 / 3.0) * CesiumMath.PI;
 
     /**
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
@@ -1310,7 +1311,7 @@ define([
      */
     BoundingSphere.prototype.volume = function() {
         var radius = this.radius;
-        return (4.0 / 3.0) * CesiumMath.PI * radius * radius * radius;
+        return volumeConstant * radius * radius * radius;
     };
 
     return BoundingSphere;

@@ -721,7 +721,7 @@ define([
             set : function(value) {
                 pointCloudShading(value);
                 if (defined(that._tileset)) {
-                    that._tileset.pointShading.geometricErrorAttenuation = value;
+                    that._tileset.pointShading.attenuation = value;
                 }
             }
         });
@@ -1145,7 +1145,7 @@ define([
                     this.loadSiblings = tileset.loadSiblings;
 
                     var pointShading = tileset.pointShading;
-                    this.pointCloudShading = pointShading.geometricErrorAttenuation;
+                    this.pointCloudShading = pointShading.attenuation;
                     this.geometricErrorScale = pointShading.geometricErrorScale;
                     this.maximumAttenuation = pointShading.maximumAttenuation ? pointShading.maximumAttenuation: 0.0;
                     this.baseResolution = pointShading.baseResolution ? pointShading.baseResolution : 0.0;

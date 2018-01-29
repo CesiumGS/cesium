@@ -164,9 +164,9 @@ defineSuite([
 
         it('pointCloudShading', function() {
             viewModel.pointCloudShading = true;
-            expect(viewModel.tileset.pointShading.geometricErrorAttenuation).toBe(true);
+            expect(viewModel.tileset.pointShading.attenuation).toBe(true);
             viewModel.pointCloudShading = false;
-            expect(viewModel.tileset.pointShading.geometricErrorAttenuation).toBe(false);
+            expect(viewModel.tileset.pointShading.attenuation).toBe(false);
         });
 
         it('geometricErrorScale', function() {

@@ -1694,7 +1694,7 @@ define([
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
         // Only run EDL if simple attenuation is on
-        if (tileset.pointShading.geometricErrorAttenuation &&
+        if (tileset.pointShading.attenuation &&
             tileset.pointShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
             tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset);
