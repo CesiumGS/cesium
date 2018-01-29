@@ -70,7 +70,10 @@ var czml = [{
     }
 }];
 
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
+
 var dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
 dataSourcePromise.then(function(dataSource){

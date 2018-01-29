@@ -155,6 +155,7 @@ viewer.clock.stopTime = stop.clone();
 viewer.clock.currentTime = start.clone();
 viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP; //Loop at the end
 viewer.clock.multiplier = 1;
+viewer.clock.shouldAnimate = true;
 
 //Set timeline to simulation bounds
 viewer.timeline.zoomTo(start, stop);
@@ -287,7 +288,7 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
     lifeTime : 16.0,
 
     emitter : new Cesium.CircleEmitter(2.0),
-    
+
     emitterModelMatrix : computeEmitterModelMatrix(),
 
     forces : [applyGravity]

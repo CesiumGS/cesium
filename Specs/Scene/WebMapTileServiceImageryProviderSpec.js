@@ -463,7 +463,8 @@ defineSuite([
             }
         });
         var clock = new Clock({
-            currentTime : JulianDate.fromIso8601('2017-04-26')
+            currentTime : JulianDate.fromIso8601('2017-04-26'),
+            shouldAnimate : true
         });
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -514,7 +515,8 @@ defineSuite([
             }
         });
         var clock = new Clock({
-            currentTime : JulianDate.fromIso8601('2017-04-26')
+            currentTime : JulianDate.fromIso8601('2017-04-26'),
+            shouldAnimate : true
         });
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -571,7 +573,8 @@ defineSuite([
         });
         var clock = new Clock({
             currentTime : JulianDate.fromIso8601('2017-04-26'),
-            clockStep : ClockStep.TICK_DEPENDENT
+            clockStep : ClockStep.TICK_DEPENDENT,
+            shouldAnimate : true
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {

@@ -288,6 +288,47 @@ defineSuite([
                 });
             });
         });
+
+        it('calling _reload adds a callback per layer per tile', function() {
+            var layer1 = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+
+            var layer2 = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Green4x4.png'
+            }));
+
+            return updateUntilDone(scene.globe).then(function() {
+                // Verify that each tile has 2 imagery objects and no loaded callbacks
+                forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                    expect(tile.data.imagery.length).toBe(2);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+                });
+
+                // Reload each layer
+                layer1._imageryProvider._reload();
+                layer2._imageryProvider._reload();
+
+                // These should be ignored
+                layer1._imageryProvider._reload();
+                layer2._imageryProvider._reload();
+
+                // Verify that each tile has 4 imagery objects (the old imagery and the reloaded imagery for each layer)
+                //  and also has 2 callbacks so the old imagery will be removed once loaded.
+                forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                    expect(tile.data.imagery.length).toBe(4);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
+                });
+
+                return updateUntilDone(scene.globe).then(function() {
+                    // Verify the old imagery was removed and the callbacks are no longer there
+                    forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                        expect(tile.data.imagery.length).toBe(2);
+                        expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+                    });
+                });
+            });
+        });
     }, 'WebGL');
 
     it('renders in 2D geographic', function() {

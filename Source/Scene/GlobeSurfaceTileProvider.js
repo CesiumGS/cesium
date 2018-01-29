@@ -681,7 +681,8 @@ define([
                 layer._imageryCache = {};
 
                 that._quadtree.forEachLoadedTile(function(tile) {
-                    if (tile.state !== QuadtreeTileLoadState.DONE) {
+                    // If this layer is still waiting to for the loaded callback, just return
+                    if (defined(tile._loadedCallbacks[layer._layerIndex])) {
                         return;
                     }
 
@@ -717,7 +718,7 @@ define([
                     // Create new TileImageries for all loaded tiles
                     if (layer._createTileImagerySkeletons(tile, terrainProvider, insertionPoint)) {
                         // Add callback to remove old TileImageries when the new TileImageries are ready
-                        tile._loadedCallbacks.push(getTileReadyCallback(tileImageriesToFree, layer, terrainProvider));
+                        tile._loadedCallbacks[layer._layerIndex] = getTileReadyCallback(tileImageriesToFree, layer, terrainProvider);
 
                         tile.state = QuadtreeTileLoadState.LOADING;
                     }
