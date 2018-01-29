@@ -1,6 +1,7 @@
 define([
     '../Core/BoundingSphere',
     '../Core/Check',
+    '../Core/createGuid',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
@@ -13,6 +14,7 @@ define([
 ], function(
     BoundingSphere,
     Check,
+    createGuid,
     defaultValue,
     defined,
     defineProperties,
@@ -44,6 +46,8 @@ function DataSourceDisplay(options) {
     //>>includeEnd('debug');
 
     GroundPrimitive.initializeTerrainHeights();
+
+    this._displayID = createGuid();
 
     var scene = options.scene;
     var dataSourceCollection = options.dataSourceCollection;
