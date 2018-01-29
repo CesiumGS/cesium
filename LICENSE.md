@@ -202,9 +202,7 @@ Copyright 2011-2017 Cesium Contributors
    See the License for the specific language governing permissions and
    limitations under the License.
 
-Patent 9153063
-
-Skipping Heuristics and Fusing (Pat. Pend.)
+Patents 9153063 and 9865085
 
 Third-Party Code
 ================

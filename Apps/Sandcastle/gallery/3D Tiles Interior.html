@@ -30,9 +30,10 @@ function startup(Cesium) {
 // San Miguel model created by Guillermo M. Leal Llaguno. Cleaned up and hosted by Morgan McGuire: http://graphics.cs.williams.edu/data/meshes.xml
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'https://beta.cesium.com/api/assets/1463?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5ZGExZTdmMS0xZjA5LTQxODAtOThmYi04MWU1YjZkMWZjNjgiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjNdLCJpYXQiOjE0OTkyNzYwNzV9.eTEtaAEBUehNIZushZQnp0On9BPRtZYS7XEWFwneSRU'
-}));
+Cesium.CesiumIon.create3DTileset(1463, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5ZGExZTdmMS0xZjA5LTQxODAtOThmYi04MWU1YjZkMWZjNjgiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjNdLCJpYXQiOjE0OTkyNzYwNzV9.eTEtaAEBUehNIZushZQnp0On9BPRtZYS7XEWFwneSRU' })
+    .then(function(tileset) {
+        viewer.scene.primitives.add(tileset);
+    });
 
 var initialPosition = new Cesium.Cartesian3(-1111583.3721328347, -5855888.151574568, 2262561.444696748);
 var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(100.0, -15.0, 0.0);

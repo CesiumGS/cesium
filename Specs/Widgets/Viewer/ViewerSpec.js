@@ -1,6 +1,7 @@
 defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/Clock',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
@@ -41,6 +42,7 @@ defineSuite([
     ], 'Widgets/Viewer/Viewer', function(
         BoundingSphere,
         Cartesian3,
+        Clock,
         ClockRange,
         ClockStep,
         Color,
@@ -151,6 +153,26 @@ defineSuite([
         viewer.destroy();
         expect(clockViewModel.isDestroyed()).toBe(false);
         clockViewModel.destroy();
+    });
+
+    it('can set shouldAnimate', function() {
+        viewer = createViewer(container, {
+            shouldAnimate : true
+        });
+        expect(viewer.clock.shouldAnimate).toBe(true);
+    });
+
+    it('setting shouldAnimate in options overrides clock shouldAnimate', function() {
+        var clockViewModel = new ClockViewModel(new Clock({
+            shouldAnimate : false
+        }));
+
+        viewer = createViewer(container, {
+            clockViewModel : clockViewModel,
+            shouldAnimate : true
+        });
+
+        expect(viewer.clock.shouldAnimate).toBe(true);
     });
 
     it('renders without errors', function() {
