@@ -212,17 +212,19 @@ var headingSpan = document.getElementById('heading');
 var pitchSpan = document.getElementById('pitch');
 var rollSpan = document.getElementById('roll');
 
-viewer.scene.preRender.addEventListener(function(scene, time) {
-    headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
-    pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
-    rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
-
+viewer.scene.preUpdate.addEventListener(function(scene, time) {
     for (var i = 0; i < primitives.length; i++) {
         var primitive = primitives[i].primitive;
         var converter = primitives[i].converter;
         var position = primitives[i].position;
         Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, converter, primitive.modelMatrix);
     }
+});
+
+viewer.scene.preRender.addEventListener(function(scene, time) {
+    headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
+    pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
+    rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();
