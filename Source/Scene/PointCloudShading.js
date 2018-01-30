@@ -76,7 +76,15 @@ define([
         this.eyeDomeLightingRadius = defaultValue(pointCloudShading.eyeDomeLightingRadius, 1.0);
     }
 
-    PointCloudShading.isSupported = PointCloudEyeDomeLighting.isSupported;
+    /**
+     * Determines if point cloud shading is supported.
+     *
+     * @param {Scene} scene The scene.
+     * @returns {Boolean} <code>true</code> if point  cloud shading is supported; otherwise, returns <code>false</code>
+     */
+    PointCloudShading.isSupported = function(scene) {
+        return PointCloudEyeDomeLighting.isSupported(scene.context);
+    };
 
     return PointCloudShading;
 });

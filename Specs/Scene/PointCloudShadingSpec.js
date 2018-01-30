@@ -1,7 +1,9 @@
 defineSuite([
-        'Scene/PointCloudShading'
+        'Scene/PointCloudShading',
+        'Specs/createScene'
     ], function(
-        PointCloudShading) {
+        PointCloudShading,
+        createScene) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -29,5 +31,13 @@ defineSuite([
         expect(pointCloudShading.eyeDomeLighting).toEqual(true);
         expect(pointCloudShading.eyeDomeLightingStrength).toEqual(options.eyeDomeLightingStrength);
         expect(pointCloudShading.eyeDomeLightingRadius).toEqual(options.eyeDomeLightingRadius);
+    });
+
+    it('provides a method for checking if point cloud shading is supported', function() {
+        var scene = createScene();
+        var context = scene.context;
+        var expectedSupport = context.floatingPointTexture && context.drawBuffers && context.fragmentDepth;
+        expect(PointCloudShading.isSupported(scene)).toEqual(expectedSupport);
+        scene.destroyForSpecs();
     });
 });
