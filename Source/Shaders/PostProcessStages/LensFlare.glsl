@@ -1,6 +1,7 @@
 uniform sampler2D colorTexture;
 uniform sampler2D dirtTexture;
 uniform sampler2D starTexture;
+uniform vec2 dirtTextureDimensions;
 uniform float distortion;
 uniform float ghostDispersal;
 uniform float haloWidth;
@@ -59,7 +60,8 @@ vec4 textureDistorted(sampler2D tex, vec2 texcoord, vec2 direction, vec3 distort
 
 void main(void)
 {
-    vec3 rgb = texture2D(colorTexture, v_textureCoordinates).rgb;
+    vec4 originalColor = texture2D(colorTexture, v_textureCoordinates);
+    vec3 rgb = originalColor.rgb;
     bool isSpace = length(czm_viewerPositionWC.xyz) > DISTANCE_TO_SPACE;
 
     // Sun position
@@ -67,6 +69,15 @@ void main(void)
     vec4 sunPositionEC = czm_view * sunPos;
     vec4 sunPositionWC = czm_eyeToWindowCoordinates(sunPositionEC);
     sunPos = czm_viewportOrthographic * vec4(sunPositionWC.xy, -sunPositionWC.z, 1.0);
+
+    // If sun is not in the screen space, use original color.
+    if(!isSpace || !((sunPos.x >= -1.1 && sunPos.x <= 1.1) && (sunPos.y >= -1.1 && sunPos.y <= 1.1)))
+    {
+        // Lens flare is disabled when not in space until #5932 is fixed.
+        //    https://github.com/AnalyticalGraphicsInc/cesium/issues/5932
+        gl_FragColor = originalColor;
+        return;
+    }
 
     vec2 texcoord = -v_textureCoordinates + vec2(1.0);
     vec2 texelSize = 1.0 / czm_viewport.zw;
@@ -93,7 +104,17 @@ void main(void)
     weightForHalo = pow(1.0 - weightForHalo, 5.0);
 
     result += textureDistorted(colorTexture, texcoord + haloVec, direction.xy, distortionVec, isSpace) * weightForHalo * 1.5;
-    result += texture2D(dirtTexture, v_textureCoordinates);
+
+    vec2 dirtTexCoords = (v_textureCoordinates * czm_viewport.zw) / dirtTextureDimensions;
+    if (dirtTexCoords.x > 1.0)
+    {
+        dirtTexCoords.x = mod(floor(dirtTexCoords.x), 2.0) == 1.0 ? 1.0 - fract(dirtTexCoords.x) :  fract(dirtTexCoords.x);
+    }
+    if (dirtTexCoords.y > 1.0)
+    {
+        dirtTexCoords.y = mod(floor(dirtTexCoords.y), 2.0) == 1.0 ? 1.0 - fract(dirtTexCoords.y) :  fract(dirtTexCoords.y);
+    }
+    result += texture2D(dirtTexture, dirtTexCoords);
 
     // Rotating starburst texture's coordinate
     // dot(czm_view[0].xyz, vec3(0.0, 0.0, 1.0)) + dot(czm_view[1].xyz, vec3(0.0, 1.0, 0.0))
@@ -123,15 +144,7 @@ void main(void)
         result *= texture2D(starTexture, lensStarTexcoord) * pow(weightForLensFlare, 1.0) * max((1.0 - length(vec3(st1.xy, 0.0))), 0.0) * 2.0;
     }
 
-    // If sun is in the screen space, add lens flare effect
-    if( (sunPos.x >= -1.1 && sunPos.x <= 1.1) && (sunPos.y >= -1.1 && sunPos.y <= 1.1))
-    {
-        result += texture2D(colorTexture, v_textureCoordinates);
-    }
-    else
-    {
-        result = texture2D(colorTexture, v_textureCoordinates);
-    }
+    result += texture2D(colorTexture, v_textureCoordinates);
 
     gl_FragColor = result;
 }

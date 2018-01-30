@@ -352,6 +352,7 @@ define([
                 if (defined(actualValue) && actualValue !== currentValue && actualValue instanceof Texture && !defined(stage._textureCache.getStageByName(name))) {
                     stage._texturesToRelease.push(actualValue);
                     delete actualUniforms[name];
+                    delete actualUniforms[name + 'Dimensions'];
                 }
 
                 if (typeof currentValue === Texture) {
@@ -371,11 +372,17 @@ define([
 
     function getUniformMapFunction(stage, name) {
         return function() {
-            var value = stage._actualUniforms[name];
-            if (typeof value === 'function') {
-                return value();
-            }
             return stage._actualUniforms[name];
+        };
+    }
+
+    function getUniformMapDimensionsFunction(uniformMap, name) {
+        return function() {
+            var texture = uniformMap[name]();
+            if (defined(texture)) {
+                return texture.dimensions;
+            }
+            return undefined;
         };
     }
 
@@ -399,6 +406,11 @@ define([
                 }
 
                 actualUniforms[name] = uniforms[name];
+
+                var value = uniformMap[name]();
+                if (typeof value === 'string' || value instanceof Texture) {
+                    uniformMap[name + 'Dimensions'] = getUniformMapDimensionsFunction(uniformMap, name);
+                }
             }
         }
 
@@ -409,8 +421,14 @@ define([
             colorTexture : function() {
                 return stage._colorTexture;
             },
+            colorTextureDimensions : function() {
+                return stage._colorTexture.dimensions;
+            },
             depthTexture : function() {
                 return stage._depthTexture;
+            },
+            depthTextureDimensions : function() {
+                return stage._depthTexture.dimensions;
             }
         });
     }
