@@ -7,7 +7,8 @@ Change Log
   * The clock does not animate by default. Set the `shouldAnimate` option to `true` when creating the Viewer to enable animation.
 * Deprecated
   * For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
-* Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, `Billboard`, along with all the low level `load*()` functions.
+  * All low level load functions including `loadArrayBuffer`, `loadBlob`, `loadImage`, `loadJson`, `loadJsonp`, `loadText`, `loadXML` and `loadWithXhr` and will be removed in Cesium 1.44. Please use the equivalent fetch functions in the `Resource` class. 
+* Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, and `Billboard`.
 * Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
 * Added new `CesiumIon` utility class for working with the Cesium ion beta API.
 * Improved CZML Custom Properties sandcastle example [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
