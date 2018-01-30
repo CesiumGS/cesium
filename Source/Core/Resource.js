@@ -129,13 +129,11 @@ define([
     /**
      * A resource that includes the location and any other parameters we need to retrieve it or create derived resources. It also provides the ability to retry requests.
      *
-     * @param {Object} options An object with the following properties
+     * @param {String|Object} options A url or an object with the following properties
      * @param {String} options.url The url of the resource.
      * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {String} [options.method='GET'] The method to use.
-     * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
@@ -175,6 +173,11 @@ define([
      */
     function Resource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        if (typeof options === 'string') {
+            options = {
+                url: options
+            };
+        }
 
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('options.url', options.url);
@@ -197,20 +200,6 @@ define([
          * @type {Request}
          */
         this.request = defaultValue(options.request, new Request());
-
-        /**
-         * The method to use for the request.
-         *
-         * @type {String}
-         */
-        this.method = defaultValue(options.method, 'GET');
-
-        /**
-         * Data to be sent with the request.
-         *
-         * @type {Object}
-         */
-        this.data = options.data;
 
         /**
          * A proxy to be used when loading the resource.
@@ -480,8 +469,6 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be combined with those of the current instance.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {String} [options.method] The method to use.
-     * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Resource~RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
@@ -513,19 +500,13 @@ define([
         if (defined(options.headers)) {
             resource.headers = combine(options.headers, resource.headers);
         }
-        if (defined(options.method)) {
-            resource.method = options.method;
-        }
-        if (defined(options.data)) {
-            resource.data = options.data;
-        }
         if (defined(options.proxy)) {
             resource.proxy = options.proxy;
         }
         if (defined(options.request)) {
             resource.request = options.request;
         } else {
-            // Clone the resource so we keep all the throttle settings
+            // Clone the request so we keep all the throttle settings
             resource.request = this.request.clone();
         }
         if (defined(options.retryCallback)) {
@@ -578,8 +559,6 @@ define([
         result._queryParameters = clone(this._queryParameters);
         result._templateValues = clone(this._templateValues);
         result.headers = clone(this.headers);
-        result.method = this.method;
-        result.data = this.data;
         result.proxy = this.proxy;
         result.retryCallback = this.retryCallback;
         result.retryAttempts = this.retryAttempts;
@@ -636,6 +615,17 @@ define([
     };
 
     /**
+     * Creates a Resource from a URL and calls fetchArrayBuffer() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchArrayBuffer = function (url) {
+        var resource = new Resource(url);
+        return resource.fetchArrayBuffer();
+    };
+
+    /**
      * Asynchronously loads the given resource as a blob.  Returns a promise that will resolve to
      * a Blob once loaded, or reject if the resource failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
@@ -658,6 +648,17 @@ define([
         return this.fetch({
             responseType : 'blob'
         });
+    };
+
+    /**
+     * Creates a Resource from a URL and calls fetchBlob() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchBlob = function (url) {
+        var resource = new Resource(url);
+        return resource.fetchBlob();
     };
 
     /**
@@ -743,7 +744,6 @@ define([
             });
     };
 
-
     function fetchImage(resource, allowCrossOrigin) {
         var request = resource.request;
         request.url = resource.url;
@@ -791,6 +791,18 @@ define([
     }
 
     /**
+     * Creates a Resource from a URL and calls fetchImage() on it.
+     *
+     * @param {String} url The url of the image.
+     * @param {Boolean} [preferBlob = false]  If true, we will load the image via a blob.
+     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchImage = function (url, preferBlob, allowCrossOrigin) {
+        var resource = new Resource(url);
+        return resource.fetchImage(preferBlob, allowCrossOrigin);
+    };
+
+    /**
      * Asynchronously loads the given resource as text.  Returns a promise that will resolve to
      * a String once loaded, or reject if the resource failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
@@ -820,6 +832,17 @@ define([
         return this.fetch({
             responseType : 'text'
         });
+    };
+
+    /**
+     * Creates a Resource from a URL and calls fetchText() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchText = function (url) {
+        var resource = new Resource(url);
+        return resource.fetchText();
     };
 
     // note: &#42;&#47;&#42; below is */* but that ends the comment block early
@@ -866,6 +889,17 @@ define([
     };
 
     /**
+     * Creates a Resource from a URL and calls fetchJson() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchJson = function (url) {
+        var resource = new Resource(url);
+        return resource.fetchJson();
+    };
+
+    /**
      * Asynchronously loads the given resource as XML.  Returns a promise that will resolve to
      * an XML Document once loaded, or reject if the resource failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
@@ -893,6 +927,17 @@ define([
             responseType : 'document',
             overrideMimeType : 'text/xml'
         });
+    };
+
+    /**
+     * Creates a Resource from a URL and calls fetchXML() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchXML = function (url) {
+        var resource = new Resource(url);
+        return resource.fetchXML();
     };
 
     /**
@@ -978,6 +1023,18 @@ define([
     }
 
     /**
+     * Creates a Resource from a URL and calls fetchJsonp() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchJsonp = function (url, callbackParameterName) {
+        var resource = new Resource(url);
+        return resource.fetchJsonp(callbackParameterName);
+    };
+
+    /**
      * Asynchronously loads the given resource.  Returns a promise that will resolve to
      * the result once loaded, or reject if the resource failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
@@ -1005,6 +1062,10 @@ define([
     Resource.prototype.fetch = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        // Hidden options that allow us to reuse this code for post calls
+        var method = defaultValue(options.method, 'GET');
+        var data = options.data;
+
         checkAndResetRequest(this.request);
 
         var request = this.request;
@@ -1013,8 +1074,6 @@ define([
         var that = this;
         request.requestFunction = function() {
             var responseType = options.responseType;
-            var method = that.method;
-            var data = that.data;
             var headers = combine(that.headers, options.headers);
             var overrideMimeType = options.overrideMimeType;
             var deferred = when.defer();
@@ -1104,6 +1163,70 @@ define([
             //>>includeEnd('debug');
         }
     }
+
+    /**
+     * Creates a Resource from a URL and calls fetch() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetch = function (url, options) {
+        var resource = new Resource(url);
+        return resource.fetch(options);
+    };
+
+    /**
+     * Asynchronously posts data the given resource.  Returns a promise that will resolve to
+     * the result once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @param {Object} data Data that is posted with the resource.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
+     * resource.post(data)
+     *   .then(function(result) {
+     *       // use the result
+     *   }).otherwise(function(error) {
+     *       // an error occurred
+     *   });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.post = function(data, options) {
+        options = defaultClone(options, {});
+        options.method = 'POST';
+        options.data = data;
+        return this.fetch(options);
+    };
+
+    /**
+     * Creates a Resource from a URL and calls fetch() on it.
+     *
+     * @param {String} url The url of the resource.
+     * @param {Object} data Data that is posted with the resource.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.post = function (url, data, options) {
+        var resource = new Resource(url);
+        return resource.post(data, options);
+    };
 
     /**
      * Contains implementations of functions that can be replaced for testing

@@ -959,12 +959,8 @@ require({
             }
         };
 
-        var resource = new Resource({
-            url : 'https://api.github.com/gists',
-            data : JSON.stringify(data),
-            method : 'POST'
-        });
-        return resource.fetch().then(function(content) {
+        var resource = new Resource('https://api.github.com/gists');
+        return resource.post(JSON.stringify(data)).then(function(content) {
             sandcastleUrl = getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
             textArea.value = sandcastleUrl;
             textArea.select();

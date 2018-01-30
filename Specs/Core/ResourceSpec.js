@@ -29,10 +29,6 @@ defineSuite([
             headers: {
                 Accept: 'application/test-type'
             },
-            method: 'POST',
-            data: {
-                stuff: 'more stuff'
-            },
             proxy: proxy,
             retryCallback: retryFunc,
             retryAttempts: 4,
@@ -54,10 +50,6 @@ defineSuite([
         });
         expect(resource.headers).toEqual({
             Accept: 'application/test-type'
-        });
-        expect(resource.method).toEqual('POST');
-        expect(resource.data).toEqual({
-            stuff: 'more stuff'
         });
         expect(resource.proxy).toBe(proxy);
         expect(resource.retryCallback).toBe(retryFunc);
@@ -146,10 +138,6 @@ defineSuite([
             headers: {
                 Accept: 'application/test-type'
             },
-            method: 'POST',
-            data: {
-                stuff: 'more stuff'
-            },
             proxy: proxy,
             retryCallback: retryFunc,
             retryAttempts: 4,
@@ -175,10 +163,6 @@ defineSuite([
         });
         expect(resource.headers).toEqual({
             Accept: 'application/test-type'
-        });
-        expect(resource.method).toEqual('POST');
-        expect(resource.data).toEqual({
-            stuff: 'more stuff'
         });
         expect(resource.proxy).toBe(proxy);
         expect(resource.retryCallback).toBe(retryFunc);
@@ -442,5 +426,82 @@ defineSuite([
         });
 
         expect(resource.isBlobUri).toBe(false);
+    });
+
+    it('post calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+        var expectedResource = new Resource({
+            url: expectedUrl,
+            headers: expectedHeaders
+        });
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType, resource) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('POST');
+            expect(data).toEqual(expectedData);
+            expect(headers['X-My-Header']).toEqual('My-Value');
+            expect(headers['X-My-Other-Header']).toEqual('My-Other-Value');
+            expect(overrideMimeType).toBe(expectedMimeType);
+            expect(resource).toBe(expectedResource);
+            deferred.resolve(expectedResult);
+        });
+
+        return expectedResource.post(expectedData, {
+            responseType: expectedResponseType,
+            headers: {
+                'X-My-Other-Header': 'My-Other-Value'
+            },
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static post calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType, resource) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('POST');
+            expect(data).toEqual(expectedData);
+            expect(headers).toEqual(expectedHeaders);
+            expect(overrideMimeType).toBe(expectedMimeType);
+            expect(resource).toBeDefined();
+            deferred.resolve(expectedResult);
+        });
+
+        return Resource.post(expectedUrl, expectedData, {
+            responseType: expectedResponseType,
+            headers: expectedHeaders,
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
     });
 });
