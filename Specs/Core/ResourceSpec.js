@@ -454,12 +454,12 @@ defineSuite([
             status: 'success'
         };
         var expectedMimeType = 'application/test-data';
-        var expectedResource = new Resource({
+        var resource = new Resource({
             url: expectedUrl,
             headers: expectedHeaders
         });
 
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType, resource) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(url).toEqual(expectedUrl);
             expect(responseType).toEqual(expectedResponseType);
             expect(method).toEqual('POST');
@@ -467,11 +467,10 @@ defineSuite([
             expect(headers['X-My-Header']).toEqual('My-Value');
             expect(headers['X-My-Other-Header']).toEqual('My-Other-Value');
             expect(overrideMimeType).toBe(expectedMimeType);
-            expect(resource).toBe(expectedResource);
             deferred.resolve(expectedResult);
         });
 
-        return expectedResource.post(expectedData, {
+        return resource.post(expectedData, {
             responseType: expectedResponseType,
             headers: {
                 'X-My-Other-Header': 'My-Other-Value'
@@ -497,14 +496,13 @@ defineSuite([
         };
         var expectedMimeType = 'application/test-data';
 
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType, resource) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(url).toEqual(expectedUrl);
             expect(responseType).toEqual(expectedResponseType);
             expect(method).toEqual('POST');
             expect(data).toEqual(expectedData);
             expect(headers).toEqual(expectedHeaders);
             expect(overrideMimeType).toBe(expectedMimeType);
-            expect(resource).toBeDefined();
             deferred.resolve(expectedResult);
         });
 
