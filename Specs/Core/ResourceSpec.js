@@ -59,7 +59,7 @@ defineSuite([
     });
 
     it('Constructor sets correct properties', function() {
-        var url = 'http://invalid.domain.com/tileset'
+        var url = 'http://invalid.domain.com/tileset';
         var resource = new Resource(url);
         expect(resource.url).toEqual(url);
         expect(resource.queryParameters).toEqual({});
