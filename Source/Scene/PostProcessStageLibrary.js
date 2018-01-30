@@ -620,27 +620,6 @@ define([
     };
 
     /**
-     * Creates a post-process stage that overlays a texture on the input texture.
-     * <p>
-     * This stage contains two uniforms: <code>texture</code> and <code>alpha</code>.
-     * <code>texture</code> is the texture to overlay and defaults to an all white image.
-     * <code>alpha</code> is the alpha for each texel of <code>texture</code> and defaults to 0.5.
-     * </p>
-     * @return {PostProcessStage} A post-process stage that overlays a texture on the input texture.
-     */
-    PostProcessStageLibrary.createTextureOverlayStage = function() {
-        // not supplying a name means more than one effect can be added
-        return new PostProcessStage({
-            fragmentShader : TextureOverlay,
-            uniforms : {
-                alpha : 0.5,
-                // data uri for a 1x1 white canvas
-                texture : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQYV2P4////fwAJ+wP9BUNFygAAAABJRU5ErkJggg=='
-            }
-        });
-    };
-
-    /**
      * Creates a post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
      * @return {PostProcessStage} A post-process stage that replaces the input color texture with a black and white texture representing the fragment depth at each pixel.
      *

@@ -372,7 +372,11 @@ define([
 
     function getUniformMapFunction(stage, name) {
         return function() {
-            return stage._actualUniforms[name];
+            var value = stage._actualUniforms[name];
+            if (typeof value === 'function') {
+                return value();
+            }
+            return value;
         };
     }
 

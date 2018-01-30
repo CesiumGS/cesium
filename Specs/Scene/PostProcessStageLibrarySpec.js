@@ -234,55 +234,6 @@ defineSuite([
         });
     });
 
-    it('texture overlay', function() {
-        var fs =
-            'void main() { \n' +
-            '    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n' +
-            '} \n';
-        scene.primitives.add(new ViewportPrimitive(fs));
-
-        expect(scene).toRenderAndCall(function (rgba) {
-            for (var i = 0; i < 3; ++i) {
-                for (var j = 0; j < 3; ++j) {
-                    var k = i * 4 * 3 + 4 * j;
-                    expect(rgba[k]).toEqual(255);
-                    expect(rgba[k + 1]).toEqual(0);
-                    expect(rgba[k + 2]).toEqual(0);
-                    expect(rgba[k + 3]).toEqual(255);
-                }
-            }
-        });
-
-        var canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        var context = canvas.getContext('2d');
-        context.fillStyle = '#0000FF';
-        context.fillRect(0, 0, 1, 1);
-
-        var textureOverlay = scene.postProcessStages.add(PostProcessStageLibrary.createTextureOverlayStage());
-        var uniforms = textureOverlay.uniforms;
-        uniforms.alpha = 1.0;
-        uniforms.texture = canvas.toDataURL();
-
-        return pollToPromise(function() {
-            scene.renderForSpecs();
-            return scene.postProcessStages.ready;
-        }).then(function() {
-            expect(scene).toRenderAndCall(function(rgba) {
-                for (var i = 0; i < 3; ++i) {
-                    for (var j = 0; j < 3; ++j) {
-                        var k = i * 4 * 3 + 4 * j;
-                        expect(rgba[k]).toEqual(0);
-                        expect(rgba[k + 1]).toEqual(0);
-                        expect(rgba[k + 2]).toEqual(255);
-                        expect(rgba[k + 3]).toEqual(255);
-                    }
-                }
-            });
-        });
-    });
-
     it('depth view', function() {
         var fs =
             'void main() { \n' +
@@ -438,6 +389,7 @@ defineSuite([
         scene.postProcessStages.ambientOcclusion.uniforms.ambientOcclusionOnly = true;
         scene.renderForSpecs();
         expect(scene).toRenderAndCall(function(rgba) {
+            console.log(rgba);
             for (var i = 0; i < rgba.length; i += 4) {
                 expect(rgba[i]).toEqual(255);
                 expect(rgba[i + 1]).toEqual(255);

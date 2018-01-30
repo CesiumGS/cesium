@@ -42,11 +42,6 @@
         <td>Night Vision</td>
         <td><input type="checkbox" data-bind="checked: nightVisionShow"></td>
     </tr>
-    <tr>
-        <td>Texture Overlay</td>
-        <td><input type="checkbox" data-bind="checked: textureOverlayShow"></td>
-        <td><input type="range" min="0" max="1" step="0.01" data-bind="value: textureOverlayAlpha, valueUpdate: 'input'"></td>
-    </tr>
 </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -63,9 +58,7 @@ var viewModel = {
     brightnessShow: false,
     brightnessValue: 0.5,
     eightBitShow: false,
-    nightVisionShow: false,
-    textureOverlayShow: false,
-    textureOverlayAlpha: 0.5
+    nightVisionShow: false
 };
 
 Cesium.knockout.track(viewModel);
@@ -82,7 +75,6 @@ var blackAndWhite = collection.add(Cesium.PostProcessStageLibrary.createBlackAnd
 var brightness = collection.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
 var eightBit = collection.add(Cesium.PostProcessStageLibrary.createEightBitStage());
 var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
-var textureOverlay = collection.add(Cesium.PostProcessStageLibrary.createTextureOverlayStage());
 
 function updatePostProcess() {
     blackAndWhite.enabled = Boolean(viewModel.blackAndWhiteShow);
@@ -91,8 +83,6 @@ function updatePostProcess() {
     brightness.uniforms.brightness = Number(viewModel.brightnessValue);
     eightBit.enabled = Boolean(viewModel.eightBitShow);
     nightVision.enabled = Boolean(viewModel.nightVisionShow);
-    textureOverlay.enabled = Boolean(viewModel.textureOverlayShow);
-    textureOverlay.uniforms.alpha = Number(viewModel.textureOverlayAlpha);
 }
 updatePostProcess();
 //Sandcastle_End
