@@ -295,6 +295,8 @@ define([
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+     * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -447,7 +449,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             terrainExaggeration : options.terrainExaggeration,
             shadows : options.shadows,
             terrainShadows : options.terrainShadows,
-            mapMode2D : options.mapMode2D
+            mapMode2D : options.mapMode2D,
+            requestRenderMode : options.requestRenderMode,
+            maximumRenderTimeChange : options.maximumRenderTimeChange
         });
 
         var dataSourceCollection = options.dataSources;
@@ -712,7 +716,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         eventHelper.add(dataSourceCollection.dataSourceRemoved, Viewer.prototype._onDataSourceRemoved, this);
 
         // Prior to each render, check if anything needs to be resized.
-        eventHelper.add(cesiumWidget.scene.preRender, Viewer.prototype.resize, this);
+        eventHelper.add(cesiumWidget.scene.postUpdate, Viewer.prototype.resize, this);
         eventHelper.add(cesiumWidget.scene.postRender, Viewer.prototype._postRender, this);
 
         // We need to subscribe to the data sources and collections so that we can clear the
@@ -1242,6 +1246,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     }
 
                     this._trackedEntityChanged.raiseEvent(value);
+                    this.scene.requestRender();
                 }
             }
         },
@@ -1850,6 +1855,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         });
 
+        that.scene.requestRender();
         return zoomPromise.promise;
     }
 

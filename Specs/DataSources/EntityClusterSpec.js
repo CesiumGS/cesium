@@ -48,8 +48,11 @@ defineSuite([
                     tilesWaitingForChildren : 0
                 }
             },
+            tileLoadedEvent : new Event(),
+            imageryLayersUpdatedEvent : new Event(),
             beginFrame : function() {},
             update : function() {},
+            render : function() {},
             endFrame : function() {}
 
         };

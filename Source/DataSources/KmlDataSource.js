@@ -2242,6 +2242,7 @@ define([
                     }
                 }).otherwise(function(error) {
                     oneTimeWarning('An error occured during loading ' + href.url);
+                    dataSource._error.raiseEvent(dataSource, error);
                 });
 
                 promises.push(promise);

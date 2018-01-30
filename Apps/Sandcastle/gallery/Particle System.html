@@ -306,7 +306,7 @@ function applyGravity(p, dt) {
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
 
-viewer.scene.preRender.addEventListener(function(scene, time) {
+viewer.scene.preUpdate.addEventListener(function(scene, time) {
     particleSystem.modelMatrix = computeModelMatrix(entity, time);
 
     // Account for any changes to the emitter model matrix.
