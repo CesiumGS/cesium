@@ -76,7 +76,7 @@ define([
                 stepSize : stepSize,
                 direction : 0.0
             },
-            samplingMode : PostProcessStageSampleMode.LINEAR
+            sampleMode : PostProcessStageSampleMode.LINEAR
         });
         var blurY = new PostProcessStage({
             name : name + '_y_direction',
@@ -87,7 +87,7 @@ define([
                 stepSize : stepSize,
                 direction : 1.0
             },
-            samplingMode : PostProcessStageSampleMode.LINEAR
+            sampleMode : PostProcessStageSampleMode.LINEAR
         });
 
         var uniforms = {};

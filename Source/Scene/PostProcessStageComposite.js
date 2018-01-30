@@ -84,12 +84,12 @@ define([
      * }));
      */
     function PostProcessStageComposite(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options', options);
         Check.defined('options.stages', options.stages);
         Check.typeOf.number.greaterThan('options.stages.length', options.stages.length, 0);
         //>>includeEnd('debug');
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._stages = options.stages;
         this._executeInSeries = defaultValue(options.executeInSeries, true);

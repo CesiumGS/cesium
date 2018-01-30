@@ -59,7 +59,7 @@ define([
      * @param {Object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
      * @param {Number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process stage  to a texture the size of the viewport.
      * @param {Boolean} [options.forcePowerOfTwo=false] Whether or not to force the texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
-     * @param {PostProcessStageSampleMode} [options.samplingMode=PostProcessStageSampleMode.NEAREST] How to sample the input color texture.
+     * @param {PostProcessStageSampleMode} [options.sampleMode=PostProcessStageSampleMode.NEAREST] How to sample the input color texture.
      * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The color pixel format of the output texture.
      * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The pixel data type of the output texture.
      * @param {Color} [options.clearColor=Color.BLACK] The color to clear the output texture to.
@@ -93,12 +93,12 @@ define([
      * }));
      */
     function PostProcessStage(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var fragmentShader = options.fragmentShader;
         var textureScale = defaultValue(options.textureScale, 1.0);
         var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options', options);
         Check.typeOf.string('options.fragmentShader', fragmentShader);
         Check.typeOf.number.greaterThan('options.textureScale', textureScale, 0.0);
         Check.typeOf.number.lessThanOrEquals('options.textureScale', textureScale, 1.0);
@@ -111,7 +111,7 @@ define([
         this._uniforms = options.uniforms;
         this._textureScale = textureScale;
         this._forcePowerOfTwo = defaultValue(options.forcePowerOfTwo, false);
-        this._sampleMode = defaultValue(options.samplingMode, PostProcessStageSampleMode.NEAREST);
+        this._sampleMode = defaultValue(options.sampleMode, PostProcessStageSampleMode.NEAREST);
         this._pixelFormat = pixelFormat;
         this._pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         this._clearColor = defaultValue(options.clearColor, Color.BLACK);
@@ -135,7 +135,7 @@ define([
         };
         this._passState = passState;
 
-        this._ready = true;
+        this._ready = false;
 
         var name = options.name;
         if (!defined(name)) {
@@ -227,6 +227,78 @@ define([
             }
         },
         /**
+         * A number in the range (0.0, 1.0] used to scale the output texture dimensions. A scale of 1.0 will render this post-process stage to a texture the size of the viewport.
+         *
+         * @memberof PostProcessStage.prototype
+         * @type {Number}
+         * @readonly
+         */
+        textureScale : {
+            get : function() {
+                return this._textureScale;
+            }
+        },
+        /**
+         * Whether or not to force the output texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
+         *
+         * @memberof PostProcessStage.prototype
+         * @type {Number}
+         * @readonly
+         */
+        forcePowerOfTwo : {
+            get : function() {
+                return this._forcePowerOfTwo;
+            }
+        },
+        /**
+         * How to sample the input color texture.
+         *
+         * @memberof PostProcessStage.prototype
+         * @type {PostProcessStageSampleMode}
+         * @readonly
+         */
+        sampleMode : {
+            get : function() {
+                return this._sampleMode;
+            }
+        },
+        /**
+         * The color pixel format of the output texture.
+         *
+         * @memberof PostProcessStage.prototype
+         * @type {PixelFormat}
+         * @readonly
+         */
+        pixelFormat : {
+            get : function() {
+                return this._pixelFormat;
+            }
+        },
+        /**
+         * The pixel data type of the output texture.
+         *
+         * @memberof PostProcessStage.prototype
+         * @type {PixelDatatype}
+         * @readonly
+         */
+        pixelDatatype : {
+            get : function() {
+                return this._pixelDatatype;
+            }
+        },
+        /**
+         * The color to clear the output texture to.
+         *
+         * @memberof PostProcessStage.prototype
+         * @type {Color}
+         * @readonly
+         */
+        clearColor : {
+            get : function() {
+                return this._clearColor;
+            }
+        },
+        /**
          * The {@link BoundingRectangle} to use for the scissor test. A default bounding rectangle will disable the scissor test.
          *
          * @memberof PostProcessStage.prototype
@@ -248,8 +320,13 @@ define([
          */
         outputTexture : {
             get : function() {
-                var framebuffer = this._textureCache.getFramebuffer(this._name);
-                return framebuffer.getColorTexture(0);
+                if (defined(this._textureCache)) {
+                    var framebuffer = this._textureCache.getFramebuffer(this._name);
+                    if (defined(framebuffer)) {
+                        return framebuffer.getColorTexture(0);
+                    }
+                }
+                return undefined;
             }
         }
     });
@@ -272,7 +349,7 @@ define([
 
                 var actualUniforms = stage._actualUniforms;
                 var actualValue = actualUniforms[name];
-                if (defined(actualValue) && actualValue !== currentValue && typeof actualValue === Texture && !defined(stage._textureCache.getStageByName(name))) {
+                if (defined(actualValue) && actualValue !== currentValue && actualValue instanceof Texture && !defined(stage._textureCache.getStageByName(name))) {
                     stage._texturesToRelease.push(actualValue);
                     delete actualUniforms[name];
                 }
@@ -416,6 +493,11 @@ define([
         texturesToCreate.length = 0;
 
         var dirtyUniforms = stage._dirtyUniforms;
+        if (dirtyUniforms.length === 0 && !defined(stage._texturePromise)) {
+            stage._ready = true;
+            return;
+        }
+
         if (dirtyUniforms.length === 0 || defined(stage._texturePromise)) {
             return;
         }
@@ -453,12 +535,17 @@ define([
             stage._command = undefined;
         }
 
+        var textureCache = stage._textureCache;
+        if (!defined(textureCache)) {
+            return;
+        }
+
         var uniforms = stage._uniforms;
         var actualUniforms = stage._actualUniforms;
         for (var name in actualUniforms) {
             if (actualUniforms.hasOwnProperty(name)) {
                 if (actualUniforms[name] instanceof Texture) {
-                    if (!defined(stage._textureCache.getStageByName(uniforms[name]))) {
+                    if (!defined(textureCache.getStageByName(uniforms[name]))) {
                         actualUniforms[name].destroy();
                     }
                     stage._dirtyUniforms.push(name);
@@ -487,7 +574,17 @@ define([
         createDrawCommand(this, context);
         createSampler(this);
 
+        if (!this._ready) {
+            return;
+        }
+
         var framebuffer = this._textureCache.getFramebuffer(this._name);
+        this._command.framebuffer = framebuffer;
+
+        if (!defined(framebuffer)) {
+            return;
+        }
+
         var colorTexture = framebuffer.getColorTexture(0);
         var renderState = this._renderState;
         if (!defined(renderState) || colorTexture.width !== renderState.viewport.width || colorTexture.height !== renderState.viewport.height) {
@@ -496,7 +593,6 @@ define([
             });
         }
 
-        this._command.framebuffer = framebuffer;
         this._command.renderState = renderState;
     };
 
@@ -508,7 +604,7 @@ define([
      * @private
      */
     PostProcessStage.prototype.execute = function(context, colorTexture, depthTexture) {
-        if (!defined(this._command) || !this._ready || !this._enabled) {
+        if (!defined(this._command) || !defined(this._command.framebuffer) || !this._ready || !this._enabled) {
             return;
         }
 

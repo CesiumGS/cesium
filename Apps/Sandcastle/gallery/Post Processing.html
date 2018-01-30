@@ -47,18 +47,6 @@
         <td><input type="checkbox" data-bind="checked: textureOverlayShow"></td>
         <td><input type="range" min="0" max="1" step="0.01" data-bind="value: textureOverlayAlpha, valueUpdate: 'input'"></td>
     </tr>
-    <tr>
-        <td>Depth View</td>
-        <td><input type="checkbox" data-bind="checked: depthViewShow"></td>
-    </tr>
-    <tr>
-        <td>Ambient Occlusion</td>
-        <td><input type="checkbox" data-bind="checked: ambientOcclusionShow"></td>
-    </tr>
-    <tr>
-        <td>FXAA</td>
-        <td><input type="checkbox" data-bind="checked: fxaaShow"></td>
-    </tr>
 </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -77,10 +65,7 @@ var viewModel = {
     eightBitShow: false,
     nightVisionShow: false,
     textureOverlayShow: false,
-    textureOverlayAlpha: 0.5,
-    depthViewShow: false,
-    ambientOcclusionShow: false,
-    fxaaShow: false
+    textureOverlayAlpha: 0.5
 };
 
 Cesium.knockout.track(viewModel);
@@ -98,7 +83,6 @@ var brightness = collection.add(Cesium.PostProcessStageLibrary.createBrightnessS
 var eightBit = collection.add(Cesium.PostProcessStageLibrary.createEightBitStage());
 var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
 var textureOverlay = collection.add(Cesium.PostProcessStageLibrary.createTextureOverlayStage());
-var depthView = collection.add(Cesium.PostProcessStageLibrary.createDepthViewStage());
 
 function updatePostProcess() {
     blackAndWhite.enabled = Boolean(viewModel.blackAndWhiteShow);
@@ -109,10 +93,6 @@ function updatePostProcess() {
     nightVision.enabled = Boolean(viewModel.nightVisionShow);
     textureOverlay.enabled = Boolean(viewModel.textureOverlayShow);
     textureOverlay.uniforms.alpha = Number(viewModel.textureOverlayAlpha);
-    depthView.enabled = Boolean(viewModel.depthViewShow);
-
-    collection.ambientOcclusion.enabled = Boolean(viewModel.ambientOcclusionShow);
-    collection.fxaa.enabled = Boolean(viewModel.fxaaShow);
 }
 updatePostProcess();
 //Sandcastle_End

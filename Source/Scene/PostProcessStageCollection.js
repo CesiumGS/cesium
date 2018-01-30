@@ -230,6 +230,7 @@ define([
          */
         length : {
             get : function() {
+                removeStages(this);
                 return this._stages.length;
             }
         },
@@ -252,7 +253,7 @@ define([
                 var length = stages.length;
                 for (var i = length - 1; i >= 0; --i) {
                     var stage = stages[i];
-                    if (stage.ready && stage.enabled) {
+                    if (defined(stage) && stage.ready && stage.enabled) {
                         return this.getOutputTexture(stage.name);
                     }
                 }
@@ -365,6 +366,8 @@ define([
         this._stages[stage._index] = undefined;
         this._stagesRemoved = true;
         this._textureCacheDirty = true;
+        stage._index = undefined;
+        stage._textureCache = undefined;
         stage.destroy();
         return true;
     };

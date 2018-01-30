@@ -46,7 +46,7 @@ define([
             fragmentShader : PassThrough,
             textureScale : scale,
             forcePowerOfTwo : true,
-            samplingMode : PostProcessStageSampleMode.LINEAR
+            sampleMode : PostProcessStageSampleMode.LINEAR
         });
 
         var brightPass = stages[1] = new PostProcessStage({
@@ -105,7 +105,7 @@ define([
 
         stages[4] = new PostProcessStage({
             fragmentShader : PassThrough,
-            samplingMode : PostProcessStageSampleMode.LINEAR
+            sampleMode : PostProcessStageSampleMode.LINEAR
         });
 
         this._uCenter = new Cartesian2();
