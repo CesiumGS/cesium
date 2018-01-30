@@ -1392,15 +1392,15 @@ define([
         return Math.max(Math.max(x, y), z);
     }
 
-    function cameraEqual(camera0, camera1) {
+    function cameraEqual(camera0, camera1, epsilon) {
         var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
         Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
         Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
-        return Cartesian3.equals(scratchPosition0, scratchPosition1) &&
-               Cartesian3.equals(camera0.direction, camera1.direction) &&
-               Cartesian3.equals(camera0.up, camera1.up) &&
-               Cartesian3.equals(camera0.right, camera1.right) &&
-               Matrix4.equals(camera0.transform, camera1.transform);
+        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
     }
 
     function updateDerivedCommands(scene, command) {
@@ -2915,7 +2915,7 @@ define([
 
     function checkForCameraUpdates(scene) {
         var camera = scene._camera;
-        if (!cameraEqual(camera, scene._cameraClone)) {
+        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON15)) {
             if (!scene._cameraStartFired) {
                 camera.moveStart.raiseEvent();
                 scene._cameraStartFired = true;
