@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -59,7 +61,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
     <table>
-        <tr>
+        <tbody><tr>
             <td>
                 <h3>
                     <code><span data-bind="text: lastRenderTime"></span></code>
@@ -71,7 +73,7 @@
         <tr>
             <td>
                 <h3>
-                    <input type="checkbox" value="true" data-bind="checked: requestRenderMode, valueUpdate: 'input'">
+                    <input value="true" data-bind="checked: requestRenderMode, valueUpdate: 'input'" type="checkbox">
                     <code>requestRenderMode</code> enabled
                 </h3>
                 <i>When enabled, a new frame is only rendered when scene updates occur, or a new frame is explicitly rendered.</i>
@@ -80,26 +82,25 @@
         <tr data-bind="visible: showTimeOptions">
             <td>
                 <h4>
-                    <input type="checkbox" value="true" data-bind="checked: timeChangeEnabled, valueUpdate: 'input'">
+                    <input value="true" data-bind="checked: timeChangeEnabled, valueUpdate: 'input'" type="checkbox">
                     Render when simulation time changes
                 </h4>
                 <i>Automatically render when the simulation time changes by "Max delta time". Adjust the simulation time on the animation widget and "Max delta time" value to see their relationship.</i>
             </td>
         </tr>
-        <tr  data-bind="visible: showTimeOptions">
+        <tr data-bind="visible: showTimeOptions">
             <td>
                 <h4>Max delta time</h4>
-                <input type="range" min="0" max="10" step="0.1" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled">
-                <input type="text" size="2" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled">
+                <input min="0" max="20" step="0.1" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled" type="range">
+                <input size="2" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled" type="text">
             </td>
         </tr>
-    </table>
+    </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-
 // Create a viewer that won't render a new frame unless
 // updates to the scene require it to reduce overall CPU usage.
 var viewer = new Cesium.Viewer('cesiumContainer', {
@@ -134,6 +135,8 @@ function resetScene() {
     scene.camera.flyHome(0.0);
     scene.requestRender();
     viewModel.showTimeOptions = false;
+    viewModel.timeChangeEnabled = false;
+    viewModel.maximumRenderTimeChange = 0;
 }
 
 // Load a tileset and set the view.
@@ -141,17 +144,14 @@ function resetScene() {
 function loadTilesetScenario() {
     resetScene();
 
-    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg'
-    }));
-
-    tileset.readyPromise.then(function() {
-        var boundingSphere = tileset.boundingSphere;
-        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-    }).otherwise(function(error) {
-        throw(error);
-    });
+    Cesium.CesiumIon.create3DTileset(1458, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg' })
+        .then(function(tileset) {
+            viewer.scene.primitives.add(tileset);
+            viewer.zoomTo(tileset);
+        })
+        .otherwise(function(error) {
+            console.log(error);
+        });
 }
 
 // Load an animated model and set the view.
@@ -160,6 +160,7 @@ function loadTilesetScenario() {
 // animations at desired speed.
 function loadModelScenario() {
     resetScene();
+    viewModel.timeChangeEnabled = true;
     viewModel.showTimeOptions = true;
 
     var entity = viewer.entities.add({
@@ -183,6 +184,8 @@ function loadModelScenario() {
 function loadCzmlScenario() {
     resetScene();
     viewModel.showTimeOptions = true;
+    viewModel.timeChangeEnabled = true;
+    viewModel.maximumRenderTimeChange = 10.0;
 
     viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/simple.czml'));
     viewer.clock.shouldAnimate = true;

@@ -137,17 +137,14 @@ gulp.task('requirejs', function(done) {
     }, done);
 });
 
-gulp.task('cloc', ['build'], function() {
+gulp.task('cloc', ['clean'], function() {
     var cmdLine;
-    var clocPath = path.join('Tools', 'cloc-1.60', 'cloc-1.60.pl');
-    var cloc_definitions = path.join('Tools', 'cloc-1.60', 'cloc_definitions');
+    var clocPath = path.join('node_modules', 'cloc', 'lib', 'cloc');
 
     //Run cloc on primary Source files only
     var source = new Promise(function(resolve, reject) {
-        var glsl = globby.sync(['Source/Shaders/*.glsl', 'Source/Shaders/**/*.glsl']).join(' ');
-
-        cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions +
-                  ' Source/main.js Source/Core/ Source/DataSources/ Source/Renderer/ Source/Scene/ Source/Widgets/ Source/Workers/ ' + glsl;
+        cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0' +
+                  ' Source/ --exclude-dir=Assets,ThirdParty --exclude-list-file=copyrightHeader.js';
 
         child_process.exec(cmdLine, function(error, stdout, stderr) {
             if (error) {
@@ -163,7 +160,8 @@ gulp.task('cloc', ['build'], function() {
     //If running cloc on source succeeded, also run it on the tests.
     return source.then(function() {
         return new Promise(function(resolve, reject) {
-            cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions + ' Specs/';
+            cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0' +
+                      ' Specs/ --exclude-dir=Data';
             child_process.exec(cmdLine, function(error, stdout, stderr) {
                 if (error) {
                     console.log(stderr);

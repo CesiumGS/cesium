@@ -7,6 +7,7 @@ Change Log
   * The clock does not animate by default. Set the `shouldAnimate` option to `true` when creating the Viewer to enable animation.
 * Deprecated
   * For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
+* Fixed Sandcastle for IE 11. [#6169](https://github.com/AnalyticalGraphicsInc/cesium/pull/6169)
 * Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, `Billboard`, along with all the low level `load*()` functions.
 * Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
 * Added new `CesiumIon` utility class for working with the Cesium ion beta API.
@@ -41,10 +42,13 @@ Change Log
 * Fixed a bug when creating billboard and model entities without a globe. [#6109](https://github.com/AnalyticalGraphicsInc/cesium/pull/6109)
 * Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
 * Added `shouldAnimate` option to the `Viewer` constructor to indicate if the clock should begin animating immediately.[#6154](https://github.com/AnalyticalGraphicsInc/cesium/pull/6154)
+* Fixed a bug that could cause tiles to be missing from the globe surface, especially when starting with the camera zoomed close to the surface.
+* Added `shouldAnimate` option to the `Viewer` constructor to indicate if the clock should begin animating immediately. [#6154](https://github.com/AnalyticalGraphicsInc/cesium/pull/6154)
 * Added separate file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
 * Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
 * Fixed sandcastle Particle System example for better visual [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
 * Fixed camera movement and look functions for 2D mode [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
+* Fixed `Camera.moveStart` and `Camera.moveEnd` events not being raised when camera is close to the ground. [#4753](https://github.com/AnalyticalGraphicsInc/cesium/issues/4753)
 * Fixed discrepancy between default value used and commented value for default value for halfAxes of OrientedBoundingBox. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
 
 ### 1.41 - 2018-01-02
