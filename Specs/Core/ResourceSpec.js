@@ -508,13 +508,87 @@ defineSuite([
             deferred.resolve(expectedResult);
         });
 
-        return Resource.post(expectedUrl, expectedData, {
+        return Resource.post({
+            url: expectedUrl,
+            data: expectedData,
             responseType: expectedResponseType,
             headers: expectedHeaders,
             overrideMimeType: expectedMimeType
         })
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static fetchArrayBuffer calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchArrayBuffer').and.returnValue(when.resolve());
+        return Resource.fetchArrayBuffer(url)
+            .then(function() {
+                expect(Resource.prototype.fetchArrayBuffer).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchBlob calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchBlob').and.returnValue(when.resolve());
+        return Resource.fetchBlob(url)
+            .then(function() {
+                expect(Resource.prototype.fetchBlob).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchImage calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchImage').and.returnValue(when.resolve());
+        return Resource.fetchImage(url)
+            .then(function() {
+                expect(Resource.prototype.fetchImage).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchText calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchText').and.returnValue(when.resolve());
+        return Resource.fetchText(url)
+            .then(function() {
+                expect(Resource.prototype.fetchText).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchJson calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve());
+        return Resource.fetchJson(url)
+            .then(function() {
+                expect(Resource.prototype.fetchJson).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchXML calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchXML').and.returnValue(when.resolve());
+        return Resource.fetchXML(url)
+            .then(function() {
+                expect(Resource.prototype.fetchXML).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchJsonp calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchJsonp').and.returnValue(when.resolve());
+        return Resource.fetchJsonp(url)
+            .then(function() {
+                expect(Resource.prototype.fetchJsonp).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetch calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve());
+        return Resource.fetch(url)
+            .then(function() {
+                expect(Resource.prototype.fetch).toHaveBeenCalled();
             });
     });
 });
