@@ -58,6 +58,19 @@ defineSuite([
         expect(resource.request).toBe(request);
     });
 
+    it('Constructor sets correct properties', function() {
+        var url = 'http://invalid.domain.com/tileset'
+        var resource = new Resource(url);
+        expect(resource.url).toEqual(url);
+        expect(resource.queryParameters).toEqual({});
+        expect(resource.templateValues).toEqual({});
+        expect(resource.headers).toEqual({});
+        expect(resource.proxy).toBeUndefined();
+        expect(resource.retryCallback).toBeUndefined();
+        expect(resource.retryAttempts).toEqual(0);
+        expect(resource.request).toBeDefined();
+    });
+
     it('appendForwardSlash appends a /', function() {
         var resource = new Resource({
             url: 'http://test.com/tileset'
