@@ -36,6 +36,8 @@ define([
         './Cesium3DTileStyleEngine',
         './ClassificationType',
         './LabelCollection',
+        './PointCloudShading',
+        './PointCloudEyeDomeLighting',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -79,6 +81,8 @@ define([
         Cesium3DTileStyleEngine,
         ClassificationType,
         LabelCollection,
+        PointCloudShading,
+        PointCloudEyeDomeLighting,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -124,6 +128,7 @@ define([
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
+     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
@@ -333,6 +338,14 @@ define([
          * @default 0.5
          */
         this.colorBlendAmount = 0.5;
+
+        /**
+         * Options for controlling point size based on geometric error and eye dome lighting.
+         * @type {PointCloudShading}
+         */
+        this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
+
+        this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -1632,6 +1645,7 @@ define([
             }
         }
         var lengthAfterUpdate = commandList.length;
+        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1661,7 +1675,6 @@ define([
              */
 
             var backfaceCommands = tileset._backfaceCommands.values;
-            var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
             commandList.length += backfaceCommandsLength;
@@ -1679,6 +1692,13 @@ define([
 
         // Number of commands added by each update above
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+
+        // Only run EDL if simple attenuation is on
+        if (tileset.pointCloudShading.attenuation &&
+            tileset.pointCloudShading.eyeDomeLighting &&
+            (addedCommandsLength > 0)) {
+            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset);
+        }
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
             if (!defined(tileset._tileDebugLabels)) {
