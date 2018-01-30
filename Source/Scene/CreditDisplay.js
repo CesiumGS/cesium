@@ -182,6 +182,11 @@ define([
                 removeCreditDomElement(credit);
             }
         }
+    }
+
+    function removeUnusedLightboxCredits(creditDisplay) {
+        var i;
+        var credit;
         var displayedLightboxCredits = creditDisplay._displayedCredits.lightboxCredits;
         for (i = 0; i < displayedLightboxCredits.length; i++) {
             credit = displayedLightboxCredits[i];
@@ -486,6 +491,23 @@ define([
     };
 
     /**
+     * Updates the credit display before a new frame is rendered.
+     */
+    CreditDisplay.prototype.update = function() {
+        var displayedLightboxCredits = [];
+
+        if (this._expanded && defined(this._creditsToUpdate)) {
+            styleLightboxContainer(this);
+            displayLightboxCredits(this, this._creditsToUpdate);
+            displayedLightboxCredits = this._creditsToUpdate.slice();
+        }
+
+        removeUnusedLightboxCredits(this);
+
+        this._displayedCredits.lightboxCredits = displayedLightboxCredits;
+    };
+
+    /**
      * Resets the credit display to a beginning of frame state, clearing out current credits.
      */
     CreditDisplay.prototype.beginFrame = function() {
@@ -495,7 +517,7 @@ define([
     };
 
     /**
-     * Sets the credit display to the end of frame state, displaying current credits in the credit container
+     * Sets the credit display to the end of frame state, displaying credits from the last frame in the credit container.
      */
     CreditDisplay.prototype.endFrame = function() {
         displayImageCredits(this, this._defaultImageCredits);
@@ -506,22 +528,16 @@ define([
 
         var displayedTextCredits = this._defaultTextCredits.concat(this._currentFrameCredits.textCredits);
         var displayedImageCredits = this._defaultImageCredits.concat(this._currentFrameCredits.imageCredits);
-        var displayedLightboxCredits = [];
 
         var showLightboxLink = this._currentFrameCredits.lightboxCredits.length > 0;
         this._expandLink.style.display = showLightboxLink ? 'inline' : 'none';
-        if (this._expanded) {
-            styleLightboxContainer(this);
-            displayLightboxCredits(this, this._currentFrameCredits.lightboxCredits);
-
-            displayedLightboxCredits = this._currentFrameCredits.lightboxCredits.slice();
-        }
 
         removeUnusedCredits(this);
 
         this._displayedCredits.textCredits = displayedTextCredits;
         this._displayedCredits.imageCredits = displayedImageCredits;
-        this._displayedCredits.lightboxCredits = displayedLightboxCredits;
+
+        this._creditsToUpdate = this._currentFrameCredits.lightboxCredits.slice();
     };
 
     /**

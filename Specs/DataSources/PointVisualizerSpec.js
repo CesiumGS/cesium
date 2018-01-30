@@ -50,7 +50,9 @@ defineSuite([
         scene = createScene();
         scene.globe = {
             ellipsoid : Ellipsoid.WGS84,
-            _surface : {}
+            _surface : {},
+            tileLoadedEvent : new Event(),
+            imageryLayersUpdatedEvent : new Event()
         };
 
         scene.globe.getHeight = function() {

@@ -302,7 +302,7 @@ defineSuite([
                 // Verify that each tile has 2 imagery objects and no loaded callbacks
                 forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBe(2);
-                    expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
                 });
 
                 // Reload each layer
@@ -317,14 +317,14 @@ defineSuite([
                 //  and also has 2 callbacks so the old imagery will be removed once loaded.
                 forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBe(4);
-                    expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(3);
                 });
 
                 return updateUntilDone(scene.globe).then(function() {
                     // Verify the old imagery was removed and the callbacks are no longer there
                     forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                         expect(tile.data.imagery.length).toBe(2);
-                        expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
+                        expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
                     });
                 });
             });

@@ -156,13 +156,13 @@ Sandcastle.addToolbarMenu([ {
     text : 'Static billboards',
     onselect : function() {
         resetBillboardCollection();
-        scene.preRender.removeEventListener(animateBillboards);
+        scene.preUpdate.removeEventListener(animateBillboards);
     }
 }, {
     text : 'Animated billboards',
     onselect : function() {
         resetBillboardCollection();
-        scene.preRender.addEventListener(animateBillboards);
+        scene.preUpdate.addEventListener(animateBillboards);
     }
 }]);
 

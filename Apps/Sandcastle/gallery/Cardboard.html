@@ -99,7 +99,7 @@ camera.direction = new Cesium.Cartesian3(1.0, 0.0, 0.0);
 camera.up = new Cesium.Cartesian3(0.0, 0.0, 1.0);
 camera.right = new Cesium.Cartesian3(0.0, -1.0, 0.0);
 
-viewer.scene.preRender.addEventListener(function(scene, time) {
+viewer.scene.postUpdate.addEventListener(function(scene, time) {
     var position = entity.position.getValue(time);
     if (!Cesium.defined(position)) {
         return;

@@ -55,7 +55,8 @@ define([
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
             baseLayerPicker : !defined(imageryProvider),
-            scene3DOnly : endUserOptions.scene3DOnly
+            scene3DOnly : endUserOptions.scene3DOnly,
+            requestRenderMode : true
         });
     } catch (exception) {
         loadingIndicator.style.display = 'none';

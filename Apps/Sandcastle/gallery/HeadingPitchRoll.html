@@ -202,12 +202,7 @@ var rollSpan = document.getElementById('roll');
 var speedSpan = document.getElementById('speed');
 var fromBehind = document.getElementById('fromBehind');
 
-viewer.scene.preRender.addEventListener(function(scene, time) {
-    headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
-    pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
-    rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
-    speedSpan.innerHTML = speed.toFixed(1);
-
+viewer.scene.preUpdate.addEventListener(function(scene, time) {
     speedVector = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.UNIT_X, speed / 10, speedVector);
     position = Cesium.Matrix4.multiplyByPoint(planePrimitive.modelMatrix, speedVector, position);
     pathPosition.addSample(Cesium.JulianDate.now(), position);
@@ -220,6 +215,13 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
         hpRange.pitch = hpRoll.pitch;
         camera.lookAt(center, hpRange);
     }
+});
+
+viewer.scene.preRender.addEventListener(function(scene, time) {
+    headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
+    pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
+    rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
+    speedSpan.innerHTML = speed.toFixed(1);
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();
