@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/clone',
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
@@ -82,6 +83,7 @@ define([
         Cartesian4,
         Cartographic,
         clone,
+        ClippingPlaneCollection,
         Color,
         combine,
         defaultValue,
@@ -706,7 +708,7 @@ define([
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
-        this._packedClippingPlanes = [];
+        this._packedClippingPlanes = undefined; // texture of clipping planes
     }
 
     defineProperties(Model.prototype, {
@@ -3319,7 +3321,38 @@ define([
 
     function createClippingPlanesLengthFunction(model) {
         return function() {
-            return model._packedClippingPlanes.length;
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return 0;
+            }
+            return clippingPlanes.length;
+        };
+    }
+
+    var scratchClippingPlaneMatrix = new Matrix4();
+    function createClippingPlanesMatrixFunction(model) {
+        return function() {
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return Matrix4.IDENTITY;
+            }
+            return Matrix4.multiply(model._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix)
+        };
+    }
+
+    function createClippingPlanesFunction(model) {
+        return function() {
+            return model._packedClippingPlanes;
+        };
+    }
+
+    function createClippingPlanesRangeFunction(model) {
+        return function() {
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return Cartesian2.ZERO;
+            }
+            return clippingPlanes.distanceRange;
         };
     }
 
@@ -3331,19 +3364,6 @@ define([
             }
 
             return clippingPlanes.unionClippingRegions;
-        };
-    }
-
-    function createClippingPlanesFunction(model) {
-        return function() {
-            var clippingPlanes = model.clippingPlanes;
-            var packedPlanes = model._packedClippingPlanes;
-
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                clippingPlanes.transformAndPackPlanes(model._modelViewMatrix, packedPlanes);
-            }
-
-            return packedPlanes;
         };
     }
 
@@ -3457,8 +3477,10 @@ define([
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
                 gltf_clippingPlanesUnionRegions: createClippingPlanesUnionRegionsFunction(model),
-                gltf_clippingPlanes: createClippingPlanesFunction(model, context),
-                gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model)
+                gltf_clippingPlanes: createClippingPlanesFunction(model),
+                gltf_clippingPlanesRange: createClippingPlanesRangeFunction(model),
+                gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model),
+                gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -3751,6 +3773,8 @@ define([
 
         createUniformMaps(model, context);               // using glTF materials/techniques
         createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
+
+        model._packedClippingPlanes = new Texture(ClippingPlaneCollection.getTextureParameters(context));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -4255,10 +4279,13 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
+            '#define PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
             'uniform int gltf_clippingPlanesLength; \n' +
             'uniform bool gltf_clippingPlanesUnionRegions; \n' +
-            'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
+            'uniform sampler2D gltf_clippingPlanes; \n' +
+            'uniform vec2 gltf_clippingPlanesRange; \n' +
             'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
+            'uniform mat4 gltf_clippingPlanesMatrix; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
@@ -4267,11 +4294,11 @@ define([
             '        float clipDistance; \n' +
             '        if (gltf_clippingPlanesUnionRegions) \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        else \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        \n' +
             '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
@@ -4279,7 +4306,7 @@ define([
             '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
             '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
             '        { \n' +
-            '            gl_FragColor = clippingPlanesEdgeColor; \n' +
+            '            gl_FragColor = clippingPlanesEdgeColor;\n' +
             '        } \n' +
             '    } \n' +
             '} \n';
@@ -4311,19 +4338,12 @@ define([
 
     function updateClippingPlanes(model) {
         var clippingPlanes = model.clippingPlanes;
-        var length = 0;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            length = clippingPlanes.length;
-        }
-
-        var packedPlanes = model._packedClippingPlanes;
-        var packedLength = packedPlanes.length;
-        if (packedLength !== length) {
-            packedPlanes.length = length;
-
-            for (var i = packedLength; i < length; ++i) {
-                packedPlanes[i] = new Cartesian4();
-            }
+            model._packedClippingPlanes.copyFrom({
+                width : ClippingPlaneCollection.TEXTURE_WIDTH,
+                height : ClippingPlaneCollection.TEXTURE_WIDTH,
+                arrayBufferView :  clippingPlanes.transformAndPackPlanes()
+            });
         }
     }
 
@@ -4796,7 +4816,7 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
-            updateClippingPlanes(this, frameState);
+            updateClippingPlanes(this);
         }
 
         if (justLoaded) {
@@ -4933,6 +4953,8 @@ define([
         }
 
         releaseCachedGltf(this);
+
+        this._packedClippingPlanes.destroy();
 
         return destroyObject(this);
     };

@@ -9,7 +9,7 @@
  * @param {int} clippingPlanesLength The number of planes in the array of clipping planes.
  * @returns {float} The distance away from a clipped fragment, in eyespace
  */
-float czm_discardIfClippedWithIntersect(vec4 clippingPlanes[czm_maxClippingPlanes], int clippingPlanesLength)
+float czm_discardIfClippedWithIntersect(sampler2D clippingPlanes, int clippingPlanesLength, vec2 range, int textureWidth, mat4 clippingPlanesMatrix)
 {
     if (clippingPlanesLength > 0)
     {
@@ -27,8 +27,12 @@ float czm_discardIfClippedWithIntersect(vec4 clippingPlanes[czm_maxClippingPlane
                 break;
             }
 
-            clipNormal = clippingPlanes[i].xyz;
-            clipPosition = -clippingPlanes[i].w * clipNormal;
+            vec4 clippingPlane = czm_getClippingPlaneFromTexture(clippingPlanes, range, i, textureWidth, clippingPlanesMatrix);
+            //clipNormal = normalize((czm_modelView * vec4(0.99999999995, 0.000009999999999833334, 0, 0.0)).xyz);
+            clipNormal = clippingPlane.xyz;
+
+            //clipPosition = -range.x * clipNormal;
+            clipPosition = -clippingPlane.w * clipNormal;
 
             float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;
             clipAmount = max(amount, clipAmount);

@@ -1,6 +1,9 @@
 define([
+        './AttributeCompression',
+        './Cartesian2',
         './Cartesian3',
         './Cartesian4',
+        './Math',
         './Check',
         './Color',
         './defaultValue',
@@ -9,10 +12,20 @@ define([
         './DeveloperError',
         './Intersect',
         './Matrix4',
-        './Plane'
+        './PixelFormat',
+        './Plane',
+        '../Renderer/PixelDatatype',
+        '../Renderer/Sampler',
+        '../Renderer/Texture',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap'
     ], function(
+        AttributeCompression,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         Check,
         Color,
         defaultValue,
@@ -21,7 +34,14 @@ define([
         DeveloperError,
         Intersect,
         Matrix4,
-        Plane) {
+        PixelFormat,
+        Plane,
+        PixelDatatype,
+        Sampler,
+        Texture,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap) {
     'use strict';
 
     /**
@@ -82,9 +102,18 @@ define([
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
+        /**
+         * Range for inflating the normalized distances in the clipping plane texture
+         *
+         * @type {Cartesian2}
+         */
+        this.distanceRange = new Cartesian2();
+
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
         this.unionClippingRegions = defaultValue(options.unionClippingRegions, false);
+
+        this._rgbaUbytePixels = new Uint8Array(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
     }
 
     function unionIntersectFunction(value) {
@@ -235,50 +264,96 @@ define([
         this._planes = [];
     };
 
-    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
-    var scratchMatrix = new Matrix4();
+    // See Aras Pranckevičius' post Encoding Floats to RGBA
+    // http://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
+    var floatEncode = new Cartesian4(1.0, 255.0, 65025.0, 16581375.0);
+    function packNormalizedFloat(float, result) {
+        Cartesian4.multiplyByScalar(floatEncode, float, result);
+        result.x = result.x - Math.floor(result.x);
+        result.y = result.y - Math.floor(result.y);
+        result.z = result.z - Math.floor(result.z);
+        result.w = result.w - Math.floor(result.w);
+
+        result.x -= result.y / 255.0;
+        result.y -= result.z / 255.0;
+        result.z -= result.w / 255.0;
+
+        return result;
+    }
+
+    var encodingScratch = new Cartesian4();
+    function insertFloat(uint8Buffer, float, byteIndex) {
+        packNormalizedFloat(float, encodingScratch);
+        uint8Buffer[byteIndex] = encodingScratch.x * 255;
+        uint8Buffer[byteIndex + 1] = encodingScratch.y * 255;
+        uint8Buffer[byteIndex + 2] = encodingScratch.z * 255;
+        uint8Buffer[byteIndex + 3] = encodingScratch.w * 255;
+    }
+
+    var octEncodeScratch = new Cartesian2();
+    var rightShift = 1.0 / 256;
     /**
-     * Applies the transformations to each plane and packs it into an array.
+     * Encodes a normalized vector into 4 SNORM values in the range [0-255] following the 'oct' encoding.
+     */
+    function oct32EncodeNormal(vector, result) {
+        AttributeCompression.octEncodeInRange(vector, 65535, octEncodeScratch);
+        result.x = octEncodeScratch.x * rightShift;
+        result.y = octEncodeScratch.x;
+        result.z = octEncodeScratch.y * rightShift;
+        result.w = octEncodeScratch.y;
+        return result;
+    }
+
+    var oct32EncodeScratch = new Cartesian4();
+    /**
+     * Applies the transformations to each plane and packs it into a typed array for transfer to a texture.
      * @private
      *
-     * @param {Matrix4} viewMatrix The 4x4 matrix to transform the plane into eyespace.
-     * @param {Cartesian4[]} [array] The array into which the planes will be packed.
-     * @returns {Cartesian4[]} The array of packed planes.
+     * @returns {Uint8Array} Typed Array representing the clipping planes packed to a RGBA Uint8 texture.
      */
-    ClippingPlaneCollection.prototype.transformAndPackPlanes = function(viewMatrix, array) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('viewMatrix', viewMatrix);
-        //>>includeEnd('debug');
+    ClippingPlaneCollection.prototype.transformAndPackPlanes = function() {
+        var rgbaUbytePixels = this._rgbaUbytePixels;
 
         var planes = this._planes;
         var length = planes.length;
+        var distances = new Array(length);
 
-        var index = 0;
-        if (!defined(array)) {
-            array = new Array(length);
-        } else {
-            index = array.length;
-            array.length = length;
-        }
-
+        // Transform all planes, recording the directions in the typed array and computing the range for the planes
+        var distanceMin = Number.POSITIVE_INFINITY;
+        var distanceMax = Number.NEGATIVE_INFINITY;
         var i;
-        for (i = index; i < length; ++i) {
-            array[i] = new Cartesian4();
-        }
-
-        var transform = Matrix4.multiply(viewMatrix, this.modelMatrix, scratchMatrix);
-
         for (i = 0; i < length; ++i) {
             var plane = planes[i];
-            var packedPlane = array[i];
 
-            Plane.transform(plane, transform, scratchPlane);
+            var byteIndex = i * 8;
 
-            Cartesian3.clone(scratchPlane.normal, packedPlane);
-            packedPlane.w = scratchPlane.distance;
+            var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
+            rgbaUbytePixels[byteIndex] = oct32Normal.x;
+            rgbaUbytePixels[byteIndex + 1] = oct32Normal.y;
+            rgbaUbytePixels[byteIndex + 2] = oct32Normal.z;
+            rgbaUbytePixels[byteIndex + 3] = oct32Normal.w;
+
+            var distance = plane.distance;
+            distanceMin = Math.min(distance, distanceMin);
+            distanceMax = Math.max(distance, distanceMax);
+            distances[i] = distance;
         }
 
-        return array;
+        // expand distance range a little bit to prevent packing 1s
+        distanceMax += (distanceMax - distanceMin) * CesiumMath.EPSILON3;
+
+        // Normalize all the distances to the range and record them in the typed array.
+        var distanceRange = this.distanceRange;
+        distanceRange.x = distanceMin;
+        distanceRange.y = distanceMax;
+        var distanceRangeSize = distanceMax - distanceMin;
+        for (i = 0; i < length; ++i) {
+            var normalizedDistance = (distances[i] - distanceMin) / distanceRangeSize;
+            var byteIndex = i * 8 + 4;
+            insertFloat(rgbaUbytePixels, normalizedDistance, byteIndex);
+        }
+
+        return rgbaUbytePixels;
     };
 
     /**
@@ -317,6 +392,8 @@ define([
         return result;
     };
 
+    var scratchMatrix = new Matrix4();
+    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     /**
      * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link BoundingVolume}.
      * @private
@@ -365,10 +442,38 @@ define([
     /**
      * The maximum number of supported clipping planes.
      *
+     * @see maxClippingPlanes.glsl
      * @type {number}
      * @constant
      */
-    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 6;
+    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 128;
+
+    /**
+     * The pixel width of a square, power-of-two RGBA UNSIGNED_BYTE texture
+     * with enough pixels to support MAX_CLIPPING_PLANES.
+     *
+     * A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal, so 8 bits or 2 pixels in RGBA
+     *
+     * @type {number}
+     * @constant
+     */
+    ClippingPlaneCollection.TEXTURE_WIDTH = CesiumMath.nextPowerOfTwo(Math.ceil(Math.sqrt(ClippingPlaneCollection.MAX_CLIPPING_PLANES * 2)));
+
+    ClippingPlaneCollection.getTextureParameters = function(context) {
+        return {
+            context : context,
+            width : ClippingPlaneCollection.TEXTURE_WIDTH,
+            height : ClippingPlaneCollection.TEXTURE_WIDTH,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
+        }
+    }
 
     return ClippingPlaneCollection;
 });

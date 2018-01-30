@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox: false,
+    selectionIndicator: false
+});
+
+var scene = viewer.scene;
+var targetY = 0.2;
+var planeEntities = [];
+var selectedPlane;
+
+var steps = 128;
+var clippingPlanes = [];
+var stepDegrees = 6.28319 / (steps);
+
+for (var i = 0; i < steps; i++) {
+    var angle = i * stepDegrees + 0.00001;
+    var dir = new Cesium.Cartesian3();
+    dir.x = 1.0;
+    dir.y = Math.tan(angle);
+    if (angle > 1.57079632679) {
+        dir.x = -1.0;
+        dir.y *= -1.0;
+    }
+    if (angle > 3.14159265359) {
+        dir.x = -1.0;
+        dir.y = dir.y;
+    }
+    if (angle > 4.71238898038) {
+        dir.x = 1.0;
+        dir.y = -dir.y;
+    }
+    Cesium.Cartesian3.normalize(dir, dir);
+    console.log(dir);
+    clippingPlanes.push(new Cesium.Plane(dir, 0.0));
+}
+
+var modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
+    planes : clippingPlanes,
+    edgeWidth: 2.0,
+    edgeColor: Cesium.Color.WHITE
+});
+
+function updateClippingPlanes() {
+    return modelEntityClippingPlanes;
+}
+
+// Select plane when mouse down
+var downHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+downHandler.setInputAction(function(movement) {
+    var pickedObject = scene.pick(movement.position);
+    if (Cesium.defined(pickedObject) &&
+            Cesium.defined(pickedObject.id) &&
+            Cesium.defined(pickedObject.id.plane)) {
+        selectedPlane = pickedObject.id.plane;
+        selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.05);
+        selectedPlane.outlineColor = Cesium.Color.WHITE;
+        scene.screenSpaceCameraController.enableInputs = false;
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+// Release plane on mouse up
+var upHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+upHandler.setInputAction(function() {
+    if (Cesium.defined(selectedPlane)) {
+        selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.1);
+        selectedPlane.outlineColor = Cesium.Color.WHITE;
+        selectedPlane = undefined;
+    }
+
+    scene.screenSpaceCameraController.enableInputs = true;
+}, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+// Update plane on mouse move
+var moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+moveHandler.setInputAction(function(movement) {
+    if (Cesium.defined(selectedPlane)) {
+        var deltaY = movement.startPosition.x - movement.endPosition.x;
+        targetY += deltaY;
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
+function createPlaneUpdateFunction(plane, transform) {
+    return function () {
+        plane.distance = targetY;
+        return Cesium.Plane.transform(plane, transform, scratchPlane);
+    };
+}
+
+var url = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
+
+var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+var heading = 0.0;//Cesium.Math.toRadians(135.0);
+var pitch = 0.0;
+var roll = 0.0;
+var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+var entity = viewer.entities.add({
+    name : url,
+    position : position,
+    orientation : orientation,
+    model : {
+        uri : url,
+        scale : 20,
+        minimumPixelSize : 100.0,
+        clippingPlanes : new Cesium.CallbackProperty(updateClippingPlanes, false)
+    }
+});
+
+viewer.trackedEntity = entity;
+
+for (var i = 0; i < clippingPlanes.length; ++i) {
+    var plane = clippingPlanes[i];
+    var planeEntity = viewer.entities.add({
+        position : position,
+        plane : {
+            dimensions : new Cesium.Cartesian2(100.0, 100.0),
+            material : Cesium.Color.WHITE.withAlpha(0.1),
+            plane : new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, Cesium.Matrix4.IDENTITY), false),
+            outline : true,
+            outlineColor : Cesium.Color.WHITE
+        }
+    });
+
+    planeEntities.push(planeEntity);
+}//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
