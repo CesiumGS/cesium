@@ -75,7 +75,7 @@ define([
             return previousName;
         }
 
-        var inSeries = !defined(composite.executeInSeries) || composite.executeInSeries;
+        var inSeries = !defined(composite.inputPreviousStageTexture) || composite.inputPreviousStageTexture;
         var currentName = previousName;
         var length = composite.length;
         for (var i = 0; i < length; ++i) {

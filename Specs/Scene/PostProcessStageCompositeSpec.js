@@ -40,20 +40,20 @@ defineSuite([
                 }
             }
         };
-        var executeInSeries = false;
+        var inputPreviousStageTexture = false;
         var name = 'kaleidoscope';
 
         var composite = new PostProcessStageComposite({
             stages : [stage],
             uniforms : uniforms,
-            executeInSeries : executeInSeries,
+            inputPreviousStageTexture : inputPreviousStageTexture,
             name : name
         });
         expect(composite.ready).toEqual(false);
         expect(composite.name).toEqual(name);
         expect(composite.enabled).toEqual(true);
         expect(composite.uniforms).toEqual(uniforms);
-        expect(composite.executeInSeries).toEqual(executeInSeries);
+        expect(composite.inputPreviousStageTexture).toEqual(inputPreviousStageTexture);
         expect(composite.length).toEqual(1);
     });
 
@@ -71,7 +71,7 @@ defineSuite([
         expect(composite.name).toBeDefined();
         expect(composite.enabled).toEqual(true);
         expect(composite.uniforms).not.toBeDefined();
-        expect(composite.executeInSeries).toEqual(true);
+        expect(composite.inputPreviousStageTexture).toEqual(true);
         expect(composite.length).toEqual(2);
     });
 
@@ -116,7 +116,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('renders with executeInSeries is true', function() {
+    it('renders with inputPreviousStageTexture is true', function() {
         var stage1 = new PostProcessStage({
             fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
         });
@@ -138,7 +138,7 @@ defineSuite([
         expect(scene).toRender([255, 0, 255, 255]);
     });
 
-    it('renders with executeInSeries is false', function() {
+    it('renders with inputPreviousStageTexture is false', function() {
         var stage1 = new PostProcessStage({
             fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
         });
@@ -152,7 +152,7 @@ defineSuite([
         });
         var composite = new PostProcessStageComposite({
             stages : [stage1, stage2],
-            executeInSeries : false
+            inputPreviousStageTexture : false
         });
 
         expect(scene).toRender([0, 0, 0, 255]);

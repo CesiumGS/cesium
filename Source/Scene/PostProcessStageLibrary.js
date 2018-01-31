@@ -213,7 +213,7 @@ define([
         return new PostProcessStageComposite({
             name : 'czm_depth_of_field',
             stages : [blur, dof],
-            executeInSeries : false,
+            inputPreviousStageTexture : false,
             uniforms : uniforms
         });
     };
@@ -279,7 +279,7 @@ define([
         return new PostProcessStageComposite({
             name : 'czm_silhouette',
             stages : [silhouetteGenerateProcess, silhouetteProcess],
-            executeInSeries : false,
+            inputPreviousStageTexture : false,
             uniforms : uniforms
         });
     };
@@ -386,7 +386,7 @@ define([
         return new PostProcessStageComposite({
             name : 'czm_bloom',
             stages : [generateComposite, bloomComposite],
-            executeInSeries : false,
+            inputPreviousStageTexture : false,
             uniforms : uniforms
         });
     };
@@ -539,7 +539,7 @@ define([
         return new PostProcessStageComposite({
             name : 'czm_ambient_occlusion',
             stages : [generateAndBlur, ambientOcclusionModulate],
-            executeInSeries : false,
+            inputPreviousStageTexture : false,
             uniforms : uniforms
         });
     };

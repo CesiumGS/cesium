@@ -550,7 +550,7 @@ define([
         var length = stage.length;
         var i;
 
-        if (stage.executeInSeries) {
+        if (stage.inputPreviousStageTexture) {
             execute(stage.get(0), context, colorTexture, depthTexture);
             for (i = 1; i < length; ++i) {
                 execute(stage.get(i), context, getOutputTexture(stage.get(i - 1)), depthTexture);

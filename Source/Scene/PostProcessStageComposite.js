@@ -17,9 +17,9 @@ define([
     /**
      * A collection of {@link PostProcessStage}s or other post-process composite stages that execute together logically.
      * <p>
-     * All stages are executed in the order of the array. The input texture changes based on the value of <code>executeInSeries</code>.
-     * If <code>executeInSeries</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
-     * If <code>executeInseries</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
+     * All stages are executed in the order of the array. The input texture changes based on the value of <code>inputPreviousStageTexture</code>.
+     * If <code>inputPreviousStageTexture</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
+     * If <code>inputPreviousStageTexture</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
      * or the output texture of the previous stage.
      * </p>
      *
@@ -28,7 +28,7 @@ define([
      *
      * @param {Object} options An object with the following properties:
      * @param {Array} options.stages An array of {@link PostProcessStage}s or composites to be executed in order.
-     * @param {Boolean} [options.executeInSeries=true] Whether to execute each post-process stage where the input to one stage is the output of the previous. Otherwise, the input to each contained stage is the output of the stage that executed before the composite.
+     * @param {Boolean} [options.inputPreviousStageTexture=true] Whether to execute each post-process stage where the input to one stage is the output of the previous. Otherwise, the input to each contained stage is the output of the stage that executed before the composite.
      * @param {String} [options.name=createGuid()] The unique name of this post-process stage for reference by other composites. If a name is not supplied, a GUID will be generated.
      * @param {Object} [options.uniforms] An alias to the uniforms of post-process stages.
      *
@@ -47,15 +47,15 @@ define([
      * @example
      * // Example 2: referencing the output of another post-process stage
      * scene.postProcessStages.add(new Cesium.PostProcessStageComposite({
-     *     executeInSeries : false,
+     *     inputPreviousStageTexture : false,
      *     stages : [
      *         // The same as Example 1.
      *         new Cesium.PostProcessStageComposite({
-     *             executeInSeries : true
+     *             inputPreviousStageTexture : true
      *             stages : [blurXDirection, blurYDirection],
      *             name : 'blur'
      *         }),
-     *         // The input texture for this stage is the same input texture to blurXDirection since executeInSeries is false
+     *         // The input texture for this stage is the same input texture to blurXDirection since inputPreviousStageTexture is false
      *         new Cesium.PostProcessStage({
      *             fragmentShader : compositeShader,
      *             uniforms : {
@@ -92,7 +92,7 @@ define([
         //>>includeEnd('debug');
 
         this._stages = options.stages;
-        this._executeInSeries = defaultValue(options.executeInSeries, true);
+        this._inputPreviousStageTexture = defaultValue(options.inputPreviousStageTexture, true);
 
         var name = options.name;
         if (!defined(name)) {
@@ -168,18 +168,18 @@ define([
             }
         },
         /**
-         * All post-process stages are executed in the order of the array. The input texture changes based on the value of <code>executeInSeries</code>.
-         * If <code>executeInSeries</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
-         * If <code>executeInseries</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
+         * All post-process stages are executed in the order of the array. The input texture changes based on the value of <code>inputPreviousStageTexture</code>.
+         * If <code>inputPreviousStageTexture</code> is <code>true</code>, the input to each stage is the output texture rendered to by the scene or of the stage that executed before it.
+         * If <code>inputPreviousStageTexture</code> is <code>false</code>, the input texture is the same for each stage in the composite. The input texture is the texture rendered to by the scene
          * or the output texture of the previous stage.
          *
          * @memberof PostProcessStageComposite.prototype
          * @type {Boolean}
          * @readonly
          */
-        executeInSeries : {
+        inputPreviousStageTexture : {
             get : function() {
-                return this._executeInSeries;
+                return this._inputPreviousStageTexture;
             }
         },
         /**
