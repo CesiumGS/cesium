@@ -7,8 +7,8 @@ Change Log
   * The clock does not animate by default. Set the `shouldAnimate` option to `true` when creating the Viewer to enable animation.
 * Deprecated
   * For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
-  * All low level load functions including `loadArrayBuffer`, `loadBlob`, `loadImage`, `loadJson`, `loadJsonp`, `loadText`, `loadXML` and `loadWithXhr` and will be removed in Cesium 1.44. Please use the equivalent fetch functions in the `Resource` class.
-* Fixed Sandcastle for IE 11. [#6169](https://github.com/AnalyticalGraphicsInc/cesium/pull/6169) 
+  * All low level load functions including `loadArrayBuffer`, `loadBlob`, `loadImage`, `loadJson`, `loadJsonp`, `loadText`, `loadXML` and `loadWithXhr` have been deprecated and will be removed in Cesium 1.44. Please use the equivalent `fetch` functions on the `Resource` class.
+* Fixed Sandcastle for IE 11. [#6169](https://github.com/AnalyticalGraphicsInc/cesium/pull/6169)
 * Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, and `Billboard`.
 * Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.
 * Added new `CesiumIon` utility class for working with the Cesium ion beta API.
@@ -34,7 +34,7 @@ Change Log
 * Updated documentation links to reflect new locations on cesiumjs.org and cesium.com.
 * Updated 'Viewer.zoomTo' and 'Viewer.flyTo' to take in Cesium3DTilesets as a target and updated sandcastle 3DTileset examples to reflect this change
 * Added optional scene request render mode to reduce CPU usage. [#6065](https://github.com/AnalyticalGraphicsInc/cesium/pull/6065) and [#6107](https://github.com/AnalyticalGraphicsInc/cesium/pull/6107)
-   * `Scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`. 
+   * `Scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`.
    * `Scene.requestRender` will explicitly request a new render frame when in request render mode.
    * Added `Scene.preUpdate` and `Scene.postUpdate` events that are raised before and after the scene updates respectively. The scene is always updated before executing a potential render. Continue to listen to `Scene.preRender and `Scene.postRender` events for when the scene renders a frame.
    * Added `CreditDisplay.update`, which updates the credit display before a new frame is rendered.
