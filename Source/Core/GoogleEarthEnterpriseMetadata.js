@@ -10,7 +10,6 @@ define([
         './deprecationWarning',
         './GoogleEarthEnterpriseTileInformation',
         './isBitSet',
-        './loadArrayBuffer',
         './Math',
         './Request',
         './Resource',
@@ -28,7 +27,6 @@ define([
         deprecationWarning,
         GoogleEarthEnterpriseTileInformation,
         isBitSet,
-        loadArrayBuffer,
         CesiumMath,
         Request,
         Resource,
@@ -326,7 +324,7 @@ define([
         quadKey = defaultValue(quadKey, '');
         var resource = getMetadataResource(this, quadKey, version, request);
 
-        var promise = loadArrayBuffer(resource);
+        var promise = resource.fetchArrayBuffer();
 
         if (!defined(promise)) {
             return undefined; // Throttled
@@ -509,7 +507,7 @@ define([
             }
         });
 
-        return loadArrayBuffer(resource)
+        return resource.fetchArrayBuffer()
             .then(function(buf) {
                 var encryptedDbRootProto = dbrootParser.EncryptedDbRootProto.decode(new Uint8Array(buf));
 

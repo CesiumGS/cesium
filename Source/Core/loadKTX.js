@@ -3,7 +3,7 @@ define([
         './Check',
         './CompressedTextureBuffer',
         './defined',
-        './loadArrayBuffer',
+        './deprecationWarning',
         './PixelFormat',
         './Resource',
         './RuntimeError'
@@ -12,7 +12,7 @@ define([
         Check,
         CompressedTextureBuffer,
         defined,
-        loadArrayBuffer,
+        deprecationWarning,
         PixelFormat,
         Resource,
         RuntimeError) {
@@ -39,8 +39,6 @@ define([
      * @exports loadKTX
      *
      * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
-     * @param {Object} [headers] HTTP headers to send with the requests.
-     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @exception {RuntimeError} Invalid KTX file.
@@ -76,18 +74,23 @@ define([
         Check.defined('resourceOrUrlOrBuffer', resourceOrUrlOrBuffer);
         //>>includeEnd('debug');
 
+        if (defined(headers)) {
+            deprecationWarning('loadCRN.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
+        }
+
+        if (defined(request)) {
+            deprecationWarning('loadCRN.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
+        }
+
         var loadPromise;
         if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
             loadPromise = when.resolve(resourceOrUrlOrBuffer);
         } else {
-            if (typeof resourceOrUrlOrBuffer === 'string') {
-                resourceOrUrlOrBuffer = new Resource({
-                    url: resourceOrUrlOrBuffer,
-                    headers: headers,
-                    request: request
-                });
-            }
-            loadPromise = loadArrayBuffer(resourceOrUrlOrBuffer);
+            var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer, {
+                headers: headers,
+                request: request
+            });
+            loadPromise = resource.fetchArrayBuffer();
         }
 
         if (!defined(loadPromise)) {

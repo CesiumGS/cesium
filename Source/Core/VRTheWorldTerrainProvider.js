@@ -11,8 +11,6 @@ define([
         './GeographicTilingScheme',
         './getImagePixels',
         './HeightmapTerrainData',
-        './loadImage',
-        './loadXML',
         './Math',
         './Rectangle',
         './Resource',
@@ -31,8 +29,6 @@ define([
         GeographicTilingScheme,
         getImagePixels,
         HeightmapTerrainData,
-        loadImage,
-        loadXML,
         CesiumMath,
         Rectangle,
         Resource,
@@ -151,7 +147,7 @@ define([
         }
 
         function requestMetadata() {
-            when(loadXML(that._resource), metadataSuccess, metadataFailure);
+            when(that._resource.fetchXML(), metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
@@ -279,7 +275,7 @@ define([
             },
             request: request
         });
-        var promise = loadImage(resource);
+        var promise = resource.fetchImage();
         if (!defined(promise)) {
             return undefined;
         }

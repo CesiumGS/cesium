@@ -8,7 +8,6 @@ define([
         '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -29,7 +28,6 @@ define([
         deprecationWarning,
         DeveloperError,
         Event,
-        loadJsonp,
         CesiumMath,
         Rectangle,
         Resource,
@@ -236,7 +234,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadJsonp(metadataResource, 'jsonp');
+            var metadata = metadataResource.fetchJsonp('jsonp');
             when(metadata, metadataSuccess, metadataFailure);
         }
 

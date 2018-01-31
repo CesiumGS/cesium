@@ -17,8 +17,6 @@ define([
         '../Core/getMagic',
         '../Core/isDataUri',
         '../Core/JulianDate',
-        '../Core/loadArrayBuffer',
-        '../Core/loadJson',
         '../Core/ManagedArray',
         '../Core/Math',
         '../Core/Matrix4',
@@ -62,8 +60,6 @@ define([
         getMagic,
         isDataUri,
         JulianDate,
-        loadArrayBuffer,
-        loadJson,
         ManagedArray,
         CesiumMath,
         Matrix4,
@@ -738,7 +734,7 @@ define([
             url : testUrl
         });
 
-        return loadArrayBuffer(testResource)
+        return testResource.fetchArrayBuffer()
             .then(function(buffer) {
                 var uint8Array = new Uint8Array(buffer);
                 var magic = getMagic(uint8Array);
@@ -1224,7 +1220,8 @@ define([
      * @returns {Promise.<Object>} A promise that resolves with the fetched json data
      */
     Cesium3DTileset.loadJson = function(tilesetUrl) {
-        return loadJson(tilesetUrl);
+        var resource = Resource.createIfNeeded(tilesetUrl);
+        return resource.fetchJson();
     };
 
     /**

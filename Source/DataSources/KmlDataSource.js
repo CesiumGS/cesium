@@ -19,8 +19,6 @@ define([
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
         '../Core/JulianDate',
-        '../Core/loadBlob',
-        '../Core/loadXML',
         '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/objectToQuery',
@@ -88,8 +86,6 @@ define([
         getFilenameFromUri,
         Iso8601,
         JulianDate,
-        loadBlob,
-        loadXML,
         CesiumMath,
         NearFarScalar,
         objectToQuery,
@@ -966,7 +962,7 @@ define([
 
     //Asynchronously processes an external style file.
     function processExternalStyles(dataSource, resource, styleCollection) {
-        return loadXML(resource).then(function(styleKml) {
+        return resource.fetchXML().then(function(styleKml) {
             return processStyles(dataSource, styleKml, styleCollection, resource, true);
         });
     }
@@ -2379,7 +2375,7 @@ define([
                 queryParameters: query
             });
 
-            promise = loadBlob(data);
+            promise = data.fetchBlob();
 
             sourceUri = defaultValue(sourceUri, data.clone());
         } else {

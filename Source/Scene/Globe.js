@@ -12,7 +12,6 @@ define([
         '../Core/EllipsoidTerrainProvider',
         '../Core/Event',
         '../Core/IntersectionTests',
-        '../Core/loadImage',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -43,7 +42,6 @@ define([
         EllipsoidTerrainProvider,
         Event,
         IntersectionTests,
-        loadImage,
         Ray,
         Rectangle,
         Resource,
@@ -578,7 +576,7 @@ define([
             var oceanNormalMapUrl =  oceanNormalMapResource.url;
             if (defined(oceanNormalMapUrl)) {
                 var that = this;
-                when(loadImage(oceanNormalMapResource), function(image) {
+                when(oceanNormalMapResource.fetchImage(), function(image) {
                     if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
                         // url changed while we were loading
                         return;

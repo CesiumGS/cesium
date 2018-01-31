@@ -24,7 +24,6 @@ define([
         '../Core/JulianDate',
         '../Core/LagrangePolynomialApproximation',
         '../Core/LinearApproximation',
-        '../Core/loadJson',
         '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/Quaternion',
@@ -113,7 +112,6 @@ define([
         JulianDate,
         LagrangePolynomialApproximation,
         LinearApproximation,
-        loadJson,
         CesiumMath,
         NearFarScalar,
         Quaternion,
@@ -1987,7 +1985,7 @@ define([
                 queryParameters: query
             });
 
-            promise = loadJson(czml);
+            promise = czml.fetchJson();
 
             sourceUri = defaultValue(sourceUri, czml.clone());
         }

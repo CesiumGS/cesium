@@ -272,7 +272,9 @@ define([
     };
 
     //Exposed for testing
-    CesiumIon._loadJson = loadJson;
+    CesiumIon._loadJson = function(resource) {
+        return resource.fetchJson();
+    };
 
     return CesiumIon;
 });

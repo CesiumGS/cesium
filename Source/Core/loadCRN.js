@@ -4,7 +4,6 @@ define([
         './defined',
         './deprecationWarning',
         './DeveloperError',
-        './loadArrayBuffer',
         './Resource',
         './TaskProcessor'
     ], function(
@@ -13,7 +12,6 @@ define([
         defined,
         deprecationWarning,
         DeveloperError,
-        loadArrayBuffer,
         Resource,
         TaskProcessor) {
     'use strict';
@@ -69,12 +67,12 @@ define([
         if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
             loadPromise = when.resolve(resourceOrUrlOrBuffer);
         } else {
-            resourceOrUrlOrBuffer = Resource.createIfNeeded(resourceOrUrlOrBuffer, {
+            var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer, {
                 headers: headers,
                 request: request
             });
 
-            loadPromise = loadArrayBuffer(resourceOrUrlOrBuffer);
+            loadPromise = resource.fetchArrayBuffer();
         }
 
         if (!defined(loadPromise)) {
