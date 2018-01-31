@@ -330,6 +330,11 @@ define([
         this._ancestorWithLoadedContent = undefined;
         this._isClipped = true;
 
+        // Additive attenuation
+        this._leafDescendants = undefined;
+        this._accumulatedGeometricError = undefined;
+        this._descendantGeometricError = undefined;
+
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
         this._debugViewerRequestVolume = undefined;
