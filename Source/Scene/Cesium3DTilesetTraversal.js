@@ -95,6 +95,11 @@ define([
         // set tile._selectionDepth on all tiles
         traverseAndSelect(tileset, root, frameState);
 
+        // Compute descendant geometric errors for point attenuation with additive refinement
+        if (hasAdditiveContent(root) && tileset.pointCloudShading.attenuation) {
+            findDescendantGeometricError(root, frameState);
+        }
+
         tileset._desiredTiles.trim();
     }
 
@@ -148,6 +153,43 @@ define([
 
     var scratchStack = [];
     var scratchStack2 = [];
+
+    function findDescendantGeometricError(tile, frameState)
+    {
+        var content = tile._content;
+
+        var children = tile.children;
+        var childrenLength = children.length;
+
+        // Is an actual leaf. Return the base resolution.
+        if (tile.geometricError === 0.0) {
+            var baseResolution = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+            content._descendantGeometricError = baseResolution;
+            //console.log('1: ' + content._descendantGeometricError);
+            return content._descendantGeometricError;
+        }
+
+        var descendantGeometricError = Number.MAX_VALUE;
+        for (var i = 0; i < childrenLength; ++i) {
+            var child = children[i];
+            var selected = child.selected && child._selectedFrame === frameState.frameNumber && child.hasRenderableContent;
+            var empty = child.hasEmptyContent || child.hasTilesetContent;
+            if (selected || empty) {
+                descendantGeometricError = Math.min(descendantGeometricError, findDescendantGeometricError(child, frameState));
+            }
+        }
+
+        // Is a "leaf" of the tree. None of its children are selected. Return the geometric error.
+        if (descendantGeometricError === Number.MAX_VALUE) {
+            content._descendantGeometricError = tile.geometricError;
+            //console.log('2: ' + content._descendantGeometricError);
+            return content._descendantGeometricError;
+        }
+
+        content._descendantGeometricError = descendantGeometricError;
+        //console.log('3: ' + content._descendantGeometricError);
+        return content._descendantGeometricError;
+    }
 
     /**
      * Traverse the tree while tiles are visible and check if their selected frame is the current frame.

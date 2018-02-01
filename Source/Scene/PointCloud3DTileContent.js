@@ -160,6 +160,7 @@ define([
 
         // Options for geometric error based attenuation
         this._attenuation = false;
+        this._descendantGeometricError = undefined; // For additive refinement
         this._geometricErrorScale = undefined;
         this._maximumAttenuation = undefined;
         this._baseResolution = undefined;
@@ -551,10 +552,15 @@ define([
                 scratch.y = content._tileset.timeSinceLoad;
 
                 if (content._attenuation) {
-                    var geometricError = content.tile.geometricError;
-                    if (geometricError === 0) {
-                        geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+
+                    var geometricError = content._descendantGeometricError; // additive
+                    if (!defined(geometricError)) {
+                        geometricError = content.tile.geometricError;
+                        if (geometricError === 0) {
+                            geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+                        }
                     }
+
                     var frustum = frameState.camera.frustum;
                     var depthMultiplier;
                     // Attenuation is maximumAttenuation in 2D/ortho
