@@ -298,6 +298,11 @@ defineSuite([
         expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
     });
 
+    it('evaluates number constants', function() {
+        var expression = new Expression('Number.POSITIVE_INFINITY');
+        expect(expression.evaluate(frameState, undefined)).toEqual(Number.POSITIVE_INFINITY);
+    });
+
     it('converts to literal number', function() {
         var expression = new Expression('Number()');
         expect(expression.evaluate(frameState, undefined)).toEqual(0);

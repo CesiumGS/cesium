@@ -69,7 +69,7 @@ define([
      * @param {Number} [options.maximumHeight=1.0] Sets the maximum height of particles in pixels.
      * @param {Number} [options.lifeTime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=ParticleSystem.html|Particle Systems Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=ParticleSystem.html|Particle Systems Demo}
      */
     function ParticleSystem(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

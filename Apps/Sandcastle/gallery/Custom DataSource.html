@@ -238,7 +238,7 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
     //Use 'when' to load the URL into a json object
     //and then process is with the `load` function.
     var that = this;
-    return Cesium.when(Cesium.loadJson(url), function(json) {
+    return Cesium.Resource.fetchJson(url).then(function(json) {
         return that.load(json, url);
     }).otherwise(function(error) {
         //Otherwise will catch any errors or exceptions that occur

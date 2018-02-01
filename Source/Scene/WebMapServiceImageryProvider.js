@@ -3,11 +3,13 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
         '../Core/objectToQuery',
         '../Core/queryToObject',
+        '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         './GetFeatureInfoFormat',
@@ -17,11 +19,13 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
         objectToQuery,
         queryToObject,
+        Resource,
         WebMercatorTilingScheme,
         Uri,
         GetFeatureInfoFormat,
@@ -35,12 +39,10 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
+     * @param {Resource|String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
      * @param {String} options.layers The layers to include, separated by commas.
-     * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters
-     *        to pass to the WMS server in the GetMap URL.
-     * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional
-     *        parameters to pass to the WMS server in the GetFeatureInfo URL.
+     * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
+     * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
      * @param {Boolean} [options.enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke
      *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
@@ -62,8 +64,6 @@ define([
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
@@ -101,95 +101,73 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        this._layers = options.layers;
-
-        var getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
-
-        // Build the template URLs for tiles and pickFeatures.
-        var uri = new Uri(options.url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-        var parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
-        queryOptions = combine(parameters, queryOptions);
-
-        var pickFeaturesUri;
-        var pickFeaturesQueryOptions;
-
-        pickFeaturesUri = new Uri(options.url);
-        pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
-        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
-        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
-
-        function setParameter(name, value) {
-            if (!defined(queryOptions[name])) {
-                queryOptions[name] = value;
-            }
-
-            if (defined(pickFeaturesQueryOptions) && !defined(pickFeaturesQueryOptions[name])) {
-                pickFeaturesQueryOptions[name] = value;
-            }
+        if (defined(options.proxy)) {
+            deprecationWarning('WebMapServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
         }
 
-        setParameter('layers', options.layers);
+        var resource = Resource.createIfNeeded(options.url, {
+            proxy: options.proxy
+        });
+
+        var pickFeatureResource = resource.clone();
+
+        resource.addQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
+        pickFeatureResource.addQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
+
+        if (defined(options.parameters)) {
+            resource.addQueryParameters(objectToLowercase(options.parameters));
+        }
+
+        if (defined(options.getFeatureInfoParameters)) {
+            pickFeatureResource.addQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
+        }
+
+        var parameters = {};
+        parameters.layers = options.layers;
+        parameters.bbox = '{westProjected},{southProjected},{eastProjected},{northProjected}';
+        parameters.width = '{width}';
+        parameters.height = '{height}';
 
         // Use SRS or CRS based on the WMS version.
-        if (parseFloat(parameters.version) >= 1.3) {
-          // Use CRS with 1.3.0 and going forward.
-          // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
-          // bbox requests.
-          setParameter('crs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
+        if (parseFloat(resource.queryParameters.version) >= 1.3) {
+            // Use CRS with 1.3.0 and going forward.
+            // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
+            // bbox requests.
+            parameters.crs = options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84';
+        } else {
+            // SRS for WMS 1.1.0 or 1.1.1.
+            parameters.srs = options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
         }
-        else {
-          // SRS for WMS 1.1.0 or 1.1.1.
-          setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
-        }
 
-        setParameter('bbox', '{westProjected},{southProjected},{eastProjected},{northProjected}');
-        setParameter('width', '{width}');
-        setParameter('height', '{height}');
+        resource.addQueryParameters(parameters, true);
+        pickFeatureResource.addQueryParameters(parameters, true);
 
-        uri.query = objectToQuery(queryOptions);
+        var pickFeatureParams = {
+            query_layers: options.layers,
+            x: '{i}',
+            y: '{j}',
+            info_format: '{format}'
+        };
+        pickFeatureResource.addQueryParameters(pickFeatureParams, true);
 
-        // objectToQuery escapes the placeholders.  Undo that.
-        var templateUrl = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
-
-        var pickFeaturesTemplateUrl;
-        if (defined(pickFeaturesQueryOptions)) {
-            if (!defined(pickFeaturesQueryOptions.query_layers)) {
-                pickFeaturesQueryOptions.query_layers = options.layers;
-            }
-
-            if (!defined(pickFeaturesQueryOptions.x)) {
-                pickFeaturesQueryOptions.x = '{i}';
-            }
-
-            if (!defined(pickFeaturesQueryOptions.y)) {
-                pickFeaturesQueryOptions.y = '{j}';
-            }
-
-            if (!defined(pickFeaturesQueryOptions.info_format)) {
-                pickFeaturesQueryOptions.info_format = '{format}';
-            }
-
-            pickFeaturesUri.query = objectToQuery(pickFeaturesQueryOptions);
-            pickFeaturesTemplateUrl = pickFeaturesUri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
-        }
+        this._resource = resource;
+        this._pickFeaturesResource = pickFeatureResource;
+        this._layers = options.layers;
 
         // Let UrlTemplateImageryProvider do the actual URL building.
         this._tileProvider = new UrlTemplateImageryProvider({
-            url : templateUrl,
-            pickFeaturesUrl : pickFeaturesTemplateUrl,
+            url : resource,
+            pickFeaturesUrl : pickFeatureResource,
             tilingScheme : defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid})),
             rectangle : options.rectangle,
             tileWidth : options.tileWidth,
             tileHeight : options.tileHeight,
             minimumLevel : options.minimumLevel,
             maximumLevel : options.maximumLevel,
-            proxy : options.proxy,
             subdomains: options.subdomains,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
-            getFeatureInfoFormats : getFeatureInfoFormats,
+            getFeatureInfoFormats : defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats),
             enablePickFeatures: options.enablePickFeatures
         });
     }
@@ -203,7 +181,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource._url;
             }
         },
 
@@ -215,7 +193,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._tileProvider.proxy;
+                return this._resource.proxy;
             }
         },
 

@@ -11,13 +11,15 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Scene/DiscardMissingTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'ThirdParty/Uri'
     ], function(
         GoogleEarthEnterpriseImageryProvider,
         decodeGoogleEarthEnterpriseData,
@@ -31,13 +33,15 @@ defineSuite([
         loadWithXhr,
         Rectangle,
         RequestScheduler,
+        Resource,
         DiscardMissingTileImagePolicy,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        when) {
+        when,
+        Uri) {
     'use strict';
 
     beforeEach(function() {
@@ -82,12 +86,16 @@ defineSuite([
         });
     }
 
-    function installFakeImageRequest(expectedUrl) {
+    function installFakeImageRequest(expectedUrl, proxy) {
         loadImage.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url)) {
                 // load blob url normally
                 loadImage.defaultCreateImage(url, crossOrigin, deferred);
             } else {
+                if (proxy) {
+                    var uri = new Uri(url);
+                    url = decodeURIComponent(uri.query);
+                }
                 if (defined(expectedUrl)) {
                     expect(url).toEqual(expectedUrl);
                 }
@@ -98,6 +106,11 @@ defineSuite([
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (defined(expectedUrl)) {
+                if (proxy) {
+                    var uri = new Uri(url);
+                    url = decodeURIComponent(uri.query);
+                }
+
                 expect(url).toEqual(expectedUrl);
             }
 
@@ -107,6 +120,24 @@ defineSuite([
     }
 
     it('resolves readyPromise', function() {
+        installMockGetQuadTreePacket();
+        var url = 'http://fake.fake.invalid';
+
+        var resource = new Resource({
+            url : url
+        });
+
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
+            url : resource
+        });
+
+        return imageryProvider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(imageryProvider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
         installMockGetQuadTreePacket();
         var url = 'http://fake.fake.invalid';
 
@@ -121,7 +152,7 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        var url = 'host.invalid';
+        var url = 'http://host.invalid';
         imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });
@@ -213,13 +244,13 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(imageryProvider.url).toEqual(url);
+        expect(imageryProvider._metadata._resource._url).toEqual(url);
         expect(imageryProvider.proxy).toEqual(proxy);
 
         return pollToPromise(function() {
             return imageryProvider.ready;
         }).then(function() {
-            installFakeImageRequest(proxy.getURL('http://foo.bar.invalid/flatfile?f1-03-i.1'));
+            installFakeImageRequest('http://foo.bar.invalid/flatfile?f1-03-i.1', true);
 
             return imageryProvider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
@@ -228,7 +259,7 @@ defineSuite([
     });
 
     it('raises error on invalid url', function() {
-        var url = 'host.invalid';
+        var url = 'http://host.invalid';
         imageryProvider = new GoogleEarthEnterpriseImageryProvider({
             url : url
         });

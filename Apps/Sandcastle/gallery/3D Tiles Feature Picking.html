@@ -40,9 +40,10 @@ viewer.scene.camera.setView({
 });
 
 // Load the NYC buildings tileset
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://beta.cesium.com/api/assets/1461?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkYWJmM2MzNS02OWM5LTQ3OWItYjEyYS0xZmNlODM5ZDNkMTYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjFdLCJpYXQiOjE0OTkyNjQ3NDN9.vuR75SqPDKcggvUrG_vpx0Av02jdiAxnnB1fNf-9f7s'
-}));
+Cesium.CesiumIon.create3DTileset(1461, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkYWJmM2MzNS02OWM5LTQ3OWItYjEyYS0xZmNlODM5ZDNkMTYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjFdLCJpYXQiOjE0OTkyNjQ3NDN9.vuR75SqPDKcggvUrG_vpx0Av02jdiAxnnB1fNf-9f7s' })
+    .then(function(tileset) {
+        viewer.scene.primitives.add(tileset);
+    });
 
 // HTML overlay for showing feature name on mouseover
 var nameOverlay = document.createElement('div');

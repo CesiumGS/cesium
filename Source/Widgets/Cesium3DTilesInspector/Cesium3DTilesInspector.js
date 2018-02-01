@@ -80,6 +80,21 @@ define([
         displayPanelContents.appendChild(makeCheckbox('showContentBoundingVolumes', 'Content Volumes'));
         displayPanelContents.appendChild(makeCheckbox('showRequestVolumes', 'Request Volumes'));
 
+        displayPanelContents.appendChild(makeCheckbox('pointCloudShading', 'Point Cloud Shading'));
+        var pointCloudShadingContainer = document.createElement('div');
+        pointCloudShadingContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : pointCloudShading, "cesium-cesiumInspector-hide" : !pointCloudShading}');
+        pointCloudShadingContainer.appendChild(makeRangeInput('geometricErrorScale', 0, 2, 0.01, 'Geometric Error Scale'));
+        pointCloudShadingContainer.appendChild(makeRangeInput('maximumAttenuation', 0, 32, 1, 'Maximum Attenuation'));
+        pointCloudShadingContainer.appendChild(makeRangeInput('baseResolution', 0, 1, 0.01, 'Base Resolution'));
+        pointCloudShadingContainer.appendChild(makeCheckbox('eyeDomeLighting', 'Eye Dome Lighting (EDL)'));
+        displayPanelContents.appendChild(pointCloudShadingContainer);
+
+        var edlContainer = document.createElement('div');
+        edlContainer.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : eyeDomeLighting, "cesium-cesiumInspector-hide" : !eyeDomeLighting}');
+        edlContainer.appendChild(makeRangeInput('eyeDomeLightingStrength', 0, 2.0, 0.1, 'EDL Strength'));
+        edlContainer.appendChild(makeRangeInput('eyeDomeLightingRadius', 0, 4.0, 0.1, 'EDL Radius'));
+        pointCloudShadingContainer.appendChild(edlContainer);
+
         updatePanelContents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
         updatePanelContents.appendChild(makeCheckbox('dynamicScreenSpaceError', 'Dynamic Screen Space Error'));
         var sseContainer = document.createElement('div');

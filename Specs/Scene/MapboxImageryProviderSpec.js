@@ -5,6 +5,7 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -18,6 +19,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
@@ -47,6 +49,22 @@ defineSuite([
     it('resolves readyPromise', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'made/up/mapbox/server/'
+        });
+
+        var provider = new MapboxImageryProvider({
+            url : resource,
             mapId: 'test-id'
         });
 

@@ -7,10 +7,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/Buffer',
@@ -19,9 +21,9 @@ define([
         '../Renderer/Pass',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './getAttributeOrUniformBySemantic',
         './Model',
         './ModelInstance',
+        './ModelUtility',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -33,10 +35,12 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Matrix4,
         PrimitiveType,
+        Resource,
         RuntimeError,
         Transforms,
         Buffer,
@@ -45,9 +49,9 @@ define([
         Pass,
         ShaderSource,
         when,
-        getAttributeOrUniformBySemantic,
         Model,
         ModelInstance,
+        ModelUtility,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -72,11 +76,10 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
-     * @param {String} [options.url] The url to the .gltf file.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Resource|String} [options.url] The url to the .gltf file.
      * @param {Object} [options.requestType] The request type, used for request prioritization
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
-     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.
      * @param {Boolean} [options.show=true] Determines if the collection will be shown.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each instance is pickable with {@link Scene#pick}.
@@ -145,11 +148,10 @@ define([
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
         // Passed on to Model
-        this._url = options.url;
-        this._headers = options.headers;
+        this._url = Resource.createIfNeeded(options.url);
         this._requestType = options.requestType;
         this._gltf = options.gltf;
-        this._basePath = options.basePath;
+        this._basePath = Resource.createIfNeeded(options.basePath);
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
         this._upAxis = options.upAxis; // Undocumented option
@@ -223,9 +225,9 @@ define([
         BoundingSphere.expand(this._boundingSphere, translation, this._boundingSphere);
     };
 
-    function getInstancedUniforms(collection, programName) {
+    function getInstancedUniforms(collection, programId) {
         if (defined(collection._instancedUniformsByProgram)) {
-            return collection._instancedUniformsByProgram[programName];
+            return collection._instancedUniformsByProgram[programId];
         }
 
         var instancedUniformsByProgram = {};
@@ -259,7 +261,7 @@ define([
                                     uniformMap[uniformName] = semantic;
                                 } else {
                                     throw new RuntimeError('Shader program cannot be optimized for instancing. ' +
-                                        'Parameter "' + parameter + '" in program "' + programName +
+                                        'Parameter "' + parameter + '" in program "' + programId +
                                         '" uses unsupported semantic "' + semantic + '"'
                                     );
                                 }
@@ -270,14 +272,14 @@ define([
             }
         }
 
-        return instancedUniformsByProgram[programName];
+        return instancedUniformsByProgram[programId];
     }
 
     var vertexShaderCached;
 
     function getVertexShaderCallback(collection) {
-        return function(vs, programName) {
-            var instancedUniforms = getInstancedUniforms(collection, programName);
+        return function(vs, programId) {
+            var instancedUniforms = getInstancedUniforms(collection, programId);
             var usesBatchTable = defined(collection._batchTable);
 
             var renamedSource = ShaderSource.replaceMain(vs, 'czm_instancing_main');
@@ -339,7 +341,9 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(instancedSource);
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(instancedSource);
             }
 
             return instancedSource;
@@ -347,12 +351,12 @@ define([
     }
 
     function getFragmentShaderCallback(collection) {
-        return function(fs) {
+        return function(fs, programId) {
             var batchTable = collection._batchTable;
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
-                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
             }
             return fs;
         };
@@ -399,13 +403,13 @@ define([
     }
 
     function getUniformMapCallback(collection, context) {
-        return function(uniformMap, programName, node) {
+        return function(uniformMap, programId, node) {
             uniformMap = clone(uniformMap);
             uniformMap.czm_instanced_modifiedModelView = createModifiedModelView(collection, context);
             uniformMap.czm_instanced_nodeTransform = createNodeTransformFunction(node);
 
             // Remove instanced uniforms from the uniform map
-            var instancedUniforms = getInstancedUniforms(collection, programName);
+            var instancedUniforms = getInstancedUniforms(collection, programId);
             for (var uniform in instancedUniforms) {
                 if (instancedUniforms.hasOwnProperty(uniform)) {
                     delete uniformMap[uniform];
@@ -431,9 +435,11 @@ define([
     }
 
     function getVertexShaderNonInstancedCallback(collection) {
-        return function(vs) {
+        return function(vs, programId) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(vs);
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -591,7 +597,6 @@ define([
 
         var modelOptions = {
             url : collection._url,
-            headers : collection._headers,
             requestType : collection._requestType,
             gltf : collection._gltf,
             basePath : collection._basePath,
@@ -691,7 +696,7 @@ define([
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
 
             if (defined(collection._url)) {
-                modelOptions.cacheKey = collection._url + '#instanced';
+                modelOptions.cacheKey = collection._url.getUrlComponent() + '#instanced';
             }
         } else {
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);

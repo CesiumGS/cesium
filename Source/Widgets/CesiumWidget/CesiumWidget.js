@@ -166,10 +166,12 @@ define([
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+     * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
      *
      * @example
      * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
@@ -269,7 +271,9 @@ define([
                 scene3DOnly : defaultValue(options.scene3DOnly, false),
                 terrainExaggeration : options.terrainExaggeration,
                 shadows : options.shadows,
-                mapMode2D : options.mapMode2D
+                mapMode2D : options.mapMode2D,
+                requestRenderMode : options.requestRenderMode,
+                maximumRenderTimeChange : options.maximumRenderTimeChange
             });
             this._scene = scene;
 
@@ -283,7 +287,7 @@ define([
             var cesiumCredit = new Credit({
                 text: 'Cesium',
                 imageUrl: cesiumLogoData,
-                link: 'http://cesiumjs.org/',
+                link: 'https://cesiumjs.org/',
                 showOnScreen: true
             });
             creditDisplay.addDefaultCredit(cesiumCredit);
@@ -702,6 +706,8 @@ define([
 
         configureCanvasSize(this);
         configureCameraFrustum(this);
+
+        this._scene.requestRender();
     };
 
     /**

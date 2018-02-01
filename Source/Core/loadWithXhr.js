@@ -1,25 +1,15 @@
 define([
         '../ThirdParty/when',
         './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Request',
-        './RequestErrorEvent',
-        './RequestScheduler',
-        './RuntimeError',
-        './TrustedServers'
+        './defineProperties',
+        './deprecationWarning',
+        './Resource'
     ], function(
         when,
         Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        RuntimeError,
-        TrustedServers) {
+        defineProperties,
+        deprecationWarning,
+        Resource) {
     'use strict';
 
     /**
@@ -31,7 +21,7 @@ define([
      * @exports loadWithXhr
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the data.
+     * @param {Resource|String} options.url The URL of the data.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
      * @param {String} [options.data] The data to send with the request, if any.
@@ -58,168 +48,41 @@ define([
      * @see loadText
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
     function loadWithXhr(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.url', options.url);
+        Check.defined('options', options);
         //>>includeEnd('debug');
 
-        var url = options.url;
+        deprecationWarning('loadWithXhr', 'loadWithXhr is deprecated and will be removed in Cesium 1.44. Please use Resource.fetch instead.');
 
-        var responseType = options.responseType;
-        var method = defaultValue(options.method, 'GET');
-        var data = options.data;
-        var headers = options.headers;
-        var overrideMimeType = options.overrideMimeType;
-        url = defaultValue(url, options.url);
+        // Take advantage that most parameters are the same
+        var resource = new Resource(options);
 
-        var request = defined(options.request) ? options.request : new Request();
-        request.url = url;
-        request.requestFunction = function() {
-            var deferred = when.defer();
-            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
-            if (defined(xhr) && defined(xhr.abort)) {
-                request.cancelFunction = function() {
-                    xhr.abort();
-                };
-            }
-            return deferred.promise;
-        };
-
-        return RequestScheduler.request(request);
+        return resource.fetch({
+            responseType: options.responseType,
+            overrideMimeType: options.overrideMimeType
+        });
     }
 
-    var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+    defineProperties(loadWithXhr, {
+        load : {
+            get : function() {
+                return Resource._Implementations.loadWithXhr;
+            },
+            set : function(value) {
+                Resource._Implementations.loadWithXhr = value;
+            }
+        },
 
-    function decodeDataUriText(isBase64, data) {
-        var result = decodeURIComponent(data);
-        if (isBase64) {
-            return atob(result);
-        }
-        return result;
-    }
-
-    function decodeDataUriArrayBuffer(isBase64, data) {
-        var byteString = decodeDataUriText(isBase64, data);
-        var buffer = new ArrayBuffer(byteString.length);
-        var view = new Uint8Array(buffer);
-        for (var i = 0; i < byteString.length; i++) {
-            view[i] = byteString.charCodeAt(i);
-        }
-        return buffer;
-    }
-
-    function decodeDataUri(dataUriRegexResult, responseType) {
-        responseType = defaultValue(responseType, '');
-        var mimeType = dataUriRegexResult[1];
-        var isBase64 = !!dataUriRegexResult[2];
-        var data = dataUriRegexResult[3];
-
-        switch (responseType) {
-            case '':
-            case 'text':
-                return decodeDataUriText(isBase64, data);
-            case 'arraybuffer':
-                return decodeDataUriArrayBuffer(isBase64, data);
-            case 'blob':
-                var buffer = decodeDataUriArrayBuffer(isBase64, data);
-                return new Blob([buffer], {
-                    type : mimeType
-                });
-            case 'document':
-                var parser = new DOMParser();
-                return parser.parseFromString(decodeDataUriText(isBase64, data), mimeType);
-            case 'json':
-                return JSON.parse(decodeDataUriText(isBase64, data));
-            default:
-                //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Unhandled responseType: ' + responseType);
-                //>>includeEnd('debug');
-        }
-    }
-
-    // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-        var dataUriRegexResult = dataUriRegex.exec(url);
-        if (dataUriRegexResult !== null) {
-            deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
-            return;
-        }
-
-        var xhr = new XMLHttpRequest();
-
-        if (TrustedServers.contains(url)) {
-            xhr.withCredentials = true;
-        }
-
-        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
-            xhr.overrideMimeType(overrideMimeType);
-        }
-
-        xhr.open(method, url, true);
-
-        if (defined(headers)) {
-            for (var key in headers) {
-                if (headers.hasOwnProperty(key)) {
-                    xhr.setRequestHeader(key, headers[key]);
-                }
+        defaultLoad : {
+            get : function() {
+                return Resource._DefaultImplementations.loadWithXhr;
             }
         }
-
-        if (defined(responseType)) {
-            xhr.responseType = responseType;
-        }
-
-        // While non-standard, file protocol always returns a status of 0 on success
-        var localFile = false;
-        if (typeof url === 'string') {
-            localFile = url.indexOf('file://') === 0;
-        }
-
-        xhr.onload = function() {
-            if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
-                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
-                return;
-            }
-
-            var response = xhr.response;
-            var browserResponseType = xhr.responseType;
-
-            //All modern browsers will go into either the first or second if block or last else block.
-            //Other code paths support older browsers that either do not support the supplied responseType
-            //or do not support the xhr.response property.
-            if (xhr.status === 204) {
-                // accept no content
-                deferred.resolve();
-            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
-                deferred.resolve(response);
-            } else if ((responseType === 'json') && typeof response === 'string') {
-                try {
-                    deferred.resolve(JSON.parse(response));
-                } catch (e) {
-                    deferred.reject(e);
-                }
-            } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                deferred.resolve(xhr.responseXML);
-            } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
-                deferred.resolve(xhr.responseText);
-            } else {
-                deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
-            }
-        };
-
-        xhr.onerror = function(e) {
-            deferred.reject(new RequestErrorEvent());
-        };
-
-        xhr.send(data);
-
-        return xhr;
-    };
-
-    loadWithXhr.defaultLoad = loadWithXhr.load;
+    });
 
     return loadWithXhr;
 });

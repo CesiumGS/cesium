@@ -34,7 +34,7 @@ define([
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the plane casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this plane will be displayed.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
      */
     function PlaneGraphics(options) {
         this._plane = undefined;

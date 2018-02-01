@@ -1,22 +1,23 @@
+All code in Cesium is publicly peer reviewed.  We review code to share knowledge, foster shared ownership, and improve code quality and consistency.
 
-
-All code in Cesium is publicly peer reviewed.  We review code to share knowledge, foster shared ownership, and improve code quality and consistency.  Just knowing that code will be reviewed improves its quality.
-
-This guide describes best practices for code reviews.
+This guide describes best practices for code reviewers.
 
 * [General](#general)
 * [Reviewing](#reviewing)
 * [Changes to the Public Cesium API](#changes-to-the-public-cesium-api)
 * [Testing](#testing)
 * [Merging](#merging)
+* [Useful Git Commit Management](#useful-git-commit-management)
 * [Resources](#resources)
 
 ## General
 
-* GitHub has great tools for code reviews in pull requests.  Become familiar with [them](https://help.github.com/articles/using-pull-requests/#reviewing-proposed-changes).
-* If we don't have a CLA for the contributor who opened the pull request (or, more precisely, any contributor to the branch), politely ask for one before reviewing the pull request ([example](https://github.com/AnalyticalGraphicsInc/cesium/pull/2918#issuecomment-127805425)).
-* Most pull requests require additional work, often minor but sometimes major, before being merged.  It's not a big deal.  Sometimes we open a pull request with a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments) for early feedback.
-* Anyone is encouraged to review any pull request that interests them.  However, someone familiar with the changed code should ultimately merge it.
+* It is ultimately the responsibility of the pull request opener to get their changes merged. They should champion their code being merged and should bump the PR or `@mention` a specific developer if it is not getting the necessary attention.
+* GitHub has great [tools for code reviews in pull requests](https://help.github.com/articles/using-pull-requests/#reviewing-proposed-changes) that you should become familiar with.
+* We need a CLA for any contribution. If we don't have a CLA for the contributor who opened the pull request (or, more precisely, any contributor to the branch), the Cesium Concierge will ask for one. If you receive no updates, politely ask for one before reviewing the pull request ([example](https://github.com/AnalyticalGraphicsInc/cesium/pull/2918#issuecomment-127805425)).
+* Most pull requests require additional work, minor or major, before being merged. Sometime pull requests are submitted incomplete for early feedback. Include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments) covering the steps that must be completed before merging.
+* Anyone is encouraged to review any pull request that interests them.  However, someone familiar with the changed code should ultimately merge it. 
+* It's OK to provide a few comments without taking responsibility for the final merge, for example commenting on the state of the public API or a Sandcastle example. However, be explicit that you will not be reviewing again.  This sometimes happens when a reviewer wants to take a quick look at the public API or code examples but not all the implementation details.
 
 ## Reviewing
 
@@ -25,9 +26,9 @@ This guide describes best practices for code reviews.
 * Provide motivation when it isn't obvious.  Suggest why a change should be made.
 * Point contributors to a relevant part of the [Coding Guide](../CodingGuide/README.md) when useful.
 * _Be concise_.  Make every word tell.
-* _Be responsive_.  The contributor should expect prompt feedback from reviewers, and reviewers should expect the same.  If not, politely ask for it.  We all want pull requests to get into master.
+* _Be responsive_.  The contributor should expect prompt feedback from reviewers, and reviewers should expect the same.  If not, politely ask for it.  We all want pull requests to get into master. Strive to respond to mentions and requests within 24 hours.
 * _Limit the scope_.  As a reviewer, it is easy to want to increase the scope, e.g., "why don't we do this everywhere?".  These are often fair questions but can be better served by submitting a separate issue to allow more incremental pull requests.
-* Bring others into the conversation sparingly.  If someone has expertise with a particular language feature or problem domain under review, invite them to comment.
+* Bring others into the conversation sparingly.  If someone has expertise with a particular language feature or problem domain under review, invite them to comment with an `@mention`.
 * If an experienced contributor makes a occasional whitespace or trivial mistake, just fix it to save on noise and speedup the review.
 
 ## Changes to the Public Cesium API
@@ -47,9 +48,10 @@ This guide describes best practices for code reviews.
 
 ## Merging
 
-* Cesium uses Travis CI for continuous integration.  Travis automatically builds Cesium, runs ESLint, and generates the documentation for each branch pushed to GitHub.  Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green `Merge pull request` button:
+* When a reviewer hits merge, the ideal is that they have enough knowledge of the new code that they could support it in the future.  In practice, this isn't always realistic but we strive for it.
+* Cesium uses Travis CI for continuous integration.  Travis automatically builds Cesium, runs ESLint, and generates the documentation for each branch pushed to GitHub.  Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green "Merge pull request" button:
 
-![](Travis.jpg)
+![Travis CI checks](Travis.jpg)
 
 * Delete the branch after merging the pull request.
 * Verify that the corresponding issue (if any) was closed.
