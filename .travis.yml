@@ -39,6 +39,10 @@ script:
   - npm run test -- --browsers Electron --failTaskOnError --webgl-stub --release --suppressPassed
   - echo -en 'travis_fold:end:script test.release\\r'
 
+  - echo 'test node' && echo -en 'travis_fold:start:script test.node\\r'
+  - node index.js
+  - echo -en 'travis_fold:end:script test.node\\r'
+
   - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
   - npm run cloc
   - echo -en 'travis_fold:end:script.cloc\\r'
