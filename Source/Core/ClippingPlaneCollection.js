@@ -9,6 +9,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './destroyObject',
         './DeveloperError',
         './Intersect',
         './Matrix4',
@@ -31,6 +32,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         Intersect,
         Matrix4,
@@ -103,17 +105,33 @@ define([
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
         /**
-         * Range for inflating the normalized distances in the clipping plane texture
+         * If this ClippingPlaneCollection is owned, only its owner can destroy it using checkDestroy(object)
          *
-         * @type {Cartesian2}
+         * @type {Object}
+         * @default undefined
          */
-        this.distanceRange = new Cartesian2();
+        this.owner = undefined;
 
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
         this.unionClippingRegions = defaultValue(options.unionClippingRegions, false);
 
-        this._rgbaUbytePixels = new Uint8Array(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
+        // Avoid wastefully re-uploading textures when the clipping planes don't change between frames
+        var previousTextureBytes = new ArrayBuffer(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
+        previousTextureBytes[0] = 1;
+        var currentTextureBytes = new ArrayBuffer(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
+
+        this._textureBytes = new Uint8Array(currentTextureBytes);
+
+        // Uint32 views for comparison and copy
+        this._previousUint32View = new Uint32Array(previousTextureBytes);
+        this._currentUint32View = new Uint32Array(currentTextureBytes);
+
+        // Avoid wasteful re-upload checks within a frame when a ClippingPlaneCollection is shared by many Models in a Cesium3DTileset
+        this._planeTextureDirty = true;
+
+        this._distanceRange = new Cartesian2();
+        this._clippingPlanesTexture = undefined;
     }
 
     function unionIntersectFunction(value) {
@@ -157,6 +175,30 @@ define([
                     this._unionClippingRegions = value;
                     this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
                 }
+            }
+        },
+
+        /**
+         * Returns a texture containing packed, untransformed clipping planes.
+         *
+         * @memberof ClippingPlaneCollection.prototype
+         * @type {Texture}
+         * @readonly
+         */
+        texture : {
+            get : function() {
+                return this._clippingPlanesTexture;
+            }
+        },
+
+        /**
+         * Range for inflating the normalized distances in the clipping plane texture
+         *
+         * @type {Cartesian2}
+         */
+        distanceRange : {
+            get : function() {
+                return this._distanceRange;
             }
         }
     });
@@ -305,6 +347,102 @@ define([
     }
 
     var oct32EncodeScratch = new Cartesian4();
+    function packAndReturnChanged(clippingPlaneCollection) {
+        var previousUint32View = clippingPlaneCollection._previousUint32View;
+        var currentUint32View = clippingPlaneCollection._currentUint32View;
+        var textureBytes = clippingPlaneCollection._textureBytes;
+        var planes = clippingPlaneCollection._planes;
+        var length = planes.length;
+        var unchanged = true;
+
+        // Pack all plane normals and get min/max of all distances.
+        // Check each normal for changes.
+        var distanceMin = Number.POSITIVE_INFINITY;
+        var distanceMax = Number.NEGATIVE_INFINITY;
+        var i;
+        for (i = 0; i < length; ++i) {
+            var plane = planes[i];
+
+            var byteIndex = i * 8; // each plane is 4 bytes normal, 4 bytes distance
+
+            var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
+            textureBytes[byteIndex] = oct32Normal.x;
+            textureBytes[byteIndex + 1] = oct32Normal.y;
+            textureBytes[byteIndex + 2] = oct32Normal.z;
+            textureBytes[byteIndex + 3] = oct32Normal.w;
+
+            var uint32Index = i + i;
+            unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
+            if (!unchanged) {
+                previousUint32View[uint32Index] = currentUint32View[uint32Index];
+            }
+
+            var distance = plane.distance;
+            distanceMin = Math.min(distance, distanceMin);
+            distanceMax = Math.max(distance, distanceMax);
+        }
+
+         // Expand distance range a little bit to prevent packing 1s
+         distanceMax += (distanceMax - distanceMin) * CesiumMath.EPSILON3;
+
+         // Normalize all the distances to the range and record them in the typed array.
+         // Check each distance for changes.
+         var distanceRange = clippingPlaneCollection._distanceRange;
+         distanceRange.x = distanceMin;
+         distanceRange.y = distanceMax;
+         var distanceRangeSize = distanceMax - distanceMin;
+         for (i = 0; i < length; ++i) {
+             var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
+             var byteIndex = i * 8 + 4;
+             insertFloat(textureBytes, normalizedDistance, byteIndex);
+
+             var uint32Index = i + i + 1;
+             unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
+             if (!unchanged) {
+                 previousUint32View[uint32Index] = currentUint32View[uint32Index];
+             }
+         }
+         return !unchanged;
+    }
+
+    /**
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * build the resources for clipping planes.
+     * <p>
+     * Do not call this function directly.
+     * </p>
+     */
+    ClippingPlaneCollection.prototype.update = function(frameState) {
+        var clippingPlanesTexture = this._clippingPlanesTexture
+        if (!defined(clippingPlanesTexture)) {
+            clippingPlanesTexture = new Texture({
+                context : frameState.context,
+                width : ClippingPlaneCollection.TEXTURE_WIDTH,
+                height : ClippingPlaneCollection.TEXTURE_WIDTH,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
+            });
+            this._clippingPlanesTexture = clippingPlanesTexture;
+        }
+        if (!this._planeTextureDirty) {
+            return;
+        }
+        // pack planes to currentTextureBytes, do a texture update if anything changed.
+        if (packAndReturnChanged(this)) {
+            clippingPlanesTexture.copyFrom({
+                width : ClippingPlaneCollection.TEXTURE_WIDTH,
+                height : ClippingPlaneCollection.TEXTURE_WIDTH,
+                arrayBufferView :  this._textureBytes
+            });
+        }
+    }
+
     /**
      * Applies the transformations to each plane and packs it into a typed array for transfer to a texture.
      * @private
@@ -446,7 +584,7 @@ define([
      * @type {number}
      * @constant
      */
-    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 128;
+    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 2048;
 
     /**
      * The pixel width of a square, power-of-two RGBA UNSIGNED_BYTE texture
@@ -459,20 +597,25 @@ define([
      */
     ClippingPlaneCollection.TEXTURE_WIDTH = CesiumMath.nextPowerOfTwo(Math.ceil(Math.sqrt(ClippingPlaneCollection.MAX_CLIPPING_PLANES * 2)));
 
-    ClippingPlaneCollection.getTextureParameters = function(context) {
-        return {
-            context : context,
-            width : ClippingPlaneCollection.TEXTURE_WIDTH,
-            height : ClippingPlaneCollection.TEXTURE_WIDTH,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+    ClippingPlaneCollection.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys this ClippingPlaneCollection if it either has no owner or a reference to the owner is passed in.
+     * We only expect an owner to be defined if this collection is shared by one Cesium3DTileset
+     * and a series of Cesium3DTiles with Model content.
+     * @private
+     *
+     * @param {Object} owner An object to check against this ClippingPlaneCollection's owner object
+     */
+    ClippingPlaneCollection.prototype.checkDestroy = function(owner) {
+        if (defined(this.owner) && owner !== this.owner) {
+            return this;
         }
+
+        this._clippingPlanesTexture.destroy();
+        return destroyObject(this);
     }
 
     return ClippingPlaneCollection;

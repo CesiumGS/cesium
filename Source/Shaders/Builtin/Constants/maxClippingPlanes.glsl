@@ -5,4 +5,4 @@
  * @glslConstant
  * @see czm_clipPlanes
  */
-const int czm_maxClippingPlanes = 128;
+const int czm_maxClippingPlanes = 2048;

@@ -526,6 +526,11 @@ define([
          */
         this.clippingPlanes = options.clippingPlanes;
 
+        // Set ownership so no Models created as content will try to delete it
+        if (defined(options.clippingPlanes)) {
+            options.clippingPlanes.owner = this;
+        }
+
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
@@ -1652,6 +1657,14 @@ define([
             this._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
+        // Update clipping planes and set them as clean to avoid re-updating the same information from each tile
+        var clippingPlanes = this.clippingPlanes;
+        if (defined(clippingPlanes)) {
+            clippingPlanes._planeTextureDirty = true;
+            clippingPlanes.update(frameState);
+            clippingPlanes._planeTextureDirty = false;
+        }
+
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
 
         // Do not do out-of-core operations (new content requests, cache removal,
@@ -1723,6 +1736,12 @@ define([
     Cesium3DTileset.prototype.destroy = function() {
         // Destroy debug labels
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
+
+        // Destroy clipping plane collection, setting ownership first.
+        var clippingPlaneCollection = this.clippingPlanes;
+        if (defined(clippingPlaneCollection)) {
+            clippingPlaneCollection.checkDestroy(this);
+        }
 
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {

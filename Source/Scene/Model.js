@@ -707,8 +707,6 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
-
-        this._packedClippingPlanes = undefined; // texture of clipping planes
     }
 
     defineProperties(Model.prototype, {
@@ -3322,7 +3320,7 @@ define([
     function createClippingPlanesLengthFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes)) {
+            if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
                 return 0;
             }
             return clippingPlanes.length;
@@ -3342,7 +3340,8 @@ define([
 
     function createClippingPlanesFunction(model) {
         return function() {
-            return model._packedClippingPlanes;
+            var clippingPlanes = model.clippingPlanes;
+            return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? model._defaultTexture : clippingPlanes.texture;
         };
     }
 
@@ -3773,8 +3772,6 @@ define([
 
         createUniformMaps(model, context);               // using glTF materials/techniques
         createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
-
-        model._packedClippingPlanes = new Texture(ClippingPlaneCollection.getTextureParameters(context));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -4336,14 +4333,10 @@ define([
         }
     }
 
-    function updateClippingPlanes(model) {
+    function updateClippingPlanes(model, frameState) {
         var clippingPlanes = model.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            model._packedClippingPlanes.copyFrom({
-                width : ClippingPlaneCollection.TEXTURE_WIDTH,
-                height : ClippingPlaneCollection.TEXTURE_WIDTH,
-                arrayBufferView :  clippingPlanes.transformAndPackPlanes()
-            });
+            clippingPlanes.update(frameState);
         }
     }
 
@@ -4816,7 +4809,7 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
-            updateClippingPlanes(this);
+            updateClippingPlanes(this, frameState);
         }
 
         if (justLoaded) {
@@ -4954,7 +4947,12 @@ define([
 
         releaseCachedGltf(this);
 
-        this._packedClippingPlanes.destroy();
+        // Check if ClippingPlaneCollection was already destroyed, for instance, by Cesium3DTileset
+        var clippingPlaneCollection = this.clippingPlanes;
+        if (defined(clippingPlaneCollection) && !clippingPlaneCollection.isDestroyed()) {
+            // If not, only destroy if the ClippingPlaneCollection is not owned by a Cesium3DTileset
+            clippingPlaneCollection.checkDestroy(this);
+        }
 
         return destroyObject(this);
     };

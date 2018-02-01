@@ -24,7 +24,18 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <table><tbody>
+        <tr>
+            <td>Spiral Size</td>
+            <td>
+                <input type="range" min="-100.0" max="100.0" step="1.0" data-bind="value: spiralSize, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: spiralSize">
+            </td>
+        </tr>
+    </tbody></table>
+    <select data-bind="options: exampleTypes, value: currentExampleType"></select>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -34,127 +45,139 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     selectionIndicator: false
 });
 
+var clipObjects = ['model', 'b3dm', 'pnts', 'i3dm'];
+var viewModel = {
+    spiralSize : 1.0,
+    exampleTypes : clipObjects,
+    currentExampleType : clipObjects[0]
+};
+var spiralSize = 1.0;
+
+Cesium.knockout.track(viewModel);
+
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'spiralSize').subscribe(
+    function(newValue) {
+        spiralSize = Number.parseFloat(viewModel.spiralSize);
+        updatePlanes();
+    }
+);
+
 var scene = viewer.scene;
-var targetY = 0.2;
 var planeEntities = [];
 var selectedPlane;
 
-var steps = 128;
+var steps = 16;
 var clippingPlanes = [];
-var stepDegrees = 6.28319 / (steps);
+var modelEntityClippingPlanes;
 
-for (var i = 0; i < steps; i++) {
-    var angle = i * stepDegrees + 0.00001;
-    var dir = new Cesium.Cartesian3();
-    dir.x = 1.0;
-    dir.y = Math.tan(angle);
-    if (angle > 1.57079632679) {
-        dir.x = -1.0;
-        dir.y *= -1.0;
+function updatePlanes() {
+    for (var i = 0; i < clippingPlanes.length; i++) {
+        var plane = clippingPlanes[i];
+        plane.distance = spiralSize * (i / (steps / 3) + 0.1);
     }
-    if (angle > 3.14159265359) {
-        dir.x = -1.0;
-        dir.y = dir.y;
-    }
-    if (angle > 4.71238898038) {
-        dir.x = 1.0;
-        dir.y = -dir.y;
-    }
-    Cesium.Cartesian3.normalize(dir, dir);
-    console.log(dir);
-    clippingPlanes.push(new Cesium.Plane(dir, 0.0));
 }
 
-var modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
-    planes : clippingPlanes,
-    edgeWidth: 2.0,
-    edgeColor: Cesium.Color.WHITE
-});
+function createClippingPlanes() {
+    clippingPlanes = [];
+    var stepDegrees = 6.28319 / steps;
+
+    for (var i = 0; i < steps; i++) {
+        var angle = i * stepDegrees + 0.00001;
+        var dir = new Cesium.Cartesian3();
+        dir.x = 1.0;
+        dir.y = Math.tan(angle);
+        if (angle > 1.57079632679) {
+            dir.x = -1.0;
+            dir.y *= -1.0;
+        }
+        if (angle > 3.14159265359) {
+            dir.x = -1.0;
+            dir.y = dir.y;
+        }
+        if (angle > 4.71238898038) {
+            dir.x = 1.0;
+            dir.y = -dir.y;
+        }
+        Cesium.Cartesian3.normalize(dir, dir);
+        clippingPlanes.push(new Cesium.Plane(dir, 0.0));
+    }
+    modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
+        planes : clippingPlanes,
+        edgeWidth: 2.0,
+        edgeColor: Cesium.Color.WHITE,
+        unionClippingRegions : false
+    });
+}
 
 function updateClippingPlanes() {
     return modelEntityClippingPlanes;
 }
 
-// Select plane when mouse down
-var downHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-downHandler.setInputAction(function(movement) {
-    var pickedObject = scene.pick(movement.position);
-    if (Cesium.defined(pickedObject) &&
-            Cesium.defined(pickedObject.id) &&
-            Cesium.defined(pickedObject.id.plane)) {
-        selectedPlane = pickedObject.id.plane;
-        selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.05);
-        selectedPlane.outlineColor = Cesium.Color.WHITE;
-        scene.screenSpaceCameraController.enableInputs = false;
-    }
-}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
+var agiHqUrl = 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg';
 
-// Release plane on mouse up
-var upHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-upHandler.setInputAction(function() {
-    if (Cesium.defined(selectedPlane)) {
-        selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.1);
-        selectedPlane.outlineColor = Cesium.Color.WHITE;
-        selectedPlane = undefined;
-    }
-
-    scene.screenSpaceCameraController.enableInputs = true;
-}, Cesium.ScreenSpaceEventType.LEFT_UP);
-
-// Update plane on mouse move
-var moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-moveHandler.setInputAction(function(movement) {
-    if (Cesium.defined(selectedPlane)) {
-        var deltaY = movement.startPosition.x - movement.endPosition.x;
-        targetY += deltaY;
-    }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
-var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
-function createPlaneUpdateFunction(plane, transform) {
-    return function () {
-        plane.distance = targetY;
-        return Cesium.Plane.transform(plane, transform, scratchPlane);
-    };
-}
-
-var url = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
-
-var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
-var heading = 0.0;//Cesium.Math.toRadians(135.0);
-var pitch = 0.0;
-var roll = 0.0;
-var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
-var entity = viewer.entities.add({
-    name : url,
-    position : position,
-    orientation : orientation,
-    model : {
-        uri : url,
-        scale : 20,
-        minimumPixelSize : 100.0,
-        clippingPlanes : new Cesium.CallbackProperty(updateClippingPlanes, false)
-    }
-});
-
-viewer.trackedEntity = entity;
-
-for (var i = 0; i < clippingPlanes.length; ++i) {
-    var plane = clippingPlanes[i];
-    var planeEntity = viewer.entities.add({
+function loadModel(url) {
+    createClippingPlanes();
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+    var heading = 0.0;//Cesium.Math.toRadians(135.0);
+    var pitch = 0.0;
+    var roll = 0.0;
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+    var entity = viewer.entities.add({
+        name : url,
         position : position,
-        plane : {
-            dimensions : new Cesium.Cartesian2(100.0, 100.0),
-            material : Cesium.Color.WHITE.withAlpha(0.1),
-            plane : new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, Cesium.Matrix4.IDENTITY), false),
-            outline : true,
-            outlineColor : Cesium.Color.WHITE
+        orientation : orientation,
+        model : {
+            uri : url,
+            scale : 20,
+            minimumPixelSize : 100.0,
+            clippingPlanes : new Cesium.CallbackProperty(updateClippingPlanes, false)
         }
     });
+    viewer.trackedEntity = entity;
+}
 
-    planeEntities.push(planeEntity);
-}//Sandcastle_End
+function loadTileset(url) {
+    createClippingPlanes();
+    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+        url : url,
+        clippingPlanes : modelEntityClippingPlanes
+    }));
+
+    tileset.readyPromise.then(function() {
+        var boundingSphere = tileset.boundingSphere;
+        var radius = boundingSphere.radius;
+
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }).otherwise(function(error) {
+        throw(error);
+    });
+}
+
+loadModel(modelUrl);
+
+Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(function(newValue) {
+    reset();
+
+    if (newValue === clipObjects[0]) {
+        loadModel(modelUrl);
+    } else if (newValue === clipObjects[1]) {
+        loadTileset(agiHqUrl);
+    }
+
+});
+
+function reset() {
+    viewer.entities.removeAll();
+    viewer.scene.primitives.removeAll();
+}
+
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

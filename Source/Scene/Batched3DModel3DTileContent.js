@@ -378,14 +378,10 @@ define([
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
             pickObject : pickObject,
-            clippingPlanes : new ClippingPlaneCollection({
-                enabled : false
-            })
+            clippingPlanes : undefined
         });
 
-        if (defined(tileset.clippingPlanes)) {
-            content._model.clippingPlanes = tileset.clippingPlanes.clone();
-        }
+        content._model.clippingPlanes = tileset.clippingPlanes;
     }
 
     function createFeatures(content) {
@@ -457,12 +453,9 @@ define([
 
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        var modelClippingPlanes = this._model.clippingPlanes;
         if (defined(tilesetClippingPlanes)) {
-            tilesetClippingPlanes.clone(modelClippingPlanes);
-            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
-        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
-            modelClippingPlanes.enabled = false;
+            // dereference the clipping planes from the model if they are irrelevant - saves on shading
+            this._model.clippingPlanes = tilesetClippingPlanes.enabled && this._tile._isClipped ? tilesetClippingPlanes : undefined;
         }
 
         this._model.update(frameState);
