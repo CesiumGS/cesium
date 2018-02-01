@@ -814,6 +814,11 @@ define([
                         id : uniformId,
                         image : uniformValue
                     });
+                }else if(uniformValue instanceof HTMLImageElement){
+                    material._loadedImages.push({
+                        id : uniformId,
+                        image : uniformValue
+                    });
                 }
 
                 material._texturePaths[uniformId] = uniformValue;
@@ -967,7 +972,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
+            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {

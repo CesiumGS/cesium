@@ -123,7 +123,7 @@ css: { "cesium-sceneModePicker-visible" : (dropDownVisible && (sceneMode !== _sc
 attr: { title: tooltipColumbusView },\
 click: morphToColumbusView,\
 cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
-        wrapper.appendChild(morphToCVButton);
+        //wrapper.appendChild(morphToCVButton);  Modify date:Oct.13th,2017
 
         knockout.applyBindings(viewModel, wrapper);
 
