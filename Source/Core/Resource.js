@@ -6,13 +6,23 @@ define([
     './defaultValue',
     './defined',
     './defineProperties',
+    './deprecationWarning',
+    './DeveloperError',
     './freezeObject',
     './getAbsoluteUri',
     './getBaseUri',
     './getExtensionFromUri',
+    './isBlobUri',
+    './isCrossOriginUrl',
     './isDataUri',
     './objectToQuery',
     './queryToObject',
+    './Request',
+    './RequestErrorEvent',
+    './RequestScheduler',
+    './RequestState',
+    './RuntimeError',
+    './TrustedServers',
     '../ThirdParty/Uri',
     '../ThirdParty/when'
 ], function(appendForwardSlash,
@@ -22,16 +32,37 @@ define([
             defaultValue,
             defined,
             defineProperties,
+            deprecationWarning,
+            DeveloperError,
             freezeObject,
             getAbsoluteUri,
             getBaseUri,
             getExtensionFromUri,
+            isBlobUri,
+            isCrossOriginUrl,
             isDataUri,
             objectToQuery,
             queryToObject,
+            Request,
+            RequestErrorEvent,
+            RequestScheduler,
+            RequestState,
+            RuntimeError,
+            TrustedServers,
             Uri,
             when) {
     'use strict';
+
+    var xhrBlobSupported = (function() {
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '#', true);
+            xhr.responseType = 'blob';
+            return xhr.responseType === 'blob';
+        } catch (e) {
+            return false;
+        }
+    })();
 
     /**
      * @private
@@ -84,17 +115,28 @@ define([
     }
 
     /**
+     * @private
+     */
+    function checkAndResetRequest(request) {
+        if (request.state === RequestState.ISSUED || request.state === RequestState.ACTIVE) {
+            throw new RuntimeError('The Resource is already being fetched.');
+        }
+
+        request.state = RequestState.UNISSUED;
+        request.deferred = undefined;
+    }
+
+    /**
      * A resource that includes the location and any other parameters we need to retrieve it or create derived resources. It also provides the ability to retry requests.
      *
-     * @param {Object} options An object with the following properties
+     * @alias Resource
+     * @constructor
+     *
+     * @param {String|Object} options A url or an object with the following properties
      * @param {String} options.url The url of the resource.
      * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {String} [options.responseType] The type of response.
-     * @param {String} [options.method='GET'] The method to use.
-     * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
-     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
@@ -129,11 +171,14 @@ define([
      *    retryCallback: refreshTokenRetryCallback,
      *    retryAttempts: 1
      * });
-     *
-     * @constructor
      */
     function Resource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        if (typeof options === 'string') {
+            options = {
+                url: options
+            };
+        }
 
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('options.url', options.url);
@@ -155,35 +200,7 @@ define([
          *
          * @type {Request}
          */
-        this.request = options.request;
-
-        /**
-         * The type of response expected from the request.
-         *
-         * @type {String}
-         */
-        this.responseType = options.responseType;
-
-        /**
-         * The method to use for the request.
-         *
-         * @type {String}
-         */
-        this.method = defaultValue(options.method, 'GET');
-
-        /**
-         * Data to be sent with the request.
-         *
-         * @type {Object}
-         */
-        this.data = options.data;
-
-        /**
-         * Overrides the MIME type returned by the server.
-         *
-         * @type {String}
-         */
-        this.overrideMimeType = options.overrideMimeType;
+        this.request = defaultValue(options.request, new Request());
 
         /**
          * A proxy to be used when loading the resource.
@@ -233,6 +250,22 @@ define([
         args.url = resource;
         return new Resource(args);
     };
+
+    defineProperties(Resource, {
+        /**
+         * Returns true if blobs are supported.
+         *
+         * @memberof Resource
+         * @type {Boolean}
+         *
+         * @readonly
+         */
+        isBlobSupported : {
+            get : function() {
+                return xhrBlobSupported;
+            }
+        }
+    });
 
     defineProperties(Resource.prototype, {
         /**
@@ -308,6 +341,42 @@ define([
         isDataUri: {
             get: function() {
                 return isDataUri(this._url);
+            }
+        },
+
+        /**
+         * True if the Resource refers to a blob URI.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
+        isBlobUri: {
+            get: function() {
+                return isBlobUri(this._url);
+            }
+        },
+
+        /**
+         * True if the Resource refers to a cross origin URL.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
+        isCrossOriginUrl: {
+            get: function() {
+                return isCrossOriginUrl(this._url);
+            }
+        },
+
+        /**
+         * True if the Resource has request headers. This is equivalent to checking if the headers property has any keys.
+         *
+         * @memberof Resource.prototype
+         * @type {Boolean}
+         */
+        hasHeaders: {
+            get: function() {
+                return (Object.keys(this.headers).length > 0);
             }
         }
     });
@@ -387,10 +456,6 @@ define([
      * @param {Object} [options.queryParameters] An object containing query parameters that will be combined with those of the current instance.
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
-     * @param {String} [options.responseType] The type of response.
-     * @param {String} [options.method] The method to use.
-     * @param {Object} [options.data] Data that is sent with the resource request if method is PUT or POST.
-     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
      * @param {Resource~RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
@@ -422,23 +487,14 @@ define([
         if (defined(options.headers)) {
             resource.headers = combine(options.headers, resource.headers);
         }
-        if (defined(options.responseType)) {
-            resource.responseType = options.responseType;
-        }
-        if (defined(options.method)) {
-            resource.method = options.method;
-        }
-        if (defined(options.data)) {
-            resource.data = options.data;
-        }
-        if (defined(options.overrideMimeType)) {
-            resource.overrideMimeType = options.overrideMimeType;
-        }
         if (defined(options.proxy)) {
             resource.proxy = options.proxy;
         }
         if (defined(options.request)) {
             resource.request = options.request;
+        } else {
+            // Clone the request so we keep all the throttle settings
+            resource.request = this.request.clone();
         }
         if (defined(options.retryCallback)) {
             resource.retryCallback = options.retryCallback;
@@ -490,10 +546,6 @@ define([
         result._queryParameters = clone(this._queryParameters);
         result._templateValues = clone(this._templateValues);
         result.headers = clone(this.headers);
-        result.responseType = this.responseType;
-        result.method = this.method;
-        result.data = this.data;
-        result.overrideMimeType = this.overrideMimeType;
         result.proxy = this.proxy;
         result.retryCallback = this.retryCallback;
         result.retryAttempts = this.retryAttempts;
@@ -524,6 +576,859 @@ define([
         this._url = appendForwardSlash(this._url);
     };
 
+    /**
+     * Asynchronously loads the resource as raw binary data.  Returns a promise that will resolve to
+     * an ArrayBuffer once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     * @example
+     * // load a single URL asynchronously
+     * resource.fetchArrayBuffer().then(function(arrayBuffer) {
+     *     // use the data
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchArrayBuffer = function () {
+        return this.fetch({
+            responseType : 'arraybuffer'
+        });
+    };
+
+    /**
+     * Creates a Resource and calls fetchArrayBuffer() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchArrayBuffer = function (options) {
+        var resource = new Resource(options);
+        return resource.fetchArrayBuffer();
+    };
+
+    /**
+     * Asynchronously loads the given resource as a blob.  Returns a promise that will resolve to
+     * a Blob once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     * @example
+     * // load a single URL asynchronously
+     * resource.fetchBlob().then(function(blob) {
+     *     // use the data
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchBlob = function () {
+        return this.fetch({
+            responseType : 'blob'
+        });
+    };
+
+    /**
+     * Creates a Resource and calls fetchBlob() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchBlob = function (options) {
+        var resource = new Resource(options);
+        return resource.fetchBlob();
+    };
+
+    /**
+     * Asynchronously loads the given image resource.  Returns a promise that will resolve to
+     * an {@link Image} once loaded, or reject if the image failed to load.
+     *
+     * @param {Boolean} [preferBlob = false]  If true, we will load the image via a blob.
+     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // load a single image asynchronously
+     * resource.fetchImage().then(function(image) {
+     *     // use the loaded image
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * // load several images in parallel
+     * when.all([resource1.fetchImage(), resource2.fetchImage()]).then(function(images) {
+     *     // images is an array containing all the loaded images
+     * });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchImage = function (preferBlob, allowCrossOrigin) {
+        if (defined(allowCrossOrigin)) {
+            deprecationWarning('Resource.fetchImage.allowCrossOrigin', 'The allowCrossOrigin parameter has been deprecated and will be removed in Cesium 1.44. It no longer needs to be specified.');
+        }
+
+        preferBlob = defaultValue(preferBlob, false);
+        allowCrossOrigin = defaultValue(allowCrossOrigin, true);
+
+        checkAndResetRequest(this.request);
+
+        // We try to load the image normally if
+        // 1. Blobs aren't supported
+        // 2. It's a data URI
+        // 3. It's a blob URI
+        // 4. It doesn't have request headers and we preferBlob is false
+        if (!xhrBlobSupported || this.isDataUri || this.isBlobUri || (!this.hasHeaders && !preferBlob)) {
+            return fetchImage(this, allowCrossOrigin);
+        }
+
+        var blobPromise = this.fetchBlob();
+        if (!defined(blobPromise)) {
+            return;
+        }
+
+        var generatedBlobResource;
+        var generatedBlob;
+        return blobPromise
+            .then(function(blob) {
+                if (!defined(blob)) {
+                    return;
+                }
+                generatedBlob = blob;
+                var blobUrl = window.URL.createObjectURL(blob);
+                generatedBlobResource = new Resource({
+                    url: blobUrl
+                });
+
+                return fetchImage(generatedBlobResource);
+            })
+            .then(function(image) {
+                if (!defined(image)) {
+                    return;
+                }
+                window.URL.revokeObjectURL(generatedBlobResource.url);
+
+                // This is because the blob object is needed for DiscardMissingTileImagePolicy
+                // See https://github.com/AnalyticalGraphicsInc/cesium/issues/1353
+                image.blob = generatedBlob;
+                return image;
+            })
+            .otherwise(function(error) {
+                if (defined(generatedBlobResource)) {
+                    window.URL.revokeObjectURL(generatedBlobResource.url);
+                }
+
+                return when.reject(error);
+            });
+    };
+
+    function fetchImage(resource, allowCrossOrigin) {
+        var request = resource.request;
+        request.url = resource.url;
+        request.requestFunction = function() {
+            var url = resource.url;
+            var crossOrigin = false;
+
+            // data URIs can't have allowCrossOrigin set.
+            if (!resource.isDataUri && !resource.isBlobUri) {
+                crossOrigin = resource.isCrossOriginUrl;
+            }
+
+            var deferred = when.defer();
+
+            Resource._Implementations.createImage(url, crossOrigin && allowCrossOrigin, deferred);
+
+            return deferred.promise;
+        };
+
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                // Don't retry cancelled or otherwise aborted requests
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return fetchImage(resource, allowCrossOrigin);
+                        }
+
+                        return when.reject(e);
+                    });
+            });
+    }
+
+    /**
+     * Creates a Resource and calls fetchImage() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {Boolean} [options.preferBlob = false]  If true, we will load the image via a blob.
+     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchImage = function (options) {
+        var resource = new Resource(options);
+        return resource.fetchImage(options.preferBlob, options.allowCrossOrigin);
+    };
+
+    /**
+     * Asynchronously loads the given resource as text.  Returns a promise that will resolve to
+     * a String once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     * @example
+     * // load text from a URL, setting a custom header
+     * var resource = new Resource({
+     *   url: 'http://someUrl.com/someJson.txt',
+     *   headers: {
+     *     'X-Custom-Header' : 'some value'
+     *   }
+     * });
+     * resource.fetchText().then(function(text) {
+     *     // Do something with the text
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchText = function() {
+        return this.fetch({
+            responseType : 'text'
+        });
+    };
+
+    /**
+     * Creates a Resource and calls fetchText() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchText = function (options) {
+        var resource = new Resource(options);
+        return resource.fetchText();
+    };
+
+    // note: &#42;&#47;&#42; below is */* but that ends the comment block early
+    /**
+     * Asynchronously loads the given resource as JSON.  Returns a promise that will resolve to
+     * a JSON object once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled. This function
+     * adds 'Accept: application/json,&#42;&#47;&#42;;q=0.01' to the request headers, if not
+     * already specified.
+     *
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * resource.fetchJson().then(function(jsonData) {
+     *     // Do something with the JSON object
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchJson = function() {
+        var promise = this.fetch({
+            responseType : 'text',
+            headers: {
+                Accept : 'application/json,*/*;q=0.01'
+            }
+        });
+
+        if (!defined(promise)) {
+            return undefined;
+        }
+
+        return promise
+            .then(function(value) {
+                if (!defined(value)) {
+                    return;
+                }
+                return JSON.parse(value);
+            });
+    };
+
+    /**
+     * Creates a Resource and calls fetchJson() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchJson = function (options) {
+        var resource = new Resource(options);
+        return resource.fetchJson();
+    };
+
+    /**
+     * Asynchronously loads the given resource as XML.  Returns a promise that will resolve to
+     * an XML Document once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // load XML from a URL, setting a custom header
+     * Cesium.loadXML('http://someUrl.com/someXML.xml', {
+     *   'X-Custom-Header' : 'some value'
+     * }).then(function(document) {
+     *     // Do something with the document
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchXML = function() {
+        return this.fetch({
+            responseType : 'document',
+            overrideMimeType : 'text/xml'
+        });
+    };
+
+    /**
+     * Creates a Resource and calls fetchXML() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchXML = function (options) {
+        var resource = new Resource(options);
+        return resource.fetchXML();
+    };
+
+    /**
+     * Requests a resource using JSONP.
+     *
+     * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // load a data asynchronously
+     * resource.loadJsonp().then(function(data) {
+     *     // use the loaded data
+     * }).otherwise(function(error) {
+     *     // an error occurred
+     * });
+     *
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetchJsonp = function(callbackParameterName) {
+        callbackParameterName = defaultValue(callbackParameterName, 'callback');
+
+        checkAndResetRequest(this.request);
+
+        //generate a unique function name
+        var functionName;
+        do {
+            functionName = 'loadJsonp' + Math.random().toString().substring(2, 8);
+        } while (defined(window[functionName]));
+
+        return fetchJsonp(this, callbackParameterName, functionName);
+    };
+
+    function fetchJsonp(resource, callbackParameterName, functionName) {
+        var callbackQuery = {};
+        callbackQuery[callbackParameterName] = functionName;
+        resource.addQueryParameters(callbackQuery);
+
+        var request = resource.request;
+        request.url = resource.url;
+        request.requestFunction = function() {
+            var deferred = when.defer();
+
+            //assign a function with that name in the global scope
+            window[functionName] = function(data) {
+                deferred.resolve(data);
+
+                try {
+                    delete window[functionName];
+                } catch (e) {
+                    window[functionName] = undefined;
+                }
+            };
+
+            Resource._Implementations.loadAndExecuteScript(resource.url, functionName, deferred);
+            return deferred.promise;
+        };
+
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .otherwise(function(e) {
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return fetchJsonp(resource, callbackParameterName, functionName);
+                        }
+
+                        return when.reject(e);
+                    });
+            });
+    }
+
+    /**
+     * Creates a Resource from a URL and calls fetchJsonp() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetchJsonp = function (options) {
+        var resource = new Resource(options);
+        return resource.fetchJsonp(options.callbackParameterName);
+    };
+
+    /**
+     * Asynchronously loads the given resource.  Returns a promise that will resolve to
+     * the result once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
+     * resource.fetch()
+     *   .then(function(blob) {
+     *       // use the data
+     *   }).otherwise(function(error) {
+     *       // an error occurred
+     *   });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetch = function(options) {
+        options = defaultClone(options, defaultValue.EMPTY_OBJECT);
+        options.method = 'GET';
+
+        return makeRequest(this, options);
+    };
+
+    function makeRequest(resource, options) {
+        checkAndResetRequest(resource.request);
+
+        var request = resource.request;
+        request.url = resource.url;
+
+        request.requestFunction = function() {
+            var responseType = options.responseType;
+            var headers = combine(resource.headers, options.headers);
+            var overrideMimeType = options.overrideMimeType;
+            var method = options.method;
+            var data = options.data;
+            var deferred = when.defer();
+            var xhr = Resource._Implementations.loadWithXhr(resource.url, responseType, method, data, headers, deferred, overrideMimeType);
+            if (defined(xhr) && defined(xhr.abort)) {
+                request.cancelFunction = function() {
+                    xhr.abort();
+                };
+            }
+            return deferred.promise;
+        };
+
+        var promise = RequestScheduler.request(request);
+        if (!defined(promise)) {
+            return;
+        }
+
+        return promise
+            .then(function(data) {
+                return data;
+            })
+            .otherwise(function(e) {
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
+
+                return resource.retryOnError(e)
+                    .then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return resource.fetch(options);
+                        }
+
+                        return when.reject(e);
+                    });
+            });
+    }
+
+    var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+
+    function decodeDataUriText(isBase64, data) {
+        var result = decodeURIComponent(data);
+        if (isBase64) {
+            return atob(result);
+        }
+        return result;
+    }
+
+    function decodeDataUriArrayBuffer(isBase64, data) {
+        var byteString = decodeDataUriText(isBase64, data);
+        var buffer = new ArrayBuffer(byteString.length);
+        var view = new Uint8Array(buffer);
+        for (var i = 0; i < byteString.length; i++) {
+            view[i] = byteString.charCodeAt(i);
+        }
+        return buffer;
+    }
+
+    function decodeDataUri(dataUriRegexResult, responseType) {
+        responseType = defaultValue(responseType, '');
+        var mimeType = dataUriRegexResult[1];
+        var isBase64 = !!dataUriRegexResult[2];
+        var data = dataUriRegexResult[3];
+
+        switch (responseType) {
+            case '':
+            case 'text':
+                return decodeDataUriText(isBase64, data);
+            case 'arraybuffer':
+                return decodeDataUriArrayBuffer(isBase64, data);
+            case 'blob':
+                var buffer = decodeDataUriArrayBuffer(isBase64, data);
+                return new Blob([buffer], {
+                    type : mimeType
+                });
+            case 'document':
+                var parser = new DOMParser();
+                return parser.parseFromString(decodeDataUriText(isBase64, data), mimeType);
+            case 'json':
+                return JSON.parse(decodeDataUriText(isBase64, data));
+            default:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Unhandled responseType: ' + responseType);
+            //>>includeEnd('debug');
+        }
+    }
+
+    /**
+     * Creates a Resource from a URL and calls fetch() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.fetch = function (options) {
+        var resource = new Resource(options);
+        return resource.fetch({
+            // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
+            responseType: options.responseType,
+            overrideMimeType: options.overrideMimeType
+        });
+    };
+
+    /**
+     * Asynchronously posts data the given resource.  Returns a promise that will resolve to
+     * the result once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @param {Object} data Data that is posted with the resource.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
+     * resource.post(data)
+     *   .then(function(result) {
+     *       // use the result
+     *   }).otherwise(function(error) {
+     *       // an error occurred
+     *   });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.post = function(data, options) {
+        Check.defined('data', data);
+
+        options = defaultClone(options, {});
+        options.method = 'POST';
+        options.data = data;
+
+        return makeRequest(this, options);
+    };
+
+    /**
+     * Creates a Resource from a URL and calls fetch() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} options.data Data that is posted with the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.post = function (options) {
+        var resource = new Resource(options);
+        return resource.post(options.data, {
+            // Make copy of just the needed fields because headers can be passed to both the constructor and to post
+            responseType: options.responseType,
+            overrideMimeType: options.overrideMimeType
+        });
+    };
+
+    /**
+     * Contains implementations of functions that can be replaced for testing
+     *
+     * @private
+     */
+    Resource._Implementations = {};
+
+    Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        var image = new Image();
+
+        image.onload = function() {
+            deferred.resolve(image);
+        };
+
+        image.onerror = function(e) {
+            deferred.reject(e);
+        };
+
+        if (crossOrigin) {
+            if (TrustedServers.contains(url)) {
+                image.crossOrigin = 'use-credentials';
+            } else {
+                image.crossOrigin = '';
+            }
+        }
+
+        image.src = url;
+    };
+
+    Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        var dataUriRegexResult = dataUriRegex.exec(url);
+        if (dataUriRegexResult !== null) {
+            deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+
+        if (TrustedServers.contains(url)) {
+            xhr.withCredentials = true;
+        }
+
+        if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
+            xhr.overrideMimeType(overrideMimeType);
+        }
+
+        xhr.open(method, url, true);
+
+        if (defined(headers)) {
+            for (var key in headers) {
+                if (headers.hasOwnProperty(key)) {
+                    xhr.setRequestHeader(key, headers[key]);
+                }
+            }
+        }
+
+        if (defined(responseType)) {
+            xhr.responseType = responseType;
+        }
+
+        // While non-standard, file protocol always returns a status of 0 on success
+        var localFile = false;
+        if (typeof url === 'string') {
+            localFile = url.indexOf('file://') === 0;
+        }
+
+        xhr.onload = function() {
+            if ((xhr.status < 200 || xhr.status >= 300) && !(localFile && xhr.status === 0)) {
+                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
+                return;
+            }
+
+            var response = xhr.response;
+            var browserResponseType = xhr.responseType;
+
+            //All modern browsers will go into either the first or second if block or last else block.
+            //Other code paths support older browsers that either do not support the supplied responseType
+            //or do not support the xhr.response property.
+            if (xhr.status === 204) {
+                // accept no content
+                deferred.resolve();
+            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+                deferred.resolve(response);
+            } else if ((responseType === 'json') && typeof response === 'string') {
+                try {
+                    deferred.resolve(JSON.parse(response));
+                } catch (e) {
+                    deferred.reject(e);
+                }
+            } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                deferred.resolve(xhr.responseXML);
+            } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
+                deferred.resolve(xhr.responseText);
+            } else {
+                deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
+            }
+        };
+
+        xhr.onerror = function(e) {
+            deferred.reject(new RequestErrorEvent());
+        };
+
+        xhr.send(data);
+
+        return xhr;
+    };
+
+    Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = url;
+
+        var head = document.getElementsByTagName('head')[0];
+        script.onload = function() {
+            script.onload = undefined;
+            head.removeChild(script);
+        };
+        script.onerror = function(e) {
+            deferred.reject(e);
+        };
+
+        head.appendChild(script);
+    };
+
+    /**
+     * The default implementations
+     *
+     * @private
+     */
+    Resource._DefaultImplementations = {};
+    Resource._DefaultImplementations.createImage = Resource._Implementations.createImage;
+    Resource._DefaultImplementations.loadWithXhr = Resource._Implementations.loadWithXhr;
+    Resource._DefaultImplementations.loadAndExecuteScript = Resource._Implementations.loadAndExecuteScript;
 
     /**
      * A resource instance initialized to the current browser location

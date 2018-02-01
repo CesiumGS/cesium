@@ -7,7 +7,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
-        '../Core/loadText',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -24,7 +23,6 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
-        loadText,
         Rectangle,
         Resource,
         RuntimeError,
@@ -238,7 +236,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadText(metadataResource);
+            var metadata = metadataResource.fetchText();
             when(metadata, metadataSuccess, metadataFailure);
         }
 

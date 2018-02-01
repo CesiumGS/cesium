@@ -2,7 +2,6 @@ define([
         '../Core/Check',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/loadImage',
         '../Core/Resource',
         '../ThirdParty/when',
         './CubeMap'
@@ -10,7 +9,6 @@ define([
         Check,
         defined,
         DeveloperError,
-        loadImage,
         Resource,
         when,
         CubeMap) {
@@ -70,24 +68,12 @@ define([
         // ideally, we would do it in the primitive's update function.
 
         var facePromises = [
-            loadImage(new Resource({
-                url: urls.positiveX
-            })),
-            loadImage(new Resource({
-                url: urls.negativeX
-            })),
-            loadImage(new Resource({
-                url: urls.positiveY
-            })),
-            loadImage(new Resource({
-                url: urls.negativeY
-            })),
-            loadImage(new Resource({
-                url: urls.positiveZ
-            })),
-            loadImage(new Resource({
-                url: urls.negativeZ
-            }))
+            Resource.createIfNeeded(urls.positiveX).fetchImage(),
+            Resource.createIfNeeded(urls.negativeX).fetchImage(),
+            Resource.createIfNeeded(urls.positiveY).fetchImage(),
+            Resource.createIfNeeded(urls.negativeY).fetchImage(),
+            Resource.createIfNeeded(urls.positiveZ).fetchImage(),
+            Resource.createIfNeeded(urls.negativeZ).fetchImage()
         ];
 
         return when.all(facePromises, function(images) {

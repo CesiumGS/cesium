@@ -9,7 +9,6 @@ define([
         '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/GoogleEarthEnterpriseMetadata',
-        '../Core/loadArrayBuffer',
         '../Core/loadImageFromTypedArray',
         '../Core/Math',
         '../Core/Rectangle',
@@ -30,7 +29,6 @@ define([
         Event,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
-        loadArrayBuffer,
         loadImageFromTypedArray,
         CesiumMath,
         Rectangle,
@@ -472,7 +470,7 @@ define([
             // Already have info and there isn't any imagery here
             return invalidImage;
         }
-        var promise = loadArrayBuffer(buildImageResource(this, info, x, y, level, request));
+        var promise = buildImageResource(this, info, x, y, level, request).fetchArrayBuffer();
         if (!defined(promise)) {
             return undefined; // Throttled
         }

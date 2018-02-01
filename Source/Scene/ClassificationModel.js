@@ -14,7 +14,6 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/IndexDatatype',
-        '../Core/loadArrayBuffer',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
@@ -50,7 +49,6 @@ define([
         DeveloperError,
         FeatureDetection,
         IndexDatatype,
-        loadArrayBuffer,
         Matrix4,
         PrimitiveType,
         Quaternion,
@@ -572,7 +570,7 @@ define([
                     url : buffer.uri
                 });
                 ++loadResources.pendingBufferLoads;
-                loadArrayBuffer(bufferResource).then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.uri));
+                bufferResource.fetchArrayBuffer().then(bufferLoad(model, i)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.uri));
             }
         }
     }

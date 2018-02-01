@@ -29,11 +29,6 @@ defineSuite([
             headers: {
                 Accept: 'application/test-type'
             },
-            responseType: 'arraybuffer',
-            method: 'POST',
-            data: {
-                stuff: 'more stuff'
-            },
             proxy: proxy,
             retryCallback: retryFunc,
             retryAttempts: 4,
@@ -56,16 +51,24 @@ defineSuite([
         expect(resource.headers).toEqual({
             Accept: 'application/test-type'
         });
-        expect(resource.responseType).toEqual('arraybuffer');
-        expect(resource.method).toEqual('POST');
-        expect(resource.data).toEqual({
-            stuff: 'more stuff'
-        });
         expect(resource.proxy).toBe(proxy);
         expect(resource.retryCallback).toBe(retryFunc);
         expect(resource.retryAttempts).toEqual(4);
         expect(resource._retryCount).toEqual(0);
         expect(resource.request).toBe(request);
+    });
+
+    it('Constructor sets correct properties', function() {
+        var url = 'http://invalid.domain.com/tileset';
+        var resource = new Resource(url);
+        expect(resource.url).toEqual(url);
+        expect(resource.queryParameters).toEqual({});
+        expect(resource.templateValues).toEqual({});
+        expect(resource.headers).toEqual({});
+        expect(resource.proxy).toBeUndefined();
+        expect(resource.retryCallback).toBeUndefined();
+        expect(resource.retryAttempts).toEqual(0);
+        expect(resource.request).toBeDefined();
     });
 
     it('appendForwardSlash appends a /', function() {
@@ -148,11 +151,6 @@ defineSuite([
             headers: {
                 Accept: 'application/test-type'
             },
-            responseType: 'arraybuffer',
-            method: 'POST',
-            data: {
-                stuff: 'more stuff'
-            },
             proxy: proxy,
             retryCallback: retryFunc,
             retryAttempts: 4,
@@ -178,11 +176,6 @@ defineSuite([
         });
         expect(resource.headers).toEqual({
             Accept: 'application/test-type'
-        });
-        expect(resource.responseType).toEqual('arraybuffer');
-        expect(resource.method).toEqual('POST');
-        expect(resource.data).toEqual({
-            stuff: 'more stuff'
         });
         expect(resource.proxy).toBe(proxy);
         expect(resource.retryCallback).toBe(retryFunc);
@@ -417,6 +410,183 @@ defineSuite([
                 expect(result).toEqual([false, true, false, true, false, false]);
                 expect(cb.calls.count()).toEqual(4);
                 expect(resource._retryCount).toEqual(4);
+            });
+    });
+
+    it('isDataUri returns correct values', function() {
+        var dataResource = new Resource({
+            url: 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3'
+        });
+
+        expect(dataResource.isDataUri).toBe(true);
+
+        var resource = new Resource({
+            url: 'http://invalid.uri/tileset'
+        });
+
+        expect(resource.isDataUri).toBe(false);
+    });
+
+    it('isBlobUri returns correct values', function() {
+        var dataResource = new Resource({
+            url: 'blob:d3958f5c-0777-0845-9dcf-2cb28783acaf'
+        });
+
+        expect(dataResource.isBlobUri).toBe(true);
+
+        var resource = new Resource({
+            url: 'http://invalid.uri/tileset'
+        });
+
+        expect(resource.isBlobUri).toBe(false);
+    });
+
+    it('post calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+        var resource = new Resource({
+            url: expectedUrl,
+            headers: expectedHeaders
+        });
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('POST');
+            expect(data).toEqual(expectedData);
+            expect(headers['X-My-Header']).toEqual('My-Value');
+            expect(headers['X-My-Other-Header']).toEqual('My-Other-Value');
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return resource.post(expectedData, {
+            responseType: expectedResponseType,
+            headers: {
+                'X-My-Other-Header': 'My-Other-Value'
+            },
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static post calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('POST');
+            expect(data).toEqual(expectedData);
+            expect(headers).toEqual(expectedHeaders);
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return Resource.post({
+            url: expectedUrl,
+            data: expectedData,
+            responseType: expectedResponseType,
+            headers: expectedHeaders,
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static fetchArrayBuffer calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchArrayBuffer').and.returnValue(when.resolve());
+        return Resource.fetchArrayBuffer(url)
+            .then(function() {
+                expect(Resource.prototype.fetchArrayBuffer).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchBlob calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchBlob').and.returnValue(when.resolve());
+        return Resource.fetchBlob(url)
+            .then(function() {
+                expect(Resource.prototype.fetchBlob).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchImage calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchImage').and.returnValue(when.resolve());
+        return Resource.fetchImage(url)
+            .then(function() {
+                expect(Resource.prototype.fetchImage).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchText calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchText').and.returnValue(when.resolve());
+        return Resource.fetchText(url)
+            .then(function() {
+                expect(Resource.prototype.fetchText).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchJson calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve());
+        return Resource.fetchJson(url)
+            .then(function() {
+                expect(Resource.prototype.fetchJson).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchXML calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchXML').and.returnValue(when.resolve());
+        return Resource.fetchXML(url)
+            .then(function() {
+                expect(Resource.prototype.fetchXML).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetchJsonp calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetchJsonp').and.returnValue(when.resolve());
+        return Resource.fetchJsonp(url)
+            .then(function() {
+                expect(Resource.prototype.fetchJsonp).toHaveBeenCalled();
+            });
+    });
+
+    it('static fetch calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve());
+        return Resource.fetch(url)
+            .then(function() {
+                expect(Resource.prototype.fetch).toHaveBeenCalled();
             });
     });
 });

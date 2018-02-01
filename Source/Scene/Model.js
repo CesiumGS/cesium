@@ -20,12 +20,9 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
-        '../Core/loadArrayBuffer',
         '../Core/loadCRN',
-        '../Core/loadImage',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
-        '../Core/loadText',
         '../Core/Math',
         '../Core/Matrix2',
         '../Core/Matrix3',
@@ -99,12 +96,9 @@ define([
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
-        loadArrayBuffer,
         loadCRN,
-        loadImage,
         loadImageFromTypedArray,
         loadKTX,
-        loadText,
         CesiumMath,
         Matrix2,
         Matrix3,
@@ -1152,7 +1146,7 @@ define([
                 modelResource.headers.Accept = defaultModelAccept;
             }
 
-            loadArrayBuffer(modelResource).then(function(arrayBuffer) {
+            modelResource.fetchArrayBuffer().then(function(arrayBuffer) {
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
@@ -1166,7 +1160,7 @@ define([
                 }
             }).otherwise(getFailedLoadFunction(model, 'model', url));
         } else if (!cachedGltf.ready) {
-            // Cache hit but the loadArrayBuffer() or loadText() request is still pending
+            // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
             cachedGltf.modelsToLoad.push(model);
         }
@@ -1349,7 +1343,7 @@ define([
                         url : buffer.uri
                     });
                     ++loadResources.pendingBufferLoads;
-                    loadArrayBuffer(bufferResource).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.url));
+                    bufferResource.fetchArrayBuffer().then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.url));
                 }
             }
         }
@@ -1429,7 +1423,7 @@ define([
                     url : shader.uri
                 });
 
-                loadText(shaderResource).then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderResource.url));
+                shaderResource.fetchText().then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderResource.url));
             }
         });
     }
@@ -1532,7 +1526,7 @@ define([
                 } else if (crnRegex.test(uri)) {
                     promise = loadCRN(imageResource);
                 } else {
-                    promise = loadImage(imageResource);
+                    promise = imageResource.fetchImage();
                 }
                 promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imageResource.url));
             }

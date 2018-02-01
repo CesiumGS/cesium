@@ -1,6 +1,7 @@
 define([
         './Cartesian3',
         './Cartographic',
+        './Math',
         './Check',
         './defaultValue',
         './defined',
@@ -14,6 +15,7 @@ define([
     ], function(
         Cartesian3,
         Cartographic,
+        CesiumMath,
         Check,
         defaultValue,
         defined,
@@ -66,6 +68,7 @@ define([
     var fromPointsMinBoxPt = new Cartesian3();
     var fromPointsMaxBoxPt = new Cartesian3();
     var fromPointsNaiveCenterScratch = new Cartesian3();
+    var volumeConstant = (4.0 / 3.0) * CesiumMath.PI;
 
     /**
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
@@ -1300,6 +1303,15 @@ define([
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
+    };
+
+    /**
+     * Computes the radius of the BoundingSphere.
+     * @returns {Number} The radius of the BoundingSphere.
+     */
+    BoundingSphere.prototype.volume = function() {
+        var radius = this.radius;
+        return volumeConstant * radius * radius * radius;
     };
 
     return BoundingSphere;

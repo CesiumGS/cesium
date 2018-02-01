@@ -7,7 +7,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
-        '../Core/loadImage',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -22,7 +21,6 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
-        loadImage,
         Rectangle,
         Resource,
         RuntimeError,
@@ -119,7 +117,7 @@ define([
         }
 
         function doRequest() {
-            when(loadImage(resource), success, failure);
+            when(resource.fetchImage(), success, failure);
         }
 
         doRequest();

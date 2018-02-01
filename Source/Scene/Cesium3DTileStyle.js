@@ -4,7 +4,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/loadJson',
         '../Core/Resource',
         '../ThirdParty/when',
         './ConditionsExpression',
@@ -15,7 +14,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        loadJson,
         Resource,
         when,
         ConditionsExpression,
@@ -100,7 +98,8 @@ define([
 
         var promise;
         if (typeof style === 'string' || style instanceof Resource) {
-            promise = loadJson(style);
+            var resource = Resource.createIfNeeded(style);
+            promise = resource.fetchJson(style);
         } else {
             promise = when.resolve(style);
         }
