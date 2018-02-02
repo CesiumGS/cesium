@@ -1,11 +1,13 @@
 defineSuite([
         'Core/loadImage',
+        'Core/loadWithXhr',
         'Core/Request',
         'Core/RequestScheduler',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
         loadImage,
+        loadWithXhr,
         Request,
         RequestScheduler,
         Resource,
@@ -133,6 +135,63 @@ defineSuite([
         expect(promise).toBeUndefined();
 
         RequestScheduler.maximumRequests = oldMaximumRequests;
+    });
+
+    it('Calls loadWithXhr with blob response type if headers is set', function() {
+        var expectedUrl = 'http://example.invalid/testuri.png';
+        var expectedHeaders = {
+            'X-my-header': 'my-value'
+        };
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(headers).toEqual(expectedHeaders);
+            expect(responseType).toEqual('blob');
+
+            var binary = atob(dataUri.split(',')[1]);
+            var array = [];
+            for(var i = 0; i < binary.length; i++) {
+                array.push(binary.charCodeAt(i));
+            }
+
+            deferred.resolve(new Blob([new Uint8Array(array)], {type: 'image/png'}));
+        });
+
+        var testResource = new Resource({
+            url: expectedUrl,
+            headers: expectedHeaders
+        });
+        var promise = loadImage(testResource);
+        expect(promise).toBeDefined();
+
+        return promise
+            .then(function(image) {
+                expect(image).toBeDefined();
+            });
+    });
+
+    it('Doesn\'t call loadWithXhr with blob response type if headers is set but is a data URI', function() {
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            deferred.reject('this shouldn\'t happen');
+        });
+
+        spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            expect(url).toEqual(dataUri);
+            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        });
+
+        var testResource = new Resource({
+            url: dataUri,
+            headers: {
+                'X-my-header': 'my-value'
+            }
+        });
+        var promise = loadImage(testResource);
+        expect(promise).toBeDefined();
+
+        return promise
+            .then(function(image) {
+                expect(image).toBeDefined();
+            });
     });
 
     describe('retries when Resource has the callback set', function() {

@@ -46,7 +46,7 @@ defineSuite([
     function createSpyTileProvider() {
         var result = jasmine.createSpyObj('tileProvider', [
             'getQuadtree', 'setQuadtree', 'getReady', 'getTilingScheme', 'getErrorEvent',
-            'initialize', 'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
+            'initialize', 'updateImagery', 'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
             'computeTileVisibility', 'showTileThisFrame', 'computeDistanceToTile', 'isDestroyed', 'destroy']);
 
         defineProperties(result, {
@@ -80,13 +80,15 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // load tiles
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         expect(tileProvider.initialize).toHaveBeenCalled();
@@ -108,13 +110,15 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // load tiles
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         expect(tileProvider.showTileThisFrame).toHaveBeenCalled();
@@ -136,19 +140,24 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // load tiles
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
+
         expect(calls).toBe(2);
 
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
+
         expect(calls).toBe(2);
     });
 
@@ -167,14 +176,18 @@ defineSuite([
         eventHelper.add(quadtree.tileLoadProgressEvent, progressEventSpy);
 
         // Initial update to get the zero-level tiles set up.
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // load zero-level tiles
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
+
+        quadtree.update(scene.frameState);
 
         scene.renderForSpecs();
 
@@ -184,9 +197,12 @@ defineSuite([
         // Change one to loaded and update again
         quadtree._levelZeroTiles[0].state = QuadtreeTileLoadState.DONE;
         quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.LOADING;
+
         quadtree.beginFrame(scene.frameState);
-        quadtree.update(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
+
+        quadtree.update(scene.frameState);
 
         scene.renderForSpecs();
 
@@ -196,9 +212,12 @@ defineSuite([
         // Simulate the second zero-level child having loaded with two children.
         quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.DONE;
         quadtree._levelZeroTiles[1].renderable = true;
+
         quadtree.beginFrame(scene.frameState);
-        quadtree.update(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
+
+        quadtree.update(scene.frameState);
 
         scene.renderForSpecs();
 
@@ -223,13 +242,15 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // load tiles
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // Don't load further tiles.
@@ -237,8 +258,9 @@ defineSuite([
             tile.state = QuadtreeTileLoadState.START;
         });
 
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         quadtree.forEachLoadedTile(function(tile) {
@@ -271,13 +293,15 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // load tiles
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         var addedCallback = false;
@@ -288,8 +312,10 @@ defineSuite([
         expect(addedCallback).toEqual(true);
 
         removeFunc();
-        quadtree.beginFrame(scene.frameState);
+
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         var removedCallback = true;
@@ -336,21 +362,24 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // load tiles
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         expect(position).toEqual(Cartesian3.ZERO);
 
         currentPosition = updatedPosition;
 
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         expect(position).toEqual(updatedPosition);
@@ -365,8 +394,9 @@ defineSuite([
             tileProvider : tileProvider
         });
 
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // The root tiles should be in the high priority load queue
@@ -379,8 +409,9 @@ defineSuite([
         // Mark the first root tile renderable (but not done loading)
         quadtree._levelZeroTiles[0].renderable = true;
 
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // That root tile should now load with low priority while its children should load with high.
@@ -400,8 +431,9 @@ defineSuite([
         quadtree._levelZeroTiles[0].children[2].renderable = true;
         quadtree._levelZeroTiles[0].children[3].renderable = true;
 
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         expect(quadtree._tileLoadQueueHigh.length).toBe(17); // levelZeroTiles[1] plus levelZeroTiles[0]'s 16 grandchildren
@@ -424,8 +456,9 @@ defineSuite([
         quadtree._levelZeroTiles[0].children[2].upsampledFromParent = true;
         quadtree._levelZeroTiles[0].children[3].upsampledFromParent = true;
 
-        quadtree.beginFrame(scene.frameState);
         quadtree.update(scene.frameState);
+        quadtree.beginFrame(scene.frameState);
+        quadtree.render(scene.frameState);
         quadtree.endFrame(scene.frameState);
 
         // levelZeroTiles[0] should move to medium priority.
@@ -463,14 +496,16 @@ defineSuite([
         scene.camera.update(scene.mode);
 
         return pollToPromise(function() {
-            quadtree.beginFrame(scene.frameState);
             quadtree.update(scene.frameState);
+            quadtree.beginFrame(scene.frameState);
+            quadtree.render(scene.frameState);
             quadtree.endFrame(scene.frameState);
 
             return quadtree._tilesToRender.filter(function(tile) { return tile.level === 1; }).length === 8;
         }).then(function() {
-            quadtree.beginFrame(scene.frameState);
             quadtree.update(scene.frameState);
+            quadtree.beginFrame(scene.frameState);
+            quadtree.render(scene.frameState);
             quadtree.endFrame(scene.frameState);
 
             // Rendered tiles:

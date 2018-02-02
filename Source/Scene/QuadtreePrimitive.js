@@ -173,6 +173,8 @@ define([
         replacementQueue.tail = undefined;
         replacementQueue.count = 0;
 
+        clearTileLoadQueue(this);
+
         // Free and recreate the level zero tiles.
         var levelZeroTiles = this._levelZeroTiles;
         if (defined(levelZeroTiles)) {
@@ -261,6 +263,30 @@ define([
     };
 
     /**
+     * Updates the tile provider imagery and continues to process the tile load queue.
+     * @private
+     */
+    QuadtreePrimitive.prototype.update = function(frameState) {
+        if (defined(this._tileProvider.update)) {
+            this._tileProvider.update(frameState);
+        }
+    };
+
+    function clearTileLoadQueue(primitive) {
+        var debug = primitive._debug;
+        debug.maxDepth = 0;
+        debug.tilesVisited = 0;
+        debug.tilesCulled = 0;
+        debug.tilesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
+
+        primitive._tileLoadQueueHigh.length = 0;
+        primitive._tileLoadQueueMedium.length = 0;
+        primitive._tileLoadQueueLow.length = 0;
+    }
+
+    /**
+     * Initializes values for a new render frame and prepare the tile load queue.
      * @private
      */
     QuadtreePrimitive.prototype.beginFrame = function(frameState) {
@@ -269,67 +295,53 @@ define([
             return;
         }
 
-        // Gets commands for any texture re-projections and updates the credit display
+        // Gets commands for any texture re-projections
         this._tileProvider.initialize(frameState);
 
-        var debug = this._debug;
-        if (debug.suspendLodUpdate) {
+        if (this._debug.suspendLodUpdate) {
             return;
         }
 
-        debug.maxDepth = 0;
-        debug.tilesVisited = 0;
-        debug.tilesCulled = 0;
-        debug.tilesRendered = 0;
-        debug.tilesWaitingForChildren = 0;
-
-        this._tileLoadQueueHigh.length = 0;
-        this._tileLoadQueueMedium.length = 0;
-        this._tileLoadQueueLow.length = 0;
+        clearTileLoadQueue(this);
         this._tileReplacementQueue.markStartOfRenderFrame();
     };
 
     /**
+     * Selects new tiles to load based on the frame state and creates render commands.
      * @private
      */
-    QuadtreePrimitive.prototype.update = function(frameState) {
+    QuadtreePrimitive.prototype.render = function(frameState) {
         var passes = frameState.passes;
+        var tileProvider = this._tileProvider;
 
         if (passes.render) {
-            this._tileProvider.beginUpdate(frameState);
+            tileProvider.beginUpdate(frameState);
 
             selectTilesForRendering(this, frameState);
             createRenderCommandsForSelectedTiles(this, frameState);
 
-            this._tileProvider.endUpdate(frameState);
+            tileProvider.endUpdate(frameState);
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.updateForPick(frameState);
+            tileProvider.updateForPick(frameState);
         }
     };
 
     /**
-     * @private
+     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
+     * a new change event at the end of the render cycle.
      */
-    QuadtreePrimitive.prototype.endFrame = function(frameState) {
-        var passes = frameState.passes;
-        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
-            // Only process the load queue for a single pass.
-            // Don't process the load queue or update heights during the morph flights.
-            return;
+    function updateTileLoadProgress(primitive, frameState) {
+        var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
+
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+            frameState.afterRender.push(Event.prototype.raiseEvent.bind(primitive._tileLoadProgressEvent, currentLoadQueueLength));
+            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
         }
 
-        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
-        processTileLoadQueue(this, frameState);
-        updateHeights(this, frameState);
-
-        var debug = this._debug;
-        if (debug.suspendLodUpdate) {
-            return;
-        }
-
-        if (debug.enableDebugOutput) {
+        var debug = primitive._debug;
+        if (debug.enableDebugOutput  && !debug.suspendLodUpdate) {
             if (debug.tilesVisited !== debug.lastTilesVisited ||
                 debug.tilesRendered !== debug.lastTilesRendered ||
                 debug.tilesCulled !== debug.lastTilesCulled ||
@@ -345,6 +357,24 @@ define([
                 debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
             }
         }
+    }
+
+    /**
+     * Updates terrain heights.
+     * @private
+     */
+    QuadtreePrimitive.prototype.endFrame = function(frameState) {
+        var passes = frameState.passes;
+        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
+            // Only process the load queue for a single pass.
+            // Don't process the load queue or update heights during the morph flights.
+            return;
+        }
+
+        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
+        processTileLoadQueue(this, frameState);
+        updateHeights(this, frameState);
+        updateTileLoadProgress(this, frameState);
     };
 
     /**
@@ -407,17 +437,15 @@ define([
             return;
         }
 
-        var i;
-        var len;
-
         // Clear the render list.
         var tilesToRender = primitive._tilesToRender;
         tilesToRender.length = 0;
 
         // We can't render anything before the level zero tiles exist.
+        var tileProvider = primitive._tileProvider;
         if (!defined(primitive._levelZeroTiles)) {
-            if (primitive._tileProvider.ready) {
-                var tilingScheme = primitive._tileProvider.tilingScheme;
+            if (tileProvider.ready) {
+                var tilingScheme = tileProvider.tilingScheme;
                 primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
             } else {
                 // Nothing to do until the provider is ready.
@@ -429,12 +457,10 @@ define([
 
         var tile;
         var levelZeroTiles = primitive._levelZeroTiles;
-
-        var tileProvider = primitive._tileProvider;
         var occluders = levelZeroTiles.length > 1 ? primitive._occluders : undefined;
 
         // Sort the level zero tiles by the distance from the center to the camera.
-        // The level zero tiles aren't necessarily a nice neat quad, so we can use the
+        // The level zero tiles aren't necessarily a nice neat quad, so we can't use the
         // quadtree ordering we use elsewhere in the tree
         comparisonPoint = frameState.camera.positionCartographic;
         levelZeroTiles.sort(compareDistanceToPoint);
@@ -443,6 +469,8 @@ define([
         var customDataRemoved = primitive._removeHeightCallbacks;
         var frameNumber = frameState.frameNumber;
 
+        var i;
+        var len;
         if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
             for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
                 tile = levelZeroTiles[i];
@@ -493,14 +521,6 @@ define([
                 ++debug.tilesCulled;
             }
         }
-
-        frameState.afterRender.push(createTileProgressFunction(primitive));
-    }
-
-    function createTileProgressFunction(primitive) {
-        return function() {
-            raiseTileLoadProgressEvent(primitive);
-        };
     }
 
     function visitTile(primitive, frameState, tile) {
@@ -653,18 +673,13 @@ define([
         } else {
             ++primitive._debug.tilesCulled;
             primitive._tileReplacementQueue.markTileRendered(tile);
-        }
-    }
-    /**
-     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
-     * a new one.
-     */
-    function raiseTileLoadProgressEvent(primitive) {
-        var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
 
-        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
-            primitive._tileLoadProgressEvent.raiseEvent(currentLoadQueueLength);
-            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
+            // We've decided this tile is not visible, but if it's not fully loaded yet, we've made
+            // this determination based on possibly-incorrect information.  We need to load this
+            // culled tile with low priority just in case it turns out to be visible after all.
+            if (tile.needsLoading) {
+                primitive._tileLoadQueueLow.push(tile);
+            }
         }
     }
 
@@ -719,7 +734,6 @@ define([
         var tileLoadQueueHigh = primitive._tileLoadQueueHigh;
         var tileLoadQueueMedium = primitive._tileLoadQueueMedium;
         var tileLoadQueueLow = primitive._tileLoadQueueLow;
-        var tileProvider = primitive._tileProvider;
 
         if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
             return;
@@ -730,6 +744,7 @@ define([
         primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
 
         var endTime = getTimestamp() + primitive._loadQueueTimeSlice;
+        var tileProvider = primitive._tileProvider;
 
         processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueHigh);
         processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueMedium);

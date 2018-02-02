@@ -324,6 +324,7 @@ define([
                 colorBlendMode(value);
                 if (defined(that._tileset)) {
                     that._tileset.colorBlendMode = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -373,6 +374,7 @@ define([
                         } else {
                             that._tileset.debugPickedTile = undefined;
                         }
+                        that._scene.requestRender();
                     }, ScreenSpaceEventType.MOUSE_MOVE);
                 } else {
                     that.feature = undefined;
@@ -398,6 +400,7 @@ define([
                 colorize(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugColorizeTiles = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -418,6 +421,7 @@ define([
                 wireframe(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugWireframe = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -438,6 +442,7 @@ define([
                 showBoundingVolumes(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowBoundingVolume = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -458,6 +463,7 @@ define([
                 showContentBoundingVolumes(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowContentBoundingVolume = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -478,6 +484,7 @@ define([
                 showRequestVolumes(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowViewerRequestVolume = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -499,6 +506,7 @@ define([
                 if (defined(that._tileset)) {
                     that._tileset.debugFreezeFrame = value;
                     that._scene.debugShowFrustumPlanes = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -519,6 +527,7 @@ define([
                 showOnlyPickedTileDebugLabel(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugPickedTileLabelOnly = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -539,6 +548,7 @@ define([
                 showGeometricError(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowGeometricError = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -559,6 +569,7 @@ define([
                 showRenderingStatistics(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowRenderingStatistics = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -579,6 +590,7 @@ define([
                 showMemoryUsage(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowMemoryUsage = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -599,6 +611,7 @@ define([
                 showUrl(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugShowUrl = value;
+                    that._scene.requestRender();
                 }
             }
         });
@@ -712,6 +725,162 @@ define([
                 }
             }
         });
+
+        var pointCloudShading = knockout.observable();
+        knockout.defineProperty(this, 'pointCloudShading', {
+            get : function() {
+                return pointCloudShading();
+            },
+            set : function(value) {
+                pointCloudShading(value);
+                if (defined(that._tileset)) {
+                    that._tileset.pointCloudShading.attenuation = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to enable point cloud shading. This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.pointCloudShading = false;
+
+        var geometricErrorScale = knockout.observable();
+        knockout.defineProperty(this, 'geometricErrorScale', {
+            get : function() {
+                return geometricErrorScale();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    geometricErrorScale(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointCloudShading.geometricErrorScale = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the geometric error scale.  This property is observable.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.geometricErrorScale = 1.0;
+
+        var maximumAttenuation = knockout.observable();
+        knockout.defineProperty(this, 'maximumAttenuation', {
+            get : function() {
+                return maximumAttenuation();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    maximumAttenuation(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointCloudShading.maximumAttenuation = value === 0 ? undefined : value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the maximum attenuation.  This property is observable.
+         *
+         * @type {Number}
+         * @default 0
+         */
+        this.maximumAttenuation = 0;
+
+        var baseResolution = knockout.observable();
+        knockout.defineProperty(this, 'baseResolution', {
+            get : function() {
+                return baseResolution();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    baseResolution(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointCloudShading.baseResolution = value === 0 ? undefined : value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the base resolution.  This property is observable.
+         *
+         * @type {Number}
+         * @default 0
+         */
+        this.baseResolution = 0;
+
+        var eyeDomeLighting = knockout.observable();
+        knockout.defineProperty(this, 'eyeDomeLighting', {
+            get : function() {
+                return eyeDomeLighting();
+            },
+            set : function(value) {
+                eyeDomeLighting(value);
+                if (defined(that._tileset)) {
+                    that._tileset.pointCloudShading.eyeDomeLighting = value;
+                }
+            }
+        });
+         /**
+         * Gets or sets the flag to enable eye dome lighting. This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.eyeDomeLighting = false;
+
+        var eyeDomeLightingStrength = knockout.observable();
+        knockout.defineProperty(this, 'eyeDomeLightingStrength', {
+            get : function() {
+                return eyeDomeLightingStrength();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    eyeDomeLightingStrength(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointCloudShading.eyeDomeLightingStrength = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the eye dome lighting strength.  This property is observable.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.eyeDomeLightingStrength = 1.0;
+
+        var eyeDomeLightingRadius = knockout.observable();
+        knockout.defineProperty(this, 'eyeDomeLightingRadius', {
+            get : function() {
+                return eyeDomeLightingRadius();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    eyeDomeLightingRadius(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.pointCloudShading.eyeDomeLightingRadius = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the eye dome lighting radius.  This property is observable.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.eyeDomeLightingRadius = 1.0;
+
         /**
          * Gets or sets the pick state
          *
@@ -851,7 +1020,8 @@ define([
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
                                    'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLevelOfDetail', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
-                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage', 'showUrl'];
+                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage', 'showUrl',
+                                    'pointCloudShading', 'geometricErrorScale', 'maximumAttenuation', 'baseResolution', 'eyeDomeLighting', 'eyeDomeLightingStrength', 'eyeDomeLightingRadius'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -986,6 +1156,17 @@ define([
                     this.skipLevels = tileset.skipLevels;
                     this.immediatelyLoadDesiredLevelOfDetail = tileset.immediatelyLoadDesiredLevelOfDetail;
                     this.loadSiblings = tileset.loadSiblings;
+
+                    var pointCloudShading = tileset.pointCloudShading;
+                    this.pointCloudShading = pointCloudShading.attenuation;
+                    this.geometricErrorScale = pointCloudShading.geometricErrorScale;
+                    this.maximumAttenuation = pointCloudShading.maximumAttenuation ? pointCloudShading.maximumAttenuation: 0.0;
+                    this.baseResolution = pointCloudShading.baseResolution ? pointCloudShading.baseResolution : 0.0;
+                    this.eyeDomeLighting = pointCloudShading.eyeDomeLighting;
+                    this.eyeDomeLightingStrength = pointCloudShading.eyeDomeLightingStrength;
+                    this.eyeDomeLightingRadius = pointCloudShading.eyeDomeLightingRadius;
+
+                    this._scene.requestRender();
                 } else {
                     this._properties({});
                 }
@@ -1018,11 +1199,13 @@ define([
                     } else {
                         currentFeature.color = oldColor;
                     }
+                    this._scene.requestRender();
                 }
                 if (defined(feature)) {
                     // Highlight new feature
                     Color.clone(feature.color, oldColor);
                     feature.color = highlightColor;
+                    this._scene.requestRender();
                 }
                 this._feature = feature;
             }
@@ -1046,12 +1229,14 @@ define([
                 if (defined(currentTile) && !currentTile.isDestroyed() && !hasFeatures(currentTile.content)) {
                     // Restore original color to tile that is no longer selected
                     currentTile.color = oldColor;
+                    this._scene.requestRender();
                 }
 
                 if (defined(tile) && !hasFeatures(tile.content)) {
                     // Highlight new tile
                     Color.clone(tile.color, oldColor);
                     tile.color = highlightColor;
+                    this._scene.requestRender();
                 }
                 this._tile = tile;
             }
@@ -1162,6 +1347,7 @@ define([
             }
             this._style = new Cesium3DTileStyle(JSON.parse(this.styleString));
             this._shouldStyle = true;
+            this._scene.requestRender();
         } catch (err) {
             this._editorError = err.toString();
         }

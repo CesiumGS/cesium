@@ -11,7 +11,6 @@ define([
         '../Core/getMagic',
         '../Core/Intersect',
         '../Core/JulianDate',
-        '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Plane',
@@ -46,7 +45,6 @@ define([
         getMagic,
         Intersect,
         JulianDate,
-        loadArrayBuffer,
         Matrix3,
         Matrix4,
         Plane,
@@ -636,7 +634,7 @@ define([
 
         resource.request = request;
 
-        var promise = loadArrayBuffer(resource);
+        var promise = resource.fetchArrayBuffer();
 
         if (!defined(promise)) {
             return false;

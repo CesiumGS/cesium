@@ -3,7 +3,6 @@ define([
         './Color',
         './defined',
         './DeveloperError',
-        './loadImage',
         './Resource',
         './writeTextToCanvas'
     ], function(
@@ -11,7 +10,6 @@ define([
         Color,
         defined,
         DeveloperError,
-        loadImage,
         Resource,
         writeTextToCanvas) {
     'use strict';
@@ -218,7 +216,7 @@ define([
             var resource = Resource.createIfNeeded(url);
 
             //If we have an image url, load it and then stamp the pin.
-            var promise = loadImage(resource).then(function(image) {
+            var promise = resource.fetchImage().then(function(image) {
                 drawIcon(context2D, image, size);
                 cache[id] = canvas;
                 return canvas;

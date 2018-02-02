@@ -12,7 +12,6 @@ define([
         '../Core/EllipsoidTerrainProvider',
         '../Core/Event',
         '../Core/IntersectionTests',
-        '../Core/loadImage',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -43,7 +42,6 @@ define([
         EllipsoidTerrainProvider,
         Event,
         IntersectionTests,
-        loadImage,
         Ray,
         Rectangle,
         Resource,
@@ -213,6 +211,30 @@ define([
         imageryLayers : {
             get : function() {
                 return this._imageryLayerCollection;
+            }
+        },
+        /**
+         * Gets an event that's raised when an imagery layer is added, shown, hidden, moved, or removed.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        imageryLayersUpdatedEvent : {
+            get : function() {
+                return this._surface.tileProvider.imageryLayersUpdatedEvent;
+            }
+        },
+        /**
+         * Gets an event that's raised when a surface tile is loaded and ready to be rendered.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        tileLoadedEvent : {
+            get : function() {
+                return this._surface.tileProvider.tileLoadedEvent;
             }
         },
         /**
@@ -528,11 +550,20 @@ define([
     /**
      * @private
      */
-    Globe.prototype.beginFrame = function(frameState) {
+    Globe.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
 
+        if (frameState.passes.render) {
+            this._surface.update(frameState);
+        }
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.beginFrame = function(frameState) {
         var surface = this._surface;
         var tileProvider = surface.tileProvider;
         var terrainProvider = this.terrainProvider;
@@ -545,7 +576,7 @@ define([
             var oceanNormalMapUrl =  oceanNormalMapResource.url;
             if (defined(oceanNormalMapUrl)) {
                 var that = this;
-                when(loadImage(oceanNormalMapResource), function(image) {
+                when(oceanNormalMapResource.fetchImage(), function(image) {
                     if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
                         // url changed while we were loading
                         return;
@@ -562,8 +593,8 @@ define([
             }
         }
 
-        var mode = frameState.mode;
         var pass = frameState.passes;
+        var mode = frameState.mode;
 
         if (pass.render) {
             // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
@@ -592,7 +623,7 @@ define([
     /**
      * @private
      */
-    Globe.prototype.update = function(frameState) {
+    Globe.prototype.render = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -605,11 +636,11 @@ define([
         var pass = frameState.passes;
 
         if (pass.render) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
 
         if (pass.pick) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
     };
 

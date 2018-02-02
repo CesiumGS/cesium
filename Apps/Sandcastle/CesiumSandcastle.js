@@ -49,8 +49,7 @@ require({
         'Sandcastle/LinkButton',
         'Source/Core/defined',
         'Source/Core/getBaseUri',
-        'Source/Core/loadJsonp',
-        'Source/Core/loadWithXhr',
+        'Source/Core/Resource',
         'Source/Cesium',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
@@ -96,8 +95,7 @@ require({
         LinkButton,
         defined,
         getBaseUri,
-        loadJsonp,
-        loadWithXhr,
+        Resource,
         Cesium
 ) {
     'use strict';
@@ -747,7 +745,7 @@ require({
             demoCode = scriptCode.replace(/\s/g, '');
 
             if (defined(queryObject.gistId)) {
-                loadJsonp('https://api.github.com/gists/' + queryObject.gistId + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
+                Resource.fetchJsonp('https://api.github.com/gists/' + queryObject.gistId + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
                     .then(function(data) {
                         var files = data.data.files;
                         var code = files['Cesium-Sandcastle.js'].content;
@@ -957,11 +955,9 @@ require({
                 }
             }
         };
-        return loadWithXhr({
-            url : 'https://api.github.com/gists',
-            data : JSON.stringify(data),
-            method : 'POST'
-        }).then(function(content) {
+
+        var resource = new Resource('https://api.github.com/gists');
+        return resource.post(JSON.stringify(data)).then(function(content) {
             sandcastleUrl = getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
             textArea.value = sandcastleUrl;
             textArea.select();

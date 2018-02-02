@@ -12,7 +12,6 @@ define([
         './GoogleEarthEnterpriseTerrainData',
         './HeightmapTerrainData',
         './JulianDate',
-        './loadArrayBuffer',
         './Math',
         './Rectangle',
         './Request',
@@ -36,7 +35,6 @@ define([
         GoogleEarthEnterpriseTerrainData,
         HeightmapTerrainData,
         JulianDate,
-        loadArrayBuffer,
         CesiumMath,
         Rectangle,
         Request,
@@ -450,7 +448,7 @@ define([
             sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
             sharedRequest = request;
-            var requestPromise = loadArrayBuffer(buildTerrainResource(this, q, terrainVersion, sharedRequest));
+            var requestPromise = buildTerrainResource(this, q, terrainVersion, sharedRequest).fetchArrayBuffer();
 
             if (!defined(requestPromise)) {
                 return undefined; // Throttled
