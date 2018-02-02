@@ -4,7 +4,7 @@ Change Log
 ### 1.43 - 2018-03-01
 
 ##### Fixes :wrench:
-* Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result.
+* Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__
