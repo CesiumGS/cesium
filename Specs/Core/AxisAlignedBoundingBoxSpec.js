@@ -79,7 +79,7 @@ defineSuite([
         expect(box).toEqual(result);
     });
 
-    it('clone without a result parameter with offset center', function() {
+    it('clone without a result parameter with box of offset center', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X, Cartesian3.UNIT_Z);
         var result = box.clone();
         expect(box).not.toBe(result);
