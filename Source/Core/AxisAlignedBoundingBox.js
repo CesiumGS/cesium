@@ -130,7 +130,7 @@ define([
         }
 
         if (!defined(result)) {
-            result = new AxisAlignedBoundingBox();
+            return new AxisAlignedBoundingBox(box.minimum, box.maximum, box.center);
         }
 
         result.minimum = Cartesian3.clone(box.minimum, result.minimum);
