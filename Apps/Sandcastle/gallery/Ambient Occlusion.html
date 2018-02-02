@@ -69,8 +69,8 @@ var viewModel = {
     ambientOcclusionOnly : false,
     intensity : 3.0,
     bias : 0.1,
-    lengthCap : 0.26,
-    stepSize : 1.95,
+    lengthCap : 0.03,
+    stepSize : 1.0,
     blurStepSize : 0.86
 };
 
@@ -85,7 +85,7 @@ for (var name in viewModel) {
 
 function updatePostProcess() {
     var ambientOcclusion = viewer.scene.postProcessStages.ambientOcclusion;
-    ambientOcclusion.enabled = Boolean(viewModel.show);
+    ambientOcclusion.enabled = Boolean(viewModel.show) || Boolean(viewModel.ambientOcclusionOnly);
     ambientOcclusion.uniforms.ambientOcclusionOnly = Boolean(viewModel.ambientOcclusionOnly);
     ambientOcclusion.uniforms.intensity = Number(viewModel.intensity);
     ambientOcclusion.uniforms.bias = Number(viewModel.bias);
@@ -96,10 +96,10 @@ function updatePostProcess() {
 updatePostProcess();
 
 var camera = viewer.scene.camera;
-camera.position = new Cesium.Cartesian3(1234121.9491740603, -5086009.253843431, 3633365.2993020345);
-camera.direction = new Cesium.Cartesian3(-0.17858981588454467, -0.2750910876938125, -0.9446854350172652);
-camera.up = new Cesium.Cartesian3(0.13955391921919083, -0.9574962548451945, 0.2524393503160511);
-camera.right = Cesium.Cartesian3.cross(camera.direction, camera.up, new Cesium.Cartesian3());
+camera.position = new Cesium.Cartesian3(1234127.2294710164, -5086011.666443127, 3633337.0413351045);
+camera.direction = new Cesium.Cartesian3(-0.5310064396211631, -0.30299013818088416, -0.7913464078682514);
+camera.right = new Cesium.Cartesian3(-0.8468592075426076, 0.1574051185945647, 0.507989282604011);
+camera.up = Cesium.Cartesian3.cross(camera.right, camera.direction, new Cesium.Cartesian3());
 
 //Sandcastle_End
 Sandcastle.finishedLoading();

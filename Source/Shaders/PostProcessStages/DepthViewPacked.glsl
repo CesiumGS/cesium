@@ -4,7 +4,7 @@ varying vec2 v_textureCoordinates;
 
 void main()
 {
-    float z_window = czm_unpackDepth(texture2D(u_depthTexture, v_textureCoordinates));
+    float z_window = texture2D(u_depthTexture, v_textureCoordinates);
     float n_range = czm_depthRange.near;
     float f_range = czm_depthRange.far;
     float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);
