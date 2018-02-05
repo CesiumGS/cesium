@@ -105,6 +105,8 @@ define([
         // used by PostProcessStageCollection
         this._textureCache = undefined;
         this._index = undefined;
+
+        this.selectedFeatures = undefined;
     }
 
     defineProperties(PostProcessStageComposite.prototype, {
@@ -219,10 +221,13 @@ define([
      * @private
      */
     PostProcessStageComposite.prototype.update = function(context) {
+        var selectedFeatures = this.selectedFeatures;
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            stages[i].update(context);
+            var stage = stages[i];
+            stage.selectedFeatures = selectedFeatures;
+            stage.update(context);
         }
     };
 

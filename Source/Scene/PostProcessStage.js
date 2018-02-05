@@ -16,6 +16,7 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
+        '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
@@ -40,6 +41,7 @@ define([
         PixelDatatype,
         RenderState,
         Sampler,
+        ShaderSource,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -143,6 +145,12 @@ define([
             name = createGuid();
         }
         this._name = name;
+
+        this._selectedIdTexture = undefined;
+        this._selectedFeatures = undefined;
+        this._selectedFeaturesShadow = undefined;
+        this._selectedFeaturesLength = 0;
+        this._selectedFeaturesDirty = true;
 
         // set by PostProcessStageCollection
         this._textureCache = undefined;
@@ -329,6 +337,14 @@ define([
                 }
                 return undefined;
             }
+        },
+        selectedFeatures : {
+            get : function() {
+                return this._selectedFeatures;
+            },
+            set : function(value) {
+                this._selectedFeatures = value;
+            }
         }
     });
 
@@ -435,18 +451,52 @@ define([
             depthTextureDimensions : function() {
                 return stage._depthTexture.dimensions;
             },
-            idTexture : function() {
+            czm_idTexture : function() {
                 return stage._idTexture;
+            },
+            czm_selectedIdTexture : function() {
+                return stage._selectedIdTexture;
+            },
+            czm_selectedIdTextureStep : function() {
+                return 1.0 / stage._selectedIdTexture.width;
             }
         });
     }
 
     function createDrawCommand(stage, context) {
-        if (defined(stage._command)) {
+        if (defined(stage._command) && !stage._selectedFeaturesDirty) {
             return;
         }
 
-        stage._command = context.createViewportQuadCommand(stage._fragmentShader, {
+        var fs = stage._fragmentShader;
+        if (defined(stage._selectedIdTexture)) {
+            var width = stage._selectedIdTexture.width;
+
+            fs = fs.replace(/varying\s+vec2\s+v_textureCoordinates;/g, '');
+            fs =
+                '#define CZM_SELECTED_FEATURE \n' +
+                'uniform sampler2D czm_idTexture; \n' +
+                'uniform sampler2D czm_selectedIdTexture; \n' +
+                'uniform float czm_selectedIdTextureStep; \n' +
+                'varying vec2 v_textureCoordinates; \n' +
+                'bool czm_selected() \n' +
+                '{ \n' +
+                '    bool selected = false;\n' +
+                '    vec4 id = texture2D(czm_idTexture, v_textureCoordinates); \n' +
+                '    for (int i = 0; i < ' + width + '; ++i) \n' +
+                '    { \n' +
+                '        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2(float(i) * czm_selectedIdTextureStep, 0.5)); \n' +
+                '        if (all(equal(id, selectedId))) \n' +
+                '        { \n' +
+                '            return true; \n' +
+                '        } \n' +
+                '    } \n' +
+                '    return false; \n' +
+                '} \n\n' +
+                fs;
+        }
+
+        stage._command = context.createViewportQuadCommand(fs, {
             uniformMap : stage._uniformMap,
             owner : stage
         });
@@ -561,6 +611,8 @@ define([
             stage._command = undefined;
         }
 
+        stage._selectedIdTexture = stage._selectedIdTexture && stage._selectedIdTexture.destroy();
+
         var textureCache = stage._textureCache;
         if (!defined(textureCache)) {
             return;
@@ -580,6 +632,124 @@ define([
         }
     }
 
+    function isSelectedTextureDirty(stage) {
+        var length = defined(stage._selectedFeatures) ? stage._selectedFeatures.length : 0;
+        var dirty = stage._selectedFeatures !== stage._selectedFeaturesShadow || length !== stage._selectedFeaturesLength;
+        if (!dirty && defined(stage._selectedFeatures)) {
+            if (!defined(stage._selectedFeaturesShadow)) {
+                return true;
+            }
+
+            length = stage._selectedFeatures.length;
+            for (var i = 0; i < length; ++i) {
+                if (stage._selectedFeatures[i] !== stage._selectedFeaturesShadow[i]) {
+                    return true;
+                }
+            }
+        }
+        return dirty;
+    }
+
+    function createSelectedTexture(stage, context) {
+        if (!stage._selectedFeaturesDirty) {
+            return;
+        }
+
+        stage._selectedIdTexture = stage._selectedIdTexture && stage._selectedIdTexture.destroy();
+        stage._selectedIdTexture = undefined;
+
+        var features = stage._selectedFeatures;
+        if (!defined(features)) {
+            return;
+        }
+
+        if (features.length === 0) {
+            // PER_ENTITY TODO
+            // max pick id is reserved?
+            var empty = new Uint8Array(4);
+            empty[0] = 255;
+            empty[1] = 255;
+            empty[2] = 255;
+            empty[3] = 255;
+
+            stage._selectedIdTexture = new Texture({
+                context : context,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    arrayBufferView : empty,
+                    width : 1,
+                    height : 1
+                },
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
+            });
+            return;
+        }
+
+        // PER_ENTITY TODO
+        var i;
+        var feature;
+
+        var textureLength = 0;
+        var length = features.length;
+        for (i = 0; i < length; ++i) {
+            feature = features[i];
+            if (defined(feature._nodeCommands)) {
+                textureLength += feature._nodeCommands.length;
+            } else if (defined(feature._batchId)) {
+                ++textureLength;
+            }
+        }
+
+        var offset = 0;
+        var ids = new Uint8Array(textureLength * 4);
+        for (i = 0; i < length; ++i) {
+            feature = features[i];
+            if (defined(feature._nodeCommands)) {
+                var commands = feature._nodeCommands;
+                var commandsLength = commands.length;
+                for (var j = 0; j < commandsLength; ++j) {
+                    var pickColor = commands[j].command._idUniformMap.czm_pickColor();
+                    ids[offset] = Color.floatToByte(pickColor.red);
+                    ids[offset + 1] = Color.floatToByte(pickColor.green);
+                    ids[offset + 2] = Color.floatToByte(pickColor.blue);
+                    ids[offset + 3] = Color.floatToByte(pickColor.alpha);
+                    offset += 4;
+                }
+            } else if (defined(feature._batchId)) {
+                var batchId = feature._batchId;
+                var pickTexture = feature._content.batchTable._pickTexture;
+                ids[offset] = pickTexture[batchId * 4];
+                ids[offset + 1] = pickTexture[batchId * 4 + 1];
+                ids[offset + 2] = pickTexture[batchId * 4 + 2];
+                ids[offset + 3] = pickTexture[batchId * 4 + 3];
+                offset += 4;
+            }
+        }
+
+        stage._selectedIdTexture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            source : {
+                arrayBufferView : ids,
+                width : textureLength,
+                height : 1
+            },
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
+        });
+    }
+
     /**
      * A function that will be called before execute. Used to create WebGL resources and load any textures.
      * @param {Context} context The context.
@@ -595,10 +765,17 @@ define([
             return;
         }
 
+        this._selectedFeaturesDirty = isSelectedTextureDirty(this);
+        this._selectedFeaturesShadow = this._selectedFeatures;
+        this._selectedFeaturesLength = defined(this._selectedFeatures) ? this._selectedFeatures.length : 0;
+
+        createSelectedTexture(this, context);
         createUniformMap(this);
         updateUniformTextures(this, context);
         createDrawCommand(this, context);
         createSampler(this);
+
+        this._selectedFeaturesDirty = false;
 
         if (!this._ready) {
             return;
