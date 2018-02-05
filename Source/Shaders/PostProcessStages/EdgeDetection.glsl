@@ -7,13 +7,6 @@ varying vec2 v_textureCoordinates;
 
 void main(void)
 {
-#ifdef CZM_SELECTED_FEATURE
-    if (!czm_selected()) {
-        gl_FragColor = vec4(color.rgb, 0.0);
-        return;
-    }
-#endif
-
     float directions[3];
     directions[0] = -1.0;
     directions[1] = 0.0;
@@ -26,6 +19,26 @@ void main(void)
 
     float padx = 1.0 / czm_viewport.z;
     float pady = 1.0 / czm_viewport.w;
+
+#ifdef CZM_SELECTED_FEATURE
+    bool selected = false;
+    for (int i = 0; i < 3; ++i)
+    {
+        float dir = directions[i];
+        selected = selected || czm_selected(vec2(-padx, dir * pady));
+        selected = selected || czm_selected(vec2(padx, dir * pady));
+        selected = selected || czm_selected(vec2(dir * padx, -pady));
+        selected = selected || czm_selected(vec2(dir * padx, pady));
+        if (selected)
+        {
+            break;
+        }
+    }
+    if (!selected) {
+        gl_FragColor = vec4(color.rgb, 0.0);
+        return;
+    }
+#endif
 
     float horizEdge = 0.0;
     float vertEdge = 0.0;

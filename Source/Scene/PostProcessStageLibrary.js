@@ -1,5 +1,6 @@
 define([
         '../Core/buildModuleUrl',
+        '../Core/createGuid',
         '../Core/Color',
         '../Core/defineProperties',
         '../Core/destroyObject',
@@ -27,6 +28,7 @@ define([
         './PostProcessStageSampleMode'
     ], function(
         buildModuleUrl,
+        createGuid,
         Color,
         defineProperties,
         destroyObject,
@@ -233,12 +235,13 @@ define([
      * @return {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
      */
     PostProcessStageLibrary.createSilhouetteStage = function() {
+        var name = createGuid();
         var silhouetteDepth = new PostProcessStage({
-            name : 'czm_silhouette_depth',
+            name : 'czm_silhouette_depth_' + name,
             fragmentShader : LinearDepth
         });
         var edgeDetection = new PostProcessStage({
-            name : 'czm_silhouette_edge_detection',
+            name : 'czm_silhouette_edge_detection_' + name,
             fragmentShader : EdgeDetection,
             uniforms : {
                 length : 0.5,
@@ -246,11 +249,11 @@ define([
             }
         });
         var silhouetteGenerateProcess = new PostProcessStageComposite({
-            name : 'czm_silhouette_generate',
+            name : 'czm_silhouette_generate_' + name,
             stages : [silhouetteDepth, edgeDetection]
         });
         var silhouetteProcess = new PostProcessStage({
-            name : 'czm_silhouette_color_edges',
+            name : 'czm_silhouette_color_edges_' + name,
             fragmentShader : Silhouette,
             uniforms : {
                 silhouetteTexture : silhouetteGenerateProcess.name
@@ -277,7 +280,8 @@ define([
             }
         });
         return new PostProcessStageComposite({
-            name : 'czm_silhouette',
+            // unique name generated on call so more than one effect can be added
+            name : name,
             stages : [silhouetteGenerateProcess, silhouetteProcess],
             inputPreviousStageTexture : false,
             uniforms : uniforms

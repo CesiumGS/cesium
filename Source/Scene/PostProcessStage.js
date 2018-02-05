@@ -479,10 +479,10 @@ define([
                 'uniform sampler2D czm_selectedIdTexture; \n' +
                 'uniform float czm_selectedIdTextureStep; \n' +
                 'varying vec2 v_textureCoordinates; \n' +
-                'bool czm_selected() \n' +
+                'bool czm_selected(vec2 offset) \n' +
                 '{ \n' +
                 '    bool selected = false;\n' +
-                '    vec4 id = texture2D(czm_idTexture, v_textureCoordinates); \n' +
+                '    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n' +
                 '    for (int i = 0; i < ' + width + '; ++i) \n' +
                 '    { \n' +
                 '        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2(float(i) * czm_selectedIdTextureStep, 0.5)); \n' +
@@ -492,6 +492,10 @@ define([
                 '        } \n' +
                 '    } \n' +
                 '    return false; \n' +
+                '} \n\n' +
+                'bool czm_selected() \n' +
+                '{ \n' +
+                '    return czm_selected(v_textureCoordinates); \n' +
                 '} \n\n' +
                 fs;
         }
@@ -706,6 +710,7 @@ define([
             }
         }
 
+        var pickColor;
         var offset = 0;
         var ids = new Uint8Array(textureLength * 4);
         for (i = 0; i < length; ++i) {
@@ -714,7 +719,7 @@ define([
                 var commands = feature._nodeCommands;
                 var commandsLength = commands.length;
                 for (var j = 0; j < commandsLength; ++j) {
-                    var pickColor = commands[j].command._idUniformMap.czm_pickColor();
+                    pickColor = commands[j].command._idUniformMap.czm_pickColor();
                     ids[offset] = Color.floatToByte(pickColor.red);
                     ids[offset + 1] = Color.floatToByte(pickColor.green);
                     ids[offset + 2] = Color.floatToByte(pickColor.blue);
@@ -723,11 +728,11 @@ define([
                 }
             } else if (defined(feature._batchId)) {
                 var batchId = feature._batchId;
-                var pickTexture = feature._content.batchTable._pickTexture;
-                ids[offset] = pickTexture[batchId * 4];
-                ids[offset + 1] = pickTexture[batchId * 4 + 1];
-                ids[offset + 2] = pickTexture[batchId * 4 + 2];
-                ids[offset + 3] = pickTexture[batchId * 4 + 3];
+                pickColor = feature._content.batchTable._pickIds[batchId].color;
+                ids[offset] = Color.floatToByte(pickColor.red);
+                ids[offset + 1] = Color.floatToByte(pickColor.green);
+                ids[offset + 2] = Color.floatToByte(pickColor.blue);
+                ids[offset + 3] = Color.floatToByte(pickColor.alpha);
                 offset += 4;
             }
         }

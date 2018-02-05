@@ -63,22 +63,24 @@ var selected = {
     originalColor: new Cesium.Color()
 };
 
-// Information about the currently highlighted feature
-var highlighted = {
-    feature: undefined,
-    originalColor: new Cesium.Color()
-};
-
 // An entity object which will hold info about the currently selected feature for infobox display
 var selectedEntity = new Cesium.Entity();
+
+var silhouetteYellow = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
+silhouetteYellow.uniforms.color = Cesium.Color.YELLOW;
+silhouetteYellow.uniforms.length = 0.01;
+silhouetteYellow.selectedFeatures = [];
+
+/*
+var silhouetteGreen = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
+silhouetteGreen.uniforms.color = Cesium.Color.LIME;
+silhouetteGreen.selectedFeatures = [];
+*/
 
 // Color a feature yellow on hover.
 viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
     // If a feature was previously highlighted, undo the highlight
-    if (Cesium.defined(highlighted.feature)) {
-        highlighted.feature.color = highlighted.originalColor;
-        highlighted.feature = undefined;
-    }
+    silhouetteYellow.selectedFeatures = [];
 
     // Pick a new feature
     var pickedFeature = viewer.scene.pick(movement.endPosition);
@@ -99,20 +101,16 @@ viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
 
     // Highlight the feature if it's not already selected.
     if (pickedFeature !== selected.feature) {
-        highlighted.feature = pickedFeature;
-        Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-        pickedFeature.color = Cesium.Color.YELLOW;
+        silhouetteYellow.selectedFeatures = [pickedFeature];
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
+/*
 // Color a feature on selection and show metadata in the InfoBox.
 var clickHandler = viewer.screenSpaceEventHandler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
 viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
     // If a feature was previously selected, undo the highlight
-    if (Cesium.defined(selected.feature)) {
-        selected.feature.color = selected.originalColor;
-        selected.feature = undefined;
-    }
+    silhouetteGreen.selectedFeatures = [];
 
     // Pick a new feature
     var pickedFeature = viewer.scene.pick(movement.position);
@@ -122,21 +120,18 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
     }
 
     // Select the feature if it's not already selected
-    if (selected.feature === pickedFeature) {
+    if (silhouetteGreen.selectedFeatures[0] === pickedFeature) {
         return;
     }
-    selected.feature = pickedFeature;
 
     // Save the selected feature's original color
-    if (pickedFeature === highlighted.feature) {
-        Cesium.Color.clone(highlighted.originalColor, selected.originalColor);
-        highlighted.feature = undefined;
-    } else {
-        Cesium.Color.clone(pickedFeature.color, selected.originalColor);
+    var highlightedFeature = silhouetteYellow.selectedFeatures[0];
+    if (pickedFeature === highlightedFeature) {
+        silhouetteYellow.selectedFeatures = [];
     }
 
     // Highlight newly selected feature
-    pickedFeature.color = Cesium.Color.LIME;
+    silhouetteGreen.selectedFeatures = [pickedFeature];
 
     // Set feature infobox description
     var featureName = pickedFeature.getProperty('name');
@@ -149,6 +144,7 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
                                  '<tr><th>SOURCE ID</th><td>' + pickedFeature.getProperty('SOURCE_ID') + '</td></tr>' +
                                  '</tbody></table>';
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+*/
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

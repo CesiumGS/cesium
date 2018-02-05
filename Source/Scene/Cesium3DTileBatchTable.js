@@ -1553,10 +1553,7 @@ define([
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
-        if (frameState.passes.pick) {
-            // Create pick texture on-demand
-            createPickTexture(this, context);
-        }
+        createPickTexture(this, context);
 
         if (this._batchValuesDirty) {
             this._batchValuesDirty = false;
