@@ -39,6 +39,10 @@ define([
         this._castShadows = defaultValue(options.castShadows, false);
         this._receiveShadows = defaultValue(options.receiveShadows, false);
 
+        this._idShaderProgram = options.idShaderProgram;
+        this._idRenderState = options.idRenderState;
+        this._idUniformMap = options.idUniformMap;
+
         this.dirty = true;
         this.lastDirtyTime = 0;
 
@@ -486,6 +490,10 @@ define([
         result._castShadows = command._castShadows;
         result._receiveShadows = command._receiveShadows;
 
+        result._idShaderProgram = command._idShaderProgram;
+        result._idRenderState = command._idRenderState;
+        result._idUniformMap = command._idUniformMap;
+
         result.dirty = true;
         result.lastDirtyTime = 0;
 
@@ -500,6 +508,13 @@ define([
      */
     DrawCommand.prototype.execute = function(context, passState) {
         context.draw(this, passState);
+    };
+
+    DrawCommand.prototype.executeId = function(context, passState) {
+        if (!defined(this._idShaderProgram)) {
+            return;
+        }
+        context.draw(this, passState, this._idShaderProgram, this._idRenderState, this._idUniformMap);
     };
 
     return DrawCommand;

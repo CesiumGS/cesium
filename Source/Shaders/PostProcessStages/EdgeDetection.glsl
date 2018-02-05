@@ -1,4 +1,5 @@
 uniform sampler2D depthTexture;
+uniform sampler2D idTexture;
 uniform float length;
 uniform float stepSize;
 uniform vec4 color;
@@ -23,7 +24,17 @@ void main(void)
     float horizEdge = 0.0;
     float vertEdge = 0.0;
 
-    for (int i = 0; i < 3; ++i) {
+/*
+    if (all(equal(texture2D(idTexture, v_textureCoordinates), vec4(0.0))))
+    {
+        gl_FragColor = vec4(color.rgb, 0.0);
+        return;
+    }
+    */
+    bool found = false;
+
+    for (int i = 0; i < 3; ++i)
+    {
         float dir = directions[i];
         float scale = scalars[i];
 
@@ -32,6 +43,28 @@ void main(void)
 
         vertEdge -= texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, -pady)).x * scale;
         vertEdge += texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, pady)).x * scale;
+
+        if (found)
+        {
+            continue;
+        }
+
+        vec4 horizEdge0 = texture2D(idTexture, v_textureCoordinates + vec2(-padx, dir * pady));
+        vec4 horizEdge1 = texture2D(idTexture, v_textureCoordinates + vec2(padx, dir * pady));
+
+        vec4 vertEdge0 = texture2D(idTexture, v_textureCoordinates + vec2(dir * padx, -pady));
+        vec4 vertEdge1 = texture2D(idTexture, v_textureCoordinates + vec2(dir * padx, pady));
+
+        found = !all(equal(horizEdge0, vec4(0.0)));
+        found = found || !all(equal(horizEdge1, vec4(0.0)));
+        found = found || !all(equal(vertEdge0, vec4(0.0)));
+        found = found || !all(equal(vertEdge1, vec4(0.0)));
+    }
+
+    if (!found)
+    {
+        gl_FragColor = vec4(color.rgb, 0.0);
+        return;
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);

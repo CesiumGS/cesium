@@ -2323,6 +2323,47 @@ define([
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
+
+            if (picking) {
+                continue;
+            }
+
+            var originalFramebuffer = passState.framebuffer;
+            passState.framebuffer = scene._sceneFramebuffer.getIdFramebuffer();
+
+            // PER_ENTITY TODO
+            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+            frustum.far = frustumCommands.far;
+            us.updateFrustum(frustum);
+
+            us.updatePass(Pass.CESIUM_3D_TILE);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+            for (j = 0; j < length; ++j) {
+                commands[j].executeId(context, passState);
+            }
+
+            us.updatePass(Pass.OPAQUE);
+            commands = frustumCommands.commands[Pass.OPAQUE];
+            length = frustumCommands.indices[Pass.OPAQUE];
+            for (j = 0; j < length; ++j) {
+                commands[j].executeId(context, passState);
+            }
+
+            // PER_ENTITY TODO
+            if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
+                frustum.near = frustumCommands.near;
+                us.updateFrustum(frustum);
+            }
+
+            us.updatePass(Pass.TRANSLUCENT);
+            commands = frustumCommands.commands[Pass.TRANSLUCENT];
+            length = frustumCommands.indices[Pass.TRANSLUCENT];
+            for (j = 0; j < length; ++j) {
+                commands[j].executeId(context, passState);
+            }
+
+            passState.framebuffer = originalFramebuffer;
         }
     }
 
@@ -2904,6 +2945,7 @@ define([
         var defaultFramebuffer = environmentState.originalFramebuffer;
         var globeFramebuffer = useGlobeDepthFramebuffer ? scene._globeDepth.framebuffer : undefined;
         var sceneFramebuffer = scene._sceneFramebuffer.getFramebuffer();
+        var idFramebuffer = scene._sceneFramebuffer.getIdFramebuffer();
 
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
@@ -2915,8 +2957,9 @@ define([
 
             var postProcess = scene.postProcessStages;
             var colorTexture = inputFramebuffer.getColorTexture(0);
+            var idTexture = idFramebuffer.getColorTexture(0);
             var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
-            postProcess.execute(context, colorTexture, depthTexture);
+            postProcess.execute(context, colorTexture, depthTexture, idTexture);
             postProcess.copy(context, defaultFramebuffer);
         }
 

@@ -63,6 +63,7 @@ define([
         './Axis',
         './BlendingState',
         './ColorBlendMode',
+        './DepthFunction',
         './HeightReference',
         './JobType',
         './ModelAnimationCache',
@@ -139,6 +140,7 @@ define([
         Axis,
         BlendingState,
         ColorBlendMode,
+        DepthFunction,
         HeightReference,
         JobType,
         ModelAnimationCache,
@@ -1915,22 +1917,20 @@ define([
             attributeLocations : attributeLocations
         });
 
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            var pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
+        // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+        var pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
+        var pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
 
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
-
-            model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : pickVS,
-                fragmentShaderSource : pickFS,
-                attributeLocations : attributeLocations
-            });
+        if (!model._pickFragmentShaderLoaded) {
+            pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
         }
+
+        model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : pickVS,
+            fragmentShaderSource : pickFS,
+            attributeLocations : attributeLocations
+        });
     }
 
     var scratchCreateProgramJob = new CreateProgramJob();
@@ -2967,6 +2967,35 @@ define([
             var castShadows = ShadowMode.castShadows(model._shadows);
             var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
+            var idProgram = rendererPickPrograms[technique.program];
+
+            var idRenderState = RenderState.getState(rs);
+            //idRenderState.depthTest.enabled = true;
+            idRenderState.depthTest.enabled = false;
+            idRenderState.depthTest.func = DepthFunction.EQUAL;
+            idRenderState = RenderState.fromCache(idRenderState);
+
+            var idUniformMap;
+
+            // Callback to override default model picking
+            if (defined(model._pickFragmentShaderLoaded)) {
+                if (defined(model._pickUniformMapLoaded)) {
+                    idUniformMap = model._pickUniformMapLoaded(uniformMap);
+                } else {
+                    // This is unlikely, but could happen if the override shader does not
+                    // need new uniforms since, for example, its pick ids are coming from
+                    // a vertex attribute or are baked into the shader source.
+                    idUniformMap = combine(uniformMap);
+                }
+            } else {
+                var pickId = context.createPickId(owner);
+                pickIds.push(pickId);
+                var pickUniforms = {
+                    czm_pickColor : createPickColorFunction(pickId.color)
+                };
+                idUniformMap = combine(uniformMap, pickUniforms);
+            }
+
             var command = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
@@ -2981,33 +3010,15 @@ define([
                 uniformMap : uniformMap,
                 renderState : rs,
                 owner : owner,
-                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
+                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass,
+                idShaderProgram : idProgram,
+                idUniformMap : idUniformMap,
+                idRenderState : idRenderState
             });
 
             var pickCommand;
 
             if (allowPicking) {
-                var pickUniformMap;
-
-                // Callback to override default model picking
-                if (defined(model._pickFragmentShaderLoaded)) {
-                    if (defined(model._pickUniformMapLoaded)) {
-                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                    } else {
-                        // This is unlikely, but could happen if the override shader does not
-                        // need new uniforms since, for example, its pick ids are coming from
-                        // a vertex attribute or are baked into the shader source.
-                        pickUniformMap = combine(uniformMap);
-                    }
-                } else {
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
-                    var pickUniforms = {
-                        czm_pickColor : createPickColorFunction(pickId.color)
-                    };
-                    pickUniformMap = combine(uniformMap, pickUniforms);
-                }
-
                 pickCommand = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -3017,7 +3028,7 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPickPrograms[technique.program],
-                    uniformMap : pickUniformMap,
+                    uniformMap : idUniformMap,
                     renderState : rs,
                     owner : owner,
                     pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass

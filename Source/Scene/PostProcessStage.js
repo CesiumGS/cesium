@@ -121,6 +121,7 @@ define([
 
         this._colorTexture = undefined;
         this._depthTexture = undefined;
+        this._idTexture = undefined;
 
         this._actualUniforms = {};
         this._dirtyUniforms = [];
@@ -433,6 +434,9 @@ define([
             },
             depthTextureDimensions : function() {
                 return stage._depthTexture.dimensions;
+            },
+            idTexture : function() {
+                return stage._idTexture;
             }
         });
     }
@@ -625,13 +629,14 @@ define([
      * @param {Texture} depthTexture The input depth texture.
      * @private
      */
-    PostProcessStage.prototype.execute = function(context, colorTexture, depthTexture) {
+    PostProcessStage.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {
         if (!defined(this._command) || !defined(this._command.framebuffer) || !this._ready || !this._enabled) {
             return;
         }
 
         this._colorTexture = colorTexture;
         this._depthTexture = depthTexture;
+        this._idTexture = idTexture;
 
         if (!Sampler.equals(this._colorTexture.sampler, this._sampler)) {
             this._colorTexture.sampler = this._sampler;
