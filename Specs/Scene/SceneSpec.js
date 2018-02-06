@@ -1326,7 +1326,7 @@ defineSuite([
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
 
         scene.destroyForSpecs();
     });
@@ -1522,7 +1522,7 @@ defineSuite([
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphToColumbusView(1.0);
@@ -1534,7 +1534,7 @@ defineSuite([
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphTo3D(1.0);
@@ -1546,7 +1546,7 @@ defineSuite([
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
 
         scene.destroyForSpecs();
     });
@@ -1567,10 +1567,10 @@ defineSuite([
 
         scene.maximumRenderTimeChange = 100.0;
 
-        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.0, new JulianDate()));
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate()));
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
 
-        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.1, new JulianDate()));
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
