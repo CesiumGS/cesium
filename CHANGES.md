@@ -1,8 +1,9 @@
 Change Log
 ==========
 
-### 1.42 - 2018-03-01
+### 1.43 - 2018-03-01
 
+##### Additions :tada:
 * Added a post-processing framework. [#5615](https://github.com/AnalyticalGraphicsInc/cesium/pull/5615)
    * Added `Scene.postProcessStages` which is a collection of post-process stages to be run in order.
       * Has a built-in `ambientOcclusion` property which will apply screen space ambient occlusion to the scene and run before all stages.
@@ -12,6 +13,9 @@ Change Log
    * Added `PostProcessStage` which takes a fragment shader that processes the color and depth texture from the stage run before it.
    * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
    * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
+
+##### Fixes :wrench:
+* Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__
