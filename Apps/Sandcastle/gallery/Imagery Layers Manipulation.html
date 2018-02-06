@@ -120,7 +120,7 @@ function setupLayers() {
     addBaseLayerOption(
             'ArcGIS World Street Maps',
             new Cesium.ArcGisMapServerImageryProvider({
-                url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
             }));
     addBaseLayerOption(
             'OpenStreetMaps',
@@ -140,7 +140,7 @@ function setupLayers() {
     addBaseLayerOption(
             'Natural Earth II (local)',
             Cesium.createTileMapServiceImageryProvider({
-                url : require.toUrl('Assets/Textures/NaturalEarthII')
+                url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
             }));
     addBaseLayerOption(
             'USGS Shaded Relief (via WMTS)',
@@ -164,8 +164,7 @@ function setupLayers() {
                 parameters : {
                     transparent : 'true',
                     format : 'image/png'
-                },
-                proxy : new Cesium.DefaultProxy('/proxy/')
+                }
             }));
     addAdditionalLayerOption(
             'United States Weather Radar',
@@ -176,8 +175,7 @@ function setupLayers() {
                 parameters : {
                     transparent : 'true',
                     format : 'image/png'
-                },
-                proxy : new Cesium.DefaultProxy('/proxy/')
+                }
             }));
     addAdditionalLayerOption(
             'TileMapService Image',

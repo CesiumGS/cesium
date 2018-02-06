@@ -12,9 +12,9 @@ define([
         '../Core/EllipsoidTerrainProvider',
         '../Core/Event',
         '../Core/IntersectionTests',
-        '../Core/loadImage',
         '../Core/Ray',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Shaders/GlobeFS',
@@ -42,9 +42,9 @@ define([
         EllipsoidTerrainProvider,
         Event,
         IntersectionTests,
-        loadImage,
         Ray,
         Rectangle,
+        Resource,
         ShaderSource,
         Texture,
         GlobeFS,
@@ -104,15 +104,10 @@ define([
          */
         this.show = true;
 
-        /**
-         * The normal map to use for rendering waves in the ocean.  Setting this property will
-         * only have an effect if the configured terrain provider includes a water mask.
-         *
-         * @type {String}
-         * @default buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
-         */
-        this.oceanNormalMapUrl = buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg');
-        this._oceanNormalMapUrl = undefined;
+        this._oceanNormalMapResourceDirty = true;
+        this._oceanNormalMapResource = new Resource({
+            url: buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
+        });
 
         /**
          * The maximum screen-space error used to drive level-of-detail refinement.  Higher
@@ -219,6 +214,30 @@ define([
             }
         },
         /**
+         * Gets an event that's raised when an imagery layer is added, shown, hidden, moved, or removed.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        imageryLayersUpdatedEvent : {
+            get : function() {
+                return this._surface.tileProvider.imageryLayersUpdatedEvent;
+            }
+        },
+        /**
+         * Gets an event that's raised when a surface tile is loaded and ready to be rendered.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        tileLoadedEvent : {
+            get : function() {
+                return this._surface.tileProvider.tileLoadedEvent;
+            }
+        },
+        /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof Globe.prototype
          * @type {Color}
@@ -243,6 +262,22 @@ define([
             },
             set : function(value) {
                 this._surface.tileProvider.clippingPlanes = value;
+            }
+        },
+        /**
+         * The normal map to use for rendering waves in the ocean.  Setting this property will
+         * only have an effect if the configured terrain provider includes a water mask.
+         * @memberof Globe.prototype
+         * @type {String}
+         * @default buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
+         */
+        oceanNormalMapUrl: {
+            get: function() {
+                return this._oceanNormalMapResource.url;
+            },
+            set: function(value) {
+                this._oceanNormalMapResource.url = value;
+                this._oceanNormalMapResourceDirty = true;
             }
         },
         /**
@@ -515,25 +550,34 @@ define([
     /**
      * @private
      */
-    Globe.prototype.beginFrame = function(frameState) {
+    Globe.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
 
+        if (frameState.passes.render) {
+            this._surface.update(frameState);
+        }
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.beginFrame = function(frameState) {
         var surface = this._surface;
         var tileProvider = surface.tileProvider;
         var terrainProvider = this.terrainProvider;
         var hasWaterMask = this.showWaterEffect && terrainProvider.ready && terrainProvider.hasWaterMask;
 
-        if (hasWaterMask && this.oceanNormalMapUrl !== this._oceanNormalMapUrl) {
+        if (hasWaterMask && this._oceanNormalMapResourceDirty) {
             // url changed, load new normal map asynchronously
-            var oceanNormalMapUrl = this.oceanNormalMapUrl;
-            this._oceanNormalMapUrl = oceanNormalMapUrl;
-
+            this._oceanNormalMapResourceDirty = false;
+            var oceanNormalMapResource = this._oceanNormalMapResource;
+            var oceanNormalMapUrl =  oceanNormalMapResource.url;
             if (defined(oceanNormalMapUrl)) {
                 var that = this;
-                when(loadImage(oceanNormalMapUrl), function(image) {
-                    if (oceanNormalMapUrl !== that.oceanNormalMapUrl) {
+                when(oceanNormalMapResource.fetchImage(), function(image) {
+                    if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
                         // url changed while we were loading
                         return;
                     }
@@ -549,8 +593,8 @@ define([
             }
         }
 
-        var mode = frameState.mode;
         var pass = frameState.passes;
+        var mode = frameState.mode;
 
         if (pass.render) {
             // Don't show the ocean specular highlights when zoomed out in 2D and Columbus View.
@@ -579,7 +623,7 @@ define([
     /**
      * @private
      */
-    Globe.prototype.update = function(frameState) {
+    Globe.prototype.render = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -592,11 +636,11 @@ define([
         var pass = frameState.passes;
 
         if (pass.render) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
 
         if (pass.pick) {
-            surface.update(frameState);
+            surface.render(frameState);
         }
     };
 

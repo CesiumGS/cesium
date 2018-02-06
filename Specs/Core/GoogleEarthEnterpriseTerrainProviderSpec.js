@@ -11,6 +11,7 @@ defineSuite([
         'Core/Math',
         'Core/Request',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -27,6 +28,7 @@ defineSuite([
         CesiumMath,
         Request,
         RequestScheduler,
+        Resource,
         TerrainProvider,
         pollToPromise,
         when) {
@@ -106,6 +108,23 @@ defineSuite([
 
         terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
             url : 'made/up/url'
+        });
+
+        return terrainProvider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(terrainProvider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'made/up/url'
+        });
+
+        installMockGetQuadTreePacket();
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            url : resource
         });
 
         return terrainProvider.readyPromise.then(function(result) {

@@ -11,11 +11,11 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/loadCRN',
-        '../Core/loadImage',
         '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
         '../Shaders/Materials/BumpMapMaterial',
@@ -48,11 +48,11 @@ define([
         DeveloperError,
         isArray,
         loadCRN,
-        loadImage,
         loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
+        Resource,
         CubeMap,
         Texture,
         BumpMapMaterial,
@@ -792,13 +792,16 @@ define([
 
             if (uniformValue !== material._texturePaths[uniformId]) {
                 if (typeof uniformValue === 'string') {
+                    var resource = new Resource({
+                        url: uniformValue
+                    });
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
-                        promise = loadKTX(uniformValue);
+                        promise = loadKTX(resource);
                     } else if (crnRegex.test(uniformValue)) {
-                        promise = loadCRN(uniformValue);
+                        promise = loadCRN(resource);
                     } else {
-                        promise = loadImage(uniformValue);
+                        promise = resource.fetchImage();
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
@@ -848,12 +851,12 @@ define([
 
             if (path !== material._texturePaths[uniformId]) {
                 var promises = [
-                    loadImage(uniformValue.positiveX),
-                    loadImage(uniformValue.negativeX),
-                    loadImage(uniformValue.positiveY),
-                    loadImage(uniformValue.negativeY),
-                    loadImage(uniformValue.positiveZ),
-                    loadImage(uniformValue.negativeZ)
+                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
                 ];
 
                 when.all(promises).then(function(images) {

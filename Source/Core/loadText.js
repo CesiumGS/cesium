@@ -1,7 +1,13 @@
 define([
-        './loadWithXhr'
+        './Check',
+        './defined',
+        './deprecationWarning',
+        './Resource'
     ], function(
-        loadWithXhr) {
+        Check,
+        defined,
+        deprecationWarning,
+        Resource) {
     'use strict';
 
     /**
@@ -12,17 +18,21 @@ define([
      *
      * @exports loadText
      *
-     * @param {String} url The URL to request.
-     * @param {Object} [headers] HTTP headers to send with the request.
+     * @param {Resource|String} urlOrResource The URL to request.
+     * @param {Object} [headers] HTTP headers to send with the requests.
      * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<String>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
      * // load text from a URL, setting a custom header
-     * Cesium.loadText('http://someUrl.com/someJson.txt', {
-     *   'X-Custom-Header' : 'some value'
-     * }).then(function(text) {
+     * var resource = new Resource({
+     *   url: 'http://someUrl.com/someJson.txt',
+     *   headers: {
+     *     'X-Custom-Header' : 'some value'
+     *   }
+     * });
+     * Cesium.loadText(resource).then(function(text) {
      *     // Do something with the text
      * }).otherwise(function(error) {
      *     // an error occurred
@@ -31,13 +41,22 @@ define([
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
-    function loadText(url, headers, request) {
-        return loadWithXhr({
-            url : url,
-            headers : headers,
-            request : request
+    function loadText(urlOrResource, headers, request) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
+
+        deprecationWarning('loadText', 'loadText is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchText instead.');
+
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
         });
+
+        return resource.fetchText();
     }
 
     return loadText;

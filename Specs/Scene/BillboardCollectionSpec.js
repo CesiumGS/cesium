@@ -1790,6 +1790,24 @@ defineSuite([
         return deferred.promise;
     });
 
+    it('can add a billboard without a globe', function() {
+        scene.globe = undefined;
+
+        var billboardsWithoutGlobe = new BillboardCollection({
+            scene : scene
+        });
+
+        var position = Cartesian3.fromDegrees(-73.0, 40.0);
+        var b = billboardsWithoutGlobe.add({
+            position : position
+        });
+
+        scene.renderForSpecs();
+
+        expect(b.position).toEqual(position);
+        expect(b._actualClampedPosition).toBeUndefined();
+    });
+
     describe('height referenced billboards', function() {
         var billboardsWithHeight;
         beforeEach(function() {
@@ -1912,6 +1930,29 @@ defineSuite([
             var b = billboards.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
+
+            expect(function() {
+                b.heightReference = HeightReference.CLAMP_TO_GROUND;
+            }).toThrowDeveloperError();
+        });
+
+        it('height reference without a globe rejects', function() {
+            scene.globe = undefined;
+
+            expect(function() {
+                return billboardsWithHeight.add({
+                    heightReference : HeightReference.CLAMP_TO_GROUND,
+                    position : Cartesian3.fromDegrees(-72.0, 40.0)
+                });
+            }).toThrowDeveloperError();
+        });
+
+        it('changing height reference without a globe throws DeveloperError', function() {
+            var b = billboardsWithHeight.add({
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+
+            scene.globe = undefined;
 
             expect(function() {
                 b.heightReference = HeightReference.CLAMP_TO_GROUND;

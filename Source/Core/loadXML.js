@@ -1,7 +1,13 @@
 define([
-        './loadWithXhr'
+        './Check',
+        './defined',
+        './deprecationWarning',
+        './Resource'
     ], function(
-        loadWithXhr) {
+        Check,
+        defined,
+        deprecationWarning,
+        Resource) {
     'use strict';
 
     /**
@@ -12,8 +18,8 @@ define([
      *
      * @exports loadXML
      *
-     * @param {String} url The URL to request.
-     * @param {Object} [headers] HTTP headers to send with the request.
+     * @param {Resource|String} urlOrResource The URL to request.
+     * @param {Object} [headers] HTTP headers to send with the requests.
      * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
@@ -31,15 +37,22 @@ define([
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
-    function loadXML(url, headers, request) {
-        return loadWithXhr({
-            url : url,
-            responseType : 'document',
-            headers : headers,
-            overrideMimeType : 'text/xml',
-            request : request
+    function loadXML(urlOrResource, headers, request) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
+
+        deprecationWarning('loadXML', 'loadXML is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchXML instead.');
+
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            headers: headers,
+            request: request
         });
+
+        return resource.fetchXML();
     }
 
     return loadXML;

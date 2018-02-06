@@ -4,6 +4,7 @@ define([
         './Check',
         './defined',
         './defineProperties',
+        './Event',
         './Heap',
         './isBlobUri',
         './isDataUri',
@@ -14,6 +15,7 @@ define([
         Check,
         defined,
         defineProperties,
+        Event,
         Heap,
         isBlobUri,
         isDataUri,
@@ -44,6 +46,8 @@ define([
     var numberOfActiveRequestsByServer = {};
 
     var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
+
+    var requestCompletedEvent = new Event();
 
     /**
      * Tracks the number of active requests and prioritizes incoming requests.
@@ -82,6 +86,15 @@ define([
      * @default false
      */
     RequestScheduler.debugShowStatistics = false;
+
+    /**
+     * An event that's raised when a request is completed.  Event handlers are passed
+     * the error object if the request fails.
+     *
+     * @type {Event}
+     * @default Event()
+     */
+    RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
     defineProperties(RequestScheduler, {
         /**
@@ -152,6 +165,7 @@ define([
             }
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.serverKey];
+            requestCompletedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             request.deferred.resolve(results);
         };
@@ -166,6 +180,7 @@ define([
             ++statistics.numberOfFailedRequests;
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.serverKey];
+            requestCompletedEvent.raiseEvent(error);
             request.state = RequestState.FAILED;
             request.deferred.reject(error);
         };
@@ -304,6 +319,7 @@ define([
         //>>includeEnd('debug');
 
         if (isDataUri(request.url) || isBlobUri(request.url)) {
+            requestCompletedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             return request.requestFunction();
         }
