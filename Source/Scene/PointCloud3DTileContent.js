@@ -552,8 +552,7 @@ define([
                 scratch.y = content._tileset.timeSinceLoad;
 
                 if (content._attenuation) {
-
-                    var geometricError = content._descendantGeometricError; // additive
+                    var geometricError = content._tile._descendantGeometricError; // additive
                     if (!defined(geometricError)) {
                         geometricError = content.tile.geometricError;
                         if (geometricError === 0) {

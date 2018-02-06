@@ -154,41 +154,48 @@ define([
     var scratchStack = [];
     var scratchStack2 = [];
 
-    function findDescendantGeometricError(tile, frameState)
-    {
-        var content = tile._content;
-
+    function findDescendantGeometricError(tile, frameState) {
         var children = tile.children;
         var childrenLength = children.length;
+        var geometricError;
 
         // Is an actual leaf. Return the base resolution.
         if (tile.geometricError === 0.0) {
-            var baseResolution = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
-            content._descendantGeometricError = baseResolution;
-            //console.log('1: ' + content._descendantGeometricError);
-            return content._descendantGeometricError;
+            // var content = tile.content;
+            //geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+            geometricError = tile.parent.geometricError / 2.0;
+            tile._descendantGeometricError = geometricError;
+            tile._leafDescendants = 1;
+            tile._accumulatedGeometricError = geometricError;
+            return;
         }
 
-        var descendantGeometricError = Number.MAX_VALUE;
+        var leafDescendants = 0;
+        var accumulatedGeometricError = 0.0;
         for (var i = 0; i < childrenLength; ++i) {
             var child = children[i];
             var selected = child.selected && child._selectedFrame === frameState.frameNumber && child.hasRenderableContent;
             var empty = child.hasEmptyContent || child.hasTilesetContent;
             if (selected || empty) {
-                descendantGeometricError = Math.min(descendantGeometricError, findDescendantGeometricError(child, frameState));
+                findDescendantGeometricError(child, frameState);
+                leafDescendants += child._leafDescendants;
+                accumulatedGeometricError += child._accumulatedGeometricError;
             }
         }
 
         // Is a "leaf" of the tree. None of its children are selected. Return the geometric error.
-        if (descendantGeometricError === Number.MAX_VALUE) {
-            content._descendantGeometricError = tile.geometricError;
-            //console.log('2: ' + content._descendantGeometricError);
-            return content._descendantGeometricError;
+        if (leafDescendants === 0) {
+            geometricError = tile.geometricError;
+            tile._descendantGeometricError = geometricError;
+            tile._leafDescendants = 1;
+            tile._accumulatedGeometricError = geometricError;
+            return
         }
 
-        content._descendantGeometricError = descendantGeometricError;
-        //console.log('3: ' + content._descendantGeometricError);
-        return content._descendantGeometricError;
+        var averageGeometricError = accumulatedGeometricError / leafDescendants;
+        tile._descendantGeometricError = CesiumMath.lerp(tile.geometricError, averageGeometricError, 0.8);
+        tile._leafDescendants = leafDescendants;
+        tile._accumulatedGeometricError = accumulatedGeometricError;
     }
 
     /**
