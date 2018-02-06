@@ -1281,6 +1281,7 @@ define([
             var tile3D = tile.tile3D;
             var children = tile.header.children;
             if (defined(children)) {
+                var hasLeafChildren = false;
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
@@ -1292,6 +1293,13 @@ define([
                         header : childHeader,
                         tile3D : childTile
                     });
+                    if (childTile.geometricError === 0.0) {
+                        hasLeafChildren = true;
+                    }
+                }
+                if (hasLeafChildren) {
+                    tile3D.attenuationGeometricError = tile3D.geometricError;
+                    tile3D.geometricError /= 3.0;
                 }
             }
 
