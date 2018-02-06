@@ -125,6 +125,7 @@ define([
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
+     * @param {Boolean} [options.leafAttenuationFix=false] TBA
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
@@ -692,6 +693,8 @@ define([
          * @default false
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
+
+        this.leafAttenuationFix = defaultValue(options.leafAttenuationFix, false);
 
         // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset.json. If the tiles aren't
         //  at the root of the domain they will not load anymore. If we find a b3dm file with a leading slash, we test load a tile.
@@ -1281,6 +1284,7 @@ define([
             var tile3D = tile.tile3D;
             var children = tile.header.children;
             if (defined(children)) {
+                var hasLeafChildren = false;
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
@@ -1292,6 +1296,15 @@ define([
                         header : childHeader,
                         tile3D : childTile
                     });
+                    if (childTile.geometricError === 0.0) {
+                        hasLeafChildren = true;
+                    }
+                }
+                if (hasLeafChildren) {
+                    tile3D.attenuationGeometricError = tile3D.geometricError;
+                    if (this.leafAttenuationFix) {
+                        tile3D.geometricError /= 3.0;
+                    }
                 }
             }
 
