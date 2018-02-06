@@ -31,7 +31,7 @@ define([
         '../Scene/BlendingState',
         '../Scene/StencilFunction',
         '../Scene/StencilOperation',
-        '../Shaders/PostProcessFilters/PointCloudEyeDomeLighting'
+        '../Shaders/PostProcessStages/PointCloudEyeDomeLighting'
     ], function(
         Cartesian3,
         clone,

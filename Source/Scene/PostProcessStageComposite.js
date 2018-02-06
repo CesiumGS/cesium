@@ -158,7 +158,7 @@ define([
             }
         },
         /**
-         * An alias to the uniform values of the post-process stages. May be <code>undefined</code>; in which case, get each stages to set uniform values.
+         * An alias to the uniform values of the post-process stages. May be <code>undefined</code>; in which case, get each stage to set uniform values.
          * @memberof PostProcessStageComposite.prototype
          * @type {Object}
          */

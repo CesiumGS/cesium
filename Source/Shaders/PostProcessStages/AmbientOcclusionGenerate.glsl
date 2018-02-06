@@ -40,7 +40,8 @@ void main(void)
     float depth = texture2D(depthTexture, v_textureCoordinates).r;
     vec4 posInCamera = clipToEye(v_textureCoordinates, depth);
 
-    if (posInCamera.z > frustumLength) {
+    if (posInCamera.z > frustumLength)
+    {
         gl_FragColor = vec4(1.0);
         return;
     }

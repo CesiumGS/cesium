@@ -3,6 +3,9 @@ Change Log
 
 ### 1.43 - 2018-03-01
 
+##### Deprecated :hourglass_flowing_sand:
+* The `Scene.fxaa` property has been deprecated and will be removed in Cesium 1.45. Use `Scene.postProcessStages.fxaa`.
+
 ##### Additions :tada:
 * Added a post-processing framework. [#5615](https://github.com/AnalyticalGraphicsInc/cesium/pull/5615)
    * Added `Scene.postProcessStages` which is a collection of post-process stages to be run in order.

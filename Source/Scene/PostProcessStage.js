@@ -7,11 +7,11 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/loadImage',
         '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/destroyObject',
+        '../Core/Resource',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
@@ -31,11 +31,11 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
-        loadImage,
         CesiumMath,
         PixelFormat,
-        destroyObject,
+        Resource,
         PassState,
         PixelDatatype,
         RenderState,
@@ -333,9 +333,8 @@ define([
 
     function getUniformValueGetterAndSetter(stage, uniforms, name) {
         var currentValue = uniforms[name];
-        var newType = typeof currentValue;
-        if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
-            newType === HTMLVideoElement || newType === ImageData) {
+        if (typeof currentValue === 'string' || currentValue instanceof HTMLCanvasElement || currentValue instanceof HTMLImageElement ||
+            currentValue instanceof HTMLVideoElement || currentValue instanceof ImageData) {
             stage._dirtyUniforms.push(name);
         }
 
@@ -355,13 +354,12 @@ define([
                     delete actualUniforms[name + 'Dimensions'];
                 }
 
-                if (typeof currentValue === Texture) {
+                if (currentValue instanceof Texture) {
                     stage._texturesToRelease.push(currentValue);
                 }
 
-                var newType = typeof value;
-                if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
-                    newType === HTMLVideoElement || newType === ImageData) {
+                if (typeof value === 'string' || value instanceof HTMLCanvasElement || value instanceof HTMLImageElement ||
+                    value instanceof HTMLVideoElement || value instanceof ImageData) {
                     stage._dirtyUniforms.push(name);
                 } else {
                     actualUniforms[name] = value;
@@ -534,7 +532,10 @@ define([
             if (defined(stageWithName)) {
                 stage._actualUniforms[name] = createStageOutputTextureFunction(stage, stageNameOrUrl);
             } else {
-                promises.push(loadImage(stageNameOrUrl).then(createLoadImageFunction(stage, name)));
+                var resource = new Resource({
+                    url : stageNameOrUrl
+                });
+                promises.push(resource.fetchImage().then(createLoadImageFunction(stage, name)));
             }
         }
 

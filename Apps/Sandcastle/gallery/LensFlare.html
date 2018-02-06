@@ -44,12 +44,6 @@
         <td>Halo Width</td>
         <td><input type="range" min="0" max="1" step="0.01" data-bind="value: haloWidth, valueUpdate: 'input'"></td>
     </tr>
-    <tr>
-        <td><button class="cesium-button" data-bind="click: fromSpace">View from space</button></td>
-    </tr>
-    <tr>
-        <td><button class="cesium-button" data-bind="click: fromEverest">View from Everest</button></td>
-    </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -67,9 +61,7 @@ var viewModel = {
     intensity: 2.0,
     distortion: 10.0,
     dispersion: 0.4,
-    haloWidth: 0.4,
-    fromSpace : fromSpace,
-    fromEverest : fromEverest
+    haloWidth: 0.4
 };
 
 Cesium.knockout.track(viewModel);
@@ -94,25 +86,12 @@ function updatePostProcess() {
 updatePostProcess();
 
 var camera = viewer.scene.camera;
+camera.position = new Cesium.Cartesian3(40010447.97500168, 56238683.46406788, 20776576.752223067);
+camera.direction = new Cesium.Cartesian3(-0.5549701431494752, -0.7801872010801355, -0.2886452346452218);
+camera.up = new Cesium.Cartesian3(-0.3016252360948521, -0.13464820558887716, 0.9438707950150912);
+camera.right = Cesium.Cartesian3.cross(camera.direction, camera.up, new Cesium.Cartesian3());
 
-function fromEverest() {
-    camera.position = new Cesium.Cartesian3(305111.15252842277, 5635080.182335396, 2980739.393793938);
-    camera.direction = new Cesium.Cartesian3(-0.8922165975346716, 0.21339304915721466, -0.39801124312642266);
-    camera.up = new Cesium.Cartesian3(0.012013291290700188, 0.8922235826513757, 0.4514341141219929);
-    camera.right = Cesium.Cartesian3.cross(camera.direction, camera.up, new Cesium.Cartesian3());
-
-    viewer.clock.currentTime = new Cesium.JulianDate(2458052, 45720.28193048129);
-}
-
-function fromSpace() {
-    camera.position = new Cesium.Cartesian3(40010447.97500168, 56238683.46406788, 20776576.752223067);
-    camera.direction = new Cesium.Cartesian3(-0.5549701431494752, -0.7801872010801355, -0.2886452346452218);
-    camera.up = new Cesium.Cartesian3(-0.3016252360948521, -0.13464820558887716, 0.9438707950150912);
-    camera.right = Cesium.Cartesian3.cross(camera.direction, camera.up, new Cesium.Cartesian3());
-
-    viewer.clock.currentTime = new Cesium.JulianDate(2458047, 27399.860215000022);
-}
-fromSpace();
+viewer.clock.currentTime = new Cesium.JulianDate(2458047, 27399.860215000022);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
