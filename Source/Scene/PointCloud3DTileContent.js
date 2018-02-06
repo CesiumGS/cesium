@@ -549,7 +549,7 @@ define([
                 if (content._attenuation) {
                     var geometricError = content._tile._descendantGeometricError; // additive
                     if (!defined(geometricError)) {
-                        geometricError = content.tile.geometricError;
+                        geometricError = content.tile.attenuationGeometricError;
                         if (geometricError === 0) {
                             geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
                         }
