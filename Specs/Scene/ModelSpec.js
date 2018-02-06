@@ -129,6 +129,7 @@ defineSuite([
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
     var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
+    var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -2334,6 +2335,13 @@ defineSuite([
             });
 
             primitives.remove(model);
+        });
+    });
+
+    it('loads a glTF with KHR_draco_mesh_compression extension', function() {
+        return loadModel(dracoCompressedModelUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
         });
     });
 
