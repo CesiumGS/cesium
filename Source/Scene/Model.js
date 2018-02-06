@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -8,6 +9,7 @@ define([
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -51,6 +53,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
+        '../ThirdParty/draco-decoder-gltf',
         '../ThirdParty/GltfPipeline/addDefaults',
         '../ThirdParty/GltfPipeline/addPipelineExtras',
         '../ThirdParty/GltfPipeline/ForEach',
@@ -78,6 +81,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        arraySlice,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -87,6 +91,7 @@ define([
         clone,
         Color,
         combine,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -130,6 +135,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
+        draco,
         addDefaults,
         addPipelineExtras,
         ForEach,
@@ -163,6 +169,8 @@ define([
     if (!FeatureDetection.supportsTypedArrays()) {
         return {};
     }
+
+    var dracoDecoder = new draco.Decoder();
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -623,6 +631,7 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
+        this._decodedData = {};
 
         this._cachedGeometryByteLength = 0;
         this._cachedTexturesByteLength = 0;
@@ -1361,8 +1370,11 @@ define([
         // through glTF accessors to create the bufferview's index buffer.
         ForEach.accessor(model.gltf, function(accessor) {
             var bufferViewId = accessor.bufferView;
-            var bufferView = bufferViews[bufferViewId];
+            if (!defined(bufferViewId)) {
+                return;
+            }
 
+            var bufferView = bufferViews[bufferViewId];
             if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(indexBufferIds[bufferViewId])) {
                 indexBufferIds[bufferViewId] = true;
                 indexBuffersToCreate.enqueue({
@@ -2373,6 +2385,7 @@ define([
 
                 for (var i = 0; i < primitivesLength; ++i) {
                     var primitive = primitives[i];
+                    var decodedData = model._decodedData[meshId + '.primitive.' + i];
 
                     // GLTF_SPEC: This does not take into account attribute arrays,
                     // indicated by when an attribute points to a parameter with a
@@ -2393,6 +2406,26 @@ define([
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
+
+                                // Use decoded draco attributes if available
+                                if (defined(decodedData)) {
+                                    var decodedAttributes = decodedData.attributes;
+                                    if (decodedAttributes.hasOwnProperty(attributeName)) {
+                                        var decodedAttribute = decodedAttributes[attributeName];
+                                        attributes.push({
+                                            index : attributeLocation,
+                                            vertexBuffer : rendererBuffers[decodedAttribute.bufferView],
+                                            componentsPerAttribute : decodedAttribute.componentsPerAttribute,
+                                            componentDatatype : decodedAttribute.componentDatatype,
+                                            normalize: decodedAttribute.normalized,
+                                            offsetInBytes : decodedAttribute.byteOffset,
+                                            strideInBytes : decodedAttribute.byteStride
+                                        });
+
+                                        continue;
+                                    }
+                                }
+
                                 var normalize = false;
                                 if (defined(a.normalized) && a.normalized) {
                                     normalize = true;
@@ -2429,7 +2462,14 @@ define([
                     var indexBuffer;
                     if (defined(primitive.indices)) {
                         var accessor = accessors[primitive.indices];
-                        indexBuffer = rendererBuffers[accessor.bufferView];
+                        var bufferView = accessor.bufferView;
+
+                        // Used decoded draco buffer if available
+                        if (defined(decodedData)) {
+                            bufferView = decodedData.bufferView;
+                        }
+
+                        indexBuffer = rendererBuffers[bufferView];
                     }
                     rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
                         context : context,
@@ -3995,6 +4035,143 @@ define([
         return (distance2 >= nearSquared) && (distance2 <= farSquared);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    function addBufferToModelResources(model, buffer) {
+        var resourceBuffers = model._rendererResources.buffers;
+        var id = Object.keys(resourceBuffers).length;
+        resourceBuffers[id] = buffer;
+        model._geometryByteLength += buffer.sizeInBytes;
+
+        return id;
+    }
+
+    function addNewVertexBuffer(typedArray, model, context) {
+        var vertexBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        vertexBuffer.vertexArrayDestroyable = false;
+
+        return addBufferToModelResources(model, vertexBuffer);
+    }
+
+    function addNewIndexBuffer(typedArray, model, context) {
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_INT
+        });
+        indexBuffer.vertexArrayDestroyable = false;
+
+        return addBufferToModelResources(model, indexBuffer);
+    }
+
+    function parseDraco(model, context) {
+        if (!defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
+            return;
+        }
+
+        var buffer;
+        var dracoGeometry;
+        var gltf = model.gltf;
+        ForEach.mesh(gltf, function(mesh, meshId) {
+            ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
+                if (!defined(primitive.extensions)) {
+                    return;
+                }
+
+                var compressionData = primitive.extensions['KHR_draco_mesh_compression'];
+                if (!defined(compressionData)) {
+                    return;
+                }
+
+                var bufferView = gltf.bufferViews[compressionData.bufferView];
+                var rawBuffer = gltf.buffers[bufferView.buffer];
+                var typedArray = arraySlice(rawBuffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
+
+                buffer = new draco.DecoderBuffer();
+                buffer.Init(new Int8Array(typedArray), bufferView.byteLength);
+
+                var geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
+                if (geometryType !== draco.TRIANGULAR_MESH) {
+                    throw new RuntimeError('Unsupported draco mesh geometry type.');
+                }
+
+                dracoGeometry = new draco.Mesh();
+                var decodingStatus = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
+                if (!decodingStatus.ok() || dracoGeometry.ptr === 0) {
+                    throw new RuntimeError('Error decoding draco mesh geometry: ' + decodingStatus.error_msg());
+                }
+
+                draco.destroy(buffer);
+
+                var numPoints = dracoGeometry.num_points();
+                var numFaces = dracoGeometry.num_faces();
+
+                var faceIndices = new draco.DracoInt32Array();
+                var indexArray = new Int32Array(numFaces * 3);
+
+                var i;
+                for (i = 0; i < numFaces; ++i) {
+                    dracoDecoder.GetFaceFromMesh(dracoGeometry, i, faceIndices);
+
+                    var offset = i * 3;
+                    indexArray[offset + 0] = faceIndices.GetValue(0);
+                    indexArray[offset + 1] = faceIndices.GetValue(1);
+                    indexArray[offset + 2] = faceIndices.GetValue(2);
+                }
+                var decodedBufferView = addNewIndexBuffer(indexArray, model, context);
+                draco.destroy(faceIndices);
+
+                var compressedAttributes = compressionData.attributes;
+                var decodedAttributeData = {};
+                var attributeData;
+                var vertexArray;
+                for (var attributeName in compressedAttributes) {
+                    if (compressedAttributes.hasOwnProperty(attributeName)) {
+                        var compressedAttribute = compressedAttributes[attributeName];
+                        var attribute = dracoDecoder.GetAttribute(dracoGeometry, compressedAttribute);
+                        var numComponents = attribute.num_components();
+
+                        if (attribute.data_type() === 4) {
+                            attributeData = new draco.DracoInt32Array();
+                            vertexArray = new Uint16Array(numPoints * numComponents);
+                            dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+                        } else {
+                            attributeData = new draco.DracoFloat32Array();
+                            vertexArray = new Float32Array(numPoints * numComponents);
+                            dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
+                        }
+
+                        for (i = 0; i < vertexArray.length; ++i) {
+                            vertexArray[i] = attributeData.GetValue(i);
+                        }
+
+                        draco.destroy(attributeData);
+
+                        var vertexBufferView = addNewVertexBuffer(vertexArray, model, context);
+                        decodedAttributeData[attributeName] = {
+                            componentsPerAttribute : numComponents,
+                            byteOffset : attribute.byte_offset(),
+                            byteStride : attribute.byte_stride(),
+                            bufferView : vertexBufferView,
+                            normalized : attribute.normalized(),
+                            componentDatatype : ComponentDatatype.fromTypedArray(vertexArray)
+                        };
+                    }
+                }
+
+                model._decodedData[meshId + '.primitive.' + primitiveId] = {
+                    bufferView : decodedBufferView,
+                    attributes : decodedAttributeData
+                };
+            });
+        });
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -4091,6 +4268,8 @@ define([
                     addDefaults(this.gltf);
                     processModelMaterialsCommon(this.gltf, options);
                     processPbrMetallicRoughness(this.gltf, options);
+                    parseDraco(this, context);
+
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
 
