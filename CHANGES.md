@@ -5,6 +5,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
+* Fixed bug where KmlDataSource did not use Ellipsoid to convert coordinates. [#6176] (https://github.com/AnalyticalGraphicsInc/cesium/pull/6176)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__
