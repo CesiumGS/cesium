@@ -201,7 +201,7 @@ define([
         primitive._levelZeroTiles = undefined;
 
         primitive._tileProvider.cancelReprojections();
-    };
+    }
 
     /**
      * Invokes a specified function for each {@link QuadtreeTile} that is partially

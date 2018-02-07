@@ -674,6 +674,7 @@ defineSuite([
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+                surface.update(scene.frameState);
                 expect(replacementQueue.count).toBe(0);
             });
         });
