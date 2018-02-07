@@ -100,6 +100,7 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
         this._loadQueueTimeSlice = 5.0;
+        this._tilesInvalidated = false;
 
         this._addHeightCallbacks = [];
         this._removeHeightCallbacks = [];
@@ -167,16 +168,20 @@ define([
      * @memberof QuadtreePrimitive
      */
     QuadtreePrimitive.prototype.invalidateAllTiles = function() {
+        this._tilesInvalidated = true;
+    };
+
+    function invalidateAllTiles(primitive) {
         // Clear the replacement queue
-        var replacementQueue = this._tileReplacementQueue;
+        var replacementQueue = primitive._tileReplacementQueue;
         replacementQueue.head = undefined;
         replacementQueue.tail = undefined;
         replacementQueue.count = 0;
 
-        clearTileLoadQueue(this);
+        clearTileLoadQueue(primitive);
 
         // Free and recreate the level zero tiles.
-        var levelZeroTiles = this._levelZeroTiles;
+        var levelZeroTiles = primitive._levelZeroTiles;
         if (defined(levelZeroTiles)) {
             for (var i = 0; i < levelZeroTiles.length; ++i) {
                 var tile = levelZeroTiles[i];
@@ -186,16 +191,16 @@ define([
                 for (var j = 0; j < customDataLength; ++j) {
                     var data = customData[j];
                     data.level = 0;
-                    this._addHeightCallbacks.push(data);
+                    primitive._addHeightCallbacks.push(data);
                 }
 
                 levelZeroTiles[i].freeResources();
             }
         }
 
-        this._levelZeroTiles = undefined;
+        primitive._levelZeroTiles = undefined;
 
-        this._tileProvider.cancelReprojections();
+        primitive._tileProvider.cancelReprojections();
     };
 
     /**
@@ -267,6 +272,11 @@ define([
      * @private
      */
     QuadtreePrimitive.prototype.update = function(frameState) {
+        if (this._tilesInvalidated) {
+            invalidateAllTiles(this);
+            this._tilesInvalidated = false;
+        }
+
         if (defined(this._tileProvider.update)) {
             this._tileProvider.update(frameState);
         }
