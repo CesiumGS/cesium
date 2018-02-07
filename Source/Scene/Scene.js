@@ -64,6 +64,7 @@ define([
         './InvertClassification',
         './JobScheduler',
         './MapMode2D',
+        './MergeDepths',
         './OIT',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
@@ -145,6 +146,7 @@ define([
         InvertClassification,
         JobScheduler,
         MapMode2D,
+        MergeDepths,
         OIT,
         PerformanceDisplay,
         PerInstanceColorAppearance,
@@ -320,6 +322,7 @@ define([
         this._depthPlane = new DepthPlane();
         this._oit = oit;
         this._sceneFramebuffer = new SceneFramebuffer();
+        this._mergeDepths = new MergeDepths();
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
@@ -2839,7 +2842,8 @@ define([
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
 
-            postProcess.update(context);
+            var usePackedDepth = useGlobeDepthFramebuffer && scene.useDepthPicking;
+            postProcess.update(context, usePackedDepth);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
@@ -2911,11 +2915,21 @@ define([
         }
 
         if (usePostProcess && (useOIT || defined(globeFramebuffer))) {
+            var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
+            if (useGlobeDepthFramebuffer && scene.useDepthPicking) {
+                var numFrustums = scene._frustumCommandsList.length;
+                if (numFrustums === 1) {
+                    depthTexture = scene._pickDepths[0].framebuffer.getColorTexture(0);
+                } else {
+                    scene._mergeDepths.execute(context, scene._pickDepths, scene._frustumCommandsList);
+                    depthTexture = scene._mergeDepths.framebuffer.getColorTexture(0);
+                }
+            }
+
             var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
 
             var postProcess = scene.postProcessStages;
             var colorTexture = inputFramebuffer.getColorTexture(0);
-            var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
             postProcess.execute(context, colorTexture, depthTexture);
             postProcess.copy(context, defaultFramebuffer);
         }

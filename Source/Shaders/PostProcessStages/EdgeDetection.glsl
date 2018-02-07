@@ -23,15 +23,29 @@ void main(void)
     float horizEdge = 0.0;
     float vertEdge = 0.0;
 
+    float frustum = czm_readDepth(depthTexture, v_textureCoordinates).y;
+
     for (int i = 0; i < 3; ++i) {
         float dir = directions[i];
         float scale = scalars[i];
 
-        horizEdge -= texture2D(depthTexture, v_textureCoordinates + vec2(-padx, dir * pady)).x * scale;
-        horizEdge += texture2D(depthTexture, v_textureCoordinates + vec2(padx, dir * pady)).x * scale;
+        vec2 negHoriz = czm_readDepth(depthTexture, v_textureCoordinates + vec2(-padx, dir * pady));
+        vec2 posHoriz = czm_readDepth(depthTexture, v_textureCoordinates + vec2(padx, dir * pady));
 
-        vertEdge -= texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, -pady)).x * scale;
-        vertEdge += texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, pady)).x * scale;
+        vec2 negVert = czm_readDepth(depthTexture, v_textureCoordinates + vec2(dir * padx, -pady));
+        vec2 posVert = czm_readDepth(depthTexture, v_textureCoordinates + vec2(dir * padx, pady));
+
+        if (negHoriz.y != frustum || negHoriz.y != posHoriz.y || negVert.y != posVert.y || negHoriz.y != negVert.y)
+        {
+            gl_FragColor = vec4(color.rgb, 0.0);
+            return;
+        }
+
+        horizEdge -= negHoriz.x * scale;
+        horizEdge += posHoriz.x * scale;
+
+        vertEdge -= negVert.x * scale;
+        vertEdge += posVert.x * scale;
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);

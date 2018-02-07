@@ -2,8 +2,12 @@ uniform sampler2D depthTexture;
 
 varying vec2 v_textureCoordinates;
 
-void main(void)
+void main()
 {
-    float depth = texture2D(depthTexture, v_textureCoordinates).r;
-    gl_FragColor = vec4(vec3(depth), 1.0);
+    float z_window = czm_readDepth(u_depthTexture, v_textureCoordinates).x;
+    float n_range = czm_depthRange.near;
+    float f_range = czm_depthRange.far;
+    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);
+    float scale = pow(z_ndc * 0.5 + 0.5, 8.0);
+    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), scale), 1.0);
 }

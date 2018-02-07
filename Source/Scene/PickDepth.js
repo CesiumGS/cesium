@@ -5,7 +5,8 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
-        '../Renderer/Texture'
+        '../Renderer/Texture',
+        '../Shaders/PostProcessStages/DepthView'
     ], function(
         defined,
         destroyObject,
@@ -13,7 +14,8 @@ define([
         Framebuffer,
         PixelDatatype,
         RenderState,
-        Texture) {
+        Texture,
+        DepthView) {
     'use strict';
 
     /**
@@ -31,19 +33,7 @@ define([
 
     function executeDebugPickDepth(pickDepth, context, passState) {
         if (!defined(pickDepth._debugPickDepthViewportCommand)) {
-            var fs =
-                'uniform sampler2D u_texture;\n' +
-                'varying vec2 v_textureCoordinates;\n' +
-                'void main()\n' +
-                '{\n' +
-                '    float z_window = czm_unpackDepth(texture2D(u_texture, v_textureCoordinates));\n' +
-                '    float n_range = czm_depthRange.near;\n' +
-                '    float f_range = czm_depthRange.far;\n' +
-                '    float z_ndc = (2.0 * z_window - n_range - f_range) / (f_range - n_range);\n' +
-                '    float scale = pow(z_ndc * 0.5 + 0.5, 8.0);\n' +
-                '    gl_FragColor = vec4(mix(vec3(0.0), vec3(1.0), scale), 1.0);\n' +
-                '}\n';
-
+            var fs = '#define USE_PACKED_DEPTH \n' + DepthView;
             pickDepth._debugPickDepthViewportCommand = context.createViewportQuadCommand(fs, {
                 uniformMap : {
                     u_texture : function() {

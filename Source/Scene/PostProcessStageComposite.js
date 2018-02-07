@@ -218,11 +218,11 @@ define([
      * @param {Context} context The context.
      * @private
      */
-    PostProcessStageComposite.prototype.update = function(context) {
+    PostProcessStageComposite.prototype.update = function(context, usePackedDepth) {
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            stages[i].update(context);
+            stages[i].update(context, usePackedDepth);
         }
     };
 

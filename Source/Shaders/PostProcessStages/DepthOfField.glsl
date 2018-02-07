@@ -32,7 +32,7 @@ float computeDepthBlur(float depth)
 
 void main(void)
 {
-    float depth = texture2D(depthTexture, v_textureCoordinates).r;
+    float depth = czm_readDepth(depthTexture, v_textureCoordinates);
     vec4 posInCamera = toEye(v_textureCoordinates, depth);
     float d = computeDepthBlur(-posInCamera.z);
     gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), texture2D(blurTexture, v_textureCoordinates), d);

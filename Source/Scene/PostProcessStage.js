@@ -116,6 +116,8 @@ define([
         this._pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         this._clearColor = defaultValue(options.clearColor, Color.BLACK);
 
+        this._usePackedDepth = undefined;
+
         this._uniformMap = undefined;
         this._command = undefined;
 
@@ -435,12 +437,20 @@ define([
         });
     }
 
-    function createDrawCommand(stage, context) {
-        if (defined(stage._command)) {
+    function createDrawCommand(stage, context, usePackedDepth) {
+        if (defined(stage._command) && stage._usePackedDepth === usePackedDepth) {
             return;
         }
 
-        stage._command = context.createViewportQuadCommand(stage._fragmentShader, {
+        stage._usePackedDepth = usePackedDepth;
+        var fs = stage._fragmentShader;
+        if (usePackedDepth) {
+            fs =
+                '#define USE_PACKED_DEPTH \n' +
+                fs;
+        }
+
+        stage._command = context.createViewportQuadCommand(fs, {
             uniformMap : stage._uniformMap,
             owner : stage
         });
@@ -582,7 +592,7 @@ define([
      * @param {Context} context The context.
      * @private
      */
-    PostProcessStage.prototype.update = function(context) {
+    PostProcessStage.prototype.update = function(context, usePackedDepth) {
         if (this.enabled !== this._enabled && !this.enabled) {
             releaseResources(this);
         }
@@ -594,7 +604,7 @@ define([
 
         createUniformMap(this);
         updateUniformTextures(this, context);
-        createDrawCommand(this, context);
+        createDrawCommand(this, context, usePackedDepth);
         createSampler(this);
 
         if (!this._ready) {

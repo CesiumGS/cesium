@@ -11,6 +11,6 @@ float linearDepth(float depth)
 
 void main(void)
 {
-    float depth = texture2D(depthTexture, v_textureCoordinates).r;
+    float depth = czm_readDepth(depthTexture, v_textureCoordinates).x;
     gl_FragColor = vec4(linearDepth(depth));
 }

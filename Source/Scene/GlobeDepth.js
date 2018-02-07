@@ -13,7 +13,7 @@ define([
         '../Renderer/TextureWrap',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
-        '../Shaders/PostProcessStages/DepthViewPacked',
+        '../Shaders/PostProcessStages/DepthView',
         '../Shaders/PostProcessStages/PassThrough',
         '../Shaders/PostProcessStages/PassThroughDepth'
     ], function(
@@ -31,7 +31,7 @@ define([
         TextureWrap,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        DepthViewPacked,
+        DepthView,
         PassThrough,
         PassThroughDepth) {
     'use strict';
@@ -62,7 +62,8 @@ define([
 
     function executeDebugGlobeDepth(globeDepth, context, passState) {
         if (!defined(globeDepth._debugGlobeDepthViewportCommand)) {
-            globeDepth._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(DepthViewPacked, {
+            var fs = '#define USE_PACKED_DEPTH \n' + DepthView;
+            globeDepth._debugGlobeDepthViewportCommand = context.createViewportQuadCommand(fs, {
                 uniformMap : {
                     u_depthTexture : function() {
                         return globeDepth._globeDepthTexture;
