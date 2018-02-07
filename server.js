@@ -46,7 +46,7 @@
         'image/ktx' : ['ktx'],
         'model/gltf+json' : ['gltf'],
         'model/gltf-binary' : ['bgltf', 'glb'],
-        'application/octet-stream' : ['b3dm', 'pnts', 'i3dm', 'cmpt'],
+        'application/octet-stream' : ['b3dm', 'pnts', 'i3dm', 'cmpt', 'geom', 'vctr'],
         'text/plain' : ['glsl']
     }, true);
 
@@ -75,7 +75,7 @@
         });
     }
 
-    var knownTilesetFormats = [/\.b3dm/, /\.pnts/, /\.i3dm/, /\.cmpt/, /\.glb/, /tileset.*\.json$/];
+    var knownTilesetFormats = [/\.b3dm/, /\.pnts/, /\.i3dm/, /\.cmpt/, /\.glb/, /\.geom/, /\.vctr/, /tileset.*\.json$/];
     app.get(knownTilesetFormats, checkGzipAndNext);
 
     app.use(express.static(__dirname));

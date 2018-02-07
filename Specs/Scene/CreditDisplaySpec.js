@@ -529,6 +529,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
+        creditDisplay.update();
 
         var innerHTML = creditList.innerHTML;
         expect(creditList.childNodes.length).toEqual(1);
@@ -537,6 +538,8 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
+        creditDisplay.update();
+
         expect(creditList.innerHTML).not.toEqual(innerHTML);
         innerHTML = creditList.innerHTML;
         expect(creditList.childNodes.length).toEqual(1);
@@ -546,12 +549,16 @@ defineSuite([
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
+        creditDisplay.update();
+
         expect(creditList.innerHTML).not.toEqual(innerHTML);
         innerHTML = creditList.innerHTML;
         expect(creditList.childNodes.length).toEqual(2);
 
         creditDisplay.beginFrame();
         creditDisplay.endFrame();
+        creditDisplay.update();
+
         expect(creditList.innerHTML).not.toEqual(innerHTML);
         expect(creditList.childNodes.length).toEqual(0);
 
@@ -569,6 +576,8 @@ defineSuite([
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
+        creditDisplay.update();
+
         expect(creditList.childNodes.length).toEqual(0);
 
         creditDisplay.showLightbox();
@@ -577,7 +586,41 @@ defineSuite([
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
+        creditDisplay.update();
+
         expect(creditList.childNodes.length).toEqual(2);
+
+        creditDisplay.hideLightbox();
+    });
+
+    it('updates lightbox when a new frames are not rendered', function() {
+        var credit1 = new Credit({text: 'credit1'});
+        var credit2 = new Credit({imageUrl: imgSrc});
+
+        creditDisplay = new CreditDisplay(container);
+        var creditList = creditDisplay._creditList;
+
+        creditDisplay.update();
+
+        expect(creditList.childNodes.length).toEqual(0);
+
+        creditDisplay.beginFrame();
+        creditDisplay.addCredit(credit1);
+        creditDisplay.addCredit(credit2);
+        creditDisplay.endFrame();
+        creditDisplay.update();
+
+        expect(creditList.childNodes.length).toEqual(0);
+
+        creditDisplay.showLightbox();
+        creditDisplay.update();
+
+        expect(creditList.childNodes.length).toEqual(2);
+
+        creditDisplay.hideLightbox();
+        creditDisplay.update();
+
+        expect(creditList.childNodes.length).toEqual(0);
 
         creditDisplay.hideLightbox();
     });

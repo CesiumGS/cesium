@@ -2,12 +2,14 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Check',
+        './defined',
         './DeveloperError',
         './Math'
     ], function(
         Cartesian2,
         Cartesian3,
         Check,
+        defined,
         DeveloperError,
         CesiumMath) {
     'use strict';
@@ -273,6 +275,49 @@ define([
         result.x = xZeroTo4095 / 4095.0;
         result.y = (compressed - xZeroTo4095 * 4096) / 4095;
         return result;
+    };
+
+    function zigZagDecode(value) {
+        return (value >> 1) ^ (-(value & 1));
+    }
+
+    /**
+     * Decodes delta and ZigZag encoded vertices. This modifies the buffers in place.
+     *
+     * @param {Uint16Array} uBuffer The buffer view of u values.
+     * @param {Uint16Array} vBuffer The buffer view of v values.
+     * @param {Uint16Array} [heightBuffer] The buffer view of height values.
+     *
+     * @see {@link https://cesiumjs.org/data-and-assets/terrain/formats/quantized-mesh-1.0.html|quantized-mesh-1.0 terrain format}
+     */
+    AttributeCompression.zigZagDeltaDecode = function(uBuffer, vBuffer, heightBuffer) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('uBuffer', uBuffer);
+        Check.defined('vBuffer', vBuffer);
+        Check.typeOf.number.equals('uBuffer.length', 'vBuffer.length', uBuffer.length, vBuffer.length);
+        if (defined(heightBuffer)) {
+            Check.typeOf.number.equals('uBuffer.length', 'heightBuffer.length', uBuffer.length, heightBuffer.length);
+        }
+        //>>includeEnd('debug');
+
+        var count = uBuffer.length;
+
+        var u = 0;
+        var v = 0;
+        var height = 0;
+
+        for (var i = 0; i < count; ++i) {
+            u += zigZagDecode(uBuffer[i]);
+            v += zigZagDecode(vBuffer[i]);
+
+            uBuffer[i] = u;
+            vBuffer[i] = v;
+
+            if (defined(heightBuffer)) {
+                height += zigZagDecode(heightBuffer[i]);
+                heightBuffer[i] = height;
+            }
+        }
     };
 
     return AttributeCompression;

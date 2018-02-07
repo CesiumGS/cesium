@@ -486,7 +486,7 @@ define([
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      *
      * @example
      * // 1. create a polygon from points

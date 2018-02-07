@@ -1,6 +1,77 @@
 Change Log
 ==========
 
+### 1.43 - 2018-03-01
+
+##### Fixes :wrench:
+* Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
+
+### 1.42.1 - 2018-02-01
+_This is an npm-only release to fix an issue with using Cesium in Node.js.__
+* Fixed a bug where Cesium would fail to load under Node.js. [#6177](https://github.com/AnalyticalGraphicsInc/cesium/pull/6177)
+
+### 1.42 - 2018-02-01
+
+##### Highlights :sparkler:
+* Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData). ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665))
+* Added optional mode to reduce CPU usage. See [Improving Performance with Explicit Rendering](https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/). ([#6115](https://github.com/AnalyticalGraphicsInc/cesium/pull/6115))
+* Added experimental `CesiumIon` utility class for working with the Cesium ion beta API. [#6136](https://github.com/AnalyticalGraphicsInc/cesium/pull/6136)
+* Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, and `Billboard`.
+
+##### Breaking Changes :mega:
+* The clock does not animate by default. Set the `shouldAnimate` option to `true` when creating the Viewer to enable animation.
+
+##### Deprecated :hourglass_flowing_sand:
+* For all classes/functions that can now take a `Resource` instance, all additional parameters that are part of the `Resource` class have been deprecated and will be removed in Cesium 1.44. This generally includes `proxy`, `headers` and `query` parameters.
+* All low level load functions including `loadArrayBuffer`, `loadBlob`, `loadImage`, `loadJson`, `loadJsonp`, `loadText`, `loadXML` and `loadWithXhr` have been deprecated and will be removed in Cesium 1.44. Please use the equivalent `fetch` functions on the `Resource` class.
+
+##### Additions :tada:
+* Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
+   * `Cesium3DTileStyle` has expanded to include styling point features. See the [styling specification](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
+   * `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, and geometry features.
+   * `Cesium3DTilePointFeature` can modify the styling options for a point feature.
+* Added optional mode to reduce CPU usage. [#6115](https://github.com/AnalyticalGraphicsInc/cesium/pull/6115)
+   * `Scene.requestRenderMode` enables a mode which will only request new render frames on changes to the scene, or when the simulation time change exceeds `scene.maximumRenderTimeChange`.
+   * `Scene.requestRender` will explicitly request a new render frame when in request render mode.
+   * Added `Scene.preUpdate` and `Scene.postUpdate` events that are raised before and after the scene updates respectively. The scene is always updated before executing a potential render. Continue to listen to `Scene.preRender` and `Scene.postRender` events for when the scene renders a frame.
+   * Added `CreditDisplay.update`, which updates the credit display before a new frame is rendered.
+   * Added `Globe.imageryLayersUpdatedEvent`, which is raised when an imagery layer is added, shown, hidden, moved, or removed on the globe.
+* Added `Cesium3DTileset.classificationType` to specify if a tileset classifies terrain, another 3D Tiles tileset, or both. This only applies to vector, geometry and batched 3D model tilesets. The limitations on the glTF contained in the b3dm tile are:
+   * `POSITION` and `_BATCHID` semantics are required.
+   * All indices with the same batch id must occupy contiguous sections of the index buffer.
+   * All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.
+   * The only supported extensions are `CESIUM_RTC` and `WEB3D_quantized_attributes`.
+   * Only one node is supported.
+   * Only one mesh per node is supported.
+   * Only one primitive per mesh is supported.
+* Added geometric-error-based point cloud attenuation and eye dome lighting for point clouds using replacement refinement. [#6069](https://github.com/AnalyticalGraphicsInc/cesium/pull/6069)
+* Updated `Viewer.zoomTo` and `Viewer.flyTo` to take a `Cesium3DTileset` as a target. [#6104](https://github.com/AnalyticalGraphicsInc/cesium/pull/6104)
+* Added `shouldAnimate` option to the `Viewer` constructor to indicate if the clock should begin animating on startup. [#6154](https://github.com/AnalyticalGraphicsInc/cesium/pull/6154)
+* Added `Cesium3DTileset.ellipsoid` determining the size and shape of the globe. This can be set at construction and defaults to a WGS84 ellipsoid.
+* Added `Plane.projectPointOntoPlane` for projecting a `Cartesian3` position onto a `Plane`. [#6092](https://github.com/AnalyticalGraphicsInc/cesium/pull/6092)
+* Added `Cartesian3.projectVector` for projecting one vector to another. [#6093](https://github.com/AnalyticalGraphicsInc/cesium/pull/6093)
+* Added `Cesium3DTileset.tileFailed` event that will be raised when a tile fails to load. The object passed to the event listener will have a url and message property. If there are no event listeners, error messages will be logged to the console. [#6088](https://github.com/AnalyticalGraphicsInc/cesium/pull/6088)
+* Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
+* Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
+* Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874](https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
+* Added `ClippingPlaneCollection.isSupported` function for checking if rendering with clipping planes is supported.[#6084](https://github.com/AnalyticalGraphicsInc/cesium/pull/6084)
+* Added `Cartographic.toCartesian` to convert from `Cartographic` to `Cartesian3`. [#6163](https://github.com/AnalyticalGraphicsInc/cesium/pull/6163)
+* Added `BoundingSphere.volume` for computing the volume of a `BoundingSphere`. [#6069](https://github.com/AnalyticalGraphicsInc/cesium/pull/6069)
+* Added new file for the Cesium [Code of Conduct](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CODE_OF_CONDUCT.md). [#6129](https://github.com/AnalyticalGraphicsInc/cesium/pull/6129)
+
+##### Fixes :wrench:
+* Fixed a bug that could cause tiles to be missing from the globe surface, especially when starting with the camera zoomed close to the surface. [#4969](https://github.com/AnalyticalGraphicsInc/cesium/pull/4969)
+* Fixed applying a translucent style to a point cloud tileset. [#6113](https://github.com/AnalyticalGraphicsInc/cesium/pull/6113)
+* Fixed Sandcastle error in IE 11. [#6169](https://github.com/AnalyticalGraphicsInc/cesium/pull/6169)
+* Fixed a glTF animation bug that caused certain animations to jitter. [#5740](https://github.com/AnalyticalGraphicsInc/cesium/pull/5740)
+* Fixed a bug when creating billboard and model entities without a globe. [#6109](https://github.com/AnalyticalGraphicsInc/cesium/pull/6109)
+* Improved CZML Custom Properties Sandcastle example. [#6086](https://github.com/AnalyticalGraphicsInc/cesium/pull/6086)
+* Improved Particle System Sandcastle example for better visual. [#6132](https://github.com/AnalyticalGraphicsInc/cesium/pull/6132)
+* Fixed behavior of `Camera.move*` and `Camera.look*` functions in 2D mode. [#5884](https://github.com/AnalyticalGraphicsInc/cesium/issues/5884)
+* Fixed `Camera.moveStart` and `Camera.moveEnd` events not being raised when camera is close to the ground. [#4753](https://github.com/AnalyticalGraphicsInc/cesium/issues/4753)
+* Fixed `OrientedBoundingBox` documentation. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
+* Updated documentation links to reflect new locations on `https://cesiumjs.org` and `https://cesium.com`.
+
 ### 1.41 - 2018-01-02
 
 * Breaking changes

@@ -11,6 +11,7 @@ define([
         './defineProperties',
         './destroyObject',
         './DeveloperError',
+        './FeatureDetection',
         './Intersect',
         './Matrix4',
         './PixelFormat',
@@ -34,6 +35,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         Intersect,
         Matrix4,
         PixelFormat,
@@ -164,7 +166,7 @@ define([
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         unionClippingRegions : {
             get : function() {
@@ -577,6 +579,15 @@ define([
         }
 
         return intersection;
+    };
+
+    /**
+     * Determines if rendering with clipping planes is supported.
+     *
+     * @returns {Boolean} <code>true</code> if ClippingPlaneCollections are supported; otherwise, returns <code>false</code>
+     */
+    ClippingPlaneCollection.isSupported = function() {
+        return !FeatureDetection.isInternetExplorer();
     };
 
     /**
