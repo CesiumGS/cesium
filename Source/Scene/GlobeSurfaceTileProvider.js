@@ -922,7 +922,11 @@ define([
             },
             u_clippingPlanes : function() {
                 var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
-                return defined(clippingPlanes) ? clippingPlanes.texture : frameState.context.defaultTexture;
+                if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
+                    // Check in case clippingPlanes hasn't been updated yet.
+                    return clippingPlanes.texture;
+                }
+                return frameState.context.defaultTexture;
             },
             u_clippingPlanesRange : function() {
                 var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;

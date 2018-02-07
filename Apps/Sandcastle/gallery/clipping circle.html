@@ -42,10 +42,21 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox: false,
-    selectionIndicator: false
+    selectionIndicator: false,
+    skyAtmosphere: false,
+    shouldAnimate : true
 });
 
-var clipObjects = ['model', 'b3dm', 'pnts', 'i3dm'];
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+var globe = viewer.scene.globe;
+globe.depthTestAgainstTerrain = true;
+
+var clipObjects = ['model', 'b3dm', 'pnts', 'i3dm', 'terrain'];
 var viewModel = {
     spiralSize : 1.0,
     exampleTypes : clipObjects,
@@ -76,11 +87,11 @@ var modelEntityClippingPlanes;
 function updatePlanes() {
     for (var i = 0; i < clippingPlanes.length; i++) {
         var plane = clippingPlanes[i];
-        plane.distance = spiralSize * (i / (steps / 3) + 0.1);
+        plane.distance = spiralSize * (i / (steps / 3) + 0.3);
     }
 }
 
-function createClippingPlanes() {
+function createClippingPlanes(modelMatrix) {
     clippingPlanes = [];
     var stepDegrees = 6.28319 / steps;
 
@@ -105,6 +116,7 @@ function createClippingPlanes() {
         clippingPlanes.push(new Cesium.Plane(dir, 0.0));
     }
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
+        modelMatrix : Cesium.defined(modelMatrix) ? modelMatrix : Cesium.Matrix4.IDENTITY,
         planes : clippingPlanes,
         edgeWidth: 2.0,
         edgeColor: Cesium.Color.WHITE,
@@ -123,7 +135,7 @@ var pointCloudUrl = 'https://beta.cesium.com/api/assets/3742?access_token=eyJhbG
 
 function loadModel(url) {
     createClippingPlanes();
-    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 300.0);
     var heading = 0.0;//Cesium.Math.toRadians(135.0);
     var pitch = 0.0;
     var roll = 0.0;
@@ -153,8 +165,14 @@ function loadTileset(url) {
 
     return tileset.readyPromise.then(function() {
         var boundingSphere = tileset.boundingSphere;
-        var radius = boundingSphere.radius;
 
+        var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+        var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+        var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 100.0);
+        var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+        var radius = boundingSphere.radius;
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     }).otherwise(function(error) {
@@ -181,12 +199,27 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         tileset.readyPromise.then(function () {
             tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
+    } else if (newValue === clipObjects[4]) {
+        var position = Cesium.Cartesian3.fromRadians(-2.0872979473351286, 0.6596620013036164, 2380.0);
+        var entity = viewer.entities.add({
+            position : position,
+            model : {
+                uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
+                minimumPixelSize : 128,
+                scale : 40
+            }
+        });
+        viewer.trackedEntity = entity;
+        createClippingPlanes(entity.computeModelMatrix(Cesium.JulianDate.now()));
+        globe.clippingPlanes = modelEntityClippingPlanes;
     }
 });
 
 function reset() {
+    viewModel.spiralSize = 1.0;
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
+    globe.destroyClippingPlanes();
 }
 
 //Sandcastle_End
