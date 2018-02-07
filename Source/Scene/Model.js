@@ -164,7 +164,7 @@ define([
         return {};
     }
 
-    var dracoDecoder = new draco.Decoder();
+    var dracoDecoder;
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -4076,7 +4076,7 @@ define([
             context : context,
             typedArray : typedArray,
             usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            indexDatatype : ComponentDatatype.fromTypedArray(typedArray)
         });
         indexBuffer.vertexArrayDestroyable = false;
 
@@ -4086,6 +4086,10 @@ define([
     function parseDraco(model, context) {
         if (!defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
             return;
+        }
+
+        if (!defined(dracoDecoder)) {
+            dracoDecoder = new draco.Decoder();
         }
 
         var buffer;
@@ -4107,7 +4111,7 @@ define([
                 var typedArray = arraySlice(rawBuffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
 
                 buffer = new draco.DecoderBuffer();
-                buffer.Init(new Int8Array(typedArray), bufferView.byteLength);
+                buffer.Init(typedArray, bufferView.byteLength);
 
                 var geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
                 if (geometryType !== draco.TRIANGULAR_MESH) {
@@ -4126,7 +4130,7 @@ define([
                 var numFaces = dracoGeometry.num_faces();
 
                 var faceIndices = new draco.DracoInt32Array();
-                var indexArray = new Int16Array(numFaces * 3);
+                var indexArray = IndexDatatype.createTypedArray(numPoints, numFaces * 3);
 
                 var i;
                 for (i = 0; i < numFaces; ++i) {
@@ -4177,6 +4181,8 @@ define([
                         };
                     }
                 }
+
+                draco.destroy(dracoGeometry);
 
                 model._decodedData[meshId + '.primitive.' + primitiveId] = {
                     bufferView : decodedBufferView,
