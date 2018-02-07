@@ -174,7 +174,7 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     } else if (newValue === clipObjects[2]) {
         loadTileset(pointCloudUrl)
             .then(function() {
-                tileset.maximumScreenSpaceError = 4;
+                tileset.pointCloudShading.attenuation = true;
             });
     } else if (newValue === clipObjects[3]) {
         loadTileset(instancedUrl);
