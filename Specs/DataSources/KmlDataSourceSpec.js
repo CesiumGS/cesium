@@ -13,6 +13,7 @@ defineSuite([
         'Core/Color',
         'Core/combine',
         'Core/DefaultProxy',
+        'Core/Ellipsoid',
         'Core/Event',
         'Core/Iso8601',
         'Core/JulianDate',
@@ -52,6 +53,7 @@ defineSuite([
         Color,
         combine,
         DefaultProxy,
+        Ellipsoid,
         Event,
         Iso8601,
         JulianDate,
@@ -2658,6 +2660,41 @@ defineSuite([
         });
     });
 
+    it('Geometry Point: correctly converts coordinates using earth ellipsoid', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <coordinates>24.070617695061806,87.90173269295278,0</coordinates>\
+            </Point>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities.length).toEqual(1);
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(213935.5635247161,
+                                                                                                95566.36983235707,
+                                                                                                6352461.425213023));
+        });
+    });
+
+    it('Geometry Point: correctly converts coordinates using moon ellipsoid', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Point>\
+              <coordinates>24.070617695061806,87.90173269295278,0</coordinates>\
+            </Point>\
+          </Placemark>';
+
+        var moonOptions = combine(options, { ellipsoid : Ellipsoid.MOON });
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), moonOptions).then(function(moonDataSource) {
+            var entities = moonDataSource.entities.values;
+            expect(entities.length).toEqual(1);
+            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(58080.7702560248,
+                                                                                                25945.04756005268,
+                                                                                                1736235.0758562544));
+        });
+    });
+
     it('Geometry Polygon: handles empty coordinates', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
@@ -2834,6 +2871,60 @@ defineSuite([
             expect(entity.polygon.extrudedHeight).toBeUndefined();
         });
     });
+
+    it('Geometry Polygon: When loaded with the Ellipsoid.MOON, the coordinates should be on the lunar ellipsoid, otherwise on Earth.', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+                <Polygon>\
+                   <outerBoundaryIs>\
+                       <LinearRing>\
+                          <coordinates>24.070617695061806,87.90173269295278,0\
+                                       49.598705282838125,87.04553528415659,0\
+                                       34.373553362965566,86.015550572534,0\
+                                       14.570663006937881,86.60174704052636,0\
+                                       24.070617695061806,87.90173269295278,0\
+                          </coordinates>\
+                      </LinearRing>\
+                    </outerBoundaryIs>\
+                </Polygon>\
+            </Placemark>';
+
+
+
+        var moonOptions = combine(options, { ellipsoid : Ellipsoid.MOON });
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), moonOptions).then(function(moonDataSource) {
+            var entity = moonDataSource.entities.values[0];
+            var moonPoint = entity.polygon.hierarchy.getValue().positions[0];
+            expect(moonPoint).toEqual(new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544));
+        });
+
+    });
+
+    it('Geometry Polygon: When loaded with the default ellipsoid, the coordinates should be on Earth.', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+                <Polygon>\
+                   <outerBoundaryIs>\
+                       <LinearRing>\
+                          <coordinates>24.070617695061806,87.90173269295278,0\
+                                       49.598705282838125,87.04553528415659,0\
+                                       34.373553362965566,86.015550572534,0\
+                                       14.570663006937881,86.60174704052636,0\
+                                       24.070617695061806,87.90173269295278,0\
+                          </coordinates>\
+                      </LinearRing>\
+                    </outerBoundaryIs>\
+                </Polygon>\
+            </Placemark>';
+
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            var earthPoint = entity.polygon.hierarchy.getValue().positions[0];
+            expect(earthPoint).toEqual(new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023));
+        });
+    });
+
 
     it('Geometry LineString: handles empty element', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\

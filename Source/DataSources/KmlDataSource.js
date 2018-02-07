@@ -734,7 +734,7 @@ define([
                 hrefResource.addQueryParameters(queryToObject(cleanupString(httpQuery)));
             }
 
-            var ellipsoid = defaultValue(dataSource._ellipsoid, Ellipsoid.WGS84);
+            var ellipsoid = dataSource._ellipsoid;
             processNetworkLinkQueryString(hrefResource, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox, ellipsoid);
 
             return hrefResource;
@@ -1212,8 +1212,8 @@ define([
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
-
-        var position = readCoordinate(coordinatesString);
+        var ellipsoid = dataSource._ellipsoid;
+        var position = readCoordinate(coordinatesString, ellipsoid);
 
         entity.position = position;
         processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
@@ -1237,7 +1237,7 @@ define([
             oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings');
         }
 
-        var ellipsoid = defaultValue(dataSource._ellipsoid, Ellipsoid.WGS84);
+        var ellipsoid = dataSource._ellipsoid;
         var coordinates = readCoordinates(coordinatesNode, ellipsoid);
         var polyline = styleEntity.polyline;
         if (canExtrude && extrude) {
@@ -1286,7 +1286,7 @@ define([
         var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.kml);
         var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.kml);
         var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
-        var ellipsoid = defaultValue(dataSource._ellipsoid, Ellipsoid.WGS84);
+        var ellipsoid = dataSource._ellipsoid;
         var coordinates = readCoordinates(coordinatesNode, ellipsoid);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
@@ -1336,6 +1336,7 @@ define([
         var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+        var ellipsoid = dataSource._ellipsoid;
 
         if (angleNodes.length > 0) {
             oneTimeWarning('kml-gx:angles', 'KML - gx:angles are not supported in gx:Tracks');
@@ -1345,7 +1346,7 @@ define([
         var coordinates = [];
         var times = [];
         for (var i = 0; i < length; i++) {
-            var position = readCoordinate(coordNodes[i].textContent);
+            var position = readCoordinate(coordNodes[i].textContent, ellipsoid);
             coordinates.push(position);
             times.push(JulianDate.fromIso8601(timeNodes[i].textContent));
         }
@@ -1415,6 +1416,7 @@ define([
         var dropShowProperty = new TimeIntervalCollectionProperty();
         var availability = new TimeIntervalCollection();
         var composite = new CompositePositionProperty();
+        var ellipsoid = dataSource._ellipsoid;
         for (var i = 0, len = trackNodes.length; i < len; i++) {
             var trackNode = trackNodes[i];
             var timeNodes = queryChildNodes(trackNode, 'when', namespaces.kml);
@@ -1429,7 +1431,7 @@ define([
             var positions = [];
             times = [];
             for (var x = 0; x < length; x++) {
-                var position = readCoordinate(coordNodes[x].textContent);
+                var position = readCoordinate(coordNodes[x].textContent, ellipsoid);
                 positions.push(position);
                 times.push(JulianDate.fromIso8601(timeNodes[x].textContent));
             }
@@ -1691,7 +1693,7 @@ define([
         processExtendedData(featureNode, entity);
         processDescription(featureNode, entity, styleEntity, uriResolver, sourceResource);
 
-        var ellipsoid = defaultValue(dataSource._ellipsoid, Ellipsoid.WGS84);
+        var ellipsoid = dataSource._ellipsoid;
         processLookAt(featureNode, entity, ellipsoid);
         processCamera(featureNode, entity, ellipsoid);
 
@@ -1781,7 +1783,7 @@ define([
 
         var playlistNode = queryFirstNode(node, 'Playlist', namespaces.gx);
         if(playlistNode) {
-            var ellipsoid = defaultValue(dataSource._ellipsoid, Ellipsoid.WGS84);
+            var ellipsoid = dataSource._ellipsoid;
             var childNodes = playlistNode.childNodes;
             for(var i = 0; i < childNodes.length; i++) {
                 var entryNode = childNodes[i];
@@ -1873,7 +1875,7 @@ define([
         var geometry;
         var isLatLonQuad = false;
 
-        var ellipsoid = defaultValue(dataSource._ellipsoid, Ellipsoid.WGS84);
+        var ellipsoid = dataSource._ellipsoid;
         var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx), ellipsoid);
         if (defined(positions)) {
             geometry = createDefaultPolygon();
@@ -2157,7 +2159,7 @@ define([
                         href.addQueryParameters(queryToObject(cleanupString(httpQuery)));
                     }
 
-                    var ellipsoid = defaultValue(dataSource._ellipsoid, Ellipsoid.WGS84);
+                    var ellipsoid = dataSource._ellipsoid;
                     processNetworkLinkQueryString(href, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox, ellipsoid);
                 }
 
@@ -2475,7 +2477,7 @@ define([
      * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
-     * @param {Ellipsoid} options.ellipsoid The global ellipsoid used for geographical calculations.  If undefined, WGS84 is used.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -2529,7 +2531,7 @@ define([
             bbox : defined(camera) ? camera.computeViewRectangle() : Rectangle.clone(Rectangle.MAX_VALUE)
         };
 
-        this._ellipsoid = options.ellipsoid;
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
     }
 
     /**
@@ -2541,7 +2543,7 @@ define([
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
-     * @param {Ellipsoid} options.ellipsoid The global ellipsoid used for geographical calculations.  If undefined, WGS84 is used.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
@@ -2695,7 +2697,7 @@ define([
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML.
-     * @param {Ellipsoid} options.ellipsoid The global ellipsoid used for geographical calculations.  If undefined, WGS84 is used.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
