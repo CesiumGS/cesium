@@ -4,7 +4,8 @@ Change Log
 ### 1.43 - 2018-03-01
 
 ##### Fixes :wrench:
-* Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
+* Fixed a bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
+* Fixed a bug where imagery stops loading when changing terrain in request render mode. [#6193](https://github.com/AnalyticalGraphicsInc/cesium/issues/6193)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__
