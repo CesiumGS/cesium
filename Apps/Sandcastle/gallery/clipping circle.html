@@ -118,6 +118,8 @@ function updateClippingPlanes() {
 
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 var agiHqUrl = 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg';
+var instancedUrl = '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/';
+var pointCloudUrl = 'https://beta.cesium.com/api/assets/3742?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxOGZjMjlhZC03MDE1LTQ3ZTAtODEyNy05YTU3M2MwYzQ0YmEiLCJpZCI6NDQsImFzc2V0cyI6WzM3NDJdLCJpYXQiOjE1MTcyNDI3NDJ9.TJAJctFXC1UyFMpxkA3cyKVAmnh72cLtfY1yKbaQsyk';
 
 function loadModel(url) {
     createClippingPlanes();
@@ -141,14 +143,15 @@ function loadModel(url) {
     viewer.trackedEntity = entity;
 }
 
+var tileset;
 function loadTileset(url) {
     createClippingPlanes();
-    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
         clippingPlanes : modelEntityClippingPlanes
     }));
 
-    tileset.readyPromise.then(function() {
+    return tileset.readyPromise.then(function() {
         var boundingSphere = tileset.boundingSphere;
         var radius = boundingSphere.radius;
 
@@ -168,8 +171,17 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         loadModel(modelUrl);
     } else if (newValue === clipObjects[1]) {
         loadTileset(agiHqUrl);
+    } else if (newValue === clipObjects[2]) {
+        loadTileset(pointCloudUrl)
+            .then(function() {
+                tileset.maximumScreenSpaceError = 4;
+            });
+    } else if (newValue === clipObjects[3]) {
+        loadTileset(instancedUrl);
+        tileset.readyPromise.then(function () {
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
     }
-
 });
 
 function reset() {

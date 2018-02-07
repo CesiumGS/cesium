@@ -3334,7 +3334,7 @@ define([
             if (!defined(clippingPlanes)) {
                 return Matrix4.IDENTITY;
             }
-            return Matrix4.multiply(model._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix)
+            return Matrix4.multiply(model._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
         };
     }
 

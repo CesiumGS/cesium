@@ -2,6 +2,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -38,6 +39,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        ClippingPlaneCollection,
         Color,
         combine,
         ComponentDatatype,
@@ -99,6 +101,7 @@ define([
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
 
+        this._defaultTexture = undefined;
         this._drawCommand = undefined;
         this._pickCommand = undefined;
         this._pickId = undefined; // Only defined when batchTable is undefined
@@ -142,7 +145,6 @@ define([
 
         this._features = undefined;
 
-        this._packedClippingPlanes = [];
         this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
@@ -458,6 +460,7 @@ define([
     var batchIdLocation = 3;
     var numberOfAttributes = 4;
 
+    var scratchClippingPlaneMatrix = new Matrix4();
     function createResources(content, frameState) {
         var context = frameState.context;
         var parsedContent = content._parsedContent;
@@ -520,7 +523,7 @@ define([
                 }
             }
         }
-
+        var clippingPlanes = content._tileset.clippingPlanes;
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -534,14 +537,15 @@ define([
                 return content._constantColor;
             },
             u_clippingPlanesLength : function() {
-                return content._packedClippingPlanes.length;
+                if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
+                    return 0;
+                }
+                return clippingPlanes.length;
             },
             u_clippingPlanes : function() {
-                return content._packedClippingPlanes;
+                return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? content._defaultTexture : clippingPlanes.texture;
             },
             u_clippingPlanesEdgeStyle : function() {
-                var clippingPlanes = content._tileset.clippingPlanes;
-
                 if (!defined(clippingPlanes)) {
                     return Color.WHITE.withAlpha(0.0);
                 }
@@ -549,6 +553,18 @@ define([
                 var style = Color.clone(clippingPlanes.edgeColor);
                 style.alpha = clippingPlanes.edgeWidth;
                 return style;
+            },
+            u_clippingPlanesMatrix : function() {
+                if (!defined(clippingPlanes)) {
+                    return Matrix4.IDENTITY;
+                }
+                return Matrix4.multiply(content._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+            },
+            u_clippingPlanesRange : function() {
+                if (!defined(clippingPlanes)) {
+                    return Cartesian2.ZERO;
+                }
+                return clippingPlanes.distanceRange;
             }
         };
 
@@ -1063,7 +1079,9 @@ define([
 
         if (hasClippedContent) {
             fs += 'uniform int u_clippingPlanesLength;' +
-                  'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
+                  'uniform sampler2D u_clippingPlanes; \n' +
+                  'uniform vec2 u_clippingPlanesRange; \n' +
+                  'uniform mat4 u_clippingPlanesMatrix; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
         }
 
@@ -1073,7 +1091,8 @@ define([
 
         if (hasClippedContent) {
             var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnion' : 'czm_discardIfClippedWithIntersect';
-            fs += '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength); \n' +
+            fs += '    #define PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
+                  '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix); \n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
                   '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +
@@ -1218,26 +1237,13 @@ define([
 
         var context = frameState.context;
 
+        this._defaultTexture = context.defaultTexture;
+
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;
         var clippingEnabled = defined(clippingPlanes) && clippingPlanes.enabled && this._tile._isClipped;
 
-        var unionClippingRegions = false;
-        var length = 0;
-        if (clippingEnabled) {
-            unionClippingRegions = clippingPlanes.unionClippingRegions;
-            length = clippingPlanes.length;
-        }
-
-        var packedPlanes = this._packedClippingPlanes;
-        var packedLength = packedPlanes.length;
-        if (packedLength !== length) {
-            packedPlanes.length = length;
-
-            for (var i = 0; i < length; ++i) {
-                packedPlanes[i] = new Cartesian4();
-            }
-        }
+        var unionClippingRegions = clippingEnabled ? clippingPlanes.unionClippingRegions : false;
 
         if (!defined(this._drawCommand)) {
             createResources(this, frameState);
@@ -1293,7 +1299,6 @@ define([
 
         if (clippingEnabled) {
             Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
-            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, packedPlanes);
         }
 
         this._drawCommand.castShadows = ShadowMode.castShadows(tileset.shadows);

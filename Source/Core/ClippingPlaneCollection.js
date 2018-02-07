@@ -354,6 +354,7 @@ define([
         var planes = clippingPlaneCollection._planes;
         var length = planes.length;
         var unchanged = true;
+        var byteIndex, uint32Index;
 
         // Pack all plane normals and get min/max of all distances.
         // Check each normal for changes.
@@ -363,7 +364,7 @@ define([
         for (i = 0; i < length; ++i) {
             var plane = planes[i];
 
-            var byteIndex = i * 8; // each plane is 4 bytes normal, 4 bytes distance
+            byteIndex = i * 8; // each plane is 4 bytes normal, 4 bytes distance
 
             var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
             textureBytes[byteIndex] = oct32Normal.x;
@@ -371,7 +372,7 @@ define([
             textureBytes[byteIndex + 2] = oct32Normal.z;
             textureBytes[byteIndex + 3] = oct32Normal.w;
 
-            var uint32Index = i + i;
+            uint32Index = i + i;
             unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
             if (!unchanged) {
                 previousUint32View[uint32Index] = currentUint32View[uint32Index];
@@ -393,10 +394,10 @@ define([
          var distanceRangeSize = distanceMax - distanceMin;
          for (i = 0; i < length; ++i) {
              var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
-             var byteIndex = i * 8 + 4;
+            byteIndex = i * 8 + 4;
              insertFloat(textureBytes, normalizedDistance, byteIndex);
 
-             var uint32Index = i + i + 1;
+            uint32Index = i + i + 1;
              unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
              if (!unchanged) {
                  previousUint32View[uint32Index] = currentUint32View[uint32Index];
@@ -413,7 +414,7 @@ define([
      * </p>
      */
     ClippingPlaneCollection.prototype.update = function(frameState) {
-        var clippingPlanesTexture = this._clippingPlanesTexture
+        var clippingPlanesTexture = this._clippingPlanesTexture;
         if (!defined(clippingPlanesTexture)) {
             clippingPlanesTexture = new Texture({
                 context : frameState.context,
@@ -441,7 +442,7 @@ define([
                 arrayBufferView :  this._textureBytes
             });
         }
-    }
+    };
 
     /**
      * Applies the transformations to each plane and packs it into a typed array for transfer to a texture.
@@ -455,6 +456,7 @@ define([
         var planes = this._planes;
         var length = planes.length;
         var distances = new Array(length);
+        var byteIndex;
 
         // Transform all planes, recording the directions in the typed array and computing the range for the planes
         var distanceMin = Number.POSITIVE_INFINITY;
@@ -463,7 +465,7 @@ define([
         for (i = 0; i < length; ++i) {
             var plane = planes[i];
 
-            var byteIndex = i * 8;
+            byteIndex = i * 8;
 
             var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
             rgbaUbytePixels[byteIndex] = oct32Normal.x;
@@ -487,7 +489,7 @@ define([
         var distanceRangeSize = distanceMax - distanceMin;
         for (i = 0; i < length; ++i) {
             var normalizedDistance = (distances[i] - distanceMin) / distanceRangeSize;
-            var byteIndex = i * 8 + 4;
+            byteIndex = i * 8 + 4;
             insertFloat(rgbaUbytePixels, normalizedDistance, byteIndex);
         }
 
@@ -616,7 +618,7 @@ define([
 
         this._clippingPlanesTexture.destroy();
         return destroyObject(this);
-    }
+    };
 
     return ClippingPlaneCollection;
 });

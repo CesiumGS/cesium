@@ -1,5 +1,4 @@
 define([
-        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -20,7 +19,6 @@ define([
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
-        ClippingPlaneCollection,
         Color,
         defaultValue,
         defined,
@@ -454,8 +452,12 @@ define([
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (defined(tilesetClippingPlanes)) {
-            // dereference the clipping planes from the model if they are irrelevant - saves on shading
+            // Dereference the clipping planes from the model if they are irrelevant - saves on shading
             this._model.clippingPlanes = tilesetClippingPlanes.enabled && this._tile._isClipped ? tilesetClippingPlanes : undefined;
+        } else if (defined(this._model.clippingPlanes)) {
+            // Destroy any other clipping planes on the model if the tileset doesn't have any clipping planes
+            this._model.clippingPlanes.checkDestroy();
+            this._model.clippingPlanes = undefined;
         }
 
         this._model.update(frameState);
