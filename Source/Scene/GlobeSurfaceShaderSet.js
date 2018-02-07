@@ -1,10 +1,12 @@
 define([
+        '../Core/ClippingPlaneCollection',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
         '../Scene/SceneMode'
     ], function(
+        ClippingPlaneCollection,
         defined,
         destroyObject,
         TerrainQuantization,
@@ -167,6 +169,7 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
+                fs.defines.push('CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH);
 
                 if (unionClippingRegions) {
                     fs.defines.push('UNION_CLIPPING_REGIONS');

@@ -1144,8 +1144,8 @@ define([
 
         if (hasClippedContent) {
             var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnion' : 'czm_discardIfClippedWithIntersect';
-            fs += '    #define PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
-                  '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix); \n' +
+            fs += '    #define CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
+                  '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix); \n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
                   '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +

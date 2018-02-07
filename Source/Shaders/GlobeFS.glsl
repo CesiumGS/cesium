@@ -54,7 +54,9 @@ uniform vec2 u_lightingFadeDistance;
 
 #ifdef ENABLE_CLIPPING_PLANES
 uniform int u_clippingPlanesLength;
-uniform vec4 u_clippingPlanes[czm_maxClippingPlanes];
+uniform sampler2D u_clippingPlanes;
+uniform vec2 u_clippingPlanesRange;
+uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
@@ -158,9 +160,9 @@ void main()
 {
 #ifdef ENABLE_CLIPPING_PLANES
     #ifdef UNION_CLIPPING_REGIONS
-    float clipDistance = czm_discardIfClippedWithUnion(u_clippingPlanes, u_clippingPlanesLength);
+    float clipDistance = czm_discardIfClippedWithUnion(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
     #else
-    float clipDistance = czm_discardIfClippedWithIntersect(u_clippingPlanes, u_clippingPlanesLength);
+    float clipDistance = czm_discardIfClippedWithIntersect(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
     #endif
 #endif
 

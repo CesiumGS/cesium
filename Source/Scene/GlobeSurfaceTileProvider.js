@@ -666,6 +666,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
+        this.clippingPlanes.checkDestroy();
         return destroyObject(this);
     };
 
@@ -826,7 +827,8 @@ define([
         }
     };
 
-    function createTileUniformMap(frameState) {
+    var scratchClippingPlaneMatrix = new Matrix4();
+    function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         var uniformMap = {
             u_initialColor : function() {
                 return this.properties.initialColor;
@@ -915,10 +917,20 @@ define([
                 return this.properties.dayTextureSplit;
             },
             u_clippingPlanesLength : function() {
-                return this.properties.clippingPlanes.length;
+                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
+                return defined(clippingPlanes) ? clippingPlanes.length : 0;
             },
             u_clippingPlanes : function() {
-                return this.properties.clippingPlanes;
+                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
+                return defined(clippingPlanes) ? clippingPlanes.texture : frameState.context.defaultTexture;
+            },
+            u_clippingPlanesRange : function() {
+                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
+                return defined(clippingPlanes) ? clippingPlanes.distanceRange : Cartesian2.ZERO;
+            },
+            u_clippingPlanesMatrix : function() {
+                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
+                return defined(clippingPlanes) ? Matrix4.multiply(frameState.context.uniformState.view, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix) : Matrix4.IDENTITY;
             },
             u_clippingPlanesEdgeStyle : function() {
                 var style = this.properties.clippingPlanesEdgeColor;
@@ -963,7 +975,6 @@ define([
 
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
-                clippingPlanes : [],
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
                 clippingPlanesEdgeWidth : 0.0
             }
@@ -1211,7 +1222,7 @@ define([
                 command.boundingVolume = new BoundingSphere();
                 command.orientedBoundingBox = undefined;
 
-                uniformMap = createTileUniformMap(frameState);
+                uniformMap = createTileUniformMap(frameState, tileProvider);
 
                 tileProvider._drawCommands.push(command);
                 tileProvider._uniformMaps.push(uniformMap);
@@ -1343,29 +1354,14 @@ define([
 
             // update clipping planes
             var clippingPlanes = tileProvider.clippingPlanes;
-            var length = 0;
-
-            if (defined(clippingPlanes) && tile.isClipped) {
-                length = clippingPlanes.length;
-            }
-
-            var packedPlanes = uniformMapProperties.clippingPlanes;
-            var packedLength = packedPlanes.length;
-            if (packedLength !== length) {
-                packedPlanes.length = length;
-
-                for (var i = packedLength; i < length; ++i) {
-                    packedPlanes[i] = new Cartesian4();
-                }
-            }
-
             if (defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped) {
-                clippingPlanes.transformAndPackPlanes(context.uniformState.view, packedPlanes);
+                //clippingPlanes.transformAndPackPlanes(context.uniformState.view, packedPlanes);
+                clippingPlanes.update(frameState);
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0) && ClippingPlaneCollection.isSupported();
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (clippingPlanes.length > 0) && ClippingPlaneCollection.isSupported();
             var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : false;
 
             if (defined(tileProvider.uniformMap)) {

@@ -3751,7 +3751,7 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
-            '#define PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
+            '#define CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
             'uniform int gltf_clippingPlanesLength; \n' +
             'uniform bool gltf_clippingPlanesUnionRegions; \n' +
             'uniform sampler2D gltf_clippingPlanes; \n' +
@@ -3766,11 +3766,11 @@ define([
             '        float clipDistance; \n' +
             '        if (gltf_clippingPlanesUnionRegions) \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
+            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        else \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
+            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        \n' +
             '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
