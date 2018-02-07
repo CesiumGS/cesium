@@ -4076,7 +4076,7 @@ define([
             context : context,
             typedArray : typedArray,
             usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : IndexDatatype.UNSIGNED_INT
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
         });
         indexBuffer.vertexArrayDestroyable = false;
 
@@ -4126,7 +4126,7 @@ define([
                 var numFaces = dracoGeometry.num_faces();
 
                 var faceIndices = new draco.DracoInt32Array();
-                var indexArray = new Int32Array(numFaces * 3);
+                var indexArray = new Int16Array(numFaces * 3);
 
                 var i;
                 for (i = 0; i < numFaces; ++i) {
