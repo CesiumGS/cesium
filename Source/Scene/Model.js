@@ -164,8 +164,6 @@ define([
         return {};
     }
 
-    var dracoDecoder;
-
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = {
@@ -4083,18 +4081,26 @@ define([
         return addBufferToModelResources(model, indexBuffer);
     }
 
+    /*
+     * Instance of the draco decoder module.
+     * @private
+     */
+    Model._dracoDecoder = undefined;
+
+
     function parseDraco(model, context) {
         if (!defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
             return;
         }
 
-        if (!defined(dracoDecoder)) {
-            dracoDecoder = new draco.Decoder();
+        if (!defined(Model._dracoDecoder)) {
+            Model._dracoDecoder = new draco.Decoder();
         }
 
         var buffer;
         var dracoGeometry;
         var gltf = model.gltf;
+        var dracoDecoder = Model._dracoDecoder;
         ForEach.mesh(gltf, function(mesh, meshId) {
             ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
                 if (!defined(primitive.extensions)) {

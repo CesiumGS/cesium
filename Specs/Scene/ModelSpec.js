@@ -129,7 +129,9 @@ defineSuite([
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
     var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
-    var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck.gltf';
+    var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
+    var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
+    var dracoCompressedModelWithErrorUrl = './Data/Models/DracoCompression/ShouldError/CesiumMilkTruck.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -205,6 +207,8 @@ defineSuite([
             return model.ready;
         }, { timeout: 10000 }).then(function() {
             return model;
+        }).otherwise(function() {
+            return when.reject(model);
         });
     }
 
@@ -2341,6 +2345,35 @@ defineSuite([
     it('loads a glTF with KHR_draco_mesh_compression extension', function() {
         return loadModel(dracoCompressedModelUrl).then(function(m) {
             verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
+        return loadModel(dracoCompressedModelWithAnimationUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loading a glTF with unsupported draco geometry type throws runtime error', function() {
+        spyOn(Model._dracoDecoder, 'GetEncodedGeometryType').and.returnValue(0);
+
+        return loadModel(dracoCompressedModelUrl).otherwise(function (m) {
+            expect(function() {
+                scene.renderForSpecs();
+            }).toThrowRuntimeError();
+
+            primitives.remove(m);
+        });
+    });
+
+    it('error decoding a glTF throws runtime error', function() {
+        return loadModel(dracoCompressedModelWithErrorUrl).otherwise(function (m) {
+            expect(function() {
+                scene.renderForSpecs();
+            }).toThrowRuntimeError();
+
             primitives.remove(m);
         });
     });
