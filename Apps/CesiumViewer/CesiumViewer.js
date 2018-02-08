@@ -1,5 +1,6 @@
 define([
         'Cesium/Core/Cartesian3',
+        'Cesium/Core/CesiumTerrainProvider',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/Math',
@@ -15,6 +16,7 @@ define([
         'domReady!'
     ], function(
         Cartesian3,
+        CesiumTerrainProvider,
         defined,
         formatError,
         CesiumMath,
@@ -57,6 +59,12 @@ define([
             baseLayerPicker : !defined(imageryProvider),
             scene3DOnly : endUserOptions.scene3DOnly,
             requestRenderMode : true
+        });
+
+        viewer.terrainProvider = new CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            requestWaterMask : true,
+            requestVertexNormals : true
         });
     } catch (exception) {
         loadingIndicator.style.display = 'none';
