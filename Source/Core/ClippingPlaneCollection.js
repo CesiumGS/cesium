@@ -132,8 +132,13 @@ define([
         // Avoid wasteful re-upload checks within a frame when a ClippingPlaneCollection is shared by many Models in a Cesium3DTileset
         this._planeTextureDirty = true;
 
-        this._distanceRange = new Cartesian2();
         this._clippingPlanesTexture = undefined;
+
+        // Packed uniform for plane count, denormalization parameters, and clipping union (0 false, 1 true)
+        this._lengthRangeUnion = new Cartesian4();
+
+        // Packed uniform for plane count and denormalization parameters
+        this._lengthRange = new Cartesian3();
     }
 
     function unionIntersectFunction(value) {
@@ -194,13 +199,26 @@ define([
         },
 
         /**
-         * Range for inflating the normalized distances in the clipping plane texture
+         * Length of clipping plane collection, range for inflating the normalized distances in the clipping plane texture,
+         * and union mode packed to a vec4 for use as a uniform.
          *
-         * @type {Cartesian2}
+         * @type {Cartesian4}
          */
-        distanceRange : {
+        lengthRangeUnion : {
             get : function() {
-                return this._distanceRange;
+                return this._lengthRangeUnion;
+            }
+        },
+
+        /**
+         * Length of clipping plane collection and range for inflating the normalized distances in the clipping plane texture,
+         * packed to a vec3 for use as a uniform.
+         *
+         * @type {Cartesian3}
+         */
+        lengthRange : {
+            get : function() {
+                return this._lengthRange;
             }
         }
     });
@@ -358,6 +376,10 @@ define([
         var unchanged = true;
         var byteIndex, uint32Index;
 
+        var lengthRangeUnion = clippingPlaneCollection._lengthRangeUnion;
+        lengthRangeUnion.x = length;
+        lengthRangeUnion.w = clippingPlaneCollection._unionClippingRegions ? 1.0 : 0.0;
+
         // Pack all plane normals and get min/max of all distances.
         // Check each normal for changes.
         var distanceMin = Number.POSITIVE_INFINITY;
@@ -390,9 +412,8 @@ define([
 
          // Normalize all the distances to the range and record them in the typed array.
          // Check each distance for changes.
-         var distanceRange = clippingPlaneCollection._distanceRange;
-         distanceRange.x = distanceMin;
-         distanceRange.y = distanceMax;
+         lengthRangeUnion.y = distanceMin;
+         lengthRangeUnion.z = distanceMax;
          var distanceRangeSize = distanceMax - distanceMin;
          for (i = 0; i < length; ++i) {
              var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
@@ -405,6 +426,10 @@ define([
                  previousUint32View[uint32Index] = currentUint32View[uint32Index];
              }
          }
+         var lengthRange = clippingPlaneCollection._lengthRange;
+         lengthRange.x = lengthRangeUnion.x;
+         lengthRange.y = lengthRangeUnion.y;
+         lengthRange.z = lengthRangeUnion.z;
          return !unchanged;
     }
 
@@ -444,58 +469,6 @@ define([
                 arrayBufferView :  this._textureBytes
             });
         }
-    };
-
-    /**
-     * Applies the transformations to each plane and packs it into a typed array for transfer to a texture.
-     * @private
-     *
-     * @returns {Uint8Array} Typed Array representing the clipping planes packed to a RGBA Uint8 texture.
-     */
-    ClippingPlaneCollection.prototype.transformAndPackPlanes = function() {
-        var rgbaUbytePixels = this._rgbaUbytePixels;
-
-        var planes = this._planes;
-        var length = planes.length;
-        var distances = new Array(length);
-        var byteIndex;
-
-        // Transform all planes, recording the directions in the typed array and computing the range for the planes
-        var distanceMin = Number.POSITIVE_INFINITY;
-        var distanceMax = Number.NEGATIVE_INFINITY;
-        var i;
-        for (i = 0; i < length; ++i) {
-            var plane = planes[i];
-
-            byteIndex = i * 8;
-
-            var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
-            rgbaUbytePixels[byteIndex] = oct32Normal.x;
-            rgbaUbytePixels[byteIndex + 1] = oct32Normal.y;
-            rgbaUbytePixels[byteIndex + 2] = oct32Normal.z;
-            rgbaUbytePixels[byteIndex + 3] = oct32Normal.w;
-
-            var distance = plane.distance;
-            distanceMin = Math.min(distance, distanceMin);
-            distanceMax = Math.max(distance, distanceMax);
-            distances[i] = distance;
-        }
-
-        // expand distance range a little bit to prevent packing 1s
-        distanceMax += (distanceMax - distanceMin) * CesiumMath.EPSILON3;
-
-        // Normalize all the distances to the range and record them in the typed array.
-        var distanceRange = this.distanceRange;
-        distanceRange.x = distanceMin;
-        distanceRange.y = distanceMax;
-        var distanceRangeSize = distanceMax - distanceMin;
-        for (i = 0; i < length; ++i) {
-            var normalizedDistance = (distances[i] - distanceMin) / distanceRangeSize;
-            byteIndex = i * 8 + 4;
-            insertFloat(rgbaUbytePixels, normalizedDistance, byteIndex);
-        }
-
-        return rgbaUbytePixels;
     };
 
     /**

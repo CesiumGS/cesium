@@ -129,9 +129,9 @@ function updateClippingPlanes() {
 }
 
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
-var agiHqUrl = 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg';
+var agiHqUrl = Cesium.CesiumIon.createResource(1458, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg' });
 var instancedUrl = '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/';
-var pointCloudUrl = 'https://beta.cesium.com/api/assets/3742?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxOGZjMjlhZC03MDE1LTQ3ZTAtODEyNy05YTU3M2MwYzQ0YmEiLCJpZCI6NDQsImFzc2V0cyI6WzM3NDJdLCJpYXQiOjE1MTcyNDI3NDJ9.TJAJctFXC1UyFMpxkA3cyKVAmnh72cLtfY1yKbaQsyk';
+var pointCloudUrl = Cesium.CesiumIon.createResource(3742, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxOGZjMjlhZC03MDE1LTQ3ZTAtODEyNy05YTU3M2MwYzQ0YmEiLCJpZCI6NDQsImFzc2V0cyI6WzM3NDJdLCJpYXQiOjE1MTcyNDI3NDJ9.TJAJctFXC1UyFMpxkA3cyKVAmnh72cLtfY1yKbaQsyk' });
 
 function loadModel(url) {
     createClippingPlanes();
@@ -188,9 +188,13 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     if (newValue === clipObjects[0]) {
         loadModel(modelUrl);
     } else if (newValue === clipObjects[1]) {
-        loadTileset(agiHqUrl);
+        agiHqUrl.then(function(resource) {
+            return loadTileset(resource);
+        });
     } else if (newValue === clipObjects[2]) {
-        loadTileset(pointCloudUrl)
+        pointCloudUrl.then(function(resource) {
+            return loadTileset(resource);
+        })
             .then(function() {
                 tileset.pointCloudShading.attenuation = true;
             });

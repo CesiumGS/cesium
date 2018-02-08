@@ -53,9 +53,8 @@ uniform vec2 u_lightingFadeDistance;
 #endif
 
 #ifdef ENABLE_CLIPPING_PLANES
-uniform int u_clippingPlanesLength;
 uniform sampler2D u_clippingPlanes;
-uniform vec2 u_clippingPlanesRange;
+uniform vec3 u_clippingPlanesLengthRange;
 uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
@@ -159,10 +158,12 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 void main()
 {
 #ifdef ENABLE_CLIPPING_PLANES
+    int clippingPlanesLength = int(u_clippingPlanesLengthRange.x);
+    vec2 clippingPlanesRange = u_clippingPlanesLengthRange.yz;
     #ifdef UNION_CLIPPING_REGIONS
-    float clipDistance = czm_discardIfClippedWithUnion(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
+    float clipDistance = czm_discardIfClippedWithUnion(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
     #else
-    float clipDistance = czm_discardIfClippedWithIntersect(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
+    float clipDistance = czm_discardIfClippedWithIntersect(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
     #endif
 #endif
 

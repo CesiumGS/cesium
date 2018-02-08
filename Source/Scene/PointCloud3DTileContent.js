@@ -573,11 +573,11 @@ define([
             u_constantColor : function() {
                 return content._constantColor;
             },
-            u_clippingPlanesLength : function() {
+            u_clippingPlanesLengthRange : function() {
                 if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
-                    return 0;
+                    return Cartesian3.ZERO;
                 }
-                return clippingPlanes.length;
+                return clippingPlanes.lengthRange;
             },
             u_clippingPlanes : function() {
                 return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? content._defaultTexture : clippingPlanes.texture;
@@ -596,12 +596,6 @@ define([
                     return Matrix4.IDENTITY;
                 }
                 return Matrix4.multiply(content._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
-            },
-            u_clippingPlanesRange : function() {
-                if (!defined(clippingPlanes)) {
-                    return Cartesian2.ZERO;
-                }
-                return clippingPlanes.distanceRange;
             }
         };
 
@@ -1131,9 +1125,8 @@ define([
         var fs = 'varying vec4 v_color; \n';
 
         if (hasClippedContent) {
-            fs += 'uniform int u_clippingPlanesLength;' +
+            fs += 'uniform vec3 u_clippingPlanesLengthRange;' +
                   'uniform sampler2D u_clippingPlanes; \n' +
-                  'uniform vec2 u_clippingPlanesRange; \n' +
                   'uniform mat4 u_clippingPlanesMatrix; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
         }
@@ -1145,7 +1138,9 @@ define([
         if (hasClippedContent) {
             var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnion' : 'czm_discardIfClippedWithIntersect';
             fs += '    #define CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
-                  '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix); \n' +
+                  '    int clippingPlanesLength = int(u_clippingPlanesLengthRange.x); \n' +
+                  '    vec2 clippingPlanesRange = u_clippingPlanesLengthRange.yz; \n' +
+                  '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix); \n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
                   '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +

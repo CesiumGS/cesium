@@ -2792,13 +2792,13 @@ define([
         };
     }
 
-    function createClippingPlanesLengthFunction(model) {
+    function createClippingPlanesLengthRangeUnionFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
             if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
-                return 0;
+                return Cartesian4.ZERO;
             }
-            return clippingPlanes.length;
+            return clippingPlanes.lengthRangeUnion;
         };
     }
 
@@ -2817,27 +2817,6 @@ define([
         return function() {
             var clippingPlanes = model.clippingPlanes;
             return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? model._defaultTexture : clippingPlanes.texture;
-        };
-    }
-
-    function createClippingPlanesRangeFunction(model) {
-        return function() {
-            var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes)) {
-                return Cartesian2.ZERO;
-            }
-            return clippingPlanes.distanceRange;
-        };
-    }
-
-    function createClippingPlanesUnionRegionsFunction(model) {
-        return function() {
-            var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes)) {
-                return false;
-            }
-
-            return clippingPlanes.unionClippingRegions;
         };
     }
 
@@ -2949,10 +2928,8 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
-                gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
-                gltf_clippingPlanesUnionRegions: createClippingPlanesUnionRegionsFunction(model),
+                gltf_clippingPlanesLengthRangeUnion: createClippingPlanesLengthRangeUnionFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model),
-                gltf_clippingPlanesRange: createClippingPlanesRangeFunction(model),
                 gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model),
                 gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model)
             });
@@ -3752,25 +3729,26 @@ define([
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
             '#define CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
-            'uniform int gltf_clippingPlanesLength; \n' +
-            'uniform bool gltf_clippingPlanesUnionRegions; \n' +
+            'uniform vec4 gltf_clippingPlanesLengthRangeUnion; \n' +
             'uniform sampler2D gltf_clippingPlanes; \n' +
-            'uniform vec2 gltf_clippingPlanesRange; \n' +
             'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    if (gltf_clippingPlanesLength > 0) \n' +
+            '    int clippingPlanesLength = int(gltf_clippingPlanesLengthRangeUnion.x);' +
+            '    bool clippingPlanesUnionRegions = gltf_clippingPlanesLengthRangeUnion.w == 1.0;' +
+            '    vec2 clippingPlanesRange = gltf_clippingPlanesLengthRangeUnion.yz;' +
+            '    if (clippingPlanesLength > 0) \n' +
             '    { \n' +
             '        float clipDistance; \n' +
-            '        if (gltf_clippingPlanesUnionRegions) \n' +
+            '        if (clippingPlanesUnionRegions) \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
+            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        else \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
+            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        \n' +
             '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +

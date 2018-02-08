@@ -916,9 +916,9 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
-            u_clippingPlanesLength : function() {
+            u_clippingPlanesLengthRange : function() {
                 var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
-                return defined(clippingPlanes) ? clippingPlanes.length : 0;
+                return defined(clippingPlanes) ? clippingPlanes.lengthRange : Cartesian3.ZERO;
             },
             u_clippingPlanes : function() {
                 var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
@@ -927,10 +927,6 @@ define([
                     return clippingPlanes.texture;
                 }
                 return frameState.context.defaultTexture;
-            },
-            u_clippingPlanesRange : function() {
-                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
-                return defined(clippingPlanes) ? clippingPlanes.distanceRange : Cartesian2.ZERO;
             },
             u_clippingPlanesMatrix : function() {
                 var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
