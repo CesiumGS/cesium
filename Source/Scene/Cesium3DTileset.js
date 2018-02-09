@@ -564,12 +564,7 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
-        /**
-         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
-         *
-         * @type {ClippingPlaneCollection}
-         */
-        this.clippingPlanes = options.clippingPlanes;
+        this._clippingPlanes = options.clippingPlanes;
 
         // Set ownership so no Models created as content will try to delete it
         if (defined(options.clippingPlanes)) {
@@ -805,6 +800,24 @@ define([
                 //>>includeEnd('debug');
 
                 return this._asset;
+            }
+        },
+        /**
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
+         *
+         * @type {ClippingPlaneCollection}
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._clippingPlanes;
+            },
+            set : function(value) {
+                var oldClippingPlanes = this._clippingPlanes;
+                if (defined(oldClippingPlanes)) {
+                    oldClippingPlanes.checkDestroy(this);
+                }
+                this._clippingPlanes = value;
+                value.owner = this;
             }
         },
 
@@ -1840,7 +1853,7 @@ define([
         }
 
         // Update clipping planes and set them as clean to avoid re-updating the same information from each tile
-        var clippingPlanes = this.clippingPlanes;
+        var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes)) {
             clippingPlanes._planeTextureDirty = true;
             clippingPlanes.update(frameState);
@@ -1922,7 +1935,7 @@ define([
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
 
         // Destroy clipping plane collection, setting ownership first.
-        var clippingPlaneCollection = this.clippingPlanes;
+        var clippingPlaneCollection = this._clippingPlanes;
         if (defined(clippingPlaneCollection)) {
             clippingPlaneCollection.checkDestroy(this);
         }

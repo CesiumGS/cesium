@@ -107,7 +107,7 @@ define([
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
         /**
-         * If this ClippingPlaneCollection is owned, only its owner can destroy it using checkDestroy(object)
+         * If this ClippingPlaneCollection has an owner, only its owner can destroy it using checkDestroy(object)
          *
          * @type {Object}
          * @default undefined
@@ -416,15 +416,15 @@ define([
          lengthRangeUnion.z = distanceMax;
          var distanceRangeSize = distanceMax - distanceMin;
          for (i = 0; i < length; ++i) {
-             var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
+            var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
             byteIndex = i * 8 + 4;
-             insertFloat(textureBytes, normalizedDistance, byteIndex);
+            insertFloat(textureBytes, normalizedDistance, byteIndex);
 
             uint32Index = i + i + 1;
-             unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
-             if (!unchanged) {
-                 previousUint32View[uint32Index] = currentUint32View[uint32Index];
-             }
+            unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
+            if (!unchanged) {
+                previousUint32View[uint32Index] = currentUint32View[uint32Index];
+            }
          }
          var lengthRange = clippingPlaneCollection._lengthRange;
          lengthRange.x = lengthRangeUnion.x;
@@ -600,7 +600,9 @@ define([
             return this;
         }
 
-        this._clippingPlanesTexture.destroy();
+        if (defined(this._clippingPlanesTexture)) {
+            this._clippingPlanesTexture.destroy();
+        }
         return destroyObject(this);
     };
 

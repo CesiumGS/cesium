@@ -827,47 +827,28 @@ defineSuite([
         });
     });
 
-    it('Updates clipping planes when clipping planes are enabled', function () {
+    it('Rebuilds shaders when clipping planes are enabled or change between union and intersection', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset._root.content;
 
-            expect(content._packedClippingPlanes).toBeDefined();
-            expect(content._packedClippingPlanes.length).toBe(0);
-            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnion')).toBe(false);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersect')).toBe(false);
 
-            tileset.clippingPlanes = new ClippingPlaneCollection({
+            var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
+            tileset.clippingPlanes = clippingPlanes;
 
             content.update(tileset, scene.frameState);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnion')).toBe(false);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersect')).toBe(true);
 
-            expect(content._packedClippingPlanes.length).toBe(1);
-            expect(content._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
-        });
-    });
-
-    it('Does not update clipping planes when tile is not clipped', function () {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var tile = tileset._root;
-            tile._isClipped = false;
-            var content = tile.content;
-
-            expect(content._packedClippingPlanes).toBeDefined();
-            expect(content._packedClippingPlanes.length).toBe(0);
-            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
-
-            tileset.clippingPlanes = new ClippingPlaneCollection({
-                planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
-                ]
-            });
-
+            clippingPlanes.unionClippingRegions = true;
             content.update(tileset, scene.frameState);
-
-            expect(content._packedClippingPlanes.length).toBe(0);
-            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnion')).toBe(true);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersect')).toBe(false);
         });
     });
 
@@ -920,20 +901,29 @@ defineSuite([
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
                 color = rgba;
+                console.log(rgba);
             });
 
             tileset.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -10.0),
+                    new Plane(Cartesian3.UNIT_Z, 0.0),
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ],
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
                 unionClippingRegions: true
             });
 
+            expect(scene).toRenderAndCall(function(rgba) {
+                console.log(rgba);
+            }); // TODO: look at this in Sandcastle
+
             expect(scene).notToRender(color);
 
             tileset.clippingPlanes.unionClippingRegions = false;
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                console.log(rgba);
+            });
 
             expect(scene).toRender(color);
         });

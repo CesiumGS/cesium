@@ -517,10 +517,6 @@ define([
         if (defined(tilesetClippingPlanes)) {
             // Dereference the clipping planes from the model if they are irrelevant - saves on shading
             model.clippingPlanes = tilesetClippingPlanes.enabled && this._tile._isClipped ? tilesetClippingPlanes : undefined;
-        } else if (defined(this._model.clippingPlanes)) {
-            // Destroy any other clipping planes on the model if the tileset doesn't have any clipping planes
-            model.clippingPlanes.checkDestroy();
-            model.clippingPlanes = undefined;
         }
 
         // If any commands were pushed, add derived commands

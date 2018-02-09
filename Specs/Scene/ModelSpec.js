@@ -769,6 +769,22 @@ defineSuite([
         });
     });
 
+    it('tries to destroy attached ClippingPlaneCollections', function() {
+        return loadModel(boxUrl).then(function(model) {
+            var clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+             });
+             model.clippingPlanes = clippingPlanes;
+            expect(model.isDestroyed()).toEqual(false);
+            expect(clippingPlanes.isDestroyed()).toEqual(false);
+            primitives.remove(model);
+            expect(model.isDestroyed()).toEqual(true);
+            expect(clippingPlanes.isDestroyed()).toEqual(true);
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('Throws because of invalid extension', function() {
@@ -2598,10 +2614,12 @@ defineSuite([
             model.show = true;
             model.zoomTo();
 
-            scene.renderForSpecs();
+            var gl = scene.frameState.context._gl;
+            spyOn(gl, 'texSubImage2D').and.callThrough();
 
-            expect(model._packedClippingPlanes).toBeDefined();
-            expect(model._packedClippingPlanes.length).toBe(0);
+            scene.renderForSpecs();
+            var callsBeforeClipping = gl.texSubImage2D.calls.count();
+
             expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
 
             model.clippingPlanes = new ClippingPlaneCollection({
@@ -2612,9 +2630,7 @@ defineSuite([
 
             model.update(scene.frameState);
             scene.renderForSpecs();
-
-            expect(model._packedClippingPlanes.length).toBe(1);
-            expect(model._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
+            expect(gl.texSubImage2D.calls.count() - callsBeforeClipping * 2).toEqual(1);
 
             primitives.remove(model);
         });

@@ -28,10 +28,8 @@ float czm_discardIfClippedWithIntersect(sampler2D clippingPlanes, int clippingPl
             }
 
             vec4 clippingPlane = czm_getClippingPlaneFromTexture(clippingPlanes, range, i, textureWidth, clippingPlanesMatrix);
-            //clipNormal = normalize((czm_modelView * vec4(0.99999999995, 0.000009999999999833334, 0, 0.0)).xyz);
-            clipNormal = clippingPlane.xyz;
 
-            //clipPosition = -range.x * clipNormal;
+            clipNormal = clippingPlane.xyz;
             clipPosition = -clippingPlane.w * clipNormal;
 
             float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;

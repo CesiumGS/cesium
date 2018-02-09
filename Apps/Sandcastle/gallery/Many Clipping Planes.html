@@ -27,10 +27,10 @@
 <div id="toolbar">
     <table><tbody>
         <tr>
-            <td>Spiral Size</td>
+            <td>Distance</td>
             <td>
-                <input type="range" min="-100.0" max="100.0" step="1.0" data-bind="value: spiralSize, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: spiralSize">
+                <input type="range" min="-100.0" max="100.0" step="1.0" data-bind="value: cylinderRadius, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: cylinderRadius">
             </td>
         </tr>
     </tbody></table>
@@ -56,22 +56,24 @@ viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
 var globe = viewer.scene.globe;
 globe.depthTestAgainstTerrain = true;
 
+var cylinderRadius = -20.0;
+var radiusMultiplier = 1.0;
+
 var clipObjects = ['model', 'b3dm', 'pnts', 'i3dm', 'terrain'];
 var viewModel = {
-    spiralSize : 1.0,
+    cylinderRadius : cylinderRadius,
     exampleTypes : clipObjects,
     currentExampleType : clipObjects[0]
 };
-var spiralSize = 1.0;
 
 Cesium.knockout.track(viewModel);
 
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-Cesium.knockout.getObservable(viewModel, 'spiralSize').subscribe(
+Cesium.knockout.getObservable(viewModel, 'cylinderRadius').subscribe(
     function(newValue) {
-        spiralSize = Number.parseFloat(viewModel.spiralSize);
+        cylinderRadius = Number.parseFloat(viewModel.cylinderRadius);
         updatePlanes();
     }
 );
@@ -80,14 +82,15 @@ var scene = viewer.scene;
 var planeEntities = [];
 var selectedPlane;
 
-var steps = 16;
+var steps = 32;
 var clippingPlanes = [];
 var modelEntityClippingPlanes;
+var clippingModeUnion = false;
 
 function updatePlanes() {
     for (var i = 0; i < clippingPlanes.length; i++) {
         var plane = clippingPlanes[i];
-        plane.distance = spiralSize * (i / (steps / 3) + 0.3);
+        plane.distance = cylinderRadius * radiusMultiplier;
     }
 }
 
@@ -96,7 +99,7 @@ function createClippingPlanes(modelMatrix) {
     var stepDegrees = 6.28319 / steps;
 
     for (var i = 0; i < steps; i++) {
-        var angle = i * stepDegrees + 0.00001;
+        var angle = i * stepDegrees;
         var dir = new Cesium.Cartesian3();
         dir.x = 1.0;
         dir.y = Math.tan(angle);
@@ -113,14 +116,14 @@ function createClippingPlanes(modelMatrix) {
             dir.y = -dir.y;
         }
         Cesium.Cartesian3.normalize(dir, dir);
-        clippingPlanes.push(new Cesium.Plane(dir, 0.0));
+        clippingPlanes.push(new Cesium.Plane(dir, cylinderRadius));
     }
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
         modelMatrix : Cesium.defined(modelMatrix) ? modelMatrix : Cesium.Matrix4.IDENTITY,
         planes : clippingPlanes,
         edgeWidth: 2.0,
         edgeColor: Cesium.Color.WHITE,
-        unionClippingRegions : false
+        unionClippingRegions : clippingModeUnion
     });
 }
 
@@ -136,7 +139,7 @@ var pointCloudUrl = Cesium.CesiumIon.createResource(3742, { accessToken: 'eyJhbG
 function loadModel(url) {
     createClippingPlanes();
     var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 300.0);
-    var heading = 0.0;//Cesium.Math.toRadians(135.0);
+    var heading = 0.0;
     var pitch = 0.0;
     var roll = 0.0;
     var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
@@ -186,12 +189,16 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     reset();
 
     if (newValue === clipObjects[0]) {
+        // Model
         loadModel(modelUrl);
     } else if (newValue === clipObjects[1]) {
+        // B3dm photogrammetry
         agiHqUrl.then(function(resource) {
             return loadTileset(resource);
         });
     } else if (newValue === clipObjects[2]) {
+        // Point clouds
+        radiusMultiplier = 20.0;
         pointCloudUrl.then(function(resource) {
             return loadTileset(resource);
         })
@@ -199,11 +206,13 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
                 tileset.pointCloudShading.attenuation = true;
             });
     } else if (newValue === clipObjects[3]) {
+        // i3dm
         loadTileset(instancedUrl);
         tileset.readyPromise.then(function () {
             tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
     } else if (newValue === clipObjects[4]) {
+        // Terrain
         var position = Cesium.Cartesian3.fromRadians(-2.0872979473351286, 0.6596620013036164, 2380.0);
         var entity = viewer.entities.add({
             position : position,
@@ -217,14 +226,21 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         createClippingPlanes(entity.computeModelMatrix(Cesium.JulianDate.now()));
         globe.clippingPlanes = modelEntityClippingPlanes;
     }
+    updatePlanes();
 });
 
 function reset() {
-    viewModel.spiralSize = 1.0;
+    radiusMultiplier = 1.0;
+    viewModel.cylinderRadius = cylinderRadius;
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
     globe.destroyClippingPlanes();
 }
+
+Sandcastle.addToggleButton('union', clippingModeUnion, function(checked) {
+    clippingModeUnion = checked;
+    modelEntityClippingPlanes.unionClippingRegions = clippingModeUnion;
+});
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

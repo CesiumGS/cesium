@@ -396,7 +396,11 @@ define([
                 tiles.length = 0;
             }
         }
-
+        // update clipping planes
+        var clippingPlanes = this.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
         this._usedDrawCommands = 0;
     };
 
@@ -666,7 +670,9 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
-        this.clippingPlanes.checkDestroy();
+        if (defined(this.clippingPlanes)) {
+            this.clippingPlanes.checkDestroy();
+        }
         return destroyObject(this);
     };
 
@@ -1354,14 +1360,12 @@ define([
 
             // update clipping planes
             var clippingPlanes = tileProvider.clippingPlanes;
-            if (defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped) {
-                //clippingPlanes.transformAndPackPlanes(context.uniformState.view, packedPlanes);
-                clippingPlanes.update(frameState);
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped && ClippingPlaneCollection.isSupported();
+            if (clippingPlanesEnabled) {
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (clippingPlanes.length > 0) && ClippingPlaneCollection.isSupported();
             var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : false;
 
             if (defined(tileProvider.uniformMap)) {

@@ -305,7 +305,7 @@ defineSuite([
         });
     });
 
-    it('Updates model\'s clipping planes', function() {
+    it('Links model to tileset clipping planes based on bounding volume clipping', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var tile = tileset._root;
             var content = tile.content;
@@ -321,18 +321,12 @@ defineSuite([
             content.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeDefined();
-            expect(model.clippingPlanes.length).toBe(1);
-            expect(model.clippingPlanes.enabled).toBe(true);
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
             tile._isClipped = false;
             content.update(tileset, scene.frameState);
 
-            expect(model.clippingPlanes.enabled).toBe(false);
-
-            tileset.clippingPlanes = undefined;
-
-            expect(model.clippingPlanes).toBeDefined();
-            expect(model.clippingPlanes.enabled).toBe(false);
+            expect(model.clippingPlanes).toBeUndefined();
         });
     });
 

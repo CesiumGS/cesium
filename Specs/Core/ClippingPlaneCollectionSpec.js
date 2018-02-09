@@ -1,21 +1,39 @@
 defineSuite([
         'Core/ClippingPlaneCollection',
+        'Core/AttributeCompression',
         'Core/BoundingSphere',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Color',
+        'Core/Math',
+        'Core/PixelFormat',
+        'Renderer/PixelDatatype',
         'Core/Intersect',
         'Core/Matrix4',
-        'Core/Plane'
+        'Core/Plane',
+        'Specs/createScene',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
+        'Renderer/TextureWrap'
     ], function(
         ClippingPlaneCollection,
+        AttributeCompression,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
+        CesiumMath,
+        PixelFormat,
+        PixelDatatype,
         Intersect,
         Matrix4,
-        Plane) {
+        Plane,
+        createScene,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap) {
     'use strict';
 
     var clippingPlanes;
@@ -26,6 +44,21 @@ defineSuite([
 
     var transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
     var boundingVolume  = new BoundingSphere(Cartesian3.ZERO, 1.0);
+
+    var unpackVec4 = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
+    var unormScratch = new Cartesian4();
+    function decodePlane(pixel1, pixel2, distanceRange) {
+        // expect pixel1 to be the normal
+        var xOct16 = pixel1.x * 256 + pixel1.y;
+        var yOct16 = pixel1.z * 256 + pixel1.w;
+        var normal = AttributeCompression.octDecodeInRange(xOct16, yOct16, 65535, new Cartesian3());
+
+        // expect pixel2 to be the distance
+        var unormPixel2 = Cartesian4.multiplyByScalar(pixel2, 1 / 255, unormScratch);
+        var normalizedDistance = Cartesian4.dot(unpackVec4, unormPixel2);
+        var distance = (distanceRange.y - distanceRange.x) * normalizedDistance + distanceRange.x;
+        return new Plane(normal, distance);
+    }
 
     it('default constructor', function() {
         clippingPlanes = new ClippingPlaneCollection();
@@ -118,26 +151,180 @@ defineSuite([
         expect(result).toBe(false);
     });
 
-    it('transforms and packs planes into result parameter', function() {
+    it('update creates a RGBA ubyte texture with no filtering or wrapping to house packed clipping planes', function() {
+        var scene = createScene();
         clippingPlanes = new ClippingPlaneCollection({
-            planes : planes
+            planes : planes,
+            enabled : false,
+            edgeColor : Color.RED,
+            modelMatrix : transform
         });
 
-        var result = clippingPlanes.transformAndPackPlanes(transform);
-        expect(result.length).toEqual(2);
-        expect(result[0]).toEqual(new Cartesian4(1.0, 0.0, 0.0, 0.0));
-        expect(result[1]).toEqual(new Cartesian4(0.0, 1.0, 0.0, -1.0));
+        clippingPlanes.update(scene.frameState);
+
+        var packedTexture = clippingPlanes.texture;
+        expect(packedTexture).toBeDefined();
+        expect(packedTexture.width).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH);
+        expect(packedTexture.height).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH);
+        expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
+        expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
+
+        var sampler = packedTexture.sampler;
+        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
+        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
+        expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+
+        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
+        scene.destroyForSpecs();
     });
 
-    it('transforms and packs planes with no result parameter creates new array', function() {
+    it('update populates uniforms for unpacking the clipping plane texture', function() {
+        var scene = createScene();
         clippingPlanes = new ClippingPlaneCollection({
-            planes : planes
+            planes : planes,
+            enabled : false,
+            edgeColor : Color.RED,
+            modelMatrix : transform
         });
 
-        var result = clippingPlanes.transformAndPackPlanes(transform);
-        expect(result.length).toEqual(2);
-        expect(result[0]).toBeInstanceOf(Cartesian4);
-        expect(result[1]).toBeInstanceOf(Cartesian4);
+        clippingPlanes.update(scene.frameState);
+        var expectedRange = new Cartesian2(1.0, 2.0);
+        var actualRange = new Cartesian2();
+
+        var lengthRange = clippingPlanes.lengthRange;
+        expect(lengthRange.x).toEqual(2.0);
+        actualRange.x = lengthRange.y;
+        actualRange.y = lengthRange.z;
+        expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
+
+        var lengthRangeUnion = clippingPlanes.lengthRangeUnion;
+        expect(lengthRangeUnion.x).toEqual(2);
+        actualRange.x = lengthRangeUnion.y;
+        actualRange.y = lengthRangeUnion.z;
+        expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
+        expect(lengthRangeUnion.w).toEqual(0);
+
+        clippingPlanes.unionClippingRegions = true;
+        clippingPlanes.update(scene.frameState);
+
+        lengthRangeUnion = clippingPlanes.lengthRangeUnion;
+        expect(lengthRangeUnion.x).toEqual(2);
+        actualRange.x = lengthRangeUnion.y;
+        actualRange.y = lengthRangeUnion.z;
+        expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
+        expect(lengthRangeUnion.w).toEqual(1);
+
+        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
+        scene.destroyForSpecs();
+    });
+
+    it('update fills the clipping plane texture with packed planes', function() {
+        var scene = createScene();
+
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes,
+            enabled : false,
+            edgeColor : Color.RED,
+            modelMatrix : transform
+        });
+
+        var rgba;
+        var gl = scene.frameState.context._gl;
+        spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
+            rgba = arrayBufferView;
+        });
+
+        clippingPlanes.update(scene.frameState);
+        expect(rgba).toBeDefined();
+        expect(rgba.length).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
+
+        // Expect two clipping planes to use 4 pixels in the texture, so the first 16 bytes
+        for (var i = 16; i < rgba.length; i++) {
+            expect(rgba[i]).toEqual(0);
+        }
+        var pixel1 = Cartesian4.fromArray(rgba, 0);
+        var pixel2 = Cartesian4.fromArray(rgba, 4);
+        var pixel3 = Cartesian4.fromArray(rgba, 8);
+        var pixel4 = Cartesian4.fromArray(rgba, 12);
+
+        var lengthRangeUnion = clippingPlanes.lengthRangeUnion;
+        var range = new Cartesian2(lengthRangeUnion.y, lengthRangeUnion.z);
+        var plane1 = decodePlane(pixel1, pixel2, range);
+        var plane2 = decodePlane(pixel3, pixel4, range);
+
+        expect(Cartesian3.equalsEpsilon(plane1.normal, planes[0].normal, CesiumMath.EPSILON3)).toEqual(true);
+        expect(Cartesian3.equalsEpsilon(plane2.normal, planes[1].normal, CesiumMath.EPSILON3)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(plane1.distance, planes[0].distance, CesiumMath.EPSILON3)).toEqual(true);
+        expect(CesiumMath.equalsEpsilon(plane2.distance, planes[1].distance, CesiumMath.EPSILON3)).toEqual(true);
+
+        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
+        scene.destroyForSpecs();
+    });
+
+    it('does not perform texture updates if the planes are unchanged', function() {
+        var scene = createScene();
+
+        var gl = scene.frameState.context._gl;
+        spyOn(gl, 'texSubImage2D').and.callThrough();
+
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes,
+            enabled : false,
+            edgeColor : Color.RED,
+            modelMatrix : transform
+        });
+        expect(gl.texSubImage2D.calls.count()).toEqual(0);
+
+        clippingPlanes.update(scene.frameState);
+        expect(gl.texSubImage2D.calls.count()).toEqual(1);
+
+        clippingPlanes.update(scene.frameState);
+        expect(gl.texSubImage2D.calls.count()).toEqual(1);
+
+        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
+        scene.destroyForSpecs();
+    });
+
+    it('does not perform texture updates if the clippingPlaneCollection has been marked clean', function() {
+        var scene = createScene();
+
+        var gl = scene.frameState.context._gl;
+        spyOn(gl, 'texSubImage2D').and.callThrough();
+
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes,
+            enabled : false,
+            edgeColor : Color.RED,
+            modelMatrix : transform
+        });
+        expect(gl.texSubImage2D.calls.count()).toEqual(0);
+
+        clippingPlanes._planeTextureDirty = false; // Set by Cesium3DTileset so update() from Model won't burn CPU time packing/comparing
+        clippingPlanes.update(scene.frameState);
+        expect(gl.texSubImage2D.calls.count()).toEqual(0);
+
+        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
+        scene.destroyForSpecs();
+    });
+
+    it('does not destroy the ClippingPlaneCollection if an owner is specified unless the owner is provided', function() {
+        var scene = createScene();
+
+        var fakeCesium3DTileset = {};
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes,
+            enabled : false,
+            edgeColor : Color.RED,
+            modelMatrix : transform
+        });
+        clippingPlanes.owner = fakeCesium3DTileset;
+        clippingPlanes.checkDestroy();
+        expect(clippingPlanes.isDestroyed()).toEqual(false);
+        clippingPlanes.checkDestroy(fakeCesium3DTileset);
+        expect(clippingPlanes.isDestroyed()).toEqual(true);
+
+        scene.destroyForSpecs();
     });
 
     it('clone without a result parameter returns new identical copy', function() {

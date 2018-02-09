@@ -540,7 +540,6 @@ define([
                 }
             }
         }
-        var clippingPlanes = content._tileset.clippingPlanes;
         var uniformMap = {
             u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier : function() {
                 var scratch = scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier;
@@ -574,15 +573,18 @@ define([
                 return content._constantColor;
             },
             u_clippingPlanesLengthRange : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
                 if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
                     return Cartesian3.ZERO;
                 }
                 return clippingPlanes.lengthRange;
             },
             u_clippingPlanes : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
                 return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? content._defaultTexture : clippingPlanes.texture;
             },
             u_clippingPlanesEdgeStyle : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
                 if (!defined(clippingPlanes)) {
                     return Color.WHITE.withAlpha(0.0);
                 }
@@ -592,6 +594,7 @@ define([
                 return style;
             },
             u_clippingPlanesMatrix : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
                 if (!defined(clippingPlanes)) {
                     return Matrix4.IDENTITY;
                 }

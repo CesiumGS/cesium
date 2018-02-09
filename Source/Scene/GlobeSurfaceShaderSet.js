@@ -93,7 +93,8 @@ define([
                     (enableFog << 13) |
                     (quantization << 14) |
                     (applySplit << 15) |
-                    (enableClippingPlanes << 16);
+                    (enableClippingPlanes << 16) |
+                    (unionClippingRegions << 17);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
