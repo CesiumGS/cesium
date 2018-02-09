@@ -262,7 +262,6 @@ define([
      * @exception {DeveloperError} this.material must be defined.
      */
     EllipsoidPrimitive.prototype.update = function(frameState) {
-
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D) ||
             (!defined(this.center)) ||

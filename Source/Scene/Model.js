@@ -1,4 +1,4 @@
-    define([
+define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -1850,32 +1850,6 @@
         return shader;
     }
 
-    function modifyFsShaderForDepth(shader) {
-        shader = ShaderSource.replaceMain(shader, 'czm_main');
-        shader +=
-            'varying float v_inverse_depth;\n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_main(); \n' +
-            '    czm_logDepth(v_inverse_depth); \n' +
-            '} \n';
-
-        return shader;
-    }
-
-    function modifyVertexShaderForDepth(shader) {
-        shader = ShaderSource.replaceMain(shader, 'gltf_morph_main');
-        shader +=
-            'varying float v_inverse_depth;\n' +
-            'void main() \n' +
-            '{ \n' +
-            '    gltf_morph_main(); \n' +
-            '    v_inverse_depth = 1. / ((u_projectionMatrix * u_modelViewMatrix * vec4(a_position,1.0)).w); \n' +
-            '} \n';
-
-        return shader;
-    }
-
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
             shader = callback(shader, programName);
@@ -1926,8 +1900,8 @@
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        fs = modifyFsShaderForDepth(fs);
-        vs = modifyVertexShaderForDepth(vs);
+        fs = ModelUtility.modifyFragmentShaderForLogDepth(fs);
+        vs = ModelUtility.modifyVertexShaderForLogDepth(model.gltf, vs);
         var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
         if (ClippingPlaneCollection.isSupported()) {
             finalFS = modifyShaderForClippingPlanes(finalFS);

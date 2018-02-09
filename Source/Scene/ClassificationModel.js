@@ -663,23 +663,25 @@ define([
     }
 
     function createProgram(model) {
-        var positionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
-        var batchIdName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
+        var gltf = model.gltf;
+
+        var positionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'POSITION');
+        var batchIdName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_BATCHID');
 
         var attributeLocations = {};
         attributeLocations[positionName] = 0;
         attributeLocations[batchIdName] = 1;
 
-        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEWPROJECTION');
+        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEWPROJECTION');
 
         var uniformDecl;
         var computePosition;
 
         if (!defined(modelViewProjectionName)) {
-            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'PROJECTION');
-            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEW');
+            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION');
+            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEW');
             if (!defined(modelViewName)) {
-                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'CESIUM_RTC_MODELVIEW');
+                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'CESIUM_RTC_MODELVIEW');
             }
 
             uniformDecl =
@@ -700,18 +702,21 @@ define([
             '    gl_Position = czm_depthClampFarPlane(positionInClipCoords);\n' +
             '}\n';
         var fs =
-            '#ifdef GL_EXT_frag_depth\n' +
-            '#extension GL_EXT_frag_depth : enable\n' +
-            '#endif\n' +
+            //'#ifdef GL_EXT_frag_depth\n' +
+            //'#extension GL_EXT_frag_depth : enable\n' +
+            //'#endif\n' +
             'void main() \n' +
             '{ \n' +
             '    gl_FragColor = vec4(1.0); \n' +
-            '    czm_writeDepthClampedToFarPlane();\n' +
+            //'    czm_writeDepthClampedToFarPlane();\n' +
             '}\n';
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
             vs = modifyShaderForQuantizedAttributes(vs, model);
         }
+
+        vs = ModelUtility.modifyVertexShaderForLogDepth(gltf, vs);
+        fs = ModelUtility.modifyFragmentShaderForLogDepth(fs);
 
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
