@@ -292,6 +292,11 @@ define([
 
     ModelUtility.modifyVertexShaderForLogDepth = function(gltf, shader) {
         var positionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'POSITION');
+        var decodedPositionName = positionName.replace('a_', 'gltf_a_dec_');
+        if (shader.indexOf(decodedPositionName) !== -1) {
+            positionName = decodedPositionName;
+        }
+
         var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEWPROJECTION');
         if (!defined(modelViewProjectionName)) {
             var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION');
