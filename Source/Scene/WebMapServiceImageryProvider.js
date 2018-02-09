@@ -71,9 +71,9 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *

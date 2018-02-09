@@ -11,10 +11,10 @@ define([
         './BingMapsImageryProvider',
         './Cesium3DTileset',
         './CesiumIonResource',
-        './createTileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
         './SingleTileImageryProvider',
+        './TileMapServiceImageryProvider',
         './UrlTemplateImageryProvider',
         './WebMapServiceImageryProvider',
         './WebMapTileServiceImageryProvider'
@@ -31,10 +31,10 @@ define([
         BingMapsImageryProvider,
         Cesium3DTileset,
         CesiumIonResource,
-        createTileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
         SingleTileImageryProvider,
+        TileMapServiceImageryProvider,
         UrlTemplateImageryProvider,
         WebMapServiceImageryProvider,
         WebMapTileServiceImageryProvider) {
@@ -93,7 +93,7 @@ define([
      * //Load an ImageryProvider with asset ID of 2347923
      * Cesium.CesiumIon.createResource(2347923)
      *   .then(function (resource) {
-     *     viewer.imageryLayers.addProvider(Cesium.createTileMapServiceImageryProvider({url : resource }));
+     *     viewer.imageryLayers.addProvider(new Cesium.TileMapServiceImageryProvider({url : resource }));
      *   });
      */
     CesiumIon.createResource = function(assetId, options) {
@@ -155,7 +155,7 @@ define([
         GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
         MAPBOX: createFactory(MapboxImageryProvider),
         SINGLE_TILE: createFactory(SingleTileImageryProvider),
-        TMS: createTileMapServiceImageryProvider,
+        TMS: createFactory(TileMapServiceImageryProvider),
         URL_TEMPLATE: createFactory(UrlTemplateImageryProvider),
         WMS: createFactory(WebMapServiceImageryProvider),
         WMTS: createFactory(WebMapTileServiceImageryProvider)
@@ -191,7 +191,7 @@ define([
 
                 var externalType = endpoint.externalType;
                 if (!defined(externalType)) {
-                    return createTileMapServiceImageryProvider({
+                    return new TileMapServiceImageryProvider({
                         url: CesiumIonResource.create(endpoint, endpointResource)
                     });
                 }

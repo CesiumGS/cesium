@@ -3,8 +3,8 @@ define([
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
-        '../../Scene/createOpenStreetMapImageryProvider',
-        '../../Scene/createTileMapServiceImageryProvider',
+        '../../Scene/OpenStreetMapImageryProvider',
+        '../../Scene/TileMapServiceImageryProvider',
         '../../Scene/MapboxImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
@@ -12,8 +12,8 @@ define([
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         BingMapsStyle,
-        createOpenStreetMapImageryProvider,
-        createTileMapServiceImageryProvider,
+        OpenStreetMapImageryProvider,
+        TileMapServiceImageryProvider,
         MapboxImageryProvider,
         ProviderViewModel) {
     'use strict';
@@ -148,7 +148,7 @@ mapping applications.\nhttp://www.esri.com',
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
 of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
-                return createOpenStreetMapImageryProvider({
+                return new OpenStreetMapImageryProvider({
                     url : 'https://a.tile.openstreetmap.org/'
                 });
             }
@@ -160,7 +160,7 @@ of the world.\nhttp://www.openstreetmap.org',
             tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
             creationFunction : function() {
-                return createOpenStreetMapImageryProvider({
+                return new OpenStreetMapImageryProvider({
                     url : 'https://stamen-tiles.a.ssl.fastly.net/watercolor/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -172,7 +172,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
             creationFunction : function() {
-                return createOpenStreetMapImageryProvider({
+                return new OpenStreetMapImageryProvider({
                     url : 'https://stamen-tiles.a.ssl.fastly.net/toner/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -185,7 +185,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
-                return createTileMapServiceImageryProvider({
+                return new TileMapServiceImageryProvider({
                     url : 'https://cesiumjs.org/blackmarble',
                     flipXY : true,
                     credit : 'Black Marble imagery courtesy NASA Earth Observatory'
@@ -198,7 +198,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
             creationFunction : function() {
-                return createTileMapServiceImageryProvider({
+                return new TileMapServiceImageryProvider({
                     url : buildModuleUrl('Assets/Textures/NaturalEarthII')
                 });
             }

@@ -8,7 +8,7 @@ define([
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
-        'Cesium/Scene/createTileMapServiceImageryProvider',
+        'Cesium/Scene/TileMapServiceImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
@@ -23,7 +23,7 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
-        createTileMapServiceImageryProvider,
+        TileMapServiceImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin) {
@@ -44,7 +44,7 @@ define([
 
     var imageryProvider;
     if (endUserOptions.tmsImageryUrl) {
-        imageryProvider = createTileMapServiceImageryProvider({
+        imageryProvider = new TileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
     }

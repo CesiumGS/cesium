@@ -5,16 +5,7 @@ define([
         '../Core/loadJson',
         '../Core/Resource',
         '../Core/RuntimeError',
-        '../ThirdParty/when',
-        './ArcGisMapServerImageryProvider',
-        './BingMapsImageryProvider',
-        './createTileMapServiceImageryProvider',
-        './GoogleEarthEnterpriseMapsProvider',
-        './MapboxImageryProvider',
-        './SingleTileImageryProvider',
-        './UrlTemplateImageryProvider',
-        './WebMapServiceImageryProvider',
-        './WebMapTileServiceImageryProvider'
+        '../ThirdParty/when'
     ], function(
         Check,
         defaultValue,
@@ -22,16 +13,7 @@ define([
         loadJson,
         Resource,
         RuntimeError,
-        when,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        createTileMapServiceImageryProvider,
-        GoogleEarthEnterpriseMapsProvider,
-        MapboxImageryProvider,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        WebMapTileServiceImageryProvider) {
+        when) {
 'use strict';
 
     /**

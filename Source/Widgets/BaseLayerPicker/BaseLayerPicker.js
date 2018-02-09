@@ -59,7 +59,7 @@ define([
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return Cesium.createOpenStreetMapImageryProvider({
+     *          return new Cesium.OpenStreetMapImageryProvider({
      *              url : 'https://a.tile.openstreetmap.org/'
      *          });
      *      }
@@ -71,7 +71,7 @@ define([
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
      * in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
-     *          return Cesium.createTileMapServiceImageryProvider({
+     *          return new Cesium.TileMapServiceImageryProvider({
      *              url : 'https://cesiumjs.org/blackmarble',
      *              credit : 'Black Marble imagery courtesy NASA Earth Observatory',
      *              flipXY : true
@@ -84,7 +84,7 @@ define([
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return Cesium.createTileMapServiceImageryProvider({
+     *          return new Cesium.TileMapServiceImageryProvider({
      *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }

@@ -27,8 +27,8 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider

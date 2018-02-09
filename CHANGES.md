@@ -3,8 +3,12 @@ Change Log
 
 ### 1.43 - 2018-03-01
 
+##### Deprecated :hourglass_flowing_sand:
+* `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been deprecated and will be removed in Cesium 1.46.  Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively.
+
 ##### Fixes :wrench:
 * Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
+* Added `TileMapResourceImageryProvider` and `OpenStreetMapImageryProvider` classes to improve API consistency: [#4812](https://github.com/AnalyticalGraphicsInc/cesium/issues/4812)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__

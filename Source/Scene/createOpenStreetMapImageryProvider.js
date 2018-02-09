@@ -1,28 +1,10 @@
 define([
-        '../Core/appendForwardSlash',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
         '../Core/deprecationWarning',
-        '../Core/DeveloperError',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
-        './UrlTemplateImageryProvider'
+        './OpenStreetMapImageryProvider'
     ], function(
-        appendForwardSlash,
-        Credit,
-        defaultValue,
-        defined,
         deprecationWarning,
-        DeveloperError,
-        Rectangle,
-        Resource,
-        WebMercatorTilingScheme,
-        UrlTemplateImageryProvider) {
+        OpenStreetMapImageryProvider) {
     'use strict';
-
-    var defaultCredit = new Credit({text: 'MapQuest, Open Street Map and contributors, CC-BY-SA'});
 
     /**
      * Creates a {@link UrlTemplateImageryProvider} instance that provides tiled imagery hosted by OpenStreetMap
@@ -42,20 +24,22 @@ define([
      * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      * @returns {UrlTemplateImageryProvider} The imagery provider.
      *
+     * @deprecated
+     *
      * @exception {DeveloperError} The rectangle and minimumLevel indicate that there are more than four tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
      *
      * @example
-     * var osm = Cesium.createOpenStreetMapImageryProvider({
+     * var osm = new Cesium.OpenStreetMapImageryProvider({
      *     url : 'https://a.tile.openstreetmap.org/'
      * });
      *
@@ -63,57 +47,9 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function createOpenStreetMapImageryProvider(options) {
-        options = defaultValue(options, {});
+        deprecationWarning('createOpenStreetMapImageryProvider', 'createOpenStreetMapImageryProvider is deprecated and will be removed in Cesium 1.46. Please use OpenStreetMapImageryProvider instead.');
 
-        var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
-        url = appendForwardSlash(url);
-        url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
-
-        if (defined(options.proxy)) {
-            deprecationWarning('createOpenStreetMapImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(url, {
-            proxy: options.proxy
-        });
-
-        var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
-
-        var tileWidth = 256;
-        var tileHeight = 256;
-
-        var minimumLevel = defaultValue(options.minimumLevel, 0);
-        var maximumLevel = options.maximumLevel;
-
-        var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
-
-        // Check the number of tiles at the minimum level.  If it's more than four,
-        // throw an exception, because starting at the higher minimum
-        // level will cause too many tiles to be downloaded and rendered.
-        var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(rectangle), minimumLevel);
-        var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
-        var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
-        //>>includeStart('debug', pragmas.debug);
-        if (tileCount > 4) {
-            throw new DeveloperError('The rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
-        }
-        //>>includeEnd('debug');
-
-        var credit = defaultValue(options.credit, defaultCredit);
-        if (typeof credit === 'string') {
-            credit = new Credit({text: credit});
-        }
-
-        return new UrlTemplateImageryProvider({
-            url: resource,
-            credit: credit,
-            tilingScheme: tilingScheme,
-            tileWidth: tileWidth,
-            tileHeight: tileHeight,
-            minimumLevel: minimumLevel,
-            maximumLevel: maximumLevel,
-            rectangle: rectangle
-        });
+        return new OpenStreetMapImageryProvider(options);
     }
 
     return createOpenStreetMapImageryProvider;

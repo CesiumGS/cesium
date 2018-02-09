@@ -35,7 +35,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var layers = viewer.imageryLayers;
-var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
+var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
     url : 'https://cesiumjs.org/blackmarble',
     credit : 'Black Marble imagery courtesy NASA Earth Observatory',
     flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
