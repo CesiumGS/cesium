@@ -1853,7 +1853,7 @@
     function modifyFsShaderForDepth(shader) {
         shader = ShaderSource.replaceMain(shader, 'czm_main');
         shader +=
-            'varying float v_inverse_depth; \n' +
+            'varying float v_inverse_depth;\n' +
             'void main() \n' +
             '{ \n' +
             '    czm_main(); \n' +
@@ -1866,11 +1866,11 @@
     function modifyVertexShaderForDepth(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_morph_main');
         shader +=
-            'varying float v_inverse_depth; \n' +
+            'varying float v_inverse_depth;\n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_morph_main(); \n' +
-            '    v_inverse_depth = 1. / gl_Position.w; \n' +
+            '    v_inverse_depth = 1. / ((u_projectionMatrix * u_modelViewMatrix * vec4(a_position,1.0)).w); \n' +
             '} \n';
 
         return shader;

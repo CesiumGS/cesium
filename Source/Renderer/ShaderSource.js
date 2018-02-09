@@ -228,6 +228,9 @@ define([
     precision highp float;\n\
 #else\n\
     precision mediump float;\n\
+#endif\n\n\
+#ifdef GL_EXT_frag_depth\n\
+#extension GL_EXT_frag_depth : enable\n\
 #endif\n\n';
         }
 

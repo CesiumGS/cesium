@@ -19,7 +19,7 @@ uniform float u_globeMinimumAltitude;
 #ifndef VECTOR_TILE
 varying vec4 v_color;
 #endif
-varying float v_inverse_depth;
+varying float v_depth;
 
 void main()
 {
@@ -37,7 +37,8 @@ void main()
     //extrudeDirection is zero for the top layer
     position = position + vec4(extrudeDirection * delta, 0.0);
 #endif
-    gl_Position = czm_depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
+    vec4 positionEC = czm_modelViewProjectionRelativeToEye * position;
+    gl_Position = czm_depthClampFarPlane(positionEC);
 #endif
-	v_inverse_depth = 1. / gl_Position.w;
+	v_depth = gl_Position.w;
 }
