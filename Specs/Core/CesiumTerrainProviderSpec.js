@@ -139,6 +139,17 @@ defineSuite([
         });
     });
 
+    it('resolves readyPromise when url promise is used', function() {
+        var provider = new CesiumTerrainProvider({
+            url : when.resolve('made/up/url')
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('resolves readyPromise with Resource', function() {
         var resource = new Resource({
             url : 'made/up/url'

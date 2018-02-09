@@ -71,6 +71,17 @@ defineSuite([
         });
     });
 
+    it('resolves readyPromise when promise url is used', function() {
+        var provider = createTileMapServiceImageryProvider({
+            url : when.resolve('made/up/tms/server/')
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('resolves readyPromise with Resource', function() {
         var resource = new Resource({
             url: 'made/up/tms/server/'
