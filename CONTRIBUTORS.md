@@ -43,6 +43,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Ottavio Hartman](https://github.com/omh1280)
    * [William Ho](https://github.com/williamkho)
    * [Srinivas Kaza](https://github.com/AnimatedRNG)
+   * [Hannah Bollar](https://github.com/hanbollar)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)

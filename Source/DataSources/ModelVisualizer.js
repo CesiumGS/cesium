@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/Model',
@@ -21,6 +22,7 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
+        Resource,
         ColorBlendMode,
         HeightReference,
         Model,
@@ -95,15 +97,15 @@ define([
             var entity = entities[i];
             var modelGraphics = entity._model;
 
-            var uri;
+            var resource;
             var modelData = modelHash[entity.id];
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
 
             var modelMatrix;
             if (show) {
                 modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
-                uri = Property.getValueOrUndefined(modelGraphics._uri, time);
-                show = defined(modelMatrix) && defined(uri);
+                resource = Resource.createIfNeeded(Property.getValueOrUndefined(modelGraphics._uri, time));
+                show = defined(modelMatrix) && defined(resource);
             }
 
             if (!show) {
@@ -114,13 +116,13 @@ define([
             }
 
             var model = defined(modelData) ? modelData.modelPrimitive : undefined;
-            if (!defined(model) || uri !== modelData.uri) {
+            if (!defined(model) || resource.url !== modelData.url) {
                 if (defined(model)) {
                     primitives.removeAndDestroy(model);
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri,
+                    url : resource,
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
                     scene : this._scene
                 });
@@ -132,7 +134,7 @@ define([
 
                 modelData = {
                     modelPrimitive : model,
-                    uri : uri,
+                    url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
                     originalNodeMatrixHash : {}

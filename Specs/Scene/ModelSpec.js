@@ -17,12 +17,14 @@ defineSuite([
         'Core/JulianDate',
         'Core/loadArrayBuffer',
         'Core/loadJson',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
         'Core/Plane',
         'Core/PrimitiveType',
+        'Core/Resource',
         'Core/Transforms',
         'Core/WebGLConstants',
         'Renderer/Pass',
@@ -54,12 +56,14 @@ defineSuite([
         JulianDate,
         loadArrayBuffer,
         loadJson,
+        loadWithXhr,
         CesiumMath,
         Matrix3,
         Matrix4,
         PerspectiveFrustum,
         Plane,
         PrimitiveType,
+        Resource,
         Transforms,
         WebGLConstants,
         Pass,
@@ -124,6 +128,7 @@ defineSuite([
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
+    var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -247,7 +252,7 @@ defineSuite([
         var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
         expect(texturedBoxModel.gltf).toBeDefined();
-        expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
+        expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
         expect(texturedBoxModel.show).toEqual(false);
         expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
         expect(texturedBoxModel.scale).toEqual(1.0);
@@ -276,8 +281,7 @@ defineSuite([
         var model = Model.fromGltf({
             url: url
         });
-        expect(model._basePath).toEndWith(params);
-        expect(model._baseUri).toEndWith(params);
+        expect(model.basePath).toEndWith(params);
     });
 
     it('fromGltf takes a base path', function() {
@@ -287,8 +291,25 @@ defineSuite([
             url: url,
             basePath: basePath
         });
-        expect(model._basePath).toEndWith(basePath);
+        expect(model.basePath).toEndWith(basePath);
         expect(model._cacheKey).toEndWith(basePath);
+    });
+
+    it('fromGltf takes Resource as url and basePath parameters', function() {
+        spyOn(loadWithXhr, 'load').and.callThrough();
+
+        var url = new Resource({
+            url: texturedBoxUrl
+        });
+        var basePath = new Resource({
+            url: './Data/Models/Box-Textured-Separate/'
+        });
+        var model = Model.fromGltf({
+            url: url,
+            basePath: basePath
+        });
+        expect(model._resource).toEqual(basePath);
+        expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(url.url);
     });
 
     it('renders', function() {
@@ -2083,6 +2104,32 @@ defineSuite([
         }
     }
 
+    function checkVertexColors(model) {
+        model.zoomTo();
+        scene.camera.moveUp(0.1);
+        // Red
+        scene.camera.moveLeft(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[2]).toBeLessThan(10);
+        });
+        // Green
+        scene.camera.moveRight(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[1]).toBeGreaterThan(20);
+            expect(rgba[2]).toBeLessThan(10);
+        });
+        // Blue
+        scene.camera.moveRight(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[2]).toBeGreaterThan(20);
+        });
+    }
+
     it('loads a glTF 2.0 with doubleSided set to false', function() {
         return loadJson(twoSidedPlaneUrl).then(function(gltf) {
             gltf.materials[0].doubleSided = false;
@@ -2099,6 +2146,14 @@ defineSuite([
         return loadModel(twoSidedPlaneUrl).then(function(m) {
             m.show = true;
             checkDoubleSided(m, true);
+            primitives.remove(m);
+        });
+    });
+
+    it('load a glTF 2.0 with vertex colors', function() {
+        return loadModel(vertexColorTestUrl).then(function(m) {
+            m.show = true;
+            checkVertexColors(m);
             primitives.remove(m);
         });
     });
@@ -2704,6 +2759,7 @@ defineSuite([
                 removedCallback : false,
                 ellipsoid : Ellipsoid.WGS84,
                 update : function() {},
+                render : function() {},
                 getHeight : function() {
                     return 0.0;
                 },
@@ -2718,6 +2774,8 @@ defineSuite([
                         tilesWaitingForChildren : 0
                     }
                 },
+                tileLoadedEvent : new Event(),
+                imageryLayersUpdatedEvent : new Event(),
                 destroy : function() {}
             };
 
@@ -2912,7 +2970,7 @@ defineSuite([
                 position : Cartesian3.fromDegrees(-72.0, 40.0),
                 show : true
             }).otherwise(function(error) {
-                expect(error.message).toEqual('Height reference is not supported without a scene.');
+                expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
             });
         });
 
@@ -2927,6 +2985,36 @@ defineSuite([
                 expect(function () {
                     return scene.renderForSpecs();
                 }).toThrowDeveloperError();
+
+                primitives.remove(model);
+            });
+        });
+
+        it('height reference without a globe rejects', function() {
+            scene.globe = undefined;
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).otherwise(function(error) {
+                expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
+            });
+        });
+
+        it('changing height reference without a globe throws DeveloperError', function() {
+            scene.globe = undefined;
+            return loadModelJson(texturedBoxModel.gltf, {
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                show : true
+            }).then(function(model) {
+                model.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+                expect(function () {
+                    return scene.renderForSpecs();
+                }).toThrowDeveloperError();
+
+                primitives.remove(model);
             });
         });
     });

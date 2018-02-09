@@ -33,7 +33,8 @@ var clock = new Cesium.Clock({
     currentTime : Cesium.JulianDate.fromIso8601("2017-07-11T10:00:00Z"),
     clockRange : Cesium.ClockRange.LOOP_STOP,
     clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-    multiplier : 1000
+    multiplier : 1000,
+    shouldAnimate : true
 });
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
