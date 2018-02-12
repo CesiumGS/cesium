@@ -715,11 +715,11 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, model);
         }
 
-        vs = ModelUtility.modifyVertexShaderForLogDepth(gltf, vs);
-        fs = ModelUtility.modifyFragmentShaderForLogDepth(fs);
-
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
+
+        drawVS = ModelUtility.modifyVertexShaderForLogDepth(gltf, drawVS);
+        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
         model._shaderProgram = {
             vertexShaderSource : drawVS,
@@ -730,6 +730,9 @@ define([
         // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
         var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
         var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
+
+        pickVS = ModelUtility.modifyVertexShaderForLogDepth(gltf, pickVS);
+        pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
 
         model._pickShaderProgram = {
             vertexShaderSource : pickVS,
