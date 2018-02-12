@@ -151,8 +151,9 @@ define([
 
         this._availability = undefined;
 
+        var deferred = when.defer();
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = deferred;
 
         var that = this;
         var lastResource;
@@ -174,6 +175,9 @@ define([
                 });
 
                 requestMetadata();
+            })
+            .otherwise(function() {
+                deferred.reject(new RuntimeError('An error occurred while loading options.url'));
             });
 
         function parseMetadataSuccess(data) {
@@ -348,8 +352,9 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = metadataResource.fetchJson();
-            when(metadata, metadataSuccess, metadataFailure);
+            when(metadataResource.fetchJson())
+                .then(metadataSuccess)
+                .otherwise(metadataFailure);
         }
     }
 

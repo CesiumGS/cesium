@@ -11,6 +11,7 @@ defineSuite([
         'Core/Request',
         'Core/RequestScheduler',
         'Core/Resource',
+        'Core/RuntimeError',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -27,6 +28,7 @@ defineSuite([
         Request,
         RequestScheduler,
         Resource,
+        RuntimeError,
         TerrainProvider,
         pollToPromise,
         when) {
@@ -163,6 +165,20 @@ defineSuite([
             expect(result).toBe(true);
             expect(provider.ready).toBe(true);
         });
+    });
+
+    it('rejects readyPromise when url rejects', function() {
+        var provider = new CesiumTerrainProvider({
+            url: when.reject()
+        });
+        return provider.readyPromise
+            .then(function() {
+                fail('should not resolve');
+            })
+            .otherwise(function(result) {
+                expect(result).toBeInstanceOf(RuntimeError);
+                expect(provider.ready).toBe(false);
+            });
     });
 
     it('uses geographic tiling scheme by default', function() {
