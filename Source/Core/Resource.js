@@ -239,7 +239,10 @@ define([
      */
     Resource.createIfNeeded = function(resource, options) {
         if (resource instanceof Resource) {
-            return resource.clone();
+            // Keep existing request
+            return  resource.getDerivedResource({
+                request: resource.request
+            });
         }
 
         if (typeof resource !== 'string') {
@@ -492,9 +495,6 @@ define([
         }
         if (defined(options.request)) {
             resource.request = options.request;
-        } else {
-            // Clone the request so we keep all the throttle settings
-            resource.request = this.request.clone();
         }
         if (defined(options.retryCallback)) {
             resource.retryCallback = options.retryCallback;
@@ -552,10 +552,7 @@ define([
         result.retryCallback = this.retryCallback;
         result.retryAttempts = this.retryAttempts;
         result._retryCount = 0;
-
-        // In practice, we don't want this cloned. It usually not set, unless we purposely set it internally and not
-        //  using the request will break the request scheduler.
-        result.request = this.request;
+        result.request = this.request.clone();
 
         return result;
     };
