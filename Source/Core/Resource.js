@@ -1103,7 +1103,7 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.fetch = function(options) {
-        options = defaultClone(options, defaultValue.EMPTY_OBJECT);
+        options = defaultClone(options, {});
         options.method = 'GET';
 
         return makeRequest(this, options);
