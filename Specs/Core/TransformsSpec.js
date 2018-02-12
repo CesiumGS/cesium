@@ -9,11 +9,11 @@ defineSuite([
         'Core/HeadingPitchRoll',
         'Core/Iau2006XysData',
         'Core/JulianDate',
-        'Core/loadJson',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Quaternion',
+        'Core/Resource',
         'Core/TimeInterval'
     ], function(
         Transforms,
@@ -26,11 +26,11 @@ defineSuite([
         HeadingPitchRoll,
         Iau2006XysData,
         JulianDate,
-        loadJson,
         CesiumMath,
         Matrix3,
         Matrix4,
         Quaternion,
+        Resource,
         TimeInterval) {
     'use strict';
 
@@ -695,7 +695,7 @@ defineSuite([
             // The rotation data from Components span before and after the EOP data so as to test
             // what happens when we try evaluating at times when we don't have EOP as well as at
             // times where we do.  The samples are not at exact EOP times, in order to test interpolation.
-            return loadJson('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json').then(function(componentsData) {
+            return Resource.fetchJson('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json').then(function(componentsData) {
                 var start = JulianDate.fromIso8601(componentsData[0].date);
                 var stop = JulianDate.fromIso8601(componentsData[componentsData.length - 1].date);
 

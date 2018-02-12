@@ -14,8 +14,6 @@ defineSuite([
         'Core/ExtrapolationType',
         'Core/Iso8601',
         'Core/JulianDate',
-        'Core/loadJson',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Quaternion',
@@ -54,8 +52,6 @@ defineSuite([
         ExtrapolationType,
         Iso8601,
         JulianDate,
-        loadJson,
-        loadWithXhr,
         CesiumMath,
         NearFarScalar,
         Quaternion,
@@ -164,10 +160,10 @@ defineSuite([
 
     beforeAll(function() {
         return when.join(
-            loadJson(simpleUrl).then(function(result) {
+            Resource.fetchJson(simpleUrl).then(function(result) {
                 simple = result;
             }),
-            loadJson(vehicleUrl).then(function(result) {
+            Resource.fetchJson(vehicleUrl).then(function(result) {
                 vehicle = result;
             }));
     });
@@ -662,7 +658,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         var requestNetworkLink = when.defer();
 
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
