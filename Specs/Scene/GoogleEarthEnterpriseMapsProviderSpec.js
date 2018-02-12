@@ -106,7 +106,7 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        var url = 'invalid.localhost';
+        var url = 'http://invalid.localhost';
         var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : 1234
@@ -296,7 +296,7 @@ defineSuite([
     });
 
     it('raises error on invalid url', function() {
-        var url = 'invalid.localhost';
+        var url = 'http://invalid.localhost';
         var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : 1234

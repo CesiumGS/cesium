@@ -518,6 +518,160 @@ defineSuite([
             });
     });
 
+    it('put calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+        var resource = new Resource({
+            url: expectedUrl,
+            headers: expectedHeaders
+        });
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PUT');
+            expect(data).toEqual(expectedData);
+            expect(headers['X-My-Header']).toEqual('My-Value');
+            expect(headers['X-My-Other-Header']).toEqual('My-Other-Value');
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return resource.put(expectedData, {
+            responseType: expectedResponseType,
+            headers: {
+                'X-My-Other-Header': 'My-Other-Value'
+            },
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static put calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PUT');
+            expect(data).toEqual(expectedData);
+            expect(headers).toEqual(expectedHeaders);
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return Resource.put({
+            url: expectedUrl,
+            data: expectedData,
+            responseType: expectedResponseType,
+            headers: expectedHeaders,
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('patch calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+        var resource = new Resource({
+            url: expectedUrl,
+            headers: expectedHeaders
+        });
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PATCH');
+            expect(data).toEqual(expectedData);
+            expect(headers['X-My-Header']).toEqual('My-Value');
+            expect(headers['X-My-Other-Header']).toEqual('My-Other-Value');
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return resource.patch(expectedData, {
+            responseType: expectedResponseType,
+            headers: {
+                'X-My-Other-Header': 'My-Other-Value'
+            },
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static patch calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PATCH');
+            expect(data).toEqual(expectedData);
+            expect(headers).toEqual(expectedHeaders);
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return Resource.patch({
+            url: expectedUrl,
+            data: expectedData,
+            responseType: expectedResponseType,
+            headers: expectedHeaders,
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
     it('static fetchArrayBuffer calls correct method', function() {
         var url = 'http://test.com/data';
         spyOn(Resource.prototype, 'fetchArrayBuffer').and.returnValue(when.resolve());
@@ -604,6 +758,34 @@ defineSuite([
 
         var resource = new Resource({url: expectedUrl});
         return resource.fetch()
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static delete calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'delete').and.returnValue(when.resolve());
+        return Resource.delete(url)
+            .then(function() {
+                expect(Resource.prototype.delete).toHaveBeenCalled();
+            });
+    });
+
+    it('delete calls correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResult = {
+            status: 'success'
+        };
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(method).toEqual('DELETE');
+            deferred.resolve(expectedResult);
+        });
+
+        var resource = new Resource({url: expectedUrl});
+        return resource.delete()
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
             });

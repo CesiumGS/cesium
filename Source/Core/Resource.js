@@ -512,6 +512,8 @@ define([
      * @param {Error} [error] The error that was encountered.
      *
      * @returns {Promise<Boolean>} A promise to a boolean, that if true will cause the resource request to be retried.
+     *
+     * @private
      */
     Resource.prototype.retryOnError = function(error) {
         var retryCallback = this.retryCallback;
@@ -1078,38 +1080,9 @@ define([
     };
 
     /**
-     * Asynchronously loads the given resource.  Returns a promise that will resolve to
-     * the result once loaded, or reject if the resource failed to load.  The data is loaded
-     * using XMLHttpRequest, which means that in order to make requests to another origin,
-     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
-     *
-     * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
-     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
-     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
-     *
-     *
-     * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
-     * resource.fetch()
-     *   .then(function(blob) {
-     *       // use the data
-     *   }).otherwise(function(error) {
-     *       // an error occurred
-     *   });
-     *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     * @private
      */
-    Resource.prototype.fetch = function(options) {
-        options = defaultClone(options, {});
-        options.method = 'GET';
-
-        return makeRequest(this, options);
-    };
-
-    function makeRequest(resource, options) {
+    Resource._makeRequest = function(resource, options) {
         checkAndResetRequest(resource.request);
 
         var request = resource.request;
@@ -1158,7 +1131,7 @@ define([
                         return when.reject(e);
                     });
             });
-    }
+    };
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 
@@ -1210,6 +1183,38 @@ define([
     }
 
     /**
+     * Asynchronously loads the given resource.  Returns a promise that will resolve to
+     * the result once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
+     * resource.fetch()
+     *   .then(function(blob) {
+     *       // use the data
+     *   }).otherwise(function(error) {
+     *       // an error occurred
+     *   });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.fetch = function(options) {
+        options = defaultClone(options, {});
+        options.method = 'GET';
+
+        return Resource._makeRequest(this, options);
+    };
+
+    /**
      * Creates a Resource from a URL and calls fetch() on it.
      *
      * @param {String|Object} options A url or an object with the following properties
@@ -1235,7 +1240,64 @@ define([
     };
 
     /**
-     * Asynchronously posts data the given resource.  Returns a promise that will resolve to
+     * Asynchronously loads the given resource.  Returns a promise that will resolve to
+     * the result once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
+     * resource.delete()
+     *   .then(function(blob) {
+     *       // use the data
+     *   }).otherwise(function(error) {
+     *       // an error occurred
+     *   });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.delete = function(options) {
+        options = defaultClone(options, {});
+        options.method = 'DELETE';
+
+        return Resource._makeRequest(this, options);
+    };
+
+    /**
+     * Creates a Resource from a URL and calls fetch() on it.
+     *
+     * @param {String|Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.delete = function (options) {
+        var resource = new Resource(options);
+        return resource.delete({
+            // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
+            responseType: options.responseType,
+            overrideMimeType: options.overrideMimeType
+        });
+    };
+
+    /**
+     * Asynchronously posts data to the given resource.  Returns a promise that will resolve to
      * the result once loaded, or reject if the resource failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
@@ -1267,13 +1329,13 @@ define([
         options.method = 'POST';
         options.data = data;
 
-        return makeRequest(this, options);
+        return Resource._makeRequest(this, options);
     };
 
     /**
-     * Creates a Resource from a URL and calls fetch() on it.
+     * Creates a Resource from a URL and calls post() on it.
      *
-     * @param {String|Object} options A url or an object with the following properties
+     * @param {Object} options A url or an object with the following properties
      * @param {String} options.url The url of the resource.
      * @param {Object} options.data Data that is posted with the resource.
      * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
@@ -1290,6 +1352,130 @@ define([
     Resource.post = function (options) {
         var resource = new Resource(options);
         return resource.post(options.data, {
+            // Make copy of just the needed fields because headers can be passed to both the constructor and to post
+            responseType: options.responseType,
+            overrideMimeType: options.overrideMimeType
+        });
+    };
+
+    /**
+     * Asynchronously puts data to the given resource.  Returns a promise that will resolve to
+     * the result once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @param {Object} data Data that is posted with the resource.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
+     * resource.put(data)
+     *   .then(function(result) {
+     *       // use the result
+     *   }).otherwise(function(error) {
+     *       // an error occurred
+     *   });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.put = function(data, options) {
+        Check.defined('data', data);
+
+        options = defaultClone(options, {});
+        options.method = 'PUT';
+        options.data = data;
+
+        return Resource._makeRequest(this, options);
+    };
+
+    /**
+     * Creates a Resource from a URL and calls put() on it.
+     *
+     * @param {Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} options.data Data that is posted with the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.put = function (options) {
+        var resource = new Resource(options);
+        return resource.put(options.data, {
+            // Make copy of just the needed fields because headers can be passed to both the constructor and to post
+            responseType: options.responseType,
+            overrideMimeType: options.overrideMimeType
+        });
+    };
+
+    /**
+     * Asynchronously patches data to the given resource.  Returns a promise that will resolve to
+     * the result once loaded, or reject if the resource failed to load.  The data is loaded
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     *
+     * @param {Object} data Data that is posted with the resource.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     *
+     *
+     * @example
+     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
+     * resource.patch(data)
+     *   .then(function(result) {
+     *       // use the result
+     *   }).otherwise(function(error) {
+     *       // an error occurred
+     *   });
+     *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     */
+    Resource.prototype.patch = function(data, options) {
+        Check.defined('data', data);
+
+        options = defaultClone(options, {});
+        options.method = 'PATCH';
+        options.data = data;
+
+        return Resource._makeRequest(this, options);
+    };
+
+    /**
+     * Creates a Resource from a URL and calls patch() on it.
+     *
+     * @param {Object} options A url or an object with the following properties
+     * @param {String} options.url The url of the resource.
+     * @param {Object} options.data Data that is posted with the resource.
+     * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+     * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+     * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+     * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
+     * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     */
+    Resource.patch = function (options) {
+        var resource = new Resource(options);
+        return resource.patch(options.data, {
             // Make copy of just the needed fields because headers can be passed to both the constructor and to post
             responseType: options.responseType,
             overrideMimeType: options.overrideMimeType
