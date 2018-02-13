@@ -790,4 +790,74 @@ defineSuite([
                 expect(result).toEqual(expectedResult);
             });
     });
+
+    it('static head calls correct method', function() {
+        var resource = Resource.DEFAULT.getDerivedResource({
+            url: './Data/Images/Blue.png'
+        });
+        spyOn(Resource.prototype, 'head').and.callThrough();
+        return Resource.head(resource)
+            .then(function() {
+                expect(Resource.prototype.head).toHaveBeenCalled();
+            });
+    });
+
+    it('head calls correct method', function() {
+        var resource = Resource.DEFAULT.getDerivedResource({
+            url: 'Data/Images/Blue.png'
+        });
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(resource.url);
+            expect(method).toEqual('HEAD');
+            Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
+        });
+
+        return resource.head()
+            .then(function(result) {
+                expect(result.date).toBeDefined();
+                expect(result['last-modified']).toBeDefined();
+                expect(result['x-powered-by']).toBeDefined();
+                expect(result.etag).toBeDefined();
+                expect(result['content-type']).toBe('image/png');
+                expect(result['access-control-allow-origin']).toBe('*');
+                expect(result['cache-control']).toBe('public, max-age=0');
+                expect(result['accept-ranges']).toBe('bytes');
+                expect(result['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
+                expect(result['content-length']).toBeDefined();
+            });
+    });
+
+    it('static options calls correct method', function() {
+        var resource = Resource.DEFAULT.getDerivedResource({
+            url: './Data/Images/Blue.png'
+        });
+        spyOn(Resource.prototype, 'options').and.callThrough();
+        return Resource.options(resource)
+            .then(function() {
+                expect(Resource.prototype.options).toHaveBeenCalled();
+            });
+    });
+
+    it('options calls correct method', function() {
+        var resource = Resource.DEFAULT.getDerivedResource({
+            url: './Data/Images/Blue.png'
+        });
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(resource.url);
+            expect(method).toEqual('OPTIONS');
+            Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
+        });
+
+        return resource.options(resource)
+            .then(function(result) {
+                expect(result.date).toBeDefined();
+                expect(result['x-powered-by']).toBeDefined();
+                expect(result.etag).toBeDefined();
+                expect(result['content-type']).toBeDefined();
+                expect(result['access-control-allow-origin']).toBe('*');
+                expect(result['access-control-allow-methods']).toBe('GET, PUT, POST, DELETE, OPTIONS');
+                expect(result['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
+                expect(result['content-length']).toBeDefined();
+            });
+    });
 });

@@ -66,7 +66,8 @@ define([
         return Resource._makeRequest(resource, {
             responseType: options.responseType,
             overrideMimeType: options.overrideMimeType,
-            method: defaultValue(options.method, 'GET')
+            method: defaultValue(options.method, 'GET'),
+            data: options.data
         });
     }
 
