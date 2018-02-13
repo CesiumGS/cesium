@@ -54,18 +54,24 @@ define([
     var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
+        var hasBaseLayerPicker = !defined(imageryProvider);
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
-            baseLayerPicker : !defined(imageryProvider),
+            baseLayerPicker : hasBaseLayerPicker,
             scene3DOnly : endUserOptions.scene3DOnly,
             requestRenderMode : true
         });
 
-        viewer.terrainProvider = new CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-            requestWaterMask : true,
-            requestVertexNormals : true
-        });
+        if (hasBaseLayerPicker) {
+            var viewModel = viewer.baseLayerPicker.viewModel;
+            viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
+        } else {
+            viewer.terrainProvider = new CesiumTerrainProvider({
+                url: 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+                requestWaterMask: true,
+                requestVertexNormals: true
+            });
+        }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);
