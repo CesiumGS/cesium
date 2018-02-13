@@ -892,72 +892,127 @@ defineSuite([
     });
 
     it('static head calls correct method', function() {
-        var resource = Resource.DEFAULT.getDerivedResource({
-            url: './Data/Images/Blue.png'
-        });
-        spyOn(Resource.prototype, 'head').and.callThrough();
-        return Resource.head(resource)
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'head').and.returnValue(when.resolve({}));
+        return Resource.head(url)
             .then(function() {
                 expect(Resource.prototype.head).toHaveBeenCalled();
             });
     });
 
     it('head calls correct method', function() {
-        var resource = Resource.DEFAULT.getDerivedResource({
-            url: 'Data/Images/Blue.png'
-        });
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResult = {
+            'accept-ranges': 'bytes',
+            'access-control-allow-headers' : 'Origin, X-Requested-With, Content-Type, Accept',
+            'access-control-allow-origin' : '*',
+            'cache-control': 'public, max-age=0',
+            'connection' : 'keep-alive',
+            'content-length' : '883',
+            'content-type' : 'image/png',
+            'date' : 'Tue, 13 Feb 2018 03:38:55 GMT',
+            'etag' : 'W/"373-15e34d146a1"',
+            'vary' : 'Accept-Encoding',
+            'x-powered-vy' : 'Express'
+        };
+        var headerString = '';
+        for (var key in expectedResult) {
+            if (expectedResult.hasOwnProperty(key)) {
+                headerString += key + ': ' + expectedResult[key] + '\r\n';
+            }
+        }
+        var fakeXHR = {
+            status: 200,
+            send : function() {
+                this.onload();
+            },
+            open : function() {},
+            getAllResponseHeaders : function() {
+                return headerString;
+            }
+        };
+        spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
+
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            expect(url).toEqual(resource.url);
+            expect(url).toEqual(expectedUrl);
             expect(method).toEqual('HEAD');
             Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
         });
 
+        var resource = new Resource({url: expectedUrl});
         return resource.head()
             .then(function(result) {
-                expect(result.date).toBeDefined();
-                expect(result['last-modified']).toBeDefined();
-                expect(result['x-powered-by']).toBeDefined();
-                expect(result.etag).toBeDefined();
-                expect(result['content-type']).toBe('image/png');
-                expect(result['access-control-allow-origin']).toBe('*');
-                expect(result['cache-control']).toBe('public, max-age=0');
-                expect(result['accept-ranges']).toBe('bytes');
-                expect(result['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
-                expect(result['content-length']).toBeDefined();
+                expect(result.date).toEqual(expectedResult.date);
+                expect(result['last-modified']).toEqual(expectedResult['last-modified']);
+                expect(result['x-powered-by']).toEqual(expectedResult['x-powered-by']);
+                expect(result.etag).toEqual(expectedResult.etag);
+                expect(result['content-type']).toEqual(expectedResult['content-type']);
+                expect(result['access-control-allow-origin']).toEqual(expectedResult['access-control-allow-origin']);
+                expect(result['cache-control']).toEqual(expectedResult['cache-control']);
+                expect(result['accept-ranges']).toEqual(expectedResult['accept-ranges']);
+                expect(result['access-control-allow-headers']).toEqual(expectedResult['access-control-allow-headers']);
+                expect(result['content-length']).toEqual(expectedResult['content-length']);
             });
     });
 
     it('static options calls correct method', function() {
-        var resource = Resource.DEFAULT.getDerivedResource({
-            url: './Data/Images/Blue.png'
-        });
-        spyOn(Resource.prototype, 'options').and.callThrough();
-        return Resource.options(resource)
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'options').and.returnValue(when.resolve({}));
+        return Resource.options(url)
             .then(function() {
                 expect(Resource.prototype.options).toHaveBeenCalled();
             });
     });
 
     it('options calls correct method', function() {
-        var resource = Resource.DEFAULT.getDerivedResource({
-            url: './Data/Images/Blue.png'
-        });
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResult = {
+            'access-control-allow-headers' : 'Origin, X-Requested-With, Content-Type, Accept',
+            'access-control-allow-methods' : 'GET, PUT, POST, DELETE, OPTIONS',
+            'access-control-allow-origin' : '*',
+            'connection' : 'keep-alive',
+            'content-length' : '2',
+            'content-type' : 'text/plain; charset=utf-8',
+            'date' : 'Tue, 13 Feb 2018 03:38:55 GMT',
+            'etag' : 'W/"2-nOO9QiTIwXgNtWtBJezz8kv3SLc"',
+            'vary' : 'Accept-Encoding',
+            'x-powered-vy' : 'Express'
+        };
+        var headerString = '';
+        for (var key in expectedResult) {
+            if (expectedResult.hasOwnProperty(key)) {
+                headerString += key + ': ' + expectedResult[key] + '\r\n';
+            }
+        }
+        var fakeXHR = {
+            status: 200,
+            send : function() {
+                this.onload();
+            },
+            open : function() {},
+            getAllResponseHeaders : function() {
+                return headerString;
+            }
+        };
+        spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
+
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            expect(url).toEqual(resource.url);
+            expect(url).toEqual(expectedUrl);
             expect(method).toEqual('OPTIONS');
             Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
         });
 
-        return resource.options(resource)
+        var resource = new Resource({url: expectedUrl});
+        return resource.options()
             .then(function(result) {
-                expect(result.date).toBeDefined();
-                expect(result['x-powered-by']).toBeDefined();
-                expect(result.etag).toBeDefined();
-                expect(result['content-type']).toBeDefined();
-                expect(result['access-control-allow-origin']).toBe('*');
-                expect(result['access-control-allow-methods']).toBe('GET, PUT, POST, DELETE, OPTIONS');
-                expect(result['access-control-allow-headers']).toBe('Origin, X-Requested-With, Content-Type, Accept');
-                expect(result['content-length']).toBeDefined();
+                expect(result.date).toEqual(expectedResult.date);
+                expect(result['x-powered-by']).toEqual(expectedResult['x-powered-by']);
+                expect(result.etag).toEqual(expectedResult.etag);
+                expect(result['content-type']).toEqual(expectedResult['content-type']);
+                expect(result['access-control-allow-origin']).toEqual(expectedResult['access-control-allow-origin']);
+                expect(result['access-control-allow-methods']).toEqual(expectedResult['access-control-allow-methods']);
+                expect(result['access-control-allow-headers']).toEqual(expectedResult['access-control-allow-headers']);
+                expect(result['content-length']).toEqual(expectedResult['content-length']);
             });
     });
 });
