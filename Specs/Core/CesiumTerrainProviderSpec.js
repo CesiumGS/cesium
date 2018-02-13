@@ -11,7 +11,6 @@ defineSuite([
         'Core/Request',
         'Core/RequestScheduler',
         'Core/Resource',
-        'Core/RuntimeError',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -28,7 +27,6 @@ defineSuite([
         Request,
         RequestScheduler,
         Resource,
-        RuntimeError,
         TerrainProvider,
         pollToPromise,
         when) {
@@ -168,15 +166,16 @@ defineSuite([
     });
 
     it('rejects readyPromise when url rejects', function() {
+        var error = new Error();
         var provider = new CesiumTerrainProvider({
-            url: when.reject()
+            url: when.reject(error)
         });
         return provider.readyPromise
             .then(function() {
                 fail('should not resolve');
             })
             .otherwise(function(result) {
-                expect(result).toBeInstanceOf(RuntimeError);
+                expect(result).toBe(error);
                 expect(provider.ready).toBe(false);
             });
     });

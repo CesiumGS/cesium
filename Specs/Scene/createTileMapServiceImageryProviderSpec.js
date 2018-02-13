@@ -12,7 +12,6 @@ defineSuite([
     'Core/Rectangle',
     'Core/RequestScheduler',
     'Core/Resource',
-    'Core/RuntimeError',
     'Core/WebMercatorProjection',
     'Core/WebMercatorTilingScheme',
     'Scene/Imagery',
@@ -35,7 +34,6 @@ defineSuite([
     Rectangle,
     RequestScheduler,
     Resource,
-    RuntimeError,
     WebMercatorProjection,
     WebMercatorTilingScheme,
     Imagery,
@@ -100,13 +98,14 @@ defineSuite([
     });
 
     it('rejects readyPromise if options.url rejects', function() {
+        var error = new Error();
         var provider = createTileMapServiceImageryProvider({
-            url : when.reject()
+            url : when.reject(error)
         });
         return provider.readyPromise.then(function() {
             fail('should not resolve');
         }).otherwise(function(result) {
-            expect(result).toBeInstanceOf(RuntimeError);
+            expect(result).toBe(error);
             expect(provider.ready).toBe(false);
         });
     });

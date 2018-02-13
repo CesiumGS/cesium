@@ -114,8 +114,8 @@ define([
 
                 requestMetadata();
             })
-            .otherwise(function() {
-                deferred.reject(new RuntimeError('An error occurred while loading options.url'));
+            .otherwise(function(e) {
+                deferred.reject(e);
             });
 
         function metadataSuccess(xml) {
