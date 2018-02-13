@@ -67,7 +67,7 @@ define([
     /**
      * @private
      */
-    function parseQuery(uri, resource) {
+    function parseQuery(uri, resource, merge, preserveQueryParameters) {
         var queryString = uri.query;
         if (!defined(queryString) || (queryString.length === 0)) {
             return {};
@@ -83,7 +83,11 @@ define([
             query = queryToObject(queryString);
         }
 
-        resource._queryParameters = combine(resource._queryParameters, query);
+        if (merge) {
+            resource._queryParameters = combineQueryParameters(query, resource._queryParameters, preserveQueryParameters);
+        } else {
+            resource._queryParameters = query;
+        }
         uri.query = undefined;
     }
 
@@ -124,6 +128,34 @@ define([
 
         request.state = RequestState.UNISSUED;
         request.deferred = undefined;
+    }
+
+    /**
+     * @private
+     */
+    function combineQueryParameters(q1, q2, preserveQueryParameters) {
+        if (!preserveQueryParameters) {
+            return combine(q1, q2);
+        }
+
+        var result = clone(q1, true);
+        for (var param in q2) {
+            if (q2.hasOwnProperty(param)) {
+                var value = result[param];
+                var q2Value = q2[param];
+                if (defined(value)) {
+                    if (!Array.isArray(value)) {
+                        value = result[param] = [value];
+                    }
+
+                    result[param] = value.concat(q2Value);
+                } else {
+                    result[param] = Array.isArray(q2Value) ? q2Value.slice() : q2Value;
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -224,7 +256,14 @@ define([
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
 
-        this.url = options.url;
+
+        var uri = new Uri(options.url);
+        parseQuery(uri, this, true, true);
+
+        // Remove the fragment as it's not sent with a request
+        uri.fragment = undefined;
+
+        this._url = uri.toString();
     }
 
     /**
@@ -312,7 +351,7 @@ define([
             set: function(value) {
                 var uri = new Uri(value);
 
-                parseQuery(uri, this);
+                parseQuery(uri, this, false);
 
                 // Remove the fragment as it's not sent with a request
                 uri.fragment = undefined;
@@ -423,32 +462,72 @@ define([
 
     /**
      * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
-     *  as opposed to adding them one at a time to the queryParameters property.
+     *  as opposed to adding them one at a time to the queryParameters property. If a value is already set, it will be replaced with the new value.
      *
      * @param {Object} params The query parameters
      * @param {Boolean} [useAsDefault=false] If true the params will be used as the default values, so they will only be set if they are undefined.
      */
-    Resource.prototype.addQueryParameters = function(params, useAsDefault) {
+    Resource.prototype.setQueryParameters = function(params, useAsDefault) {
         if (useAsDefault) {
-            this._queryParameters = combine(this._queryParameters, params);
+            this._queryParameters = combineQueryParameters(this._queryParameters, params, false);
         } else {
-            this._queryParameters = combine(params, this._queryParameters);
+            this._queryParameters = combineQueryParameters(params, this._queryParameters, false);
         }
     };
 
     /**
-     * Combines the specified object and the existing template values. This allows you to add many values at once,
-     *  as opposed to adding them one at a time to the templateValues property.
+     * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
+     *  as opposed to adding them one at a time to the queryParameters property. If a value is already set, it will be replaced with the new value.
      *
-     * @param {Object} params The template values
+     * @param {Object} params The query parameters
+     * @param {Boolean} [useAsDefault=false] If true the params will be used as the default values, so they will only be set if they are undefined.
+     *
+     * @deprecated
+     */
+    Resource.prototype.addQueryParameters = function(params, useAsDefault) {
+        deprecationWarning('Resource.addQueryParameters', 'addQueryParameters has been deprecated and will be removed 1.45. Use setQueryParameters or appendQueryParameters instead.');
+
+        return this.setQueryParameters(params, useAsDefault);
+    };
+
+    /**
+     * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
+     *  as opposed to adding them one at a time to the queryParameters property.
+     *
+     * @param {Object} params The query parameters
+     */
+    Resource.prototype.appendQueryParameters = function(params) {
+        this._queryParameters = combineQueryParameters(params, this._queryParameters, true);
+    };
+
+    /**
+     * Combines the specified object and the existing template values. This allows you to add many values at once,
+     *  as opposed to adding them one at a time to the templateValues property. If a value is already set, it will become an array and the new value will be appended.
+     *
+     * @param {Object} template The template values
      * @param {Boolean} [useAsDefault=false] If true the values will be used as the default values, so they will only be set if they are undefined.
      */
-    Resource.prototype.addTemplateValues = function(template, useAsDefault) {
+    Resource.prototype.setTemplateValues = function(template, useAsDefault) {
         if (useAsDefault) {
             this._templateValues = combine(this._templateValues, template);
         } else {
             this._templateValues = combine(template, this._templateValues);
         }
+    };
+
+    /**
+     * Combines the specified object and the existing template values. This allows you to add many values at once,
+     *  as opposed to adding them one at a time to the templateValues property. If a value is already set, it will become an array and the new value will be appended.
+     *
+     * @param {Object} template The template values
+     * @param {Boolean} [useAsDefault=false] If true the values will be used as the default values, so they will only be set if they are undefined.
+     *
+     * @deprecated
+     */
+    Resource.prototype.addTemplateValues = function(template, useAsDefault) {
+        deprecationWarning('Resource.addTemplateValues', 'addTemplateValues has been deprecated and will be removed 1.45. Use setTemplateValues.');
+
+        return this.setTemplateValues(template, useAsDefault);
     };
 
     /**
@@ -463,6 +542,7 @@ define([
      * @param {Resource~RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+     * @param {Boolean} [options.preserveQueryParameters=false] If true, this will keep all query parameters from the current resource and derived resource. If false, derived parameters will replace those of the current resource.
      *
      * @returns {Resource} The resource derived from the current one.
      */
@@ -473,7 +553,8 @@ define([
         if (defined(options.url)) {
             var uri = new Uri(options.url);
 
-            parseQuery(uri, resource);
+            var preserveQueryParameters = defaultValue(options.preserveQueryParameters, false);
+            parseQuery(uri, resource, true, preserveQueryParameters);
 
             // Remove the fragment as it's not sent with a request
             uri.fragment = undefined;

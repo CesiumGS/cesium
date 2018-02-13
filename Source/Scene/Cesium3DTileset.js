@@ -1254,7 +1254,7 @@ define([
                 v: defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
-            tilesetResource.addQueryParameters(versionQuery);
+            tilesetResource.setQueryParameters(versionQuery);
         }
 
         // A tileset.json referenced from a tile may exist in a different directory than the root tileset.

@@ -108,6 +108,49 @@ defineSuite([
         expect(resource.url).toEqual('http://test.com/tileset');
     });
 
+    it('multiple values for query parameters are allowed', function() {
+        var resource = new Resource('http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4');
+        expect(resource.queryParameters.a).toEqual(['1', '2', '4']);
+        expect(resource.queryParameters.b).toEqual('3');
+
+        expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
+    });
+
+    it('multiple values for query parameters works with getDerivedResource without preserverQueryParameters', function() {
+        var resource = new Resource('http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4');
+        expect(resource.queryParameters.a).toEqual(['1', '2', '4']);
+        expect(resource.queryParameters.b).toEqual('3');
+
+        expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
+
+        var derived = resource.getDerivedResource({
+            url: 'other_endpoint?a=5&b=6&a=7'
+        });
+
+        expect(derived.queryParameters.a).toEqual(['5', '7']);
+        expect(derived.queryParameters.b).toEqual('6');
+
+        expect(derived.url).toEqual('http://test.com/tileset/other_endpoint?a=5&a=7&b=6');
+    });
+
+    it('multiple values for query parameters works with getDerivedResource with preserveQueryParameters', function() {
+        var resource = new Resource('http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4');
+        expect(resource.queryParameters.a).toEqual(['1', '2', '4']);
+        expect(resource.queryParameters.b).toEqual('3');
+
+        expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
+
+        var derived = resource.getDerivedResource({
+            url: 'other_endpoint?a=5&b=6&a=7',
+            preserveQueryParameters: true
+        });
+
+        expect(derived.queryParameters.a).toEqual(['5', '7', '1', '2', '4']);
+        expect(derived.queryParameters.b).toEqual(['6', '3']);
+
+        expect(derived.url).toEqual('http://test.com/tileset/other_endpoint?a=5&a=7&a=1&a=2&a=4&b=6&b=3');
+    });
+
     it('templateValues are respected', function() {
         var resource = new Resource({
             url: 'http://test.com/tileset/{foo}/{bar}',
@@ -158,10 +201,10 @@ defineSuite([
         });
 
         expect(resource.getUrlComponent(false, false)).toEqual('http://test.com/tileset/tileset.json');
-        expect(resource.getUrlComponent(true, false)).toEqual('http://test.com/tileset/tileset.json?key1=value1&key2=value2&foo=bar&key=value');
+        expect(resource.getUrlComponent(true, false)).toEqual('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar');
         expect(resource.getUrlComponent(false, true)).toEqual(proxy.getURL('http://test.com/tileset/tileset.json'));
-        expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&foo=bar&key=value'));
-        expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&foo=bar&key=value'));
+        expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar'));
+        expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar'));
         expect(resource.queryParameters).toEqual({
             foo: 'bar',
             key: 'value',
@@ -248,7 +291,7 @@ defineSuite([
         expect(resource.url).toEqual('http://test.com/terrain?x=1&y=2&z=0');
     });
 
-    it('addQueryParameters with useAsDefault set to true', function() {
+    it('setQueryParameters with useAsDefault set to true', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain',
             queryParameters: {
@@ -262,7 +305,7 @@ defineSuite([
             y: 2
         });
 
-        resource.addQueryParameters({
+        resource.setQueryParameters({
             x: 3,
             y: 4,
             z: 0
@@ -275,7 +318,7 @@ defineSuite([
         });
     });
 
-    it('addQueryParameters with useAsDefault set to false', function() {
+    it('setQueryParameters with useAsDefault set to false', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain',
             queryParameters: {
@@ -289,7 +332,7 @@ defineSuite([
             y: 2
         });
 
-        resource.addQueryParameters({
+        resource.setQueryParameters({
             x: 3,
             y: 4,
             z: 0
@@ -302,7 +345,64 @@ defineSuite([
         });
     });
 
-    it('addTemplateValues with useAsDefault set to true', function() {
+    it('appendQueryParameters works with non-arrays', function() {
+        var resource = new Resource({
+            url: 'http://test.com/terrain',
+            queryParameters: {
+                x: 1,
+                y: 2
+            }
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: 1,
+            y: 2
+        });
+
+        resource.appendQueryParameters({
+            x: 3,
+            y: 4,
+            z: 0
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: [3, 1],
+            y: [4, 2],
+            z: 0
+        });
+    });
+
+    it('appendQueryParameters works with arrays/non-arrays', function() {
+        var resource = new Resource({
+            url: 'http://test.com/terrain',
+            queryParameters: {
+                x: [1, 2],
+                y: 2,
+                z: [-1, -2]
+            }
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: [1, 2],
+            y: 2,
+            z: [-1, -2]
+        });
+
+        resource.appendQueryParameters({
+            x: 3,
+            y: [4, 5],
+            z: [-3, -4]
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: [3, 1, 2],
+            y: [4, 5, 2],
+            z: [-3, -4, -1, -2]
+        });
+    });
+
+
+    it('setTemplateValues with useAsDefault set to true', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain/{z}/{x}/{y}.terrain',
             templateValues: {
@@ -318,7 +418,7 @@ defineSuite([
             map: 'my map'
         });
 
-        resource.addTemplateValues({
+        resource.setTemplateValues({
             x: 3,
             y: 4,
             z: 0,
@@ -334,7 +434,7 @@ defineSuite([
         });
     });
 
-    it('addTemplateValues with useAsDefault set to false', function() {
+    it('setTemplateValues with useAsDefault set to false', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain/{z}/{x}/{y}.terrain',
             templateValues: {
@@ -350,7 +450,7 @@ defineSuite([
             map: 'my map'
         });
 
-        resource.addTemplateValues({
+        resource.setTemplateValues({
             x: 3,
             y: 4,
             z: 0,
