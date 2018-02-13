@@ -1900,8 +1900,6 @@ define([
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        fs = ModelUtility.modifyFragmentShaderForLogDepth(fs);
-        vs = ModelUtility.modifyVertexShaderForLogDepth(model.gltf, vs);
         var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
         if (ClippingPlaneCollection.isSupported()) {
             finalFS = modifyShaderForClippingPlanes(finalFS);
@@ -1909,6 +1907,9 @@ define([
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
+
+        drawVS = ModelUtility.modifyVertexShaderForLogDepth(model.gltf, drawVS);
+        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -1925,6 +1926,9 @@ define([
             if (!model._pickFragmentShaderLoaded) {
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
+
+            pickVS = ModelUtility.modifyVertexShaderForLogDepth(model.gltf, pickVS);
+            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,

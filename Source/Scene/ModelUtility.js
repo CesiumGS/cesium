@@ -280,11 +280,12 @@ define([
     ModelUtility.modifyFragmentShaderForLogDepth = function(shader) {
         shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
         shader +=
-            'varying float v_inverse_depth;\n' +
+            '\n' +
+            'varying float v_depth; \n' +
             'void main() \n' +
             '{ \n' +
             '    czm_depth_main(); \n' +
-            '    czm_logDepth(v_inverse_depth); \n' +
+            '    czm_logDepth(1.0 / v_depth); \n' +
             '} \n';
 
         return shader;
@@ -301,7 +302,9 @@ define([
         if (!defined(modelViewProjectionName)) {
             var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION');
             var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEW');
-            if (!defined(modelViewName)) {
+            if (shader.indexOf('czm_instanced_modelView ') !== -1) {
+                modelViewName = 'czm_instanced_modelView';
+            } else if (!defined(modelViewName)) {
                 modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'CESIUM_RTC_MODELVIEW');
             }
             modelViewProjectionName = projectionName + ' * ' + modelViewName;
@@ -309,12 +312,12 @@ define([
 
         shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
         shader +=
-            'varying float v_inverse_depth;\n' +
+            '\n' +
+            'varying float v_depth;\n' +
             'void main() \n' +
             '{ \n' +
             '    czm_depth_main(); \n' +
-            //'    v_inverse_depth = 1.0 / ((u_projectionMatrix * u_modelViewMatrix * vec4(a_position,1.0)).w); \n' +
-            '    v_inverse_depth = 1.0 / (' + modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)).w; \n' +
+            '    v_depth = (' + modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)).w; \n' +
             '} \n';
 
         return shader;
