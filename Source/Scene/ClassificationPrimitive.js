@@ -22,7 +22,8 @@ define([
         './Primitive',
         './SceneMode',
         './StencilFunction',
-        './StencilOperation'
+        './StencilOperation',
+        '../Core/WebGLConstants'
     ], function(
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -47,7 +48,8 @@ define([
         Primitive,
         SceneMode,
         StencilFunction,
-        StencilOperation) {
+        StencilOperation,
+        WebGLConstants) {
     'use strict';
 
     var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
@@ -594,7 +596,7 @@ define([
 
     function createColorCommands(classificationPrimitive, colorCommands) {
         var primitive = classificationPrimitive._primitive;
-        var length = primitive._va.length * 3;
+        var length = primitive._va.length * 3; // each geometry (pack of vertex attributes) needs 3 commands: front/back stencils and fill
         colorCommands.length = length;
 
         var i;
