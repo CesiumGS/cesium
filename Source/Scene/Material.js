@@ -791,10 +791,8 @@ define([
             }
 
             if (uniformValue !== material._texturePaths[uniformId]) {
-                if (typeof uniformValue === 'string') {
-                    var resource = new Resource({
-                        url: uniformValue
-                    });
+                if (typeof uniformValue === 'string' || uniformValue instanceof Resource) {
+                    var resource = Resource.createIfNeeded(uniformValue);
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
                         promise = loadKTX(resource);
