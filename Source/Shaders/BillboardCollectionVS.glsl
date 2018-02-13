@@ -258,7 +258,7 @@ void main()
 
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
-    v_inverse_depth = -1. / positionEC.z;
+    v_inverse_depth = -1.0 / positionEC.z;
     v_textureCoordinates = textureCoordinates;
 
 #ifdef DISABLE_DEPTH_DISTANCE

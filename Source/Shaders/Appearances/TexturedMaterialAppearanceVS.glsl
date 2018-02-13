@@ -9,14 +9,14 @@ varying vec3 v_normalEC;
 varying vec2 v_st;
 varying float v_inverse_depth;
 
-void main() 
+void main()
 {
     vec4 p = czm_computePosition();
 
     v_positionEC = (czm_modelViewRelativeToEye * p).xyz;      // position in eye coordinates
     v_normalEC = czm_normal * normal;                         // normal in eye coordinates
-    v_inverse_depth = -1. / v_positionEC.z;
     v_st = st;
-    
+
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
+    v_inverse_depth = 1.0 / gl_Position.w;
 }

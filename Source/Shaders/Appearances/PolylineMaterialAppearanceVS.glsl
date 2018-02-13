@@ -9,9 +9,9 @@ attribute vec2 st;
 attribute float batchId;
 
 varying float v_width;
-varying vec2  v_st;
+varying vec2 v_st;
 varying float v_polylineAngle;
-varying float  v_inverse_depth;
+varying float v_inverse_depth;
 
 void main()
 {
@@ -28,5 +28,5 @@ void main()
 
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, v_polylineAngle);
     gl_Position = czm_viewportOrthographic * positionWC;
-    v_inverse_depth = -1. / (czm_modelViewRelativeToEye * p).z;
+    v_inverse_depth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
 }

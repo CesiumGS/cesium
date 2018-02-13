@@ -1745,8 +1745,7 @@ define([
             farChange = far / frustumCommandsList[numberOfFrustums - 1].far;
         }
         if ((near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-                ((scene.logDepthBuffer &&
-                (isFinite(farChange) && !CesiumMath.equalsEpsilon(1, farChange, CesiumMath.EPSILON8))) ||
+                ((scene.logDepthBuffer && isFinite(farChange) && !CesiumMath.equalsEpsilon(1, farChange, CesiumMath.EPSILON8)) ||
                 (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);

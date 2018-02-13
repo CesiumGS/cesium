@@ -93,7 +93,7 @@ void main()
 
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, v_polylineAngle);
     gl_Position = czm_viewportOrthographic * positionWC * show;
-    v_inverse_depth = 1. / (czm_modelViewRelativeToEye * p).z;
+    v_inverse_depth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
 
     v_st = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;

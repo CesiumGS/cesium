@@ -39,5 +39,5 @@ void main()
 #endif
     gl_Position = czm_depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
 #endif
-	v_depth = gl_Position.w;
+    v_depth = gl_Position.w;
 }
