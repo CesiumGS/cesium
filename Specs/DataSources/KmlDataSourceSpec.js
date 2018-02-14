@@ -16,8 +16,6 @@ defineSuite([
         'Core/Event',
         'Core/Iso8601',
         'Core/JulianDate',
-        'Core/loadBlob',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
@@ -55,8 +53,6 @@ defineSuite([
         Event,
         Iso8601,
         JulianDate,
-        loadBlob,
-        loadWithXhr,
         CesiumMath,
         NearFarScalar,
         Rectangle,
@@ -207,7 +203,7 @@ defineSuite([
 
     it('load works with a KMZ file', function() {
         var dataSource = new KmlDataSource(options);
-        return loadBlob('Data/KML/simple.kmz').then(function(blob) {
+        return Resource.fetchBlob('Data/KML/simple.kmz').then(function(blob) {
             return dataSource.load(blob);
         }).then(function(source) {
             expect(source).toBe(dataSource);
@@ -220,7 +216,7 @@ defineSuite([
         var spy = jasmine.createSpy('errorEvent');
         dataSource.errorEvent.addEventListener(spy);
 
-        return loadBlob('Data/Images/Blue.png').then(function(blob) {
+        return Resource.fetchBlob('Data/Images/Blue.png').then(function(blob) {
             return dataSource.load(blob);
         }).otherwise(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
@@ -229,7 +225,7 @@ defineSuite([
     });
 
     it('load rejects KMZ file with no KML contained', function() {
-        return loadBlob('Data/KML/empty.kmz').then(function(blob) {
+        return Resource.fetchBlob('Data/KML/empty.kmz').then(function(blob) {
             return KmlDataSource.load(blob, options);
         }).otherwise(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
@@ -328,7 +324,7 @@ defineSuite([
 
     it('if load contains <icon> tag with no image included, no image is added', function() {
         var dataSource = new KmlDataSource(options);
-        return loadBlob('Data/KML/simpleNoIcon.kml').then(function(blob) {
+        return Resource.fetchBlob('Data/KML/simpleNoIcon.kml').then(function(blob) {
             return dataSource.load(blob);
         }).then(function(source) {
             expect(source.entities);
@@ -340,7 +336,7 @@ defineSuite([
 
     it('if load does not contain icon <style> tag for placemark, default yellow pin does show', function() {
         var dataSource = new KmlDataSource(options);
-        return loadBlob('Data/KML/simpleNoStyle.kml').then(function(blob) {
+        return Resource.fetchBlob('Data/KML/simpleNoStyle.kml').then(function(blob) {
             return dataSource.load(blob);
         }).then(function(source) {
             expect(source.entities);
@@ -352,7 +348,7 @@ defineSuite([
 
     it('if load contains empty <IconStyle> tag for placemark, default yellow pin does show', function() {
         var dataSource = new KmlDataSource(options);
-        return loadBlob('Data/KML/simpleEmptyIconStyle.kml').then(function(blob) {
+        return Resource.fetchBlob('Data/KML/simpleEmptyIconStyle.kml').then(function(blob) {
             return dataSource.load(blob);
         }).then(function(source) {
             expect(source.entities);
@@ -3364,7 +3360,7 @@ defineSuite([
 
     it('NetworkLink: Appends query tokens to source URL', function() {
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3393,7 +3389,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3551,7 +3547,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3572,7 +3568,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3594,7 +3590,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3617,7 +3613,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3640,7 +3636,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3663,7 +3659,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3693,7 +3689,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3724,7 +3720,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3749,7 +3745,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3774,7 +3770,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3805,7 +3801,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3835,7 +3831,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -3859,7 +3855,7 @@ defineSuite([
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });

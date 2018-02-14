@@ -589,4 +589,23 @@ defineSuite([
                 expect(Resource.prototype.fetch).toHaveBeenCalled();
             });
     });
+
+    it('fetch calls correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResult = {
+            status: 'success'
+        };
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(method).toEqual('GET');
+            deferred.resolve(expectedResult);
+        });
+
+        var resource = new Resource({url: expectedUrl});
+        return resource.fetch()
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
 });
