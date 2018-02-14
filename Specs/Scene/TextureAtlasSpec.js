@@ -2,18 +2,18 @@ defineSuite([
         'Scene/TextureAtlas',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
-        'Core/loadImage',
         'Core/Math',
         'Core/PixelFormat',
+        'Core/Resource',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
         TextureAtlas,
         BoundingRectangle,
         Cartesian2,
-        loadImage,
         CesiumMath,
         PixelFormat,
+        Resource,
         createScene,
         when) {
     'use strict';
@@ -31,22 +31,22 @@ defineSuite([
         scene = createScene();
 
         return when.join(
-            loadImage('./Data/Images/Green.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
                 greenImage = image;
             }),
-            loadImage('./Data/Images/Green1x4.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green1x4.png').then(function(image) {
                 tallGreenImage = image;
             }),
-            loadImage('./Data/Images/Blue.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
                 blueImage = image;
             }),
-            loadImage('./Data/Images/Red16x16.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
                 bigRedImage = image;
             }),
-            loadImage('./Data/Images/Blue10x10.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(image) {
                 bigBlueImage = image;
             }),
-            loadImage('./Data/Images/Green4x4.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green4x4.png').then(function(image) {
                 bigGreenImage = image;
             }));
     });

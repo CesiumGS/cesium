@@ -6,8 +6,6 @@ defineSuite([
     'Core/GeographicProjection',
     'Core/GeographicTilingScheme',
     'Core/getAbsoluteUri',
-    'Core/loadImage',
-    'Core/loadWithXhr',
     'Core/Math',
     'Core/Rectangle',
     'Core/RequestScheduler',
@@ -28,8 +26,6 @@ defineSuite([
     GeographicProjection,
     GeographicTilingScheme,
     getAbsoluteUri,
-    loadImage,
-    loadWithXhr,
     CesiumMath,
     Rectangle,
     RequestScheduler,
@@ -49,8 +45,8 @@ defineSuite([
     });
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     it('return a UrlTemplateImageryProvider', function() {
@@ -111,7 +107,7 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             // We can't resolve the promise immediately, because then the error would be raised
             // before we could subscribe to it.  This a problem particular to tests.
             setTimeout(function() {
@@ -147,7 +143,7 @@ defineSuite([
     });
 
     it('rejects readyPromise on invalid xml', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             // We can't resolve the promise immediately, because then the error would be raised
             // before we could subscribe to it.  This a problem particular to tests.
             setTimeout(function() {
@@ -210,15 +206,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toStartWith(getAbsoluteUri(baseUrl));
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -232,15 +228,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('made/up/tms/server/');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -255,15 +251,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toStartWith(getAbsoluteUri(baseUrl));
                 expect(url).toContain('?a=some&b=query');
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -284,13 +280,13 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -323,7 +319,7 @@ defineSuite([
         /*eslint-disable no-unused-vars*/
         var proxy = new DefaultProxy('/proxy/');
         var requestMetadata = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestMetadata.resolve(url);
             deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
         });
@@ -342,7 +338,7 @@ defineSuite([
     it('resource request takes a query string', function() {
         /*eslint-disable no-unused-vars*/
         var requestMetadata = when.defer();
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestMetadata.resolve(url);
             deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
         });
@@ -369,15 +365,15 @@ defineSuite([
         }).then(function() {
             expect(provider.proxy).toEqual(proxy);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL(getAbsoluteUri('made/up/tms/server')))).toEqual(0);
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -403,15 +399,15 @@ defineSuite([
             expect(provider.rectangle.south).toEqualEpsilon(rectangle.south, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('/0/0/0');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -449,10 +445,10 @@ defineSuite([
             }, 1);
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -480,7 +476,7 @@ defineSuite([
     });
 
     it('keeps the rectangle within the bounds allowed by the tiling scheme no matter what the tilemapresource.xml says.', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -517,7 +513,7 @@ defineSuite([
     });
 
     it('uses a minimum level if the tilemapresource.xml specifies one and it is reasonable', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -549,7 +545,7 @@ defineSuite([
     });
 
     it('ignores the minimum level in the tilemapresource.xml if it is unreasonable', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -581,7 +577,7 @@ defineSuite([
     });
 
     it('handles XML with casing differences', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<Tilemap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -613,7 +609,7 @@ defineSuite([
     });
 
     it('supports the global-mercator profile with a non-flipped, mercator bounding box', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
@@ -654,7 +650,7 @@ defineSuite([
     });
 
     it('supports the global-geodetic profile with a non-flipped, geographic bounding box', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
@@ -694,7 +690,7 @@ defineSuite([
     });
 
     it('supports the old mercator profile with a flipped, geographic bounding box', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
@@ -735,7 +731,7 @@ defineSuite([
     });
 
     it('supports the old geodetic profile with a flipped, geographic bounding box', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
@@ -776,7 +772,7 @@ defineSuite([
     });
 
     it('raises an error if tilemapresource.xml specifies an unsupported profile', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             // We can't resolve the promise immediately, because then the error would be raised
             // before we could subscribe to it.  This a problem particular to tests.
             setTimeout(function() {
