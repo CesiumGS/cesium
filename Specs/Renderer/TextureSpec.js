@@ -2,9 +2,9 @@ defineSuite([
         'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
-        'Core/loadImage',
         'Core/loadKTX',
         'Core/PixelFormat',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Renderer/PixelDatatype',
@@ -18,9 +18,9 @@ defineSuite([
         Texture,
         Cartesian2,
         Color,
-        loadImage,
         loadKTX,
         PixelFormat,
+        Resource,
         ClearCommand,
         ContextLimits,
         PixelDatatype,
@@ -57,19 +57,19 @@ defineSuite([
         context = createContext();
 
         var promises = [];
-        promises.push(loadImage('./Data/Images/Green.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         }));
-        promises.push(loadImage('./Data/Images/Blue.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
             blueImage = image;
         }));
-        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(image) {
             blueAlphaImage = image;
         }));
-        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
         }));
-        promises.push(loadImage('./Data/Images/Red16x16.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
             red16x16Image = image;
         }));
         promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
