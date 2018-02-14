@@ -5,7 +5,7 @@ Change Log
 
 ##### Additions :tada:
 * Added support for a promise to a resource for `CesiumTerrainProvider`, `createTileMapServiceImageryProvider` and `Cesium3DTileset` [#6204](https://github.com/AnalyticalGraphicsInc/cesium/pull/6204)
-* Added `Cesium.Math.cbrt`.
+* Added `Cesium.Math.cbrt`. [#6222](https://github.com/AnalyticalGraphicsInc/cesium/pull/6222)
 
 ##### Fixes :wrench:
 * Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
