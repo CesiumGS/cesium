@@ -162,6 +162,7 @@ define([
      * @param {Plane} plane The plane to project the point onto
      * @param {Cartesian3} point The point to project onto the plane
      * @param {Cartesian3} [result] The result point.  If undefined, a new Cartesian3 will be created.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Plane.projectPointOntoPlane = function(plane, point, result) {
         //>>includeStart('debug', pragmas.debug);
