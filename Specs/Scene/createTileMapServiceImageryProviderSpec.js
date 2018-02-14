@@ -1,43 +1,43 @@
 defineSuite([
-        'Scene/createTileMapServiceImageryProvider',
-        'Core/Cartesian2',
-        'Core/Cartographic',
-        'Core/DefaultProxy',
-        'Core/GeographicProjection',
-        'Core/GeographicTilingScheme',
-        'Core/getAbsoluteUri',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryState',
-        'Scene/UrlTemplateImageryProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        createTileMapServiceImageryProvider,
-        Cartesian2,
-        Cartographic,
-        DefaultProxy,
-        GeographicProjection,
-        GeographicTilingScheme,
-        getAbsoluteUri,
-        CesiumMath,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        Imagery,
-        ImageryLayer,
-        ImageryState,
-        UrlTemplateImageryProvider,
-        pollToPromise,
-        when) {
+    'Scene/createTileMapServiceImageryProvider',
+    'Core/Cartesian2',
+    'Core/Cartographic',
+    'Core/DefaultProxy',
+    'Core/GeographicProjection',
+    'Core/GeographicTilingScheme',
+    'Core/getAbsoluteUri',
+    'Core/Math',
+    'Core/Rectangle',
+    'Core/RequestScheduler',
+    'Core/Resource',
+    'Core/WebMercatorProjection',
+    'Core/WebMercatorTilingScheme',
+    'Scene/Imagery',
+    'Scene/ImageryLayer',
+    'Scene/ImageryState',
+    'Scene/UrlTemplateImageryProvider',
+    'Specs/pollToPromise',
+    'ThirdParty/when'
+], function(
+    createTileMapServiceImageryProvider,
+    Cartesian2,
+    Cartographic,
+    DefaultProxy,
+    GeographicProjection,
+    GeographicTilingScheme,
+    getAbsoluteUri,
+    CesiumMath,
+    Rectangle,
+    RequestScheduler,
+    Resource,
+    WebMercatorProjection,
+    WebMercatorTilingScheme,
+    Imagery,
+    ImageryLayer,
+    ImageryState,
+    UrlTemplateImageryProvider,
+    pollToPromise,
+    when) {
     'use strict';
 
     beforeEach(function() {
@@ -51,7 +51,7 @@ defineSuite([
 
     it('return a UrlTemplateImageryProvider', function() {
         var provider = createTileMapServiceImageryProvider({
-          url: 'made/up/tms/server/'
+            url : 'made/up/tms/server/'
         });
         expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
     });
@@ -67,9 +67,20 @@ defineSuite([
         });
     });
 
+    it('resolves readyPromise when promise url is used', function() {
+        var provider = createTileMapServiceImageryProvider({
+            url : when.resolve('made/up/tms/server/')
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('resolves readyPromise with Resource', function() {
         var resource = new Resource({
-            url: 'made/up/tms/server/'
+            url : 'made/up/tms/server/'
         });
 
         var provider = createTileMapServiceImageryProvider({
@@ -79,6 +90,19 @@ defineSuite([
         return provider.readyPromise.then(function(result) {
             expect(result).toBe(true);
             expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise if options.url rejects', function() {
+        var error = new Error();
+        var provider = createTileMapServiceImageryProvider({
+            url : when.reject(error)
+        });
+        return provider.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function(result) {
+            expect(result).toBe(error);
+            expect(provider.ready).toBe(false);
         });
     });
 
@@ -112,7 +136,7 @@ defineSuite([
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).otherwise(function(e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain('unsupported profile');
         });
@@ -147,7 +171,7 @@ defineSuite([
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).otherwise(function(e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain('expected tilesets or bbox attributes');
         });
@@ -157,6 +181,7 @@ defineSuite([
         function createWithoutUrl() {
             return createTileMapServiceImageryProvider({});
         }
+
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
@@ -272,9 +297,9 @@ defineSuite([
             url : 'made/up/tms/server'
         });
         return pollToPromise(function() {
-          return provider.ready;
+            return provider.ready;
         }).then(function() {
-          expect(provider.credit).toBeUndefined();
+            expect(provider.credit).toBeUndefined();
         });
     });
 
@@ -284,9 +309,9 @@ defineSuite([
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
         return pollToPromise(function() {
-          return providerWithCredit.ready;
+            return providerWithCredit.ready;
         }).then(function() {
-          expect(providerWithCredit.credit).toBeDefined();
+            expect(providerWithCredit.credit).toBeDefined();
         });
     });
 

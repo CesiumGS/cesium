@@ -253,6 +253,23 @@ defineSuite([
         });
     });
 
+    it('Constructor works with promise to resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : when.resolve(resource)
+        });
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
     it('Constructor works with directory resource', function() {
         var resource = new Resource({
             url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
