@@ -1,8 +1,5 @@
 defineSuite([
         'Scene/CesiumIon',
-        'Core/loadImage',
-        'Core/loadJsonp',
-        'Core/loadWithXhr',
         'Core/RuntimeError',
         'Core/RequestErrorEvent',
         'Core/Resource',
@@ -19,9 +16,6 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         CesiumIon,
-        loadImage,
-        loadJsonp,
-        loadWithXhr,
         RuntimeError,
         RequestErrorEvent,
         Resource,
@@ -164,21 +158,21 @@ defineSuite([
     }
 
     it('createImageryProvider works with ARCGIS_MAPSERVER', function() {
-        spyOn(loadJsonp, 'loadAndExecuteScript').and.callFake(function(url, name, deffered) {
+        spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, name, deffered) {
             deffered.resolve({ resourceSets: [{ resources: [{ imageUrl: '', imageUrlSubdomains: [], zoomMax: 0 }] }] });
         });
         return testExternalImagery('ARCGIS_MAPSERVER', { url: 'https://test.invalid' }, ArcGisMapServerImageryProvider);
     });
 
     it('createImageryProvider works with BING', function() {
-        spyOn(loadJsonp, 'loadAndExecuteScript').and.callFake(function(url, name, deffered) {
+        spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, name, deffered) {
             deffered.resolve({ resourceSets: [{ resources: [{ imageUrl: '', imageUrlSubdomains: [], zoomMax: 0 }] }] });
         });
         return testExternalImagery('BING', { url: 'https://test.invalid' }, BingMapsImageryProvider);
     });
 
     it('createImageryProvider works with GOOGLE_EARTH', function() {
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             deferred.resolve(JSON.stringify({ layers: [{ id: 0, version: '' }] }));
         });
 
@@ -190,7 +184,7 @@ defineSuite([
     });
 
     it('createImageryProvider works with SINGLE_TILE', function() {
-        spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+        spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
             deferred.resolve({});
         });
 

@@ -1,10 +1,10 @@
 defineSuite([
         'Core/buildModuleUrl',
-        'Core/loadText',
+        'Core/Resource',
         'ThirdParty/Uri'
     ], function(
         buildModuleUrl,
-        loadText,
+        Resource,
         Uri) {
     'use strict';
 
@@ -15,7 +15,7 @@ defineSuite([
         expect(new Uri(url).isAbsolute()).toBe(true);
 
         // make sure it actually exists at that URL
-        return loadText(url);
+        return Resource.fetchText(url);
     });
 
     it('matches the expected forms of URLs to Cesium.js', function() {
