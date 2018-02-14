@@ -728,10 +728,10 @@ define([
             var viewFormat = defaultValue(queryStringValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
             var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
             if (defined(viewFormat)) {
-                hrefResource.addQueryParameters(queryToObject(cleanupString(viewFormat)));
+                hrefResource.setQueryParameters(queryToObject(cleanupString(viewFormat)));
             }
             if (defined(httpQuery)) {
-                hrefResource.addQueryParameters(queryToObject(cleanupString(httpQuery)));
+                hrefResource.setQueryParameters(queryToObject(cleanupString(httpQuery)));
             }
 
             processNetworkLinkQueryString(hrefResource, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox);
@@ -2108,7 +2108,7 @@ define([
         queryString = queryString.replace('[clientName]', 'Cesium');
         queryString = queryString.replace('[language]', 'English');
 
-        resource.addQueryParameters(queryToObject(queryString));
+        resource.setQueryParameters(queryToObject(queryString));
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
@@ -2145,10 +2145,10 @@ define([
                     var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
                     var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
                     if (defined(viewFormat)) {
-                        href.addQueryParameters(queryToObject(cleanupString(viewFormat)));
+                        href.setQueryParameters(queryToObject(cleanupString(viewFormat)));
                     }
                     if (defined(httpQuery)) {
-                        href.addQueryParameters(queryToObject(cleanupString(httpQuery)));
+                        href.setQueryParameters(queryToObject(cleanupString(httpQuery)));
                     }
 
                     processNetworkLinkQueryString(href, dataSource._camera, dataSource._canvas, viewBoundScale, dataSource._lastCameraView.bbox);
@@ -2391,7 +2391,7 @@ define([
         }
 
         if (defined(query)) {
-            sourceUri.addQueryParameters(query);
+            sourceUri.setQueryParameters(query);
         }
 
         return when(promise)
@@ -2525,7 +2525,7 @@ define([
     /**
      * Creates a Promise to a new instance loaded with the provided KML data.
      *
-     * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
+     * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
@@ -2681,9 +2681,9 @@ define([
      * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
      * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
-     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML.
+     *
+     * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2976,7 +2976,7 @@ define([
                     networkLink.updating = true;
                     var newEntityCollection = new EntityCollection();
                     var href = networkLink.href.clone();
-                    href.addQueryParameters(networkLink.cookie);
+                    href.setQueryParameters(networkLink.cookie);
                     processNetworkLinkQueryString(href, that._camera, that._canvas, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newEntityCollection, href, {context : entity.id})
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
