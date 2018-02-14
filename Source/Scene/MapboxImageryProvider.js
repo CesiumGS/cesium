@@ -100,7 +100,7 @@ define([
         templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
         resource.url = templateUrl;
 
-        resource.addQueryParameters({
+        resource.setQueryParameters({
             access_token: accessToken
         });
 

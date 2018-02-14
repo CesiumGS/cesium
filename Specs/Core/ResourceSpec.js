@@ -108,6 +108,49 @@ defineSuite([
         expect(resource.url).toEqual('http://test.com/tileset');
     });
 
+    it('multiple values for query parameters are allowed', function() {
+        var resource = new Resource('http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4');
+        expect(resource.queryParameters.a).toEqual(['1', '2', '4']);
+        expect(resource.queryParameters.b).toEqual('3');
+
+        expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
+    });
+
+    it('multiple values for query parameters works with getDerivedResource without preserverQueryParameters', function() {
+        var resource = new Resource('http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4');
+        expect(resource.queryParameters.a).toEqual(['1', '2', '4']);
+        expect(resource.queryParameters.b).toEqual('3');
+
+        expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
+
+        var derived = resource.getDerivedResource({
+            url: 'other_endpoint?a=5&b=6&a=7'
+        });
+
+        expect(derived.queryParameters.a).toEqual(['5', '7']);
+        expect(derived.queryParameters.b).toEqual('6');
+
+        expect(derived.url).toEqual('http://test.com/tileset/other_endpoint?a=5&a=7&b=6');
+    });
+
+    it('multiple values for query parameters works with getDerivedResource with preserveQueryParameters', function() {
+        var resource = new Resource('http://test.com/tileset/endpoint?a=1&a=2&b=3&a=4');
+        expect(resource.queryParameters.a).toEqual(['1', '2', '4']);
+        expect(resource.queryParameters.b).toEqual('3');
+
+        expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
+
+        var derived = resource.getDerivedResource({
+            url: 'other_endpoint?a=5&b=6&a=7',
+            preserveQueryParameters: true
+        });
+
+        expect(derived.queryParameters.a).toEqual(['5', '7', '1', '2', '4']);
+        expect(derived.queryParameters.b).toEqual(['6', '3']);
+
+        expect(derived.url).toEqual('http://test.com/tileset/other_endpoint?a=5&a=7&a=1&a=2&a=4&b=6&b=3');
+    });
+
     it('templateValues are respected', function() {
         var resource = new Resource({
             url: 'http://test.com/tileset/{foo}/{bar}',
@@ -158,10 +201,10 @@ defineSuite([
         });
 
         expect(resource.getUrlComponent(false, false)).toEqual('http://test.com/tileset/tileset.json');
-        expect(resource.getUrlComponent(true, false)).toEqual('http://test.com/tileset/tileset.json?key1=value1&key2=value2&foo=bar&key=value');
+        expect(resource.getUrlComponent(true, false)).toEqual('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar');
         expect(resource.getUrlComponent(false, true)).toEqual(proxy.getURL('http://test.com/tileset/tileset.json'));
-        expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&foo=bar&key=value'));
-        expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&foo=bar&key=value'));
+        expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar'));
+        expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar'));
         expect(resource.queryParameters).toEqual({
             foo: 'bar',
             key: 'value',
@@ -248,7 +291,7 @@ defineSuite([
         expect(resource.url).toEqual('http://test.com/terrain?x=1&y=2&z=0');
     });
 
-    it('addQueryParameters with useAsDefault set to true', function() {
+    it('setQueryParameters with useAsDefault set to true', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain',
             queryParameters: {
@@ -262,7 +305,7 @@ defineSuite([
             y: 2
         });
 
-        resource.addQueryParameters({
+        resource.setQueryParameters({
             x: 3,
             y: 4,
             z: 0
@@ -275,7 +318,7 @@ defineSuite([
         });
     });
 
-    it('addQueryParameters with useAsDefault set to false', function() {
+    it('setQueryParameters with useAsDefault set to false', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain',
             queryParameters: {
@@ -289,7 +332,7 @@ defineSuite([
             y: 2
         });
 
-        resource.addQueryParameters({
+        resource.setQueryParameters({
             x: 3,
             y: 4,
             z: 0
@@ -302,7 +345,64 @@ defineSuite([
         });
     });
 
-    it('addTemplateValues with useAsDefault set to true', function() {
+    it('appendQueryParameters works with non-arrays', function() {
+        var resource = new Resource({
+            url: 'http://test.com/terrain',
+            queryParameters: {
+                x: 1,
+                y: 2
+            }
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: 1,
+            y: 2
+        });
+
+        resource.appendQueryParameters({
+            x: 3,
+            y: 4,
+            z: 0
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: [3, 1],
+            y: [4, 2],
+            z: 0
+        });
+    });
+
+    it('appendQueryParameters works with arrays/non-arrays', function() {
+        var resource = new Resource({
+            url: 'http://test.com/terrain',
+            queryParameters: {
+                x: [1, 2],
+                y: 2,
+                z: [-1, -2]
+            }
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: [1, 2],
+            y: 2,
+            z: [-1, -2]
+        });
+
+        resource.appendQueryParameters({
+            x: 3,
+            y: [4, 5],
+            z: [-3, -4]
+        });
+
+        expect(resource.queryParameters).toEqual({
+            x: [3, 1, 2],
+            y: [4, 5, 2],
+            z: [-3, -4, -1, -2]
+        });
+    });
+
+
+    it('setTemplateValues with useAsDefault set to true', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain/{z}/{x}/{y}.terrain',
             templateValues: {
@@ -318,7 +418,7 @@ defineSuite([
             map: 'my map'
         });
 
-        resource.addTemplateValues({
+        resource.setTemplateValues({
             x: 3,
             y: 4,
             z: 0,
@@ -334,7 +434,7 @@ defineSuite([
         });
     });
 
-    it('addTemplateValues with useAsDefault set to false', function() {
+    it('setTemplateValues with useAsDefault set to false', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain/{z}/{x}/{y}.terrain',
             templateValues: {
@@ -350,7 +450,7 @@ defineSuite([
             map: 'my map'
         });
 
-        resource.addTemplateValues({
+        resource.setTemplateValues({
             x: 3,
             y: 4,
             z: 0,
@@ -518,6 +618,160 @@ defineSuite([
             });
     });
 
+    it('put calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+        var resource = new Resource({
+            url: expectedUrl,
+            headers: expectedHeaders
+        });
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PUT');
+            expect(data).toEqual(expectedData);
+            expect(headers['X-My-Header']).toEqual('My-Value');
+            expect(headers['X-My-Other-Header']).toEqual('My-Other-Value');
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return resource.put(expectedData, {
+            responseType: expectedResponseType,
+            headers: {
+                'X-My-Other-Header': 'My-Other-Value'
+            },
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static put calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PUT');
+            expect(data).toEqual(expectedData);
+            expect(headers).toEqual(expectedHeaders);
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return Resource.put({
+            url: expectedUrl,
+            data: expectedData,
+            responseType: expectedResponseType,
+            headers: expectedHeaders,
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('patch calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+        var resource = new Resource({
+            url: expectedUrl,
+            headers: expectedHeaders
+        });
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PATCH');
+            expect(data).toEqual(expectedData);
+            expect(headers['X-My-Header']).toEqual('My-Value');
+            expect(headers['X-My-Other-Header']).toEqual('My-Other-Value');
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return resource.patch(expectedData, {
+            responseType: expectedResponseType,
+            headers: {
+                'X-My-Other-Header': 'My-Other-Value'
+            },
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static patch calls with correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResponseType = 'json';
+        var expectedData = {
+            stuff: 'myStuff'
+        };
+        var expectedHeaders = {
+            'X-My-Header': 'My-Value'
+        };
+        var expectedResult = {
+            status: 'success'
+        };
+        var expectedMimeType = 'application/test-data';
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(responseType).toEqual(expectedResponseType);
+            expect(method).toEqual('PATCH');
+            expect(data).toEqual(expectedData);
+            expect(headers).toEqual(expectedHeaders);
+            expect(overrideMimeType).toBe(expectedMimeType);
+            deferred.resolve(expectedResult);
+        });
+
+        return Resource.patch({
+            url: expectedUrl,
+            data: expectedData,
+            responseType: expectedResponseType,
+            headers: expectedHeaders,
+            overrideMimeType: expectedMimeType
+        })
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
     it('static fetchArrayBuffer calls correct method', function() {
         var url = 'http://test.com/data';
         spyOn(Resource.prototype, 'fetchArrayBuffer').and.returnValue(when.resolve());
@@ -606,6 +860,159 @@ defineSuite([
         return resource.fetch()
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static delete calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'delete').and.returnValue(when.resolve());
+        return Resource.delete(url)
+            .then(function() {
+                expect(Resource.prototype.delete).toHaveBeenCalled();
+            });
+    });
+
+    it('delete calls correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResult = {
+            status: 'success'
+        };
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(method).toEqual('DELETE');
+            deferred.resolve(expectedResult);
+        });
+
+        var resource = new Resource({url: expectedUrl});
+        return resource.delete()
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+            });
+    });
+
+    it('static head calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'head').and.returnValue(when.resolve({}));
+        return Resource.head(url)
+            .then(function() {
+                expect(Resource.prototype.head).toHaveBeenCalled();
+            });
+    });
+
+    it('head calls correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResult = {
+            'accept-ranges': 'bytes',
+            'access-control-allow-headers' : 'Origin, X-Requested-With, Content-Type, Accept',
+            'access-control-allow-origin' : '*',
+            'cache-control': 'public, max-age=0',
+            'connection' : 'keep-alive',
+            'content-length' : '883',
+            'content-type' : 'image/png',
+            'date' : 'Tue, 13 Feb 2018 03:38:55 GMT',
+            'etag' : 'W/"373-15e34d146a1"',
+            'vary' : 'Accept-Encoding',
+            'x-powered-vy' : 'Express'
+        };
+        var headerString = '';
+        for (var key in expectedResult) {
+            if (expectedResult.hasOwnProperty(key)) {
+                headerString += key + ': ' + expectedResult[key] + '\r\n';
+            }
+        }
+        var fakeXHR = {
+            status: 200,
+            send : function() {
+                this.onload();
+            },
+            open : function() {},
+            getAllResponseHeaders : function() {
+                return headerString;
+            }
+        };
+        spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(method).toEqual('HEAD');
+            Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
+        });
+
+        var resource = new Resource({url: expectedUrl});
+        return resource.head()
+            .then(function(result) {
+                expect(result.date).toEqual(expectedResult.date);
+                expect(result['last-modified']).toEqual(expectedResult['last-modified']);
+                expect(result['x-powered-by']).toEqual(expectedResult['x-powered-by']);
+                expect(result.etag).toEqual(expectedResult.etag);
+                expect(result['content-type']).toEqual(expectedResult['content-type']);
+                expect(result['access-control-allow-origin']).toEqual(expectedResult['access-control-allow-origin']);
+                expect(result['cache-control']).toEqual(expectedResult['cache-control']);
+                expect(result['accept-ranges']).toEqual(expectedResult['accept-ranges']);
+                expect(result['access-control-allow-headers']).toEqual(expectedResult['access-control-allow-headers']);
+                expect(result['content-length']).toEqual(expectedResult['content-length']);
+            });
+    });
+
+    it('static options calls correct method', function() {
+        var url = 'http://test.com/data';
+        spyOn(Resource.prototype, 'options').and.returnValue(when.resolve({}));
+        return Resource.options(url)
+            .then(function() {
+                expect(Resource.prototype.options).toHaveBeenCalled();
+            });
+    });
+
+    it('options calls correct method', function() {
+        var expectedUrl = 'http://test.com/endpoint';
+        var expectedResult = {
+            'access-control-allow-headers' : 'Origin, X-Requested-With, Content-Type, Accept',
+            'access-control-allow-methods' : 'GET, PUT, POST, DELETE, OPTIONS',
+            'access-control-allow-origin' : '*',
+            'connection' : 'keep-alive',
+            'content-length' : '2',
+            'content-type' : 'text/plain; charset=utf-8',
+            'date' : 'Tue, 13 Feb 2018 03:38:55 GMT',
+            'etag' : 'W/"2-nOO9QiTIwXgNtWtBJezz8kv3SLc"',
+            'vary' : 'Accept-Encoding',
+            'x-powered-vy' : 'Express'
+        };
+        var headerString = '';
+        for (var key in expectedResult) {
+            if (expectedResult.hasOwnProperty(key)) {
+                headerString += key + ': ' + expectedResult[key] + '\r\n';
+            }
+        }
+        var fakeXHR = {
+            status: 200,
+            send : function() {
+                this.onload();
+            },
+            open : function() {},
+            getAllResponseHeaders : function() {
+                return headerString;
+            }
+        };
+        spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
+
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            expect(url).toEqual(expectedUrl);
+            expect(method).toEqual('OPTIONS');
+            Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
+        });
+
+        var resource = new Resource({url: expectedUrl});
+        return resource.options()
+            .then(function(result) {
+                expect(result.date).toEqual(expectedResult.date);
+                expect(result['x-powered-by']).toEqual(expectedResult['x-powered-by']);
+                expect(result.etag).toEqual(expectedResult.etag);
+                expect(result['content-type']).toEqual(expectedResult['content-type']);
+                expect(result['access-control-allow-origin']).toEqual(expectedResult['access-control-allow-origin']);
+                expect(result['access-control-allow-methods']).toEqual(expectedResult['access-control-allow-methods']);
+                expect(result['access-control-allow-headers']).toEqual(expectedResult['access-control-allow-headers']);
+                expect(result['content-length']).toEqual(expectedResult['content-length']);
             });
     });
 });
