@@ -1899,9 +1899,7 @@ define([
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
         var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
-        if (ClippingPlaneCollection.isSupported()) {
-            finalFS = modifyShaderForClippingPlanes(finalFS);
-        }
+        finalFS = modifyShaderForClippingPlanes(finalFS);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
@@ -1922,9 +1920,7 @@ define([
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 
-            if (ClippingPlaneCollection.isSupported()) {
-                pickFS = modifyShaderForClippingPlanes(pickFS);
-            }
+            pickFS = modifyShaderForClippingPlanes(pickFS);
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,

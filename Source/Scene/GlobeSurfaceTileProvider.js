@@ -1360,7 +1360,7 @@ define([
 
             // update clipping planes
             var clippingPlanes = tileProvider.clippingPlanes;
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped && ClippingPlaneCollection.isSupported();
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped;
             if (clippingPlanesEnabled) {
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;

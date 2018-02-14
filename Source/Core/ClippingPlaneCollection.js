@@ -555,15 +555,6 @@ define([
     };
 
     /**
-     * Determines if rendering with clipping planes is supported.
-     *
-     * @returns {Boolean} <code>true</code> if ClippingPlaneCollections are supported; otherwise, returns <code>false</code>
-     */
-    ClippingPlaneCollection.isSupported = function() {
-        return !FeatureDetection.isInternetExplorer();
-    };
-
-    /**
      * The maximum number of supported clipping planes.
      *
      * @see maxClippingPlanes.glsl
