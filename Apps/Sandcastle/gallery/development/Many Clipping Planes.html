@@ -73,7 +73,7 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 
 Cesium.knockout.getObservable(viewModel, 'cylinderRadius').subscribe(
     function(newValue) {
-        cylinderRadius = Number.parseFloat(viewModel.cylinderRadius);
+        cylinderRadius = parseFloat(viewModel.cylinderRadius);
         updatePlanes();
     }
 );

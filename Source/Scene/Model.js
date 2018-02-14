@@ -1922,6 +1922,10 @@ define([
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 
+            if (ClippingPlaneCollection.isSupported()) {
+                pickFS = modifyShaderForClippingPlanes(pickFS);
+            }
+
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : pickVS,
@@ -3728,7 +3732,6 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
-            '#define CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
             'uniform vec4 gltf_clippingPlanesLengthRangeUnion; \n' +
             'uniform sampler2D gltf_clippingPlanes; \n' +
             'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
@@ -3744,11 +3747,11 @@ define([
             '        float clipDistance; \n' +
             '        if (clippingPlanesUnionRegions) \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
+            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        else \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, gltf_clippingPlanesMatrix); \n' +
+            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
             '        } \n' +
             '        \n' +
             '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
