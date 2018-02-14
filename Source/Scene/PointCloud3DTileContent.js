@@ -466,7 +466,7 @@ define([
         // Typical use case is leaves, where lower estimates of interpoint distance might
         // lead to underattenuation.
         var sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
-        content._baseResolutionApproximation = Math.cbrt(sphereVolume / pointsLength);
+        content._baseResolutionApproximation = Math.pow(sphereVolume / pointsLength, 1/3); // IE doesn't support cbrt
     }
 
     var scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier = new Cartesian4();
