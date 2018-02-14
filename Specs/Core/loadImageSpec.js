@@ -1,13 +1,11 @@
 defineSuite([
         'Core/loadImage',
-        'Core/loadWithXhr',
         'Core/Request',
         'Core/RequestScheduler',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
         loadImage,
-        loadWithXhr,
         Request,
         RequestScheduler,
         Resource,
@@ -142,7 +140,7 @@ defineSuite([
         var expectedHeaders = {
             'X-my-header': 'my-value'
         };
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(url).toEqual(expectedUrl);
             expect(headers).toEqual(expectedHeaders);
             expect(responseType).toEqual('blob');
@@ -170,7 +168,7 @@ defineSuite([
     });
 
     it('Doesn\'t call loadWithXhr with blob response type if headers is set but is a data URI', function() {
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             deferred.reject('this shouldn\'t happen');
         });
 
