@@ -306,7 +306,7 @@ var uiOptions = {
         '3D Tiles' : {
             'centerLongitude' : -1.31968,
             'centerLatitude' : 0.698874,
-            'tileset' : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset'
+            'tileset' : Cesium.CesiumIon.createResource(3883, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }
     }
 };
@@ -593,10 +593,15 @@ function updateModels() {
     }
 }
 
-function createTileset(url) {
-    scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : url
-    }));
+function createTileset(resource) {
+    resource.then(function(url) {
+        viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+            url : url
+        }));
+    })
+    .otherwise(function(error) {
+        console.log(error);
+    });
 }
 
 function createModel(url, origin) {

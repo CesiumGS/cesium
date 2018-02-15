@@ -2,9 +2,6 @@ defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/loadImage',
-        'Core/loadJsonp',
-        'Core/loadWithXhr',
         'Core/queryToObject',
         'Core/RequestScheduler',
         'Core/Resource',
@@ -21,9 +18,6 @@ defineSuite([
         BingMapsImageryProvider,
         DefaultProxy,
         defined,
-        loadImage,
-        loadJsonp,
-        loadWithXhr,
         queryToObject,
         RequestScheduler,
         Resource,
@@ -43,9 +37,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
@@ -155,7 +149,7 @@ defineSuite([
     function installFakeMetadataRequest(url, mapStyle, proxy) {
         var expectedUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle;
 
-        loadJsonp.loadAndExecuteScript = function(url, functionName) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
             var uri = new Uri(url);
             if (proxy) {
                 uri = new Uri(decodeURIComponent(uri.query));
@@ -176,10 +170,10 @@ defineSuite([
     }
 
     function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else {
                 if (defined(expectedUrl)) {
                     var uri = new Uri(url);
@@ -197,11 +191,11 @@ defineSuite([
                     }
                 }
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             }
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (defined(expectedUrl)) {
                 var uri = new Uri(url);
                 if (proxy) {
@@ -219,7 +213,7 @@ defineSuite([
             }
 
             // Just return any old image.
-            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
     }
 
@@ -443,13 +437,13 @@ defineSuite([
             }, 1);
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else if (tries === 2) {
                 // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -458,10 +452,10 @@ defineSuite([
             }
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             } else {
                 // fail
                 setTimeout(function() {

@@ -19,7 +19,7 @@ define([
      * @param {String} [options.text] The text to be displayed on the screen if no imageUrl is specified.
      * @param {String} [options.imageUrl] The source location for an image
      * @param {String} [options.link] A URL location for which the credit will be hyperlinked
-     * @param {String} [options.showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+     * @param {Boolean} [options.showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
      *
      * @alias Credit
      * @constructor

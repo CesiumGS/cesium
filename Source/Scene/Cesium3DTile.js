@@ -619,7 +619,7 @@ define([
         var expired = this.contentExpired;
         if (expired) {
             // Append a query parameter of the tile expiration date to prevent caching
-            resource.addQueryParameters({
+            resource.setQueryParameters({
                 expired: this.expireDate.toString()
             });
         }

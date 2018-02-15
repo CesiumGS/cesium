@@ -2,8 +2,8 @@ defineSuite([
         'Renderer/CubeMap',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/loadImage',
         'Core/PixelFormat',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Renderer/PixelDatatype',
@@ -18,8 +18,8 @@ defineSuite([
         CubeMap,
         Cartesian3,
         Color,
-        loadImage,
         PixelFormat,
+        Resource,
         ClearCommand,
         ContextLimits,
         PixelDatatype,
@@ -85,19 +85,19 @@ defineSuite([
         context = createContext();
 
         var promises = [];
-        promises.push(loadImage('./Data/Images/Green.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(result) {
             greenImage = result;
         }));
-        promises.push(loadImage('./Data/Images/Blue.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(result) {
             blueImage = result;
         }));
-        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(result) {
             blueAlphaImage = result;
         }));
-        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(result) {
             blueOverRedImage = result;
         }));
-        promises.push(loadImage('./Data/Images/Red16x16.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(result) {
             red16x16Image = result;
         }));
 

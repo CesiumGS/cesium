@@ -45,43 +45,43 @@ var viewModel = {
     tilesets: [
         {
             name: 'Tileset',
-            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
+            resource: Cesium.CesiumIon.createResource(3883, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Translucent',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
+            resource: Cesium.CesiumIon.createResource(3871, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Translucent/Opaque',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
+            resource: Cesium.CesiumIon.createResource(3872, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Multi-color',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/'
+            resource: Cesium.CesiumIon.createResource(3870, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Request Volume',
-            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+            resource: Cesium.CesiumIon.createResource(3884, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Batched',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
+            resource: Cesium.CesiumIon.createResource(3873, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Instanced',
-            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
+            resource: Cesium.CesiumIon.createResource(3877, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Instanced/Orientation',
-            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/'
+            resource: Cesium.CesiumIon.createResource(3876, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'Composite',
-            url: '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
+            resource: Cesium.CesiumIon.createResource(3874, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'PointCloud',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/'
+            resource: Cesium.CesiumIon.createResource(3881, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'PointCloudConstantColor',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/'
+            resource: Cesium.CesiumIon.createResource(3879, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'PointCloudNormals',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/'
+            resource: Cesium.CesiumIon.createResource(3880, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }, {
             name: 'PointCloudBatched',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
+            resource: Cesium.CesiumIon.createResource(3878, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
         }
     ],
     selectedTileset: undefined,
@@ -105,13 +105,14 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
         inspectorViewModel.tileset = undefined;
         return;
     }
-    tileset = new Cesium.Cesium3DTileset({
-        url: options.url
-    });
-    inspectorViewModel.tileset = tileset;
-    scene.primitives.add(tileset);
-    tileset.readyPromise.then(function(tileset) {
 
+    options.resource.then(function(url) {
+        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+            url : url
+        }));
+        return tileset.readyPromise;
+    }).then(function() {
+        inspectorViewModel.tileset = tileset;
         viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0, -2.0, Math.max(100.0 - tileset.boundingSphere.radius, 0.0)));
 
         var properties = tileset.properties;

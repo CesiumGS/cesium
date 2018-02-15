@@ -13,6 +13,7 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/getStringFromTypedArray',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
@@ -51,6 +52,7 @@ define([
         DeveloperError,
         FeatureDetection,
         getStringFromTypedArray,
+        CesiumMath,
         Matrix3,
         Matrix4,
         oneTimeWarning,
@@ -466,7 +468,7 @@ define([
         // Typical use case is leaves, where lower estimates of interpoint distance might
         // lead to underattenuation.
         var sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
-        content._baseResolutionApproximation = Math.cbrt(sphereVolume / pointsLength);
+        content._baseResolutionApproximation = CesiumMath.cbrt(sphereVolume / pointsLength);
     }
 
     var scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier = new Cartesian4();
