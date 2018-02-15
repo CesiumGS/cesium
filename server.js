@@ -55,14 +55,7 @@
     app.use(function(req, res, next) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-        //intercepts OPTIONS method
-        if ('OPTIONS' === req.method) {
-            res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, DELETE, OPTIONS');
-            //respond with 200
-            res.sendStatus(200);
-        } else {
-            next();
-        }
+        next();
     });
 
     function checkGzipAndNext(req, res, next) {

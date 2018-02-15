@@ -6,7 +6,6 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/JulianDate',
-        'Core/loadImage',
         'Core/objectToQuery',
         'Core/queryToObject',
         'Core/Request',
@@ -29,7 +28,6 @@ defineSuite([
         DefaultProxy,
         GeographicTilingScheme,
         JulianDate,
-        loadImage,
         objectToQuery,
         queryToObject,
         Request,
@@ -51,7 +49,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -335,16 +333,16 @@ defineSuite([
         return pollToPromise(function() {
             return provider1.ready && provider2.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider1.requestImage(0, 0, 0).then(function(image) {
                 return provider2.requestImage(0, 0, 0).then(function(image) {
-                    expect(loadImage.createImage.calls.count()).toEqual(2);
+                    expect(Resource._Implementations.createImage.calls.count()).toEqual(2);
                     //expect the two image URLs to be the same between the two providers
-                    var allCalls = loadImage.createImage.calls.all();
+                    var allCalls = Resource._Implementations.createImage.calls.all();
                     expect(allCalls[1].args[0]).toEqual(allCalls[0].args[0]);
                 });
             });
@@ -362,13 +360,13 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -387,15 +385,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('http://wmts.invalid'))).toEqual(0);
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -423,10 +421,10 @@ defineSuite([
             }, 1);
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -476,8 +474,8 @@ defineSuite([
             times : times
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         var entry;
@@ -528,8 +526,8 @@ defineSuite([
             times : times
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         var entry;
@@ -577,8 +575,8 @@ defineSuite([
             shouldAnimate : true
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -618,9 +616,9 @@ defineSuite([
 
     it('dimensions work with RESTful requests', function() {
         var lastUrl;
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             lastUrl = url;
-            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -657,9 +655,9 @@ defineSuite([
 
     it('dimensions work with KVP requests', function() {
         var lastUrl;
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             lastUrl = url;
-            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
         var uri = new Uri('http://wmts.invalid/kvp');

@@ -65,6 +65,13 @@ define([
     })();
 
     /**
+     * Parses a query string and returns the object equivalent.
+     *
+     * @param {Uri} uri The Uri with a query object.
+     * @param {Resource} resource The Resource that will be assigned queryParameters.
+     * @param {Boolean} merge If true, we'll merge with the resource's existing queryParameters. Otherwise they will be replaced.
+     * @param {Boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in uri will take precedence.
+     *
      * @private
      */
     function parseQuery(uri, resource, merge, preserveQueryParameters) {
@@ -92,6 +99,11 @@ define([
     }
 
     /**
+     * Converts a query object into a string.
+     *
+     * @param {Uri} uri The Uri object that will have the query object set.
+     * @param {Resource} resource The resource that has queryParameters
+     *
      * @private
      */
     function stringifyQuery(uri, resource) {
@@ -108,17 +120,28 @@ define([
     }
 
     /**
+     * Clones a value if it is defined, otherwise returns the default value
+     *
+     * @param {*} [val] The value to clone.
+     * @param {*} [defaultVal] The default value.
+     *
+     * @returns {*} A clone of val or the defaultVal.
+     *
      * @private
      */
-    function defaultClone(obj, defaultVal) {
-        if (!defined(obj)) {
+    function defaultClone(val, defaultVal) {
+        if (!defined(val)) {
             return defaultVal;
         }
 
-        return defined(obj.clone) ? obj.clone() : clone(obj);
+        return defined(val.clone) ? val.clone() : clone(val);
     }
 
     /**
+     * Checks to make sure the Resource isn't already being requested.
+     *
+     * @param {Request} request The request to check.
+     *
      * @private
      */
     function checkAndResetRequest(request) {
@@ -131,6 +154,60 @@ define([
     }
 
     /**
+     * This combines a map of query parameters.
+     *
+     * @param {Object} q1 The first map of query parameters. Values in this map will take precedence if preserveQueryParameters is false.
+     * @param {Object} q2 The second map of query parameters.
+     * @param {Boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in q1 will take precedence.
+     *
+     * @returns {Object} The combined map of query parameters.
+     *
+     * @example
+     * var q1 = {
+     *   a: 1,
+     *   b: 2
+     * };
+     * var q2 = {
+     *   a: 3,
+     *   c: 4
+     * };
+     * var q3 = {
+     *   b: [5, 6],
+     *   d: 7
+     * }
+     *
+     * // Returns
+     * // {
+     * //   a: [1, 3],
+     * //   b: 2,
+     * //   c: 4
+     * // };
+     * combineQueryParameters(q1, q2, true);
+     *
+     * // Returns
+     * // {
+     * //   a: 1,
+     * //   b: 2,
+     * //   c: 4
+     * // };
+     * combineQueryParameters(q1, q2, false);
+     *
+     * // Returns
+     * // {
+     * //   a: 1,
+     * //   b: [2, 5, 6],
+     * //   d: 7
+     * // };
+     * combineQueryParameters(q1, q3, true);
+     *
+     * // Returns
+     * // {
+     * //   a: 1,
+     * //   b: 2,
+     * //   d: 7
+     * // };
+     * combineQueryParameters(q1, q3, false);
+     *
      * @private
      */
     function combineQueryParameters(q1, q2, preserveQueryParameters) {
@@ -278,7 +355,10 @@ define([
      */
     Resource.createIfNeeded = function(resource, options) {
         if (resource instanceof Resource) {
-            // Keep existing request
+            // Keep existing request object. This function is used internally to duplicate a Resource, so that it can't
+            //  be modified outside of a class that holds it (eg. an imagery or terrain provider). Since the Request objects
+            //  are managed outside of the providers, by the tile loading code, we want to keep the request property the same so if it is changed
+            //  in the underlying tiling code the requests for this resource will use it.
             return  resource.getDerivedResource({
                 request: resource.request
             });
@@ -1264,7 +1344,8 @@ define([
      * Asynchronously loads the given resource.  Returns a promise that will resolve to
      * the result once loaded, or reject if the resource failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
-     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled. It's recommended that you use
+     * the more specific functions eg. fetchJson, fetchBlob, etc.
      *
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
@@ -1274,9 +1355,8 @@ define([
      *
      *
      * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
      * resource.fetch()
-     *   .then(function(blob) {
+     *   .then(function(body) {
      *       // use the data
      *   }).otherwise(function(error) {
      *       // an error occurred
@@ -1331,9 +1411,8 @@ define([
      *
      *
      * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
      * resource.delete()
-     *   .then(function(blob) {
+     *   .then(function(body) {
      *       // use the data
      *   }).otherwise(function(error) {
      *       // an error occurred
@@ -1388,7 +1467,6 @@ define([
      *
      *
      * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
      * resource.head()
      *   .then(function(headers) {
      *       // use the data
@@ -1445,8 +1523,7 @@ define([
      *
      *
      * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
-     * resource.head()
+     * resource.options()
      *   .then(function(headers) {
      *       // use the data
      *   }).otherwise(function(error) {
@@ -1503,7 +1580,6 @@ define([
      *
      *
      * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
      * resource.post(data)
      *   .then(function(result) {
      *       // use the result
@@ -1565,7 +1641,6 @@ define([
      *
      *
      * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
      * resource.put(data)
      *   .then(function(result) {
      *       // use the result
@@ -1627,7 +1702,6 @@ define([
      *
      *
      * @example
-     * // Load a single resource asynchronously. In real code, you should use loadBlob instead.
      * resource.patch(data)
      *   .then(function(result) {
      *       // use the result

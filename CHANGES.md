@@ -8,6 +8,7 @@ Change Log
 
 ##### Additions :tada:
 * Added support for a promise to a resource for `CesiumTerrainProvider`, `createTileMapServiceImageryProvider` and `Cesium3DTileset` [#6204](https://github.com/AnalyticalGraphicsInc/cesium/pull/6204)
+* Added `Cesium.Math.cbrt`. [#6222](https://github.com/AnalyticalGraphicsInc/cesium/pull/6222)
 * `Resource` class [#6205](https://github.com/AnalyticalGraphicsInc/cesium/issues/6205)
   * Added `put`, `patch`, `delete`, `options` and `head` methods, so it can be used for all XHR requests.
   * Added `preserveQueryParameters` parameter to `getDerivedResource`, to allow us to append query parameters instead of always replacing them.
@@ -17,6 +18,7 @@ Change Log
 * Fixed bug where AxisAlignedBoundingBox did not copy over center value when cloning an undefined result. [#6183](https://github.com/AnalyticalGraphicsInc/cesium/pull/6183)
 * Fixed `Resource.fetch` when called with no arguments [#6206](https://github.com/AnalyticalGraphicsInc/cesium/issues/6206)
 * Fixed `Resource.clone` to clone the `Request` object, so resource can be used in parallel. [#6208](https://github.com/AnalyticalGraphicsInc/cesium/issues/6208)
+* Fixed bug where 3D Tiles Point Clouds would fail in Internet Explorer. [#6220](https://github.com/AnalyticalGraphicsInc/cesium/pull/6220)
 
 ##### Additions :tada:
 * Enable terrain in the `CesiumViewer` demo application [#6198](https://github.com/AnalyticalGraphicsInc/cesium/pull/6198)
