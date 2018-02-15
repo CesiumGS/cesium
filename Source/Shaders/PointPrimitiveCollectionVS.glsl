@@ -151,6 +151,7 @@ void main()
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    v_inverse_depth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
@@ -168,6 +169,7 @@ void main()
         {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
+            v_inverse_depth = 1.0 / czm_currentFrustum.x;
         }
     }
 #endif
@@ -180,8 +182,6 @@ void main()
     v_innerPercent = 1.0 - outlinePercent;
     v_pixelDistance = 2.0 / totalSize;
     gl_PointSize = totalSize;
-
-    v_inverse_depth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
 
 #ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;
