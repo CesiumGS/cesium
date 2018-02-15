@@ -11,6 +11,7 @@ varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_innerPercent;
 varying float v_pixelDistance;
+varying float v_inverse_depth;
 
 #ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
@@ -179,6 +180,8 @@ void main()
     v_innerPercent = 1.0 - outlinePercent;
     v_pixelDistance = 2.0 / totalSize;
     gl_PointSize = totalSize;
+
+    v_inverse_depth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
 
 #ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;

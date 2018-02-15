@@ -6,6 +6,8 @@ attribute float a_batchId;
 
 uniform mat4 u_modifiedModelView;
 
+varying float v_inverse_depth;
+
 void main()
 {
     float expandDir = expandAndWidth.x;
@@ -19,4 +21,5 @@ void main()
     float angle;
     vec4 positionWC = getPolylineWindowCoordinatesEC(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
+    v_inverse_depth = 1.0 / (czm_projection * u_modifiedModelView * currentPosition).w;
 }

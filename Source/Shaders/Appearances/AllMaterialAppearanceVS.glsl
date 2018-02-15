@@ -22,7 +22,7 @@ void main()
     v_tangentEC = czm_normal * tangent;                       // tangent in eye coordinates
     v_bitangentEC = czm_normal * bitangent;                   // bitangent in eye coordinates
     v_st = st;
-    v_inverse_depth = -1.0 / v_positionEC.z;
 
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
+    v_inverse_depth = 1.0 / gl_Position.w;
 }
