@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/GeometryVisualizer',
+        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -30,6 +31,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         GeometryVisualizer,
+        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -75,7 +77,8 @@ defineSuite([
         // Leave ground primitive uninitialized
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     it('Can create and destroy', function() {

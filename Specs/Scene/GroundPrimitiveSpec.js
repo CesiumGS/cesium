@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/GroundPrimitive',
+        'Core/ApproximateTerrainHeights',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/destroyObject',
@@ -20,6 +21,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         GroundPrimitive,
+        ApproximateTerrainHeights,
         Color,
         ColorGeometryInstanceAttribute,
         destroyObject,
@@ -69,7 +71,8 @@ defineSuite([
         // Leave ground primitive uninitialized
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function MockGlobePrimitive(primitive) {

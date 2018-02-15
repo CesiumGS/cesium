@@ -133,7 +133,7 @@ define([
     /**
      * Gets the value of the property at the provided time.
      *
-     * @param {JulianDate} [time] The time for which to retrieve the value.
+     * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */

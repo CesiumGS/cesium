@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/DataSourceDisplay',
+        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Iso8601',
@@ -11,6 +12,7 @@ defineSuite([
         'Specs/MockDataSource'
     ], function(
         DataSourceDisplay,
+        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Iso8601,
@@ -38,7 +40,8 @@ defineSuite([
         // Leave ground primitive uninitialized
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     afterEach(function() {
@@ -358,7 +361,8 @@ defineSuite([
     it('verify update returns false till terrain heights are initialized', function() {
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
 
         var source1 = new MockDataSource();
         var source2 = new MockDataSource();

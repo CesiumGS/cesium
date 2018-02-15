@@ -51,7 +51,7 @@ Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', f
     handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction(function(movement) {
         var cartesian = viewer.camera.pickEllipsoid(movement.endPosition, scene.globe.ellipsoid);
-        if (cartesian) {
+        if (Cesium.defined(cartesian)) {
             var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
             var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
             var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
