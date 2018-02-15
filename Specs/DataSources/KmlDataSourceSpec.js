@@ -2885,15 +2885,12 @@ defineSuite([
                 </Polygon>\
             </Placemark>';
 
-
-
         var moonOptions = combine(options, { ellipsoid : Ellipsoid.MOON });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), moonOptions).then(function(moonDataSource) {
             var entity = moonDataSource.entities.values[0];
             var moonPoint = entity.polygon.hierarchy.getValue().positions[0];
             expect(moonPoint).toEqual(new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544));
         });
-
     });
 
     it('Geometry Polygon: When loaded with the default ellipsoid, the coordinates should be on Earth.', function() {
@@ -2912,7 +2909,6 @@ defineSuite([
                     </outerBoundaryIs>\
                 </Polygon>\
             </Placemark>';
-
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
