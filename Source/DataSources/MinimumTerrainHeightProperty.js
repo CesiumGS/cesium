@@ -115,13 +115,6 @@ define([
      * @returns {Number} The minimum terrain height
      */
     MinimumTerrainHeightProperty.prototype.getValue = function(time) {
-        return this._getValue(time);
-    };
-
-    /**
-     * @private
-     */
-    MinimumTerrainHeightProperty.prototype._getValue = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
