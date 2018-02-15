@@ -113,7 +113,7 @@ define([
             proxy: options.proxy
         });
 
-        urlResource.addQueryParameters({
+        urlResource.setQueryParameters({
             key: this._key
         });
 
