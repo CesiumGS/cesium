@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
+        '../Core/ClippingPlaneCollection',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -46,6 +47,7 @@ define([
         Cartesian3,
         Cartographic,
         Check,
+        ClippingPlaneCollection,
         defaultValue,
         defined,
         defineProperties,
@@ -547,12 +549,8 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
-        this._clippingPlanes = options.clippingPlanes;
-
-        // Set ownership so no Models created as content will try to delete it
-        if (defined(options.clippingPlanes)) {
-            options.clippingPlanes.owner = this;
-        }
+        this._clippingPlanes = undefined;
+        ClippingPlaneCollection.setOwnership(options.clippingPlanes, this, '_clippingPlanes');
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -810,7 +808,7 @@ define([
             }
         },
         /**
-         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
          *
          * @type {ClippingPlaneCollection}
          */
@@ -819,12 +817,7 @@ define([
                 return this._clippingPlanes;
             },
             set : function(value) {
-                var oldClippingPlanes = this._clippingPlanes;
-                if (defined(oldClippingPlanes)) {
-                    oldClippingPlanes.checkDestroy(this);
-                }
-                this._clippingPlanes = value;
-                value.owner = this;
+                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
             }
         },
 
@@ -1861,10 +1854,8 @@ define([
 
         // Update clipping planes and set them as clean to avoid re-updating the same information from each tile
         var clippingPlanes = this._clippingPlanes;
-        if (defined(clippingPlanes)) {
-            clippingPlanes._planeTextureDirty = true;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
-            clippingPlanes._planeTextureDirty = false;
         }
 
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
@@ -1941,11 +1932,8 @@ define([
         // Destroy debug labels
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
 
-        // Destroy clipping plane collection, setting ownership first.
-        var clippingPlaneCollection = this._clippingPlanes;
-        if (defined(clippingPlaneCollection)) {
-            clippingPlaneCollection.checkDestroy(this);
-        }
+        // Destroy clipping plane collection
+        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {

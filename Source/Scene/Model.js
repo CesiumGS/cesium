@@ -512,11 +512,15 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
-         * The {@link ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
+         * The {ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
+         * @private
          *
          * @type {ClippingPlaneCollection}
          */
-        this.clippingPlanes = options.clippingPlanes;
+        this._clippingPlanes = undefined;
+
+        var clippingPlanes = options.clippingPlanes;
+        ClippingPlaneCollection.setOwnership(clippingPlanes, this, '_clippingPlanes');
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -996,6 +1000,22 @@ define([
         cachedTexturesByteLength : {
             get : function() {
                 return this._cachedTexturesByteLength;
+            }
+        },
+
+        /**
+         * The {ClippingPlaneCollection} used to selectively disable rendering the model.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {ClippingPlaneCollection}
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._clippingPlanes;
+            },
+            set : function(value) {
+                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
             }
         }
     });
@@ -3786,8 +3806,8 @@ define([
     }
 
     function updateClippingPlanes(model, frameState) {
-        var clippingPlanes = model.clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+        var clippingPlanes = model._clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes._owner === model && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
     }
@@ -4205,7 +4225,7 @@ define([
                 }
             }
 
-            var clippingPlanes = this.clippingPlanes;
+            var clippingPlanes = this._clippingPlanes;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
                 Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
             }
@@ -4369,12 +4389,13 @@ define([
 
         releaseCachedGltf(this);
 
-        // Check if ClippingPlaneCollection was already destroyed, for instance, by Cesium3DTileset
-        var clippingPlaneCollection = this.clippingPlanes;
-        if (defined(clippingPlaneCollection) && !clippingPlaneCollection.isDestroyed()) {
-            // If not, only destroy if the ClippingPlaneCollection is not owned by a Cesium3DTileset
-            clippingPlaneCollection.checkDestroy(this);
+        // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
+        // _clippingPlanes references a ClippingPlaneCollection that this model does not own.
+        var clippingPlaneCollection = this._clippingPlanes;
+        if (defined(clippingPlaneCollection) && !clippingPlaneCollection.isDestroyed() && clippingPlaneCollection._owner === this) {
+            clippingPlaneCollection.destroy();
         }
+        this._clippingPlanes = undefined;
 
         return destroyObject(this);
     };

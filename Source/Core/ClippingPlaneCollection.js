@@ -50,7 +50,7 @@ define([
 
     /**
      * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the
-     * outside of the specified list of {@link Plane} objects.
+     * outside of the specified list of {@link Plane} objects for a single gltf model, 3D Tileset, or the globe.
      *
      * @alias ClippingPlaneCollection
      * @constructor
@@ -107,12 +107,14 @@ define([
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
         /**
-         * If this ClippingPlaneCollection has an owner, only its owner can destroy it using checkDestroy(object)
+         * If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
+         * This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
+         * @private
          *
          * @type {Object}
          * @default undefined
          */
-        this.owner = undefined;
+        this._owner = undefined;
 
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
@@ -120,7 +122,6 @@ define([
 
         // Avoid wastefully re-uploading textures when the clipping planes don't change between frames
         var previousTextureBytes = new ArrayBuffer(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
-        previousTextureBytes[0] = 1;
         var currentTextureBytes = new ArrayBuffer(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
 
         this._textureBytes = new Uint8Array(currentTextureBytes);
@@ -128,9 +129,6 @@ define([
         // Uint32 views for comparison and copy
         this._previousUint32View = new Uint32Array(previousTextureBytes);
         this._currentUint32View = new Uint32Array(currentTextureBytes);
-
-        // Avoid wasteful re-upload checks within a frame when a ClippingPlaneCollection is shared by many Models in a Cesium3DTileset
-        this._planeTextureDirty = true;
 
         this._clippingPlanesTexture = undefined;
 
@@ -353,9 +351,10 @@ define([
     }
 
     var octEncodeScratch = new Cartesian2();
-    var rightShift = 1.0 / 256;
+    var rightShift = 1.0 / 256.0;
     /**
      * Encodes a normalized vector into 4 SNORM values in the range [0-255] following the 'oct' encoding.
+     * oct32 precision is higher than the default oct16, hence the additional 2 uint16 values.
      */
     function oct32EncodeNormal(vector, result) {
         AttributeCompression.octEncodeInRange(vector, 65535, octEncodeScratch);
@@ -373,7 +372,7 @@ define([
         var textureBytes = clippingPlaneCollection._textureBytes;
         var planes = clippingPlaneCollection._planes;
         var length = planes.length;
-        var unchanged = true;
+        var dirty = false;
         var byteIndex, uint32Index;
 
         var lengthRangeUnion = clippingPlaneCollection._lengthRangeUnion;
@@ -396,9 +395,9 @@ define([
             textureBytes[byteIndex + 2] = oct32Normal.z;
             textureBytes[byteIndex + 3] = oct32Normal.w;
 
-            uint32Index = i + i;
-            unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
-            if (!unchanged) {
+            uint32Index = i * 2;
+            dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
+            if (dirty) {
                 previousUint32View[uint32Index] = currentUint32View[uint32Index];
             }
 
@@ -420,9 +419,9 @@ define([
             byteIndex = i * 8 + 4;
             insertFloat(textureBytes, normalizedDistance, byteIndex);
 
-            uint32Index = i + i + 1;
-            unchanged = unchanged && previousUint32View[uint32Index] === currentUint32View[uint32Index];
-            if (!unchanged) {
+            uint32Index = i * 2 + 1;
+            dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
+            if (dirty) {
                 previousUint32View[uint32Index] = currentUint32View[uint32Index];
             }
          }
@@ -430,7 +429,7 @@ define([
          lengthRange.x = lengthRangeUnion.x;
          lengthRange.y = lengthRangeUnion.y;
          lengthRange.z = lengthRangeUnion.z;
-         return !unchanged;
+         return dirty;
     }
 
     /**
@@ -457,9 +456,6 @@ define([
                 })
             });
             this._clippingPlanesTexture = clippingPlanesTexture;
-        }
-        if (!this._planeTextureDirty) {
-            return;
         }
         // pack planes to currentTextureBytes, do a texture update if anything changed.
         if (packAndReturnChanged(this)) {
@@ -556,12 +552,12 @@ define([
 
     /**
      * The maximum number of supported clipping planes.
+     * @private
      *
-     * @see maxClippingPlanes.glsl
      * @type {number}
      * @constant
      */
-    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 2048;
+    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 2048; // See maxClippingPlanes.glsl
 
     /**
      * The pixel width of a square, power-of-two RGBA UNSIGNED_BYTE texture
@@ -574,27 +570,62 @@ define([
      */
     ClippingPlaneCollection.TEXTURE_WIDTH = CesiumMath.nextPowerOfTwo(Math.ceil(Math.sqrt(ClippingPlaneCollection.MAX_CLIPPING_PLANES * 2)));
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see ClippingPlaneCollection#destroy
+     */
     ClippingPlaneCollection.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Destroys this ClippingPlaneCollection if it either has no owner or a reference to the owner is passed in.
-     * We only expect an owner to be defined if this collection is shared by one Cesium3DTileset
-     * and a series of Cesium3DTiles with Model content.
+     * Destroys this ClippingPlaneCollectionand its WebGL resources.
      * @private
-     *
-     * @param {Object} owner An object to check against this ClippingPlaneCollection's owner object
      */
-    ClippingPlaneCollection.prototype.checkDestroy = function(owner) {
-        if (defined(this.owner) && owner !== this.owner) {
-            return this;
-        }
-
-        if (defined(this._clippingPlanesTexture)) {
-            this._clippingPlanesTexture.destroy();
-        }
+    ClippingPlaneCollection.prototype.destroy = function() {
+        this._clippingPlanesTexture = this._clippingPlanesTexture && this._clippingPlanesTexture.destroy();
         return destroyObject(this);
+    };
+
+    /**
+     * Sets the owner for the input ClippingPlaneCollection if there wasn't another owner.
+     * Destroys the owner's previous ClippingPlaneCollection if setting is successful.
+     *
+     * @param {ClippingPlaneCollection} [clippingPlaneCollection] A ClippingPlaneCollection (or undefined) being attached to an object
+     * @param {Object} newOwner An Object that should receive the new ClippingPlaneCollection
+     * @param {String} key The Key for the Object to reference the ClippingPlaneCollection
+     * @private
+     */
+    ClippingPlaneCollection.setOwnership = function(clippingPlaneCollection, newOwner, key) {
+        // Don't destroy the ClippingPlaneCollection if it is already owned by newOwner
+        if (clippingPlaneCollection === newOwner[key]) {
+            return;
+        }
+        // Destroy the existing ClippingPlaneCollection, if any
+        newOwner[key] = newOwner[key] && newOwner[key].destroy();
+        if (defined(clippingPlaneCollection)) {
+            if (defined(clippingPlaneCollection._owner)) {
+                throw new DeveloperError('ClippingPlaneCollection should only be assigned to one object');
+            }
+            clippingPlaneCollection._owner = newOwner;
+            newOwner[key] = clippingPlaneCollection;
+        }
+    };
+
+    /**
+     * Determines if rendering with clipping planes is supported.
+     *
+     * @returns {Boolean} <code>true</code> if ClippingPlaneCollections are supported
+     * @deprecated
+     */
+    ClippingPlaneCollection.isSupported = function() {
+        return true;
     };
 
     return ClippingPlaneCollection;

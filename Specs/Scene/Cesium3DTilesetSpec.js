@@ -2887,30 +2887,7 @@ defineSuite([
         });
     });
 
-    it('takes ownership of ClippingPlaneCollections', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            var clippingPlaneCollection1 = new ClippingPlaneCollection({
-                planes : [
-                    new Plane(Cartesian3.UNIT_Z, -100000000.0)
-                ]
-            });
-            expect(clippingPlaneCollection1.owner).not.toBeDefined();
-
-            tileset.clippingPlanes = clippingPlaneCollection1;
-            expect(clippingPlaneCollection1.owner).toBe(tileset);
-
-            var clippingPlaneCollection2 = new ClippingPlaneCollection({
-                planes : [
-                    new Plane(Cartesian3.UNIT_Z, -100000000.0)
-                ]
-            });
-
-            tileset.clippingPlanes = clippingPlaneCollection2;
-            expect(clippingPlaneCollection2.owner).toBe(tileset);
-        });
-    });
-
-    it('handles destroying ClippingPlaneCollections', function() {
+    it('destroys attached ClippingPlaneCollections and ClippingPlaneCollections that have been detached', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var clippingPlaneCollection1 = new ClippingPlaneCollection({
                 planes : [
@@ -2931,6 +2908,25 @@ defineSuite([
 
             scene.primitives.remove(tileset);
             expect(clippingPlaneCollection2.isDestroyed()).toBe(true);
+        });
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to another Tileset', function() {
+        var clippingPlanes;
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset1) {
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset1.clippingPlanes = clippingPlanes;
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl);
+        })
+        .then(function(tileset2) {
+            expect(function() {
+                tileset2.clippingPlanes = clippingPlanes;
+            }).toThrowDeveloperError();
         });
     });
 

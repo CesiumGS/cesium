@@ -21,6 +21,7 @@ defineSuite([
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
         'Scene/ImagerySplitDirection',
+        'Scene/Model',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
@@ -51,6 +52,7 @@ defineSuite([
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         ImagerySplitDirection,
+        Model,
         QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
@@ -898,6 +900,37 @@ defineSuite([
             expect(tile.isClipped).toBe(false);
             expect(scene.frameState.commandList.length).toBe(4);
         });
+    });
+
+    it('destroys attached ClippingPlaneCollections that have been detached', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new Plane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var globe = scene.globe;
+        globe.clippingPlanes = clippingPlanes;
+        expect(clippingPlanes.isDestroyed()).toBe(false);
+
+        globe.clippingPlanes = undefined;
+        expect(clippingPlanes.isDestroyed()).toBe(true);
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to a Model', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new Plane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var model = scene.primitives.add(Model.fromGltf({
+            url : './Data/Models/Box/CesiumBoxTest.gltf'
+        }));
+        model.clippingPlanes = clippingPlanes;
+        var globe = scene.globe;
+
+        expect(function() {
+            globe.clippingPlanes = clippingPlanes;
+        }).toThrowDeveloperError();
     });
 
 }, 'WebGL');

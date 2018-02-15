@@ -133,7 +133,7 @@ function updateClippingPlanes() {
 
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 var agiHqUrl = Cesium.CesiumIon.createResource(1458, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg' });
-var instancedUrl = '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/';
+var instancedUrl = Cesium.CesiumIon.createResource(3876, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' });
 var pointCloudUrl = Cesium.CesiumIon.createResource(3742, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxOGZjMjlhZC03MDE1LTQ3ZTAtODEyNy05YTU3M2MwYzQ0YmEiLCJpZCI6NDQsImFzc2V0cyI6WzM3NDJdLCJpYXQiOjE1MTcyNDI3NDJ9.TJAJctFXC1UyFMpxkA3cyKVAmnh72cLtfY1yKbaQsyk' });
 
 function loadModel(url) {
@@ -207,10 +207,12 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
             });
     } else if (newValue === clipObjects[3]) {
         // i3dm
-        loadTileset(instancedUrl);
-        tileset.readyPromise.then(function () {
-            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        });
+        instancedUrl.then(function(resource) {
+            return loadTileset(resource);
+        })
+            .then(function() {
+                tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+            });
     } else if (newValue === clipObjects[4]) {
         // Terrain
         var position = Cesium.Cartesian3.fromRadians(-2.0872979473351286, 0.6596620013036164, 2380.0);
@@ -234,7 +236,7 @@ function reset() {
     viewModel.cylinderRadius = cylinderRadius;
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
-    globe.destroyClippingPlanes();
+    globe.clippingPlanes = undefined; // destroy Globe clipping planes, if any
 }
 
 Sandcastle.addToggleButton('union', clippingModeUnion, function(checked) {

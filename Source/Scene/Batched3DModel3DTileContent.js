@@ -398,8 +398,7 @@ define([
                 pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
                 pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-                pickObject : pickObject,
-                clippingPlanes : tileset.clippingPlanes
+                pickObject : pickObject
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -494,7 +493,8 @@ define([
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (defined(tilesetClippingPlanes)) {
             // Dereference the clipping planes from the model if they are irrelevant - saves on shading
-            this._model.clippingPlanes = tilesetClippingPlanes.enabled && this._tile._isClipped ? tilesetClippingPlanes : undefined;
+            // Link/Dereference directly to avoid ownership checks.
+            this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
         }
 
         this._model.update(frameState);

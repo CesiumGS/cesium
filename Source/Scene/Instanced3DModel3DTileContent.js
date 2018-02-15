@@ -516,7 +516,8 @@ define([
         var model = this._modelInstanceCollection._model;
         if (defined(tilesetClippingPlanes)) {
             // Dereference the clipping planes from the model if they are irrelevant - saves on shading
-            model.clippingPlanes = tilesetClippingPlanes.enabled && this._tile._isClipped ? tilesetClippingPlanes : undefined;
+            // Link/Dereference directly to avoid ownership checks.
+            model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
         }
 
         // If any commands were pushed, add derived commands

@@ -103,7 +103,6 @@ define([
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
 
-        this._defaultTexture = undefined;
         this._drawCommand = undefined;
         this._pickCommand = undefined;
         this._pickId = undefined; // Only defined when batchTable is undefined
@@ -466,7 +465,7 @@ define([
         // Typical use case is leaves, where lower estimates of interpoint distance might
         // lead to underattenuation.
         var sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
-        content._baseResolutionApproximation = Math.pow(sphereVolume / pointsLength, 1/3); // IE doesn't support cbrt
+        content._baseResolutionApproximation = Math.pow(sphereVolume / pointsLength, 1.0 / 3.0); // IE doesn't support Math.cbrt
     }
 
     var scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier = new Cartesian4();
@@ -581,7 +580,7 @@ define([
             },
             u_clippingPlanes : function() {
                 var clippingPlanes = content._tileset.clippingPlanes;
-                return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? content._defaultTexture : clippingPlanes.texture;
+                return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? context.defaultTexture : clippingPlanes.texture;
             },
             u_clippingPlanesEdgeStyle : function() {
                 var clippingPlanes = content._tileset.clippingPlanes;
@@ -1286,8 +1285,6 @@ define([
         this._mode = frameState.mode;
 
         var context = frameState.context;
-
-        this._defaultTexture = context.defaultTexture;
 
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;

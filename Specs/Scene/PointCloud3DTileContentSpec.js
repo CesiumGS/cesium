@@ -901,7 +901,6 @@ defineSuite([
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
                 color = rgba;
-                console.log(rgba);
             });
 
             tileset.clippingPlanes = new ClippingPlaneCollection ({
@@ -913,17 +912,9 @@ defineSuite([
                 unionClippingRegions: true
             });
 
-            expect(scene).toRenderAndCall(function(rgba) {
-                console.log(rgba);
-            }); // TODO: look at this in Sandcastle
-
             expect(scene).notToRender(color);
 
             tileset.clippingPlanes.unionClippingRegions = false;
-
-            expect(scene).toRenderAndCall(function(rgba) {
-                console.log(rgba);
-            });
 
             expect(scene).toRender(color);
         });

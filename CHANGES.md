@@ -3,6 +3,9 @@ Change Log
 
 ### 1.43 - 2018-03-01
 
+##### Deprecated :hourglass_flowing_sand:
+* `ClippingPlaneCollection` is now supported in Internet Explorer, so `ClippingPlaneCollection.isSupported` always returns `true`. [#6201](https://github.com/AnalyticalGraphicsInc/cesium/pull/6201)
+
 ##### Additions :tada:
 * Added support for a promise to a resource for `CesiumTerrainProvider`, `createTileMapServiceImageryProvider` and `Cesium3DTileset` [#6204](https://github.com/AnalyticalGraphicsInc/cesium/pull/6204)
 
@@ -15,7 +18,7 @@ Change Log
 * Enable terrain in the `CesiumViewer` demo application [#6198](https://github.com/AnalyticalGraphicsInc/cesium/pull/6198)
 
 ##### Additions :tada:
-* Increased maximum number of clipping planes from 6 to 2048, added support for Internet Explorer, and removed `ClippingPlaneCollection.isSupported`. [#6201](https://github.com/AnalyticalGraphicsInc/cesium/pull/6201)
+* Increased maximum number of clipping planes from 6 to 2048, added support for Internet Explorer. [#6201](https://github.com/AnalyticalGraphicsInc/cesium/pull/6201)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__

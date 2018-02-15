@@ -172,7 +172,7 @@ define([
          * @type {ClippingPlaneCollection}
          * @private
          */
-        this.clippingPlanes = undefined;
+        this._clippingPlanes = undefined;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -302,6 +302,21 @@ define([
                     this._quadtree.invalidateAllTiles();
                 }
             }
+        },
+        /**
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+         *
+         * @type {ClippingPlaneCollection}
+         *
+         * @private
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._clippingPlanes;
+            },
+            set : function(value) {
+                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+            }
         }
     });
 
@@ -397,7 +412,7 @@ define([
             }
         }
         // update clipping planes
-        var clippingPlanes = this.clippingPlanes;
+        var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
@@ -552,7 +567,7 @@ define([
             }
         }
 
-        var clippingPlanes = this.clippingPlanes;
+        var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
             tile.isClipped = (planeIntersection !== Intersect.INSIDE);
@@ -670,9 +685,8 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
-        if (defined(this.clippingPlanes)) {
-            this.clippingPlanes.checkDestroy();
-        }
+        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+
         return destroyObject(this);
     };
 
@@ -923,11 +937,11 @@ define([
                 return this.properties.dayTextureSplit;
             },
             u_clippingPlanesLengthRange : function() {
-                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
+                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
                 return defined(clippingPlanes) ? clippingPlanes.lengthRange : Cartesian3.ZERO;
             },
             u_clippingPlanes : function() {
-                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
+                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
                 if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
                     // Check in case clippingPlanes hasn't been updated yet.
                     return clippingPlanes.texture;
@@ -935,7 +949,7 @@ define([
                 return frameState.context.defaultTexture;
             },
             u_clippingPlanesMatrix : function() {
-                var clippingPlanes = globeSurfaceTileProvider.clippingPlanes;
+                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
                 return defined(clippingPlanes) ? Matrix4.multiply(frameState.context.uniformState.view, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix) : Matrix4.IDENTITY;
             },
             u_clippingPlanesEdgeStyle : function() {
@@ -1359,7 +1373,7 @@ define([
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             // update clipping planes
-            var clippingPlanes = tileProvider.clippingPlanes;
+            var clippingPlanes = tileProvider._clippingPlanes;
             var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped;
             if (clippingPlanesEnabled) {
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);

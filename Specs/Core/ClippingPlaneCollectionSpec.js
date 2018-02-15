@@ -175,7 +175,6 @@ defineSuite([
         expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
         expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
 
-        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
         scene.destroyForSpecs();
     });
 
@@ -215,7 +214,6 @@ defineSuite([
         expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
         expect(lengthRangeUnion.w).toEqual(1);
 
-        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
         scene.destroyForSpecs();
     });
 
@@ -258,7 +256,6 @@ defineSuite([
         expect(CesiumMath.equalsEpsilon(plane1.distance, planes[0].distance, CesiumMath.EPSILON3)).toEqual(true);
         expect(CesiumMath.equalsEpsilon(plane2.distance, planes[1].distance, CesiumMath.EPSILON3)).toEqual(true);
 
-        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
         scene.destroyForSpecs();
     });
 
@@ -282,49 +279,47 @@ defineSuite([
         clippingPlanes.update(scene.frameState);
         expect(gl.texSubImage2D.calls.count()).toEqual(1);
 
-        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
         scene.destroyForSpecs();
     });
 
-    it('does not perform texture updates if the clippingPlaneCollection has been marked clean', function() {
-        var scene = createScene();
+    it('provides a function for attaching the ClippingPlaneCollection to objects', function() {
+        var clippedObject1 = {
+            clippingPlanes : undefined
+        };
+        var clippedObject2 = {
+            clippingPlanes : undefined
+        };
 
-        var gl = scene.frameState.context._gl;
-        spyOn(gl, 'texSubImage2D').and.callThrough();
-
-        clippingPlanes = new ClippingPlaneCollection({
+        var clippingPlanes1 = new ClippingPlaneCollection({
             planes : planes,
             enabled : false,
             edgeColor : Color.RED,
             modelMatrix : transform
         });
-        expect(gl.texSubImage2D.calls.count()).toEqual(0);
 
-        clippingPlanes._planeTextureDirty = false; // Set by Cesium3DTileset so update() from Model won't burn CPU time packing/comparing
-        clippingPlanes.update(scene.frameState);
-        expect(gl.texSubImage2D.calls.count()).toEqual(0);
+        ClippingPlaneCollection.setOwnership(clippingPlanes1, clippedObject1, 'clippingPlanes');
+        expect(clippedObject1.clippingPlanes).toBe(clippingPlanes1);
+        expect(clippingPlanes1._owner).toBe(clippedObject1);
 
-        clippingPlanes.checkDestroy(); // since clippingPlanes has been updated, need to destroy textures
-        scene.destroyForSpecs();
-    });
-
-    it('does not destroy the ClippingPlaneCollection if an owner is specified unless the owner is provided', function() {
-        var scene = createScene();
-
-        var fakeCesium3DTileset = {};
-        clippingPlanes = new ClippingPlaneCollection({
+        var clippingPlanes2 = new ClippingPlaneCollection({
             planes : planes,
             enabled : false,
             edgeColor : Color.RED,
             modelMatrix : transform
         });
-        clippingPlanes.owner = fakeCesium3DTileset;
-        clippingPlanes.checkDestroy();
-        expect(clippingPlanes.isDestroyed()).toEqual(false);
-        clippingPlanes.checkDestroy(fakeCesium3DTileset);
-        expect(clippingPlanes.isDestroyed()).toEqual(true);
 
-        scene.destroyForSpecs();
+        // Expect detached clipping planes to be destroyed
+        ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject1, 'clippingPlanes');
+        expect(clippingPlanes1.isDestroyed()).toBe(true);
+
+        // Expect setting the same ClippingPlaneCollection again to not destroy the ClippingPlaneCollection
+        ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject1, 'clippingPlanes');
+        expect(clippingPlanes2.isDestroyed()).toBe(false);
+
+        // Expect failure when attaching one ClippingPlaneCollection to two objects
+        expect(function() {
+            ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject2, 'clippingPlanes');
+        }).toThrowDeveloperError();
     });
 
     it('clone without a result parameter returns new identical copy', function() {

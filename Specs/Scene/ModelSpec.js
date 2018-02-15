@@ -763,19 +763,54 @@ defineSuite([
         });
     });
 
-    it('tries to destroy attached ClippingPlaneCollections', function() {
+    it('destroys attached ClippingPlaneCollections', function() {
         return loadModel(boxUrl).then(function(model) {
             var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ]
-             });
-             model.clippingPlanes = clippingPlanes;
+            });
+            model.clippingPlanes = clippingPlanes;
             expect(model.isDestroyed()).toEqual(false);
             expect(clippingPlanes.isDestroyed()).toEqual(false);
             primitives.remove(model);
             expect(model.isDestroyed()).toEqual(true);
             expect(clippingPlanes.isDestroyed()).toEqual(true);
+        });
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to another Model', function() {
+        var clippingPlanes;
+        return loadModel(boxUrl).then(function(model1) {
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            model1.clippingPlanes = clippingPlanes;
+
+            return loadModel(boxUrl);
+        })
+        .then(function(model2) {
+            expect(function() {
+                model2.clippingPlanes = clippingPlanes;
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('destroys ClippingPlaneCollections that are detached', function() {
+        var clippingPlanes;
+        return loadModel(boxUrl).then(function(model1) {
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            model1.clippingPlanes = clippingPlanes;
+            expect(clippingPlanes.isDestroyed()).toBe(false);
+
+            model1.clippingPlanes = undefined;
+            expect(clippingPlanes.isDestroyed()).toBe(true);
         });
     });
 

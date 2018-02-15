@@ -696,16 +696,5 @@ define([
         return destroyObject(this);
     };
 
-    /**
-     * Destroys the Globe's ClippingPlaneCollection and frees the associated webgl resources.
-     */
-    Globe.prototype.destroyClippingPlanes = function() {
-        var clippingPlanes = this._surface.tileProvider.clippingPlanes;
-        if (defined(clippingPlanes)) {
-            clippingPlanes.checkDestroy();
-        }
-        this._surface.tileProvider.clippingPlanes = undefined;
-    };
-
     return Globe;
 });
