@@ -1,31 +1,27 @@
 define([
     '../Core/ApproximateTerrainHeights',
-    '../Core/Cartesian3',
-    '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
     '../Core/isArray',
-    '../Core/DeveloperError',
+    '../Core/Check',
     '../Core/Event',
-    '../Core/JulianDate',
     '../Core/Rectangle',
     './Property'
 ], function(
     ApproximateTerrainHeights,
-    Cartesian3,
-    defaultValue,
     defined,
     defineProperties,
     isArray,
-    DeveloperError,
+    Check,
     Event,
-    JulianDate,
     Rectangle,
     Property) {
     'use strict';
 
+    var scratchRectangle = new Rectangle();
+
     /**
-     * A {@link Property} which evaluates to a {@link Number} based on the minimum height of terrain
+     * A {@link Property} which evaluates to a Number based on the minimum height of terrain
      * within the bounds of the provided positions.
      *
      * @alias MinimumTerrainHeightProperty
@@ -116,9 +112,7 @@ define([
      */
     MinimumTerrainHeightProperty.prototype.getValue = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var property = this._positions;
@@ -132,7 +126,7 @@ define([
         if (!isArray(positions)) {
             positions = positions.positions; //positions is a PolygonHierarchy, just use the outer ring
         }
-        var rectangle = Rectangle.fromCartesianArray(positions);
+        var rectangle = Rectangle.fromCartesianArray(positions, undefined, scratchRectangle);
         return ApproximateTerrainHeights.getApproximateTerrainHeights(rectangle).minimumTerrainHeight;
     };
 
