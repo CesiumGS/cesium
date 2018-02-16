@@ -1140,12 +1140,20 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnion' : 'czm_discardIfClippedWithIntersect';
-            fs += '    #define CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH + '\n' +
-                  '    int clippingPlanesLength = int(u_clippingPlanesLengthRange.x); \n' +
-                  '    vec2 clippingPlanesRange = u_clippingPlanesLengthRange.yz; \n' +
-                  '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix); \n' +
-                  '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+            var clippingFunction;
+            if (ClippingPlaneCollection._useFloatTexture(context)) {
+                var width = ClippingPlaneCollection.TEXTURE_WIDTH;
+                var height = ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT;
+                clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnionFloat' : 'czm_discardIfClippedWithIntersectFloat';
+                fs += '    int clippingPlanesLength = int(u_clippingPlanesLengthRange.x); \n' +
+                      '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, clippingPlanesLength, ' + width + ', ' + height + ', u_clippingPlanesMatrix); \n';
+            } else {
+                clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnionUint8' : 'czm_discardIfClippedWithIntersectUint8';
+                fs += '    int clippingPlanesLength = int(u_clippingPlanesLengthRange.x); \n' +
+                      '    vec2 clippingPlanesRange = u_clippingPlanesLengthRange.yz; \n' +
+                      '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', u_clippingPlanesMatrix); \n';
+            }
+            fs += '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
                   '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +
                   '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +

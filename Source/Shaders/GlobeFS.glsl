@@ -160,10 +160,18 @@ void main()
 #ifdef ENABLE_CLIPPING_PLANES
     int clippingPlanesLength = int(u_clippingPlanesLengthRange.x);
     vec2 clippingPlanesRange = u_clippingPlanesLengthRange.yz;
-    #ifdef UNION_CLIPPING_REGIONS
-    float clipDistance = czm_discardIfClippedWithUnion(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
+    #ifdef FLOAT_CLIPPING_PLANES
+        #ifdef UNION_CLIPPING_REGIONS
+        float clipDistance = czm_discardIfClippedWithUnionFloat(u_clippingPlanes, clippingPlanesLength, CLIPPING_PLANES_TEXTURE_WIDTH, CLIPPING_PLANES_TEXTURE_HEIGHT_FLOAT, u_clippingPlanesMatrix);
+        #else
+        float clipDistance = czm_discardIfClippedWithIntersectFloat(u_clippingPlanes, clippingPlanesLength, CLIPPING_PLANES_TEXTURE_WIDTH, CLIPPING_PLANES_TEXTURE_HEIGHT_FLOAT, u_clippingPlanesMatrix);
+        #endif
     #else
-    float clipDistance = czm_discardIfClippedWithIntersect(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
+        #ifdef UNION_CLIPPING_REGIONS
+        float clipDistance = czm_discardIfClippedWithUnionUint8(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
+        #else
+        float clipDistance = czm_discardIfClippedWithIntersectUint8(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
+        #endif
     #endif
 #endif
 

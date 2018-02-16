@@ -172,6 +172,11 @@ define([
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
                 fs.defines.push('CLIPPING_PLANES_TEXTURE_WIDTH ' + ClippingPlaneCollection.TEXTURE_WIDTH);
 
+                if (ClippingPlaneCollection._useFloatTexture(frameState.context)) {
+                    fs.defines.push('CLIPPING_PLANES_TEXTURE_HEIGHT_FLOAT ' + ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT);
+                    fs.defines.push('FLOAT_CLIPPING_PLANES');
+                }
+
                 if (unionClippingRegions) {
                     fs.defines.push('UNION_CLIPPING_REGIONS');
                 }

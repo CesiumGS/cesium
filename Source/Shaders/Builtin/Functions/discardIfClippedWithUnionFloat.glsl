@@ -2,14 +2,17 @@
  * Clip a fragment by an array of clipping planes. Clipping plane regions are joined with the union operation,
  * therefore if a fragment is clipped by any of the planes, it is discarded.
  *
- * @name czm_discardIfClippedWithUnion
+ * @name czm_discardIfClippedWithUnionFloat
  * @glslFunction
  *
- * @param {vec4[]} clippingPlanes The array of planes used to clip, defined in eyespace.
- * @param {int} clippingPlanesLength The number of planes in the array of clipping planes.
+ * @param {sampler2D} clippingPlanes Texture containing planes used to clip, defined in the ClippingPlaneCollection's model space.
+ * @param {int} clippingPlanesLength The number of planes.
+ * @param {int} textureWidth The width of the clipping planes texture.
+ * @param {int} textureHeight The height of the clipping planes texture.
+ * @param {mat4} clippingPlanesMatrix The matrix for transforming the clipping planes to eyespace.
  * @returns {float} The distance away from a clipped fragment, in eyespace
  */
-float czm_discardIfClippedWithUnion(sampler2D clippingPlanes, int clippingPlanesLength, vec2 range, int textureWidth, mat4 clippingPlanesMatrix)
+float czm_discardIfClippedWithUnionFloat(sampler2D clippingPlanes, int clippingPlanesLength, int textureWidth, int textureHeight, mat4 clippingPlanesMatrix)
 {
     if (clippingPlanesLength > 0)
     {
@@ -26,7 +29,7 @@ float czm_discardIfClippedWithUnion(sampler2D clippingPlanes, int clippingPlanes
                 break;
             }
 
-            vec4 clippingPlane = czm_getClippingPlaneFromTexture(clippingPlanes, range, i, textureWidth, clippingPlanesMatrix);
+            vec4 clippingPlane = czm_getClippingPlaneFromRgbaFloat(clippingPlanes, i, textureWidth, textureHeight, clippingPlanesMatrix);
 
             clipNormal = clippingPlane.xyz;
             clipPosition = -clippingPlane.w * clipNormal;

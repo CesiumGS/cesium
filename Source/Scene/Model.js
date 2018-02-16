@@ -1919,7 +1919,7 @@ define([
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
         var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
-        finalFS = modifyShaderForClippingPlanes(finalFS);
+        finalFS = modifyShaderForClippingPlanes(finalFS, context);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
@@ -1940,7 +1940,7 @@ define([
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 
-            pickFS = modifyShaderForClippingPlanes(pickFS);
+            pickFS = modifyShaderForClippingPlanes(pickFS, context);
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
@@ -3745,40 +3745,76 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader) {
+    function modifyShaderForClippingPlanes(shader, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        shader +=
-            'uniform vec4 gltf_clippingPlanesLengthRangeUnion; \n' +
-            'uniform sampler2D gltf_clippingPlanes; \n' +
-            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
-            'uniform mat4 gltf_clippingPlanesMatrix; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    gltf_clip_main(); \n' +
-            '    int clippingPlanesLength = int(gltf_clippingPlanesLengthRangeUnion.x);' +
-            '    bool clippingPlanesUnionRegions = gltf_clippingPlanesLengthRangeUnion.w == 1.0;' +
-            '    vec2 clippingPlanesRange = gltf_clippingPlanesLengthRangeUnion.yz;' +
-            '    if (clippingPlanesLength > 0) \n' +
-            '    { \n' +
-            '        float clipDistance; \n' +
-            '        if (clippingPlanesUnionRegions) \n' +
-            '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
-            '        } \n' +
-            '        else \n' +
-            '        { \n' +
-            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
-            '        } \n' +
-            '        \n' +
-            '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-            '        clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
-            '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
-            '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-            '        { \n' +
-            '            gl_FragColor = clippingPlanesEdgeColor;\n' +
-            '        } \n' +
-            '    } \n' +
-            '} \n';
+        if (ClippingPlaneCollection._useFloatTexture(context)) {
+            var width = ClippingPlaneCollection.TEXTURE_WIDTH;
+            var height = ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT;
+            shader +=
+                'uniform vec4 gltf_clippingPlanesLengthRangeUnion; \n' +
+                'uniform sampler2D gltf_clippingPlanes; \n' +
+                'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
+                'uniform mat4 gltf_clippingPlanesMatrix; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    gltf_clip_main(); \n' +
+                '    int clippingPlanesLength = int(gltf_clippingPlanesLengthRangeUnion.x);' +
+                '    bool clippingPlanesUnionRegions = gltf_clippingPlanesLengthRangeUnion.w == 1.0;' +
+                '    if (clippingPlanesLength > 0) \n' +
+                '    { \n' +
+                '        float clipDistance; \n' +
+                '        if (clippingPlanesUnionRegions) \n' +
+                '        { \n' +
+                '            clipDistance = czm_discardIfClippedWithUnionFloat(gltf_clippingPlanes, clippingPlanesLength, ' + width + ', ' + height + ', gltf_clippingPlanesMatrix); \n' +
+                '        } \n' +
+                '        else \n' +
+                '        { \n' +
+                '            clipDistance = czm_discardIfClippedWithIntersectFloat(gltf_clippingPlanes, clippingPlanesLength, ' + width + ', ' + height + ', gltf_clippingPlanesMatrix); \n' +
+                '        } \n' +
+                '        \n' +
+                '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+                '        clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
+                '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
+                '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
+                '        { \n' +
+                '            gl_FragColor = clippingPlanesEdgeColor;\n' +
+                '        } \n' +
+                '    } \n' +
+                '} \n';
+        } else {
+            shader +=
+                'uniform vec4 gltf_clippingPlanesLengthRangeUnion; \n' +
+                'uniform sampler2D gltf_clippingPlanes; \n' +
+                'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
+                'uniform mat4 gltf_clippingPlanesMatrix; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    gltf_clip_main(); \n' +
+                '    int clippingPlanesLength = int(gltf_clippingPlanesLengthRangeUnion.x);' +
+                '    bool clippingPlanesUnionRegions = gltf_clippingPlanesLengthRangeUnion.w == 1.0;' +
+                '    vec2 clippingPlanesRange = gltf_clippingPlanesLengthRangeUnion.yz;' +
+                '    if (clippingPlanesLength > 0) \n' +
+                '    { \n' +
+                '        float clipDistance; \n' +
+                '        if (clippingPlanesUnionRegions) \n' +
+                '        { \n' +
+                '            clipDistance = czm_discardIfClippedWithUnionUint8(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
+                '        } \n' +
+                '        else \n' +
+                '        { \n' +
+                '            clipDistance = czm_discardIfClippedWithIntersectUint8(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
+                '        } \n' +
+                '        \n' +
+                '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+                '        clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
+                '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
+                '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
+                '        { \n' +
+                '            gl_FragColor = clippingPlanesEdgeColor;\n' +
+                '        } \n' +
+                '    } \n' +
+                '} \n';
+        }
 
         return shader;
     }

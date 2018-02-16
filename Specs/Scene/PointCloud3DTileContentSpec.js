@@ -829,10 +829,12 @@ defineSuite([
 
     it('Rebuilds shaders when clipping planes are enabled or change between union and intersection', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(false);
+
             var content = tileset._root.content;
 
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnion')).toBe(false);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersect')).toBe(false);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnionUint8')).toBe(false);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersectUint8')).toBe(false);
 
             var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
@@ -842,13 +844,13 @@ defineSuite([
             tileset.clippingPlanes = clippingPlanes;
 
             content.update(tileset, scene.frameState);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnion')).toBe(false);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersect')).toBe(true);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnionUint8')).toBe(false);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersectUint8')).toBe(true);
 
             clippingPlanes.unionClippingRegions = true;
             content.update(tileset, scene.frameState);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnion')).toBe(true);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersect')).toBe(false);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnionUint8')).toBe(true);
+            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersectUint8')).toBe(false);
         });
     });
 
@@ -896,7 +898,10 @@ defineSuite([
         });
     });
 
-    it('clipping planes union regions', function() {
+    it('clipping planes union regions (Uint8)', function() {
+        // Force uint8 mode - there's a slight rendering difference between
+        // float and packed uint8 clipping planes for this test due to the small context
+        spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(false);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -919,6 +924,35 @@ defineSuite([
             expect(scene).toRender(color);
         });
     });
+
+    it('clipping planes union regions (Float)', function() {
+        if (!ClippingPlaneCollection._useFloatTexture(scene._context)) {
+            // This configuration for the test fails in uint8 mode due to the small context
+            return;
+        }
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    new Plane(Cartesian3.UNIT_Z, -10.0),
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
+                unionClippingRegions: true
+            });
+
+            expect(scene).notToRender(color);
+
+            tileset.clippingPlanes.unionClippingRegions = false;
+
+            expect(scene).toRender(color);
+        });
+    });
+
 
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);

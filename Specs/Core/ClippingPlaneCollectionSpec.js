@@ -47,7 +47,7 @@ defineSuite([
 
     var unpackVec4 = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
     var unormScratch = new Cartesian4();
-    function decodePlane(pixel1, pixel2, distanceRange) {
+    function decodeUint8Plane(pixel1, pixel2, distanceRange) {
         // expect pixel1 to be the normal
         var xOct16 = pixel1.x * 256 + pixel1.y;
         var yOct16 = pixel1.z * 256 + pixel1.w;
@@ -151,112 +151,191 @@ defineSuite([
         expect(result).toBe(false);
     });
 
-    it('update creates a RGBA ubyte texture with no filtering or wrapping to house packed clipping planes', function() {
-        var scene = createScene();
-        clippingPlanes = new ClippingPlaneCollection({
-            planes : planes,
-            enabled : false,
-            edgeColor : Color.RED,
-            modelMatrix : transform
+    describe('uint8 texture mode', function() {
+        beforeEach(function() {
+            spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(false);
         });
 
-        clippingPlanes.update(scene.frameState);
+        it('update creates a RGBA ubyte texture with no filtering or wrapping to house packed clipping planes', function() {
+            var scene = createScene();
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : planes,
+                enabled : false,
+                edgeColor : Color.RED,
+                modelMatrix : transform
+            });
 
-        var packedTexture = clippingPlanes.texture;
-        expect(packedTexture).toBeDefined();
-        expect(packedTexture.width).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH);
-        expect(packedTexture.height).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH);
-        expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
-        expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
+            clippingPlanes.update(scene.frameState);
 
-        var sampler = packedTexture.sampler;
-        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
-        expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+            var packedTexture = clippingPlanes.texture;
+            expect(packedTexture).toBeDefined();
+            expect(packedTexture.width).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH);
+            expect(packedTexture.height).toEqual(ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8);
+            expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
+            expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
 
-        scene.destroyForSpecs();
+            var sampler = packedTexture.sampler;
+            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
+            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
+            expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+            expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
+        });
+
+        it('update populates uniforms for unpacking the clipping plane texture', function() {
+            var scene = createScene();
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : planes,
+                enabled : false,
+                edgeColor : Color.RED,
+                modelMatrix : transform
+            });
+
+            clippingPlanes.update(scene.frameState);
+            var expectedRange = new Cartesian2(1.0, 2.0);
+            var actualRange = new Cartesian2();
+
+            var lengthRange = clippingPlanes.lengthRange;
+            expect(lengthRange.x).toEqual(2.0);
+            actualRange.x = lengthRange.y;
+            actualRange.y = lengthRange.z;
+            expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
+
+            var lengthRangeUnion = clippingPlanes.lengthRangeUnion;
+            expect(lengthRangeUnion.x).toEqual(2);
+            actualRange.x = lengthRangeUnion.y;
+            actualRange.y = lengthRangeUnion.z;
+            expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
+            expect(lengthRangeUnion.w).toEqual(0);
+
+            clippingPlanes.unionClippingRegions = true;
+            clippingPlanes.update(scene.frameState);
+
+            lengthRangeUnion = clippingPlanes.lengthRangeUnion;
+            expect(lengthRangeUnion.x).toEqual(2);
+            actualRange.x = lengthRangeUnion.y;
+            actualRange.y = lengthRangeUnion.z;
+            expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
+            expect(lengthRangeUnion.w).toEqual(1);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
+        });
+
+        it('update fills the clipping plane texture with packed planes', function() {
+            var scene = createScene();
+
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : planes,
+                enabled : false,
+                edgeColor : Color.RED,
+                modelMatrix : transform
+            });
+
+            var rgba;
+            var gl = scene.frameState.context._gl;
+            spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
+                rgba = arrayBufferView;
+            });
+
+            clippingPlanes.update(scene.frameState);
+            expect(rgba).toBeDefined();
+            expect(rgba.length).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8 * 4);
+
+            // Expect two clipping planes to use 4 pixels in the texture, so the first 16 bytes
+            for (var i = 16; i < rgba.length; i++) {
+                expect(rgba[i]).toEqual(0);
+            }
+            var pixel1 = Cartesian4.fromArray(rgba, 0);
+            var pixel2 = Cartesian4.fromArray(rgba, 4);
+            var pixel3 = Cartesian4.fromArray(rgba, 8);
+            var pixel4 = Cartesian4.fromArray(rgba, 12);
+
+            var lengthRangeUnion = clippingPlanes.lengthRangeUnion;
+            var range = new Cartesian2(lengthRangeUnion.y, lengthRangeUnion.z);
+            var plane1 = decodeUint8Plane(pixel1, pixel2, range);
+            var plane2 = decodeUint8Plane(pixel3, pixel4, range);
+
+            expect(Cartesian3.equalsEpsilon(plane1.normal, planes[0].normal, CesiumMath.EPSILON3)).toEqual(true);
+            expect(Cartesian3.equalsEpsilon(plane2.normal, planes[1].normal, CesiumMath.EPSILON3)).toEqual(true);
+            expect(CesiumMath.equalsEpsilon(plane1.distance, planes[0].distance, CesiumMath.EPSILON3)).toEqual(true);
+            expect(CesiumMath.equalsEpsilon(plane2.distance, planes[1].distance, CesiumMath.EPSILON3)).toEqual(true);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
+        });
     });
 
-    it('update populates uniforms for unpacking the clipping plane texture', function() {
-        var scene = createScene();
-        clippingPlanes = new ClippingPlaneCollection({
-            planes : planes,
-            enabled : false,
-            edgeColor : Color.RED,
-            modelMatrix : transform
+    describe('float texture mode', function() {
+        beforeEach(function() {
+            spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(true);
         });
 
-        clippingPlanes.update(scene.frameState);
-        var expectedRange = new Cartesian2(1.0, 2.0);
-        var actualRange = new Cartesian2();
+        it('update creates a float texture with no filtering or wrapping to house packed clipping planes', function() {
+            var scene = createScene();
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : planes,
+                enabled : false,
+                edgeColor : Color.RED,
+                modelMatrix : transform
+            });
 
-        var lengthRange = clippingPlanes.lengthRange;
-        expect(lengthRange.x).toEqual(2.0);
-        actualRange.x = lengthRange.y;
-        actualRange.y = lengthRange.z;
-        expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
+            clippingPlanes.update(scene.frameState);
 
-        var lengthRangeUnion = clippingPlanes.lengthRangeUnion;
-        expect(lengthRangeUnion.x).toEqual(2);
-        actualRange.x = lengthRangeUnion.y;
-        actualRange.y = lengthRangeUnion.z;
-        expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
-        expect(lengthRangeUnion.w).toEqual(0);
+            var packedTexture = clippingPlanes.texture;
+            expect(packedTexture).toBeDefined();
+            expect(packedTexture.width).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH);
+            expect(packedTexture.height).toEqual(ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT);
+            expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
+            expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.FLOAT);
 
-        clippingPlanes.unionClippingRegions = true;
-        clippingPlanes.update(scene.frameState);
+            var sampler = packedTexture.sampler;
+            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
+            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
+            expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+            expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
 
-        lengthRangeUnion = clippingPlanes.lengthRangeUnion;
-        expect(lengthRangeUnion.x).toEqual(2);
-        actualRange.x = lengthRangeUnion.y;
-        actualRange.y = lengthRangeUnion.z;
-        expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
-        expect(lengthRangeUnion.w).toEqual(1);
-
-        scene.destroyForSpecs();
-    });
-
-    it('update fills the clipping plane texture with packed planes', function() {
-        var scene = createScene();
-
-        clippingPlanes = new ClippingPlaneCollection({
-            planes : planes,
-            enabled : false,
-            edgeColor : Color.RED,
-            modelMatrix : transform
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
         });
 
-        var rgba;
-        var gl = scene.frameState.context._gl;
-        spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
-            rgba = arrayBufferView;
+        it('update fills the clipping plane texture with packed planes', function() {
+            var scene = createScene();
+
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : planes,
+                enabled : false,
+                edgeColor : Color.RED,
+                modelMatrix : transform
+            });
+
+            var rgba;
+            var gl = scene.frameState.context._gl;
+            spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
+                rgba = arrayBufferView;
+            });
+
+            clippingPlanes.update(scene.frameState);
+            expect(rgba).toBeDefined();
+            expect(rgba.length).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT * 4);
+
+            // Expect two clipping planes to use 2 pixels in the texture, so the first 8 floats.
+            for (var i = 8; i < rgba.length; i++) {
+                expect(rgba[i]).toEqual(0);
+            }
+            var plane1 = Plane.fromCartesian4(Cartesian4.fromArray(rgba, 0));
+            var plane2 = Plane.fromCartesian4(Cartesian4.fromArray(rgba, 4));
+
+            expect(Cartesian3.equalsEpsilon(plane1.normal, planes[0].normal, CesiumMath.EPSILON3)).toEqual(true);
+            expect(Cartesian3.equalsEpsilon(plane2.normal, planes[1].normal, CesiumMath.EPSILON3)).toEqual(true);
+            expect(CesiumMath.equalsEpsilon(plane1.distance, planes[0].distance, CesiumMath.EPSILON3)).toEqual(true);
+            expect(CesiumMath.equalsEpsilon(plane2.distance, planes[1].distance, CesiumMath.EPSILON3)).toEqual(true);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
         });
-
-        clippingPlanes.update(scene.frameState);
-        expect(rgba).toBeDefined();
-        expect(rgba.length).toEqual(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_WIDTH * 4);
-
-        // Expect two clipping planes to use 4 pixels in the texture, so the first 16 bytes
-        for (var i = 16; i < rgba.length; i++) {
-            expect(rgba[i]).toEqual(0);
-        }
-        var pixel1 = Cartesian4.fromArray(rgba, 0);
-        var pixel2 = Cartesian4.fromArray(rgba, 4);
-        var pixel3 = Cartesian4.fromArray(rgba, 8);
-        var pixel4 = Cartesian4.fromArray(rgba, 12);
-
-        var lengthRangeUnion = clippingPlanes.lengthRangeUnion;
-        var range = new Cartesian2(lengthRangeUnion.y, lengthRangeUnion.z);
-        var plane1 = decodePlane(pixel1, pixel2, range);
-        var plane2 = decodePlane(pixel3, pixel4, range);
-
-        expect(Cartesian3.equalsEpsilon(plane1.normal, planes[0].normal, CesiumMath.EPSILON3)).toEqual(true);
-        expect(Cartesian3.equalsEpsilon(plane2.normal, planes[1].normal, CesiumMath.EPSILON3)).toEqual(true);
-        expect(CesiumMath.equalsEpsilon(plane1.distance, planes[0].distance, CesiumMath.EPSILON3)).toEqual(true);
-        expect(CesiumMath.equalsEpsilon(plane2.distance, planes[1].distance, CesiumMath.EPSILON3)).toEqual(true);
-
-        scene.destroyForSpecs();
     });
 
     it('does not perform texture updates if the planes are unchanged', function() {
@@ -279,6 +358,7 @@ defineSuite([
         clippingPlanes.update(scene.frameState);
         expect(gl.texSubImage2D.calls.count()).toEqual(1);
 
+        clippingPlanes.destroy();
         scene.destroyForSpecs();
     });
 
