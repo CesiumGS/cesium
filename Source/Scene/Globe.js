@@ -251,7 +251,7 @@ define([
             }
         },
         /**
-         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane. Clipping planes are not currently supported in Internet Explorer.
+         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
          *
          * @memberof Globe.prototype
          * @type {ClippingPlaneCollection}

@@ -5,7 +5,7 @@ Change Log
 
 ##### Deprecated :hourglass_flowing_sand:
 * In the `Resource` class, `addQueryParameters` and `addTemplateValues` have been deprecated and will be removed in Cesium 1.45. Please use `setQueryParameters` and `setTemplateValues` instead.
-* `ClippingPlaneCollection` is now supported in Internet Explorer, so `ClippingPlaneCollection.isSupported` has been deprectaed and will be removed in Cesium 1.45.
+* `ClippingPlaneCollection` is now supported in Internet Explorer, so `ClippingPlaneCollection.isSupported` has been deprectaed and will be removed in Cesium 1.43.
 
 ##### Additions :tada:
 * Added support for a promise to a resource for `CesiumTerrainProvider`, `createTileMapServiceImageryProvider` and `Cesium3DTileset` [#6204](https://github.com/AnalyticalGraphicsInc/cesium/pull/6204)

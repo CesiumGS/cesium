@@ -153,7 +153,7 @@ defineSuite([
 
     describe('uint8 texture mode', function() {
         beforeEach(function() {
-            spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(false);
+            spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
         });
 
         it('update creates a RGBA ubyte texture with no filtering or wrapping to house packed clipping planes', function() {
@@ -269,12 +269,14 @@ defineSuite([
     });
 
     describe('float texture mode', function() {
-        beforeEach(function() {
-            spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(true);
-        });
-
         it('update creates a float texture with no filtering or wrapping to house packed clipping planes', function() {
             var scene = createScene();
+
+            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+                // Don't fail just because float textures aren't supported
+                return;
+            }
+
             clippingPlanes = new ClippingPlaneCollection({
                 planes : planes,
                 enabled : false,
@@ -303,6 +305,11 @@ defineSuite([
 
         it('update fills the clipping plane texture with packed planes', function() {
             var scene = createScene();
+
+            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+                // Don't fail just because float textures aren't supported
+                return;
+            }
 
             clippingPlanes = new ClippingPlaneCollection({
                 planes : planes,

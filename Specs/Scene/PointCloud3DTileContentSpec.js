@@ -829,7 +829,7 @@ defineSuite([
 
     it('Rebuilds shaders when clipping planes are enabled or change between union and intersection', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(false);
+            spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
 
             var content = tileset._root.content;
 
@@ -901,7 +901,7 @@ defineSuite([
     it('clipping planes union regions (Uint8)', function() {
         // Force uint8 mode - there's a slight rendering difference between
         // float and packed uint8 clipping planes for this test due to the small context
-        spyOn(ClippingPlaneCollection, '_useFloatTexture').and.returnValue(false);
+        spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -926,7 +926,7 @@ defineSuite([
     });
 
     it('clipping planes union regions (Float)', function() {
-        if (!ClippingPlaneCollection._useFloatTexture(scene._context)) {
+        if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
             // This configuration for the test fails in uint8 mode due to the small context
             return;
         }

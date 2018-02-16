@@ -1141,7 +1141,7 @@ define([
 
         if (hasClippedContent) {
             var clippingFunction;
-            if (ClippingPlaneCollection._useFloatTexture(context)) {
+            if (ClippingPlaneCollection.useFloatTexture(context)) {
                 var width = ClippingPlaneCollection.TEXTURE_WIDTH;
                 var height = ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT;
                 clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnionFloat' : 'czm_discardIfClippedWithIntersectFloat';

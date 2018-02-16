@@ -267,7 +267,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
+     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -511,16 +511,9 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-        /**
-         * The {ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
-         * @private
-         *
-         * @type {ClippingPlaneCollection}
-         */
         this._clippingPlanes = undefined;
 
-        var clippingPlanes = options.clippingPlanes;
-        ClippingPlaneCollection.setOwnership(clippingPlanes, this, '_clippingPlanes');
+        ClippingPlaneCollection.setOwnership(options.clippingPlanes, this, '_clippingPlanes');
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1004,7 +997,7 @@ define([
         },
 
         /**
-         * The {ClippingPlaneCollection} used to selectively disable rendering the model.
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
          *
          * @memberof Model.prototype
          *
@@ -1078,7 +1071,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model. Clipping planes are not currently supported in Internet Explorer.
+     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
      * @returns {Model} The newly created model.
      *
@@ -3747,7 +3740,7 @@ define([
 
     function modifyShaderForClippingPlanes(shader, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        if (ClippingPlaneCollection._useFloatTexture(context)) {
+        if (ClippingPlaneCollection.useFloatTexture(context)) {
             var width = ClippingPlaneCollection.TEXTURE_WIDTH;
             var height = ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT;
             shader +=
@@ -3843,7 +3836,7 @@ define([
 
     function updateClippingPlanes(model, frameState) {
         var clippingPlanes = model._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes._owner === model && clippingPlanes.enabled) {
+        if (defined(clippingPlanes) && clippingPlanes.owner === model && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
     }
@@ -4428,7 +4421,7 @@ define([
         // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
         // _clippingPlanes references a ClippingPlaneCollection that this model does not own.
         var clippingPlaneCollection = this._clippingPlanes;
-        if (defined(clippingPlaneCollection) && !clippingPlaneCollection.isDestroyed() && clippingPlaneCollection._owner === this) {
+        if (defined(clippingPlaneCollection) && !clippingPlaneCollection.isDestroyed() && clippingPlaneCollection.owner === this) {
             clippingPlaneCollection.destroy();
         }
         this._clippingPlanes = undefined;

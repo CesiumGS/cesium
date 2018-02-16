@@ -199,6 +199,7 @@ define([
          * and union mode packed to a vec4 for use as a uniform.
          *
          * @type {Cartesian4}
+         * @readonly
          */
         lengthRangeUnion : {
             get : function() {
@@ -211,10 +212,23 @@ define([
          * packed to a vec3 for use as a uniform.
          *
          * @type {Cartesian3}
+         * @readonly
          */
         lengthRange : {
             get : function() {
                 return this._lengthRange;
+            }
+        },
+
+        /**
+         * A reference to the ClippingPlaneCollection's owner, if any.
+         *
+         * @readonly
+         * @private
+         */
+        owner : {
+            get : function() {
+                return this._owner;
             }
         }
     });
@@ -477,7 +491,7 @@ define([
     ClippingPlaneCollection.prototype.update = function(frameState) {
         var clippingPlanesTexture = this._clippingPlanesTexture;
         var context = frameState.context;
-        var usefloatTexture = ClippingPlaneCollection._useFloatTexture(context);
+        var usefloatTexture = ClippingPlaneCollection.useFloatTexture(context);
 
         if (!defined(clippingPlanesTexture)) {
             var sampler = new Sampler({
@@ -631,6 +645,7 @@ define([
      * For odd-power PoT numbers of clipping planes, this is a PoT square.
      *
      * In RGBA FLOAT, A plane is 4 floats packed to a RGBA. For odd-power PoT numbers of clipping planes, this works out to half a PoT square.
+     * @private
      *
      * @type {number}
      * @constant
@@ -643,6 +658,7 @@ define([
      *
      * In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal, so 8 bits or 2 pixels in RGBA.
      * For odd-power PoT numbers of clipping planes, this is a PoT square.
+     * @private
      *
      * @type {number}
      * @constant
@@ -654,11 +670,60 @@ define([
      * with enough pixels to support MAX_CLIPPING_PLANES.
      *
      * In RGBA FLOAT, A plane is 4 floats packed to a RGBA. For odd-power PoT numbers of clipping planes, this works out to half a PoT square.
+     * @private
      *
      * @type {number}
      * @constant
      */
     ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT = ClippingPlaneCollection.MAX_CLIPPING_PLANES / textureWidth;
+
+    /**
+     * Sets the owner for the input ClippingPlaneCollection if there wasn't another owner.
+     * Destroys the owner's previous ClippingPlaneCollection if setting is successful.
+     *
+     * @param {ClippingPlaneCollection} [clippingPlaneCollection] A ClippingPlaneCollection (or undefined) being attached to an object
+     * @param {Object} owner An Object that should receive the new ClippingPlaneCollection
+     * @param {String} key The Key for the Object to reference the ClippingPlaneCollection
+     * @private
+     */
+    ClippingPlaneCollection.setOwnership = function(clippingPlaneCollection, owner, key) {
+        // Don't destroy the ClippingPlaneCollection if it is already owned by newOwner
+        if (clippingPlaneCollection === owner[key]) {
+            return;
+        }
+        // Destroy the existing ClippingPlaneCollection, if any
+        owner[key] = owner[key] && owner[key].destroy();
+        if (defined(clippingPlaneCollection)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (defined(clippingPlaneCollection._owner)) {
+                throw new DeveloperError('ClippingPlaneCollection should only be assigned to one object');
+            }
+            //>>includeEnd('debug');
+            clippingPlaneCollection._owner = owner;
+            owner[key] = clippingPlaneCollection;
+        }
+    };
+
+    /**
+     * Determines if rendering with clipping planes is supported.
+     *
+     * @returns {Boolean} <code>true</code> if ClippingPlaneCollections are supported
+     * @deprecated
+     */
+    ClippingPlaneCollection.isSupported = function() {
+        return true;
+    };
+
+    /**
+     * Function for checking if the context will allow clipping planes with floating point textures.
+     *
+     * @param {Context} context The Context that will contain clipped objects and clipping textures.
+     * @returns {Boolean} <code>true</code> if floating point textures can be used for clipping planes.
+     * @private
+     */
+    ClippingPlaneCollection.useFloatTexture = function(context) {
+        return context.floatingPointTexture;
+    };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
@@ -675,58 +740,26 @@ define([
     };
 
     /**
-     * Destroys this ClippingPlaneCollectionand its WebGL resources.
-     * @private
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     *
+     * @example
+     * clippingPlanes = clippingPlanes && clippingPlanes .destroy();
+     *
+     * @see ClippingPlaneCollection#isDestroyed
      */
     ClippingPlaneCollection.prototype.destroy = function() {
         this._clippingPlanesTexture = this._clippingPlanesTexture && this._clippingPlanesTexture.destroy();
         return destroyObject(this);
-    };
-
-    /**
-     * Sets the owner for the input ClippingPlaneCollection if there wasn't another owner.
-     * Destroys the owner's previous ClippingPlaneCollection if setting is successful.
-     *
-     * @param {ClippingPlaneCollection} [clippingPlaneCollection] A ClippingPlaneCollection (or undefined) being attached to an object
-     * @param {Object} newOwner An Object that should receive the new ClippingPlaneCollection
-     * @param {String} key The Key for the Object to reference the ClippingPlaneCollection
-     * @private
-     */
-    ClippingPlaneCollection.setOwnership = function(clippingPlaneCollection, newOwner, key) {
-        // Don't destroy the ClippingPlaneCollection if it is already owned by newOwner
-        if (clippingPlaneCollection === newOwner[key]) {
-            return;
-        }
-        // Destroy the existing ClippingPlaneCollection, if any
-        newOwner[key] = newOwner[key] && newOwner[key].destroy();
-        if (defined(clippingPlaneCollection)) {
-            if (defined(clippingPlaneCollection._owner)) {
-                throw new DeveloperError('ClippingPlaneCollection should only be assigned to one object');
-            }
-            clippingPlaneCollection._owner = newOwner;
-            newOwner[key] = clippingPlaneCollection;
-        }
-    };
-
-    /**
-     * Determines if rendering with clipping planes is supported.
-     *
-     * @returns {Boolean} <code>true</code> if ClippingPlaneCollections are supported
-     * @deprecated
-     */
-    ClippingPlaneCollection.isSupported = function() {
-        return true;
-    };
-
-    /**
-     * Function for checking if the context will allow floating point texture use for clipping planes.
-     * Exposed for testing.
-     * @param {Context} context The Context that will contain clipped objects and clipping textures.
-     * @returns {Boolean} <code>true</code> if floating point textures can be used for clipping planes.
-     * @private
-     */
-    ClippingPlaneCollection._useFloatTexture = function(context) {
-        return context.floatingPointTexture;
     };
 
     return ClippingPlaneCollection;
