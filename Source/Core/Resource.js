@@ -1169,7 +1169,7 @@ define([
     function fetchJsonp(resource, callbackParameterName, functionName) {
         var callbackQuery = {};
         callbackQuery[callbackParameterName] = functionName;
-        resource.addQueryParameters(callbackQuery);
+        resource.setQueryParameters(callbackQuery);
 
         var request = resource.request;
         request.url = resource.url;
