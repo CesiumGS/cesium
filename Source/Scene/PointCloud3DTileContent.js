@@ -1101,7 +1101,7 @@ define([
 
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n' +
-              '    v_inverse_depth = 1. / gl_Position.w; \n';
+              '    v_inverse_depth = 1.0 / gl_Position.w; \n';
 
         if (hasNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +

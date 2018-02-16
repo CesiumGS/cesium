@@ -117,9 +117,6 @@ define([
             vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
 
-            if (frameState.logDepthBuffer) {
-                fs.defines.push('LOG_DEPTH_BUFFER');
-            }
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');
             }

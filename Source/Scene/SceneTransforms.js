@@ -308,7 +308,7 @@ define([
         var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
         ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
         ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;
-        if (scene.logDepthBuffer) {
+        if (scene._logDepthBuffer) {
             var frustumCommand = scene._frustumCommandsList[0];
             var far = frustumCommand.far;
             var near = frustumCommand.near;
@@ -343,8 +343,7 @@ define([
             var w = 1.0 / worldCoords.w;
             Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
         }
-        result = Cartesian3.fromCartesian4(worldCoords, result);
-        return result;
+        return Cartesian3.fromCartesian4(worldCoords, result);
     };
 
     return SceneTransforms;

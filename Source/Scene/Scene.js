@@ -239,7 +239,6 @@ define([
      */
     function Scene(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
@@ -262,20 +261,16 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
-        if (context.fragmentDepth) {
-            this.logDepthBuffer = true;
-        } else {
-            this.logDepthBuffer = false;
-        }
         if (!defined(creditViewport)) {
             creditViewport = canvas.parentNode;
         }
+
+        this._logDepthBuffer = context.fragmentDepth;
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
         this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
-        this._frameState.logDepthBuffer = this.logDepthBuffer;
         this._removeCreditContainer = !hasCreditContainer;
         this._creditContainer = creditContainer;
 
@@ -773,7 +768,7 @@ define([
         var far = camera.frustum.far;
         var numFrustums;
         var farToNearRatio;
-        if (this.logDepthBuffer) {
+        if (this._logDepthBuffer) {
             numFrustums = 1;
             farToNearRatio = far / near;
         } else {
@@ -1719,13 +1714,13 @@ define([
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var is2D = scene.mode === SceneMode.SCENE2D;
-
+        var logDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums;
 
         if (!is2D) {
             // The multifrustum for 3D/CV is non-uniformly distributed.
-            if (scene.logDepthBuffer) {
+            if (logDepth) {
                 numFrustums = 1;
                 farToNearRatio = far / near;
             } else {
@@ -1733,7 +1728,7 @@ define([
             }
         } else {
             // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
-            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // the camera is moved to just before the frustum and the frustum depth is scaled
             // to be in [1.0, nearToFarDistance2D].
             far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
             near = Math.min(near, far);
@@ -1745,7 +1740,7 @@ define([
             farChange = far / frustumCommandsList[numberOfFrustums - 1].far;
         }
         if ((near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-                ((scene.logDepthBuffer && isFinite(farChange) && !CesiumMath.equalsEpsilon(1, farChange, CesiumMath.EPSILON8)) ||
+                ((logDepth && isFinite(farChange) && !CesiumMath.equalsEpsilon(1, farChange, CesiumMath.EPSILON8)) ||
                 (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
