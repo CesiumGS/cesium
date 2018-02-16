@@ -132,9 +132,6 @@ define([
 
         // Packed uniform for plane count, denormalization parameters, and clipping union (0 false, 1 true)
         this._lengthRangeUnion = new Cartesian4();
-
-        // Packed uniform for plane count and denormalization parameters
-        this._lengthRange = new Cartesian3();
     }
 
     function unionIntersectFunction(value) {
@@ -204,19 +201,6 @@ define([
         lengthRangeUnion : {
             get : function() {
                 return this._lengthRangeUnion;
-            }
-        },
-
-        /**
-         * Length of clipping plane collection and range for inflating the normalized distances in the clipping plane texture,
-         * packed to a vec3 for use as a uniform.
-         *
-         * @type {Cartesian3}
-         * @readonly
-         */
-        lengthRange : {
-            get : function() {
-                return this._lengthRange;
             }
         },
 
@@ -437,10 +421,6 @@ define([
             previousUint32View[uint32Index] = currentUint32View[uint32Index];
         }
         }
-        var lengthRange = clippingPlaneCollection._lengthRange;
-        lengthRange.x = lengthRangeUnion.x;
-        lengthRange.y = lengthRangeUnion.y;
-        lengthRange.z = lengthRangeUnion.z;
         return dirty;
     }
 
@@ -456,7 +436,6 @@ define([
         var lengthRangeUnion = clippingPlaneCollection._lengthRangeUnion;
         lengthRangeUnion.x = length;
         lengthRangeUnion.w = clippingPlaneCollection._unionClippingRegions ? 1.0 : 0.0;
-        clippingPlaneCollection._lengthRange.x = length;
 
         var i, j;
         for (i = 0; i < length; ++i) {

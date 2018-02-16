@@ -573,12 +573,12 @@ define([
             u_constantColor : function() {
                 return content._constantColor;
             },
-            u_clippingPlanesLengthRange : function() {
+            u_clippingPlanesLengthRangeUnion : function() {
                 var clippingPlanes = content._tileset.clippingPlanes;
                 if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
-                    return Cartesian3.ZERO;
+                    return Cartesian4.ZERO;
                 }
-                return clippingPlanes.lengthRange;
+                return clippingPlanes.lengthRangeUnion;
             },
             u_clippingPlanes : function() {
                 var clippingPlanes = content._tileset.clippingPlanes;
@@ -1129,7 +1129,7 @@ define([
         var fs = 'varying vec4 v_color; \n';
 
         if (hasClippedContent) {
-            fs += 'uniform vec3 u_clippingPlanesLengthRange;' +
+            fs += 'uniform vec4 u_clippingPlanesLengthRangeUnion;' +
                   'uniform sampler2D u_clippingPlanes; \n' +
                   'uniform mat4 u_clippingPlanesMatrix; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
@@ -1145,12 +1145,12 @@ define([
                 var width = ClippingPlaneCollection.TEXTURE_WIDTH;
                 var height = ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT;
                 clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnionFloat' : 'czm_discardIfClippedWithIntersectFloat';
-                fs += '    int clippingPlanesLength = int(u_clippingPlanesLengthRange.x); \n' +
+                fs += '    int clippingPlanesLength = int(u_clippingPlanesLengthRangeUnion.x); \n' +
                       '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, clippingPlanesLength, ' + width + ', ' + height + ', u_clippingPlanesMatrix); \n';
             } else {
                 clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnionUint8' : 'czm_discardIfClippedWithIntersectUint8';
-                fs += '    int clippingPlanesLength = int(u_clippingPlanesLengthRange.x); \n' +
-                      '    vec2 clippingPlanesRange = u_clippingPlanesLengthRange.yz; \n' +
+                fs += '    int clippingPlanesLength = int(u_clippingPlanesLengthRangeUnion.x); \n' +
+                      '    vec2 clippingPlanesRange = u_clippingPlanesLengthRangeUnion.yz; \n' +
                       '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', u_clippingPlanesMatrix); \n';
             }
             fs += '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +

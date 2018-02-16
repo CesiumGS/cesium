@@ -936,9 +936,9 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
-            u_clippingPlanesLengthRange : function() {
+            u_clippingPlanesLengthRangeUnion : function() {
                 var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
-                return defined(clippingPlanes) ? clippingPlanes.lengthRange : Cartesian3.ZERO;
+                return defined(clippingPlanes) ? clippingPlanes.lengthRangeUnion : Cartesian4.ZERO;
             },
             u_clippingPlanes : function() {
                 var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;

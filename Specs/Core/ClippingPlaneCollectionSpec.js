@@ -197,12 +197,6 @@ defineSuite([
             var expectedRange = new Cartesian2(1.0, 2.0);
             var actualRange = new Cartesian2();
 
-            var lengthRange = clippingPlanes.lengthRange;
-            expect(lengthRange.x).toEqual(2.0);
-            actualRange.x = lengthRange.y;
-            actualRange.y = lengthRange.z;
-            expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
-
             var lengthRangeUnion = clippingPlanes.lengthRangeUnion;
             expect(lengthRangeUnion.x).toEqual(2);
             actualRange.x = lengthRangeUnion.y;
