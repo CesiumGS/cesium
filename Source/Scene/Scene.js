@@ -695,6 +695,7 @@ define([
         this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
+        this._frustumChanged = true;
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -1431,8 +1432,19 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if (command.dirty && defined(derivedCommands)) {
+        if ((scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
+
+            var frustum = scene.camera.frustum;
+            var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+            if (useLogDepth) {
+                derivedCommands.logDepth = createLogDepthCommand(command, context, derivedCommands.logDepth);
+                command = derivedCommands.logDepth.logDepthCommand;
+            }
+
+            if (scene.frameState.passes.pick) {
+                return;
+            }
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
@@ -1540,9 +1552,7 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        if (!scene.frameState.passes.pick) {
-            updateDerivedCommands(scene, command);
-        }
+        updateDerivedCommands(scene, command);
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
@@ -1871,6 +1881,8 @@ define([
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else if (scene.frameState.passes.depth && defined(command.derivedCommands.depth)) {
             command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
+        } else if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+            command.derivedCommands.logDepth.logDepthCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
@@ -3067,8 +3079,9 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
+        this._frustumChanged = this._camera !== this._cameraClone.frustum;
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
@@ -3365,6 +3378,52 @@ define([
         } else {
             result.depthOnlyCommand.shaderProgram = shader;
             result.depthOnlyCommand.renderState = renderState;
+        }
+
+        return result;
+    }
+
+    function getLogDepthShaderProgram(context, shaderProgram) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'logDepth');
+        if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var fs = shaderProgram.fragmentShaderSource.clone();
+            fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
+            fs.defines.push('LOG_DEPTH');
+
+            var extension =
+                '#ifdef GL_EXT_frag_depth \n' +
+                '#extension GL_EXT_frag_depth : enable \n' +
+                '#endif \n';
+            fs.sources.push(extension);
+
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'logDepth', {
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        return shader;
+    }
+
+    function createLogDepthCommand(command, context, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shader;
+        if (defined(result.logDepthCommand)) {
+            shader = result.logDepthCommand.shaderProgram;
+        }
+
+        result.logDepthCommand = DrawCommand.shallowClone(command, result.logDepthCommand);
+
+        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+            result.logDepthCommand.shaderProgram = getLogDepthShaderProgram(context, command.shaderProgram);
+            result.shaderProgramId = command.shaderProgram.id;
+        } else {
+            result.logDepthCommand.shaderProgram = shader;
         }
 
         return result;
