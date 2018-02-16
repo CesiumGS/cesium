@@ -106,21 +106,15 @@ define([
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
-        /**
-         * If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
-         * This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
-         * @private
-         *
-         * @type {Object}
-         * @default undefined
-         */
+         // If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
+         // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
 
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
         this.unionClippingRegions = defaultValue(options.unionClippingRegions, false);
 
-        this._textureBytes = undefined;
+        this._uint8View = undefined;
         this._float32View = undefined;
 
         // Uint32 views for comparison and copy
@@ -365,7 +359,7 @@ define([
     function packAndReturnChangedUint8(clippingPlaneCollection) {
         var previousUint32View = clippingPlaneCollection._previousUint32View;
         var currentUint32View = clippingPlaneCollection._currentUint32View;
-        var textureBytes = clippingPlaneCollection._textureBytes;
+        var textureBytes = clippingPlaneCollection._uint8View;
         var planes = clippingPlaneCollection._planes;
         var length = planes.length;
         var dirty = false;
@@ -411,15 +405,15 @@ define([
         lengthRangeUnion.z = distanceMax;
         var distanceRangeSize = distanceMax - distanceMin;
         for (i = 0; i < length; ++i) {
-        var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
-        byteIndex = i * 8 + 4;
-        insertFloat(textureBytes, normalizedDistance, byteIndex);
+            var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
+            byteIndex = i * 8 + 4;
+            insertFloat(textureBytes, normalizedDistance, byteIndex);
 
-        uint32Index = i * 2 + 1;
-        dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
-        if (dirty) {
-            previousUint32View[uint32Index] = currentUint32View[uint32Index];
-        }
+            uint32Index = i * 2 + 1;
+            dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
+            if (dirty) {
+                previousUint32View[uint32Index] = currentUint32View[uint32Index];
+            }
         }
         return dirty;
     }
@@ -449,7 +443,7 @@ define([
             float32View[floatIndex + 2] = normal.z;
             float32View[floatIndex + 3] = plane.distance;
 
-            for (j = 0; j < 4; j++) {
+            for (j = 0; j < 4; ++j) {
                 uint32Index = floatIndex + j;
                 dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
                 if (dirty) {
@@ -470,7 +464,7 @@ define([
     ClippingPlaneCollection.prototype.update = function(frameState) {
         var clippingPlanesTexture = this._clippingPlanesTexture;
         var context = frameState.context;
-        var usefloatTexture = ClippingPlaneCollection.useFloatTexture(context);
+        var useFloatTexture = ClippingPlaneCollection.useFloatTexture(context);
 
         if (!defined(clippingPlanesTexture)) {
             var sampler = new Sampler({
@@ -481,7 +475,7 @@ define([
             });
 
             var byteCount = 0;
-            if (usefloatTexture) {
+            if (useFloatTexture) {
                 clippingPlanesTexture = new Texture({
                     context : context,
                     width : ClippingPlaneCollection.TEXTURE_WIDTH,
@@ -505,7 +499,7 @@ define([
             var previousTextureBytes = new ArrayBuffer(byteCount);
             var currentTextureBytes = new ArrayBuffer(byteCount);
 
-            this._textureBytes = new Uint8Array(currentTextureBytes);
+            this._uint8View = new Uint8Array(currentTextureBytes);
             this._float32View = new Float32Array(currentTextureBytes);
             this._previousUint32View = new Uint32Array(previousTextureBytes);
             this._currentUint32View = new Uint32Array(currentTextureBytes);
@@ -513,12 +507,12 @@ define([
             this._clippingPlanesTexture = clippingPlanesTexture;
         }
         // pack planes to currentTextureBytes, do a texture update if anything changed.
-        var changed = usefloatTexture ? packAndReturnChangedFloat(this) : packAndReturnChangedUint8(this);
+        var changed = useFloatTexture ? packAndReturnChangedFloat(this) : packAndReturnChangedUint8(this);
         if (changed) {
             clippingPlanesTexture.copyFrom({
                 width : clippingPlanesTexture.width,
                 height : clippingPlanesTexture.height,
-                arrayBufferView : usefloatTexture ? this._float32View : this._textureBytes
+                arrayBufferView : useFloatTexture ? this._float32View : this._uint8View
             });
         }
     };
@@ -644,7 +638,7 @@ define([
      */
     ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8 = (ClippingPlaneCollection.MAX_CLIPPING_PLANES * 2) / textureWidth;
 
-        /**
+    /**
      * The pixel width of a power-of-two RGBA FLOAT texture.
      * with enough pixels to support MAX_CLIPPING_PLANES.
      *

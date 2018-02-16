@@ -201,10 +201,9 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         radiusMultiplier = 20.0;
         pointCloudUrl.then(function(resource) {
             return loadTileset(resource);
-        })
-            .then(function() {
-                tileset.pointCloudShading.attenuation = true;
-            });
+        }).then(function() {
+            tileset.pointCloudShading.attenuation = true;
+        });
     } else if (newValue === clipObjects[3]) {
         // i3dm
         instancedUrl.then(function(resource) {
