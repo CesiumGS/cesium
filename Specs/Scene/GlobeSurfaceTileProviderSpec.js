@@ -2,6 +2,7 @@ defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
+        'Core/ClippingPlane',
         'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/Credit',
@@ -10,7 +11,6 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
         'Core/Intersect',
-        'Core/Plane',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
@@ -33,6 +33,7 @@ defineSuite([
         GlobeSurfaceTileProvider,
         Cartesian3,
         CesiumTerrainProvider,
+        ClippingPlane,
         ClippingPlaneCollection,
         Color,
         Credit,
@@ -41,7 +42,6 @@ defineSuite([
         EllipsoidTerrainProvider,
         GeographicProjection,
         Intersect,
-        Plane,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
@@ -757,7 +757,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10000.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10000.0);
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -788,7 +788,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -1000.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -1000.0);
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -823,8 +823,8 @@ defineSuite([
 
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -10000.0),
-                    new Plane(Cartesian3.UNIT_X, -1000.0)
+                    new ClippingPlane(Cartesian3.UNIT_Z, -10000.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, -1000.0)
                 ],
                 unionClippingRegions: true
             });
@@ -852,7 +852,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, -1000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, -1000000.0)
             ]
         });
 
@@ -870,7 +870,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 0.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 0.0)
             ]
         });
 
@@ -888,7 +888,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 10000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
         });
 
@@ -905,7 +905,7 @@ defineSuite([
     it('destroys attached ClippingPlaneCollections that have been detached', function() {
         var clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 10000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
         });
         var globe = scene.globe;
@@ -919,7 +919,7 @@ defineSuite([
     it('throws a DeveloperError when given a ClippingPlaneCollection attached to a Model', function() {
         var clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 10000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
         });
         var model = scene.primitives.add(Model.fromGltf({

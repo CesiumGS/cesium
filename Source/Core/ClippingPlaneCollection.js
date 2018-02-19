@@ -5,6 +5,7 @@ define([
         './Cartesian4',
         './Math',
         './Check',
+        './ClippingPlane',
         './Color',
         './defaultValue',
         './defined',
@@ -29,6 +30,7 @@ define([
         Cartesian4,
         CesiumMath,
         Check,
+        ClippingPlane,
         Color,
         defaultValue,
         defined,
@@ -50,13 +52,13 @@ define([
 
     /**
      * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the
-     * outside of the specified list of {@link Plane} objects for a single gltf model, 3D Tileset, or the globe.
+     * outside of the specified list of {@link ClippingPlane} objects for a single gltf model, 3D Tileset, or the globe.
      *
      * @alias ClippingPlaneCollection
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Plane[]} [options.planes=[]] An array of up to 6 {@link Plane} objects used to selectively disable rendering on the outside of each plane.
+     * @param {Plane[]} [options.planes=[]] An array of up to 2048 {@link ClippingPlane} objects used to selectively disable rendering on the outside of each plane.
      * @param {Boolean} [options.enabled=true] Determines whether the clipping planes are active.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
      * @param {Boolean} [options.unionClippingRegions=false] If true, a region will be clipped if included in any plane in the collection. Otherwise, the region to be clipped must intersect the regions defined by all planes in this collection.
@@ -66,11 +68,22 @@ define([
     function ClippingPlaneCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this._planes = [];
+        this._containsUntrackablePlanes = false;
+
+        // Do partial texture updates if just one plane is dirty.
+        // If many planes are dirty, refresh the entire texture.
+        this._dirtyIndex = -1;
+        this._manyDirtyPlanes = false;
+
+        // Add each plane to check if it's actually a Plane object instead of a ClippingPlane.
+        // Use of Plane objects will be deprecated.
         var planes = options.planes;
         if (defined(planes)) {
-            this._planes = planes.slice(0);
-        } else {
-            this._planes = [];
+            var planeCount = planes.length;
+            for (var i = 0; i < planeCount; i++) {
+                this.add(planes[i]);
+            }
         }
 
         /**
@@ -110,6 +123,9 @@ define([
          // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
 
+        // Packed uniform for plane count, denormalization parameters, and clipping union (0 false, 1 true)
+        this._lengthRangeUnion = new Cartesian4();
+
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
         this.unionClippingRegions = defaultValue(options.unionClippingRegions, false);
@@ -117,15 +133,7 @@ define([
         this._uint8View = undefined;
         this._float32View = undefined;
 
-        // Uint32 views for comparison and copy
-        // Avoid wastefully re-uploading textures when the clipping planes don't change between frames
-        this._previousUint32View = undefined;
-        this._currentUint32View = undefined;
-
         this._clippingPlanesTexture = undefined;
-
-        // Packed uniform for plane count, denormalization parameters, and clipping union (0 false, 1 true)
-        this._lengthRangeUnion = new Cartesian4();
     }
 
     function unionIntersectFunction(value) {
@@ -169,6 +177,7 @@ define([
                     this._unionClippingRegions = value;
                     this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
                 }
+                this._lengthRangeUnion.w = this._unionClippingRegions ? 1.0 : 0.0;
             }
         },
 
@@ -211,14 +220,21 @@ define([
         }
     });
 
+    ClippingPlaneCollection.prototype.setIndexDirty = function(index) {
+        // If there's already a different _dirtyIndex set, more than one plane has changed since update.
+        // Entire texture must be reloaded
+        this._manyDirtyPlanes = this._manyDirtyPlanes || (this._dirtyIndex !== -1 && this._dirtyIndex !== index);
+        this._dirtyIndex = index;
+    };
+
     /**
-     * Adds the specified {@link Plane} to the collection to be used to selectively disable rendering
+     * Adds the specified {@link ClippingPlane} to the collection to be used to selectively disable rendering
      * on the outside of each plane. Use {@link ClippingPlaneCollection#unionClippingRegions} to modify
      * how modify the clipping behavior of multiple planes.
      *
-     * @param {Plane} plane The plane to add to the collection.
+     * @param {ClippingPlanePlane} plane The clipping plane plane to add to the collection. Use of Plane objects will be deprecated.
      *
-     * @exception {DeveloperError} The plane added exceeds the maximum number of supported clipping planes.
+     * @exception {DeveloperError} The clipping plane added exceeds the maximum number of supported clipping planes.
      *
      * @see ClippingPlaneCollection#unionClippingRegions
      * @see ClippingPlaneCollection#remove
@@ -231,6 +247,17 @@ define([
         }
         //>>includeEnd('debug');
 
+        var newPlaneIndex = this._planes.length;
+        if (plane instanceof ClippingPlane) {
+            var that = this;
+            plane.onChangeCallback = function(index) {
+                that.setIndexDirty(index);
+            };
+            plane.index = newPlaneIndex;
+        } else {
+            this._containsUntrackablePlanes = true;
+        }
+        this.setIndexDirty(newPlaneIndex);
         this._planes.push(plane);
     };
 
@@ -266,9 +293,9 @@ define([
     }
 
     /**
-     * Checks whether this collection contains the given plane.
+     * Checks whether this collection contains a plane equal to the given plane.
      *
-     * @param {Plane} [plane] The plane to check for.
+     * @param {Plane} [plane] The plane or ClippingPlane to check for.
      * @returns {Boolean} true if this collection contains the plane, false otherwise.
      *
      * @see ClippingPlaneCollection#get
@@ -295,10 +322,22 @@ define([
             return false;
         }
 
+        // Unlink this ClippingPlaneCollection from the ClippingPlane
+        if (plane instanceof ClippingPlane) {
+            plane.onChangeCallback = undefined;
+            plane.index = -1;
+        }
+
+        // Shift and update indices
         var length = planes.length - 1;
         for (var i = index; i < length; ++i) {
-            planes[i] = planes[i + 1];
+            var planeToKeep = planes[i + 1];
+            planes[i] = planeToKeep;
+            if (planeToKeep instanceof ClippingPlane) {
+                planeToKeep.index = i;
+            }
         }
+        this._manyDirtyPlanes = true;
         planes.length = length;
 
         return true;
@@ -311,6 +350,17 @@ define([
      * @see ClippingPlaneCollection#remove
      */
     ClippingPlaneCollection.prototype.removeAll = function() {
+        // Dereference this ClippingPlaneCollection from all ClippingPlanes
+        var planes = this._planes;
+        var planesCount = planes.length;
+        for (var i = 0; i < planesCount; i++) {
+            var plane = planes[i];
+            if (plane instanceof ClippingPlane) {
+                plane.onChangeCallback = undefined;
+                plane.index = -1;
+            }
+        }
+        this._manyDirtyPlanes = true;
         this._planes = [];
     };
 
@@ -332,7 +382,7 @@ define([
     }
 
     var encodingScratch = new Cartesian4();
-    function insertFloat(uint8Buffer, float, byteIndex) {
+    function insertNormalizedFloat(uint8Buffer, float, byteIndex) {
         packNormalizedFloat(float, encodingScratch);
         uint8Buffer[byteIndex] = encodingScratch.x * 255;
         uint8Buffer[byteIndex + 1] = encodingScratch.y * 255;
@@ -356,18 +406,14 @@ define([
     }
 
     var oct32EncodeScratch = new Cartesian4();
-    function packAndReturnChangedUint8(clippingPlaneCollection) {
-        var previousUint32View = clippingPlaneCollection._previousUint32View;
-        var currentUint32View = clippingPlaneCollection._currentUint32View;
-        var textureBytes = clippingPlaneCollection._uint8View;
+    function packAllUint8s(clippingPlaneCollection) {
+        var uint8View = clippingPlaneCollection._uint8View;
         var planes = clippingPlaneCollection._planes;
         var length = planes.length;
-        var dirty = false;
-        var byteIndex, uint32Index;
+        var byteIndex;
 
         var lengthRangeUnion = clippingPlaneCollection._lengthRangeUnion;
         lengthRangeUnion.x = length;
-        lengthRangeUnion.w = clippingPlaneCollection._unionClippingRegions ? 1.0 : 0.0;
 
         // Pack all plane normals and get min/max of all distances.
         // Check each normal for changes.
@@ -380,16 +426,10 @@ define([
             byteIndex = i * 8; // each plane is 4 bytes normal, 4 bytes distance
 
             var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
-            textureBytes[byteIndex] = oct32Normal.x;
-            textureBytes[byteIndex + 1] = oct32Normal.y;
-            textureBytes[byteIndex + 2] = oct32Normal.z;
-            textureBytes[byteIndex + 3] = oct32Normal.w;
-
-            uint32Index = i * 2;
-            dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
-            if (dirty) {
-                previousUint32View[uint32Index] = currentUint32View[uint32Index];
-            }
+            uint8View[byteIndex] = oct32Normal.x;
+            uint8View[byteIndex + 1] = oct32Normal.y;
+            uint8View[byteIndex + 2] = oct32Normal.z;
+            uint8View[byteIndex + 3] = oct32Normal.w;
 
             var distance = plane.distance;
             distanceMin = Math.min(distance, distanceMin);
@@ -407,51 +447,32 @@ define([
         for (i = 0; i < length; ++i) {
             var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
             byteIndex = i * 8 + 4;
-            insertFloat(textureBytes, normalizedDistance, byteIndex);
-
-            uint32Index = i * 2 + 1;
-            dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
-            if (dirty) {
-                previousUint32View[uint32Index] = currentUint32View[uint32Index];
-            }
+            insertNormalizedFloat(uint8View, normalizedDistance, byteIndex);
         }
-        return dirty;
     }
 
-    function packAndReturnChangedFloat(clippingPlaneCollection) {
-        var previousUint32View = clippingPlaneCollection._previousUint32View;
-        var currentUint32View = clippingPlaneCollection._currentUint32View;
+    // Pack starting at the beginning of the buffer to allow partial update
+    function packPlanesAsFloats(clippingPlaneCollection, startIndex, endIndex) {
         var float32View = clippingPlaneCollection._float32View;
         var planes = clippingPlaneCollection._planes;
         var length = planes.length;
-        var dirty = false;
-        var floatIndex, uint32Index;
 
         var lengthRangeUnion = clippingPlaneCollection._lengthRangeUnion;
         lengthRangeUnion.x = length;
         lengthRangeUnion.w = clippingPlaneCollection._unionClippingRegions ? 1.0 : 0.0;
 
-        var i, j;
-        for (i = 0; i < length; ++i) {
+        var floatIndex = 0;
+        for (var i = startIndex; i < endIndex; ++i) {
             var plane = planes[i];
-
-            floatIndex = i * 4; // each plane is 4 floats
-
             var normal = plane.normal;
+
             float32View[floatIndex] = normal.x;
             float32View[floatIndex + 1] = normal.y;
             float32View[floatIndex + 2] = normal.z;
             float32View[floatIndex + 3] = plane.distance;
 
-            for (j = 0; j < 4; ++j) {
-                uint32Index = floatIndex + j;
-                dirty = dirty || previousUint32View[uint32Index] !== currentUint32View[uint32Index];
-                if (dirty) {
-                    previousUint32View[uint32Index] = currentUint32View[uint32Index];
-                }
-            }
+            floatIndex += 4; // each plane is 4 floats
         }
-        return dirty;
     }
 
     /**
@@ -474,7 +495,6 @@ define([
                 magnificationFilter : TextureMagnificationFilter.NEAREST
             });
 
-            var byteCount = 0;
             if (useFloatTexture) {
                 clippingPlanesTexture = new Texture({
                     context : context,
@@ -482,9 +502,10 @@ define([
                     height : ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT,
-                    sampler : sampler
+                    sampler : sampler,
+                    flipY : false
                 });
-                byteCount = ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT * 16; // RGBA float
+                this._float32View = new Float32Array(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT * 4);
             } else {
                 clippingPlanesTexture = new Texture({
                     context : context,
@@ -492,29 +513,55 @@ define([
                     height : ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                    sampler : sampler
+                    sampler : sampler,
+                    flipY : false
                 });
-                byteCount = ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8 * 4; // RGBA uint8
+                this._uint8View = new Uint8Array(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8 * 4);
             }
-            var previousTextureBytes = new ArrayBuffer(byteCount);
-            var currentTextureBytes = new ArrayBuffer(byteCount);
-
-            this._uint8View = new Uint8Array(currentTextureBytes);
-            this._float32View = new Float32Array(currentTextureBytes);
-            this._previousUint32View = new Uint32Array(previousTextureBytes);
-            this._currentUint32View = new Uint32Array(currentTextureBytes);
 
             this._clippingPlanesTexture = clippingPlanesTexture;
+            this._manyDirtyPlanes = true;
         }
-        // pack planes to currentTextureBytes, do a texture update if anything changed.
-        var changed = useFloatTexture ? packAndReturnChangedFloat(this) : packAndReturnChangedUint8(this);
-        if (changed) {
+
+        // Use of Plane objects will be deprecated.
+        // But until then, we have no way of telling if they changed since last frame.
+        var refreshFullTexture = this._manyDirtyPlanes || this._containsUntrackablePlanes;
+        var dirtyIndex = this._dirtyIndex;
+
+        if (!refreshFullTexture && dirtyIndex === -1) {
+            return;
+        }
+
+        if (!refreshFullTexture && useFloatTexture) {
+            // partial update possible
+            packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
+            var offsetY = dirtyIndex / clippingPlanesTexture.width;
+            var offsetX = dirtyIndex - offsetY * clippingPlanesTexture.width;
+
+            clippingPlanesTexture.copyFrom({
+                width : 1,
+                height : 1,
+                arrayBufferView : this._float32View
+            }, offsetX, offsetY);
+        } else if (useFloatTexture) {
+            packPlanesAsFloats(this, 0, this._planes.length);
             clippingPlanesTexture.copyFrom({
                 width : clippingPlanesTexture.width,
                 height : clippingPlanesTexture.height,
-                arrayBufferView : useFloatTexture ? this._float32View : this._uint8View
+                arrayBufferView : this._float32View
+            });
+        } else {
+            // don't do "partial" updates at all for uint8 because all plane normalizations may change
+            packAllUint8s(this);
+            clippingPlanesTexture.copyFrom({
+                width : clippingPlanesTexture.width,
+                height : clippingPlanesTexture.height,
+                arrayBufferView : this._uint8View
             });
         }
+
+        this._manyDirtyPlanes = false;
+        this._dirtyIndex = -1;
     };
 
     /**
@@ -536,12 +583,17 @@ define([
 
             planes.length = length;
             for (i = index; i < length; ++i) {
-                result._planes[i] = new Plane(Cartesian3.UNIT_X, 0.0);
+                result._planes[i] = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
             }
         }
 
         for (i = 0; i < length; ++i) {
-            Plane.clone(this._planes[i], result._planes[i]);
+            var resultPlane = result._planes[i];
+            resultPlane.index = i;
+            resultPlane.onChangeCallback = function(index) {
+                result.setIndexDirty(index);
+            };
+            ClippingPlane.clone(this._planes[i], resultPlane);
         }
 
         result.enabled = this.enabled;
@@ -587,7 +639,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var plane = planes[i];
 
-            Plane.transform(plane, modelMatrix, scratchPlane);
+            Plane.transform(plane, modelMatrix, scratchPlane); // ClippingPlane can be used for Plane math
 
             var value = boundingVolume.intersectPlane(scratchPlane);
             if (value === Intersect.INTERSECTING) {

@@ -102,7 +102,7 @@ moveHandler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
+var scratchPlane = new Cesium.ClippingPlane(Cesium.Cartesian3.UNIT_X, 0.0);
 function createPlaneUpdateFunction(plane, transform) {
     return function () {
         plane.distance = targetY;
@@ -113,7 +113,7 @@ function createPlaneUpdateFunction(plane, transform) {
 var tileset;
 function loadTileset(url) {
     var clippingPlanes = [
-        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -154,7 +154,7 @@ function loadTileset(url) {
 var modelEntityClippingPlanes;
 function loadModel(url) {
     var clippingPlanes = [
-        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
 
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({

@@ -116,7 +116,7 @@ function createClippingPlanes(modelMatrix) {
             dir.y = -dir.y;
         }
         Cesium.Cartesian3.normalize(dir, dir);
-        clippingPlanes.push(new Cesium.Plane(dir, cylinderRadius));
+        clippingPlanes.push(new Cesium.ClippingPlane(dir, cylinderRadius));
     }
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
         modelMatrix : Cesium.defined(modelMatrix) ? modelMatrix : Cesium.Matrix4.IDENTITY,

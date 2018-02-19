@@ -15,11 +15,10 @@ vec4 czm_getClippingPlaneFromRgbaFloat(sampler2D packedClippingPlanes, int clipp
 {
     int pixY = clippingPlaneNumber / textureWidth;
     int pixX = clippingPlaneNumber - (pixY * textureWidth);
-    pixY = textureHeight - pixY; // flipped relative to texture
     float pixelWidth = 1.0 / float(textureWidth);
     float pixelHeight = 1.0 / float(textureHeight);
     float u = (float(pixX) + 0.5) * pixelWidth; // sample from center of pixel
-    float v = (float(pixY) - 0.5) * pixelHeight;
+    float v = (float(pixY) + 0.5) * pixelHeight;
 
     vec4 plane = texture2D(packedClippingPlanes, vec2(u, v));
     return czm_transformPlane(transform, plane);

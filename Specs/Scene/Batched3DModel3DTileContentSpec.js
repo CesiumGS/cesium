@@ -1,22 +1,22 @@
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
+        'Core/ClippingPlane',
         'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
-        'Core/Plane',
         'Core/Transforms',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
+        ClippingPlane,
         ClippingPlaneCollection,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
-        Plane,
         Transforms,
         Cesium3DTilesTester,
         createScene) {
@@ -300,7 +300,7 @@ defineSuite([
 
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
             content.update(tileset, scene.frameState);

@@ -3,6 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
+        'Core/ClippingPlane',
         'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/combine',
@@ -19,7 +20,6 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
-        'Core/Plane',
         'Core/PrimitiveType',
         'Core/Resource',
         'Core/Transforms',
@@ -39,6 +39,7 @@ defineSuite([
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
+        ClippingPlane,
         ClippingPlaneCollection,
         Color,
         combine,
@@ -55,7 +56,6 @@ defineSuite([
         Matrix3,
         Matrix4,
         PerspectiveFrustum,
-        Plane,
         PrimitiveType,
         Resource,
         Transforms,
@@ -767,7 +767,7 @@ defineSuite([
         return loadModel(boxUrl).then(function(model) {
             var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
             model.clippingPlanes = clippingPlanes;
@@ -784,7 +784,7 @@ defineSuite([
         return loadModel(boxUrl).then(function(model1) {
             clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
             model1.clippingPlanes = clippingPlanes;
@@ -803,7 +803,7 @@ defineSuite([
         return loadModel(boxUrl).then(function(model1) {
             clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
             model1.clippingPlanes = clippingPlanes;
@@ -2653,7 +2653,7 @@ defineSuite([
 
             model.clippingPlanes = new ClippingPlaneCollection({
                planes : [
-                   new Plane(Cartesian3.UNIT_X, 0.0)
+                   new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                ]
             });
 
@@ -2676,7 +2676,7 @@ defineSuite([
                 modelColor = rgba;
             });
 
-            var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
             model.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -2709,7 +2709,7 @@ defineSuite([
                 modelColor = rgba;
             });
 
-            var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
             model.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -2746,8 +2746,8 @@ defineSuite([
 
             model.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, 5.0),
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_Z, 5.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ],
                 unionClippingRegions: true
             });

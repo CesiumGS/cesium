@@ -1,6 +1,7 @@
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
+        'Core/ClippingPlane',
         'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/CullingVolume',
@@ -12,7 +13,6 @@ defineSuite([
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
-        'Core/Plane',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
         'Core/Resource',
@@ -31,6 +31,7 @@ defineSuite([
     ], function(
         Cesium3DTileset,
         Cartesian3,
+        ClippingPlane,
         ClippingPlaneCollection,
         Color,
         CullingVolume,
@@ -42,7 +43,6 @@ defineSuite([
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
-        Plane,
         PrimitiveType,
         RequestScheduler,
         Resource,
@@ -2891,7 +2891,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var clippingPlaneCollection1 = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -100000000.0)
+                    new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0)
                 ]
             });
             expect(clippingPlaneCollection1.owner).not.toBeDefined();
@@ -2899,7 +2899,7 @@ defineSuite([
             tileset.clippingPlanes = clippingPlaneCollection1;
             var clippingPlaneCollection2 = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -100000000.0)
+                    new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0)
                 ]
             });
 
@@ -2916,7 +2916,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset1) {
             clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
             tileset1.clippingPlanes = clippingPlanes;
@@ -2936,7 +2936,7 @@ defineSuite([
 
             expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, -100000000.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -2960,7 +2960,7 @@ defineSuite([
 
             expect(visibility).not.toBe(Intersect.OUTSIDE);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, -100000000.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -2989,7 +2989,7 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -3031,7 +3031,7 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane

@@ -17,10 +17,9 @@ vec4 czm_getClippingPlaneFromRgbaUint8(sampler2D packedClippingPlanes, vec2 rang
     int clippingPlaneStartIndex = clippingPlaneNumber * 2; // clipping planes are two pixels each
     int pixY = clippingPlaneStartIndex / textureWidth;
     int pixX = clippingPlaneStartIndex - (pixY * textureWidth);
-    pixY = textureWidth - pixY; // flipped relative to texture
     float pixelWidth = 1.0 / float(textureWidth);
     float u = (float(pixX) + 0.5) * pixelWidth; // sample from center of pixel
-    float v = (float(pixY) - 0.5) * pixelWidth;
+    float v = (float(pixY) + 0.5) * pixelWidth;
 
     vec4 oct32 = texture2D(packedClippingPlanes, vec2(u, v)) * 255.0;
     vec2 oct = vec2(oct32.x * 256.0 + oct32.y, oct32.z * 256.0 + oct32.w);
