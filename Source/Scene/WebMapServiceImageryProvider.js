@@ -111,15 +111,15 @@ define([
 
         var pickFeatureResource = resource.clone();
 
-        resource.addQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
-        pickFeatureResource.addQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
+        resource.setQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
+        pickFeatureResource.setQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
 
         if (defined(options.parameters)) {
-            resource.addQueryParameters(objectToLowercase(options.parameters));
+            resource.setQueryParameters(objectToLowercase(options.parameters));
         }
 
         if (defined(options.getFeatureInfoParameters)) {
-            pickFeatureResource.addQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
+            pickFeatureResource.setQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
         }
 
         var parameters = {};
@@ -139,8 +139,8 @@ define([
             parameters.srs = options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
         }
 
-        resource.addQueryParameters(parameters, true);
-        pickFeatureResource.addQueryParameters(parameters, true);
+        resource.setQueryParameters(parameters, true);
+        pickFeatureResource.setQueryParameters(parameters, true);
 
         var pickFeatureParams = {
             query_layers: options.layers,
@@ -148,7 +148,7 @@ define([
             y: '{j}',
             info_format: '{format}'
         };
-        pickFeatureResource.addQueryParameters(pickFeatureParams, true);
+        pickFeatureResource.setQueryParameters(pickFeatureParams, true);
 
         this._resource = resource;
         this._pickFeaturesResource = pickFeatureResource;
