@@ -56,7 +56,7 @@ define([
      *
      * @type {String}
      */
-    CesiumIon.defaultAccessToken = undefined;
+    CesiumIon.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NDViM2NkNi0xYTE2LTRlZTUtODBlNy05M2Q4ODg4M2NmMTQiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTc4MDh9.sld5jPORDf_lWavMEsugh6vHPnjR6j3qd1aBkQTswNM';
 
     /**
      * The default Cesium ion server to use.
