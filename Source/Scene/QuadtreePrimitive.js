@@ -272,11 +272,6 @@ define([
      * @private
      */
     QuadtreePrimitive.prototype.update = function(frameState) {
-        if (this._tilesInvalidated) {
-            invalidateAllTiles(this);
-            this._tilesInvalidated = false;
-        }
-
         if (defined(this._tileProvider.update)) {
             this._tileProvider.update(frameState);
         }
@@ -345,7 +340,7 @@ define([
     function updateTileLoadProgress(primitive, frameState) {
         var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
 
-        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength || primitive._tilesInvalidated) {
             frameState.afterRender.push(Event.prototype.raiseEvent.bind(primitive._tileLoadProgressEvent, currentLoadQueueLength));
             primitive._lastTileLoadQueueLength = currentLoadQueueLength;
         }
@@ -381,10 +376,16 @@ define([
             return;
         }
 
+        if (this._tilesInvalidated) {
+            invalidateAllTiles(this);
+        }
+
         // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
         processTileLoadQueue(this, frameState);
         updateHeights(this, frameState);
         updateTileLoadProgress(this, frameState);
+
+        this._tilesInvalidated = false;
     };
 
     /**
