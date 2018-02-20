@@ -439,9 +439,9 @@ defineSuite([
 
         var result = clippingPlanes.clone();
         expect(result).not.toBe(clippingPlanes);
-        expect(result._planes[0].normal).toEqual(planes[0].normal);
+        expect(Cartesian3.equals(result._planes[0].normal, planes[0].normal)).toBe(true);
         expect(result._planes[0].distance).toEqual(planes[0].distance);
-        expect(result._planes[1].normal).toEqual(planes[1].normal);
+        expect(Cartesian3.equals(result._planes[1].normal, planes[1].normal)).toBe(true);
         expect(result._planes[1].distance).toEqual(planes[1].distance);
         expect(result.enabled).toEqual(false);
         expect(result.modelMatrix).toEqual(transform);
@@ -462,9 +462,9 @@ defineSuite([
         var copy = clippingPlanes.clone(result);
         expect(copy).toBe(result);
         expect(result._planes).not.toBe(planes);
-        expect(result._planes[0].normal).toEqual(planes[0].normal);
+        expect(Cartesian3.equals(result._planes[0].normal, planes[0].normal)).toBe(true);
         expect(result._planes[0].distance).toEqual(planes[0].distance);
-        expect(result._planes[1].normal).toEqual(planes[1].normal);
+        expect(Cartesian3.equals(result._planes[1].normal, planes[1].normal)).toBe(true);
         expect(result._planes[1].distance).toEqual(planes[1].distance);
         expect(result.enabled).toEqual(false);
         expect(result.modelMatrix).toEqual(transform);

@@ -165,7 +165,7 @@ defineSuite([
         expect(primitive.modelMatrix).toEqual(Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
         expect(primitive.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
         expect(primitive.clippingPlanes._planes.length).toEqual(clippingPlanes._planes.length);
-        expect(primitive.clippingPlanes._planes[0].normal).toEqual(clippingPlanes._planes[0].normal);
+        expect(Cartesian3.equals(primitive.clippingPlanes._planes[0].normal, clippingPlanes._planes[0].normal)).toBe(true);
         expect(primitive.clippingPlanes._planes[0].distance).toEqual(clippingPlanes._planes[0].distance);
 
         // wait till the model is loaded before we can check node transformations

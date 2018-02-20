@@ -48,6 +48,10 @@ defineSuite([
         // Normal non-change
         clippingPlane.normal = Cartesian3.UNIT_Z;
         expect(changeCount).toEqual(2);
+
+        // Normal member change
+        clippingPlane.normal.x += 1.0;
+        expect(changeCount).toEqual(3);
     });
 
     it('can be instantiated from a Plane', function() {

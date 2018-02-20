@@ -30,7 +30,9 @@ define([
      * @param {Function} onChangeCallback Callback to take the Plane's index on update.
      */
     function ClippingPlane(normal, distance, onChangeCallback) {
-        this._plane = new Plane(normal, distance);
+
+        this._distance = distance;
+        this._normal = new UpdateChangedCartesian3(normal, this);
         this.onChangeCallback = onChangeCallback;
         this.index = -1; // to be set by ClippingPlaneCollection
     }
@@ -49,16 +51,16 @@ define([
          */
         distance : {
             get : function() {
-                return this._plane.distance;
+                return this._distance;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number('value', value);
                 //>>includeEnd('debug');
-                if (defined(this.onChangeCallback) && value !== this._plane.distance) {
+                if (defined(this.onChangeCallback) && value !== this._distance) {
                     this.onChangeCallback(this.index);
                 }
-                this._plane.distance = value;
+                this._distance = value;
             }
         },
         /**
@@ -68,16 +70,17 @@ define([
          */
         normal : {
             get : function() {
-                return this._plane.normal;
+                return this._normal;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.object('value', value);
                 //>>includeEnd('debug');
-                if (defined(this.onChangeCallback) && !Cartesian3.equals(this._plane.normal, value)) {
+                if (defined(this.onChangeCallback) && !Cartesian3.equals(this._normal._cartesian3, value)) {
                     this.onChangeCallback(this.index);
                 }
-                Cartesian3.clone(value, this._plane.normal);
+                // Set without firing callback again
+                Cartesian3.clone(value, this._normal._cartesian3);
             }
         }
     });
@@ -104,17 +107,23 @@ define([
     };
 
     /**
+     * Create a Plane from a ClippingPlane object.
      *
-     * @param {*} clippingPlane
-     * @param {*} result
+     * @param {ClippingPlane} clippingPlane The ClippingPlane containing parameters to copy
+     * @param {Plane} [result] The object on which to store the result
      */
     ClippingPlane.toPlane = function(clippingPlane, result) {
         if (!defined(result)) {
-            result = new Plane(Cartesian3.UNIT_X, 0.0);
+            return new Plane(clippingPlane._normal, clippingPlane._distance);
         }
-        return Plane.clone(clippingPlane._plane, result);
+        return ClippingPlane.clone(clippingPlane, result);
     };
 
+    /**
+     * Clones the ClippingPlane without setting its ownership.
+     * @param {ClippingPlane} clippingPlane The ClippingPlane to be cloned
+     * @param {ClippingPlane} [result] The object on which to store the cloned parameters.
+     */
     ClippingPlane.clone = function(clippingPlane, result) {
         if (!defined(result)) {
             return new ClippingPlane(clippingPlane.normal, clippingPlane.distance);
@@ -123,6 +132,64 @@ define([
         result.distance = clippingPlane.distance;
         return result;
     };
+
+    /**
+     * Wrapper on Cartesian3 that allows detection of Plane changes from "members of members," for example:
+     *
+     * var clippingPlane = new ClippingPlane(...);
+     * clippingPlane.normal.z = -1.0;
+     *
+     * @private
+     */
+    function UpdateChangedCartesian3(normal, clippingPlane) {
+        this._clippingPlane = clippingPlane;
+        this._cartesian3 = Cartesian3.clone(normal);
+    }
+
+    defineProperties(UpdateChangedCartesian3.prototype, {
+        x : {
+            get : function() {
+                return this._cartesian3.x;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('value', value);
+                //>>includeEnd('debug');
+                if (defined(this._clippingPlane.onChangeCallback) && value !== this._cartesian3.x) {
+                    this._clippingPlane.onChangeCallback(this._clippingPlane.index);
+                }
+                this._cartesian3.x = value;
+            }
+        },
+        y : {
+            get : function() {
+                return this._cartesian3.y;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('value', value);
+                //>>includeEnd('debug');
+                if (defined(this._clippingPlane.onChangeCallback) && value !== this._cartesian3.y) {
+                    this._clippingPlane.onChangeCallback(this._clippingPlane.index);
+                }
+                this._cartesian3.y = value;
+            }
+        },
+        z : {
+            get : function() {
+                return this._cartesian3.z;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('value', value);
+                //>>includeEnd('debug');
+                if (defined(this._clippingPlane.onChangeCallback) && value !== this._cartesian3.z) {
+                    this._clippingPlane.onChangeCallback(this._clippingPlane.index);
+                }
+                this._cartesian3.z = value;
+            }
+        }
+    });
 
     return ClippingPlane;
 });
