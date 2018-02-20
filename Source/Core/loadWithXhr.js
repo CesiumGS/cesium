@@ -1,12 +1,14 @@
 define([
         '../ThirdParty/when',
         './Check',
+        './defaultValue',
         './defineProperties',
         './deprecationWarning',
         './Resource'
     ], function(
         when,
         Check,
+        defaultValue,
         defineProperties,
         deprecationWarning,
         Resource) {
@@ -61,9 +63,11 @@ define([
         // Take advantage that most parameters are the same
         var resource = new Resource(options);
 
-        return resource.fetch({
+        return Resource._makeRequest(resource, {
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            method: defaultValue(options.method, 'GET'),
+            data: options.data
         });
     }
 

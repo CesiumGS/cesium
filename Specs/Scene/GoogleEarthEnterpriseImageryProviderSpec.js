@@ -7,8 +7,6 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTileInformation',
-        'Core/loadImage',
-        'Core/loadWithXhr',
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Core/Resource',
@@ -29,8 +27,6 @@ defineSuite([
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTileInformation,
-        loadImage,
-        loadWithXhr,
         Rectangle,
         RequestScheduler,
         Resource,
@@ -58,8 +54,8 @@ defineSuite([
 
     var imageryProvider;
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -87,10 +83,10 @@ defineSuite([
     }
 
     function installFakeImageRequest(expectedUrl, proxy) {
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else {
                 if (proxy) {
                     var uri = new Uri(url);
@@ -100,11 +96,11 @@ defineSuite([
                     expect(url).toEqual(expectedUrl);
                 }
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             }
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (defined(expectedUrl)) {
                 if (proxy) {
                     var uri = new Uri(url);
@@ -115,7 +111,7 @@ defineSuite([
             }
 
             // Just return any old image.
-            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
     }
 
@@ -300,10 +296,10 @@ defineSuite([
             }, 1);
         });
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             } else {
                 // fail
                 setTimeout(function() {

@@ -1,16 +1,16 @@
 defineSuite([
         'Scene/Globe',
         'Core/CesiumTerrainProvider',
-        'Core/loadWithXhr',
         'Core/Rectangle',
+        'Core/Resource',
         'Scene/SingleTileImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
         Globe,
         CesiumTerrainProvider,
-        loadWithXhr,
         Rectangle,
+        Resource,
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {
@@ -34,14 +34,14 @@ defineSuite([
 
     afterEach(function() {
         scene.globe = undefined;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     function returnTileJson(path) {
-        var oldLoad = loadWithXhr.load;
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        var oldLoad = Resource._Implementations.loadWithXhr;
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
-                loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr(path, responseType, method, data, headers, deferred);
             } else {
                 return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
@@ -155,8 +155,8 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
         };
 
         returnVertexNormalTileJson();
