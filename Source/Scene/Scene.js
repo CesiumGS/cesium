@@ -784,6 +784,7 @@ define([
         if (defined(globe)) {
             removeGlobeCallbacks.push(globe.tileLoadedEvent.addEventListener(requestRenderAfterFrame(scene)));
             removeGlobeCallbacks.push(globe.imageryLayersUpdatedEvent.addEventListener(requestRenderAfterFrame(scene)));
+            removeGlobeCallbacks.push(globe.terrainProviderChanged.addEventListener(requestRenderAfterFrame(scene)));
         }
         scene._removeGlobeCallbacks = removeGlobeCallbacks;
     }
