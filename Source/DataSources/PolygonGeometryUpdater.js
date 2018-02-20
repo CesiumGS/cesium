@@ -120,25 +120,6 @@ define([
         this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     }
 
-    defineProperties(PolygonGeometryUpdater, {
-        /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof PolygonGeometryUpdater
-         * @type {Appearance}
-         */
-        perInstanceColorAppearanceType : {
-            value : PerInstanceColorAppearance
-        },
-        /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof PolygonGeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            value : MaterialAppearance
-        }
-    });
-
     defineProperties(PolygonGeometryUpdater.prototype, {
         /**
          * Gets the unique ID associated with this updater

@@ -107,25 +107,6 @@ define([
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
 
-    defineProperties(PolylineGeometryUpdater, {
-        /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof PolylineGeometryUpdater
-         * @type {Appearance}
-         */
-        perInstanceColorAppearanceType : {
-            value : PolylineColorAppearance
-        },
-        /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof PolylineGeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            value : PolylineMaterialAppearance
-        }
-    });
-
     defineProperties(PolylineGeometryUpdater.prototype, {
         /**
          * Gets the unique ID associated with this updater

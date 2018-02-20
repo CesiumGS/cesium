@@ -30,26 +30,17 @@ define([
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(GeometryUpdater, {
+    defineProperties(GeometryUpdater.prototype, {
         /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof GeometryUpdater
-         * @type {Appearance}
+         * Gets the unique id associated with this updater.
+         * @memberof GeometryUpdater.prototype
+         *
+         * @type {String}
+         * @readonly
          */
-        perInstanceColorAppearanceType : {
+        id : {
             get : DeveloperError.throwInstantiationError
         },
-        /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof GeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            get : DeveloperError.throwInstantiationError
-        }
-    });
-
-    defineProperties(GeometryUpdater.prototype, {
         /**
          * Gets the entity associated with this geometry.
          * @memberof GeometryUpdater.prototype
