@@ -42,16 +42,12 @@ geocoder.search();
 // Vector 3D Tiles are experimental and the format is subject to change in the future.
 // For more details, see:
 //    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData
-Cesium.CesiumIon.create3DTileset(3623, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwODI4NTUxMC1lMzRjLTQ3OTMtODQ4NC1jM2UzYjc0MTk1NGQiLCJpZCI6NDQsImFzc2V0cyI6WzM2MjNdLCJpYXQiOjE1MTU1OTMxNjl9.PhDPnGMEPxGvxs_oIcQgfMv1OgiZhGjREJypZkwEs1g' })
-    .then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3841) });
+viewer.scene.primitives.add(tileset);
 
-        tileset.style = new Cesium.Cesium3DTileStyle({
-            color: 'rgba(255, 255, 255, 0.5)'
-        });
-    }).otherwise(function(error) {
-        console.log(error);
-    });
+tileset.style = new Cesium.Cesium3DTileStyle({
+    color: 'rgba(255, 255, 255, 0.5)'
+});
 
 // Information about the currently highlighted feature
 var highlighted = {

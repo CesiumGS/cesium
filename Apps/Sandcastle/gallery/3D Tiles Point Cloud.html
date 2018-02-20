@@ -29,15 +29,9 @@ function startup(Cesium) {
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-Cesium.CesiumIon.create3DTileset(1460, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM' })
-    .then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset);
-    })
-    .otherwise(function(error) {
-        console.log(error);
-    });
-
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3838) });
+viewer.scene.primitives.add(tileset);
+viewer.zoomTo(tileset);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

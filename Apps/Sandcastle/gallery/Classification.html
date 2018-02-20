@@ -195,26 +195,22 @@ function updateAlpha(value) {
     scene.invertClassificationColor.alpha = parseFloat(value);
 }
 
-Cesium.CesiumIon.create3DTileset(1458, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg' })
-    .then(function(tileset) {
-        scene.primitives.add(tileset);
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3836) });
+scene.primitives.add(tileset);
 
-        var viewModel = {
-            inverted: viewer.scene.invertClassification,
-            invertedAlpha: viewer.scene.invertClassificationColor.alpha,
-            highlightBuilding: highlightBuilding,
-            highlightTrees: highlightTrees
-        };
-        Cesium.knockout.track(viewModel);
-        var toolbar = document.getElementById('toolbar');
-        Cesium.knockout.applyBindings(viewModel, toolbar);
-        Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(invertClassification);
-        Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(updateAlpha);
+var viewModel = {
+    inverted: viewer.scene.invertClassification,
+    invertedAlpha: viewer.scene.invertClassificationColor.alpha,
+    highlightBuilding: highlightBuilding,
+    highlightTrees: highlightTrees
+};
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(invertClassification);
+Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(updateAlpha);
 
-        highlightTrees();
-    }).otherwise(function(error) {
-        console.log(error);
-    });
+highlightTrees();
 
 var currentObjectId;
 var currentPrimitive;
