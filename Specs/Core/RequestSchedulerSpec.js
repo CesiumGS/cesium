@@ -12,12 +12,12 @@ defineSuite([
 
     var originalMaximumRequests;
     var originalMaximumRequestsPerServer;
-    var originalPriorityHeapLength;
+    var originalRequestQueueLength;
 
     beforeAll(function() {
         originalMaximumRequests = RequestScheduler.maximumRequests;
         originalMaximumRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
-        originalPriorityHeapLength = RequestScheduler.priorityHeapLength;
+        originalRequestQueueLength = RequestScheduler.requestQueueLength;
     });
 
     beforeEach(function() {
@@ -27,7 +27,7 @@ defineSuite([
     afterEach(function() {
         RequestScheduler.maximumRequests = originalMaximumRequests;
         RequestScheduler.maximumRequestsPerServer = originalMaximumRequestsPerServer;
-        RequestScheduler.priorityHeapLength = originalPriorityHeapLength;
+        RequestScheduler.requestQueueLength = originalRequestQueueLength;
     });
 
     it('request throws when request is undefined', function() {
@@ -204,7 +204,7 @@ defineSuite([
         }
     });
 
-    it('honors priorityHeapLength', function() {
+    it('honors requestQueue length', function() {
         var deferreds = [];
         var requests = [];
 
@@ -225,22 +225,23 @@ defineSuite([
             return request;
         }
 
-        RequestScheduler.priorityHeapLength = 1;
+        RequestScheduler.requestQueueLength = 1;
         var firstRequest = createRequest(0.0);
         var promise = RequestScheduler.request(firstRequest);
         expect(promise).toBeDefined();
         promise = RequestScheduler.request(createRequest(1.0));
         expect(promise).toBeUndefined();
 
-        RequestScheduler.priorityHeapLength = 3;
+        RequestScheduler.requestQueueLength = 3;
+        promise = RequestScheduler.request(createRequest(1.0));
         promise = RequestScheduler.request(createRequest(2.0));
         promise = RequestScheduler.request(createRequest(3.0));
         expect(promise).toBeDefined();
         promise = RequestScheduler.request(createRequest(4.0));
         expect(promise).toBeUndefined();
 
-        // A request is cancelled to accommodate the new heap length
-        RequestScheduler.priorityHeapLength = 2;
+        // The requests are cancelled when the queue length changes
+        RequestScheduler.requestQueueLength = 2;
         expect(firstRequest.state).toBe(RequestState.CANCELLED);
 
         var length = deferreds.length;
@@ -448,7 +449,7 @@ defineSuite([
             });
         }
 
-        var length = RequestScheduler.priorityHeapLength;
+        var length = RequestScheduler.requestQueueLength;
         for (var i = 0; i < length; ++i) {
             var priority = Math.random();
             RequestScheduler.request(createRequest(priority));
@@ -485,7 +486,7 @@ defineSuite([
 
         var i;
         var request;
-        var length = RequestScheduler.priorityHeapLength;
+        var length = RequestScheduler.requestQueueLength;
         for (i = 0; i < length; ++i) {
             var priority = i / (length - 1);
             request = createRequest(priority);
@@ -497,28 +498,31 @@ defineSuite([
         RequestScheduler.maximumRequests = 0;
         RequestScheduler.update();
 
-        var requestHeap = RequestScheduler.requestHeap;
+        var requestQueue = RequestScheduler.requestQueue;
         var requests = [];
         var currentTestId = 0;
-        while (requestHeap.length > 0) {
-            request = requestHeap.pop();
+
+        for (i = 0; i < length; ++i) {
+            request = requestQueue.get(i);
             requests.push(request);
             expect(request.testId).toBeGreaterThanOrEqualTo(currentTestId);
             currentTestId = request.testId;
         }
+        requestQueue.remove(length);
 
         for (i = 0; i < length; ++i) {
-            requestHeap.insert(requests[i]);
+            requestQueue.insert(requests[i]);
         }
 
         invertPriority = true;
         RequestScheduler.update();
 
-        while (requestHeap.length > 0) {
-            request = requestHeap.pop();
+        for (i = 0; i < length; ++i) {
+            request = requestQueue.get(i);
             expect(request.testId).toBeLessThanOrEqualTo(currentTestId);
             currentTestId = request.testId;
         }
+        requestQueue.remove(length);
     });
 
     it('handles low priority requests', function() {
@@ -539,7 +543,7 @@ defineSuite([
         var mediumPriority = 0.5;
         var lowPriority = 1.0;
 
-        var length = RequestScheduler.priorityHeapLength;
+        var length = RequestScheduler.requestQueueLength;
         for (var i = 0; i < length; ++i) {
             RequestScheduler.request(createRequest(mediumPriority));
         }
