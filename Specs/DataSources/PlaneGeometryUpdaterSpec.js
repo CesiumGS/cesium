@@ -348,7 +348,7 @@ defineSuite([
 
         var updater = new PlaneGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(primitives.length).toBe(0);
 
         dynamicUpdater.update(JulianDate.now());
@@ -439,45 +439,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicPlane();
-        var updater = new PlaneGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicPlane();
-        entity.plane.dimensions = createDynamicProperty(new Cartesian2(1.0, 2.0
-        ));
-        var updater = new PlaneGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicPlane();
         entity.plane.dimensions = createDynamicProperty(new Cartesian2(1.0, 2.0));
         var updater = new PlaneGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new PlaneGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicPlane();
-        expect(function() {
-            return new PlaneGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

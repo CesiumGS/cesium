@@ -73,6 +73,8 @@ define([
      */
     function BoxGeometryUpdater(entity, scene) {
         GeometryUpdater.call(this, entity, scene, new BoxGeometryOptions(entity), 'box', ['availability', 'position', 'orientation', 'box']);
+
+        this._isClosed = true;
     }
 
     if (defined(Object.create)) {
@@ -166,26 +168,21 @@ define([
         });
     };
 
-    BoxGeometryUpdater.prototype._isHidden = function(entity) {
-        var dimensions = entity.box.dimensions;
-        var position = entity.position;
-        return !defined(dimensions) || !defined(position) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    BoxGeometryUpdater.prototype._isHidden = function(entity, box) {
+        return !defined(box.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, box);
     };
 
     BoxGeometryUpdater.prototype._isDynamic = function(entity) {
         var box = entity.box;
-        var dimensions = box.dimensions;
-        var outlineWidth = box.outlineWidth;
-        var position = entity.position;
-        return !position.isConstant ||  !Property.isConstant(entity.orientation) ||  !dimensions.isConstant ||  !Property.isConstant(outlineWidth);
+        return !entity.position.isConstant ||  !Property.isConstant(entity.orientation) ||  !box.dimensions.isConstant ||  !Property.isConstant(box.outlineWidth);
     };
 
     BoxGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var dimensions = entity.box.dimensions;
-        var options = this._options;
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
+
+        var options = this._options;
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-        options.dimensions = dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
+        options.dimensions = entity.box.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
     };
 
     BoxGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;

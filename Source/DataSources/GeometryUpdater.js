@@ -63,7 +63,7 @@ define([
 
         this._entity = entity;
         this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(this._onEntityPropertyChanged.bind(this));
+        this._entitySubscription = entity.definitionChanged.addEventListener(GeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
         this._onTerrain = false;
@@ -352,7 +352,7 @@ define([
         return false;
     };
 
-    GeometryUpdater.prototype._isClosed = function() {
+    GeometryUpdater.prototype._getIsClosed = function() {
         return true;
     };
 
@@ -395,7 +395,7 @@ define([
         }
 
         var show = geometry.show;
-        if (this._isHidden(entity)) {
+        if (this._isHidden(entity, geometry)) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -421,7 +421,7 @@ define([
         }
 
         this._onTerrain = onTerrain;
-        this._isClosed = this._isClosed(entity);
+        this._isClosed = this._getIsClosed(entity);
         this._outlineEnabled = outlineEnabled;
 
         if (this._isDynamic(entity)) {
@@ -430,7 +430,7 @@ define([
                 this._geometryChanged.raiseEvent(this);
             }
         } else {
-            this._setStaticOptions();
+            this._setStaticOptions(entity);
             var outlineWidth = geometry.outlineWidth;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;

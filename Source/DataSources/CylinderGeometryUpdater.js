@@ -77,6 +77,8 @@ define([
      */
     function CylinderGeometryUpdater(entity, scene) {
         GeometryUpdater.call(this, entity, scene, new CylinderGeometryOptions(entity), 'cylinder', ['availability', 'position', 'orientation', 'cylinder']);
+
+        this._isClosed = true;
     }
 
     if (defined(Object.create)) {
@@ -170,13 +172,8 @@ define([
         });
     };
 
-    CylinderGeometryUpdater.prototype._isHidden = function(entity) {
-        var cylinder = entity.cylinder;
-        var length = cylinder.length;
-        var topRadius = cylinder.topRadius;
-        var bottomRadius = cylinder.bottomRadius;
-        var position = entity.position;
-        return !defined(position) || !defined(length) || !defined(topRadius) || !defined(bottomRadius) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    CylinderGeometryUpdater.prototype._isHidden = function(entity, cylinder) {
+        return !defined(entity.position) || !defined(cylinder.length) || !defined(cylinder.topRadius) || !defined(cylinder.bottomRadius) || GeometryUpdater.prototype._isHidden.call(this, entity, cylinder);
     };
 
     CylinderGeometryUpdater.prototype._isDynamic = function(entity) {

@@ -203,13 +203,11 @@ define([
         });
     };
 
-    PlaneGeometryUpdater.prototype._isHidden = function(entity) {
-        var plane = entity.plane;
-
-        return !defined(plane.plane) || !defined(plane.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    PlaneGeometryUpdater.prototype._isHidden = function(entity, plane) {
+        return !defined(plane.plane) || !defined(plane.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, plane);
     };
 
-    GeometryUpdater.prototype._isClosed = function() {
+    GeometryUpdater.prototype._getIsClosed = function() {
         return false;
     };
 

@@ -179,8 +179,8 @@ define([
         });
     };
 
-    PolygonGeometryUpdater.prototype._isHidden = function(entity) {
-        return !defined(entity.polygon.hierarchy) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    PolygonGeometryUpdater.prototype._isHidden = function(entity, polygon) {
+        return !defined(polygon.hierarchy) || GeometryUpdater.prototype._isHidden.call(this, entity, polygon);
     };
 
     PolygonGeometryUpdater.prototype._isOnTerrain = function(entity) {

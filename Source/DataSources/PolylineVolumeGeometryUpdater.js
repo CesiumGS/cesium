@@ -76,6 +76,8 @@ define([
      */
     function PolylineVolumeGeometryUpdater(entity, scene) {
         GeometryUpdater.call(this, entity, scene, new PolylineVolumeGeometryOptions(entity), 'polylineVolume', ['availability', 'polylineVolume']);
+
+        this._isClosed = true;
     }
 
     if (defined(Object.create)) {
@@ -167,9 +169,8 @@ define([
         });
     };
 
-    PolylineVolumeGeometryUpdater.prototype._isHidden = function(entity) {
-        var pv = entity.polylineVolume;
-        return defined(pv.positions) || !defined(pv.shape) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    PolylineVolumeGeometryUpdater.prototype._isHidden = function(entity, polylineVolume) {
+        return !defined(polylineVolume.positions) || !defined(polylineVolume.shape) || GeometryUpdater.prototype._isHidden.call(this, entity, polylineVolume);
     };
 
     PolylineVolumeGeometryUpdater.prototype._isDynamic = function(entity) {

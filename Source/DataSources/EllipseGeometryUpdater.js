@@ -176,11 +176,10 @@ define([
         });
     };
 
-    EllipseGeometryUpdater.prototype._isHidden = function(entity) {
+    EllipseGeometryUpdater.prototype._isHidden = function(entity, ellipse) {
         var position = entity.position;
-        var ellipse = entity.ellipse;
 
-        return !defined(position) || !defined(ellipse.semiMajorAxis) || !defined(ellipse.semiMinorAxis) || GeometryUpdater.prototype._isHidden.call(this, entity);
+        return !defined(position) || !defined(ellipse.semiMajorAxis) || !defined(ellipse.semiMinorAxis) || GeometryUpdater.prototype._isHidden.call(this, entity, ellipse);
     };
 
     EllipseGeometryUpdater.prototype._isOnTerrain = function(entity) {
@@ -190,7 +189,7 @@ define([
         return this._fillEnabled && !defined(ellipse.height) && !defined(ellipse.extrudedHeight) && isColorMaterial && GroundPrimitive.isSupported(this._scene);
     };
 
-    EllipseGeometryUpdater.prototype._isClosed = function(entity) {
+    EllipseGeometryUpdater.prototype._getIsClosed = function(entity) {
         return defined(entity.ellipse.extrudedHeight) || this._onTerrain;
     };
 

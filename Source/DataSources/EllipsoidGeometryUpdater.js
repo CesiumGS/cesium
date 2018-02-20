@@ -86,6 +86,13 @@ define([
      */
     function EllipsoidGeometryUpdater(entity, scene) {
         GeometryUpdater.call(this, entity, scene, new EllipsoidGeometryOptions(entity), 'ellipsoid', ['availability', 'position', 'orientation', 'ellipsoid']);
+
+        this._isClosed = true;
+    }
+
+    if (defined(Object.create)) {
+        EllipsoidGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        EllipsoidGeometryUpdater.prototype.constructor = EllipsoidGeometryUpdater;
     }
 
     /**
@@ -175,8 +182,8 @@ define([
         });
     };
 
-    EllipsoidGeometryUpdater.prototype._isHidden = function(entity) {
-        return !defined(entity.position) || !defined(entity.ellipsoid.radii) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    EllipsoidGeometryUpdater.prototype._isHidden = function(entity, ellipsoid) {
+        return !defined(entity.position) || !defined(ellipsoid.radii) || GeometryUpdater.prototype._isHidden.call(this, entity, ellipsoid);
     };
 
     EllipsoidGeometryUpdater.prototype._isDynamic = function(entity) {

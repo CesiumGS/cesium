@@ -167,8 +167,8 @@ define([
         });
     };
 
-    WallGeometryUpdater.prototype._isHidden = function(entity) {
-        return !defined(entity.wall.positions) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    WallGeometryUpdater.prototype._isHidden = function(entity, wall) {
+        return !defined(wall.positions) || GeometryUpdater.prototype._isHidden.call(this, entity, wall);
     };
 
     WallGeometryUpdater.prototype._isDynamic = function(entity) {
@@ -195,7 +195,7 @@ define([
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    WallGeometryUpdater.prototype._isClosed = function() {
+    WallGeometryUpdater.prototype._getIsClosed = function() {
         return false;
     };
 

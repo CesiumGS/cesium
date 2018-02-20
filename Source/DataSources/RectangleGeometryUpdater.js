@@ -175,8 +175,8 @@ define([
         });
     };
 
-    RectangleGeometryUpdater.prototype._isHidden = function(entity) {
-        return !defined(entity.rectangle.coordinates) || GeometryUpdater.prototype._isHidden.call(this, entity);
+    RectangleGeometryUpdater.prototype._isHidden = function(entity, rectangle) {
+        return !defined(rectangle.coordinates) || GeometryUpdater.prototype._isHidden.call(this, entity, rectangle);
     };
 
     RectangleGeometryUpdater.prototype._isOnTerrain = function(entity) {
