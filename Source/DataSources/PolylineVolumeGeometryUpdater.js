@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -24,6 +25,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -79,12 +81,8 @@ define([
      */
     function PolylineVolumeGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required');
-        }
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required');
-        }
+        Check.defined('entity', entity);
+        Check.defined('scene', scene);
         //>>includeEnd('debug');
 
         this._entity = entity;
@@ -103,29 +101,23 @@ define([
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
         this._options = new GeometryOptions(entity);
+        this._id = 'polyline-volume-' + entity.id;
+
         this._onEntityPropertyChanged(entity, 'polylineVolume', entity.polylineVolume, undefined);
     }
 
-    defineProperties(PolylineVolumeGeometryUpdater, {
-        /**
-         * Gets the type of appearance to use for simple color-based geometry.
-         * @memberof PolylineVolumeGeometryUpdater
-         * @type {Appearance}
-         */
-        perInstanceColorAppearanceType : {
-            value : PerInstanceColorAppearance
-        },
-        /**
-         * Gets the type of appearance to use for material-based geometry.
-         * @memberof PolylineVolumeGeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            value : MaterialAppearance
-        }
-    });
-
     defineProperties(PolylineVolumeGeometryUpdater.prototype, {
+        /**
+         * Gets the unique ID associated with this updater
+         * @memberof PolylineVolumeGeometryUpdater.prototype
+         * @type {String}
+         * @readonly
+         */
+        id: {
+            get: function() {
+                return this._id;
+            }
+        },
         /**
          * Gets the entity associated with this geometry.
          * @memberof PolylineVolumeGeometryUpdater.prototype
@@ -326,9 +318,7 @@ define([
      */
     PolylineVolumeGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
 
         if (!this._fillEnabled) {
             throw new DeveloperError('This instance does not represent a filled geometry.');
@@ -379,9 +369,7 @@ define([
      */
     PolylineVolumeGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
 
         if (!this._outlineEnabled) {
             throw new DeveloperError('This instance does not represent an outlined geometry.');
@@ -519,12 +507,10 @@ define([
      */
     PolylineVolumeGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
         //>>includeStart('debug', pragmas.debug);
+        Check.defined('primitives', primitives);
+
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
-        }
-
-        if (!defined(primitives)) {
-            throw new DeveloperError('primitives is required.');
         }
         //>>includeEnd('debug');
 
@@ -540,12 +526,12 @@ define([
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
+        this._entity = geometryUpdater._entity;
     }
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
@@ -555,7 +541,7 @@ define([
         this._outlinePrimitive = undefined;
 
         var geometryUpdater = this._geometryUpdater;
-        var entity = geometryUpdater._entity;
+        var entity = this._entity;
         var polylineVolume = entity.polylineVolume;
         if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polylineVolume.show, time, true)) {
             return;
@@ -625,8 +611,8 @@ define([
         }
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
-        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
+        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
