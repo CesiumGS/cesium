@@ -116,6 +116,7 @@ define([
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
         this._onTerrain = false;
+        this._isColorMaterial = false;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     }
@@ -503,6 +504,7 @@ define([
 
         var material = defaultValue(polygon.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
+        this._isColorMaterial = isColorMaterial;
         this._materialProperty = material;
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
@@ -516,7 +518,7 @@ define([
         var granularity = polygon.granularity;
         var stRotation = polygon.stRotation;
         var outlineWidth = polygon.outlineWidth;
-        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial &&
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial && // TODO
                         !perPositionHeightEnabled && GroundPrimitive.isSupported(this._scene);
 
         if (outlineEnabled && onTerrain) {

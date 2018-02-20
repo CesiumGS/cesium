@@ -3,6 +3,7 @@ define([
         '../Core/buildModuleUrl',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
@@ -26,6 +27,7 @@ define([
         buildModuleUrl,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         defaultValue,
         defined,
@@ -45,12 +47,6 @@ define([
         ClassificationType,
         SceneMode) {
     'use strict';
-
-    var GroundPrimitiveUniformMap = {
-        u_globeMinimumAltitude: function() {
-            return 55000.0;
-        }
-    };
 
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
@@ -213,6 +209,18 @@ define([
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
+        var sphericalExtents = new Cartesian4();
+        var uniformMap = {
+            u_globeMinimumAltitude: function() {
+                return 55000.0;
+            },
+            u_sphericalExtents: function() {
+                return sphericalExtents;
+            }
+        };
+        this._sphericalExtents = sphericalExtents;
+        this._uniformMap = uniformMap;
+
         var that = this;
         this._primitiveOptions = {
             geometryInstances : undefined,
@@ -226,7 +234,7 @@ define([
             _updateAndQueueCommandsFunction : undefined,
             _pickPrimitive : that,
             _extruded : true,
-            _uniformMap : GroundPrimitiveUniformMap
+            _uniformMap : uniformMap
         };
     }
 
@@ -766,6 +774,26 @@ define([
             primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
+
+            // grab spherical extents. TODO: what to do if not all the geometryInstances are polygonHierarchies? TODO: does this even happen here?
+            var rectangleSphericalExtents = undefined;
+            for (i = 0; i < length; i++) {
+                var geometry = groundInstances[i].geometry;
+                if (defined(geometry._rectangle)) {
+                    if (!defined(rectangleSphericalExtents)) {
+                        rectangleSphericalExtents = Rectangle.clone(geometry._rectangle);
+                    } else {
+                        Rectangle.union(rectangleSphericalExtents, geometry._rectangle, rectangleSphericalExtents);
+                    }
+                }
+            }
+            console.log(rectangleSphericalExtents);
+            var sphericalExtentsVec4 = this._sphericalExtents;
+            sphericalExtentsVec4.x = rectangleSphericalExtents.west;
+            sphericalExtentsVec4.y = rectangleSphericalExtents.south;
+            sphericalExtentsVec4.z = 1.0 / (rectangleSphericalExtents.east - rectangleSphericalExtents.west);
+            sphericalExtentsVec4.w = 1.0 / (rectangleSphericalExtents.north - rectangleSphericalExtents.south);
+            console.log(sphericalExtentsVec4);
 
             this._primitive = new ClassificationPrimitive(primitiveOptions);
             this._primitive.readyPromise.then(function(primitive) {
