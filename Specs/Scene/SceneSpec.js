@@ -1502,6 +1502,34 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    it('Globe changing terrain providers triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.terrainProviderChanged.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+
     it('scene morphing causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
         scene.renderForSpecs();
