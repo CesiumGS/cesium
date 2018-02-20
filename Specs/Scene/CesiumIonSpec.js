@@ -100,7 +100,7 @@ defineSuite([
     it('createEndpointResource creates expected values with default parameters', function() {
         var assetId = 2348234;
         var resource = CesiumIon._createEndpointResource(assetId);
-        expect(resource.url).toBe(CesiumIon.defaultServerUrl + '/v1/assets/' + assetId + '/endpoint');
+        expect(resource.url).toBe(CesiumIon.defaultServerUrl + '/v1/assets/' + assetId + '/endpoint?access_token=' + CesiumIon.defaultAccessToken);
     });
 
     it('createEndpointResource creates expected values with overridden options', function() {
