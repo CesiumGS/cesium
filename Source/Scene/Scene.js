@@ -1437,9 +1437,12 @@ define([
 
             var frustum = scene.camera.frustum;
             var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+            var logDepthCommand;
+            var logDepthDerivedCommands;
             if (useLogDepth) {
                 derivedCommands.logDepth = createLogDepthCommand(command, context, derivedCommands.logDepth);
-                command = derivedCommands.logDepth.logDepthCommand;
+                logDepthCommand = derivedCommands.logDepth.logDepthCommand;
+                logDepthDerivedCommands = logDepthCommand.derivedCommands;
             }
 
             if (scene.frameState.passes.pick) {
@@ -1448,13 +1451,21 @@ define([
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+                if (useLogDepth) {
+                    logDepthDerivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, logDepthCommand, shadowsDirty, context, logDepthDerivedCommands.shadows);
+                }
+            }
+
+            if (useLogDepth) {
+                command = logDepthCommand;
+                derivedCommands = logDepthDerivedCommands;
             }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
                 if (lightShadowsEnabled && command.receiveShadows) {
                     derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
-                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
@@ -1872,6 +1883,10 @@ define([
         var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
         var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
 
+        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+            command = command.derivedCommands.logDepth.logDepthCommand;
+        }
+
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
         } else if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
@@ -1881,8 +1896,6 @@ define([
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else if (scene.frameState.passes.depth && defined(command.derivedCommands.depth)) {
             command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
-        } else if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
-            command.derivedCommands.logDepth.logDepthCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
