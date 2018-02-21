@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+##### Additions :tada:
+* Added `HereMapsImageryProvider.js`
+
 ### 1.43 - 2018-03-01
 
 ##### Deprecated :hourglass_flowing_sand:
