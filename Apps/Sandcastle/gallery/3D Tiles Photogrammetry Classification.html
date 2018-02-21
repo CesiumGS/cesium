@@ -31,48 +31,35 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 // A normal b3dm tileset of photogrammetry
-Cesium.CesiumIon.create3DTileset(1458, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg' })
-    .then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset);
-    })
-    .otherwise(function(error) {
-        console.log(error);
-    });
+var tileset = new Cesium.Cesium3DTileset({
+    url: Cesium.CesiumIon.createResource(3836)
+});
+viewer.scene.primitives.add(tileset);
+viewer.zoomTo(tileset);
 
 // A b3dm tileset used to classify the photogrammetry tileset
-var classificationPromise = Cesium.CesiumIon.create3DTileset(3625, {
-    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDI4YzA2Ny03YTIwLTQ5ZWEtODY3My1hMzU0OTJmMjEwMWQiLCJpZCI6NDQsImFzc2V0cyI6WzM2MjVdLCJpYXQiOjE1MTU1OTMxODN9.cntiWhEEBAeUb9Lq4ECpwpUuz9yZzEqOvucYopTjA5k',
-    tilesetOptions: { classificationType: Cesium.ClassificationType.CESIUM_3D_TILE }
-}).then(function(classification) {
-    classification.style = new Cesium.Cesium3DTileStyle({
-        color: 'rgba(255, 0, 0, 0.5)'
-    });
-    return viewer.scene.primitives.add(classification);
-}).otherwise(function(error) {
-    console.log(error);
+var classificationTileset = new Cesium.Cesium3DTileset({
+    url: Cesium.CesiumIon.createResource(3843),
+    classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
 });
+classificationTileset.style = new Cesium.Cesium3DTileStyle({
+    color: 'rgba(255, 0, 0, 0.5)'
+});
+viewer.scene.primitives.add(classificationTileset);
 
 // The same b3dm tileset used for classification, but rendered normally for comparison.
-var nonClassificationPromise = Cesium.CesiumIon.create3DTileset(3625, {
-    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDI4YzA2Ny03YTIwLTQ5ZWEtODY3My1hMzU0OTJmMjEwMWQiLCJpZCI6NDQsImFzc2V0cyI6WzM2MjVdLCJpYXQiOjE1MTU1OTMxODN9.cntiWhEEBAeUb9Lq4ECpwpUuz9yZzEqOvucYopTjA5k',
-    tilesetOptions: { show: false }
-}).then(function(nonClassification) {
-    nonClassification.style = new Cesium.Cesium3DTileStyle({
-        color: 'rgba(255, 0, 0, 0.5)'
-    });
-    return viewer.scene.primitives.add(nonClassification);
-}).otherwise(function(error) {
-    console.log(error);
+var nonClassificationTileset = new Cesium.Cesium3DTileset({
+    url: Cesium.CesiumIon.createResource(3843),
+    show: false
 });
+nonClassificationTileset.style = new Cesium.Cesium3DTileStyle({
+    color: 'rgba(255, 0, 0, 0.5)'
+});
+viewer.scene.primitives.add(nonClassificationTileset);
 
-Cesium.when.join(classificationPromise, nonClassificationPromise).then(function(results) {
-    var classification = results[0];
-    var nonClassification = results[1];
-    Sandcastle.addToggleButton('Show classification', true, function(checked) {
-        classification.show = checked;
-        nonClassification.show = !checked;
-    });
+Sandcastle.addToggleButton('Show classification', true, function(checked) {
+    classificationTileset.show = checked;
+    nonClassificationTileset.show = !checked;
 });
 //Sandcastle_End
 Sandcastle.finishedLoading();
