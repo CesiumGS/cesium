@@ -10,6 +10,7 @@ define([
         '../Core/Math',
         '../Core/Credit',
         '../Core/TileProviderError',
+        '../Core/RuntimeError',
         '../ThirdParty/when',
         '../Core/loadJsonp'
     ], function(
@@ -24,9 +25,10 @@ define([
         CesiumMath,
         Credit,
         TileProviderError,
+        RuntimeError,
         when,
         loadJsonp) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery using the Here Maps Imagery REST API. See https://developer.here.com/documentation/map-tile/topics/request-constructing.html
@@ -36,19 +38,19 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} [options.baseUrl="aerial.maps.api.here.com"] The URL for accessing tiles, without the Load Balancing prefix. 
-     *        You may use the *.maps.cit.api.here.com URLs during development. The first part of the URL determines which tileTypes 
+     * @param {String} [options.baseUrl="aerial.maps.api.here.com"] The URL for accessing tiles, without the Load Balancing prefix.
+     *        You may use the *.maps.cit.api.here.com URLs during development. The first part of the URL determines which tileTypes
      *.       are available.
      * @param {String} [options.tileType="maptile"] Determines which type of image will be delivered. E.g. Map, Labels, Streets, etc.
      * @param {String} [options.scheme="satellite.day"] Specifies the view scheme, e.g normal.day, normal.night, terrain.day, etc.
-              Note, some schemes will be rejected by certain baseUrls. 
+              Note, some schemes will be rejected by certain baseUrls.
      * @param {String} [options.tileFormat="jpg"] Valid values are jpg, png, and png8.
      * @param {Number} [options.tileSize=256] The width and height of each tile in pixels. Supported values are 256 and 512.
-     * @param {Boolean} [options.forceUseNewest=false] By default, the current map version will be queried only once at start. 
-     *        Subsequent tile requests will always use a hash of this version so that tiles are consistent in case the map is updated 
-     *        while the app is running. Enabling this flag will cause all tiles to always reqeuest the newest version. 
+     * @param {Boolean} [options.forceUseNewest=false] By default, the current map version will be queried only once at start.
+     *        Subsequent tile requests will always use a hash of this version so that tiles are consistent in case the map is updated
+     *        while the app is running. Enabling this flag will cause all tiles to always reqeuest the newest version.
      *        See https://developer.here.com/documentation/map-tile/topics/tile-version.html#tile-version for details.
-     * 
+     *
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthImageryProvider
@@ -94,16 +96,16 @@ define([
             info: '//1.{baseUrl}/maptile/2.1/info?app_id={appId}&app_code={appCode}',
             tile: '//{subdomain}.{baseUrl}/maptile/2.1/{tileType}/{mapId}/{scheme}/{level}/{x}/{y}/{tileSize}/{tileFormat}?app_id={appId}&app_code={appCode}'
         };
-        
-        Object.keys(this._urls).forEach((urlKey) => {
-            let url = this._urls[urlKey];
-            url = url.replace('{baseUrl}', defaultValue(options.baseUrl, "aerial.maps.api.here.com"));
-            url = url.replace('{tileType}', defaultValue(options.tileType, "maptile"));
+
+        Object.keys(this._urls).forEach(function(urlKey) {
+            var url = this._urls[urlKey];
+            url = url.replace('{baseUrl}', defaultValue(options.baseUrl, 'aerial.maps.api.here.com'));
+            url = url.replace('{tileType}', defaultValue(options.tileType, 'maptile'));
             // @TODO: Implement mapId locking using hashes. For now we'll just use newest (options.forceUseNewest)
-            url = url.replace('{mapId}', "newest");
-            url = url.replace('{scheme}', defaultValue(options.scheme,"satellite.day"));
+            url = url.replace('{mapId}', 'newest');
+            url = url.replace('{scheme}', defaultValue(options.scheme,'satellite.day'));
             url = url.replace('{tileSize}', this._tileSize);
-            url = url.replace('{tileFormat}', defaultValue(options.tileFormat, "jpg"));
+            url = url.replace('{tileFormat}', defaultValue(options.tileFormat, 'jpg'));
             url = url.replace('{appId}', options.appId);
             url = url.replace('{appCode}', options.appCode);
             this._urls[urlKey] = url;
@@ -133,7 +135,7 @@ define([
 
             for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
                 var attribution = attributionList[attributionIndex];
-             
+
                 attribution.credit = new Credit({
                     text: attribution.alt
                 });
@@ -378,7 +380,7 @@ define([
             }
         }
     });
-        
+
     var rectangleScratch = new Rectangle();
 
     /**
