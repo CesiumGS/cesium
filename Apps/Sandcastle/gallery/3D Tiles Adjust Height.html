@@ -56,29 +56,27 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-Cesium.CesiumIon.create3DTileset(3883, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' })
-    .then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.5, tileset.boundingSphere.radius * 2.0));
-        onLoad(tileset);
-    }).otherwise(function(error) {
-        console.log(error);
-    });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3883) });
+tileset.readyPromise.then(function(tileset) {
+    viewer.scene.primitives.add(tileset);
+    viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.5, tileset.boundingSphere.radius * 2.0));
+}).otherwise(function(error) {
+    console.log(error);
+});
 
-function onLoad(tileset) {
-    Cesium.knockout.getObservable(viewModel, 'height').subscribe(function(height) {
-        height = Number(height);
-        if (isNaN(height)) {
-            return;
-        }
+Cesium.knockout.getObservable(viewModel, 'height').subscribe(function(height) {
+    height = Number(height);
+    if (isNaN(height)) {
+        return;
+    }
 
-        var cartographic = Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center);
-        var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
-        var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
-        var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
-        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
-    });
-}
+    var cartographic = Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center);
+    var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+    var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
+    var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+    tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+});
+
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
