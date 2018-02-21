@@ -827,30 +827,47 @@ defineSuite([
         });
     });
 
-    it('Rebuilds shaders when clipping planes are enabled or change between union and intersection', function () {
+    it('Rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
+            var tile = tileset._root;
+            tile._isClipped = true;
+            var content = tile.content;
 
-            var content = tileset._root.content;
-
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnionUint8')).toBe(false);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersectUint8')).toBe(false);
+            var noClipFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(noClipFS.includes('clip')).toBe(false);
 
             var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)
-                ]
+                ],
+                unionClippingRegions : false
             });
             tileset.clippingPlanes = clippingPlanes;
 
-            content.update(tileset, scene.frameState);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnionUint8')).toBe(false);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersectUint8')).toBe(true);
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipOneIntersectFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipOneIntersectFS.includes('= clip(')).toBe(true);
+            expect(clipOneIntersectFS.includes('float clip')).toBe(true);
 
             clippingPlanes.unionClippingRegions = true;
-            content.update(tileset, scene.frameState);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithUnionUint8')).toBe(true);
-            expect(content._drawCommand.shaderProgram._fragmentShaderText.includes('czm_discardIfClippedWithIntersectUint8')).toBe(false);
+
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipOneUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipOneUnionFS.includes('= clip(')).toBe(true);
+            expect(clipOneUnionFS.includes('float clip')).toBe(true);
+            expect(clipOneUnionFS).not.toEqual(clipOneIntersectFS);
+
+            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 1.0));
+
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipTwoUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipTwoUnionFS.includes('= clip(')).toBe(true);
+            expect(clipTwoUnionFS.includes('float clip')).toBe(true);
+            expect(clipTwoUnionFS).not.toEqual(clipOneIntersectFS);
+            expect(clipTwoUnionFS).not.toEqual(clipOneUnionFS);
         });
     });
 

@@ -173,10 +173,11 @@ define([
                 return this._unionClippingRegions;
             },
             set : function(value) {
-                if (this._unionClippingRegions !== value) {
-                    this._unionClippingRegions = value;
-                    this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
+                if (this._unionClippingRegions === value) {
+                    return;
                 }
+                this._unionClippingRegions = value;
+                this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
                 this._lengthRangeUnion.w = this._unionClippingRegions ? 1.0 : 0.0;
             }
         },
@@ -650,6 +651,18 @@ define([
         }
 
         return intersection;
+    };
+
+    /**
+     * Returns a Number for checking if shaders built for this ClippingPlaneCollection need to be updated
+     * due to changes in plane count or clipping mode.
+     *
+     * Clipping mode is encoded in the sign of the number, which is just the plane count.
+     *
+     * @returns {Number} A Number that describes the shaders needed to use this ClippingPlaneCollection.
+     */
+    ClippingPlaneCollection.prototype.getShaderState = function() {
+        return this._unionClippingRegions ? this._planes.length : -this._planes.length;
     };
 
     /**

@@ -549,4 +549,21 @@ defineSuite([
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, transform);
         expect(intersect).not.toEqual(Intersect.INSIDE);
     });
+
+    it('computes a description of the current shader for comparison', function() {
+        clippingPlanes = new ClippingPlaneCollection();
+        clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, -1.0));
+
+        expect(clippingPlanes.getShaderState()).toEqual(-1);
+
+        var holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
+        clippingPlanes.add(holdThisPlane);
+        expect(clippingPlanes.getShaderState()).toEqual(-2);
+
+        clippingPlanes.unionClippingRegions = true;
+        expect(clippingPlanes.getShaderState()).toEqual(2);
+
+        clippingPlanes.remove(holdThisPlane);
+        expect(clippingPlanes.getShaderState()).toEqual(1);
+    });
 });

@@ -158,20 +158,10 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 void main()
 {
 #ifdef ENABLE_CLIPPING_PLANES
-    int clippingPlanesLength = int(u_clippingPlanesLengthRangeUnion.x);
-    vec2 clippingPlanesRange = u_clippingPlanesLengthRangeUnion.yz;
     #ifdef FLOAT_CLIPPING_PLANES
-        #ifdef UNION_CLIPPING_REGIONS
-        float clipDistance = czm_discardIfClippedWithUnionFloat(u_clippingPlanes, clippingPlanesLength, CLIPPING_PLANES_TEXTURE_WIDTH, CLIPPING_PLANES_TEXTURE_HEIGHT_FLOAT, u_clippingPlanesMatrix);
-        #else
-        float clipDistance = czm_discardIfClippedWithIntersectFloat(u_clippingPlanes, clippingPlanesLength, CLIPPING_PLANES_TEXTURE_WIDTH, CLIPPING_PLANES_TEXTURE_HEIGHT_FLOAT, u_clippingPlanesMatrix);
-        #endif
+        float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
     #else
-        #ifdef UNION_CLIPPING_REGIONS
-        float clipDistance = czm_discardIfClippedWithUnionUint8(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
-        #else
-        float clipDistance = czm_discardIfClippedWithIntersectUint8(u_clippingPlanes, clippingPlanesLength, clippingPlanesRange, CLIPPING_PLANES_TEXTURE_WIDTH, u_clippingPlanesMatrix);
-        #endif
+        float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix, u_clippingPlanesLengthRangeUnion.yz);
     #endif
 #endif
 

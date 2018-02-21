@@ -329,6 +329,7 @@ define([
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
         this._isClipped = true;
+        this._clippingShaderState = 0; // encapsulates if shader should clip (_isClipped, clippingPlanes.enabled) and number/function
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -1054,10 +1055,26 @@ define([
      * @private
      */
     Cesium3DTile.prototype.update = function(tileset, frameState) {
+        // Compute and compare ClippingPlanes state:
+        // - enabled-ness - are clipping planes enabled? is this tile clipped?
+        // - clipping plane count
+        // - clipping function (union v. intersection)
+        var clippingPlanes = tileset.clippingPlanes;
+        if (defined(clippingPlanes)) {
+            var enabled = this._isClipped && clippingPlanes.enabled;
+            var currentClippingShaderState = enabled ? clippingPlanes.getShaderState() : 0;
+            if (currentClippingShaderState !== this._clippingShaderState) {
+                this._clippingShaderState = currentClippingShaderState;
+                this._content.shadersDirty = true; // indicate shader rebuild
+            }
+        }
+
         var initCommandLength = frameState.commandList.length;
         applyDebugSettings(this, tileset, frameState);
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
+
+        this._content.shadersDirty = false;
     };
 
     var scratchCommandList = [];

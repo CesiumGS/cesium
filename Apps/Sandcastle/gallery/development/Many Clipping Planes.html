@@ -32,6 +32,11 @@
                 <input type="range" min="-100.0" max="100.0" step="1.0" data-bind="value: cylinderRadius, valueUpdate: 'input'">
                 <input type="text" size="5" data-bind="value: cylinderRadius">
             </td>
+            <td>Plane Count</td>
+            <td>
+                <input type="range" min="1" max="128" step="1" data-bind="value: planeCount, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: planeCount">
+            </td>
         </tr>
     </tbody></table>
     <select data-bind="options: exampleTypes, value: currentExampleType"></select>
@@ -59,11 +64,17 @@ globe.depthTestAgainstTerrain = true;
 var cylinderRadius = -20.0;
 var radiusMultiplier = 1.0;
 
+var steps = 32;
+var clippingPlanes = [];
+var modelEntityClippingPlanes;
+var clippingModeUnion = false;
+
 var clipObjects = ['model', 'b3dm', 'pnts', 'i3dm', 'terrain'];
 var viewModel = {
     cylinderRadius : cylinderRadius,
     exampleTypes : clipObjects,
-    currentExampleType : clipObjects[0]
+    currentExampleType : clipObjects[0],
+    planeCount : steps
 };
 
 Cesium.knockout.track(viewModel);
@@ -78,14 +89,20 @@ Cesium.knockout.getObservable(viewModel, 'cylinderRadius').subscribe(
     }
 );
 
+Cesium.knockout.getObservable(viewModel, 'planeCount').subscribe(
+    function(newValue) {
+        var newSteps = parseFloat(viewModel.planeCount);
+        if (newSteps !== steps) {
+            steps = newSteps;
+            modelEntityClippingPlanes.removeAll();
+            computePlanes();
+        }
+    }
+);
+
 var scene = viewer.scene;
 var planeEntities = [];
 var selectedPlane;
-
-var steps = 32;
-var clippingPlanes = [];
-var modelEntityClippingPlanes;
-var clippingModeUnion = false;
 
 function updatePlanes() {
     for (var i = 0; i < clippingPlanes.length; i++) {
@@ -94,9 +111,9 @@ function updatePlanes() {
     }
 }
 
-function createClippingPlanes(modelMatrix) {
-    clippingPlanes = [];
+function computePlanes() {
     var stepDegrees = 6.28319 / steps;
+    clippingPlanes = [];
 
     for (var i = 0; i < steps; i++) {
         var angle = i * stepDegrees;
@@ -116,15 +133,20 @@ function createClippingPlanes(modelMatrix) {
             dir.y = -dir.y;
         }
         Cesium.Cartesian3.normalize(dir, dir);
-        clippingPlanes.push(new Cesium.ClippingPlane(dir, cylinderRadius));
+        var newPlane = new Cesium.ClippingPlane(dir, cylinderRadius * radiusMultiplier);
+        modelEntityClippingPlanes.add(newPlane);
+        clippingPlanes.push(newPlane);
     }
+}
+
+function createClippingPlanes(modelMatrix) {
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
         modelMatrix : Cesium.defined(modelMatrix) ? modelMatrix : Cesium.Matrix4.IDENTITY,
-        planes : clippingPlanes,
         edgeWidth: 2.0,
         edgeColor: Cesium.Color.WHITE,
         unionClippingRegions : clippingModeUnion
     });
+    computePlanes();
 }
 
 function updateClippingPlanes() {
@@ -235,6 +257,7 @@ function reset() {
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
     globe.clippingPlanes = undefined; // destroy Globe clipping planes, if any
+    modelEntityClippingPlanes = undefined;
 }
 
 Sandcastle.addToggleButton('union', clippingModeUnion, function(checked) {

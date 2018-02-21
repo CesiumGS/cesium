@@ -1852,7 +1852,7 @@ define([
             this._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
-        // Update clipping planes and set them as clean to avoid re-updating the same information from each tile
+        // Update clipping planes
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
