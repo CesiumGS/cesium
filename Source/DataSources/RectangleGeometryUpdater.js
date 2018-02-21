@@ -83,7 +83,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function RectangleGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new RectangleGeometryOptions(entity), 'rectangle', ['availability', 'rectangle']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new RectangleGeometryOptions(entity),
+            geometryPropertyName : 'rectangle',
+            observedPropertyNames : ['availability', 'rectangle']
+        });
     }
 
     if (defined(Object.create)) {
@@ -179,16 +185,13 @@ define([
         return !defined(rectangle.coordinates) || GeometryUpdater.prototype._isHidden.call(this, entity, rectangle);
     };
 
-    RectangleGeometryUpdater.prototype._isOnTerrain = function(entity) {
+    RectangleGeometryUpdater.prototype._isOnTerrain = function(entity, rectangle) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-        var rectangle = entity.rectangle;
 
         return this._fillEnabled && !defined(rectangle.height) && !defined(rectangle.extrudedHeight) && isColorMaterial && GroundPrimitive.isSupported(this._scene);
     };
 
-    RectangleGeometryUpdater.prototype._isDynamic = function(entity) {
-        var rectangle = entity.rectangle;
-
+    RectangleGeometryUpdater.prototype._isDynamic = function(entity, rectangle) {
         return !rectangle.coordinates.isConstant || //
                !Property.isConstant(rectangle.height) || //
                !Property.isConstant(rectangle.extrudedHeight) || //
@@ -201,8 +204,7 @@ define([
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
-    RectangleGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var rectangle = entity.rectangle;
+    RectangleGeometryUpdater.prototype._setStaticOptions = function(entity, rectangle) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
         var height = rectangle.height;

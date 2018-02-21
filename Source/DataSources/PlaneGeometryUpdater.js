@@ -81,7 +81,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function PlaneGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new PlaneGeometryOptions(entity), 'plane', ['availability', 'position', 'orientation', 'plane']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new PlaneGeometryOptions(entity),
+            geometryPropertyName : 'plane',
+            observedPropertyNames : ['availability', 'position', 'orientation', 'plane']
+        });
     }
 
     if (defined(Object.create)) {
@@ -207,13 +213,11 @@ define([
         return !defined(plane.plane) || !defined(plane.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, plane);
     };
 
-    GeometryUpdater.prototype._getIsClosed = function() {
+    GeometryUpdater.prototype._getIsClosed = function(entity, plane) {
         return false;
     };
 
-    PlaneGeometryUpdater.prototype._isDynamic = function(entity) {
-        var plane = entity.plane;
-
+    PlaneGeometryUpdater.prototype._isDynamic = function(entity, plane) {
         return !entity.position.isConstant || //
                !Property.isConstant(entity.orientation) || //
                !plane.plane.isConstant || //
@@ -221,9 +225,8 @@ define([
                !Property.isConstant(plane.outlineWidth);
     };
 
-    PlaneGeometryUpdater.prototype._setStaticOptions = function(entity) {
+    PlaneGeometryUpdater.prototype._setStaticOptions = function(entity, plane) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-        var plane = entity.plane;
 
         var options = this._options;
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;

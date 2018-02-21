@@ -210,7 +210,7 @@ defineSuite([
 
     it('Creates and removes static color material and static color depth fail material', function() {
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(PolylineGeometryUpdater, scene, objects);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
@@ -234,8 +234,8 @@ defineSuite([
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
             expect(attributes.depthFailColor).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
-            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
-            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineColorAppearance);
 
             objects.remove(entity);
 
@@ -252,7 +252,7 @@ defineSuite([
 
     it('Creates and removes static color material and static depth fail material', function() {
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(PolylineGeometryUpdater, scene, objects);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
@@ -276,8 +276,8 @@ defineSuite([
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
             expect(attributes.depthFailColor).toBeUndefined();
-            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
-            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(PolylineColorAppearance);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineMaterialAppearance);
 
             objects.remove(entity);
 
@@ -294,7 +294,7 @@ defineSuite([
 
     it('Creates and removes static material and static depth fail material', function() {
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(PolylineGeometryUpdater, scene, objects);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
@@ -318,8 +318,8 @@ defineSuite([
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
             expect(attributes.depthFailColor).toBeUndefined();
-            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
-            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(PolylineMaterialAppearance);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineMaterialAppearance);
 
             objects.remove(entity);
 
@@ -336,7 +336,7 @@ defineSuite([
 
     it('Creates and removes static material and static color depth fail material', function() {
         var objects = new EntityCollection();
-        var visualizer = new PolylineVisualizer(PolylineGeometryUpdater, scene, objects);
+        var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
@@ -360,8 +360,8 @@ defineSuite([
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
             expect(attributes.depthFailColor).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
-            expect(primitive.appearance).toBeInstanceOf(PolylineGeometryUpdater.materialAppearanceType);
-            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineGeometryUpdater.perInstanceColorAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(PolylineMaterialAppearance);
+            expect(primitive.depthFailAppearance).toBeInstanceOf(PolylineColorAppearance);
 
             objects.remove(entity);
 
@@ -433,7 +433,9 @@ defineSuite([
         var visualizer = new PolylineVisualizer(scene, objects);
 
         var polyline = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline.positions = new CallbackProperty(function() {
+            return [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)];
+        }, false);
         polyline.material = new ColorMaterialProperty();
 
         var entity = new Entity();
@@ -484,8 +486,8 @@ defineSuite([
         entity.polyline = polyline;
 
         var polyline2 = new PolylineGraphics();
-        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
-        polyline.material = new PolylineArrowMaterialProperty();
+        polyline2.positions = new ConstantProperty([Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)]);
+        polyline2.material = new PolylineArrowMaterialProperty();
 
         var entity2 = new Entity();
         entity2.polyline = polyline2;
@@ -517,7 +519,7 @@ defineSuite([
     });
 
     it('StaticGeometryColorBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticGeometryColorBatch(scene.primitives, PolylineMaterialAppearance, undefined, false, ShadowMode.DISABLED);
+        var batch = new StaticGeometryColorBatch(scene.primitives, PolylineColorAppearance, undefined, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             polyline : {
@@ -722,9 +724,7 @@ defineSuite([
             position : new Cartesian3(1234, 5678, 9101112),
             polyline : {
                 positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 1.0)],
-                material : new PolylineArrowMaterialProperty({
-                    color : createDynamicProperty(Color.BLUE)
-                })
+                material : new PolylineArrowMaterialProperty(createDynamicProperty(Color.BLUE))
             }
         });
 

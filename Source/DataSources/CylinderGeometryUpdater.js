@@ -76,7 +76,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function CylinderGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new CylinderGeometryOptions(entity), 'cylinder', ['availability', 'position', 'orientation', 'cylinder']);
+        GeometryUpdater.call(this, {
+            entity: entity,
+            scene: scene,
+            geometryOptions: new CylinderGeometryOptions(entity),
+            geometryPropertyName: 'cylinder',
+            observedPropertyNames: ['availability', 'position', 'orientation', 'cylinder']
+        });
 
         this._isClosed = true;
     }
@@ -176,9 +182,7 @@ define([
         return !defined(entity.position) || !defined(cylinder.length) || !defined(cylinder.topRadius) || !defined(cylinder.bottomRadius) || GeometryUpdater.prototype._isHidden.call(this, entity, cylinder);
     };
 
-    CylinderGeometryUpdater.prototype._isDynamic = function(entity) {
-        var cylinder = entity.cylinder;
-
+    CylinderGeometryUpdater.prototype._isDynamic = function(entity, cylinder) {
         return !entity.position.isConstant || //
                 !Property.isConstant(entity.orientation) || //
                 !cylinder.length.isConstant || //
@@ -189,8 +193,7 @@ define([
                 !Property.isConstant(cylinder.numberOfVerticalLines);
     };
 
-    CylinderGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var cylinder = entity.cylinder;
+    CylinderGeometryUpdater.prototype._setStaticOptions = function(entity, cylinder) {
         var slices = cylinder.slices;
         var numberOfVerticalLines = cylinder.numberOfVerticalLines;
 

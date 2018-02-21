@@ -72,7 +72,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function BoxGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new BoxGeometryOptions(entity), 'box', ['availability', 'position', 'orientation', 'box']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new BoxGeometryOptions(entity),
+            geometryPropertyName : 'box',
+            observedPropertyNames : ['availability', 'position', 'orientation', 'box']
+        });
 
         this._isClosed = true;
     }
@@ -172,17 +178,16 @@ define([
         return !defined(box.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, box);
     };
 
-    BoxGeometryUpdater.prototype._isDynamic = function(entity) {
-        var box = entity.box;
+    BoxGeometryUpdater.prototype._isDynamic = function(entity, box) {
         return !entity.position.isConstant ||  !Property.isConstant(entity.orientation) ||  !box.dimensions.isConstant ||  !Property.isConstant(box.outlineWidth);
     };
 
-    BoxGeometryUpdater.prototype._setStaticOptions = function(entity) {
+    BoxGeometryUpdater.prototype._setStaticOptions = function(entity, box) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
         var options = this._options;
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-        options.dimensions = entity.box.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
+        options.dimensions = box.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
     };
 
     BoxGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;

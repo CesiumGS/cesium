@@ -81,7 +81,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function CorridorGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new CorridorGeometryOptions(entity), 'corridor', ['availability', 'corridor']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new CorridorGeometryOptions(entity),
+            geometryPropertyName : 'corridor',
+            observedPropertyNames : ['availability', 'corridor']
+        });
     }
 
     if (defined(Object.create)) {
@@ -175,21 +181,18 @@ define([
         return !defined(corridor.positions) || GeometryUpdater.prototype._isHidden.call(this, entity, corridor);
     };
 
-    CorridorGeometryUpdater.prototype._isOnTerrain = function(entity) {
-        var corridor = entity.corridor;
+    CorridorGeometryUpdater.prototype._isOnTerrain = function(entity, corridor) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
         return this._fillEnabled && !defined(corridor.height) && !defined(corridor.extrudedHeight) &&
                isColorMaterial && GroundPrimitive.isSupported(this._scene);
     };
 
-    CorridorGeometryUpdater.prototype._getIsClosed = function(entity) {
-        return defined(entity.corridor.extrudedHeight) || this._onTerrain;
+    CorridorGeometryUpdater.prototype._getIsClosed = function(entity, corridor) {
+        return defined(corridor.extrudedHeight) || this._onTerrain;
     };
 
-    CorridorGeometryUpdater.prototype._isDynamic = function(entity) {
-        var corridor = entity.corridor;
-
+    CorridorGeometryUpdater.prototype._isDynamic = function(entity, corridor) {
         return !corridor.positions.isConstant || //
                !Property.isConstant(corridor.height) || //
                !Property.isConstant(corridor.extrudedHeight) || //
@@ -200,8 +203,7 @@ define([
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
-    CorridorGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var corridor = entity.corridor;
+    CorridorGeometryUpdater.prototype._setStaticOptions = function(entity, corridor) {
         var height = corridor.height;
         var extrudedHeight = corridor.extrudedHeight;
         var granularity = corridor.granularity;

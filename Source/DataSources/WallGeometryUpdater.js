@@ -75,7 +75,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function WallGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new WallGeometryOptions(entity), 'wall', ['availability', 'wall']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new WallGeometryOptions(entity),
+            geometryPropertyName : 'wall',
+            observedPropertyNames : ['availability', 'wall']
+        });
     }
 
     if (defined(Object.create)) {
@@ -171,8 +177,11 @@ define([
         return !defined(wall.positions) || GeometryUpdater.prototype._isHidden.call(this, entity, wall);
     };
 
-    WallGeometryUpdater.prototype._isDynamic = function(entity) {
-        var wall = entity.wall;
+    WallGeometryUpdater.prototype._getIsClosed = function(entity, wall) {
+        return false;
+    };
+
+    WallGeometryUpdater.prototype._isDynamic = function(entity, wall) {
         return !wall.positions.isConstant || //
                !Property.isConstant(wall.minimumHeights) || //
                !Property.isConstant(wall.maximumHeights) || //
@@ -180,8 +189,7 @@ define([
                !Property.isConstant(wall.granularity);
     };
 
-    WallGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var wall = entity.wall;
+    WallGeometryUpdater.prototype._setStaticOptions = function(entity, wall) {
         var minimumHeights = wall.minimumHeights;
         var maximumHeights = wall.maximumHeights;
         var granularity = wall.granularity;
@@ -195,9 +203,6 @@ define([
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    WallGeometryUpdater.prototype._getIsClosed = function() {
-        return false;
-    };
 
     WallGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
 

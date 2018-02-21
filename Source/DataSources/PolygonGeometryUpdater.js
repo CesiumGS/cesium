@@ -87,7 +87,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function PolygonGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new PolygonGeometryOptions(entity), 'polygon', ['availability', 'polygon']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new PolygonGeometryOptions(entity),
+            geometryPropertyName : 'polygon',
+            observedPropertyNames : ['availability', 'polygon']
+        });
     }
 
     if (defined(Object.create)) {
@@ -183,8 +189,7 @@ define([
         return !defined(polygon.hierarchy) || GeometryUpdater.prototype._isHidden.call(this, entity, polygon);
     };
 
-    PolygonGeometryUpdater.prototype._isOnTerrain = function(entity) {
-        var polygon = entity.polygon;
+    PolygonGeometryUpdater.prototype._isOnTerrain = function(entity, polygon) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
         var perPositionHeightProperty = polygon.perPositionHeight;
         var perPositionHeightEnabled = defined(perPositionHeightProperty) && (perPositionHeightProperty.isConstant ? perPositionHeightProperty.getValue(Iso8601.MINIMUM_VALUE) : true);
@@ -192,9 +197,7 @@ define([
                !perPositionHeightEnabled && GroundPrimitive.isSupported(this._scene);
     };
 
-    PolygonGeometryUpdater.prototype._isDynamic = function(entity) {
-        var polygon = entity.polygon;
-
+    PolygonGeometryUpdater.prototype._isDynamic = function(entity, polygon) {
         return !polygon.hierarchy.isConstant || //
                !Property.isConstant(polygon.height) || //
                !Property.isConstant(polygon.extrudedHeight) || //
@@ -207,8 +210,7 @@ define([
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
-    PolygonGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var polygon = entity.polygon;
+    PolygonGeometryUpdater.prototype._setStaticOptions = function(entity, polygon) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
         var options = this._options;

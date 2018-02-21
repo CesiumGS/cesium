@@ -75,7 +75,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function PolylineVolumeGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new PolylineVolumeGeometryOptions(entity), 'polylineVolume', ['availability', 'polylineVolume']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new PolylineVolumeGeometryOptions(entity),
+            geometryPropertyName : 'polylineVolume',
+            observedPropertyNames : ['availability', 'polylineVolume']
+        });
 
         this._isClosed = true;
     }
@@ -173,25 +179,23 @@ define([
         return !defined(polylineVolume.positions) || !defined(polylineVolume.shape) || GeometryUpdater.prototype._isHidden.call(this, entity, polylineVolume);
     };
 
-    PolylineVolumeGeometryUpdater.prototype._isDynamic = function(entity) {
-        var pv = entity.polylineVolume;
-        return !pv.positions.isConstant || //
-               !pv.shape.isConstant || //
-               !Property.isConstant(pv.granularity) || //
-               !Property.isConstant(pv.outlineWidth) || //
-               !Property.isConstant(pv.cornerType);
+    PolylineVolumeGeometryUpdater.prototype._isDynamic = function(entity, polylineVolume) {
+        return !polylineVolume.positions.isConstant || //
+               !polylineVolume.shape.isConstant || //
+               !Property.isConstant(polylineVolume.granularity) || //
+               !Property.isConstant(polylineVolume.outlineWidth) || //
+               !Property.isConstant(polylineVolume.cornerType);
     };
 
-    PolylineVolumeGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var pv = entity.polylineVolume;
-        var granularity = pv.granularity;
-        var cornerType = pv.cornerType;
+    PolylineVolumeGeometryUpdater.prototype._setStaticOptions = function(entity, polylineVolume) {
+        var granularity = polylineVolume.granularity;
+        var cornerType = polylineVolume.cornerType;
 
         var options = this._options;
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-        options.polylinePositions = pv.positions.getValue(Iso8601.MINIMUM_VALUE, options.polylinePositions);
-        options.shapePositions = pv.shape.getValue(Iso8601.MINIMUM_VALUE, options.shape);
+        options.polylinePositions = polylineVolume.positions.getValue(Iso8601.MINIMUM_VALUE, options.polylinePositions);
+        options.shapePositions = polylineVolume.shape.getValue(Iso8601.MINIMUM_VALUE, options.shape);
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };

@@ -46,23 +46,27 @@ define([
      * @alias GeometryUpdater
      * @constructor
      *
-     * @param {Entity} entity The entity containing the geometry to be visualized.
-     * @param {Scene} scene The scene where visualization is taking place.
-     * @param {Object} geometryOptions Options for the geometry
-     * @param {String} type The geometry type
-     * @param {String[]} observedProperties The entity properties this geometry cares about
+     * @param {Object} options An object with the following properties:
+     * @param {Entity} options.entity The entity containing the geometry to be visualized.
+     * @param {Scene} options.scene The scene where visualization is taking place.
+     * @param {Object} options.geometryOptions Options for the geometry
+     * @param {String} options.geometryPropertyName The geometry property name
+     * @param {String[]} options.observedPropertyNames The entity properties this geometry cares about
      */
-    function GeometryUpdater(entity, scene, geometryOptions, type, observedProperties) {
+    function GeometryUpdater(options) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('entity', entity);
-        Check.defined('scene', scene);
-        Check.defined('geometryOptions', geometryOptions);
-        Check.defined('type', type);
-        Check.defined('observedProperties', observedProperties);
+        Check.defined('options.entity', options.entity);
+        Check.defined('options.scene', options.scene);
+        Check.defined('options.geometryOptions', options.geometryOptions);
+        Check.defined('options.geometryPropertyName', options.geometryPropertyName);
+        Check.defined('options.observedPropertyNames', options.observedPropertyNames);
         //>>includeEnd('debug');
 
+        var entity = options.entity;
+        var geometryPropertyName = options.geometryPropertyName;
+
         this._entity = entity;
-        this._scene = scene;
+        this._scene = options.scene;
         this._entitySubscription = entity.definitionChanged.addEventListener(GeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
@@ -77,13 +81,13 @@ define([
         this._outlineWidth = 1.0;
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
-        this._options = geometryOptions;
-        this._type = type;
-        this._id = type + '-' + entity.id;
+        this._options = options.geometryOptions;
+        this._geometryPropertyName = geometryPropertyName;
+        this._id = geometryPropertyName + '-' + entity.id;
 
-        this._observedProperties = observedProperties;
+        this._observedPropertyNames = options.observedPropertyNames;
 
-        this._onEntityPropertyChanged(entity, type, entity[type], undefined);
+        this._onEntityPropertyChanged(entity, geometryPropertyName, entity[geometryPropertyName], undefined);
     }
 
     defineProperties(GeometryUpdater.prototype, {
@@ -341,6 +345,8 @@ define([
         destroyObject(this);
     };
     /**
+     * @param {Entity} entity
+     * @param {Object} geometry
      * @private
      */
     GeometryUpdater.prototype._isHidden = function(entity, geometry) {
@@ -348,24 +354,51 @@ define([
         return defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE);
     };
 
-    GeometryUpdater.prototype._isOnTerrain = function() {
+    /**
+     * @param {Entity} entity
+     * @param {Object} geometry
+     * @private
+     */
+    GeometryUpdater.prototype._isOnTerrain = function(entity, geometry) {
         return false;
     };
 
-    GeometryUpdater.prototype._getIsClosed = function() {
+    /**
+     * @param {Entity} entity
+     * @param {Object} geometry
+     * @private
+     */
+    GeometryUpdater.prototype._getIsClosed = function(entity, geometry) {
         return true;
     };
 
+    /**
+     * @param {Entity} entity
+     * @param {Object} geometry
+     * @private
+     */
     GeometryUpdater.prototype._isDynamic = DeveloperError.throwInstantiationError;
 
+    /**
+     * @param {Entity} entity
+     * @param {Object} geometry
+     * @private
+     */
     GeometryUpdater.prototype._setStaticOptions = DeveloperError.throwInstantiationError;
 
+    /**
+     * @param {Entity} entity
+     * @param {String} propertyName
+     * @param {Object} newValue
+     * @param {Object} oldValue
+     * @private
+     */
     GeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (this._observedProperties.indexOf(propertyName) === -1) {
+        if (this._observedPropertyNames.indexOf(propertyName) === -1) {
             return;
         }
 
-        var geometry = this._entity[this._type];
+        var geometry = this._entity[this._geometryPropertyName];
 
         if (!defined(geometry)) {
             if (this._fillEnabled || this._outlineEnabled) {
@@ -414,23 +447,23 @@ define([
 
         this._fillEnabled = fillEnabled;
 
-        var onTerrain = this._isOnTerrain(entity);
+        var onTerrain = this._isOnTerrain(entity, geometry);
         if (outlineEnabled && onTerrain) {
             oneTimeWarning(oneTimeWarning.geometryOutlines);
             outlineEnabled = false;
         }
 
         this._onTerrain = onTerrain;
-        this._isClosed = this._getIsClosed(entity);
+        this._isClosed = this._getIsClosed(entity, geometry);
         this._outlineEnabled = outlineEnabled;
 
-        if (this._isDynamic(entity)) {
+        if (this._isDynamic(entity, geometry)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
             }
         } else {
-            this._setStaticOptions(entity);
+            this._setStaticOptions(entity, geometry);
             var outlineWidth = geometry.outlineWidth;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;

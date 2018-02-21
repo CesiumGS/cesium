@@ -84,7 +84,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function EllipseGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new EllipseGeometryOptions(entity), 'ellipse', ['availability', 'position', 'ellipse']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new EllipseGeometryOptions(entity),
+            geometryPropertyName : 'ellipse',
+            observedPropertyNames : ['availability', 'position', 'ellipse']
+        });
     }
 
     if (defined(Object.create)) {
@@ -182,20 +188,17 @@ define([
         return !defined(position) || !defined(ellipse.semiMajorAxis) || !defined(ellipse.semiMinorAxis) || GeometryUpdater.prototype._isHidden.call(this, entity, ellipse);
     };
 
-    EllipseGeometryUpdater.prototype._isOnTerrain = function(entity) {
+    EllipseGeometryUpdater.prototype._isOnTerrain = function(entity, ellipse) {
         var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-        var ellipse = entity.ellipse;
 
         return this._fillEnabled && !defined(ellipse.height) && !defined(ellipse.extrudedHeight) && isColorMaterial && GroundPrimitive.isSupported(this._scene);
     };
 
-    EllipseGeometryUpdater.prototype._getIsClosed = function(entity) {
-        return defined(entity.ellipse.extrudedHeight) || this._onTerrain;
+    EllipseGeometryUpdater.prototype._getIsClosed = function(entity, ellipse) {
+        return defined(ellipse.extrudedHeight) || this._onTerrain;
     };
 
-    EllipseGeometryUpdater.prototype._isDynamic = function(entity) {
-        var ellipse = entity.ellipse;
-
+    EllipseGeometryUpdater.prototype._isDynamic = function(entity, ellipse) {
         return !entity.position.isConstant || //
                !ellipse.semiMajorAxis.isConstant || //
                !ellipse.semiMinorAxis.isConstant || //
@@ -209,8 +212,7 @@ define([
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
-    EllipseGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var ellipse = entity.ellipse;
+    EllipseGeometryUpdater.prototype._setStaticOptions = function(entity, ellipse) {
         var rotation = ellipse.rotation;
         var height = ellipse.height;
         var extrudedHeight = ellipse.extrudedHeight;

@@ -85,7 +85,13 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function EllipsoidGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, entity, scene, new EllipsoidGeometryOptions(entity), 'ellipsoid', ['availability', 'position', 'orientation', 'ellipsoid']);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new EllipsoidGeometryOptions(entity),
+            geometryPropertyName : 'ellipsoid',
+            observedPropertyNames : ['availability', 'position', 'orientation', 'ellipsoid']
+        });
 
         this._isClosed = true;
     }
@@ -186,9 +192,7 @@ define([
         return !defined(entity.position) || !defined(ellipsoid.radii) || GeometryUpdater.prototype._isHidden.call(this, entity, ellipsoid);
     };
 
-    EllipsoidGeometryUpdater.prototype._isDynamic = function(entity) {
-        var ellipsoid = entity.ellipsoid;
-
+    EllipsoidGeometryUpdater.prototype._isDynamic = function(entity, ellipsoid) {
         return !entity.position.isConstant || //
                !Property.isConstant(entity.orientation) || //
                !ellipsoid.radii.isConstant || //
@@ -198,8 +202,7 @@ define([
                !Property.isConstant(ellipsoid.subdivisions);
     };
 
-    EllipsoidGeometryUpdater.prototype._setStaticOptions = function(entity) {
-        var ellipsoid = entity.ellipsoid;
+    EllipsoidGeometryUpdater.prototype._setStaticOptions = function(entity, ellipsoid) {
         var stackPartitions = ellipsoid.stackPartitions;
         var slicePartitions = ellipsoid.slicePartitions;
         var subdivisions = ellipsoid.subdivisions;
