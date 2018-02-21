@@ -329,18 +329,16 @@ define([
      * Creates the geometry instance which represents the fill of the geometry.
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
+     * @param {Boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
+     * @param {Matrix4} [modelMatrixResult] Used to store the result of the model matrix calculation
      * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+    EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function(time, skipModelMatrix, modelMatrixResult) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
-        }
-
-        if (!this._fillEnabled) {
-            throw new DeveloperError('This instance does not represent a filled geometry.');
         }
         //>>includeEnd('debug');
 
@@ -374,7 +372,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidGeometry(this._options),
-            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : skipModelMatrix ? undefined : entity.computeModelMatrix(time, modelMatrixResult),
             attributes : attributes
         });
     };
@@ -383,18 +381,16 @@ define([
      * Creates the geometry instance which represents the outline of the geometry.
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
+     * @param {Boolean} [skipModelMatrix=false] Whether to compute a model matrix for the geometry instance
+     * @param {Matrix4} [modelMatrixResult] Used to store the result of the model matrix calculation
      * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
      *
      * @exception {DeveloperError} This instance does not represent an outlined geometry.
      */
-    EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+    EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function(time, skipModelMatrix, modelMatrixResult) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
-        }
-
-        if (!this._outlineEnabled) {
-            throw new DeveloperError('This instance does not represent an outlined geometry.');
         }
         //>>includeEnd('debug');
 
@@ -407,7 +403,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : skipModelMatrix ? undefined : entity.computeModelMatrix(time, modelMatrixResult),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
@@ -557,7 +553,7 @@ define([
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._entity);
+        this._options = geometryUpdater._options;
         this._modelMatrix = new Matrix4();
         this._material = undefined;
         this._attributes = undefined;
@@ -567,6 +563,7 @@ define([
         this._lastOutlineShow = undefined;
         this._lastOutlineWidth = undefined;
         this._lastOutlineColor = undefined;
+        this._material = {};
     }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -602,12 +599,10 @@ define([
         }
 
         //Compute attributes and material.
-        var appearance;
         var showFill = Property.getValueOrDefault(ellipsoid.fill, time, true);
         var showOutline = Property.getValueOrDefault(ellipsoid.outline, time, false);
         var outlineColor = Property.getValueOrClonedDefault(ellipsoid.outlineColor, time, Color.BLACK, scratchColor);
         var material = MaterialProperty.getValue(time, defaultValue(ellipsoid.material, defaultMaterial), this._material);
-        this._material = material;
 
         // Check properties that could trigger a primitive rebuild.
         var stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, time);
@@ -625,7 +620,6 @@ define([
 
         var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
         var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
-        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
 
         //We only rebuild the primitive if something other than the radii has changed
         //For the radii, we use unit sphere and then deform it with a scale matrix.
@@ -647,44 +641,28 @@ define([
             options.subdivisions = subdivisions;
             options.radii = in3D ? unitSphere : radii;
 
-            appearance = new MaterialAppearance({
+            var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
                 closed : true
             });
             options.vertexFormat = appearance.vertexFormat;
 
+            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time, in3D, this._modelMatrix);
+
             this._primitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new EllipsoidGeometry(options),
-                    modelMatrix : !in3D ? modelMatrix : undefined,
-                    attributes : {
-                        show : new ShowGeometryInstanceAttribute(showFill),
-                        distanceDisplayCondition : distanceDisplayConditionAttribute
-                    }
-                }),
+                geometryInstances : fillInstance,
                 appearance : appearance,
                 asynchronous : false,
                 shadows : shadows
             }));
 
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
+            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time, in3D, this._modelMatrix);
             this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new EllipsoidOutlineGeometry(options),
-                    modelMatrix : !in3D ? modelMatrix : undefined,
-                    attributes : {
-                        show : new ShowGeometryInstanceAttribute(showOutline),
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                        distanceDisplayCondition : distanceDisplayConditionAttribute
-                    }
-                }),
+                geometryInstances : outlineInstance,
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : outlineColor.alpha !== 1.0,
+                    translucent : outlineInstance.attributes.color.value[3] !== 255,
                     renderState : {
                         lineWidth : this._geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
@@ -704,9 +682,7 @@ define([
 
             primitive.show = true;
             outlinePrimitive.show = true;
-
-            appearance = primitive.appearance;
-            appearance.material = material;
+            primitive.appearance.material = material;
 
             var attributes = this._attributes;
             if (!defined(attributes)) {

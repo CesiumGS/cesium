@@ -57,7 +57,6 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var scratchColor = new Color();
 
     function GeometryOptions(entity) {
         this.id = entity;
@@ -362,7 +361,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : BoxGeometry.fromDimensions(this._options),
-            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computeModelMatrix(time),
             attributes : attributes
         });
     };
@@ -394,7 +393,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : BoxOutlineGeometry.fromDimensions(this._options),
-            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computeModelMatrix(time),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
@@ -532,7 +531,8 @@ define([
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._entity);
+        this._options = geometryUpdater._options;
+        this._material = {};
     }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -562,33 +562,34 @@ define([
         }
 
         options.dimensions = dimensions;
-
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
-        var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
-        var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
-        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
-
         if (Property.getValueOrDefault(box.fill, time, true)) {
-            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-            this._material = material;
+            var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
+            var appearance;
+            if (isColorAppearance) {
+                appearance = new PerInstanceColorAppearance({
+                    closed: true
+                });
+            } else {
+                var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+                appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : true
+                });
+            }
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : true
-            });
             options.vertexFormat = appearance.vertexFormat;
 
+            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
+
+            if (isColorAppearance) {
+                appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
+            }
+
             this._primitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : BoxGeometry.fromDimensions(options),
-                    modelMatrix : modelMatrix,
-                    attributes : {
-                        distanceDisplayCondition : distanceDisplayConditionAttribute
-                    }
-                }),
+                geometryInstances : fillInstance,
                 appearance : appearance,
                 asynchronous : false,
                 shadows : shadows
@@ -596,25 +597,14 @@ define([
         }
 
         if (Property.getValueOrDefault(box.outline, time, false)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
-            var outlineColor = Property.getValueOrClonedDefault(box.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
             var outlineWidth = Property.getValueOrDefault(box.outlineWidth, time, 1.0);
-            var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : BoxOutlineGeometry.fromDimensions(options),
-                    modelMatrix : modelMatrix,
-                    attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                        distanceDisplayCondition : distanceDisplayConditionAttribute
-                    }
-                }),
+                geometryInstances : outlineInstance,
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : translucent,
+                    translucent : outlineInstance.attributes.color.value[3] !== 255,
                     renderState : {
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }

@@ -57,7 +57,6 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var scratchColor = new Color();
 
     function GeometryOptions(entity) {
         this.id = entity;
@@ -542,7 +541,8 @@ define([
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._entity);
+        this._options = geometryUpdater._options;
+        this._material = {};
     }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -578,21 +578,31 @@ define([
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
         if (Property.getValueOrDefault(wall.fill, time, true)) {
-            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-            this._material = material;
+            var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
+            var appearance;
+            if (isColorAppearance) {
+                appearance = new PerInstanceColorAppearance({
+                    closed: true
+                });
+            } else {
+                var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+                appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight)
+                });
+            }
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
-            });
             options.vertexFormat = appearance.vertexFormat;
 
+            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
+
+            if (isColorAppearance) {
+                appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
+            }
+
             this._primitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new WallGeometry(options)
-                }),
+                geometryInstances : fillInstance,
                 appearance : appearance,
                 asynchronous : false,
                 shadows : shadows
@@ -600,23 +610,14 @@ define([
         }
 
         if (Property.getValueOrDefault(wall.outline, time, false)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
-            var outlineColor = Property.getValueOrClonedDefault(wall.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
             var outlineWidth = Property.getValueOrDefault(wall.outlineWidth, time, 1.0);
-            var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new WallOutlineGeometry(options),
-                    attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
-                    }
-                }),
+                geometryInstances : outlineInstance,
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : translucent,
+                    translucent : outlineInstance.attributes.color.value[3] !== 255,
                     renderState : {
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }

@@ -61,7 +61,6 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var scratchColor = new Color();
 
     function GeometryOptions(entity) {
         this.id = entity;
@@ -589,7 +588,8 @@ define([
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new GeometryOptions(geometryUpdater._entity);
+        this._options = geometryUpdater._options;
+        this._material = {};
     }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -636,41 +636,40 @@ define([
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
         if (Property.getValueOrDefault(rectangle.fill, time, true)) {
-            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
-            var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
-            this._material = material;
-
             if (onTerrain) {
-                var currentColor = Color.WHITE;
-                if (defined(fillMaterialProperty.color)) {
-                    currentColor = fillMaterialProperty.color.getValue(time);
-                }
-
+                options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
                 this._primitive = groundPrimitives.add(new GroundPrimitive({
-                    geometryInstances : new GeometryInstance({
-                        id : entity,
-                        geometry : new RectangleGeometry(options),
-                        attributes: {
-                            color: ColorGeometryInstanceAttribute.fromColor(currentColor)
-                        }
-                    }),
+                    geometryInstances : this._geometryUpdater.createFillGeometryInstance(time),
                     asynchronous : false,
                     shadows : shadows
                 }));
             } else {
-                var appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : defined(options.extrudedHeight)
-                });
+                var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
+                var isClosed = defined(options.extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
+                var appearance;
+                if (isColorAppearance) {
+                    appearance = new PerInstanceColorAppearance({
+                        closed: isClosed
+                    });
+                } else {
+                    var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+                    appearance = new MaterialAppearance({
+                        material : material,
+                        translucent : material.isTranslucent(),
+                        closed : defined(options.extrudedHeight)
+                    });
+                }
 
                 options.vertexFormat = appearance.vertexFormat;
 
+                var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
+
+                if (isColorAppearance) {
+                    appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
+                }
+
                 this._primitive = primitives.add(new Primitive({
-                    geometryInstances : new GeometryInstance({
-                        id : entity,
-                        geometry : new RectangleGeometry(options)
-                    }),
+                    geometryInstances : fillInstance,
                     appearance : appearance,
                     asynchronous : false,
                     shadows : shadows
@@ -679,23 +678,14 @@ define([
         }
 
         if (!onTerrain && Property.getValueOrDefault(rectangle.outline, time, false)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
-            var outlineColor = Property.getValueOrClonedDefault(rectangle.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
             var outlineWidth = Property.getValueOrDefault(rectangle.outlineWidth, time, 1.0);
-            var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new RectangleOutlineGeometry(options),
-                    attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
-                    }
-                }),
+                geometryInstances : outlineInstance,
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : translucent,
+                    translucent : outlineInstance.attributes.color.value[3] !== 255,
                     renderState : {
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
