@@ -80,7 +80,16 @@ define([
         this.updaters = updaters;
         this.geometryChanged = geometryChanged;
         this.eventHelper = eventHelper;
+
+        this._removeEntitySubscription = entity.definitionChanged.addEventListener(GeometryUpdaterSet.prototype._onEntityPropertyChanged, this);
     }
+
+    GeometryUpdaterSet.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
+        var updaters = this.updaters;
+        for (var i = 0; i < updaters.length; i++) {
+            updaters[i]._onEntityPropertyChanged(entity, propertyName, newValue, oldValue);
+        }
+    };
 
     GeometryUpdaterSet.prototype.forEach = function (callback) {
         var updaters = this.updaters;
@@ -95,6 +104,7 @@ define([
         for (var i = 0; i < updaters.length; i++) {
             updaters[i].destroy();
         }
+        this._removeEntitySubscription();
         destroyObject(this);
     };
 

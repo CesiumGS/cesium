@@ -19,6 +19,7 @@ define([
             var updater = new Updater(entity, scene);
             graphics.fill = true;
             graphics.outline = false;
+            updater._onEntityPropertyChanged(entity, updater._geometryPropertyName);
             var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
             dynamicUpdater.update(time);
 
@@ -46,6 +47,7 @@ define([
             var updater = new Updater(entity, scene);
             graphics.fill = false;
             graphics.outline = true;
+            updater._onEntityPropertyChanged(entity, updater._geometryPropertyName);
 
             var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
             dynamicUpdater.update(time);

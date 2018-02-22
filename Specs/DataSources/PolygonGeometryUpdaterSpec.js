@@ -125,6 +125,7 @@ defineSuite([
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon = undefined;
+        updater._onEntityPropertyChanged(entity, 'polygon');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -136,6 +137,7 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.fill = new ConstantProperty(false);
         entity.polygon.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'polygon');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -163,6 +165,8 @@ defineSuite([
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.fillMaterialProperty).toBe(entity.polygon.material);
     });
 
@@ -170,6 +174,8 @@ defineSuite([
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isClosed).toBe(true);
     });
 
@@ -178,6 +184,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.extrudedHeight = new ConstantProperty(1000);
         entity.polygon.closeTop = false;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isClosed).toBe(false);
     });
 
@@ -186,6 +194,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.extrudedHeight = new ConstantProperty(1000);
         entity.polygon.closeBottom = false;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isClosed).toBe(false);
     });
 
@@ -194,6 +204,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.outlineWidth = new SampledProperty(Number);
         entity.polygon.outlineWidth.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -209,6 +221,8 @@ defineSuite([
 
         entity.polygon.hierarchy = new PropertyArray();
         entity.polygon.hierarchy.setValue([point1, point2, point3]);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -217,6 +231,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.height = new SampledProperty(Number);
         entity.polygon.height.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -225,6 +241,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.extrudedHeight = new SampledProperty(Number);
         entity.polygon.extrudedHeight.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -233,6 +251,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.granularity = new SampledProperty(Number);
         entity.polygon.granularity.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -241,6 +261,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.stRotation = new SampledProperty(Number);
         entity.polygon.stRotation.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -249,6 +271,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.perPositionHeight = new SampledProperty(Number);
         entity.polygon.perPositionHeight.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -258,6 +282,8 @@ defineSuite([
         var color = new SampledProperty(Color);
         color.addSample(time, Color.WHITE);
         entity.polygon.material = new ColorMaterialProperty(color);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(groundPrimitiveSupported);
     });
 
@@ -579,24 +605,29 @@ defineSuite([
         expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
         entity.show = true;
+        updater._onEntityPropertyChanged(entity, 'show');
 
         //If a dynamic show returns false, the primitive should go away.
         polygon.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
 
         polygon.show.setValue(true);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
         expect(groundPrimitives.length).toBe(0);
 
         //If a dynamic position returns undefined, the primitive should go away.
         polygon.hierarchy.setValue(undefined);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
@@ -651,22 +682,28 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.polygon.hierarchy = new ConstantProperty([]);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         expect(listener.calls.count()).toEqual(1);
 
         entity.polygon.height = new ConstantProperty(82);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(3);
 
         entity.polygon.hierarchy = undefined;
+        updater._onEntityPropertyChanged(entity, 'polygon');
         expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.polygon.height = undefined;
+        updater._onEntityPropertyChanged(entity, 'polygon');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(4);
     });
 

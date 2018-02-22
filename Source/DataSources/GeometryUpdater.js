@@ -67,7 +67,6 @@ define([
 
         this._entity = entity;
         this._scene = options.scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(GeometryUpdater.prototype._onEntityPropertyChanged, this);
         this._fillEnabled = false;
         this._isClosed = false;
         this._onTerrain = false;
@@ -84,7 +83,6 @@ define([
         this._options = options.geometryOptions;
         this._geometryPropertyName = geometryPropertyName;
         this._id = geometryPropertyName + '-' + entity.id;
-
         this._observedPropertyNames = options.observedPropertyNames;
 
         this._onEntityPropertyChanged(entity, geometryPropertyName, entity[geometryPropertyName], undefined);
@@ -341,7 +339,6 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     GeometryUpdater.prototype.destroy = function() {
-        this._entitySubscription();
         destroyObject(this);
     };
     /**
