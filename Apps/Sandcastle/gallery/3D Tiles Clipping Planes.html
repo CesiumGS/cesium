@@ -205,9 +205,9 @@ function loadModel(url) {
 }
 
 // Power Plant design model provided by Bentley Systems
-var bimUrl = Cesium.CesiumIon.createResource(3837);
-var pointCloudUrl = Cesium.CesiumIon.createResource(3838);
-var instancedUrl = Cesium.CesiumIon.createResource(3876);
+var bimUrl = Cesium.IonResource.fromAssetId(3837);
+var pointCloudUrl = Cesium.IonResource.fromAssetId(3838);
+var instancedUrl = Cesium.IonResource.fromAssetId(3876);
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
 loadTileset(bimUrl);

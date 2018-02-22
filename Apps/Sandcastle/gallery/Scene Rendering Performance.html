@@ -144,7 +144,7 @@ function resetScene() {
 function loadTilesetScenario() {
     resetScene();
 
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3836) });
+    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3836) });
     viewer.scene.primitives.add(tileset);
     viewer.zoomTo(tileset);
 }

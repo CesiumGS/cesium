@@ -14,8 +14,7 @@ define([
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
         './Cesium3DTileset',
-        '../Core/CesiumIon',
-        '../Core/CesiumIonResource',
+        '../Core/IonResource',
         './createTileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
@@ -39,8 +38,7 @@ define([
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         Cesium3DTileset,
-        CesiumIon,
-        CesiumIonResource,
+        IonResource,
         createTileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
@@ -56,7 +54,7 @@ define([
         };
     }
 
-    // These values are the unofficial list of supported external imagery
+    // These values are the list of supported external imagery
     // assets in the Cesium ion beta. They are subject to change.
     var ImageryProviderMapping = {
         ARCGIS_MAPSERVER: createFactory(ArcGisMapServerImageryProvider),
@@ -77,12 +75,12 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {assetId} options.assetId An ion imagery asset ID;
-     * @param {String} [options.accessToken=CesiumIon.defaultAccessToken] The access token to use.
-     * @param {String} [options.serverUrl=CesiumIon.defaultServerUrl] The url to the Cesium ion API server.
+     * @param {Number} options.assetId An ion imagery asset ID;
+     * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
+     * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
      *
      * @example
-     * var provider = new Cesium.IonImageryProvider({ assetId : 23489024 });
+     * viewer.imageryLayers.addImageryProvider(new Cesium.IonImageryProvider({ assetId : 23489024 }));
      */
     function IonImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -91,7 +89,7 @@ define([
         Check.typeOf.number('options.assetId', options.assetId);
         //>>includeEnd('debug');
 
-        var endpointResource = CesiumIon._createEndpointResource(options.assetId, options);
+        var endpointResource = IonResource._createEndpointResource(options.assetId, options);
 
         /**
          * The default alpha blending value of this provider, with 0.0 representing fully transparent and
@@ -176,7 +174,7 @@ define([
                 var externalType = endpoint.externalType;
                 if (!defined(externalType)) {
                     imageryProvider = createTileMapServiceImageryProvider({
-                        url: CesiumIonResource.create(endpoint, endpointResource)
+                        url: new IonResource(endpoint, endpointResource)
                     });
                 } else {
                     var factory = ImageryProviderMapping[externalType];
