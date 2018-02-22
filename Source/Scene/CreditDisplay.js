@@ -390,9 +390,6 @@ define([
             // logo at the same time. Since the ion logo is required, we just replace the
             // Cesium logo.  This will also add the logo if the Cesium one was removed.
             this._currentFrameCredits.imageCredits[cesiumCredit.id] = credit;
-            if (defined(cesiumCredit.parentNode)) {
-                removeCreditDomElement(cesiumCredit);
-            }
         } else if (!credit.showOnScreen) {
             this._currentFrameCredits.lightboxCredits[credit.id] = credit;
         } else if (credit.hasImage()) {
