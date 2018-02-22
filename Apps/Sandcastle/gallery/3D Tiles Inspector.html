@@ -31,14 +31,12 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
-Cesium.CesiumIon.create3DTileset(1461, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkYWJmM2MzNS02OWM5LTQ3OWItYjEyYS0xZmNlODM5ZDNkMTYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjFdLCJpYXQiOjE0OTkyNjQ3NDN9.vuR75SqPDKcggvUrG_vpx0Av02jdiAxnnB1fNf-9f7s' })
-    .then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
-        viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.5, tileset.boundingSphere.radius / 4.0));
-    }).otherwise(function(error) {
-        console.log(error);
-    });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3839) });
+viewer.scene.primitives.add(tileset);
 
+tileset.readyPromise.then(function(){
+    viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.5, tileset.boundingSphere.radius / 4.0));
+});
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

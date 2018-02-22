@@ -30,34 +30,32 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
-Cesium.CesiumIon.create3DTileset(1460, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM' })
-    .then(function(tileset) {
-        viewer.scene.primitives.add(tileset);
-    });
+var tileset = new Cesium.Cesium3DTileset({
+    url: Cesium.CesiumIon.createResource(3838)
+});
+viewer.scene.primitives.add(tileset);
 
 // Geometry Tiles are experimental and the format is subject to change in the future.
 // For more details, see:
 //    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/Geometry
-Cesium.CesiumIon.create3DTileset(3624, {
-    accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYTdkZTFlNC1lYTZlLTQzODMtYmM5NC1iYmRkNzI1ZTg2NzkiLCJpZCI6NDQsImFzc2V0cyI6WzM2MjRdLCJpYXQiOjE1MTU1OTMxOTZ9.-YnJ5-FK5FmSsyChVZ-AwSbzD3k_rMhbuaIbqG2sKb4',
-    tilesetOptions: { classificationType: Cesium.ClassificationType.CESIUM_3D_TILE }
-})
-.then(function(classification) {
-    viewer.scene.primitives.add(classification);
+var classificationTileset = new Cesium.Cesium3DTileset({
+    url: Cesium.CesiumIon.createResource(3842),
+    classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+});
+viewer.scene.primitives.add(classificationTileset);
 
-    classification.style = new Cesium.Cesium3DTileStyle({
-        color : {
-            conditions : [
-                ["${id} === 'roof1'", "color('#004FFF', 0.5)"],
-                ["${id} === 'towerBottom1'", "color('#33BB66', 0.5)"],
-                ["${id} === 'towerTop1'", "color('#0099AA', 0.5)"],
-                ["${id} === 'roof2'", "color('#004FFF', 0.5)"],
-                ["${id} === 'tower3'", "color('#FF8833', 0.5)"],
-                ["${id} === 'tower4'", "color('#FFAA22', 0.5)"],
-                ["true", "color('#FFFF00', 0.5)"]
-            ]
-        }
-    });
+classificationTileset.style = new Cesium.Cesium3DTileStyle({
+    color : {
+        conditions : [
+            ["${id} === 'roof1'", "color('#004FFF', 0.5)"],
+            ["${id} === 'towerBottom1'", "color('#33BB66', 0.5)"],
+            ["${id} === 'towerTop1'", "color('#0099AA', 0.5)"],
+            ["${id} === 'roof2'", "color('#004FFF', 0.5)"],
+            ["${id} === 'tower3'", "color('#FF8833', 0.5)"],
+            ["${id} === 'tower4'", "color('#FFAA22', 0.5)"],
+            ["true", "color('#FFFF00', 0.5)"]
+        ]
+    }
 });
 
 viewer.scene.camera.setView({

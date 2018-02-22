@@ -1,14 +1,14 @@
 defineSuite([
-    'Scene/CesiumIonResource',
+    'Core/CesiumIonResource',
+    'Core/CesiumIon',
     'Core/RequestErrorEvent',
     'Core/Resource',
-    'Scene/CesiumIon',
     'ThirdParty/when'
 ], function(
     CesiumIonResource,
+    CesiumIon,
     RequestErrorEvent,
     Resource,
-    CesiumIon,
     when) {
 'use strict';
 
@@ -16,7 +16,8 @@ defineSuite([
     var endpoint = {
         type: '3DTILES',
         url: 'https://assets.cesium.com/' + assetId + '/tileset.json',
-        accessToken: 'not_really_a_refresh_token'
+        accessToken: 'not_really_a_refresh_token',
+        attributions: []
     };
 
     it('constructs with expected values', function() {
