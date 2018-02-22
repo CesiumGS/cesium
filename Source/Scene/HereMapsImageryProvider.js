@@ -84,7 +84,11 @@ define([
         var that = this;
 
         this._proxy = options.proxy;
-        this._credit = undefined; // The base credit is always supplied in the attribution list
+        this._credit = new Credit({
+            text: '2014 DigitalGlobe, Inc.',
+            imageUrl: HereMapsImageryProvider._logoData,
+            link: 'http://www.here.com'
+        });
 
         this._tilingScheme = new WebMercatorTilingScheme();
         this._tileSize = defaultValue(options.tileSize, 256);
@@ -464,6 +468,9 @@ define([
     HereMapsImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
+
+    HereMapsImageryProvider._logoData = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI4MHB4IiBoZWlnaHQ9IjgwcHgiIHZpZXdCb3g9IjAgMCA4MCA4MCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgODAgODA7IiB4bWw6c3BhY2U9InByZXNlcnZlIj48c3R5bGUgdHlwZT0idGV4dC9jc3MiPi5zdDB7ZGlzcGxheTpub25lO2ZpbGw6IzE2MTkxOTt9LnN0MXtmaWxsOiM2NUMxQzI7fS5zdDJ7ZmlsbDojRkZGRkZGO308L3N0eWxlPjxnIGlkPSJFYmVuZV8xIj48cmVjdCBjbGFzcz0ic3QwIiB3aWR0aD0iNzkuOSIgaGVpZ2h0PSI3OS45Ii8+PGcgaWQ9IkxvZ28iPjxwYXRoIGlkPSJ0cmlhbmdsZSIgY2xhc3M9InN0MSIgZD0iTTIyLjEsNjUuNWwtMTEsMTFsLTExLTExTDIyLjEsNjUuNXoiLz48cGF0aCBpZD0iaGVyZSIgY2xhc3M9InN0MiIgZD0iTTM4LjIsNDAuNWMtMi4zLTIuNy0yLjItNC4yLTAuOC01LjZjMS43LTEuNywzLjUtMSw1LjUsMC45TDM4LjIsNDAuNXogTTYxLjgsMTAuNWMxLjctMS43LDMuNS0xLDUuNSwwLjlsLTQuNyw0LjdDNjAuMiwxMy40LDYwLjMsMTIsNjEuOCwxMC41eiBNNzYsMTUuM2MtMi4xLDMuMi01LjksOC40LTkuOCw0LjVsOS45LTkuOUM3NS4yLDksNzQuNiw4LjIsNzQsNy43Yy01LjMtNS4zLTExLjMtNS40LTE2LTAuN2MtMy4xLDMuMS00LDYuNy0zLjEsMTAuMWwtMy4xLTMuNUM1MSwxNCw0Ny4yLDE3LjQsNTAsMjIuNGwtMy41LTIuOWwtNC43LDQuN2w2LjQsNi40Yy00LjktMy45LTEwLjItMy41LTE0LjQsMC43Yy00LjUsNC41LTQuMiwxMC0wLjgsMTQuNWwtMC43LTAuN2MtNC41LTQuNS05LjQtMi45LTExLjgtMC41Yy0xLjksMS45LTMsNC40LTIuNSw2LjJsLTkuNy05LjdsLTUuMiw1LjJsMTkuMiwxOS4yaDEwLjNsLTYuOS02LjljLTMuNi0zLjctMy43LTUuNi0xLjktNy40YzEuNy0xLjcsMy43LTAuNiw3LjIsMi44bDYuOCw2LjhsNS4xLTUuMWwtNi41LTYuNWM0LjcsMy41LDEwLjMsMy43LDE1LjMtMS4zYzAsMCwwLjEtMC4xLDAuMS0wLjFsMCwwYzMuMS0yLjgsNC01LjYsNC01LjZsLTMuOS0yLjZjLTIuMSwzLjItNS44LDguNC05LjcsNC41bDkuOS05LjlsNi4yLDYuMmw1LjQtNS40bC03LjctNy43Yy0zLjYtMy42LTEuNS03LDAtOC4zYzAuNywxLjUsMS43LDIuOSwzLDQuMmM1LDUsMTEuNCw2LDE3LjEsMC40YzAsMCwwLjEtMC4xLDAuMS0wLjFsMCwwYzMuMS0yLjgsNC01LjYsNC01LjZMNzYsMTUuM3oiLz48L2c+PC9nPjxnIGlkPSJFYmVuZV8yIj48L2c+PC9zdmc+';
+
 
     function buildImageResource(imageryProvider, x, y, level, request) {
         var subdomains = imageryProvider._urlSubdomains;

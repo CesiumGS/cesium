@@ -2,15 +2,29 @@ defineSuite([
         'Scene/HereMapsImageryProvider',
         'Core/RequestScheduler',
         'Core/Resource',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
         'Scene/ImageryProvider',
+        'Scene/ImageryState',
         'ThirdParty/Uri',
+        'Specs/pollToPromise',
+        'Core/WebMercatorTilingScheme',
+        'Core/defined',
+        'Core/DefaultProxy',
         'Core/queryToObject'
     ], function(
         HereMapsImageryProvider,
         RequestScheduler,
         Resource,
+        Imagery,
+        ImageryLayer,
         ImageryProvider,
+        ImageryState,
         Uri,
+        pollToPromise,
+        WebMercatorTilingScheme,
+        defined,
+        DefaultProxy,
         queryToObject) {
     'use strict';
 
@@ -182,6 +196,7 @@ defineSuite([
             var uri = new Uri(url);
             if (proxy) {
                 uri = new Uri(decodeURIComponent(uri.query));
+                console.log(uri);
             }
 
             var query = queryToObject(uri.query);
@@ -198,60 +213,60 @@ defineSuite([
         };
     }
 
-    // function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
-    //     Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-    //         if (/^blob:/.test(url)) {
-    //             // load blob url normally
-    //             Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
-    //         } else {
-    //             if (defined(expectedUrl)) {
-    //                 var uri = new Uri(url);
-    //                 if (proxy) {
-    //                     uri = new Uri(decodeURIComponent(uri.query));
-    //                 }
+    function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            if (/^blob:/.test(url)) {
+                // load blob url normally
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            } else {
+                if (defined(expectedUrl)) {
+                    var uri = new Uri(url);
+                    if (proxy) {
+                        uri = new Uri(decodeURIComponent(uri.query));
+                    }
 
-    //                 var query = queryToObject(uri.query);
-    //                 uri.query = undefined;
-    //                 expect(uri.toString()).toEqual(expectedUrl);
-    //                 for(var param in expectedParams) {
-    //                     if (expectedParams.hasOwnProperty(param)) {
-    //                         expect(query[param]).toEqual(expectedParams[param]);
-    //                     }
-    //                 }
-    //             }
-    //             // Just return any old image.
-    //             Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-    //         }
-    //     };
+                    var query = queryToObject(uri.query);
+                    uri.query = undefined;
+                    expect(uri.toString()).toEqual(expectedUrl);
+                    for(var param in expectedParams) {
+                        if (expectedParams.hasOwnProperty(param)) {
+                            expect(query[param]).toEqual(expectedParams[param]);
+                        }
+                    }
+                }
+                // Just return any old image.
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            }
+        };
 
-    //     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-    //         if (defined(expectedUrl)) {
-    //             var uri = new Uri(url);
-    //             if (proxy) {
-    //                 uri = new Uri(decodeURIComponent(uri.query));
-    //             }
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            if (defined(expectedUrl)) {
+                var uri = new Uri(url);
+                if (proxy) {
+                    uri = new Uri(decodeURIComponent(uri.query));
+                }
 
-    //             var query = queryToObject(uri.query);
-    //             uri.query = undefined;
-    //             expect(uri.toString()).toEqual(expectedUrl);
-    //             for(var param in expectedParams) {
-    //                 if (expectedParams.hasOwnProperty(param)) {
-    //                     expect(query[param]).toEqual(expectedParams[param]);
-    //                 }
-    //             }
-    //         }
+                var query = queryToObject(uri.query);
+                uri.query = undefined;
+                expect(uri.toString()).toEqual(expectedUrl);
+                for(var param in expectedParams) {
+                    if (expectedParams.hasOwnProperty(param)) {
+                        expect(query[param]).toEqual(expectedParams[param]);
+                    }
+                }
+            }
 
-    //         // Just return any old image.
-    //         Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
-    //     };
-    // }
+            // Just return any old image.
+            Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+        };
+    }
 
     it('resolves readyPromise', function() {
         var baseUrl = 'aerial.maps.api.here.com';
         var mapId = 'newest';
 
         installFakeCopyrightRequest(baseUrl, mapId);
-        // installFakeImageRequest();
+        installFakeImageRequest();
 
         var provider = new HereMapsImageryProvider({
             appId : 'fake',
@@ -264,250 +279,185 @@ defineSuite([
         });
     });
 
-    // it('resolves readyPromise with Resource', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
+    it('rejects readyPromise on error', function() {
+        var baseUrl = 'host.invalid';
+        var provider = new HereMapsImageryProvider({
+            baseUrl : baseUrl,
+            appId : 'fake',
+            appCode : 'invalid'
+        });
 
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain(baseUrl);
+        });
+    });
 
-    //     var resource = new Resource({
-    //         url : url
-    //     });
+    it('returns valid value for hasAlphaChannel', function() {
+        var baseUrl = 'aerial.maps.api.here.com';
+        var mapId = 'newest';
 
-    //     var provider = new BingMapsImageryProvider({
-    //         url : resource,
-    //         mapStyle : mapStyle
-    //     });
+        installFakeCopyrightRequest(baseUrl, mapId);
+        installFakeImageRequest();
 
-    //     return provider.readyPromise.then(function(result) {
-    //         expect(result).toBe(true);
-    //         expect(provider.ready).toBe(true);
-    //     });
-    // });
+        var provider = new HereMapsImageryProvider({
+            appId : 'fake',
+            appCode : 'invalid'
+        });
 
-    // it('rejects readyPromise on error', function() {
-    //     var url = 'http://host.invalid';
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url
-    //     });
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
 
-    //     return provider.readyPromise.then(function () {
-    //         fail('should not resolve');
-    //     }).otherwise(function (e) {
-    //         expect(provider.ready).toBe(false);
-    //         expect(e.message).toContain(url);
-    //     });
-    // });
+    it('can provide a root tile', function() {
+        var baseUrl = 'fake.invalid';
+        var mapId = 'newest';
+        var appId = 'fake';
+        var appCode = 'invalid';
 
-    // it('returns valid value for hasAlphaChannel', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.AERIAL;
+        installFakeCopyrightRequest(baseUrl, mapId);
+        installFakeImageRequest();
 
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
+        var provider = new HereMapsImageryProvider({
+            baseUrl : baseUrl,
+            appId : appId,
+            appCode : appCode
+        });
 
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
+        expect(provider.url).toContain(baseUrl);
 
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         expect(typeof provider.hasAlphaChannel).toBe('boolean');
-    //     });
-    // });
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(20);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
+            expect(provider.credit).toBeInstanceOf(Object);
 
-    // it('can provide a root tile', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
+            installFakeImageRequest('http://1.fake.invalid/maptile/2.1/maptile/newest/satellite.day/0/0/0/256/jpg', {
+                app_id : appId,
+                app_code : appCode
+            });
 
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
 
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
+    it('routes requests through a proxy if one is specified', function() {
+        var baseUrl = 'fake.invalid';
+        var mapId = 'newest';
+        var appId = 'fake';
+        var appCode = 'invalid';
 
-    //     expect(provider.url).toStartWith(url);
-    //     expect(provider.key).toBeDefined();
-    //     expect(provider.mapStyle).toEqual(mapStyle);
+        var proxy = new DefaultProxy('/proxy/');
 
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         expect(provider.tileWidth).toEqual(256);
-    //         expect(provider.tileHeight).toEqual(256);
-    //         expect(provider.maximumLevel).toEqual(20);
-    //         expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-    //         expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
-    //         expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
-    //         expect(provider.credit).toBeInstanceOf(Object);
+        installFakeCopyrightRequest(baseUrl, mapId, true);
+        installFakeImageRequest();
 
-    //         installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg', {
-    //             g : '3031',
-    //             mkt : ''
-    //         });
+        var provider = new HereMapsImageryProvider({
+            baseUrl : baseUrl,
+            appId : appId,
+            appCode : appCode,
+            proxy : proxy
+        });
 
-    //         return provider.requestImage(0, 0, 0).then(function(image) {
-    //             expect(image).toBeInstanceOf(Image);
-    //         });
-    //     });
-    // });
+        expect(provider.url).toContain(baseUrl);
+        expect(provider.proxy).toEqual(proxy);
 
-    // it('sets correct culture in tile requests', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.AERIAL_WITH_LABELS;
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            installFakeImageRequest('http://1.fake.invalid/maptile/2.1/maptile/newest/satellite.day/0/0/0/256/jpg', {
+                app_id : appId,
+                app_code : appCode
+            }, true);
 
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
 
-    //     var culture = 'ja-jp';
+    it('raises error event when image cannot be loaded', function() {
+        var baseUrl = 'fake.invalid';
+        var mapId = 'newest';
+        var appId = 'fake';
+        var appCode = 'invalid';
 
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle,
-    //         culture : culture
-    //     });
+        installFakeCopyrightRequest(baseUrl, mapId);
+        installFakeImageRequest();
 
-    //     expect(provider.culture).toEqual(culture);
+        var provider = new HereMapsImageryProvider({
+            baseUrl : baseUrl,
+            appId : appId,
+            appCode : appCode
+        });
 
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg', {
-    //             g: '3031',
-    //             mkt: 'ja-jp'
-    //         });
+        var layer = new ImageryLayer(provider);
 
-    //         return provider.requestImage(0, 0, 0).then(function(image) {
-    //             expect(image).toBeInstanceOf(Image);
-    //         });
-    //     });
-    // });
+        var tries = 0;
+        provider.errorEvent.addEventListener(function(error) {
+            expect(error.timesRetried).toEqual(tries);
+            ++tries;
+            if (tries < 3) {
+                error.retry = true;
+            }
+            setTimeout(function() {
+                RequestScheduler.update();
+            }, 1);
+        });
 
-    // it('routes requests through a proxy if one is specified', function() {
-    //     var url = 'http://foo.bar.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            if (/^blob:/.test(url)) {
+                // load blob url normally
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            } else if (tries === 2) {
+                // Succeed after 2 tries
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            } else {
+                // fail
+                setTimeout(function() {
+                    deferred.reject();
+                }, 1);
+            }
+        };
 
-    //     var proxy = new DefaultProxy('/proxy/');
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            if (tries === 2) {
+                // Succeed after 2 tries
+                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            } else {
+                // fail
+                setTimeout(function() {
+                    deferred.reject();
+                }, 1);
+            }
+        };
 
-    //     installFakeMetadataRequest(url, mapStyle, true);
-    //     installFakeImageRequest();
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
 
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle,
-    //         proxy : proxy
-    //     });
-
-    //     expect(provider._resource._url).toEqual(url);
-    //     expect(provider.proxy).toEqual(proxy);
-
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg', {
-    //             g: '3031',
-    //             mkt: ''
-    //         }, true);
-
-    //         return provider.requestImage(0, 0, 0).then(function(image) {
-    //             expect(image).toBeInstanceOf(Image);
-    //         });
-    //     });
-    // });
-
-    // it('raises error on invalid url', function() {
-    //     var url = 'http://host.invalid';
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url
-    //     });
-
-    //     var errorEventRaised = false;
-    //     provider.errorEvent.addEventListener(function(error) {
-    //         expect(error.message).toContain(url);
-    //         errorEventRaised = true;
-    //     });
-
-    //     return pollToPromise(function() {
-    //         return provider.ready || errorEventRaised;
-    //     }).then(function() {
-    //         expect(provider.ready).toEqual(false);
-    //         expect(errorEventRaised).toEqual(true);
-    //     });
-    // });
-
-    // it('raises error event when image cannot be loaded', function() {
-    //     var url = 'http://foo.bar.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
-
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
-
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
-
-    //     var layer = new ImageryLayer(provider);
-
-    //     var tries = 0;
-    //     provider.errorEvent.addEventListener(function(error) {
-    //         expect(error.timesRetried).toEqual(tries);
-    //         ++tries;
-    //         if (tries < 3) {
-    //             error.retry = true;
-    //         }
-    //         setTimeout(function() {
-    //             RequestScheduler.update();
-    //         }, 1);
-    //     });
-
-    //     Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-    //         if (/^blob:/.test(url)) {
-    //             // load blob url normally
-    //             Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
-    //         } else if (tries === 2) {
-    //             // Succeed after 2 tries
-    //             Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-    //         } else {
-    //             // fail
-    //             setTimeout(function() {
-    //                 deferred.reject();
-    //             }, 1);
-    //         }
-    //     };
-
-    //     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-    //         if (tries === 2) {
-    //             // Succeed after 2 tries
-    //             Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
-    //         } else {
-    //             // fail
-    //             setTimeout(function() {
-    //                 deferred.reject();
-    //             }, 1);
-    //         }
-    //     };
-
-    //     return pollToPromise(function() {
-    //         return provider.ready;
-    //     }).then(function() {
-    //         var imagery = new Imagery(layer, 0, 0, 0);
-    //         imagery.addReference();
-    //         layer._requestImagery(imagery);
-    //         RequestScheduler.update();
-
-    //         return pollToPromise(function() {
-    //             return imagery.state === ImageryState.RECEIVED;
-    //         }).then(function() {
-    //             expect(imagery.image).toBeInstanceOf(Image);
-    //             expect(tries).toEqual(2);
-    //             imagery.releaseReference();
-    //         });
-    //     });
-    // });
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBeInstanceOf(Image);
+                expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
+        });
+    });
 });
