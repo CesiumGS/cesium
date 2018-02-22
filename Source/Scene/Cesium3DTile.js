@@ -250,14 +250,16 @@ define([
         this.hasTilesetContent = false;
 
         /**
-         * The corresponding node in the cache replacement list.
+         * The corresponding node in the cache.
+         *
+         * See {@link Cesium3DTilesetCache}
          *
          * @type {DoublyLinkedListNode}
          * @readonly
          *
          * @private
          */
-        this.replacementNode = undefined;
+        this.cacheNode = undefined;
 
         var expire = header.expire;
         var expireDuration;
@@ -720,8 +722,6 @@ define([
         this._contentState = Cesium3DTileContentState.UNLOADED;
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
-
-        this.replacementNode = undefined;
 
         this.lastStyleTime = 0;
 
