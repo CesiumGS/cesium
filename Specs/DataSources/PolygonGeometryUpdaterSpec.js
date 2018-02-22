@@ -703,36 +703,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicPolygon();
-        entity.polygon.height = new SampledProperty(Number);
-        entity.polygon.height.addSample(time, 4);
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined, new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if groundPrimitives undefined', function() {
-        var entity = createBasicPolygon();
-        entity.polygon.height = new SampledProperty(Number);
-        entity.polygon.height.addSample(time, 4);
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection(), undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicPolygon();
         entity.polygon.height = new SampledProperty(Number);
@@ -741,19 +711,6 @@ defineSuite([
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new PolygonGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicPolygon();
-        expect(function() {
-            return new PolygonGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

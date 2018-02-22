@@ -387,7 +387,7 @@ defineSuite([
 
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
 
@@ -483,46 +483,16 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicPolylineVolume();
-        var updater = new PolylineVolumeGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicPolylineVolume();
-        entity.polylineVolume.outlineWidth = createDynamicProperty(1);
-        var updater = new PolylineVolumeGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicPolylineVolume();
         entity.polylineVolume.outlineWidth = createDynamicProperty(1);
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new PolylineVolumeGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicPolylineVolume();
-        expect(function() {
-            return new PolylineVolumeGeometryUpdater(entity, undefined);
-        }).toThrowDeveloperError();
-    });
 
     var entity = createBasicPolylineVolume();
     entity.polylineVolume.shape = createDynamicProperty(shape);
