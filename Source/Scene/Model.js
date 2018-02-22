@@ -4087,9 +4087,8 @@ define([
      */
     Model._dracoDecoder = undefined;
 
-
     function parseDraco(model, context) {
-        if (!defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
+        if (!defined(model.extensionsRequired['KHR_draco_mesh_compression']) || !defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
             return;
         }
 
@@ -4157,7 +4156,7 @@ define([
                 for (var attributeName in compressedAttributes) {
                     if (compressedAttributes.hasOwnProperty(attributeName)) {
                         var compressedAttribute = compressedAttributes[attributeName];
-                        var attribute = dracoDecoder.GetAttribute(dracoGeometry, compressedAttribute);
+                        var attribute = dracoDecoder.GetAttributeByUniqueId(dracoGeometry, compressedAttribute);
                         var numComponents = attribute.num_components();
 
                         if (attribute.data_type() === 4) {
