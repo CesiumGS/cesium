@@ -3093,7 +3093,7 @@ define([
 
         this._frustumChanged = this._camera !== this._cameraClone.frustum;
         if (this._frustumChanged && this._logDepthBuffer && !(this._camera.frustum instanceof OrthographicFrustum || this._camera.frustum instanceof OrthographicOffCenterFrustum)) {
-            this._camera.frustum.near = 0.1;
+            this._camera.frustum.near = 1.0;
             this._camera.frustum.far = 10000000000.0;
         }
 

@@ -17,6 +17,6 @@ void main(void)
 #else
     gl_FragColor = v_color;
 #endif
-    //czm_writeDepthClampedToFarPlane();
+    czm_writeDepthClampedToFarPlane();
     czm_logDepth(1.0 / v_depth);
 }
