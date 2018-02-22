@@ -224,7 +224,6 @@ define([
         this._material = {};
     }
 
-
     if (defined(Object.create)) {
         DynamicEllipsoidGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
         DynamicEllipsoidGeometryUpdater.prototype.constructor = DynamicEllipsoidGeometryUpdater;

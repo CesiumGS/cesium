@@ -49,7 +49,7 @@ define([
         this._geometryUpdater = geometryUpdater;
         this._options = geometryUpdater._options;
         this._entity = geometryUpdater._entity;
-        this._material = {};
+        this._material = undefined;
     }
 
     DynamicGeometryUpdater.prototype._isHidden = function(entity, geometry, time) {
@@ -116,6 +116,7 @@ define([
                     });
                 } else {
                     var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
+                    this._material = material;
                     appearance = new MaterialAppearance({
                         material : material,
                         translucent : material.isTranslucent(),
