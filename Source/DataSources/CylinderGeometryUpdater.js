@@ -1,4 +1,5 @@
 define([
+        '../Core/Cartesian3',
         '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -15,11 +16,12 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
     ], function(
+        Cartesian3,
         Check,
         Color,
         ColorGeometryInstanceAttribute,
@@ -36,11 +38,13 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
     'use strict';
+
+    var positionScratch = new Cartesian3();
 
     function CylinderGeometryOptions(entity) {
         this.id = entity;
@@ -193,122 +197,34 @@ define([
         options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    CylinderGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    CylinderGeometryUpdater.DynamicGeometryUpdater = DynamicCylinderGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives) {
-        this._primitives = primitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._options = geometryUpdater._options;
-        this._material = {};
-        this._entity = geometryUpdater._entity;
+    function DynamicCylinderGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
+    if (defined(Object.create)) {
+        DynamicCylinderGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicCylinderGeometryUpdater.prototype.constructor = DynamicCylinderGeometryUpdater;
+    }
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
-        var geometryUpdater = this._geometryUpdater;
-        var entity = this._entity;
-        var cylinder = entity.cylinder;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(cylinder.show, time, true)) {
-            return;
-        }
-
+    DynamicCylinderGeometryUpdater.prototype._isHidden = function(entity, cylinder, time) {
         var options = this._options;
-        var modelMatrix = entity.computeModelMatrix(time);
-        var length = Property.getValueOrUndefined(cylinder.length, time);
-        var topRadius = Property.getValueOrUndefined(cylinder.topRadius, time);
-        var bottomRadius = Property.getValueOrUndefined(cylinder.bottomRadius, time);
-        if (!defined(modelMatrix) || !defined(length) || !defined(topRadius) || !defined(bottomRadius)) {
-            return;
-        }
+        var position = Property.getValueOrUndefined(entity.position, time, positionScratch);
+        return !defined(position) || !defined(options.length) || !defined(options.topRadius) || //
+               !defined(options.bottomRadius) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, cylinder, time);
+    };
 
-        options.length = length;
-        options.topRadius = topRadius;
-        options.bottomRadius = bottomRadius;
+    DynamicCylinderGeometryUpdater.prototype._setOptions = function(entity, cylinder, time) {
+        var options = this._options;
+        options.length = Property.getValueOrUndefined(cylinder.length, time);
+        options.topRadius = Property.getValueOrUndefined(cylinder.topRadius, time);
+        options.bottomRadius = Property.getValueOrUndefined(cylinder.bottomRadius, time);
         options.slices = Property.getValueOrUndefined(cylinder.slices, time);
         options.numberOfVerticalLines = Property.getValueOrUndefined(cylinder.numberOfVerticalLines, time);
-
-        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-
-        if (Property.getValueOrDefault(cylinder.fill, time, true)) {
-            var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
-            var appearance;
-            if (isColorAppearance) {
-                appearance = new PerInstanceColorAppearance({
-                    closed: true
-                });
-            } else {
-                var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-                this._material = material;
-
-                appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : true
-                });
-            }
-
-            options.vertexFormat = appearance.vertexFormat;
-
-            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
-
-            if (isColorAppearance) {
-                appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
-            }
-
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : fillInstance,
-                appearance : appearance,
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-
-        if (Property.getValueOrDefault(cylinder.outline, time, false)) {
-            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
-            var outlineWidth = Property.getValueOrDefault(cylinder.outlineWidth, time, 1.0);
-
-            this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
-                }),
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-    };
-
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
     };
 
     return CylinderGeometryUpdater;
