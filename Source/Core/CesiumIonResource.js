@@ -1,37 +1,17 @@
 define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/loadJson',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../ThirdParty/when',
-        './ArcGisMapServerImageryProvider',
-        './BingMapsImageryProvider',
-        './createTileMapServiceImageryProvider',
-        './GoogleEarthEnterpriseMapsProvider',
-        './MapboxImageryProvider',
-        './SingleTileImageryProvider',
-        './UrlTemplateImageryProvider',
-        './WebMapServiceImageryProvider',
-        './WebMapTileServiceImageryProvider'
+        './Credit',
+        './defaultValue',
+        './defined',
+        './loadJson',
+        './Resource',
+        '../ThirdParty/when'
     ], function(
-        Check,
+        Credit,
         defaultValue,
         defined,
         loadJson,
         Resource,
-        RuntimeError,
-        when,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        createTileMapServiceImageryProvider,
-        GoogleEarthEnterpriseMapsProvider,
-        MapboxImageryProvider,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        WebMapTileServiceImageryProvider) {
+        when) {
 'use strict';
 
     /**
@@ -43,6 +23,16 @@ define([
      */
     function CesiumIonResource(options, endpoint, endpointResource) {
         Resource.call(this, options);
+
+        // Array of credits pertaining to this asset.
+        this.credits = endpoint.attributions.map(function(attribution) {
+            return new Credit({
+                text: attribution.text,
+                link: attribution.url,
+                imageUrl: attribution.image,
+                showOnScreen: defined(attribution.collapsible) && !attribution.collapsible
+            });
+        });
 
         // The asset endpoint data returned from ion.
         this.ionEndpoint = endpoint;
