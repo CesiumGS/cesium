@@ -1,6 +1,7 @@
 define([
         '../Core/BoxGeometry',
         '../Core/BoxOutlineGeometry',
+        '../Core/Cartesian3',
         '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -15,13 +16,14 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
     ], function(
         BoxGeometry,
         BoxOutlineGeometry,
+        Cartesian3,
         Check,
         Color,
         ColorGeometryInstanceAttribute,
@@ -36,12 +38,13 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
     'use strict';
 
+    var positionScratch = new Cartesian3();
 
     function BoxGeometryOptions(entity) {
         this.id = entity;
@@ -177,113 +180,28 @@ define([
         options.dimensions = box.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
     };
 
-    BoxGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    BoxGeometryUpdater.DynamicGeometryUpdater = DynamicBoxGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives) {
-        this._primitives = primitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._entity = geometryUpdater._entity;
-        this._options = geometryUpdater._options;
-        this._material = {};
+    function DynamicBoxGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
+    if (defined(Object.create)) {
+        DynamicBoxGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicBoxGeometryUpdater.prototype.constructor = DynamicBoxGeometryUpdater;
+    }
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
-        var geometryUpdater = this._geometryUpdater;
-        var entity = this._entity;
-        var box = entity.box;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(box.show, time, true)) {
-            return;
-        }
-
-        var options = this._options;
-        var modelMatrix = entity.computeModelMatrix(time);
-        var dimensions = Property.getValueOrUndefined(box.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(dimensions)) {
-            return;
-        }
-
-        options.dimensions = dimensions;
-        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-
-        if (Property.getValueOrDefault(box.fill, time, true)) {
-            var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
-            var appearance;
-            if (isColorAppearance) {
-                appearance = new PerInstanceColorAppearance({
-                    closed: true
-                });
-            } else {
-                var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-                appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : true
-                });
-            }
-
-            options.vertexFormat = appearance.vertexFormat;
-
-            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
-
-            if (isColorAppearance) {
-                appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
-            }
-
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : fillInstance,
-                appearance : appearance,
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-
-        if (Property.getValueOrDefault(box.outline, time, false)) {
-            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
-            var outlineWidth = Property.getValueOrDefault(box.outlineWidth, time, 1.0);
-
-            this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
-                }),
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
+    DynamicBoxGeometryUpdater.prototype._isHidden = function(entity, box, time) {
+        var position = Property.getValueOrUndefined(entity.position, time, positionScratch);
+        var dimensions = this._options.dimensions;
+        return !defined(position) || !defined(dimensions) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, box, time);
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
+    DynamicBoxGeometryUpdater.prototype._setOptions = function(entity, box, time) {
+        this._options.dimensions = Property.getValueOrUndefined(box.dimensions, time, this._options.dimensions);
     };
 
     return BoxGeometryUpdater;
