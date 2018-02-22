@@ -208,22 +208,22 @@ define([
 
                 if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
                     var colorProperty = updater.fillMaterialProperty.color;
-                    colorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastColor, colorScratch)) {
-                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
-                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                    var resultColor = colorProperty.getValue(time, colorScratch);
+                    if (!Color.equals(attributes._lastColor, resultColor)) {
+                        attributes._lastColor = Color.clone(resultColor, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(resultColor, attributes.color);
                         if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
                             this.itemsToRemove[removedCount++] = updater;
                         }
                     }
                 }
 
-                if (defined(this.depthFailAppearanceType) && this.depthFailAppearanceType instanceof ColorMaterialProperty && (!updater.depthFailMaterialProperty.isConstant || waitingOnCreate)) {
+                if (defined(this.depthFailAppearanceType) && updater.depthFailMaterialProperty instanceof ColorMaterialProperty && (!updater.depthFailMaterialProperty.isConstant || waitingOnCreate)) {
                     var depthFailColorProperty = updater.depthFailMaterialProperty.color;
-                    depthFailColorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastDepthFailColor, colorScratch)) {
-                        attributes._lastDepthFailColor = Color.clone(colorScratch, attributes._lastDepthFailColor);
-                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.depthFailColor);
+                    var depthColor = depthFailColorProperty.getValue(time, colorScratch);
+                    if (!Color.equals(attributes._lastDepthFailColor, depthColor)) {
+                        attributes._lastDepthFailColor = Color.clone(depthColor, attributes._lastDepthFailColor);
+                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(depthColor, attributes.depthFailColor);
                     }
                 }
 
