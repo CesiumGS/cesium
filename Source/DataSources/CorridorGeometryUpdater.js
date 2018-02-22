@@ -44,7 +44,6 @@ define([
         Property) {
     'use strict';
 
-    var scratchColor = new Color();
 
     function CorridorGeometryOptions(entity) {
         this.id = entity;
@@ -218,7 +217,8 @@ define([
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
-        this._options = new CorridorGeometryOptions(geometryUpdater._entity);
+        this._options = geometryUpdater._options;
+        this._material = {};
         this._entity = geometryUpdater._entity;
     }
 
@@ -248,7 +248,7 @@ define([
         }
 
         var options = this._options;
-        var positions = Property.getValueOrUndefined(corridor.positions, time, options.positions);
+        var positions = Property.getValueOrUndefined(corridor.positions, time);
         var width = Property.getValueOrUndefined(corridor.width, time);
         if (!defined(positions) || !defined(width)) {
             return;
@@ -262,48 +262,43 @@ define([
         options.cornerType = Property.getValueOrUndefined(corridor.cornerType, time);
 
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-        var distanceDisplayCondition = this._geometryUpdater.distanceDisplayConditionProperty.getValue(time);
-        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
 
         if (!defined(corridor.fill) || corridor.fill.getValue(time)) {
-            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
-            var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
-            this._material = material;
-
             if (onTerrain) {
-                var currentColor = Color.WHITE;
-                if (defined(fillMaterialProperty.color)) {
-                    currentColor = fillMaterialProperty.color.getValue(time);
-                }
-
+                options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
                 this._primitive = groundPrimitives.add(new GroundPrimitive({
-                    geometryInstances : new GeometryInstance({
-                        id : entity,
-                        geometry : new CorridorGeometry(options),
-                        attributes: {
-                            color: ColorGeometryInstanceAttribute.fromColor(currentColor),
-                            distanceDisplayCondition : distanceDisplayConditionAttribute
-                        }
-                    }),
+                    geometryInstances : this._geometryUpdater.createFillGeometryInstance(time),
                     asynchronous : false,
                     shadows : shadows
                 }));
             } else {
-                var appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : defined(options.extrudedHeight)
-                });
+                var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
+                var isColorAppearance = fillMaterialProperty instanceof ColorMaterialProperty;
+                var appearance;
+                var closed = defined(options.extrudedHeight);
+                if (isColorAppearance) {
+                    appearance = new PerInstanceColorAppearance({
+                        closed: closed
+                    });
+                } else {
+                    var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
+                    appearance = new MaterialAppearance({
+                        material : material,
+                        translucent : material.isTranslucent(),
+                        closed : closed
+                    });
+                }
+
                 options.vertexFormat = appearance.vertexFormat;
 
+                var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
+
+                if (isColorAppearance) {
+                    appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
+                }
+
                 this._primitive = primitives.add(new Primitive({
-                    geometryInstances : new GeometryInstance({
-                        id : entity,
-                        geometry : new CorridorGeometry(options),
-                        attributes : {
-                            distanceDisplayCondition : distanceDisplayConditionAttribute
-                        }
-                    }),
+                    geometryInstances : fillInstance,
                     appearance : appearance,
                     asynchronous : false,
                     shadows : shadows
@@ -312,24 +307,14 @@ define([
         }
 
         if (!onTerrain && defined(corridor.outline) && corridor.outline.getValue(time)) {
-            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-
-            var outlineColor = Property.getValueOrClonedDefault(corridor.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
             var outlineWidth = Property.getValueOrDefault(corridor.outlineWidth, time, 1.0);
-            var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new CorridorOutlineGeometry(options),
-                    attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                        distanceDisplayCondition : distanceDisplayConditionAttribute
-                    }
-                }),
+                geometryInstances : outlineInstance,
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : translucent,
+                    translucent : outlineInstance.attributes.color.value[3] !== 255,
                     renderState : {
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }

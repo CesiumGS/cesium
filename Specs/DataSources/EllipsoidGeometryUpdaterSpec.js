@@ -546,27 +546,11 @@ defineSuite([
         expect(listener.calls.count()).toEqual(5);
     });
 
-    it('createFillGeometryInstance throws if object is not filled', function() {
-        var entity = new Entity();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createFillGeometryInstance(time);
-        }).toThrowDeveloperError();
-    });
-
     it('createFillGeometryInstance throws if no time provided', function() {
         var entity = createBasicEllipsoid();
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         expect(function() {
             return updater.createFillGeometryInstance(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('createOutlineGeometryInstance throws if object is not outlined', function() {
-        var entity = new Entity();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createOutlineGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
