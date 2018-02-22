@@ -15,7 +15,7 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
@@ -36,7 +36,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
@@ -187,117 +187,31 @@ define([
         options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    PolylineVolumeGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    PolylineVolumeGeometryUpdater.DynamicGeometryUpdater = DynamicPolylineVolumeGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives) {
-        this._primitives = primitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._options = geometryUpdater._options;
-        this._entity = geometryUpdater._entity;
-        this._material = {};
+    function DynamicPolylineVolumeGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
+    if (defined(Object.create)) {
+        DynamicPolylineVolumeGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicPolylineVolumeGeometryUpdater.prototype.constructor = DynamicPolylineVolumeGeometryUpdater;
+    }
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
-        var geometryUpdater = this._geometryUpdater;
-        var entity = this._entity;
-        var polylineVolume = entity.polylineVolume;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polylineVolume.show, time, true)) {
-            return;
-        }
-
+    DynamicPolylineVolumeGeometryUpdater.prototype._isHidden = function(entity, polylineVolume, time) {
         var options = this._options;
-        var positions = Property.getValueOrUndefined(polylineVolume.positions, time, options.polylinePositions);
-        var shape = Property.getValueOrUndefined(polylineVolume.shape, time);
-        if (!defined(positions) || !defined(shape)) {
-            return;
-        }
+        return !defined(options.polylinePositions) || !defined(options.shapePositions) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, polylineVolume, time);
+    };
 
-        options.polylinePositions = positions;
-        options.shapePositions = shape;
+    DynamicPolylineVolumeGeometryUpdater.prototype._setOptions = function(entity, polylineVolume, time) {
+        var options = this._options;
+        options.polylinePositions = Property.getValueOrUndefined(polylineVolume.positions, time, options.polylinePositions);
+        options.shapePositions = Property.getValueOrUndefined(polylineVolume.shape, time);
         options.granularity = Property.getValueOrUndefined(polylineVolume.granularity, time);
         options.cornerType = Property.getValueOrUndefined(polylineVolume.cornerType, time);
-
-        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-
-        if (!defined(polylineVolume.fill) || polylineVolume.fill.getValue(time)) {
-            var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
-            var appearance;
-            if (isColorAppearance) {
-                appearance = new PerInstanceColorAppearance({
-                    closed: true
-                });
-            } else {
-                var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-                appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : true
-                });
-            }
-
-            options.vertexFormat = appearance.vertexFormat;
-
-            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
-
-            if (isColorAppearance) {
-                appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
-            }
-
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : fillInstance,
-                appearance : appearance,
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-
-        if (defined(polylineVolume.outline) && polylineVolume.outline.getValue(time)) {
-            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
-            var outlineWidth = Property.getValueOrDefault(polylineVolume.outlineWidth, time, 1.0);
-
-            this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
-                }),
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-    };
-
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
     };
 
     return PolylineVolumeGeometryUpdater;

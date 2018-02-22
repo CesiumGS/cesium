@@ -19,7 +19,7 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
@@ -44,12 +44,13 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
     'use strict';
 
+    var positionScratch = new Cartesian3();
 
     function PlaneGeometryOptions(entity) {
         this.id = entity;
@@ -221,102 +222,34 @@ define([
         options.dimensions = plane.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
     };
 
-    PlaneGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    PlaneGeometryUpdater.DynamicGeometryUpdater = DynamicPlaneGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives) {
-        this._primitives = primitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._options = geometryUpdater._options;
-        this._entity = geometryUpdater._entity;
-        this._material = {};
+    function DynamicPlaneGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
+    if (defined(Object.create)) {
+        DynamicPlaneGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicPlaneGeometryUpdater.prototype.constructor = DynamicPlaneGeometryUpdater;
+    }
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
-        var geometryUpdater = this._geometryUpdater;
-        var entity = this._entity;
-        var planeGraphics = entity.plane;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(planeGraphics.show, time, true)) {
-            return;
-        }
-
+    DynamicPlaneGeometryUpdater.prototype._isHidden = function(entity, plane, time) {
         var options = this._options;
-        var modelMatrix = entity.computeModelMatrix(time);
-        var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
-        var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
-            return;
-        }
+        var position = Property.getValueOrUndefined(entity.position, time, positionScratch);
+        return !defined(position) || !defined(options.plane) || !defined(options.dimensions) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, plane, time);
+    };
 
-        options.plane = plane;
-        options.dimensions = dimensions;
+    DynamicPlaneGeometryUpdater.prototype._getIsClosed = function(entity, plane, time) {
+        return false;
+    };
 
-        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-
-        if (Property.getValueOrDefault(planeGraphics.fill, time, true)) {
-            var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
-            var appearance;
-            if (isColorAppearance) {
-                appearance = new PerInstanceColorAppearance({
-                    closed: true
-                });
-            } else {
-                var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-
-                appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : true
-                });
-            }
-
-            options.vertexFormat = appearance.vertexFormat;
-
-            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
-
-            if (isColorAppearance) {
-                appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
-            }
-
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : fillInstance,
-                appearance : appearance,
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-
-        if (Property.getValueOrDefault(planeGraphics.outline, time, false)) {
-            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
-            var outlineWidth = Property.getValueOrDefault(planeGraphics.outlineWidth, time, 1.0);
-
-            this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances :outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
-                }),
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
+    DynamicPlaneGeometryUpdater.prototype._setOptions = function(entity, plane, time) {
+        var options = this._options;
+        options.plane = Property.getValueOrDefault(plane.plane, time, options.plane);
+        options.dimensions = Property.getValueOrUndefined(plane.dimensions, time, options.dimensions);
     };
 
     var scratchTranslation = new Cartesian3();
@@ -362,21 +295,6 @@ define([
         var axis = Cartesian3.cross(up, direction, scratchAxis);
         return Quaternion.fromAxisAngle(axis, angle, scratchQuaternion);
     }
-
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
-    };
 
     return PlaneGeometryUpdater;
 });

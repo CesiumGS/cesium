@@ -16,7 +16,7 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
@@ -38,7 +38,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
@@ -213,54 +213,32 @@ define([
         this._isClosed = defined(extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
     };
 
-    RectangleGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    RectangleGeometryUpdater.DynamicGeometryUpdater = DynamicRectangleGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
-        this._primitives = primitives;
-        this._groundPrimitives = groundPrimitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._options = geometryUpdater._options;
-        this._entity = geometryUpdater._entity;
-        this._material = {};
+    function DynamicRectangleGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
+    if (defined(Object.create)) {
+        DynamicRectangleGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicRectangleGeometryUpdater.prototype.constructor = DynamicRectangleGeometryUpdater;
+    }
 
-        var geometryUpdater = this._geometryUpdater;
-        var onTerrain = geometryUpdater._onTerrain;
+    DynamicRectangleGeometryUpdater.prototype._isHidden = function(entity, rectangle, time) {
+        return  !defined(this._options.rectangle) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, rectangle, time);
+    };
 
-        var primitives = this._primitives;
-        var groundPrimitives = this._groundPrimitives;
-        if (onTerrain) {
-            groundPrimitives.removeAndDestroy(this._primitive);
-        } else {
-            primitives.removeAndDestroy(this._primitive);
-            primitives.removeAndDestroy(this._outlinePrimitive);
-            this._outlinePrimitive = undefined;
-        }
-        this._primitive = undefined;
-
-        var entity = this._entity;
-        var rectangle = entity.rectangle;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(rectangle.show, time, true)) {
-            return;
-        }
-
+    DynamicRectangleGeometryUpdater.prototype._getIsClosed = function(entity, rectangle, time) {
         var options = this._options;
-        var coordinates = Property.getValueOrUndefined(rectangle.coordinates, time, options.rectangle);
-        if (!defined(coordinates)) {
-            return;
-        }
+        return defined(options.extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
+    };
 
-        options.rectangle = coordinates;
+    DynamicRectangleGeometryUpdater.prototype._setOptions = function(entity, rectangle, time) {
+        var options = this._options;
+        options.rectangle = Property.getValueOrUndefined(rectangle.coordinates, time, options.rectangle);
         options.height = Property.getValueOrUndefined(rectangle.height, time);
         options.extrudedHeight = Property.getValueOrUndefined(rectangle.extrudedHeight, time);
         options.granularity = Property.getValueOrUndefined(rectangle.granularity, time);
@@ -268,88 +246,6 @@ define([
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
         options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
         options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
-
-        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-
-        if (Property.getValueOrDefault(rectangle.fill, time, true)) {
-            if (onTerrain) {
-                options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-                this._primitive = groundPrimitives.add(new GroundPrimitive({
-                    geometryInstances : this._geometryUpdater.createFillGeometryInstance(time),
-                    asynchronous : false,
-                    shadows : shadows
-                }));
-            } else {
-                var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
-                var isClosed = defined(options.extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
-                var appearance;
-                if (isColorAppearance) {
-                    appearance = new PerInstanceColorAppearance({
-                        closed: isClosed
-                    });
-                } else {
-                    var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-                    appearance = new MaterialAppearance({
-                        material : material,
-                        translucent : material.isTranslucent(),
-                        closed : defined(options.extrudedHeight)
-                    });
-                }
-
-                options.vertexFormat = appearance.vertexFormat;
-
-                var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
-
-                if (isColorAppearance) {
-                    appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
-                }
-
-                this._primitive = primitives.add(new Primitive({
-                    geometryInstances : fillInstance,
-                    appearance : appearance,
-                    asynchronous : false,
-                    shadows : shadows
-                }));
-            }
-        }
-
-        if (!onTerrain && Property.getValueOrDefault(rectangle.outline, time, false)) {
-            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
-            var outlineWidth = Property.getValueOrDefault(rectangle.outlineWidth, time, 1.0);
-
-            this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
-                }),
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-    };
-
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        var groundPrimitives = this._groundPrimitives;
-        if (this._geometryUpdater._onTerrain) {
-            groundPrimitives.removeAndDestroy(this._primitive);
-        } else {
-            primitives.removeAndDestroy(this._primitive);
-        }
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
     };
 
     return RectangleGeometryUpdater;

@@ -16,7 +16,7 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
@@ -38,7 +38,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
@@ -219,149 +219,40 @@ define([
         options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    EllipseGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    EllipseGeometryUpdater.DynamicGeometryUpdater = DynamicEllipseGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
-        this._primitives = primitives;
-        this._groundPrimitives = groundPrimitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._options = geometryUpdater._options;
-        this._entity = geometryUpdater._entity;
-        this._material = {};
+    function DynamicEllipseGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
+    if (defined(Object.create)) {
+        DynamicEllipseGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicEllipseGeometryUpdater.prototype.constructor = DynamicEllipseGeometryUpdater;
+    }
 
-        var geometryUpdater = this._geometryUpdater;
-        var onTerrain = geometryUpdater._onTerrain;
-
-        var primitives = this._primitives;
-        var groundPrimitives = this._groundPrimitives;
-        if (onTerrain) {
-            groundPrimitives.removeAndDestroy(this._primitive);
-        } else {
-            primitives.removeAndDestroy(this._primitive);
-            primitives.removeAndDestroy(this._outlinePrimitive);
-            this._outlinePrimitive = undefined;
-        }
-        this._primitive = undefined;
-
-
-        var entity = this._entity;
-        var ellipse = entity.ellipse;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(ellipse.show, time, true)) {
-            return;
-        }
-
+    DynamicEllipseGeometryUpdater.prototype._isHidden = function(entity, ellipse, time) {
         var options = this._options;
-        var center = Property.getValueOrUndefined(entity.position, time, options.center);
-        var semiMajorAxis = Property.getValueOrUndefined(ellipse.semiMajorAxis, time);
-        var semiMinorAxis = Property.getValueOrUndefined(ellipse.semiMinorAxis, time);
-        if (!defined(center) || !defined(semiMajorAxis) || !defined(semiMinorAxis)) {
-            return;
-        }
+        return !defined(options.center) || !defined(options.semiMajorAxis) || !defined(options.semiMinorAxis) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, ellipse, time);
+    };
 
-        options.center = center;
-        options.semiMajorAxis = semiMajorAxis;
-        options.semiMinorAxis = semiMinorAxis;
+    DynamicEllipseGeometryUpdater.prototype._getIsClosed = function(entity, ellipse, time) {
+        return defined(this._options.extrudedHeight);
+    };
+
+    DynamicEllipseGeometryUpdater.prototype._setOptions = function(entity, ellipse, time) {
+        var options = this._options;
+        options.center = Property.getValueOrUndefined(entity.position, time, options.center);
+        options.semiMajorAxis = Property.getValueOrUndefined(ellipse.semiMajorAxis, time);
+        options.semiMinorAxis = Property.getValueOrUndefined(ellipse.semiMinorAxis, time);
         options.rotation = Property.getValueOrUndefined(ellipse.rotation, time);
         options.height = Property.getValueOrUndefined(ellipse.height, time);
         options.extrudedHeight = Property.getValueOrUndefined(ellipse.extrudedHeight, time);
         options.granularity = Property.getValueOrUndefined(ellipse.granularity, time);
         options.stRotation = Property.getValueOrUndefined(ellipse.stRotation, time);
         options.numberOfVerticalLines = Property.getValueOrUndefined(ellipse.numberOfVerticalLines, time);
-
-        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-
-        if (Property.getValueOrDefault(ellipse.fill, time, true)) {
-            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
-
-            if (onTerrain) {
-                options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-                this._primitive = groundPrimitives.add(new GroundPrimitive({
-                    geometryInstances : this._geometryUpdater.createFillGeometryInstance(time),
-                    asynchronous : false,
-                    shadows : shadows
-                }));
-            } else {
-                var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
-                var isClosed = defined(ellipse.extrudedHeight) || onTerrain;
-                var appearance;
-                if (isColorAppearance) {
-                    appearance = new PerInstanceColorAppearance({
-                        closed: isClosed
-                    });
-                } else {
-                    var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
-                    appearance = new MaterialAppearance({
-                        material : material,
-                        translucent : material.isTranslucent(),
-                        closed : isClosed
-                    });
-                }
-
-                options.vertexFormat = appearance.vertexFormat;
-
-                var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
-
-                if (isColorAppearance) {
-                    appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
-                }
-
-                this._primitive = primitives.add(new Primitive({
-                    geometryInstances : fillInstance,
-                    appearance : appearance,
-                    asynchronous : false,
-                    shadows : shadows
-                }));
-            }
-        }
-
-        if (!onTerrain && Property.getValueOrDefault(ellipse.outline, time, false)) {
-            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
-            var outlineWidth = Property.getValueOrDefault(ellipse.outlineWidth, time, 1.0);
-
-            this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
-                }),
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-    };
-
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        var groundPrimitives = this._groundPrimitives;
-        if (this._geometryUpdater._onTerrain) {
-            groundPrimitives.removeAndDestroy(this._primitive);
-        } else {
-            primitives.removeAndDestroy(this._primitive);
-        }
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
     };
 
     return EllipseGeometryUpdater;

@@ -20,7 +20,7 @@ define([
         '../Scene/Primitive',
         '../Scene/SceneMode',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
@@ -46,7 +46,7 @@ define([
         Primitive,
         SceneMode,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
@@ -204,21 +204,16 @@ define([
         options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    EllipsoidGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    EllipsoidGeometryUpdater.DynamicGeometryUpdater = DynamicEllipsoidGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives) {
-        this._entity = geometryUpdater._entity;
+    function DynamicEllipsoidGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
+
         this._scene = geometryUpdater._scene;
-        this._primitives = primitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._options = geometryUpdater._options;
         this._modelMatrix = new Matrix4();
-        this._material = undefined;
         this._attributes = undefined;
         this._outlineAttributes = undefined;
         this._lastSceneMode = undefined;
@@ -229,7 +224,13 @@ define([
         this._material = {};
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
+
+    if (defined(Object.create)) {
+        DynamicEllipsoidGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicEllipsoidGeometryUpdater.prototype.constructor = DynamicEllipsoidGeometryUpdater;
+    }
+
+    DynamicEllipsoidGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('time', time);
         //>>includeEnd('debug');
@@ -392,21 +393,6 @@ define([
             this._primitive.modelMatrix = modelMatrix;
             this._outlinePrimitive.modelMatrix = modelMatrix;
         }
-    };
-
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
     };
 
     return EllipsoidGeometryUpdater;

@@ -15,7 +15,7 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './ColorMaterialProperty',
-        './dynamicGeometryGetBoundingSphere',
+        './DynamicGeometryUpdater',
         './GeometryUpdater',
         './MaterialProperty',
         './Property'
@@ -36,7 +36,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         ColorMaterialProperty,
-        dynamicGeometryGetBoundingSphere,
+        DynamicGeometryUpdater,
         GeometryUpdater,
         MaterialProperty,
         Property) {
@@ -191,116 +191,34 @@ define([
     };
 
 
-    WallGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
+    WallGeometryUpdater.DynamicGeometryUpdater = DynamicWallGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives) {
-        this._primitives = primitives;
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-        this._geometryUpdater = geometryUpdater;
-        this._options = geometryUpdater._options;
-        this._entity = geometryUpdater._entity;
-        this._material = {};
+    function DynamicWallGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        DynamicGeometryUpdater.call(this, geometryUpdater, primitives, groundPrimitives);
     }
 
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        //>>includeEnd('debug');
+    if (defined(Object.create)) {
+        DynamicWallGeometryUpdater.prototype = Object.create(DynamicGeometryUpdater.prototype);
+        DynamicWallGeometryUpdater.prototype.constructor = DynamicWallGeometryUpdater;
+    }
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
-        var geometryUpdater = this._geometryUpdater;
-        var entity = this._entity;
-        var wall = entity.wall;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(wall.show, time, true)) {
-            return;
-        }
-
-        var options = this._options;
-        var positions = Property.getValueOrUndefined(wall.positions, time, options.positions);
-        if (!defined(positions)) {
-            return;
-        }
-
-        options.positions = positions;
-        options.minimumHeights = Property.getValueOrUndefined(wall.minimumHeights, time, options.minimumHeights);
-        options.maximumHeights = Property.getValueOrUndefined(wall.maximumHeights, time, options.maximumHeights);
-        options.granularity = Property.getValueOrUndefined(wall.granularity, time);
-
-        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
-
-        if (Property.getValueOrDefault(wall.fill, time, true)) {
-            var isColorAppearance = geometryUpdater.fillMaterialProperty instanceof ColorMaterialProperty;
-            var appearance;
-            if (isColorAppearance) {
-                appearance = new PerInstanceColorAppearance({
-                    closed: true
-                });
-            } else {
-                var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
-                appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : defined(options.extrudedHeight)
-                });
-            }
-
-            options.vertexFormat = appearance.vertexFormat;
-
-            var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);
-
-            if (isColorAppearance) {
-                appearance.translucent = fillInstance.attributes.color.value[3] !== 255;
-            }
-
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : fillInstance,
-                appearance : appearance,
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
-
-        if (Property.getValueOrDefault(wall.outline, time, false)) {
-            var outlineInstance = this._geometryUpdater.createOutlineGeometryInstance(time);
-            var outlineWidth = Property.getValueOrDefault(wall.outlineWidth, time, 1.0);
-
-            this._outlinePrimitive = primitives.add(new Primitive({
-                geometryInstances : outlineInstance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : outlineInstance.attributes.color.value[3] !== 255,
-                    renderState : {
-                        lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
-                    }
-                }),
-                asynchronous : false,
-                shadows : shadows
-            }));
-        }
+    DynamicWallGeometryUpdater.prototype._isHidden = function(entity, wall, time) {
+        return  !defined(this._options.positions) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, wall, time);
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
-        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
-    };
-
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
+    DynamicWallGeometryUpdater.prototype._getIsClosed = function(entity, wall, time) {
         return false;
     };
 
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        destroyObject(this);
+    DynamicWallGeometryUpdater.prototype._setOptions = function(entity, wall, time) {
+        var options = this._options;
+        options.positions = Property.getValueOrUndefined(wall.positions, time, options.positions);
+        options.minimumHeights = Property.getValueOrUndefined(wall.minimumHeights, time, options.minimumHeights);
+        options.maximumHeights = Property.getValueOrUndefined(wall.maximumHeights, time, options.maximumHeights);
+        options.granularity = Property.getValueOrUndefined(wall.granularity, time);
     };
 
     return WallGeometryUpdater;
