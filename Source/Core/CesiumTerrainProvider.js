@@ -154,6 +154,7 @@ define([
         var deferred = when.defer();
         this._ready = false;
         this._readyPromise = deferred;
+        this._tileCredits = undefined;
 
         var that = this;
         var lastResource;
@@ -173,6 +174,9 @@ define([
                 metadataResource = lastResource.getDerivedResource({
                     url: 'layer.json'
                 });
+
+                // ion resources have a credits property we can use for additional attribution.
+                that._tileCredits = resource.credits;
 
                 requestMetadata();
             })
@@ -405,7 +409,8 @@ define([
             waterMask : new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1),
             width : provider._heightmapWidth,
             height : provider._heightmapWidth,
-            structure : provider._heightmapStructure
+            structure : provider._heightmapStructure,
+            credits: provider._tileCredits
         });
     }
 
@@ -550,7 +555,8 @@ define([
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
             childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
-            waterMask: waterMaskBuffer
+            waterMask: waterMaskBuffer,
+            credits: provider._tileCredits
         });
     }
 
