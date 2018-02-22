@@ -25,7 +25,9 @@ define([
     /**
      * @private
      */
-    var Cesium3DTilesetTraversal = {};
+    function Cesium3DTilesetTraversal() {
+    }
+
 
     function selectTiles(tileset, frameState, outOfCore) {
         if (tileset.debugFreezeFrame) {
@@ -40,11 +42,7 @@ define([
         tileset._selectedTilesToStyle.length = 0;
         tileset._hasMixedContent = false;
 
-        // Move sentinel node to the tail so, at the start of the frame, all tiles
-        // may be potentially replaced.  Tiles are moved to the right of the sentinel
-        // when they are selected so they will not be replaced.
-        var replacementList = tileset._replacementList;
-        replacementList.splice(replacementList.tail, tileset._replacementSentinel);
+        tileset._cache.reset();
 
         var root = tileset._root;
         root.updateTransform(tileset._modelMatrix);
@@ -625,10 +623,7 @@ define([
         if (!outOfCore) {
             return;
         }
-        var node = tile.replacementNode;
-        if (defined(node)) {
-            tileset._replacementList.splice(tileset._replacementSentinel, node);
-        }
+        tileset._cache.touch(tile);
     }
 
     function computeSSE(tile, frameState) {

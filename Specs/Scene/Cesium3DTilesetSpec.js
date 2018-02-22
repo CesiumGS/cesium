@@ -2299,14 +2299,14 @@ defineSuite([
     it('Unloads cached tiles in a tileset with external tileset.json using maximumMemoryUsage', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
             var statistics = tileset._statistics;
-            var replacementList = tileset._replacementList;
+            var cacheList = tileset._cache._list;
 
             tileset.maximumMemoryUsage = 0.025;
 
             scene.renderForSpecs();
             expect(statistics.numberOfCommands).toEqual(5);
             expect(statistics.numberOfTilesWithContentReady).toEqual(5);
-            expect(replacementList.length - 1).toEqual(5); // Only tiles with content are on the replacement list. -1 for sentinel.
+            expect(cacheList.length - 1).toEqual(5); // Only tiles with content are on the replacement list. -1 for sentinel.
 
             // Zoom out so only root tile is needed to meet SSE.  This unloads
             // all tiles except the root and one of the b3dm children
@@ -2315,7 +2315,7 @@ defineSuite([
 
             expect(statistics.numberOfCommands).toEqual(1);
             expect(statistics.numberOfTilesWithContentReady).toEqual(2);
-            expect(replacementList.length - 1).toEqual(2);
+            expect(cacheList.length - 1).toEqual(2);
 
             // Reset camera so all tiles are reloaded
             viewAllTiles();
@@ -2324,7 +2324,7 @@ defineSuite([
                 expect(statistics.numberOfCommands).toEqual(5);
                 expect(statistics.numberOfTilesWithContentReady).toEqual(5);
 
-                expect(replacementList.length - 1).toEqual(5);
+                expect(cacheList.length - 1).toEqual(5);
             });
         });
     });

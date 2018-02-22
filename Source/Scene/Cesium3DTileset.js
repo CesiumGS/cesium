@@ -29,6 +29,7 @@ define([
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileOptimizations',
+        './Cesium3DTilesetCache',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
@@ -73,6 +74,7 @@ define([
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileOptimizations,
+        Cesium3DTilesetCache,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
@@ -175,6 +177,7 @@ define([
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._gltfUpAxis = undefined;
+        this._cache = new Cesium3DTilesetCache();
         this._processingQueue = [];
         this._selectedTiles = [];
         this._requestedTiles = [];
@@ -182,14 +185,6 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
-
-        var replacementList = new DoublyLinkedList();
-
-        // [head, sentinel) -> tiles that weren't selected this frame and may be replaced
-        // (sentinel, tail] -> tiles that were selected this frame
-        this._replacementList = replacementList; // Tiles with content loaded.  For cache management.
-        this._replacementSentinel = replacementList.add();
-        this._trimTiles = false;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
 
@@ -1502,10 +1497,7 @@ define([
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
 
-                // Add to the tile cache. Previously expired tiles are already in the cache.
-                if (!defined(tile.replacementNode)) {
-                    tile.replacementNode = tileset._replacementList.add(tile);
-                }
+                tileset._cache.add(tile);
             }
         };
     }
@@ -1745,52 +1737,27 @@ define([
                 stack.push(children[i]);
             }
             if (tile !== root) {
-                unloadTileFromCache(tileset, tile);
-                tile.destroy();
+                destroyTile(tileset, tile);
                 --statistics.numberOfTilesTotal;
             }
         }
         root.children = [];
     }
 
-    function unloadTileFromCache(tileset, tile) {
-        var node = tile.replacementNode;
-        if (!defined(node)) {
-            return;
-        }
+    function unloadTile(tileset, tile) {
+        tileset.tileUnload.raiseEvent(tile);
+        tileset._statistics.decrementLoadCounts(tile.content);
+        --tileset._statistics.numberOfTilesWithContentReady;
+        tile.unloadContent();
+    }
 
-        var statistics = tileset._statistics;
-        var replacementList = tileset._replacementList;
-        var tileUnload = tileset.tileUnload;
-
-        tileUnload.raiseEvent(tile);
-        replacementList.remove(node);
-        statistics.decrementLoadCounts(tile.content);
-        --statistics.numberOfTilesWithContentReady;
+    function destroyTile(tileset, tile) {
+        tileset._cache.unloadTile(tileset, tile, unloadTile);
+        tile.destroy();
     }
 
     function unloadTiles(tileset) {
-        var trimTiles = tileset._trimTiles;
-        tileset._trimTiles = false;
-
-        var replacementList = tileset._replacementList;
-
-        var totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
-        var maximumMemoryUsageInBytes = tileset._maximumMemoryUsage * 1024 * 1024;
-
-        // Traverse the list only to the sentinel since tiles/nodes to the
-        // right of the sentinel were used this frame.
-        //
-        // The sub-list to the left of the sentinel is ordered from LRU to MRU.
-        var sentinel = tileset._replacementSentinel;
-        var node = replacementList.head;
-        while ((node !== sentinel) && ((totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
-            var tile = node.item;
-            node = node.next;
-            unloadTileFromCache(tileset, tile);
-            tile.unloadContent();
-            totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
-        }
+        tileset._cache.unloadTiles(tileset, unloadTile);
     }
 
     /**
@@ -1803,8 +1770,7 @@ define([
      * </p>
      */
     Cesium3DTileset.prototype.trimLoadedTiles = function() {
-        // Defer to next frame so WebGL delete calls happen inside the render loop
-        this._trimTiles = true;
+        this._cache.trim();
     };
 
     ///////////////////////////////////////////////////////////////////////////
