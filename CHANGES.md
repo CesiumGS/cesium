@@ -22,6 +22,7 @@ Change Log
 * Fixed bug where 3D Tiles Point Clouds would fail in Internet Explorer. [#6220](https://github.com/AnalyticalGraphicsInc/cesium/pull/6220)
 * Fixed `Material` so it can now take a `Resource` object as an image. [#6199](https://github.com/AnalyticalGraphicsInc/cesium/issues/6199)
 * Fixed issue where `CESIUM_BASE_URL` wouldn't work without a trailing `/`. [#6225](https://github.com/AnalyticalGraphicsInc/cesium/issues/6225)
+* Fixed an issue causing the Bing Maps key to be sent unnecessarily with every tile request. [#6250](https://github.com/AnalyticalGraphicsInc/cesium/pull/6250)
 * Fixed documentation issue for the `Cesium.Math` class. [#6233](https://github.com/AnalyticalGraphicsInc/cesium/issues/6233)
 
 ##### Additions :tada:
