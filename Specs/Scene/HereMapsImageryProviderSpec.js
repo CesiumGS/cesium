@@ -3,13 +3,15 @@ defineSuite([
         'Core/RequestScheduler',
         'Core/Resource',
         'Scene/ImageryProvider',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'Core/queryToObject'
     ], function(
         HereMapsImageryProvider,
         RequestScheduler,
         Resource,
         ImageryProvider,
-        Uri) {
+        Uri,
+        queryToObject) {
     'use strict';
 
     beforeEach(function() {
@@ -21,39 +23,6 @@ defineSuite([
         Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
-
-    // it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
-    //     // http://msdn.microsoft.com/en-us/library/bb259689.aspx
-    //     // Levels are off by one compared to the documentation because our levels
-    //     // start at 0 while Bing's start at 1.
-    //     expect(BingMapsImageryProvider.tileXYToQuadKey(1, 0, 0)).toEqual('1');
-    //     expect(BingMapsImageryProvider.tileXYToQuadKey(1, 2, 1)).toEqual('21');
-    //     expect(BingMapsImageryProvider.tileXYToQuadKey(3, 5, 2)).toEqual('213');
-    //     expect(BingMapsImageryProvider.tileXYToQuadKey(4, 7, 2)).toEqual('322');
-    // });
-
-    // it('quadKeyToTileXY works for examples in Bing Maps documentation', function() {
-    //     expect(BingMapsImageryProvider.quadKeyToTileXY('1')).toEqual({
-    //         x : 1,
-    //         y : 0,
-    //         level : 0
-    //     });
-    //     expect(BingMapsImageryProvider.quadKeyToTileXY('21')).toEqual({
-    //         x : 1,
-    //         y : 2,
-    //         level : 1
-    //     });
-    //     expect(BingMapsImageryProvider.quadKeyToTileXY('213')).toEqual({
-    //         x : 3,
-    //         y : 5,
-    //         level : 2
-    //     });
-    //     expect(BingMapsImageryProvider.quadKeyToTileXY('322')).toEqual({
-    //         x : 4,
-    //         y : 7,
-    //         level : 2
-    //     });
-    // });
 
     it('conforms to ImageryProvider interface', function() {
         expect(HereMapsImageryProvider).toConformToInterface(ImageryProvider);
@@ -68,86 +37,166 @@ defineSuite([
         expect(constructWithoutApiInfo).toThrowDeveloperError();
     });
 
-    // function createFakeMetadataResponse(mapStyle) {
-    //     var stylePrefix = 'a';
-    //     switch (mapStyle) {
-    //     case BingMapsStyle.AERIAL_WITH_LABELS:
-    //         stylePrefix = 'h';
-    //         break;
-    //     case BingMapsStyle.ROAD:
-    //         stylePrefix = 'r';
-    //         break;
-    //     }
+    function createFakeCopyrightResponse() {
+        var obj = {
+            "hybrid":
+                [
+                    {
+                        "minLevel": 0,
+                        "maxLevel": 20,
+                        "label": "2014 DigitalGlobe",
+                        "alt": "copyright 2014 DigitalGlobe, Inc."
+                    },
+                    {
+                        "minLevel": 10,
+                        "maxLevel": 20,
+                        "label": "Navteq",
+                        "alt": "Navteq",
+                        "boxes":
+                            [
+                                [-26.8359,  30.8723,    -25.6938,   32.1739],
+                                [-27.0738,  30.7201,    -26.2624,   31.5422],
+                                [-27.3832,  30.9615,    -26.5576,   32.0286],
+                                [-27.3403,  31.4364,    -26.7719,   32.0286],
+                                [-26.8455,  32.0275,    -26.7719,   32.1475]
+                            ]
+                    },
+                    {
+                        "minLevel": 6,
+                        "maxLevel": 20,
+                        "label": "PSMA",
+                        "alt": "Copyright. Based on data provided under license from PSMA Australia Limited. Product incorporates data which is 2014 Telstra Corporation Limited, GM Holden Limited, Intelematics Australia Pty Ltd, HERE International LLC, Sentinel Content Pty Limited and Continental Pty Ltd",
+                        "boxes":
+                            [
+                                [-13.1672,  95.8626,    -11.1672,   97.8626],
+                                [-11.5539,  104.6728,   -9.5539,    106.6728],
+                                [-32.5901,  158.0863,   -30.5901,   160.0863],
+                                [-30.0761,  167.0381,   -28.0761,   169.0381],
+                                [-32,   113,    -20,    151],
+                                [-38,   135,    -32,    151],
+                                [-20,   123,    -14,    147],
+                                [-20,   121,    -16,    123],
+                                [-14,   129,    -10,    137],
+                                [-14,   141,    -8, 145],
+                                [-36,   115,    -32,    127],
+                                [-44,   141,    -38,    149],
+                                [-34,   127,    -32,    135],
+                                [-34,   151,    -24,    155]
+                            ]
+                    }
+                ],
+            "satellite":
+                [
+                    {
+                        "minLevel": 0,
+                        "maxLevel": 20,
+                        "label": "2014 DigitalGlobe",
+                        "alt": "copyright 2014 DigitalGlobe, Inc."
+                    },
+                    {
+                        "minLevel": 10,
+                        "maxLevel": 20,
+                        "label": "Navteq",
+                        "alt": "Navteq",
+                        "boxes":
+                            [
+                                [-26.8359,  30.8723,    -25.6938,   32.1739],
+                                [-27.0738,  30.7201,    -26.2624,   31.5422],
+                                [-27.3832,  30.9615,    -26.5576,   32.0286],
+                                [-27.3403,  31.4364,    -26.7719,   32.0286],
+                                [-26.8455,  32.0275,    -26.7719,   32.1475]
+                            ]
+                    },
+                    {
+                        "minLevel": 6,
+                        "maxLevel": 20,
+                        "label": "PSMA",
+                        "alt": "Copyright. Based on data provided under license from PSMA Australia Limited. Product incorporates data which is 2014 Telstra Corporation Limited, GM Holden Limited, Intelematics Australia Pty Ltd, HERE International LLC, Sentinel Content Pty Limited and Continental Pty Ltd",
+                        "boxes":
+                            [
+                                [-13.1672,  95.8626,    -11.1672,   97.8626],
+                                [-11.5539,  104.6728,   -9.5539,    106.6728],
+                                [-32.5901,  158.0863,   -30.5901,   160.0863],
+                                [-30.0761,  167.0381,   -28.0761,   169.0381],
+                                [-32,   113,    -20,    151],
+                                [-38,   135,    -32,    151],
+                                [-20,   123,    -14,    147],
+                                [-20,   121,    -16,    123],
+                                [-14,   129,    -10,    137],
+                                [-14,   141,    -8, 145],
+                                [-36,   115,    -32,    127],
+                                [-44,   141,    -38,    149],
+                                [-34,   127,    -32,    135],
+                                [-34,   151,    -24,    155]
+                            ]
+                    }
+                ],
+            "terrain":
+                [
+                    {
+                        "minLevel": 10,
+                        "maxLevel": 20,
+                        "label": "Navteq",
+                        "alt": "Navteq",
+                        "boxes":
+                            [
+                                [-26.8359,  30.8723,    -25.6938,   32.1739],
+                                [-27.0738,  30.7201,    -26.2624,   31.5422],
+                                [-27.3832,  30.9615,    -26.5576,   32.0286],
+                                [-27.3403,  31.4364,    -26.7719,   32.0286],
+                                [-26.8455,  32.0275,    -26.7719,   32.1475]
+                            ]
+                    },
+                    {
+                        "minLevel": 6,
+                        "maxLevel": 20,
+                        "label": "PSMA",
+                        "alt": "Copyright. Based on data provided under license from PSMA Australia Limited. Product incorporates data which is 2014 Telstra Corporation Limited, GM Holden Limited, Intelematics Australia Pty Ltd, HERE International LLC, Sentinel Content Pty Limited and Continental Pty Ltd",
+                        "boxes":
+                            [
+                                [-13.1672,  95.8626,    -11.1672,   97.8626],
+                                [-11.5539,  104.6728,   -9.5539,    106.6728],
+                                [-32.5901,  158.0863,   -30.5901,   160.0863],
+                                [-30.0761,  167.0381,   -28.0761,   169.0381],
+                                [-32,   113,    -20,    151],
+                                [-38,   135,    -32,    151],
+                                [-20,   123,    -14,    147],
+                                [-20,   121,    -16,    123],
+                                [-14,   129,    -10,    137],
+                                [-14,   141,    -8, 145],
+                                [-36,   115,    -32,    127],
+                                [-44,   141,    -38,    149],
+                                [-34,   127,    -32,    135],
+                                [-34,   151,    -24,    155]
+                            ]
+                    }
+                ]
+        };
+        return JSON.stringify(obj);
+    }
 
-    //     return {
-    //         "authenticationResultCode" : "ValidCredentials",
-    //         "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
-    //         "copyright" : "Copyright © 2014 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
-    //         "resourceSets" : [{
-    //             "estimatedTotal" : 1,
-    //             "resources" : [{
-    //                 "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
-    //                 "imageHeight" : 256,
-    //                 "imageUrl" : "http:\/\/ecn.{subdomain}.tiles.virtualearth.net.fake.invalid\/tiles\/" + stylePrefix + "{quadkey}.jpeg?g=3031&mkt={culture}",
-    //                 "imageUrlSubdomains" : ["t0", "t1", "t2", "t3"],
-    //                 "imageWidth" : 256,
-    //                 "imageryProviders" : [{
-    //                     "attribution" : "© 2014 DigitalGlobe",
-    //                     "coverageAreas" : [{
-    //                         "bbox" : [-67, -179.99, 27, 0],
-    //                         "zoomMax" : 21,
-    //                         "zoomMin" : 14
-    //                     }, {
-    //                         "bbox" : [27, -179.99, 87, -126.5],
-    //                         "zoomMax" : 21,
-    //                         "zoomMin" : 14
-    //                     }, {
-    //                         "bbox" : [48.4, -126.5, 87, -5.75],
-    //                         "zoomMax" : 21,
-    //                         "zoomMin" : 14
-    //                     }]
-    //                 }, {
-    //                     "attribution" : "Image courtesy of NASA",
-    //                     "coverageAreas" : [{
-    //                         "bbox" : [-90, -180, 90, 180],
-    //                         "zoomMax" : 8,
-    //                         "zoomMin" : 1
-    //                     }]
-    //                 }],
-    //                 "vintageEnd" : null,
-    //                 "vintageStart" : null,
-    //                 "zoomMax" : 21,
-    //                 "zoomMin" : 1
-    //             }]
-    //         }],
-    //         "statusCode" : 200,
-    //         "statusDescription" : "OK",
-    //         "traceId" : "ea754a48ccdb4dd297c8f35350e0f0d9|BN20130533|02.00.106.1600|"
-    //     };
-    // }
+    function installFakeCopyrightRequest(baseUrl, mapId, proxy) {
+        var expectedUrl = 'http://1.' + baseUrl + '/maptile/2.1/copyright/' + mapId;
 
-    // function installFakeMetadataRequest(url, mapStyle, proxy) {
-    //     var expectedUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle;
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
+            var uri = new Uri(url);
+            if (proxy) {
+                uri = new Uri(decodeURIComponent(uri.query));
+            }
 
-    //     Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
-    //         var uri = new Uri(url);
-    //         if (proxy) {
-    //             uri = new Uri(decodeURIComponent(uri.query));
-    //         }
+            var query = queryToObject(uri.query);
+            expect(query.callback_func).toBeDefined();
+            expect(query.app_id).toBeDefined();
+            expect(query.app_code).toBeDefined();
 
-    //         var query = queryToObject(uri.query);
-    //         expect(query.jsonp).toBeDefined();
-    //         expect(query.incl).toEqual('ImageryProviders');
-    //         expect(query.key).toBeDefined();
+            uri.query = undefined;
+            expect(uri.toString()).toStartWith(expectedUrl);
 
-    //         uri.query = undefined;
-    //         expect(uri.toString()).toStartWith(expectedUrl);
-
-    //         setTimeout(function() {
-    //             window[functionName](createFakeMetadataResponse(mapStyle));
-    //         }, 1);
-    //     };
-    // }
+            setTimeout(function() {
+                window[functionName](createFakeCopyrightResponse());
+            }, 1);
+        };
+    }
 
     // function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
     //     Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
@@ -197,23 +246,23 @@ defineSuite([
     //     };
     // }
 
-    // it('resolves readyPromise', function() {
-    //     var url = 'http://fake.fake.invalid';
-    //     var mapStyle = BingMapsStyle.ROAD;
+    it('resolves readyPromise', function() {
+        var baseUrl = 'aerial.maps.api.here.com';
+        var mapId = 'newest';
 
-    //     installFakeMetadataRequest(url, mapStyle);
-    //     installFakeImageRequest();
+        installFakeCopyrightRequest(baseUrl, mapId);
+        // installFakeImageRequest();
 
-    //     var provider = new BingMapsImageryProvider({
-    //         url : url,
-    //         mapStyle : mapStyle
-    //     });
+        var provider = new HereMapsImageryProvider({
+            appId : 'fake',
+            appCode : 'invalid'
+        });
 
-    //     return provider.readyPromise.then(function(result) {
-    //         expect(result).toBe(true);
-    //         expect(provider.ready).toBe(true);
-    //     });
-    // });
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
 
     // it('resolves readyPromise with Resource', function() {
     //     var url = 'http://fake.fake.invalid';

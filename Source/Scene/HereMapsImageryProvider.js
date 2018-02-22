@@ -11,8 +11,8 @@ define([
         '../Core/Credit',
         '../Core/TileProviderError',
         '../Core/RuntimeError',
-        '../ThirdParty/when',
-        '../Core/loadJsonp'
+        '../Core/Resource',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         WebMercatorTilingScheme,
@@ -26,8 +26,8 @@ define([
         Credit,
         TileProviderError,
         RuntimeError,
-        when,
-        loadJsonp) {
+        Resource,
+        when) {
     'use strict';
 
     /**
@@ -81,33 +81,40 @@ define([
         }
         //>>includeEnd('debug');
 
+        var that = this;
+
         this._proxy = options.proxy;
         this._credit = undefined; // The base credit is always supplied in the attribution list
 
         this._tilingScheme = new WebMercatorTilingScheme();
         this._tileSize = defaultValue(options.tileSize, 256);
 
-        // Build URL's
-        this._urls = {
-            copyright: '//1.{baseUrl}/maptile/2.1/copyright/{mapId}?app_id={appId}&app_code={appCode}',
-            info: '//1.{baseUrl}/maptile/2.1/info?app_id={appId}&app_code={appCode}',
-            tile: '//{subdomain}.{baseUrl}/maptile/2.1/{tileType}/{mapId}/{scheme}/{level}/{x}/{y}/{tileSize}/{tileFormat}?app_id={appId}&app_code={appCode}'
-        };
+        this._baseUrl = defaultValue(options.baseUrl, 'aerial.maps.api.here.com');
+        var mapId = 'newest';
 
-        // @TODO: Add HereMapsStyles like BingMapsStyles
+        var baseResource = new Resource({
+            url: '//{subdomain}.' + this._baseUrl,
+            queryParameters: {
+                app_id: options.appId,
+                app_code: options.appCode
+            },
+            proxy: options.proxy
+        });
 
-        Object.keys(this._urls).forEach(function(urlKey) {
-            var url = this._urls[urlKey];
-            url = url.replace('{baseUrl}', defaultValue(options.baseUrl, 'aerial.maps.api.here.com'));
-            url = url.replace('{tileType}', defaultValue(options.tileType, 'maptile'));
-            // @TODO: Implement mapId locking using hashes. For now we'll just use newest (options.forceUseNewest)
-            url = url.replace('{mapId}', 'newest');
-            url = url.replace('{scheme}', defaultValue(options.scheme,'satellite.day'));
-            url = url.replace('{tileSize}', this._tileSize);
-            url = url.replace('{tileFormat}', defaultValue(options.tileFormat, 'jpg'));
-            url = url.replace('{appId}', options.appId);
-            url = url.replace('{appCode}', options.appCode);
-            this._urls[urlKey] = url;
+        var copyrightResource = baseResource.getDerivedResource({
+            url: '/maptile/2.1/copyright/' + mapId,
+            templateValues: { subdomain: '1' }
+        });
+
+        this._tileResource = baseResource.getDerivedResource({
+            url: '/maptile/2.1/{tileType}/{mapId}/{scheme}/{level}/{x}/{y}/{tileSize}/{tileFormat}',
+            templateValues: {
+                tileType: defaultValue(options.tileType, 'maptile'),
+                mapId: mapId,
+                scheme: defaultValue(options.scheme,'satellite.day'),
+                tileSize: that._tileSize,
+                tileFormat: defaultValue(options.tileFormat, 'jpg')
+            }
         });
 
         this._maximumLevel = 20;
@@ -120,55 +127,56 @@ define([
 
         //@TODO: Do we need to support DiscardMissingTileImagePolicy?
 
-        var that = this;
         var metadataError;
-
         function metadataSuccess(data) {
-            var jsonString = data;
-            var resource = JSON.parse(jsonString);
+            try {
+                var jsonString = data;
+                var resource = JSON.parse(jsonString);
 
-            var attributionList = that._attributionList = resource.satellite;
-            if (!attributionList) {
-                attributionList = that._attributionList = [];
-            }
+                var attributionList = that._attributionList = resource.satellite;
+                if (!attributionList) {
+                    attributionList = that._attributionList = [];
+                }
 
-            for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
-                var attribution = attributionList[attributionIndex];
+                for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+                    var attribution = attributionList[attributionIndex];
 
-                attribution.credit = new Credit({
-                    text: attribution.alt
-                });
+                    attribution.credit = new Credit({
+                        text: attribution.alt
+                    });
 
-                if (attribution.boxes) {
-                    var coverageAreas = attribution.boxes;
+                    if (attribution.boxes) {
+                        var coverageAreas = attribution.boxes;
 
-                    for (var areaIndex = 0, areaLength = attribution.boxes.length; areaIndex < areaLength; ++areaIndex) {
-                        var area = coverageAreas[areaIndex];
-                        area.bbox = new Rectangle(
-                                CesiumMath.toRadians(area[1]),
-                                CesiumMath.toRadians(area[0]),
-                                CesiumMath.toRadians(area[3]),
-                                CesiumMath.toRadians(area[2]));
+                        for (var areaIndex = 0, areaLength = attribution.boxes.length; areaIndex < areaLength; ++areaIndex) {
+                            var area = coverageAreas[areaIndex];
+                            area.bbox = new Rectangle(
+                                    CesiumMath.toRadians(area[1]),
+                                    CesiumMath.toRadians(area[0]),
+                                    CesiumMath.toRadians(area[3]),
+                                    CesiumMath.toRadians(area[2]));
+                        }
                     }
                 }
-            }
 
-            that._ready = true;
-            that._readyPromise.resolve(true);
-            TileProviderError.handleSuccess(metadataError);
+                that._ready = true;
+                that._readyPromise.resolve(true);
+                TileProviderError.handleSuccess(metadataError);
+            }
+            catch (e)
+            {
+                metadataFailure(data);
+            }
         }
 
         function metadataFailure(data) {
-            var message = 'An error occurred while accessing ' + that._urls.copyright + '.';
+            var message = 'An error occurred while accessing ' + copyrightResource.url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
             that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
-            var metadata = loadJsonp(that._urls.copyright, {
-                callbackParameterName : 'callback_func',
-                proxy : that._proxy
-            });
+            var metadata = copyrightResource.fetchJsonp('callback_func');
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -183,7 +191,7 @@ define([
          */
         url : {
             get : function() {
-                return this._urls.tile;
+                return this._baseUrl;
             }
         },
 
@@ -353,6 +361,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof HereMapsImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link HereMapsImageryProvider#ready} returns true.
          * @memberof HereMapsImageryProvider.prototype
@@ -417,15 +437,14 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    HereMapsImageryProvider.prototype.requestImage = function(x, y, level) {
+    HereMapsImageryProvider.prototype.requestImage = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
 
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
     };
 
     /**
@@ -446,23 +465,19 @@ define([
         return undefined;
     };
 
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var imageUrl = imageryProvider._urls.tile;
-
-        imageUrl = imageUrl.replace('{level}', level);
-        imageUrl = imageUrl.replace('{x}', x);
-        imageUrl = imageUrl.replace('{y}', y);
-
+    function buildImageResource(imageryProvider, x, y, level, request) {
         var subdomains = imageryProvider._urlSubdomains;
         var subdomainIndex = (x + y + level) % subdomains.length;
-        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
 
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            imageUrl = proxy.getURL(imageUrl);
-        }
-
-        return imageUrl;
+        return imageryProvider._tileResource.getDerivedResource({
+            request: request,
+            templateValues: {
+                level: level,
+                x: x,
+                y: y,
+                subdomain: imageryProvider._urlSubdomains[subdomainIndex]
+            }
+        });
     }
 
     var intersectionScratch = new Rectangle();
