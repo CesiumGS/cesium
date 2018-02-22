@@ -147,6 +147,7 @@ function loadTileset(url) {
 
             planeEntities.push(planeEntity);
         }
+        return tileset;
     }).otherwise(function(error) {
         console.log(error);
     });
@@ -220,20 +221,19 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(function(newValue) {
     reset();
 
-    var tileset;
     if (newValue === clipObjects[0]) {
-        return loadTileset(bimUrl);
+        loadTileset(bimUrl);
     } else if (newValue === clipObjects[1]) {
-        tileset = loadTileset(pointCloudUrl);
-        tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        return tileset;
+        loadTileset(pointCloudUrl).then(function(tileset) {
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
     } else if (newValue === clipObjects[2]) {
-         tileset = loadTileset(instancedUrl);
-        tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        return tileset;
+        loadTileset(instancedUrl).then(function(tileset) {
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
+    } else {
+        loadModel(modelUrl);
     }
-
-    loadModel(modelUrl);
 });
 
 Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(value) {
