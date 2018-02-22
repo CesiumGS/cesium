@@ -29,6 +29,13 @@ defineSuite([
         }
     });
 
+    // For the sake of the tests, we remove the logo
+    // credit at the beginning of every frame
+    function beginFrame(creditDisplay) {
+        creditDisplay.beginFrame();
+        creditDisplay._currentFrameCredits.imageCredits.length = 0;
+    }
+
     it('credit display throws with no container', function() {
         expect(function() {
             return new CreditDisplay();
@@ -83,7 +90,7 @@ defineSuite([
             text: 'credit1',
             showOnScreen: true
         });
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
         expect(container.childNodes.length).toEqual(3);
@@ -103,7 +110,7 @@ defineSuite([
             imageUrl: imgSrc,
             showOnScreen: true
         });
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
 
@@ -126,7 +133,7 @@ defineSuite([
             link: link,
             showOnScreen: true
         });
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
 
@@ -154,7 +161,7 @@ defineSuite([
         });
 
         creditDisplay = new CreditDisplay(container);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         var innerHTML = container.innerHTML;
@@ -164,7 +171,7 @@ defineSuite([
         expect(child1.childNodes.length).toEqual(1);
         expect(child1.childNodes[0].innerHTML).toEqual('credit1');
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
         expect(container.innerHTML).not.toEqual(innerHTML);
@@ -177,7 +184,7 @@ defineSuite([
         expect(child00.childNodes.length).toEqual(1);
         expect(child00.childNodes[0].src).toContain(imgSrc);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
@@ -186,7 +193,7 @@ defineSuite([
         expect(container.childNodes[0].childNodes.length).toEqual(1);
         expect(container.childNodes[1].childNodes.length).toEqual(1);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.endFrame();
         expect(container.innerHTML).not.toEqual(innerHTML);
         expect(container.childNodes[0].childNodes.length).toEqual(0);
@@ -203,7 +210,7 @@ defineSuite([
             showOnScreen: true
         });
         creditDisplay = new CreditDisplay(container, ', ');
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
@@ -237,7 +244,7 @@ defineSuite([
         });
 
         creditDisplay = new CreditDisplay(container, ', ');
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.addCredit(credit3);
@@ -254,7 +261,7 @@ defineSuite([
         expect(child1.childNodes[3].className).toEqual(delimiter);
         expect(child1.childNodes[4].className).toEqual(text);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit2);
         creditDisplay.addCredit(credit3);
         creditDisplay.endFrame();
@@ -265,7 +272,7 @@ defineSuite([
         expect(child1.childNodes[1].className).toEqual(delimiter);
         expect(child1.childNodes[2].className).toEqual(text);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
         child1 = container.childNodes[1];
@@ -273,7 +280,7 @@ defineSuite([
         expect(child1.childNodes.length).toEqual(1);
         expect(child1.childNodes[0].className).toEqual(text);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit2);
         creditDisplay.addCredit(credit3);
         creditDisplay.endFrame();
@@ -292,7 +299,7 @@ defineSuite([
             showOnScreen: true
         });
         creditDisplay = new CreditDisplay(container);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
 
@@ -314,7 +321,7 @@ defineSuite([
             showOnScreen: true
         });
         creditDisplay = new CreditDisplay(container);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
 
@@ -342,7 +349,7 @@ defineSuite([
 
         creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
 
@@ -356,7 +363,7 @@ defineSuite([
         expect(child1.childNodes[2].className).toEqual(text);
         expect(child1.childNodes[2].innerHTML).toEqual('credit1');
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.endFrame();
         child1 = container.childNodes[1];
         expect(child1.className).toEqual(textContainer);
@@ -377,7 +384,7 @@ defineSuite([
 
         creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         var child1 = container.childNodes[1];
@@ -391,7 +398,7 @@ defineSuite([
         expect(child1.childNodes[2].innerHTML).toEqual('credit1');
 
         creditDisplay.removeDefaultCredit(defaultCredit);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         child1 = container.childNodes[1];
@@ -412,7 +419,7 @@ defineSuite([
         });
         creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         var child0 = container.childNodes[0];
@@ -422,7 +429,7 @@ defineSuite([
         expect(child0.childNodes.length).toEqual(1);
         expect(child1.childNodes.length).toEqual(1);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.endFrame();
         child0 = container.childNodes[0];
         child1 = container.childNodes[1];
@@ -444,7 +451,7 @@ defineSuite([
 
         creditDisplay = new CreditDisplay(container, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         var child0 = container.childNodes[0];
@@ -455,7 +462,7 @@ defineSuite([
         expect(child1.childNodes.length).toEqual(1);
 
         creditDisplay.removeDefaultCredit(defaultCredit);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         child0 = container.childNodes[0];
@@ -476,7 +483,7 @@ defineSuite([
             showOnScreen: true
         });
         creditDisplay = new CreditDisplay(container);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
@@ -503,7 +510,7 @@ defineSuite([
             showOnScreen: true
         });
         creditDisplay = new CreditDisplay(container);
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
@@ -526,16 +533,16 @@ defineSuite([
 
         creditDisplay.showLightbox();
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         creditDisplay.update();
 
         var innerHTML = creditList.innerHTML;
         expect(creditList.childNodes.length).toEqual(1);
-        expect(creditList.childNodes[0].innerHTML).toEqual('credit1');
+        expect(creditList.childNodes[0].childNodes[0]).toEqual(credit1.element);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
         creditDisplay.update();
@@ -543,9 +550,9 @@ defineSuite([
         expect(creditList.innerHTML).not.toEqual(innerHTML);
         innerHTML = creditList.innerHTML;
         expect(creditList.childNodes.length).toEqual(1);
-        expect(creditList.childNodes[0].childNodes[0].src).toContain(imgSrc);
+        expect(creditList.childNodes[0].childNodes[0]).toEqual(credit2.element);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
@@ -555,7 +562,7 @@ defineSuite([
         innerHTML = creditList.innerHTML;
         expect(creditList.childNodes.length).toEqual(2);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.endFrame();
         creditDisplay.update();
 
@@ -572,7 +579,7 @@ defineSuite([
         creditDisplay = new CreditDisplay(container);
         var creditList = creditDisplay._creditList;
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
@@ -582,7 +589,7 @@ defineSuite([
 
         creditDisplay.showLightbox();
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
@@ -604,7 +611,7 @@ defineSuite([
 
         expect(creditList.childNodes.length).toEqual(0);
 
-        creditDisplay.beginFrame();
+        beginFrame(creditDisplay);
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
