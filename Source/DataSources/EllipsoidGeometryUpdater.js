@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -27,6 +28,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        Check,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
@@ -88,12 +90,8 @@ define([
      */
     function EllipsoidGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required');
-        }
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required');
-        }
+        Check.defined('entity', entity);
+        Check.defined('scene', scene);
         //>>includeEnd('debug');
 
         this._scene = scene;
@@ -112,29 +110,23 @@ define([
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
         this._options = new GeometryOptions(entity);
+        this._id = 'ellipsoid-' + entity.id;
+
         this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
     }
 
-    defineProperties(EllipsoidGeometryUpdater, {
-        /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof EllipsoidGeometryUpdater
-         * @type {Appearance}
-         */
-        perInstanceColorAppearanceType : {
-            value : PerInstanceColorAppearance
-        },
-        /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof EllipsoidGeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            value : MaterialAppearance
-        }
-    });
-
     defineProperties(EllipsoidGeometryUpdater.prototype, {
+        /**
+         * Gets the unique ID associated with this updater
+         * @memberof EllipsoidGeometryUpdater.prototype
+         * @type {String}
+         * @readonly
+         */
+        id: {
+            get: function() {
+                return this._id;
+            }
+        },
         /**
          * Gets the entity associated with this geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
@@ -337,9 +329,7 @@ define([
      */
     EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function(time, skipModelMatrix, modelMatrixResult) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var entity = this._entity;
@@ -389,9 +379,7 @@ define([
      */
     EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function(time, skipModelMatrix, modelMatrixResult) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var entity = this._entity;
@@ -531,12 +519,10 @@ define([
      */
     EllipsoidGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
         //>>includeStart('debug', pragmas.debug);
+        Check.defined('primitives', primitives);
+
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
-        }
-
-        if (!defined(primitives)) {
-            throw new DeveloperError('primitives is required.');
         }
         //>>includeEnd('debug');
 
@@ -565,11 +551,10 @@ define([
         this._lastOutlineColor = undefined;
         this._material = {};
     }
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var entity = this._entity;
@@ -732,8 +717,8 @@ define([
         }
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
-        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
+        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

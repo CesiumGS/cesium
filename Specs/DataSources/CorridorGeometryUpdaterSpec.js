@@ -510,7 +510,7 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var groundPrimitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
@@ -658,7 +658,7 @@ defineSuite([
         var entity = createBasicCorridor();
         var updater = new CorridorGeometryUpdater(entity, scene);
         expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
+            return updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -669,7 +669,18 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
-            return updater.createDynamicUpdater(undefined);
+            return updater.createDynamicUpdater(undefined, new PrimitiveCollection());
+        }).toThrowDeveloperError();
+    });
+
+    it('createDynamicUpdater throws if groundPrimitives undefined', function() {
+        var entity = createBasicCorridor();
+        entity.corridor.height = new SampledProperty(Number);
+        entity.corridor.height.addSample(time, 4);
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.isDynamic).toBe(true);
+        expect(function() {
+            return updater.createDynamicUpdater(new PrimitiveCollection(), undefined);
         }).toThrowDeveloperError();
     });
 
@@ -678,7 +689,7 @@ defineSuite([
         entity.corridor.height = new SampledProperty(Number);
         entity.corridor.height.addSample(time, 4);
         var updater = new CorridorGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

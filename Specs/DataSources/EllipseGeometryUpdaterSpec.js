@@ -703,7 +703,7 @@ defineSuite([
         var entity = createBasicEllipse();
         var updater = new EllipseGeometryUpdater(entity, scene);
         expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
+            return updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -713,7 +713,7 @@ defineSuite([
         var updater = new EllipseGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
-            return updater.createDynamicUpdater(undefined);
+            return updater.createDynamicUpdater(undefined, new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -721,7 +721,7 @@ defineSuite([
         var entity = createBasicEllipse();
         entity.ellipse.semiMajorAxis = createDynamicProperty(4);
         var updater = new EllipseGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
