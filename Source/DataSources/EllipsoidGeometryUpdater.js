@@ -5,14 +5,12 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/EllipsoidGeometry',
         '../Core/EllipsoidOutlineGeometry',
-        '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
         '../Core/Matrix4',
@@ -21,10 +19,9 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/SceneMode',
-        '../Scene/ShadowMode',
         './ColorMaterialProperty',
-        './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
+        './GeometryUpdater',
         './MaterialProperty',
         './Property'
     ], function(
@@ -34,14 +31,12 @@ define([
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
-        defineProperties,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
         EllipsoidGeometry,
         EllipsoidOutlineGeometry,
-        Event,
         GeometryInstance,
         Iso8601,
         Matrix4,
@@ -50,27 +45,20 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
-        ShadowMode,
         ColorMaterialProperty,
-        ConstantProperty,
         dynamicGeometryGetBoundingSphere,
+        GeometryUpdater,
         MaterialProperty,
         Property) {
     'use strict';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
-    var defaultShow = new ConstantProperty(true);
-    var defaultFill = new ConstantProperty(true);
-    var defaultOutline = new ConstantProperty(false);
-    var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
-    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
     var radiiScratch = new Cartesian3();
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
-    function GeometryOptions(entity) {
+    function EllipsoidGeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
@@ -89,233 +77,21 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function EllipsoidGeometryUpdater(entity, scene) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('entity', entity);
-        Check.defined('scene', scene);
-        //>>includeEnd('debug');
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new EllipsoidGeometryOptions(entity),
+            geometryPropertyName : 'ellipsoid',
+            observedPropertyNames : ['availability', 'position', 'orientation', 'ellipsoid']
+        });
 
-        this._scene = scene;
-        this._entity = entity;
-        this._entitySubscription = entity.definitionChanged.addEventListener(EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged, this);
-        this._fillEnabled = false;
-        this._dynamic = false;
-        this._outlineEnabled = false;
-        this._geometryChanged = new Event();
-        this._showProperty = undefined;
-        this._materialProperty = undefined;
-        this._hasConstantOutline = true;
-        this._showOutlineProperty = undefined;
-        this._outlineColorProperty = undefined;
-        this._outlineWidth = 1.0;
-        this._shadowsProperty = undefined;
-        this._distanceDisplayConditionProperty = undefined;
-        this._options = new GeometryOptions(entity);
-        this._id = 'ellipsoid-' + entity.id;
-
-        this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
+        this._isClosed = true;
     }
 
-    defineProperties(EllipsoidGeometryUpdater.prototype, {
-        /**
-         * Gets the unique ID associated with this updater
-         * @memberof EllipsoidGeometryUpdater.prototype
-         * @type {String}
-         * @readonly
-         */
-        id: {
-            get: function() {
-                return this._id;
-            }
-        },
-        /**
-         * Gets the entity associated with this geometry.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Entity}
-         * @readonly
-         */
-        entity : {
-            get : function() {
-                return this._entity;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has a fill component.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        fillEnabled : {
-            get : function() {
-                return this._fillEnabled;
-            }
-        },
-        /**
-         * Gets a value indicating if fill visibility varies with simulation time.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        hasConstantFill : {
-            get : function() {
-                return !this._fillEnabled ||
-                       (!defined(this._entity.availability) &&
-                        Property.isConstant(this._showProperty) &&
-                        Property.isConstant(this._fillProperty));
-            }
-        },
-        /**
-         * Gets the material property used to fill the geometry.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {MaterialProperty}
-         * @readonly
-         */
-        fillMaterialProperty : {
-            get : function() {
-                return this._materialProperty;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has an outline component.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        outlineEnabled : {
-            get : function() {
-                return this._outlineEnabled;
-            }
-        },
-        /**
-         * Gets a value indicating if outline visibility varies with simulation time.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        hasConstantOutline : {
-            get : function() {
-                return !this._outlineEnabled ||
-                       (!defined(this._entity.availability) &&
-                        Property.isConstant(this._showProperty) &&
-                        Property.isConstant(this._showOutlineProperty));
-            }
-        },
-        /**
-         * Gets the {@link Color} property for the geometry outline.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        outlineColorProperty : {
-            get : function() {
-                return this._outlineColorProperty;
-            }
-        },
-        /**
-         * Gets the constant with of the geometry outline, in pixels.
-         * This value is only valid if isDynamic is false.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        outlineWidth : {
-            get : function() {
-                return this._outlineWidth;
-            }
-        },
-        /**
-         * Gets the property specifying whether the geometry
-         * casts or receives shadows from each light source.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        shadowsProperty : {
-            get : function() {
-                return this._shadowsProperty;
-            }
-        },
-        /**
-         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        distanceDisplayConditionProperty : {
-            get : function() {
-                return this._distanceDisplayConditionProperty;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
-         * returned by GeometryUpdater#createDynamicUpdater.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        isDynamic : {
-            get : function() {
-                return this._dynamic;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry is closed.
-         * This property is only valid for static geometry.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        isClosed : {
-            value : true
-        },
-        /**
-         * Gets an event that is raised whenever the public properties
-         * of this updater change.
-         * @memberof EllipsoidGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        geometryChanged : {
-            get : function() {
-                return this._geometryChanged;
-            }
-        }
-    });
-
-    /**
-     * Checks if the geometry is outlined at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
-     */
-    EllipsoidGeometryUpdater.prototype.isOutlineVisible = function(time) {
-        var entity = this._entity;
-        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
-    };
-
-    /**
-     * Checks if the geometry is filled at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
-     */
-    EllipsoidGeometryUpdater.prototype.isFilled = function(time) {
-        var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
-    };
+    if (defined(Object.create)) {
+        EllipsoidGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        EllipsoidGeometryUpdater.prototype.constructor = EllipsoidGeometryUpdater;
+    }
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
@@ -400,139 +176,40 @@ define([
         });
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    EllipsoidGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
+    EllipsoidGeometryUpdater.prototype._isHidden = function(entity, ellipsoid) {
+        return !defined(entity.position) || !defined(ellipsoid.radii) || GeometryUpdater.prototype._isHidden.call(this, entity, ellipsoid);
     };
 
-    /**
-     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    EllipsoidGeometryUpdater.prototype.destroy = function() {
-        this._entitySubscription();
-        destroyObject(this);
+    EllipsoidGeometryUpdater.prototype._isDynamic = function(entity, ellipsoid) {
+        return !entity.position.isConstant || //
+               !Property.isConstant(entity.orientation) || //
+               !ellipsoid.radii.isConstant || //
+               !Property.isConstant(ellipsoid.stackPartitions) || //
+               !Property.isConstant(ellipsoid.slicePartitions) || //
+               !Property.isConstant(ellipsoid.outlineWidth) || //
+               !Property.isConstant(ellipsoid.subdivisions);
     };
 
-    EllipsoidGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'ellipsoid')) {
-            return;
-        }
-
-        var ellipsoid = entity.ellipsoid;
-
-        if (!defined(ellipsoid)) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var fillProperty = ellipsoid.fill;
-        var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
-
-        var outlineProperty = ellipsoid.outline;
-        var outlineEnabled = defined(outlineProperty);
-        if (outlineEnabled && outlineProperty.isConstant) {
-            outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
-        }
-
-        if (!fillEnabled && !outlineEnabled) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var position = entity.position;
-        var radii = ellipsoid.radii;
-
-        var show = ellipsoid.show;
-        if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(position) || !defined(radii))) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var material = defaultValue(ellipsoid.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
-        this._fillProperty = defaultValue(fillProperty, defaultFill);
-        this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(ellipsoid.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(ellipsoid.outlineColor, defaultOutlineColor) : undefined;
-        this._shadowsProperty = defaultValue(ellipsoid.shadows, defaultShadows);
-        this._distanceDisplayConditionProperty = defaultValue(ellipsoid.distanceDisplayCondition, defaultDistanceDisplayCondition);
-
-        this._fillEnabled = fillEnabled;
-        this._outlineEnabled = outlineEnabled;
-
+    EllipsoidGeometryUpdater.prototype._setStaticOptions = function(entity, ellipsoid) {
         var stackPartitions = ellipsoid.stackPartitions;
         var slicePartitions = ellipsoid.slicePartitions;
-        var outlineWidth = ellipsoid.outlineWidth;
         var subdivisions = ellipsoid.subdivisions;
+        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
-        if (!position.isConstant || //
-            !Property.isConstant(entity.orientation) || //
-            !radii.isConstant || //
-            !Property.isConstant(stackPartitions) || //
-            !Property.isConstant(slicePartitions) || //
-            !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(subdivisions)) {
-            if (!this._dynamic) {
-                this._dynamic = true;
-                this._geometryChanged.raiseEvent(this);
-            }
-        } else {
-            var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.radii = radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
-            options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
-            this._dynamic = false;
-            this._geometryChanged.raiseEvent(this);
-        }
+        var options = this._options;
+        options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
+        options.radii = ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
+        options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    /**
-     * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     *
-     * @param {PrimitiveCollection} primitives The primitive collection to use.
-     * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
-     *
-     * @exception {DeveloperError} This instance does not represent dynamic geometry.
-     */
-    EllipsoidGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('primitives', primitives);
-
-        if (!this._dynamic) {
-            throw new DeveloperError('This instance does not represent dynamic geometry.');
-        }
-        //>>includeEnd('debug');
-
-        return new DynamicGeometryUpdater(primitives, this);
-    };
+    EllipsoidGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(geometryUpdater, primitives) {
         this._entity = geometryUpdater._entity;
         this._scene = geometryUpdater._scene;
         this._primitives = primitives;
@@ -541,7 +218,6 @@ define([
         this._geometryUpdater = geometryUpdater;
         this._options = geometryUpdater._options;
         this._modelMatrix = new Matrix4();
-        this._material = undefined;
         this._attributes = undefined;
         this._outlineAttributes = undefined;
         this._lastSceneMode = undefined;

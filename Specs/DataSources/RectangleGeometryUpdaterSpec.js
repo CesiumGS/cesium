@@ -641,36 +641,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicRectangle();
-        var updater = new RectangleGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicRectangle();
-        entity.rectangle.height = new SampledProperty(Number);
-        entity.rectangle.height.addSample(time, 4);
-        var updater = new RectangleGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined, new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if groundPrimitives undefined', function() {
-        var entity = createBasicRectangle();
-        entity.rectangle.height = new SampledProperty(Number);
-        entity.rectangle.height.addSample(time, 4);
-        var updater = new RectangleGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection(), undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicRectangle();
         entity.rectangle.height = new SampledProperty(Number);
@@ -679,19 +649,6 @@ defineSuite([
         var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new RectangleGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicRectangle();
-        expect(function() {
-            return new RectangleGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

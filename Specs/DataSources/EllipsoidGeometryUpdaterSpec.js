@@ -412,7 +412,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
 
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
 
@@ -446,7 +446,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         var primitives = scene.primitives;
 
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2); //Ellipsoid always has both fill and outline primitives regardless of setting
 
@@ -497,7 +497,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         var primitives = scene.primitives;
 
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2); //Ellipsoid always has both fill and outline primitives regardless of setting
 
@@ -563,46 +563,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicEllipsoid();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicEllipsoid();
-        entity.ellipsoid.radii = new SampledProperty(Number);
-        entity.ellipsoid.radii.addSample(time, 4);
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicEllipsoid();
         entity.ellipsoid.radii = new SampledProperty(Number);
         entity.ellipsoid.radii.addSample(time, 4);
         var updater = new EllipsoidGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new EllipsoidGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicEllipsoid();
-        expect(function() {
-            return new EllipsoidGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

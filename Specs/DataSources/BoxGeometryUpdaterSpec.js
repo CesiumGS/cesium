@@ -335,7 +335,7 @@ defineSuite([
 
         var updater = new BoxGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(primitives.length).toBe(0);
 
         dynamicUpdater.update(JulianDate.now());
@@ -382,7 +382,7 @@ defineSuite([
 
         var updater = new BoxGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
@@ -448,44 +448,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicBox();
-        var updater = new BoxGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicBox();
-        entity.box.dimensions = createDynamicProperty(new Cartesian3(1, 2, 3));
-        var updater = new BoxGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicBox();
         entity.box.dimensions = createDynamicProperty(new Cartesian3(1, 2, 3));
         var updater = new BoxGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new BoxGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicBox();
-        expect(function() {
-            return new BoxGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

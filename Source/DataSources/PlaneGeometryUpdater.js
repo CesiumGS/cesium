@@ -6,14 +6,10 @@ define([
         '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
         '../Core/Matrix4',
@@ -22,10 +18,9 @@ define([
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
-        '../Scene/ShadowMode',
         './ColorMaterialProperty',
-        './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
+        './GeometryUpdater',
         './MaterialProperty',
         './Property'
     ], function(
@@ -36,14 +31,10 @@ define([
         Check,
         Color,
         ColorGeometryInstanceAttribute,
-        defaultValue,
         defined,
-        defineProperties,
         destroyObject,
         DeveloperError,
-        DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
-        Event,
         GeometryInstance,
         Iso8601,
         Matrix4,
@@ -52,23 +43,15 @@ define([
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
-        ShadowMode,
         ColorMaterialProperty,
-        ConstantProperty,
         dynamicGeometryGetBoundingSphere,
+        GeometryUpdater,
         MaterialProperty,
         Property) {
     'use strict';
 
-    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
-    var defaultShow = new ConstantProperty(true);
-    var defaultFill = new ConstantProperty(true);
-    var defaultOutline = new ConstantProperty(false);
-    var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
-    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
-    function GeometryOptions(entity) {
+    function PlaneGeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.plane = undefined;
@@ -85,233 +68,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function PlaneGeometryUpdater(entity, scene) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('entity', entity);
-        Check.defined('scene', scene);
-        //>>includeEnd('debug');
-
-        this._entity = entity;
-        this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(PlaneGeometryUpdater.prototype._onEntityPropertyChanged, this);
-        this._fillEnabled = false;
-        this._dynamic = false;
-        this._outlineEnabled = false;
-        this._geometryChanged = new Event();
-        this._showProperty = undefined;
-        this._materialProperty = undefined;
-        this._hasConstantOutline = true;
-        this._showOutlineProperty = undefined;
-        this._outlineColorProperty = undefined;
-        this._outlineWidth = 1.0;
-        this._shadowsProperty = undefined;
-        this._distanceDisplayConditionProperty = undefined;
-        this._options = new GeometryOptions(entity);
-        this._id = 'plane-' + entity.id;
-
-        this._onEntityPropertyChanged(entity, 'plane', entity.plane, undefined);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new PlaneGeometryOptions(entity),
+            geometryPropertyName : 'plane',
+            observedPropertyNames : ['availability', 'position', 'orientation', 'plane']
+        });
     }
 
-    defineProperties(PlaneGeometryUpdater.prototype, {
-        /**
-         * Gets the unique ID associated with this updater
-         * @memberof PlaneGeometryUpdater.prototype
-         * @type {String}
-         * @readonly
-         */
-        id: {
-            get: function() {
-                return this._id;
-            }
-        },
-        /**
-         * Gets the entity associated with this geometry.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Entity}
-         * @readonly
-         */
-        entity : {
-            get : function() {
-                return this._entity;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has a fill component.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        fillEnabled : {
-            get : function() {
-                return this._fillEnabled;
-            }
-        },
-        /**
-         * Gets a value indicating if fill visibility varies with simulation time.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        hasConstantFill : {
-            get : function() {
-                return !this._fillEnabled ||
-                       (!defined(this._entity.availability) &&
-                        Property.isConstant(this._showProperty) &&
-                        Property.isConstant(this._fillProperty));
-            }
-        },
-        /**
-         * Gets the material property used to fill the geometry.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {MaterialProperty}
-         * @readonly
-         */
-        fillMaterialProperty : {
-            get : function() {
-                return this._materialProperty;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has an outline component.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        outlineEnabled : {
-            get : function() {
-                return this._outlineEnabled;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has an outline component.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        hasConstantOutline : {
-            get : function() {
-                return !this._outlineEnabled ||
-                       (!defined(this._entity.availability) &&
-                        Property.isConstant(this._showProperty) &&
-                        Property.isConstant(this._showOutlineProperty));
-            }
-        },
-        /**
-         * Gets the {@link Color} property for the geometry outline.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        outlineColorProperty : {
-            get : function() {
-                return this._outlineColorProperty;
-            }
-        },
-        /**
-         * Gets the constant with of the geometry outline, in pixels.
-         * This value is only valid if isDynamic is false.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        outlineWidth : {
-            get : function() {
-                return this._outlineWidth;
-            }
-        },
-        /**
-         * Gets the property specifying whether the geometry
-         * casts or receives shadows from each light source.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        shadowsProperty : {
-            get : function() {
-                return this._shadowsProperty;
-            }
-        },
-        /**
-         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        distanceDisplayConditionProperty : {
-            get : function() {
-                return this._distanceDisplayConditionProperty;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
-         * returned by GeometryUpdater#createDynamicUpdater.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        isDynamic : {
-            get : function() {
-                return this._dynamic;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry is closed.
-         * This property is only valid for static geometry.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        isClosed : {
-            value : false
-        },
-        /**
-         * Gets an event that is raised whenever the public properties
-         * of this updater change.
-         * @memberof PlaneGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        geometryChanged : {
-            get : function() {
-                return this._geometryChanged;
-            }
-        }
-    });
-
-    /**
-     * Checks if the geometry is outlined at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
-     */
-    PlaneGeometryUpdater.prototype.isOutlineVisible = function(time) {
-        var entity = this._entity;
-        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
-    };
-
-    /**
-     * Checks if the geometry is filled at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
-     */
-    PlaneGeometryUpdater.prototype.isFilled = function(time) {
-        var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
-    };
+    if (defined(Object.create)) {
+        PlaneGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        PlaneGeometryUpdater.prototype.constructor = PlaneGeometryUpdater;
+    }
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
@@ -427,131 +196,37 @@ define([
         });
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    PlaneGeometryUpdater.prototype.isDestroyed = function() {
+    PlaneGeometryUpdater.prototype._isHidden = function(entity, plane) {
+        return !defined(plane.plane) || !defined(plane.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, plane);
+    };
+
+    GeometryUpdater.prototype._getIsClosed = function(entity, plane) {
         return false;
     };
 
-    /**
-     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    PlaneGeometryUpdater.prototype.destroy = function() {
-        this._entitySubscription();
-        destroyObject(this);
+    PlaneGeometryUpdater.prototype._isDynamic = function(entity, plane) {
+        return !entity.position.isConstant || //
+               !Property.isConstant(entity.orientation) || //
+               !plane.plane.isConstant || //
+               !plane.dimensions.isConstant || //
+               !Property.isConstant(plane.outlineWidth);
     };
 
-    PlaneGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'plane')) {
-            return;
-        }
-        var planeGraphics = this._entity.plane;
+    PlaneGeometryUpdater.prototype._setStaticOptions = function(entity, plane) {
+        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
-        if (!defined(planeGraphics)) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var fillProperty = planeGraphics.fill;
-        var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
-
-        var outlineProperty = planeGraphics.outline;
-        var outlineEnabled = defined(outlineProperty);
-        if (outlineEnabled && outlineProperty.isConstant) {
-            outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
-        }
-
-        if (!fillEnabled && !outlineEnabled) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var plane = planeGraphics.plane;
-        var dimensions = planeGraphics.dimensions;
-        var position = entity.position;
-
-        var show = planeGraphics.show;
-        if (!defined(plane) || !defined(dimensions) || !defined(position) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var material = defaultValue(planeGraphics.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
-        this._fillProperty = defaultValue(fillProperty, defaultFill);
-        this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(planeGraphics.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(planeGraphics.outlineColor, defaultOutlineColor) : undefined;
-        this._shadowsProperty = defaultValue(planeGraphics.shadows, defaultShadows);
-        this._distanceDisplayConditionProperty = defaultValue(planeGraphics.distanceDisplayCondition, defaultDistanceDisplayCondition);
-
-        var outlineWidth = planeGraphics.outlineWidth;
-
-        this._fillEnabled = fillEnabled;
-        this._outlineEnabled = outlineEnabled;
-
-        if (!position.isConstant || //
-            !Property.isConstant(entity.orientation) || //
-            !plane.isConstant || //
-            !dimensions.isConstant || //
-            !Property.isConstant(outlineWidth)) {
-            if (!this._dynamic) {
-                this._dynamic = true;
-                this._geometryChanged.raiseEvent(this);
-            }
-        } else {
-            var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.plane = plane.getValue(Iso8601.MINIMUM_VALUE, options.plane);
-            options.dimensions = dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
-            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
-            this._dynamic = false;
-            this._geometryChanged.raiseEvent(this);
-        }
+        var options = this._options;
+        options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
+        options.plane = plane.plane.getValue(Iso8601.MINIMUM_VALUE, options.plane);
+        options.dimensions = plane.dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
     };
 
-    /**
-     * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     *
-     * @param {PrimitiveCollection} primitives The primitive collection to use.
-     * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
-     *
-     * @exception {DeveloperError} This instance does not represent dynamic geometry.
-     */
-    PlaneGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('primitives', primitives);
-
-        if (!this._dynamic) {
-            throw new DeveloperError('This instance does not represent dynamic geometry.');
-        }
-        //>>includeEnd('debug');
-
-        return new DynamicGeometryUpdater(primitives, this);
-    };
+    PlaneGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(geometryUpdater, primitives) {
         this._primitives = primitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;

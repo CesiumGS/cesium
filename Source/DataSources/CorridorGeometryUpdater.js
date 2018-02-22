@@ -4,26 +4,20 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/CorridorGeometry',
         '../Core/CorridorOutlineGeometry',
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
-        '../Core/oneTimeWarning',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/GroundPrimitive',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
-        '../Scene/ShadowMode',
         './ColorMaterialProperty',
-        './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
+        './GeometryUpdater',
         './MaterialProperty',
         './Property'
     ], function(
@@ -32,39 +26,26 @@ define([
         ColorGeometryInstanceAttribute,
         CorridorGeometry,
         CorridorOutlineGeometry,
-        defaultValue,
         defined,
-        defineProperties,
         destroyObject,
         DeveloperError,
-        DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
-        Event,
         GeometryInstance,
         Iso8601,
-        oneTimeWarning,
         ShowGeometryInstanceAttribute,
         GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
-        ShadowMode,
         ColorMaterialProperty,
-        ConstantProperty,
         dynamicGeometryGetBoundingSphere,
+        GeometryUpdater,
         MaterialProperty,
         Property) {
     'use strict';
 
-    var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
-    var defaultShow = new ConstantProperty(true);
-    var defaultFill = new ConstantProperty(true);
-    var defaultOutline = new ConstantProperty(false);
-    var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
-    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
-    function GeometryOptions(entity) {
+    function CorridorGeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.positions = undefined;
@@ -85,249 +66,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function CorridorGeometryUpdater(entity, scene) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('entity', entity);
-        Check.defined('scene', scene);
-        //>>includeEnd('debug');
-
-        this._entity = entity;
-        this._scene = scene;
-        this._entitySubscription = entity.definitionChanged.addEventListener(CorridorGeometryUpdater.prototype._onEntityPropertyChanged, this);
-        this._fillEnabled = false;
-        this._isClosed = false;
-        this._dynamic = false;
-        this._outlineEnabled = false;
-        this._geometryChanged = new Event();
-        this._showProperty = undefined;
-        this._materialProperty = undefined;
-        this._hasConstantOutline = true;
-        this._showOutlineProperty = undefined;
-        this._outlineColorProperty = undefined;
-        this._outlineWidth = 1.0;
-        this._shadowsProperty = undefined;
-        this._distanceDisplayConditionProperty = undefined;
-        this._onTerrain = false;
-        this._options = new GeometryOptions(entity);
-        this._id = 'corridor-' + entity.id;
-
-        this._onEntityPropertyChanged(entity, 'corridor', entity.corridor, undefined);
+        GeometryUpdater.call(this, {
+            entity : entity,
+            scene : scene,
+            geometryOptions : new CorridorGeometryOptions(entity),
+            geometryPropertyName : 'corridor',
+            observedPropertyNames : ['availability', 'corridor']
+        });
     }
 
-    defineProperties(CorridorGeometryUpdater.prototype, {
-        /**
-         * Gets the unique ID associated with this updater
-         * @memberof CorridorGeometryUpdater.prototype
-         * @type {String}
-         * @readonly
-         */
-        id: {
-            get: function() {
-                return this._id;
-            }
-        },
-        /**
-         * Gets the entity associated with this geometry.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Entity}
-         * @readonly
-         */
-        entity : {
-            get : function() {
-                return this._entity;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has a fill component.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        fillEnabled : {
-            get : function() {
-                return this._fillEnabled;
-            }
-        },
-        /**
-         * Gets a value indicating if fill visibility varies with simulation time.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        hasConstantFill : {
-            get : function() {
-                return !this._fillEnabled ||
-                       (!defined(this._entity.availability) &&
-                        Property.isConstant(this._showProperty) &&
-                        Property.isConstant(this._fillProperty));
-            }
-        },
-        /**
-         * Gets the material property used to fill the geometry.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {MaterialProperty}
-         * @readonly
-         */
-        fillMaterialProperty : {
-            get : function() {
-                return this._materialProperty;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has an outline component.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        outlineEnabled : {
-            get : function() {
-                return this._outlineEnabled;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry has an outline component.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        hasConstantOutline : {
-            get : function() {
-                return !this._outlineEnabled ||
-                       (!defined(this._entity.availability) &&
-                        Property.isConstant(this._showProperty) &&
-                        Property.isConstant(this._showOutlineProperty));
-            }
-        },
-        /**
-         * Gets the {@link Color} property for the geometry outline.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        outlineColorProperty : {
-            get : function() {
-                return this._outlineColorProperty;
-            }
-        },
-        /**
-         * Gets the constant with of the geometry outline, in pixels.
-         * This value is only valid if isDynamic is false.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        outlineWidth : {
-            get : function() {
-                return this._outlineWidth;
-            }
-        },
-        /**
-         * Gets the property specifying whether the geometry
-         * casts or receives shadows from each light source.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        shadowsProperty : {
-            get : function() {
-                return this._shadowsProperty;
-            }
-        },
-        /**
-         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Property}
-         * @readonly
-         */
-        distanceDisplayConditionProperty : {
-            get : function() {
-                return this._distanceDisplayCondition;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
-         * returned by GeometryUpdater#createDynamicUpdater.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        isDynamic : {
-            get : function() {
-                return this._dynamic;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry is closed.
-         * This property is only valid for static geometry.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        isClosed : {
-            get : function() {
-                return this._isClosed;
-            }
-        },
-        /**
-         * Gets a value indicating if the geometry should be drawn on terrain.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        onTerrain : {
-            get : function() {
-                return this._onTerrain;
-            }
-        },
-        /**
-         * Gets an event that is raised whenever the public properties
-         * of this updater change.
-         * @memberof CorridorGeometryUpdater.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        geometryChanged : {
-            get : function() {
-                return this._geometryChanged;
-            }
-        }
-    });
-
-    /**
-     * Checks if the geometry is outlined at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
-     */
-    CorridorGeometryUpdater.prototype.isOutlineVisible = function(time) {
-        var entity = this._entity;
-        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
-    };
-
-    /**
-     * Checks if the geometry is filled at the provided time.
-     *
-     * @param {JulianDate} time The time for which to retrieve visibility.
-     * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
-     */
-    CorridorGeometryUpdater.prototype.isFilled = function(time) {
-        var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
-    };
+    if (defined(Object.create)) {
+        CorridorGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        CorridorGeometryUpdater.prototype.constructor = CorridorGeometryUpdater;
+    }
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
@@ -353,7 +104,7 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
-        var distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayCondition.getValue(time));
+        var distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -406,159 +157,61 @@ define([
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayCondition.getValue(time))
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time))
             }
         });
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    CorridorGeometryUpdater.prototype.isDestroyed = function() {
-        return false;
+    CorridorGeometryUpdater.prototype._isHidden = function(entity, corridor) {
+        return !defined(corridor.positions) || GeometryUpdater.prototype._isHidden.call(this, entity, corridor);
     };
 
-    /**
-     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    CorridorGeometryUpdater.prototype.destroy = function() {
-        this._entitySubscription();
-        destroyObject(this);
+    CorridorGeometryUpdater.prototype._isOnTerrain = function(entity, corridor) {
+        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
+
+        return this._fillEnabled && !defined(corridor.height) && !defined(corridor.extrudedHeight) &&
+               isColorMaterial && GroundPrimitive.isSupported(this._scene);
     };
 
-    CorridorGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'corridor')) {
-            return;
-        }
+    CorridorGeometryUpdater.prototype._getIsClosed = function(entity, corridor) {
+        return defined(corridor.extrudedHeight) || this._onTerrain;
+    };
 
-        var corridor = this._entity.corridor;
+    CorridorGeometryUpdater.prototype._isDynamic = function(entity, corridor) {
+        return !corridor.positions.isConstant || //
+               !Property.isConstant(corridor.height) || //
+               !Property.isConstant(corridor.extrudedHeight) || //
+               !Property.isConstant(corridor.granularity) || //
+               !Property.isConstant(corridor.width) || //
+               !Property.isConstant(corridor.outlineWidth) || //
+               !Property.isConstant(corridor.cornerType) || //
+               (this._onTerrain && !Property.isConstant(this._materialProperty));
+    };
 
-        if (!defined(corridor)) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var fillProperty = corridor.fill;
-        var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
-
-        var outlineProperty = corridor.outline;
-        var outlineEnabled = defined(outlineProperty);
-        if (outlineEnabled && outlineProperty.isConstant) {
-            outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
-        }
-
-        if (!fillEnabled && !outlineEnabled) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var positions = corridor.positions;
-
-        var show = corridor.show;
-        if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(positions))) {
-            if (this._fillEnabled || this._outlineEnabled) {
-                this._fillEnabled = false;
-                this._outlineEnabled = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-            return;
-        }
-
-        var material = defaultValue(corridor.material, defaultMaterial);
-        var isColorMaterial = material instanceof ColorMaterialProperty;
-        this._materialProperty = material;
-        this._fillProperty = defaultValue(fillProperty, defaultFill);
-        this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(corridor.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(corridor.outlineColor, defaultOutlineColor) : undefined;
-        this._shadowsProperty = defaultValue(corridor.shadows, defaultShadows);
-        this._distanceDisplayCondition = defaultValue(corridor.distanceDisplayCondition, defaultDistanceDisplayCondition);
-
+    CorridorGeometryUpdater.prototype._setStaticOptions = function(entity, corridor) {
         var height = corridor.height;
         var extrudedHeight = corridor.extrudedHeight;
         var granularity = corridor.granularity;
         var width = corridor.width;
-        var outlineWidth = corridor.outlineWidth;
         var cornerType = corridor.cornerType;
-        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) &&
-                        isColorMaterial && GroundPrimitive.isSupported(this._scene);
+        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
-        if (outlineEnabled && onTerrain) {
-            oneTimeWarning(oneTimeWarning.geometryOutlines);
-            outlineEnabled = false;
-        }
-
-        this._fillEnabled = fillEnabled;
-        this._onTerrain = onTerrain;
-        this._isClosed = defined(extrudedHeight) || onTerrain;
-        this._outlineEnabled = outlineEnabled;
-
-        if (!positions.isConstant || //
-            !Property.isConstant(height) || //
-            !Property.isConstant(extrudedHeight) || //
-            !Property.isConstant(granularity) || //
-            !Property.isConstant(width) || //
-            !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(cornerType) || //
-            (onTerrain && !Property.isConstant(material))) {
-            if (!this._dynamic) {
-                this._dynamic = true;
-                this._geometryChanged.raiseEvent(this);
-            }
-        } else {
-            var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.positions = positions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
-            options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
-            this._dynamic = false;
-            this._geometryChanged.raiseEvent(this);
-        }
+        var options = this._options;
+        options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
+        options.positions = corridor.positions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
+        options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-    /**
-     * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     *
-     * @param {PrimitiveCollection} primitives The primitive collection to use.
-     * @param {PrimitiveCollection} groundPrimitives The ground primitives collection to use.
-     * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
-     *
-     * @exception {DeveloperError} This instance does not represent dynamic geometry.
-     */
-    CorridorGeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('primitives', primitives);
-        Check.defined('groundPrimitives', groundPrimitives);
-
-        if (!this._dynamic) {
-            throw new DeveloperError('This instance does not represent dynamic geometry.');
-        }
-        //>>includeEnd('debug');
-
-        return new DynamicGeometryUpdater(primitives, groundPrimitives, this);
-    };
+    CorridorGeometryUpdater.DynamicGeometryUpdater = DynamicGeometryUpdater;
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
+    function DynamicGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
         this._primitives = primitives;
         this._groundPrimitives = groundPrimitives;
         this._primitive = undefined;

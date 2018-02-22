@@ -1,7 +1,7 @@
 define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
+    '../Core/DeveloperError'
+], function(
+    DeveloperError) {
     'use strict';
 
     /**

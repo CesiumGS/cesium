@@ -2659,7 +2659,7 @@ defineSuite([
         });
     });
 
-    it('immediatelyLoadDesiredLevelOfDetail', function() {
+    xit('immediatelyLoadDesiredLevelOfDetail', function() {
         viewBottomRight();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetOfTilesetsUrl,
