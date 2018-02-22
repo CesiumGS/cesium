@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/CorridorGeometry',
@@ -26,6 +27,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         CorridorGeometry,
@@ -85,12 +87,8 @@ define([
      */
     function CorridorGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required');
-        }
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required');
-        }
+        Check.defined('entity', entity);
+        Check.defined('scene', scene);
         //>>includeEnd('debug');
 
         this._entity = entity;
@@ -111,30 +109,23 @@ define([
         this._distanceDisplayConditionProperty = undefined;
         this._onTerrain = false;
         this._options = new GeometryOptions(entity);
+        this._id = 'corridor-' + entity.id;
 
         this._onEntityPropertyChanged(entity, 'corridor', entity.corridor, undefined);
     }
 
-    defineProperties(CorridorGeometryUpdater, {
-        /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof CorridorGeometryUpdater
-         * @type {Appearance}
-         */
-        perInstanceColorAppearanceType : {
-            value : PerInstanceColorAppearance
-        },
-        /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof CorridorGeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            value : MaterialAppearance
-        }
-    });
-
     defineProperties(CorridorGeometryUpdater.prototype, {
+        /**
+         * Gets the unique ID associated with this updater
+         * @memberof CorridorGeometryUpdater.prototype
+         * @type {String}
+         * @readonly
+         */
+        id: {
+            get: function() {
+                return this._id;
+            }
+        },
         /**
          * Gets the entity associated with this geometry.
          * @memberof CorridorGeometryUpdater.prototype
@@ -349,9 +340,7 @@ define([
      */
     CorridorGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
 
         if (!this._fillEnabled) {
             throw new DeveloperError('This instance does not represent a filled geometry.');
@@ -401,9 +390,7 @@ define([
      */
     CorridorGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
 
         if (!this._outlineEnabled) {
             throw new DeveloperError('This instance does not represent an outlined geometry.');
@@ -558,12 +545,11 @@ define([
      */
     CorridorGeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
+        Check.defined('primitives', primitives);
+        Check.defined('groundPrimitives', groundPrimitives);
+
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
-        }
-
-        if (!defined(primitives)) {
-            throw new DeveloperError('primitives is required.');
         }
         //>>includeEnd('debug');
 
@@ -580,12 +566,12 @@ define([
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
+        this._entity = geometryUpdater._entity;
     }
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var geometryUpdater = this._geometryUpdater;
@@ -602,7 +588,7 @@ define([
         }
         this._primitive = undefined;
 
-        var entity = geometryUpdater._entity;
+        var entity = this._entity;
         var corridor = entity.corridor;
         if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(corridor.show, time, true)) {
             return;
@@ -701,8 +687,8 @@ define([
         }
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
-        return dynamicGeometryGetBoundingSphere(entity, this._primitive, this._outlinePrimitive, result);
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
+        return dynamicGeometryGetBoundingSphere(this._entity, this._primitive, this._outlinePrimitive, result);
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {

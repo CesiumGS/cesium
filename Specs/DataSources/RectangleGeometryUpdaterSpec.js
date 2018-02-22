@@ -656,7 +656,18 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
-            return updater.createDynamicUpdater(undefined);
+            return updater.createDynamicUpdater(undefined, new PrimitiveCollection());
+        }).toThrowDeveloperError();
+    });
+
+    it('createDynamicUpdater throws if groundPrimitives undefined', function() {
+        var entity = createBasicRectangle();
+        entity.rectangle.height = new SampledProperty(Number);
+        entity.rectangle.height.addSample(time, 4);
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.isDynamic).toBe(true);
+        expect(function() {
+            return updater.createDynamicUpdater(new PrimitiveCollection(), undefined);
         }).toThrowDeveloperError();
     });
 
@@ -665,7 +676,7 @@ defineSuite([
         entity.rectangle.height = new SampledProperty(Number);
         entity.rectangle.height.addSample(time, 4);
         var updater = new RectangleGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
