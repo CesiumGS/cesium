@@ -767,15 +767,15 @@ define([
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
-        var numFrustums;
         var farToNearRatio;
+
         if (this._logDepthBuffer) {
-            numFrustums = 1;
-            farToNearRatio = far / near;
+            farToNearRatio = this.farToNearRatio * this.farToNearRatio;
         } else {
-            numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
             farToNearRatio = this.farToNearRatio;
         }
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         updateFrustums(near, far, farToNearRatio, numFrustums, this._frustumCommandsList, false, undefined);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
@@ -783,7 +783,7 @@ define([
         this.initializeFrame();
     }
 
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
+    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9;
 
     function updateGlobeListeners(scene, globe) {
         for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
@@ -1742,11 +1742,9 @@ define([
         if (!is2D) {
             // The multifrustum for 3D/CV is non-uniformly distributed.
             if (logDepth) {
-                numFrustums = 1;
-                farToNearRatio = far / near;
-            } else {
-                numFrustums = Math.ceil(Math.log(far / near) / Math.log(scene.farToNearRatio));
+                farToNearRatio *= farToNearRatio;
             }
+            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         } else {
             // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
             // the camera is moved to just before the frustum and the frustum depth is scaled
@@ -3094,6 +3092,11 @@ define([
         this._postUpdate.raiseEvent(this, time);
 
         this._frustumChanged = this._camera !== this._cameraClone.frustum;
+        if (this._frustumChanged && this._logDepthBuffer && !(this._camera.frustum instanceof OrthographicFrustum || this._camera.frustum instanceof OrthographicOffCenterFrustum)) {
+            this._camera.frustum.near = 0.1;
+            this._camera.frustum.far = 10000000000.0;
+        }
+
         var cameraChanged = checkForCameraUpdates(this);
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {

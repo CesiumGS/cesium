@@ -199,7 +199,8 @@ define([
                     enabled : true,
                     face : CullFace.FRONT
                 },
-                blending : BlendingState.ALPHA_BLEND
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : false
             });
 
             var vs = new ShaderSource({
