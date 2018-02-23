@@ -385,15 +385,21 @@ define([
         Check.defined('credit', credit);
         //>>includeEnd('debug');
 
+        var imageCredits = this._currentFrameCredits.imageCredits;
+
         if (credit.text === 'Cesium ion') {
             // We don't want to clutter the screen with the Cesium logo and the Cesium ion
             // logo at the same time. Since the ion logo is required, we just replace the
-            // Cesium logo.  This will also add the logo if the Cesium one was removed.
-            this._currentFrameCredits.imageCredits[cesiumCredit.id] = credit;
+            // Cesium logo or add the logo if the Cesium one was removed.
+            if (defined(imageCredits[cesiumCredit.id])) {
+                imageCredits[cesiumCredit.id] = credit;
+            } else {
+                imageCredits[credit.id] = credit;
+            }
         } else if (!credit.showOnScreen) {
             this._currentFrameCredits.lightboxCredits[credit.id] = credit;
         } else if (credit.hasImage()) {
-            this._currentFrameCredits.imageCredits[credit.id] = credit;
+            imageCredits[credit.id] = credit;
         } else {
             this._currentFrameCredits.textCredits[credit.id] = credit;
         }
@@ -478,9 +484,13 @@ define([
      */
     CreditDisplay.prototype.beginFrame = function() {
         this._currentFrameCredits.imageCredits.length = 0;
-        this._currentFrameCredits.imageCredits[cesiumCredit.id] = cesiumCredit;
         this._currentFrameCredits.textCredits.length = 0;
         this._currentFrameCredits.lightboxCredits.length = 0;
+
+        var cesiumCredit = CreditDisplay.cesiumCredit;
+        if (defined(cesiumCredit)) {
+            this._currentFrameCredits.imageCredits[cesiumCredit.id] = cesiumCredit;
+        }
     };
 
     /**
@@ -537,6 +547,12 @@ define([
     CreditDisplay.prototype.isDestroyed = function() {
         return false;
     };
+
+    /**
+     * Gets or sets the Cesium logo credit.
+     * @type {Credit}
+     */
+    CreditDisplay.cesiumCredit = cesiumCredit;
 
     return CreditDisplay;
 });
