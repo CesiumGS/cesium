@@ -34,8 +34,6 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 10,
-            closeTop : false,
-            closeBottom : false,
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition()
         };
@@ -53,8 +51,6 @@ defineSuite([
         expect(rectangle.outline).toBeInstanceOf(ConstantProperty);
         expect(rectangle.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(rectangle.outlineWidth).toBeInstanceOf(ConstantProperty);
-        expect(rectangle.closeTop).toBeInstanceOf(ConstantProperty);
-        expect(rectangle.closeBottom).toBeInstanceOf(ConstantProperty);
         expect(rectangle.shadows).toBeInstanceOf(ConstantProperty);
         expect(rectangle.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
 
@@ -70,8 +66,6 @@ defineSuite([
         expect(rectangle.outline.getValue()).toEqual(options.outline);
         expect(rectangle.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(rectangle.outlineWidth.getValue()).toEqual(options.outlineWidth);
-        expect(rectangle.closeTop.getValue()).toEqual(options.closeTop);
-        expect(rectangle.closeBottom.getValue()).toEqual(options.closeBottom);
         expect(rectangle.shadows.getValue()).toEqual(options.shadows);
         expect(rectangle.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
     });
@@ -90,8 +84,6 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
-        source.closeTop = new ConstantProperty();
-        source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty();
 
@@ -110,8 +102,6 @@ defineSuite([
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
-        expect(target.closeTop).toBe(source.closeTop);
-        expect(target.closeBottom).toBe(source.closeBottom);
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
@@ -131,8 +121,6 @@ defineSuite([
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
-        var closeTop = new ConstantProperty();
-        var closeBottom = new ConstantProperty();
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
 
@@ -149,8 +137,6 @@ defineSuite([
         target.outline = outline;
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
-        target.closeTop = closeTop;
-        target.closeBottom = closeBottom;
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
 
@@ -168,8 +154,6 @@ defineSuite([
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
-        expect(target.closeTop).toBe(closeTop);
-        expect(target.closeBottom).toBe(closeBottom);
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
     });
@@ -188,8 +172,6 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
-        source.closeTop = new ConstantProperty();
-        source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
 
@@ -206,8 +188,6 @@ defineSuite([
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
-        expect(result.closeTop).toBe(source.closeTop);
-        expect(result.closeBottom).toBe(source.closeBottom);
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
     });
@@ -233,8 +213,6 @@ defineSuite([
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
-        testDefinitionChanged(property, 'closeTop', false, true);
-        testDefinitionChanged(property, 'closeBottom', false, true);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
