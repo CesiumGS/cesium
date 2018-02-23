@@ -64,6 +64,7 @@ defineSuite([
             expect(attributes.color).toEqual([255, 0, 0, 255]);
 
             entity.ellipse.outlineColor = Color.GREEN;
+            updater._onEntityPropertyChanged(entity, 'ellipse');
             batch.remove(updater);
             batch.add(time, updater);
             return pollToPromise(function() {

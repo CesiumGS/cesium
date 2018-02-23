@@ -85,6 +85,7 @@ defineSuite([
             expect(batch._batches.get(redKey).key).toEqual(redKey);
 
             entity.ellipse.material = Color.GREEN;
+            updater._onEntityPropertyChanged(entity, 'ellipse');
             batch.remove(updater);
             batch.add(time, updater);
             return pollToPromise(function() {
