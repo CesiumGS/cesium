@@ -45,7 +45,7 @@ define([
      * @param {String} options.appCode The Here Maps appCode for your application, which can be
      *        created at {@link https://developer.here.com/}.
      * @param {Resource|String} [options.url="http://maps.api.here.com"] The URL for accessing tiles, without the Load Balancing or Map Type prefixes.
-     *        You may use the *.maps.cit.api.here.com URLs during development. 
+     *        You may use the *.maps.cit.api.here.com URLs during development.
      * @param {String} [options.mapType="aerial"] The type of imagery to load. @see {@link https://developer.here.com/documentation/map-tile/topics/request-constructing.html|HereMaps Request Constructing}
      * @param {String} [options.tileType="maptile"] Determines which type of image will be delivered. E.g. Map, Labels, Streets, etc.
      * @param {String} [options.scheme="satellite.day"] Specifies the view scheme, e.g normal.day, normal.night, terrain.day, etc.
@@ -101,7 +101,7 @@ define([
         var rootUrl = Resource.createIfNeeded( defaultValue(options.url, 'http://maps.api.here.com') );
         var mapType = defaultValue(options.mapType, 'aerial');
         var mapId = 'newest';
-        
+
         this._baseUrl = new Resource({
             url: '//{subdomain}.' + mapType + '.' + new Uri(rootUrl.url).getAuthority(),
             queryParameters: {
