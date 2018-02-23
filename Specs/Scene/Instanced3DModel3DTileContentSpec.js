@@ -8,7 +8,8 @@ defineSuite([
         'Core/Transforms',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Scene/Model'
     ], 'Scene/Instanced3DModel3DTileContent', function(
         Cartesian3,
         ClippingPlane,
@@ -19,7 +20,8 @@ defineSuite([
         Transforms,
         TileBoundingSphere,
         Cesium3DTilesTester,
-        createScene) {
+        createScene,
+        Model) {
     'use strict';
 
     var scene;
@@ -313,11 +315,13 @@ defineSuite([
 
             expect(model.clippingPlanes).toBeUndefined();
 
-            tileset.clippingPlanes = new ClippingPlaneCollection({
+            var clippingPlaneCollection = new ClippingPlaneCollection({
                 planes : [
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
             content.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeDefined();
@@ -327,6 +331,27 @@ defineSuite([
             content.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeUndefined();
+        });
+    });
+
+    it('rebuilds Model shaders when clipping planes change', function() {
+        spyOn(Model, '_getClippingFunction').and.callThrough();
+
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var content = tile.content;
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            content.shadersDirty = true;
+            content.update(tileset, scene.frameState);
+
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
         });
     });
 

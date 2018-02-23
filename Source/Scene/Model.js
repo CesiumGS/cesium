@@ -63,6 +63,7 @@ define([
         './Axis',
         './BlendingState',
         './ColorBlendMode',
+        './getClippingFunction',
         './HeightReference',
         './JobType',
         './ModelAnimationCache',
@@ -139,6 +140,7 @@ define([
         Axis,
         BlendingState,
         ColorBlendMode,
+        getClippingFunction,
         HeightReference,
         JobType,
         ModelAnimationCache,
@@ -490,6 +492,7 @@ define([
         this.color = defaultValue(options.color, Color.WHITE);
         this._color = new Color();
         this._colorPreviousAlpha = 1.0;
+        this._hasPremultipliedAlpha = false;
 
         /**
          * Defines how the color blends with the model.
@@ -511,9 +514,21 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
+        this.needsColorShadingCode = needsColorShadingCode(this);
+
         this._clippingPlanes = undefined;
 
         ClippingPlaneCollection.setOwnership(options.clippingPlanes, this, '_clippingPlanes');
+
+        /**
+         * Flag to specify that shaders should be regenerated.
+         * Typically used to rebuild shaders if a ClippingPlaneCollection is added or removed.
+         *
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        this.shouldRegenerateShaders = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -619,6 +634,11 @@ define([
         this._geometryByteLength = 0;
         this._texturesByteLength = 0;
         this._trianglesLength = 0;
+
+        // Hold references to programs and shaders for shader reconstruction.
+        // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
+        this._sourcePrograms = undefined;
+        this._sourceShaders = undefined;
 
         this._nodeCommands = [];
         this._pickIds = [];
@@ -1008,13 +1028,27 @@ define([
                 return this._clippingPlanes;
             },
             set : function(value) {
+                if (value === this._clippingPlanes) {
+                    return;
+                }
+                // Handle destroying, checking of unknown, checking for existing ownership
                 ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                this.shouldRegenerateShaders = true;
             }
         }
     });
 
     function silhouetteSupported(context) {
         return context.stencilBuffer;
+    }
+
+    function needsColorShadingCode(model) {
+        return !Color.equals(model.color, Color.WHITE) || (model.colorBlendMode !== ColorBlendMode.HIGHLIGHT);
+    }
+
+    function needsClippingCode(model) {
+        var clippingPlanes = model._clippingPlanes;
+        return defined(clippingPlanes) && clippingPlanes.enabled;
     }
 
     /**
@@ -1881,15 +1915,20 @@ define([
     };
 
     CreateProgramJob.prototype.execute = function() {
-        createProgram(this.id, this.model, this.context);
+        createProgram(this.id, this.model, this.context, true);
     };
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function createProgram(id, model, context) {
-        var programs = model.gltf.programs;
-        var shaders = model.gltf.shaders;
+    // When building programs for the first time, do not include modifiers for clipping planes and color
+    // since this is the version of the program that will be cached.
+    function createProgram(id, model, context, firstBuild) {
+        var programs = model._sourcePrograms;
+        var shaders = model._sourceShaders;
         var program = programs[id];
+
+        var clippingPlaneCollection = model.clippingPlanes;
+        var addClippingPlaneCode = !firstBuild && needsClippingCode(model);
 
         var attributeLocations = createAttributeLocations(model, program.attributes);
         var vs = shaders[program.vertexShader].extras._pipeline.source;
@@ -1910,9 +1949,13 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, id, model);
         }
 
-        var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
-        finalFS = modifyShaderForClippingPlanes(finalFS, context);
+        var finalFS = fs;
+        if (needsColorShadingCode(model)) {
+            finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
+        }
+        if (addClippingPlaneCode) {
+            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
+        }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
@@ -1933,7 +1976,9 @@ define([
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 
-            pickFS = modifyShaderForClippingPlanes(pickFS, context);
+            if (addClippingPlaneCode) {
+                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection, context);
+            }
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
@@ -1973,7 +2018,7 @@ define([
         } else {
             // Create all loaded programs this frame
             while (programsToCreate.length > 0) {
-                createProgram(programsToCreate.dequeue(), model, context);
+                createProgram(programsToCreate.dequeue(), model, context, true);
             }
         }
     }
@@ -2520,7 +2565,7 @@ define([
         var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
 
         // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
-        if (booleanStates[WebGLConstants.BLEND] && hasPremultipliedAlpha(model)) {
+        if (booleanStates[WebGLConstants.BLEND] && model._hasPremultipliedAlpha) {
             if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
                 blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
                 blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
@@ -2984,7 +3029,7 @@ define([
                 vertexArray : vertexArray,
                 count : count,
                 offset : offset,
-                shaderProgram : rendererPrograms[technique.program],
+                shaderProgram : rendererPrograms[programId],
                 castShadows : castShadows,
                 receiveShadows : receiveShadows,
                 uniformMap : uniformMap,
@@ -3025,7 +3070,7 @@ define([
                     vertexArray : vertexArray,
                     count : count,
                     offset : offset,
-                    shaderProgram : rendererPickPrograms[technique.program],
+                    shaderProgram : rendererPickPrograms[programId],
                     uniformMap : pickUniformMap,
                     renderState : rs,
                     owner : owner,
@@ -3061,12 +3106,13 @@ define([
                 silhouetteColorCommand2D : undefined,
                 // Generated on demand when color alpha is less than 1.0
                 translucentCommand : undefined,
-                translucentCommand2D : undefined
+                translucentCommand2D : undefined,
+                // For updating node commands on shader reconstruction
+                programId : programId
             };
             runtimeNode.commands.push(nodeCommand);
             nodeCommands.push(nodeCommand);
         }
-
     }
 
     function createRuntimeNodes(model, context, scene3DOnly) {
@@ -3194,6 +3240,12 @@ define([
     function createResources(model, frameState) {
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
+
+        // Retain references to updated source shaders and programs for rebuilding as needed
+        model._sourcePrograms = model.gltf.programs;
+        model._sourceShaders = model.gltf.shaders;
+        model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
+
 
         ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {
@@ -3518,14 +3570,14 @@ define([
         return translucentCommand;
     }
 
-    function updateColor(model, frameState) {
+    function updateColor(model, frameState, forceDerive) {
         // Generate translucent commands when the blend color has an alpha in the range (0.0, 1.0) exclusive
         var scene3DOnly = frameState.scene3DOnly;
         var alpha = model.color.alpha;
         if ((alpha > 0.0) && (alpha < 1.0)) {
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
-            if (!defined(nodeCommands[0].translucentCommand)) {
+            if (!defined(nodeCommands[0].translucentCommand) || forceDerive) {
                 for (var i = 0; i < length; ++i) {
                     var nodeCommand = nodeCommands[i];
                     var command = nodeCommand.command;
@@ -3738,12 +3790,11 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader, context) {
+    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        if (ClippingPlaneCollection.useFloatTexture(context)) {
-            var width = ClippingPlaneCollection.TEXTURE_WIDTH;
-            var height = ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT;
             shader +=
+            Model._getClippingFunction(clippingPlaneCollection) +
+            '\n' +
                 'uniform vec4 gltf_clippingPlanesLengthRangeUnion; \n' +
                 'uniform sampler2D gltf_clippingPlanes; \n' +
                 'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
@@ -3751,68 +3802,19 @@ define([
                 'void main() \n' +
                 '{ \n' +
                 '    gltf_clip_main(); \n' +
-                '    int clippingPlanesLength = int(gltf_clippingPlanesLengthRangeUnion.x);' +
-                '    bool clippingPlanesUnionRegions = gltf_clippingPlanesLengthRangeUnion.w == 1.0;' +
-                '    if (clippingPlanesLength > 0) \n' +
+            '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix' + (ClippingPlaneCollection.useFloatTexture(context) ? ');\n' : ', gltf_clippingPlanesLengthRangeUnion.yz);\n') +
+            '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+            '    clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
+            '    float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
+            '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
                 '    { \n' +
-                '        float clipDistance; \n' +
-                '        if (clippingPlanesUnionRegions) \n' +
-                '        { \n' +
-                '            clipDistance = czm_discardIfClippedWithUnionFloat(gltf_clippingPlanes, clippingPlanesLength, ' + width + ', ' + height + ', gltf_clippingPlanesMatrix); \n' +
-                '        } \n' +
-                '        else \n' +
-                '        { \n' +
-                '            clipDistance = czm_discardIfClippedWithIntersectFloat(gltf_clippingPlanes, clippingPlanesLength, ' + width + ', ' + height + ', gltf_clippingPlanesMatrix); \n' +
-                '        } \n' +
-                '        \n' +
-                '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-                '        clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
-                '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
-                '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-                '        { \n' +
-                '            gl_FragColor = clippingPlanesEdgeColor;\n' +
-                '        } \n' +
+            '        gl_FragColor = clippingPlanesEdgeColor;\n' +
                 '    } \n' +
                 '} \n';
-        } else {
-            shader +=
-                'uniform vec4 gltf_clippingPlanesLengthRangeUnion; \n' +
-                'uniform sampler2D gltf_clippingPlanes; \n' +
-                'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
-                'uniform mat4 gltf_clippingPlanesMatrix; \n' +
-                'void main() \n' +
-                '{ \n' +
-                '    gltf_clip_main(); \n' +
-                '    int clippingPlanesLength = int(gltf_clippingPlanesLengthRangeUnion.x);' +
-                '    bool clippingPlanesUnionRegions = gltf_clippingPlanesLengthRangeUnion.w == 1.0;' +
-                '    vec2 clippingPlanesRange = gltf_clippingPlanesLengthRangeUnion.yz;' +
-                '    if (clippingPlanesLength > 0) \n' +
-                '    { \n' +
-                '        float clipDistance; \n' +
-                '        if (clippingPlanesUnionRegions) \n' +
-                '        { \n' +
-                '            clipDistance = czm_discardIfClippedWithUnionUint8(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
-                '        } \n' +
-                '        else \n' +
-                '        { \n' +
-                '            clipDistance = czm_discardIfClippedWithIntersectUint8(gltf_clippingPlanes, clippingPlanesLength, clippingPlanesRange, ' + ClippingPlaneCollection.TEXTURE_WIDTH + ', gltf_clippingPlanesMatrix); \n' +
-                '        } \n' +
-                '        \n' +
-                '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-                '        clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
-                '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
-                '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-                '        { \n' +
-                '            gl_FragColor = clippingPlanesEdgeColor;\n' +
-                '        } \n' +
-                '    } \n' +
-                '} \n';
-        }
-
         return shader;
     }
 
-    function updateSilhouette(model, frameState) {
+    function updateSilhouette(model, frameState, force) {
         // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
         // There are two silhouette commands:
         //     1. silhouetteModelCommand : render model normally while enabling stencil mask
@@ -3829,15 +3831,18 @@ define([
         model._colorPreviousAlpha = model.color.alpha;
         model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
 
-        if (dirty) {
+        if (dirty || force) {
             createSilhouetteCommands(model, frameState);
         }
     }
 
     function updateClippingPlanes(model, frameState) {
         var clippingPlanes = model._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.owner === model && clippingPlanes.enabled) {
-            clippingPlanes.update(frameState);
+        if (defined(clippingPlanes) && clippingPlanes.owner === model) {
+            if (clippingPlanes.enabled) {
+                clippingPlanes.update(frameState);
+            }
+            clippingPlanes.shouldRegenerateShaders = false;
         }
     }
 
@@ -4068,7 +4073,7 @@ define([
             // Use renderer resources from cache instead of loading/creating them?
             var cachedRendererResources;
             var cacheKey = this.cacheKey;
-            if (defined(cacheKey)) {
+            if (defined(cacheKey)) { // cache key given? this model will pull from or contribute to context level cache
                 context.cache.modelRendererResourceCache = defaultValue(context.cache.modelRendererResourceCache, {});
                 var modelCaches = context.cache.modelRendererResourceCache;
 
@@ -4088,7 +4093,7 @@ define([
                     modelCaches[this.cacheKey] = cachedRendererResources;
                 }
                 this._cachedRendererResources = cachedRendererResources;
-            } else {
+            } else { // cache key not given? this model doesn't care about context level cache at all. Cache is here to simplify freeing on destroy.
                 cachedRendererResources = new CachedRendererResources(context);
                 cachedRendererResources.count = 1;
                 this._cachedRendererResources = cachedRendererResources;
@@ -4255,8 +4260,12 @@ define([
             }
 
             var clippingPlanes = this._clippingPlanes;
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+            var clippingPlanesShouldRegenerateShaders = false;
+            if (defined(clippingPlanes)) {
+                if (clippingPlanes.enabled) {
+                    Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+                }
+                clippingPlanesShouldRegenerateShaders = clippingPlanes.shouldRegenerateShaders;
             }
 
             // Update modelMatrix throughout the graph as needed
@@ -4278,9 +4287,22 @@ define([
             updateWireframe(this);
             updateShowBoundingVolume(this);
             updateShadows(this);
-            updateColor(this, frameState);
-            updateSilhouette(this, frameState);
             updateClippingPlanes(this, frameState);
+
+            // Regenerate shader if color shading changed from last update
+            var currentlyNeedsColorCode = needsColorShadingCode(this);
+            if (currentlyNeedsColorCode !== this.needsColorShadingCode) {
+                this.needsColorShadingCode = currentlyNeedsColorCode;
+                this.shouldRegenerateShaders = true;
+            }
+
+            if (this.shouldRegenerateShaders || clippingPlanesShouldRegenerateShaders) {
+                regenerateShaders(this, frameState);
+                this.shouldRegenerateShaders = false;
+            } else {
+                updateColor(this, frameState, false);
+                updateSilhouette(this, frameState, false);
+            }
         }
 
         if (justLoaded) {
@@ -4359,6 +4381,84 @@ define([
         }
     };
 
+    function destroyIfNotCached(rendererResources, cachedRendererResources) {
+        if (rendererResources.programs !== cachedRendererResources.programs) {
+            destroy(rendererResources.programs);
+        }
+        if (rendererResources.pickPrograms !== cachedRendererResources.pickPrograms) {
+            destroy(rendererResources.pickPrograms);
+        }
+        if (rendererResources.silhouettePrograms !== cachedRendererResources.silhouettePrograms) {
+            destroy(rendererResources.silhouettePrograms);
+        }
+    }
+
+    // Run from update iff:
+    // - everything is loaded
+    // - clipping planes state change (shouldRegenerateShaders) OR color state set
+    // Run this from destructor after removing color state and clipping plane state
+    function regenerateShaders(model, frameState) {
+        // In regards to _cachedRendererResources:
+        // Fair to assume that this is data that should just never get modified due to clipping planes or model color.
+        // So if clipping planes or model color active:
+        // - delink _rendererResources.*programs and create new dictionaries.
+        // - do NOT destroy any programs - might be used by copies of the model or by might be needed in the future if clipping planes/model color is deactivated
+
+        // If clipping planes/model color inactive:
+        // - destroy _rendererResources.*programs
+        // - relink _rendererResources.*programs to _cachedRendererResources
+
+        // In both cases, need to mark commands as dirty, re-run derived commands (elsewhere)
+
+        var rendererResources = model._rendererResources;
+
+        if (needsClippingCode(model) || needsColorShadingCode(model)) {
+            rendererResources.programs = {};
+            rendererResources.pickPrograms = {};
+            rendererResources.silhouettePrograms = {};
+
+            var sourcePrograms = model._sourcePrograms;
+
+            ForEach.object(sourcePrograms, function(program, id) {
+                createProgram(id, model, frameState.context, false);
+            });
+        } else {
+            var cachedRendererResources = model._cachedRendererResources;
+            destroyIfNotCached(rendererResources, cachedRendererResources);
+
+            rendererResources.programs = cachedRendererResources.programs;
+            rendererResources.pickPrograms = cachedRendererResources.pickPrograms;
+            rendererResources.silhouettePrograms = cachedRendererResources.silhouettePrograms;
+        }
+
+        // Fix all the commands, marking them as dirty so everything that derives will re-derive
+        var rendererPrograms = rendererResources.programs;
+        var rendererPickPrograms = rendererResources.pickPrograms;
+
+        var nodeCommands = model._nodeCommands;
+        var commandCount = nodeCommands.length;
+        for (var i = 0; i < commandCount; ++i) {
+            var nodeCommand = nodeCommands[i];
+            var programId = nodeCommand.programId;
+
+            var renderProgram = rendererPrograms[programId];
+            var pickProgram = rendererPickPrograms[programId];
+
+            nodeCommand.command.shaderProgram = renderProgram;
+            nodeCommand.pickCommand.shaderProgram = pickProgram;
+            if (defined(nodeCommand.command2D)) {
+                nodeCommand.command2D.shaderProgram = renderProgram;
+            }
+            if (defined(nodeCommand.pickCommand2D)) {
+                nodeCommand.pickCommand2D.shaderProgram = pickProgram;
+            }
+        }
+
+        // Force update silhouette commands/shaders
+        updateColor(model, frameState, true);
+        updateSilhouette(model, frameState, true);
+    }
+
     /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
@@ -4407,6 +4507,11 @@ define([
             this._terrainProviderChangedCallback = undefined;
         }
 
+        // Shaders modified for clipping and for color don't get cached, so destroy these manually
+        if (defined(this._cachedRendererResources)) {
+            destroyIfNotCached(this._rendererResources, this._cachedRendererResources);
+        }
+
         this._rendererResources = undefined;
         this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
 
@@ -4417,6 +4522,8 @@ define([
         }
 
         releaseCachedGltf(this);
+        this._sourcePrograms = undefined;
+        this._sourceShaders = undefined;
 
         // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
         // _clippingPlanes references a ClippingPlaneCollection that this model does not own.
@@ -4428,6 +4535,10 @@ define([
 
         return destroyObject(this);
     };
+
+    // exposed for testing
+    Model._getClippingFunction = getClippingFunction;
+    Model._modifyShaderForColor = modifyShaderForColor;
 
     return Model;
 });

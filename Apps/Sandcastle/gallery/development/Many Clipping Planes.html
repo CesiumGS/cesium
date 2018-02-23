@@ -48,7 +48,6 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox: false,
     selectionIndicator: false,
-    skyAtmosphere: false,
     shouldAnimate : true
 });
 
@@ -57,6 +56,7 @@ viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
     requestWaterMask : true,
     requestVertexNormals : true
 });
+viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 
 var globe = viewer.scene.globe;
 globe.depthTestAgainstTerrain = true;
@@ -68,6 +68,7 @@ var steps = 32;
 var clippingPlanes = [];
 var modelEntityClippingPlanes;
 var clippingModeUnion = false;
+var enabled = true;
 
 var clipObjects = ['model', 'b3dm', 'pnts', 'i3dm', 'terrain'];
 var viewModel = {
@@ -144,7 +145,8 @@ function createClippingPlanes(modelMatrix) {
         modelMatrix : Cesium.defined(modelMatrix) ? modelMatrix : Cesium.Matrix4.IDENTITY,
         edgeWidth: 2.0,
         edgeColor: Cesium.Color.WHITE,
-        unionClippingRegions : clippingModeUnion
+        unionClippingRegions : clippingModeUnion,
+        enabled : enabled
     });
     computePlanes();
 }
@@ -263,6 +265,11 @@ function reset() {
 Sandcastle.addToggleButton('union', clippingModeUnion, function(checked) {
     clippingModeUnion = checked;
     modelEntityClippingPlanes.unionClippingRegions = clippingModeUnion;
+});
+
+Sandcastle.addToggleButton('enabled', enabled, function(checked) {
+    enabled = checked;
+    modelEntityClippingPlanes.enabled = enabled;
 });
 
 //Sandcastle_End

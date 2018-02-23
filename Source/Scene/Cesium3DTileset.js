@@ -1895,6 +1895,11 @@ define([
         // Update last statistics
         var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+
+        if (defined(clippingPlanes)) {
+            // Signal that clipping plane shaders have been updated
+            clippingPlanes.shouldRegenerateShaders = false;
+        }
     };
 
     /**

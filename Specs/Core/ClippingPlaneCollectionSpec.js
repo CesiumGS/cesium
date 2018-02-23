@@ -566,4 +566,28 @@ defineSuite([
         clippingPlanes.remove(holdThisPlane);
         expect(clippingPlanes.getShaderState()).toEqual(1);
     });
+
+    it('tracks and indicates need for shader changes', function() {
+        clippingPlanes = new ClippingPlaneCollection();
+        expect(clippingPlanes.shouldRegenerateShaders).toBe(false);
+
+        var holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
+
+        clippingPlanes.add(holdThisPlane);
+        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
+        clippingPlanes.shouldRegenerateShaders = false;
+
+        clippingPlanes.enabled = false;
+        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
+        clippingPlanes.enabled = true;
+        clippingPlanes.shouldRegenerateShaders = false;
+
+        clippingPlanes.unionClippingRegions = true;
+        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
+        clippingPlanes.shouldRegenerateShaders = false;
+
+        clippingPlanes.remove(holdThisPlane);
+        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
+        clippingPlanes.shouldRegenerateShaders = false;
+    });
 });

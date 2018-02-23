@@ -1074,7 +1074,7 @@ define([
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
 
-        this._content.shadersDirty = false;
+        this._content.shadersDirty = false; // reset to prevent unnecessary shader rebuilds
     };
 
     var scratchCommandList = [];

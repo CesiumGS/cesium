@@ -871,6 +871,19 @@ define([
         };
     }
 
+    function generateModelCommands(modelInstanceCollection, instancingSupported) {
+        modelInstanceCollection._drawCommands = [];
+        modelInstanceCollection._pickCommands = [];
+
+        var modelCommands = getModelCommands(modelInstanceCollection._model);
+        if (instancingSupported) {
+            createCommands(modelInstanceCollection, modelCommands.draw, modelCommands.pick);
+        } else {
+            createCommandsNonInstanced(modelInstanceCollection, modelCommands.draw, modelCommands.pick);
+            updateCommandsNonInstanced(modelInstanceCollection);
+        }
+    }
+
     function updateShadows(collection) {
         if (collection.shadows !== collection._shadows) {
             collection._shadows = collection.shadows;
@@ -916,6 +929,8 @@ define([
 
         var instancingSupported = this._instancingSupported;
         var model = this._model;
+        var modelShadersChanged = model.shouldRegenerateShaders;
+
         model.update(frameState);
 
         if (model.ready && (this._state === LoadState.LOADING)) {
@@ -929,12 +944,7 @@ define([
             var modelCommands = getModelCommands(model);
             this._modelCommands = modelCommands.draw;
 
-            if (instancingSupported) {
-                createCommands(this, modelCommands.draw, modelCommands.pick);
-            } else {
-                createCommandsNonInstanced(this, modelCommands.draw, modelCommands.pick);
-                updateCommandsNonInstanced(this);
-            }
+            generateModelCommands(this, instancingSupported);
 
             this._readyPromise.resolve(this);
             return;
@@ -965,6 +975,11 @@ define([
 
             // PERFORMANCE_IDEA: only update dirty sub-sections instead of the whole collection
             updateVertexBuffer(this);
+        }
+
+        // If the model was set to rebuild shaders during update, rebuild instanced commands.
+        if (modelShadersChanged) {
+            generateModelCommands(this, instancingSupported);
         }
 
         // If any node changes due to an animation, update the commands. This could be inefficient if the model is

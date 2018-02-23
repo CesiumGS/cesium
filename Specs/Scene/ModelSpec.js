@@ -811,6 +811,49 @@ defineSuite([
 
             model1.clippingPlanes = undefined;
             expect(clippingPlanes.isDestroyed()).toBe(true);
+
+            primitives.remove(model1);
+        });
+    });
+
+    it('rebuilds shaders when clipping planes change state', function() {
+        spyOn(Model, '_getClippingFunction').and.callThrough();
+
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+
+            var clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                unionClippingRegions : false
+            });
+            model.clippingPlanes = clippingPlanes;
+
+            scene.renderForSpecs();
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+
+            clippingPlanes.unionClippingRegions = true;
+
+            scene.renderForSpecs();
+            expect(Model._getClippingFunction.calls.count()).toEqual(4);
+
+            primitives.remove(model);
+        });
+    });
+
+    it('rebuilds shaders when color requires coloring shader code', function() {
+        spyOn(Model, '_modifyShaderForColor').and.callThrough();
+
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+
+            model.color = Color.LIME;
+
+            scene.renderForSpecs();
+            expect(Model._modifyShaderForColor.calls.count()).toEqual(1);
+
+            primitives.remove(model);
         });
     });
 

@@ -92,7 +92,8 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.enabled = defaultValue(options.enabled, true);
+        this._enabled = false;
+        this.enabled = defaultValue(options.enabled, true); // set using setter
 
         /**
          * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes
@@ -128,12 +129,22 @@ define([
 
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
-        this.unionClippingRegions = defaultValue(options.unionClippingRegions, false);
+        this.unionClippingRegions = defaultValue(options.unionClippingRegions, false); // set using setter
 
         this._uint8View = undefined;
         this._float32View = undefined;
 
         this._clippingPlanesTexture = undefined;
+
+        /**
+         * Flag for if changes since the last call to update necessitate shader changes.
+         * Used by Model.js to rebuild shaders when it owns the ClippingPlaneCollection.
+         * Terrain and 3D Tilesets handle this at the tile-level using getShaderState() and bounding volume checks instead.
+         *
+         * @type {Boolean}
+         * @private
+         */
+        this.shouldRegenerateShaders = false;
     }
 
     function unionIntersectFunction(value) {
@@ -179,6 +190,27 @@ define([
                 this._unionClippingRegions = value;
                 this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
                 this._lengthRangeUnion.w = this._unionClippingRegions ? 1.0 : 0.0;
+                this.shouldRegenerateShaders = true;
+            }
+        },
+
+        /**
+         * If true, clipping will be enabled.
+         *
+         * @memberof ClippingPlaneCollection.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        enabled : {
+            get : function() {
+                return this._enabled;
+            },
+            set : function(value) {
+                if (this._enabled === value) {
+                    return;
+                }
+                this._enabled = value;
+                this.shouldRegenerateShaders = true;
             }
         },
 
@@ -260,6 +292,7 @@ define([
         }
         this.setIndexDirty(newPlaneIndex);
         this._planes.push(plane);
+        this.shouldRegenerateShaders = true;
     };
 
     /**
@@ -341,6 +374,7 @@ define([
         this._manyDirtyPlanes = true;
         planes.length = length;
 
+        this.shouldRegenerateShaders = true;
         return true;
     };
 
@@ -363,6 +397,7 @@ define([
         }
         this._manyDirtyPlanes = true;
         this._planes = [];
+        this.shouldRegenerateShaders = true;
     };
 
     // See Aras Pranckevičius' post Encoding Floats to RGBA
