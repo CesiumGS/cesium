@@ -195,7 +195,7 @@ function updateAlpha(value) {
     scene.invertClassificationColor.alpha = parseFloat(value);
 }
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3836) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3836) });
 scene.primitives.add(tileset);
 
 var viewModel = {

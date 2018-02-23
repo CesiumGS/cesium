@@ -31,7 +31,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3839) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3839) });
 viewer.scene.primitives.add(tileset);
 
 tileset.readyPromise.then(function(){
