@@ -12,7 +12,8 @@ define([
         '../Core/TileProviderError',
         '../Core/RuntimeError',
         '../Core/Resource',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        '../ThirdParty/Uri'
     ], function(
         defaultValue,
         WebMercatorTilingScheme,
@@ -27,7 +28,8 @@ define([
         TileProviderError,
         RuntimeError,
         Resource,
-        when) {
+        when,
+        Uri ) {
     'use strict';
 
     /**
@@ -42,9 +44,9 @@ define([
      *        created at {@link https://developer.here.com/}.
      * @param {String} options.appCode The Here Maps appCode for your application, which can be
      *        created at {@link https://developer.here.com/}.
-     * @param {String} [options.baseUrl="aerial.maps.api.here.com"] The URL for accessing tiles, without the Load Balancing prefix.
-     *        You may use the *.maps.cit.api.here.com URLs during development. The first part of the URL determines which tileTypes
-     *.       are available.
+     * @param {Resource|String} [options.url="http://maps.api.here.com"] The URL for accessing tiles, without the Load Balancing or Map Type prefixes.
+     *        You may use the *.maps.cit.api.here.com URLs during development. 
+     * @param {String} [options.mapType="aerial"] The type of imagery to load. @see {@link https://developer.here.com/documentation/map-tile/topics/request-constructing.html|HereMaps Request Constructing}
      * @param {String} [options.tileType="maptile"] Determines which type of image will be delivered. E.g. Map, Labels, Streets, etc.
      * @param {String} [options.scheme="satellite.day"] Specifies the view scheme, e.g normal.day, normal.night, terrain.day, etc.
               Note, some schemes will be rejected by certain baseUrls.
@@ -96,11 +98,12 @@ define([
         this._tilingScheme = new WebMercatorTilingScheme();
         this._tileSize = defaultValue(options.tileSize, 256);
 
-        this._baseUrl = defaultValue(options.baseUrl, 'aerial.maps.api.here.com');
+        var rootUrl = Resource.createIfNeeded( defaultValue(options.url, 'http://maps.api.here.com') );
+        var mapType = defaultValue(options.mapType, 'aerial');
         var mapId = 'newest';
-
-        var baseResource = new Resource({
-            url: '//{subdomain}.' + this._baseUrl,
+        
+        this._baseUrl = new Resource({
+            url: '//{subdomain}.' + mapType + '.' + new Uri(rootUrl.url).getAuthority(),
             queryParameters: {
                 app_id: options.appId,
                 app_code: options.appCode
@@ -108,12 +111,12 @@ define([
             proxy: options.proxy
         });
 
-        var copyrightResource = baseResource.getDerivedResource({
+        var copyrightResource = this._baseUrl.getDerivedResource({
             url: '/maptile/2.1/copyright/' + mapId,
             templateValues: { subdomain: '1' }
         });
 
-        this._tileResource = baseResource.getDerivedResource({
+        this._tileResource = this._baseUrl.getDerivedResource({
             url: '/maptile/2.1/{tileType}/{mapId}/{scheme}/{level}/{x}/{y}/{tileSize}/{tileFormat}',
             templateValues: {
                 tileType: defaultValue(options.tileType, 'maptile'),
@@ -196,7 +199,7 @@ define([
          */
         url : {
             get : function() {
-                return this._baseUrl;
+                return this._baseUrl.getDerivedResource({templateValues: {subdomain: 1}}).url;
             }
         },
 
