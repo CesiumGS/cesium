@@ -98,6 +98,11 @@ define([
         this.buttonImageUrl = undefined;
         knockout.defineProperty(this, 'buttonImageUrl', function() {
             var viewModel = this.selectedImagery;
+            if (defined(viewModel)) {
+                return viewModel.iconUrl;
+            }
+
+            viewModel = this.selectedTerrain;
             return defined(viewModel) ? viewModel.iconUrl : undefined;
         });
 
