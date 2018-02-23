@@ -210,16 +210,27 @@ define([
         var closeTopValue = Property.getValueOrDefault(polygon.closeTop, Iso8601.MINIMUM_VALUE, true);
         var closeBottomValue = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
         var extrudedHeightValue = Property.getValueOrUndefined(polygon.extrudedHeight, Iso8601.MINIMUM_VALUE);
+        var perPositionHeightValue = Property.getValueOrUndefined(polygon.perPositionHeight, Iso8601.MINIMUM_VALUE);
+
+        if (defined(extrudedHeightValue) && !defined(heightValue) && !defined(perPositionHeightValue)) {
+            heightValue = 0;
+        }
 
         options.polygonHierarchy = hierarchyValue;
         options.height = heightValue;
         options.extrudedHeight = extrudedHeightValue;
         options.granularity = Property.getValueOrUndefined(polygon.granularity, Iso8601.MINIMUM_VALUE);
         options.stRotation = Property.getValueOrUndefined(polygon.stRotation, Iso8601.MINIMUM_VALUE);
-        options.perPositionHeight = Property.getValueOrUndefined(polygon.perPositionHeight, Iso8601.MINIMUM_VALUE);
+        options.perPositionHeight = perPositionHeightValue;
         options.closeTop = closeTopValue;
         options.closeBottom = closeBottomValue;
-        this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue && closeTopValue && closeBottomValue;
+    };
+
+    PolygonGeometryUpdater.prototype._getIsClosed = function(options) {
+        var height = options.height;
+        var extrudedHeight = options.extrudedHeight;
+        var isExtruded = defined(extrudedHeight) && extrudedHeight !== height;
+        return !options.perPositionHeight && (!isExtruded && height === 0 || (isExtruded && options.closeTop && options.closeBottom));
     };
 
     PolygonGeometryUpdater.DynamicGeometryUpdater = DyanmicPolygonGeometryUpdater;
@@ -238,11 +249,6 @@ define([
 
     DyanmicPolygonGeometryUpdater.prototype._isHidden = function(entity, polygon, time) {
         return !defined(this._options.polygonHierarchy) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, polygon, time);
-    };
-
-    DyanmicPolygonGeometryUpdater.prototype._getIsClosed = function(entity, polygon, time) {
-        var options = this._options;
-        return defined(options.extrudedHeight) && options.extrudedHeight !== options.height && options.closeTop && options.closeBottom;
     };
 
     DyanmicPolygonGeometryUpdater.prototype._setOptions = function(entity, polygon, time) {

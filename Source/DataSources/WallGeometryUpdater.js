@@ -164,7 +164,7 @@ define([
         return !defined(wall.positions) || GeometryUpdater.prototype._isHidden.call(this, entity, wall);
     };
 
-    WallGeometryUpdater.prototype._getIsClosed = function(entity, wall) {
+    WallGeometryUpdater.prototype._getIsClosed = function(options) {
         return false;
     };
 
@@ -207,10 +207,6 @@ define([
 
     DynamicWallGeometryUpdater.prototype._isHidden = function(entity, wall, time) {
         return  !defined(this._options.positions) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, wall, time);
-    };
-
-    DynamicWallGeometryUpdater.prototype._getIsClosed = function(entity, wall, time) {
-        return false;
     };
 
     DynamicWallGeometryUpdater.prototype._setOptions = function(entity, wall, time) {

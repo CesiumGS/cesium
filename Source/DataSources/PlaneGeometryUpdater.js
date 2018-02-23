@@ -201,7 +201,7 @@ define([
         return !defined(plane.plane) || !defined(plane.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, plane);
     };
 
-    GeometryUpdater.prototype._getIsClosed = function(entity, plane) {
+    GeometryUpdater.prototype._getIsClosed = function(options) {
         return false;
     };
 
@@ -240,10 +240,6 @@ define([
         var options = this._options;
         var position = Property.getValueOrUndefined(entity.position, time, positionScratch);
         return !defined(position) || !defined(options.plane) || !defined(options.dimensions) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, plane, time);
-    };
-
-    DynamicPlaneGeometryUpdater.prototype._getIsClosed = function(entity, plane, time) {
-        return false;
     };
 
     DynamicPlaneGeometryUpdater.prototype._setOptions = function(entity, plane, time) {

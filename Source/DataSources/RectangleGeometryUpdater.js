@@ -197,8 +197,6 @@ define([
         var granularity = rectangle.granularity;
         var stRotation = rectangle.stRotation;
         var rotation = rectangle.rotation;
-        var closeBottom = rectangle.closeBottom;
-        var closeTop = rectangle.closeTop;
 
         var options = this._options;
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
@@ -208,9 +206,14 @@ define([
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.closeBottom = defined(closeBottom) ? closeBottom.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.closeTop = defined(closeTop) ? closeTop.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        this._isClosed = defined(extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
+        options.closeBottom = Property.getValueOrDefault(rectangle.closeBottom, Iso8601.MINIMUM_VALUE, true);
+        options.closeTop =  Property.getValueOrDefault(rectangle.closeTop, Iso8601.MINIMUM_VALUE, true);
+    };
+
+    RectangleGeometryUpdater.prototype._getIsClosed = function(options) {
+        var height = options.height;
+        var extrudedHeight = options.extrudedHeight;
+        return height === 0 || defined(extrudedHeight) && extrudedHeight !== height;
     };
 
     RectangleGeometryUpdater.DynamicGeometryUpdater = DynamicRectangleGeometryUpdater;
@@ -231,11 +234,6 @@ define([
         return  !defined(this._options.rectangle) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, rectangle, time);
     };
 
-    DynamicRectangleGeometryUpdater.prototype._getIsClosed = function(entity, rectangle, time) {
-        var options = this._options;
-        return defined(options.extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
-    };
-
     DynamicRectangleGeometryUpdater.prototype._setOptions = function(entity, rectangle, time) {
         var options = this._options;
         options.rectangle = Property.getValueOrUndefined(rectangle.coordinates, time, options.rectangle);
@@ -244,8 +242,8 @@ define([
         options.granularity = Property.getValueOrUndefined(rectangle.granularity, time);
         options.stRotation = Property.getValueOrUndefined(rectangle.stRotation, time);
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
-        options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
-        options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
+        options.closeBottom = Property.getValueOrDefault(rectangle.closeBottom, time, true);
+        options.closeTop = Property.getValueOrDefault(rectangle.closeTop, time, true);
     };
 
     return RectangleGeometryUpdater;
