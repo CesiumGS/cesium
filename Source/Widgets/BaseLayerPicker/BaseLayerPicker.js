@@ -127,7 +127,7 @@ click: toggleDropDown');
         imgElement.setAttribute('draggable', 'false');
         imgElement.className = 'cesium-baseLayerPicker-selected';
         imgElement.setAttribute('data-bind', '\
-attr: { src: buttonImageUrl }');
+attr: { src: buttonImageUrl }, visible: !!buttonImageUrl');
         element.appendChild(imgElement);
 
         var dropPanel = document.createElement('div');
