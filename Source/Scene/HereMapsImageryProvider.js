@@ -87,7 +87,6 @@ define([
 
         var that = this;
 
-        this._proxy = options.proxy;
         this._credit = new Credit({
             text: '2014 DigitalGlobe, Inc.',
             imageUrl: HereMapsImageryProvider._logoData,
@@ -210,7 +209,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._tileResource.proxy;
             }
         },
 
