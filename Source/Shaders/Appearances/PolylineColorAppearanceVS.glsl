@@ -9,7 +9,10 @@ attribute vec4 color;
 attribute float batchId;
 
 varying vec4 v_color;
-varying float v_inverse_depth;
+
+#ifdef LOG_DEPTH
+varying float v_inverseDepth;
+#endif
 
 void main()
 {
@@ -26,5 +29,8 @@ void main()
     float angle;
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
-    v_inverse_depth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
+
+#ifdef LOG_DEPTH
+    v_inverseDepth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
+#endif
 }

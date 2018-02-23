@@ -6,7 +6,6 @@ attribute float batchId;
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_st;
-varying float v_inverse_depth;
 
 void main()
 {
@@ -17,5 +16,4 @@ void main()
     v_st = st;
 
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
-    v_inverse_depth = 1.0 / gl_Position.w;
 }

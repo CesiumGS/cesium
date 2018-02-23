@@ -8,8 +8,6 @@ uniform vec4 u_highlightColor;
 varying vec4 v_color;
 #endif
 
-varying float v_depth;
-
 void main(void)
 {
 #ifdef VECTOR_TILE
@@ -18,5 +16,4 @@ void main(void)
     gl_FragColor = v_color;
 #endif
     czm_writeDepthClampedToFarPlane();
-    czm_logDepth(1.0 / v_depth);
 }

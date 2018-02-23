@@ -970,7 +970,6 @@ define([
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
-                 'varying float v_inverse_depth; \n' +
                  'uniform vec4 u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n';
@@ -1102,8 +1101,7 @@ define([
         }
 
         vs += '    v_color = color; \n' +
-              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n' +
-              '    v_inverse_depth = 1.0 / gl_Position.w; \n';
+              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (hasNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
@@ -1118,8 +1116,7 @@ define([
 
         vs += '} \n';
 
-        var fs = 'varying vec4 v_color; \n' +
-                 'varying float v_inverse_depth; \n';
+        var fs = 'varying vec4 v_color; \n';
 
         if (hasClippedContent) {
             fs += 'uniform int u_clippingPlanesLength;' +
@@ -1143,8 +1140,7 @@ define([
                   '    } \n';
         }
 
-        fs += '    czm_logDepth(v_inverse_depth); \n' +
-              '} \n';
+        fs += '} \n';
 
         var drawVS = vs;
         var drawFS = fs;

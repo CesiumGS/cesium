@@ -3,7 +3,10 @@ uniform vec4 u_highlightColor;
 #endif
 
 varying vec2 v_st;
-varying float v_inverse_depth;
+
+#ifdef LOG_DEPTH
+varying float v_inverseDepth;
+#endif
 
 void main()
 {
@@ -15,8 +18,10 @@ void main()
 
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
-    czm_logDepth(v_inverse_depth);
 #ifdef VECTOR_TILE
     gl_FragColor *= u_highlightColor;
+#endif
+#ifdef LOG_DEPTH
+    czm_logDepth(v_inverseDepth);
 #endif
 }

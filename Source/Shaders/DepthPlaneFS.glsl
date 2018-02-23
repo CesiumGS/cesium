@@ -8,8 +8,6 @@ void main()
     vec3 direction = normalize(positionEC.xyz);
     czm_ray ray = czm_ray(vec3(0.0), direction);
 
-    czm_logDepth(-1.0 / positionEC.z);
-
     czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
     if (!czm_isEmpty(intersection))
     {
@@ -19,4 +17,8 @@ void main()
     {
         discard;
     }
+
+#ifdef LOG_DEPTH
+    czm_logDepth(-1.0 / positionEC.z);
+#endif
 }

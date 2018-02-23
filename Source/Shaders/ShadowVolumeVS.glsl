@@ -19,7 +19,6 @@ uniform float u_globeMinimumAltitude;
 #ifndef VECTOR_TILE
 varying vec4 v_color;
 #endif
-varying float v_depth;
 
 void main()
 {
@@ -39,5 +38,4 @@ void main()
 #endif
     gl_Position = czm_depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
 #endif
-    v_depth = gl_Position.w;
 }

@@ -3400,22 +3400,70 @@ define([
         return result;
     }
 
+    var logDepthRegex = /\s+czm_logDepth\(/;
+
     function getLogDepthShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'logDepth');
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
+            var vs = shaderProgram.vertexShaderSource.clone();
             var fs = shaderProgram.fragmentShaderSource.clone();
+
+            vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
+            vs.defines.push('LOG_DEPTH');
             fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
             fs.defines.push('LOG_DEPTH');
 
-            var extension =
+            var logSource =
                 '#ifdef GL_EXT_frag_depth \n' +
                 '#extension GL_EXT_frag_depth : enable \n' +
-                '#endif \n';
-            fs.sources.push(extension);
+                '#endif \n\n';
+
+            var writesLogDepth = false;
+            var sources = fs.sources;
+            var length = sources.length;
+            var i;
+            for (i = 0; i < length; ++i) {
+                if (logDepthRegex.test(sources[i])) {
+                    writesLogDepth = true;
+                    break;
+                }
+            }
+
+            if (!writesLogDepth) {
+                for (i = 0; i < length; i++) {
+                    sources[i] = ShaderSource.replaceMain(sources[i], 'czm_log_depth_main');
+                }
+
+                logSource +=
+                    'varying float v_depth; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_log_depth_main(); \n' +
+                    '    czm_logDepth(1.0 / v_depth); \n' +
+                    '} \n';
+
+                var vertexSources = vs.sources;
+                length = vertexSources.length;
+                for (i = 0; i < length; ++i) {
+                    vertexSources[i] = ShaderSource.replaceMain(vertexSources[i], 'czm_log_depth_main');
+                }
+
+                var logMain =
+                    '\n\n' +
+                    'varying float v_depth; \n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_log_depth_main(); \n' +
+                    '    v_depth = gl_Position.w; \n' +
+                    '} \n';
+                vertexSources.push(logMain);
+            }
+
+            sources.push(logSource);
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'logDepth', {
-                vertexShaderSource : shaderProgram.vertexShaderSource,
+                vertexShaderSource : vs,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });

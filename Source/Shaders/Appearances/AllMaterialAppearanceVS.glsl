@@ -11,7 +11,6 @@ varying vec3 v_normalEC;
 varying vec3 v_tangentEC;
 varying vec3 v_bitangentEC;
 varying vec2 v_st;
-varying float v_inverse_depth;
 
 void main()
 {
@@ -24,5 +23,4 @@ void main()
     v_st = st;
 
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
-    v_inverse_depth = 1.0 / gl_Position.w;
 }

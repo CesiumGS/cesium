@@ -4,7 +4,6 @@ attribute vec4 color;
 attribute float batchId;
 
 varying vec4 v_color;
-varying float v_inverse_depth;
 
 void main()
 {
@@ -13,5 +12,4 @@ void main()
     v_color = color;
 
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
-    v_inverse_depth = 1.0 / gl_Position.w;
 }

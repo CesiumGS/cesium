@@ -5,7 +5,6 @@ attribute float batchId;
 
 varying vec3 v_positionEC;
 varying vec3 v_normalEC;
-varying float v_inverse_depth;
 
 void main()
 {
@@ -15,5 +14,4 @@ void main()
     v_normalEC = czm_normal * normal;                         // normal in eye coordinates
 
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
-    v_inverse_depth = 1.0 / gl_Position.w;
 }

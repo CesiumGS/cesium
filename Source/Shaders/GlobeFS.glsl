@@ -63,7 +63,6 @@ uniform float u_minimumBrightness;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
-varying float v_inverse_depth;
 varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
@@ -253,7 +252,6 @@ void main()
 #else
     gl_FragColor = finalColor;
 #endif
-    czm_logDepth(v_inverse_depth);
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN

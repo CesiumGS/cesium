@@ -16,7 +16,10 @@ varying vec2  v_st;
 varying float v_width;
 varying vec4  czm_pickColor;
 varying float v_polylineAngle;
-varying float v_inverse_depth;
+
+#ifdef LOG_DEPTH
+varying float v_inverseDepth;
+#endif
 
 void main()
 {
@@ -93,9 +96,12 @@ void main()
 
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, v_polylineAngle);
     gl_Position = czm_viewportOrthographic * positionWC * show;
-    v_inverse_depth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
 
     v_st = vec2(texCoord, clamp(expandDir, 0.0, 1.0));
     v_width = width;
     czm_pickColor = pickColor;
+
+#ifdef LOG_DEPTH
+    v_inverseDepth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
+#endif
 }

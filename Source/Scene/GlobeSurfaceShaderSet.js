@@ -242,11 +242,9 @@ define([
 
             // pass through fragment shader. only depth is rendered for the globe on a pick pass
             var fs =
-                'varying float v_inverse_depth;\n' +
                 'void main()\n' +
                 '{\n' +
                 '    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
-                '    czm_logDepth(v_inverse_depth);\n' +
                 '}\n';
 
             pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
