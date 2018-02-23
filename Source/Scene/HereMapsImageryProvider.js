@@ -132,8 +132,6 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        //@TODO: Do we need to support DiscardMissingTileImagePolicy?
-
         var metadataError;
         function metadataSuccess(data) {
             try {
