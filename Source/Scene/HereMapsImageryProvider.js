@@ -38,6 +38,10 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
+     * @param {String} options.appId The Here Maps appId for your application, which can be
+     *        created at {@link https://developer.here.com/}.
+     * @param {String} options.appCode The Here Maps appCode for your application, which can be
+     *        created at {@link https://developer.here.com/}.
      * @param {String} [options.baseUrl="aerial.maps.api.here.com"] The URL for accessing tiles, without the Load Balancing prefix.
      *        You may use the *.maps.cit.api.here.com URLs during development. The first part of the URL determines which tileTypes
      *.       are available.
