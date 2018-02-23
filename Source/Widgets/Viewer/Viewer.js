@@ -558,10 +558,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         // These need to be set after the BaseLayerPicker is created in order to take effect
         if (defined(options.imageryProvider)) {
+            if (createBaseLayerPicker) {
+                baseLayerPicker.viewModel.selectedImagery = undefined;
+            }
             scene.imageryLayers.removeAll();
             scene.imageryLayers.addImageryProvider(options.imageryProvider);
         }
         if (defined(options.terrainProvider)) {
+            if (createBaseLayerPicker) {
+                baseLayerPicker.viewModel.selectedTerrain = undefined;
+            }
             scene.terrainProvider = options.terrainProvider;
         }
 
