@@ -416,6 +416,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         // Cesium widget
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
+            imageryProvider: createBaseLayerPicker || defined(options.imageryProvider) ? false : undefined,
             clock : clock,
             skyBox : options.skyBox,
             skyAtmosphere : options.skyAtmosphere,
