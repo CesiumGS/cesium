@@ -83,6 +83,7 @@ define([
 
         var that = this;
 
+        this._proxy = options.proxy;
         this._credit = new Credit({
             text: '2014 DigitalGlobe, Inc.',
             imageUrl: HereMapsImageryProvider._logoData,
@@ -197,6 +198,18 @@ define([
                 return this._baseUrl;
             }
         },
+
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof HereMapsImageryProvider.prototype
+         * @type {Proxy}
+         */
+        proxy : {
+            get : function() {
+                return this._proxy;
+            }
+        },
+
 
         /**
          * Gets the width of each tile, in pixels. This function should
