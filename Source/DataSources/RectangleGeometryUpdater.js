@@ -49,8 +49,6 @@ define([
         this.id = entity;
         this.vertexFormat = undefined;
         this.rectangle = undefined;
-        this.closeBottom = undefined;
-        this.closeTop = undefined;
         this.height = undefined;
         this.extrudedHeight = undefined;
         this.granularity = undefined;
@@ -184,8 +182,6 @@ define([
                !Property.isConstant(rectangle.stRotation) || //
                !Property.isConstant(rectangle.rotation) || //
                !Property.isConstant(rectangle.outlineWidth) || //
-               !Property.isConstant(rectangle.closeBottom) || //
-               !Property.isConstant(rectangle.closeTop) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
@@ -206,8 +202,6 @@ define([
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.closeBottom = Property.getValueOrDefault(rectangle.closeBottom, Iso8601.MINIMUM_VALUE, true);
-        options.closeTop =  Property.getValueOrDefault(rectangle.closeTop, Iso8601.MINIMUM_VALUE, true);
     };
 
     RectangleGeometryUpdater.prototype._getIsClosed = function(options) {
@@ -242,8 +236,6 @@ define([
         options.granularity = Property.getValueOrUndefined(rectangle.granularity, time);
         options.stRotation = Property.getValueOrUndefined(rectangle.stRotation, time);
         options.rotation = Property.getValueOrUndefined(rectangle.rotation, time);
-        options.closeBottom = Property.getValueOrDefault(rectangle.closeBottom, time, true);
-        options.closeTop = Property.getValueOrDefault(rectangle.closeTop, time, true);
     };
 
     return RectangleGeometryUpdater;
