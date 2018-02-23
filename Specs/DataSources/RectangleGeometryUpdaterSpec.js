@@ -114,6 +114,7 @@ defineSuite([
         var entity = createBasicRectangle();
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle = undefined;
+        updater._onEntityPropertyChanged(entity, 'rectangle');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -125,6 +126,7 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.fill = new ConstantProperty(false);
         entity.rectangle.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -152,6 +154,8 @@ defineSuite([
         var entity = createBasicRectangle();
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.fillMaterialProperty).toBe(entity.rectangle.material);
     });
 
@@ -159,10 +163,13 @@ defineSuite([
         var entity = createBasicRectangle();
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.extrudedHeight = new ConstantProperty(1000);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         expect(updater.isClosed).toBe(false);
         entity.rectangle.closeBottom = new ConstantProperty(true);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         expect(updater.isClosed).toBe(false);
         entity.rectangle.closeTop = new ConstantProperty(true);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         expect(updater.isClosed).toBe(true);
     });
 
@@ -171,6 +178,8 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.outlineWidth = new SampledProperty(Number);
         entity.rectangle.outlineWidth.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -179,6 +188,8 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.coordinates = new SampledProperty(Rectangle);
         entity.rectangle.coordinates.addSample(JulianDate.now(), new Rectangle());
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -187,6 +198,8 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.height = new SampledProperty(Number);
         entity.rectangle.height.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -195,6 +208,8 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.extrudedHeight = new SampledProperty(Number);
         entity.rectangle.extrudedHeight.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -203,6 +218,8 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.granularity = new SampledProperty(Number);
         entity.rectangle.granularity.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -211,6 +228,8 @@ defineSuite([
         var updater = new RectangleGeometryUpdater(entity, scene);
         entity.rectangle.stRotation = new SampledProperty(Number);
         entity.rectangle.stRotation.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -223,6 +242,8 @@ defineSuite([
             stop : time2,
             data : false
         }));
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -235,6 +256,8 @@ defineSuite([
             stop : time2,
             data : false
         }));
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -244,6 +267,8 @@ defineSuite([
         var color = new SampledProperty(Color);
         color.addSample(time, Color.WHITE);
         entity.rectangle.material = new ColorMaterialProperty(color);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
+
         expect(updater.isDynamic).toBe(groundPrimitiveSupported);
     });
 
@@ -525,24 +550,29 @@ defineSuite([
         expect(options.stRotation).toEqual(rectangle.stRotation.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
         entity.show = true;
+        updater._onEntityPropertyChanged(entity, 'show');
 
         //If a dynamic show returns false, the primitive should go away.
         rectangle.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
 
         rectangle.show.setValue(true);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
         expect(groundPrimitives.length).toBe(0);
 
         //If a dynamic coordinates returns undefined, the primitive should go away.
         rectangle.coordinates.setValue(undefined);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
@@ -592,19 +622,24 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.rectangle.height = new ConstantProperty(82);
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         expect(listener.calls.count()).toEqual(1);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(2);
 
         entity.rectangle.coordinates = undefined;
+        updater._onEntityPropertyChanged(entity, 'rectangle');
         expect(listener.calls.count()).toEqual(3);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.rectangle.height = undefined;
+        updater._onEntityPropertyChanged(entity, 'rectangle');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(3);
     });
 
