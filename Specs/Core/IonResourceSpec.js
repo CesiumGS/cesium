@@ -44,6 +44,8 @@ defineSuite([
         expect(cloned).not.toBe(resource);
         expect(cloned._ionRoot).toBe(resource);
         cloned._ionRoot = undefined;
+        expect(cloned.retryCallback).toBe(resource.retryCallback);
+        expect(cloned.queryParameters.access_token).toBe(resource.queryParameters.access_token);
         expect(cloned).toEqual(resource);
     });
 
@@ -163,7 +165,7 @@ defineSuite([
         beforeEach(function() {
             endpointResource = new Resource({ url: 'https://api.test.invalid', access_token: 'not_the_token' });
             resource = new IonResource(endpoint, endpointResource);
-            retryCallback = IonResource._createRetryCallback(endpoint, endpointResource, resource);
+            retryCallback = resource.retryCallback;
         });
 
         it('returns false when error is undefined', function() {
