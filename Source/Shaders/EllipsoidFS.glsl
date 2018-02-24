@@ -90,7 +90,7 @@ void main()
     t = (intersection.start != 0.0) ? intersection.start : intersection.stop;
     vec3 positionEC = czm_pointAlongRay(ray, t);
     vec4 positionCC = czm_projection * vec4(positionEC, 1.0);
-    czm_logDepth(1.0 / positionCC.w);
+    czm_writeLogZ(1.0 + positionCC.w);
 #endif
 #endif
 }

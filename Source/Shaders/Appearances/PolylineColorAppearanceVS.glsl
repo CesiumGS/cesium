@@ -10,10 +10,6 @@ attribute float batchId;
 
 varying vec4 v_color;
 
-#ifdef LOG_DEPTH
-varying float v_inverseDepth;
-#endif
-
 void main()
 {
     float expandDir = expandAndWidth.x;
@@ -31,6 +27,6 @@ void main()
     gl_Position = czm_viewportOrthographic * positionWC;
 
 #ifdef LOG_DEPTH
-    v_inverseDepth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
+    czm_vertexLogZ(czm_modelViewProjectionRelativeToEye * p);
 #endif
 }

@@ -139,6 +139,9 @@ define([
         if (!defined(this._sp) || this._useLogDepth !== useLogDepth) {
             this._useLogDepth = useLogDepth;
 
+            var vs = new ShaderSource({
+                sources : [DepthPlaneVS]
+            });
             var fs = new ShaderSource({
                 sources : [DepthPlaneFS]
             });
@@ -150,12 +153,13 @@ define([
 
                 fs.sources.push(extension);
                 fs.defines.push('LOG_DEPTH');
+                vs.defines.push('LOG_DEPTH');
             }
 
             this._sp = ShaderProgram.replaceCache({
                 shaderProgram : this._sp,
                 context : context,
-                vertexShaderSource : DepthPlaneVS,
+                vertexShaderSource : vs,
                 fragmentShaderSource : fs,
                 attributeLocations : {
                     position : 0

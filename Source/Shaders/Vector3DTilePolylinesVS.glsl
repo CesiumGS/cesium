@@ -6,10 +6,6 @@ attribute float a_batchId;
 
 uniform mat4 u_modifiedModelView;
 
-#ifdef LOG_DEPTH
-varying float v_inverseDepth;
-#endif
-
 void main()
 {
     float expandDir = expandAndWidth.x;
@@ -25,6 +21,6 @@ void main()
     gl_Position = czm_viewportOrthographic * positionWC;
 
 #ifdef LOG_DEPTH
-    v_inverseDepth = 1.0 / (czm_projection * u_modifiedModelView * currentPosition).w;
+    czm_vertexLogZ(czm_projection * u_modifiedModelView * currentPosition);
 #endif
 }

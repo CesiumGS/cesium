@@ -1,4 +1,5 @@
 varying vec4 positionEC;
+varying float flogz;
 
 void main()
 {
@@ -18,7 +19,5 @@ void main()
         discard;
     }
 
-#ifdef LOG_DEPTH
-    czm_logDepth(-1.0 / positionEC.z);
-#endif
+    czm_writeLogZ();
 }

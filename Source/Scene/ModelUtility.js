@@ -281,11 +281,10 @@ define([
         shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
         shader +=
             '\n' +
-            'varying float v_depth; \n' +
             'void main() \n' +
             '{ \n' +
             '    czm_depth_main(); \n' +
-            '    czm_logDepth(1.0 / v_depth); \n' +
+            '    czm_writeLogZ(); \n' +
             '} \n';
 
         return shader;
@@ -313,11 +312,10 @@ define([
         shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
         shader +=
             '\n' +
-            'varying float v_depth;\n' +
             'void main() \n' +
             '{ \n' +
             '    czm_depth_main(); \n' +
-            '    v_depth = (' + modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)).w; \n' +
+            '    czm_vertexLogZ(' + modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)); \n' +
             '} \n';
 
         return shader;

@@ -17,10 +17,6 @@ varying float v_width;
 varying vec4  czm_pickColor;
 varying float v_polylineAngle;
 
-#ifdef LOG_DEPTH
-varying float v_inverseDepth;
-#endif
-
 void main()
 {
     float texCoord = texCoordExpandAndBatchIndex.x;
@@ -102,6 +98,6 @@ void main()
     czm_pickColor = pickColor;
 
 #ifdef LOG_DEPTH
-    v_inverseDepth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
+    czm_vertexLogZ(czm_modelViewProjectionRelativeToEye * p);
 #endif
 }

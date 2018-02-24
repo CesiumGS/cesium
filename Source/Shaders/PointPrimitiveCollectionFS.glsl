@@ -3,10 +3,6 @@ varying vec4 v_outlineColor;
 varying float v_innerPercent;
 varying float v_pixelDistance;
 
-#ifdef LOG_DEPTH
-varying float v_inverseDepth;
-#endif
-
 #ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
 #endif
@@ -51,7 +47,5 @@ void main()
     gl_FragColor = color;
 #endif
 
-#ifdef LOG_DEPTH
-    czm_logDepth(v_inverseDepth);
-#endif
+    czm_writeLogZ();
 }

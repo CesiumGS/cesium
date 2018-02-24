@@ -16,10 +16,6 @@ attribute float a_batchId;
 
 varying vec2 v_textureCoordinates;
 
-#ifdef LOG_DEPTH
-varying float v_inverseDepth;
-#endif
-
 #ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
 #else
@@ -264,7 +260,7 @@ void main()
     v_textureCoordinates = textureCoordinates;
 
 #ifdef LOG_DEPTH
-    v_inverseDepth = 1.0 / (czm_modelViewProjectionRelativeToEye * p).w;
+    czm_vertexLogZ(czm_modelViewProjectionRelativeToEye * p);
 #endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
@@ -284,7 +280,7 @@ void main()
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
 #ifdef LOG_DEPTH
-            v_inverseDepth = 1.0 / czm_currentFrustum.x;
+            czm_vertexLogZ(vec4(czm_currentFrustum.x));
 #endif
         }
     }

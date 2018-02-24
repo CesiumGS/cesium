@@ -8,6 +8,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -32,6 +34,8 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         VertexFormat,
         BufferUsage,
         DrawCommand,
@@ -196,6 +200,8 @@ define([
          */
         this._depthTestEnabled = defaultValue(options.depthTestEnabled, true);
 
+        this._useLogDepth = false;
+
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -250,6 +256,11 @@ define([
         context.cache.ellipsoidPrimitive_vertexArray = vertexArray;
         return vertexArray;
     }
+
+    var logDepthExtension =
+        '#ifdef GL_EXT_frag_depth \n' +
+        '#extension GL_EXT_frag_depth : enable \n' +
+        '#endif \n\n';
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -343,11 +354,20 @@ define([
         var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
         this._onlySunLighting = this.onlySunLighting;
 
+        var frustum = frameState.camera.frustum;
+        var useLogDepth = context.fragmentDepth && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepthChanged = this._useLogDepth !== useLogDepth;
+        this._useLogDepth = useLogDepth;
+
         var colorCommand = this._colorCommand;
+        var vs;
         var fs;
 
         // Recompile shader when material, lighting, or translucency changes
-        if (materialChanged || lightingChanged || translucencyChanged) {
+        if (materialChanged || lightingChanged || translucencyChanged || useLogDepthChanged) {
+            vs = new ShaderSource({
+                sources : [EllipsoidVS]
+            });
             fs = new ShaderSource({
                 sources : [this.material.shaderSource, EllipsoidFS]
             });
@@ -357,11 +377,16 @@ define([
             if (!translucent && context.fragmentDepth) {
                 fs.defines.push('WRITE_DEPTH');
             }
+            if (this._useLogDepth) {
+                vs.defines.push('LOG_DEPTH');
+                fs.defines.push('LOG_DEPTH');
+                fs.sources.push(logDepthExtension);
+            }
 
             this._sp = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : this._sp,
-                vertexShaderSource : EllipsoidVS,
+                vertexShaderSource : vs,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
@@ -398,7 +423,10 @@ define([
             }
 
             // Recompile shader when material changes
-            if (materialChanged || lightingChanged || !defined(this._pickSP)) {
+            if (materialChanged || lightingChanged || !defined(this._pickSP) || useLogDepthChanged) {
+                vs = new ShaderSource({
+                    sources : [EllipsoidVS]
+                });
                 fs = new ShaderSource({
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
@@ -409,11 +437,16 @@ define([
                 if (!translucent && context.fragmentDepth) {
                     fs.defines.push('WRITE_DEPTH');
                 }
+                if (this._useLogDepth) {
+                    vs.defines.push('LOG_DEPTH');
+                    fs.defines.push('LOG_DEPTH');
+                    fs.sources.push(logDepthExtension);
+                }
 
                 this._pickSP = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._pickSP,
-                    vertexShaderSource : EllipsoidVS,
+                    vertexShaderSource : vs,
                     fragmentShaderSource : fs,
                     attributeLocations : attributeLocations
                 });

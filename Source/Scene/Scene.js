@@ -3400,7 +3400,7 @@ define([
         return result;
     }
 
-    var logDepthRegex = /\s+czm_logDepth\(/;
+    var logDepthRegex = /\s+czm_writeLogZ\(/;
 
     function getLogDepthShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'logDepth');
@@ -3436,11 +3436,11 @@ define([
                 }
 
                 logSource +=
-                    'varying float v_depth; \n' +
+                    '\n' +
                     'void main() \n' +
                     '{ \n' +
                     '    czm_log_depth_main(); \n' +
-                    '    czm_logDepth(1.0 / v_depth); \n' +
+                    '    czm_writeLogZ(); \n' +
                     '} \n';
 
                 var vertexSources = vs.sources;
@@ -3451,11 +3451,10 @@ define([
 
                 var logMain =
                     '\n\n' +
-                    'varying float v_depth; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    czm_log_depth_main(); \n' +
-                    '    v_depth = gl_Position.w; \n' +
+                    '    czm_vertexLogZ(); \n' +
                     '} \n';
                 vertexSources.push(logMain);
             }
