@@ -33,10 +33,10 @@ define([
     'use strict';
 
     /**
-     * Provides tiled imagery using the Here Maps Imagery REST API. See https://developer.here.com/documentation/map-tile/topics/request-constructing.html
+     * Provides tiled imagery using the Here Maps Imagery REST API. See {@link https://developer.here.com/documentation/map-tile/topics/request-constructing.html|Here Maps Request Constructing}
      * for more details on how the query URLs are constructed and acceptable values for each option.
      *
-     * @alias HereMapsImageryProvider.js
+     * @alias HereMapsImageryProvider
      * @constructor
      *
      * @param {Object} options Object with the following properties:
@@ -46,7 +46,7 @@ define([
      *        created at {@link https://developer.here.com/}.
      * @param {Resource|String} [options.url="http://maps.api.here.com"] The URL for accessing tiles, without the Load Balancing or Map Type prefixes.
      *        You may use the *.maps.cit.api.here.com URLs during development.
-     * @param {String} [options.mapType="aerial"] The type of imagery to load. @see {@link https://developer.here.com/documentation/map-tile/topics/request-constructing.html|HereMaps Request Constructing}
+     * @param {String} [options.mapType="aerial"] The type of imagery to load. See {@link https://developer.here.com/documentation/map-tile/topics/request-constructing.html|HereMaps Request Constructing}
      * @param {String} [options.tileType="maptile"] Determines which type of image will be delivered. E.g. Map, Labels, Streets, etc.
      * @param {String} [options.scheme="satellite.day"] Specifies the view scheme, e.g normal.day, normal.night, terrain.day, etc.
               Note, some schemes will be rejected by certain baseUrls.
@@ -55,17 +55,19 @@ define([
      * @param {Boolean} [options.forceUseNewest=false] By default, the current map version will be queried only once at start.
      *        Subsequent tile requests will always use a hash of this version so that tiles are consistent in case the map is updated
      *        while the app is running. Enabling this flag will cause all tiles to always reqeuest the newest version.
-     *        See https://developer.here.com/documentation/map-tile/topics/tile-version.html#tile-version for details.
+     *        See {@link https://developer.here.com/documentation/map-tile/topics/tile-version.html#tile-version|Here Maps Tile Version} for details.
      *
      *
      * @see ArcGisMapServerImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      *
-     * @see {@link https://developer.here.com/documentation/map-tile/topics/overview.html}
+     * @see {@link https://developer.here.com/documentation/map-tile/topics/overview.html|Here Map Tile API }
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
