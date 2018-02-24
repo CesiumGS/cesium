@@ -56,10 +56,6 @@ define([
         return !entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(geometry.show, time, true);
     };
 
-    DynamicGeometryUpdater.prototype._getIsClosed = function(entity, geometry, time) {
-        return true;
-    };
-
     DynamicGeometryUpdater.prototype._setOptions = DeveloperError.throwInstantiationError;
 
     /**
@@ -109,7 +105,7 @@ define([
                 var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
                 var isColorAppearance = fillMaterialProperty instanceof ColorMaterialProperty;
                 var appearance;
-                var closed = this._getIsClosed(entity, geometry, time);
+                var closed = geometryUpdater._getIsClosed(options);
                 if (isColorAppearance) {
                     appearance = new PerInstanceColorAppearance({
                         closed: closed

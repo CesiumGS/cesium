@@ -361,11 +361,10 @@ define([
     };
 
     /**
-     * @param {Entity} entity
-     * @param {Object} geometry
+     * @param {GeometryOptions} options
      * @private
      */
-    GeometryUpdater.prototype._getIsClosed = function(entity, geometry) {
+    GeometryUpdater.prototype._getIsClosed = function(options) {
         return true;
     };
 
@@ -451,7 +450,6 @@ define([
         }
 
         this._onTerrain = onTerrain;
-        this._isClosed = this._getIsClosed(entity, geometry);
         this._outlineEnabled = outlineEnabled;
 
         if (this._isDynamic(entity, geometry)) {
@@ -461,6 +459,7 @@ define([
             }
         } else {
             this._setStaticOptions(entity, geometry);
+            this._isClosed = this._getIsClosed(this._options);
             var outlineWidth = geometry.outlineWidth;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;

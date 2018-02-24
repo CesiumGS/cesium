@@ -115,7 +115,7 @@ defineSuite([
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
             expect(primitive.appearance).toBeInstanceOf(PerInstanceColorAppearance);
-            expect(primitive.appearance.closed).toBe(false);
+            expect(primitive.appearance.closed).toBe(true);
 
             objects.remove(entity);
 

@@ -202,7 +202,12 @@ define([
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        this._isClosed = defined(extrudedHeight);
+    };
+
+    RectangleGeometryUpdater.prototype._getIsClosed = function(options) {
+        var height = options.height;
+        var extrudedHeight = options.extrudedHeight;
+        return height === 0 || defined(extrudedHeight) && extrudedHeight !== height;
     };
 
     RectangleGeometryUpdater.DynamicGeometryUpdater = DynamicRectangleGeometryUpdater;
@@ -221,11 +226,6 @@ define([
 
     DynamicRectangleGeometryUpdater.prototype._isHidden = function(entity, rectangle, time) {
         return  !defined(this._options.rectangle) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, rectangle, time);
-    };
-
-    DynamicRectangleGeometryUpdater.prototype._getIsClosed = function(entity, rectangle, time) {
-        var options = this._options;
-        return defined(options.extrudedHeight);
     };
 
     DynamicRectangleGeometryUpdater.prototype._setOptions = function(entity, rectangle, time) {

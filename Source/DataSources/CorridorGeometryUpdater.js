@@ -173,8 +173,10 @@ define([
                isColorMaterial && GroundPrimitive.isSupported(this._scene);
     };
 
-    CorridorGeometryUpdater.prototype._getIsClosed = function(entity, corridor) {
-        return defined(corridor.extrudedHeight) || this._onTerrain;
+    CorridorGeometryUpdater.prototype._getIsClosed = function(options) {
+        var height = options.height;
+        var extrudedHeight = options.extrudedHeight;
+        return height === 0 || (defined(extrudedHeight) && extrudedHeight !== height);
     };
 
     CorridorGeometryUpdater.prototype._isDynamic = function(entity, corridor) {
@@ -223,10 +225,6 @@ define([
     DynamicCorridorGeometryUpdater.prototype._isHidden = function(entity, corridor, time) {
         var options = this._options;
         return !defined(options.positions) || !defined(options.width) || DynamicGeometryUpdater.prototype._isHidden.call(this, entity, corridor, time);
-    };
-
-    DynamicCorridorGeometryUpdater.prototype._getIsClosed = function(entity, corridor, time) {
-        return defined(this._options.extrudedHeight);
     };
 
     DynamicCorridorGeometryUpdater.prototype._setOptions = function(entity, corridor, time) {

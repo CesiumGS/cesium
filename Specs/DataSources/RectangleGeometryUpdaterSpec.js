@@ -137,7 +137,7 @@ defineSuite([
         var entity = createBasicRectangle();
         var updater = new RectangleGeometryUpdater(entity, scene);
 
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);

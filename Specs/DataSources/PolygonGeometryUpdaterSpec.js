@@ -148,7 +148,7 @@ defineSuite([
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
 
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
@@ -170,33 +170,36 @@ defineSuite([
         expect(updater.fillMaterialProperty).toBe(entity.polygon.material);
     });
 
-    it('Settings extrudedHeight causes geometry to be closed.', function() {
+    it('Properly computes isClosed', function() {
         var entity = createBasicPolygon();
+        entity.polygon.perPositionHeight = true;
         var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        expect(updater.isClosed).toBe(false); //open because of perPositionHeights
+
+        entity.polygon.perPositionHeight = false;
         updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(true); //close because polygon is on the ground
 
-        expect(updater.isClosed).toBe(true);
-    });
+        entity.polygon.height = 1000;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(false); //open because polygon is at a height
 
-    it('Settings extrudedHeight and closeTop false causes geometry to be open.', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        entity.polygon.extrudedHeight = 1000;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(false); //open because height === extrudedHeight so it's not extruded
+
+        entity.polygon.extrudedHeight = 100;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(true); //closed because polygon is extruded
+
         entity.polygon.closeTop = false;
         updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(false); //open because top cap isn't included
 
-        expect(updater.isClosed).toBe(false);
-    });
-
-    it('Settings extrudedHeight and closeBottom false causes geometry to be open.', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        entity.polygon.closeTop = true;
         entity.polygon.closeBottom = false;
         updater._onEntityPropertyChanged(entity, 'polygon');
-
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(false); //open because bottom cap isn't included
     });
 
     it('A time-varying outlineWidth causes geometry to be dynamic', function() {
