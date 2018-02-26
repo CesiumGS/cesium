@@ -125,6 +125,7 @@ defineSuite([
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon = undefined;
+        updater._onEntityPropertyChanged(entity, 'polygon');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -136,6 +137,7 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.fill = new ConstantProperty(false);
         entity.polygon.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'polygon');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -146,7 +148,7 @@ defineSuite([
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
 
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
@@ -163,30 +165,41 @@ defineSuite([
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.fillMaterialProperty).toBe(entity.polygon.material);
     });
 
-    it('Settings extrudedHeight causes geometry to be closed.', function() {
+    it('Properly computes isClosed', function() {
         var entity = createBasicPolygon();
+        entity.polygon.perPositionHeight = true;
         var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new ConstantProperty(1000);
-        expect(updater.isClosed).toBe(true);
-    });
+        expect(updater.isClosed).toBe(false); //open because of perPositionHeights
 
-    it('Settings extrudedHeight and closeTop false causes geometry to be open.', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        entity.polygon.perPositionHeight = false;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(true); //close because polygon is on the ground
+
+        entity.polygon.height = 1000;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(false); //open because polygon is at a height
+
+        entity.polygon.extrudedHeight = 1000;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(false); //open because height === extrudedHeight so it's not extruded
+
+        entity.polygon.extrudedHeight = 100;
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(true); //closed because polygon is extruded
+
         entity.polygon.closeTop = false;
-        expect(updater.isClosed).toBe(false);
-    });
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(false); //open because top cap isn't included
 
-    it('Settings extrudedHeight and closeBottom false causes geometry to be open.', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        entity.polygon.closeTop = true;
         entity.polygon.closeBottom = false;
-        expect(updater.isClosed).toBe(false);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        expect(updater.isClosed).toBe(false); //open because bottom cap isn't included
     });
 
     it('A time-varying outlineWidth causes geometry to be dynamic', function() {
@@ -194,6 +207,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.outlineWidth = new SampledProperty(Number);
         entity.polygon.outlineWidth.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -209,6 +224,8 @@ defineSuite([
 
         entity.polygon.hierarchy = new PropertyArray();
         entity.polygon.hierarchy.setValue([point1, point2, point3]);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -217,6 +234,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.height = new SampledProperty(Number);
         entity.polygon.height.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -225,6 +244,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.extrudedHeight = new SampledProperty(Number);
         entity.polygon.extrudedHeight.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -233,6 +254,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.granularity = new SampledProperty(Number);
         entity.polygon.granularity.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -241,6 +264,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.stRotation = new SampledProperty(Number);
         entity.polygon.stRotation.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -249,6 +274,8 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         entity.polygon.perPositionHeight = new SampledProperty(Number);
         entity.polygon.perPositionHeight.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -258,6 +285,8 @@ defineSuite([
         var color = new SampledProperty(Color);
         color.addSample(time, Color.WHITE);
         entity.polygon.material = new ColorMaterialProperty(color);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
         expect(updater.isDynamic).toBe(groundPrimitiveSupported);
     });
 
@@ -558,7 +587,7 @@ defineSuite([
         var updater = new PolygonGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var groundPrimitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
@@ -579,24 +608,29 @@ defineSuite([
         expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
         entity.show = true;
+        updater._onEntityPropertyChanged(entity, 'show');
 
         //If a dynamic show returns false, the primitive should go away.
         polygon.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
 
         polygon.show.setValue(true);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
         expect(groundPrimitives.length).toBe(0);
 
         //If a dynamic position returns undefined, the primitive should go away.
         polygon.hierarchy.setValue(undefined);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
@@ -651,22 +685,28 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.polygon.hierarchy = new ConstantProperty([]);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         expect(listener.calls.count()).toEqual(1);
 
         entity.polygon.height = new ConstantProperty(82);
+        updater._onEntityPropertyChanged(entity, 'polygon');
         expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(3);
 
         entity.polygon.hierarchy = undefined;
+        updater._onEntityPropertyChanged(entity, 'polygon');
         expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.polygon.height = undefined;
+        updater._onEntityPropertyChanged(entity, 'polygon');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(4);
     });
 
@@ -703,46 +743,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicPolygon();
-        entity.polygon.height = new SampledProperty(Number);
-        entity.polygon.height.addSample(time, 4);
-        var updater = new PolygonGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicPolygon();
         entity.polygon.height = new SampledProperty(Number);
         entity.polygon.height.addSample(time, 4);
         var updater = new PolygonGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new PolygonGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicPolygon();
-        expect(function() {
-            return new PolygonGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

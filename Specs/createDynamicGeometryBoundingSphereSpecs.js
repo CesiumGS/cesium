@@ -19,7 +19,8 @@ define([
             var updater = new Updater(entity, scene);
             graphics.fill = true;
             graphics.outline = false;
-            var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+            updater._onEntityPropertyChanged(entity, updater._geometryPropertyName);
+            var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
             dynamicUpdater.update(time);
 
             var state;
@@ -28,7 +29,7 @@ define([
             return pollToPromise(function() {
                 scene.initializeFrame();
                 scene.render();
-                state = dynamicUpdater.getBoundingSphere(entity, result);
+                state = dynamicUpdater.getBoundingSphere(result);
                 return state !== BoundingSphereState.PENDING;
             }).then(function() {
                 var primitive = scene.primitives.get(0);
@@ -46,8 +47,9 @@ define([
             var updater = new Updater(entity, scene);
             graphics.fill = false;
             graphics.outline = true;
+            updater._onEntityPropertyChanged(entity, updater._geometryPropertyName);
 
-            var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+            var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
             dynamicUpdater.update(time);
 
             var state;
@@ -55,7 +57,7 @@ define([
             return pollToPromise(function() {
                 scene.initializeFrame();
                 scene.render();
-                state = dynamicUpdater.getBoundingSphere(entity, result);
+                state = dynamicUpdater.getBoundingSphere(result);
                 return state !== BoundingSphereState.PENDING;
             }).then(function() {
                 var primitive = scene.primitives.get(0);
@@ -68,27 +70,13 @@ define([
             });
         });
 
-        it('Compute dynamic geometry bounding sphere throws without entity.', function() {
-            var scene = getScene();
-            var updater = new Updater(entity, scene);
-            var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
-
-            var result = new BoundingSphere();
-            expect(function() {
-                dynamicUpdater.getBoundingSphere(undefined, result);
-            }).toThrowDeveloperError();
-
-            updater.destroy();
-            scene.primitives.removeAll();
-        });
-
         it('Compute dynamic geometry bounding sphere throws without result.', function() {
             var scene = getScene();
             var updater = new Updater(entity, scene);
-            var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+            var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
 
             expect(function() {
-                dynamicUpdater.getBoundingSphere(entity, undefined);
+                dynamicUpdater.getBoundingSphere(undefined);
             }).toThrowDeveloperError();
 
             updater.destroy();

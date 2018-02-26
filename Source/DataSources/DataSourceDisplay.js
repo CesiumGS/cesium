@@ -10,23 +10,13 @@ define([
         '../Scene/GroundPrimitive',
         './BillboardVisualizer',
         './BoundingSphereState',
-        './BoxGeometryUpdater',
-        './CorridorGeometryUpdater',
         './CustomDataSource',
-        './CylinderGeometryUpdater',
-        './EllipseGeometryUpdater',
-        './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
         './LabelVisualizer',
         './ModelVisualizer',
         './PathVisualizer',
-        './PlaneGeometryUpdater',
         './PointVisualizer',
-        './PolygonGeometryUpdater',
-        './PolylineGeometryUpdater',
-        './PolylineVolumeGeometryUpdater',
-        './RectangleGeometryUpdater',
-        './WallGeometryUpdater'
+        './PolylineVisualizer'
     ], function(
         BoundingSphere,
         Check,
@@ -39,23 +29,13 @@ define([
         GroundPrimitive,
         BillboardVisualizer,
         BoundingSphereState,
-        BoxGeometryUpdater,
-        CorridorGeometryUpdater,
         CustomDataSource,
-        CylinderGeometryUpdater,
-        EllipseGeometryUpdater,
-        EllipsoidGeometryUpdater,
         GeometryVisualizer,
         LabelVisualizer,
         ModelVisualizer,
         PathVisualizer,
-        PlaneGeometryUpdater,
         PointVisualizer,
-        PolygonGeometryUpdater,
-        PolylineGeometryUpdater,
-        PolylineVolumeGeometryUpdater,
-        RectangleGeometryUpdater,
-        WallGeometryUpdater) {
+        PolylineVisualizer) {
     'use strict';
 
     /**
@@ -105,27 +85,17 @@ define([
      * Gets or sets the default function which creates an array of visualizers used for visualization.
      * By default, this function uses all standard visualizers.
      *
-     * @member
      * @type {DataSourceDisplay~VisualizersCallback}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
         var entities = dataSource.entities;
         return [new BillboardVisualizer(entityCluster, entities),
-                new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
-                new GeometryVisualizer(CylinderGeometryUpdater, scene, entities),
-                new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
-                new GeometryVisualizer(EllipseGeometryUpdater, scene, entities),
-                new GeometryVisualizer(EllipsoidGeometryUpdater, scene, entities),
-                new GeometryVisualizer(PlaneGeometryUpdater, scene, entities),
-                new GeometryVisualizer(PolygonGeometryUpdater, scene, entities),
-                new GeometryVisualizer(PolylineGeometryUpdater, scene, entities),
-                new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
-                new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
-                new GeometryVisualizer(WallGeometryUpdater, scene, entities),
+                new GeometryVisualizer(scene, entities),
                 new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
-                new PathVisualizer(scene, entities)];
+                new PathVisualizer(scene, entities),
+                new PolylineVisualizer(scene, entities)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
@@ -228,9 +198,7 @@ define([
      */
     DataSourceDisplay.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         if (!GroundPrimitive._initialized) {
@@ -288,15 +256,9 @@ define([
      */
     DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required.');
-        }
-        if (!defined(allowPartial)) {
-            throw new DeveloperError('allowPartial is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('entity', entity);
+        Check.typeOf.bool('allowPartial', allowPartial);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         if (!this._ready) {

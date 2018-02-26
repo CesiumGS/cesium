@@ -103,6 +103,7 @@ defineSuite([
         var entity = createBasicCylinder();
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder = undefined;
+        updater._onEntityPropertyChanged(entity, 'cylinder');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -113,6 +114,7 @@ defineSuite([
         var entity = createBasicCylinder();
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.topRadius = undefined;
+        updater._onEntityPropertyChanged(entity, 'cylinder');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -123,6 +125,7 @@ defineSuite([
         var entity = createBasicCylinder();
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.bottomRadius = undefined;
+        updater._onEntityPropertyChanged(entity, 'cylinder');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -134,6 +137,7 @@ defineSuite([
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.fill = new ConstantProperty(false);
         entity.cylinder.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -161,6 +165,8 @@ defineSuite([
         var entity = createBasicCylinder();
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+
         expect(updater.fillMaterialProperty).toBe(entity.cylinder.material);
     });
 
@@ -169,6 +175,8 @@ defineSuite([
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.outlineWidth = new SampledProperty(Number);
         entity.cylinder.outlineWidth.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -177,6 +185,8 @@ defineSuite([
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.position = new SampledPositionProperty();
         entity.position.addSample(time, Cartesian3.ZERO);
+        updater._onEntityPropertyChanged(entity, 'position');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -185,6 +195,8 @@ defineSuite([
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.bottomRadius = new SampledProperty(Number);
         entity.cylinder.bottomRadius.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -193,6 +205,8 @@ defineSuite([
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.topRadius = new SampledProperty(Number);
         entity.cylinder.topRadius.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -201,6 +215,8 @@ defineSuite([
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.length = new SampledProperty(Number);
         entity.cylinder.length.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -209,6 +225,8 @@ defineSuite([
         var updater = new CylinderGeometryUpdater(entity, scene);
         entity.cylinder.numberOfVerticalLines = new SampledProperty(Number);
         entity.cylinder.numberOfVerticalLines.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -424,7 +442,7 @@ defineSuite([
 
         var updater = new CylinderGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(primitives.length).toBe(0);
 
         dynamicUpdater.update(JulianDate.now());
@@ -436,25 +454,31 @@ defineSuite([
         expect(dynamicUpdater._options.bottomRadius).toEqual(cylinder.bottomRadius.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         entity.show = true;
+        updater._onEntityPropertyChanged(entity, 'show');
 
         cylinder.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
         cylinder.show.setValue(true);
         cylinder.fill.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
 
         cylinder.fill.setValue(true);
         cylinder.outline.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
 
         cylinder.length.setValue(undefined);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
@@ -470,26 +494,33 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
+        updater._onEntityPropertyChanged(entity, 'position');
         expect(listener.calls.count()).toEqual(1);
 
         entity.cylinder.topRadius = new ConstantProperty(82);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
         expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(3);
 
         entity.cylinder.topRadius = undefined;
+        updater._onEntityPropertyChanged(entity, 'cylinder');
         expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.cylinder.bottomRadius = undefined;
+        updater._onEntityPropertyChanged(entity, 'cylinder');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(4);
 
         entity.cylinder.topRadius = new SampledProperty(Number);
         entity.cylinder.bottomRadius = new SampledProperty(Number);
+        updater._onEntityPropertyChanged(entity, 'cylinder');
         expect(listener.calls.count()).toEqual(5);
     });
 
@@ -526,29 +557,11 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicCylinder();
-        var updater = new CylinderGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicCylinder();
-        entity.cylinder.topRadius = createDynamicProperty(4);
-        var updater = new CylinderGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicCylinder();
         entity.cylinder.topRadius = createDynamicProperty(4);
         var updater = new CylinderGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

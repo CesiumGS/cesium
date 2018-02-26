@@ -3,12 +3,18 @@ Change Log
 
 ### 1.43 - 2018-03-01
 
+##### Breaking Changes :mega:
+* Removed `GeometryUpdater.perInstanceColorAppearanceType` and `GeometryUpdater.materialAppearanceType`. [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
+* `GeometryVisualizer` no longer uses a `type` parameter. [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
+* `GeometryVisualizer` no longer displays polylines.  Use `PolylineVisualizer` instead. [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
+
 ##### Deprecated :hourglass_flowing_sand:
 * In the `Resource` class, `addQueryParameters` and `addTemplateValues` have been deprecated and will be removed in Cesium 1.45. Please use `setQueryParameters` and `setTemplateValues` instead.
 
 ##### Additions :tada:
 * Added support for a promise to a resource for `CesiumTerrainProvider`, `createTileMapServiceImageryProvider` and `Cesium3DTileset` [#6204](https://github.com/AnalyticalGraphicsInc/cesium/pull/6204)
 * Added `Cesium.Math.cbrt`. [#6222](https://github.com/AnalyticalGraphicsInc/cesium/pull/6222)
+* Added `PolylineVisualizer` for displaying polyline entities [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
 * `Resource` class [#6205](https://github.com/AnalyticalGraphicsInc/cesium/issues/6205)
   * Added `put`, `patch`, `delete`, `options` and `head` methods, so it can be used for all XHR requests.
   * Added `preserveQueryParameters` parameter to `getDerivedResource`, to allow us to append query parameters instead of always replacing them.
@@ -24,6 +30,9 @@ Change Log
 * Fixed bug where 3D Tiles Point Clouds would fail in Internet Explorer. [#6220](https://github.com/AnalyticalGraphicsInc/cesium/pull/6220)
 * Fixed `Material` so it can now take a `Resource` object as an image. [#6199](https://github.com/AnalyticalGraphicsInc/cesium/issues/6199)
 * Fixed issue where `CESIUM_BASE_URL` wouldn't work without a trailing `/`. [#6225](https://github.com/AnalyticalGraphicsInc/cesium/issues/6225)
+* Fixed coloring for polyline entities with a dynamic color for the depth fail material [#6245](https://github.com/AnalyticalGraphicsInc/cesium/pull/6245)
+* Fixed an issue causing the Bing Maps key to be sent unnecessarily with every tile request. [#6250](https://github.com/AnalyticalGraphicsInc/cesium/pull/6250)
+* Fixed documentation issue for the `Cesium.Math` class. [#6233](https://github.com/AnalyticalGraphicsInc/cesium/issues/6233)
 
 ### 1.42.1 - 2018-02-01
 _This is an npm-only release to fix an issue with using Cesium in Node.js.__
