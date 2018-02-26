@@ -156,9 +156,9 @@ function updateClippingPlanes() {
 }
 
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
-var agiHqUrl = Cesium.CesiumIon.createResource(1458, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg' });
-var instancedUrl = Cesium.CesiumIon.createResource(3876, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJjYjNlMTg5Zi1hMzc2LTRmZjktOGEwZC00NGEzNTM0MTAzZGUiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTE2NTV9.qaP8-_Ej6AihGnv5iB990Hm6lHr8F_rrC3_EPxdT6MQ' });
-var pointCloudUrl = Cesium.CesiumIon.createResource(3742, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxOGZjMjlhZC03MDE1LTQ3ZTAtODEyNy05YTU3M2MwYzQ0YmEiLCJpZCI6NDQsImFzc2V0cyI6WzM3NDJdLCJpYXQiOjE1MTcyNDI3NDJ9.TJAJctFXC1UyFMpxkA3cyKVAmnh72cLtfY1yKbaQsyk' });
+var agiHqUrl = Cesium.IonResource.fromAssetId(3836);
+var instancedUrl = Cesium.IonResource.fromAssetId(3876);
+var pointCloudUrl = Cesium.IonResource.fromAssetId(3844);
 
 function loadModel(url) {
     createClippingPlanes();

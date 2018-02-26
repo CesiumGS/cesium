@@ -31,17 +31,18 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-
-// set lighting to true
-viewer.scene.globe.enableLighting = true;
-
-var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+var worldTerrain = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestWaterMask : true,
     requestVertexNormals : true
 });
-viewer.terrainProvider = cesiumTerrainProviderMeshes;
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: worldTerrain
+});
+
+// set lighting to true
+viewer.scene.globe.enableLighting = true;
 
 // setup alternative terrain providers
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
@@ -54,7 +55,7 @@ var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
 Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain',
     onselect : function() {
-        viewer.terrainProvider = cesiumTerrainProviderMeshes;
+        viewer.terrainProvider = worldTerrain;
         viewer.scene.globe.enableLighting = true;
     }
 }, {

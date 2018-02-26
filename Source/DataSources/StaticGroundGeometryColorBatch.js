@@ -42,7 +42,7 @@ define([
     }
 
     Batch.prototype.add = function(updater, instance) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
@@ -52,14 +52,14 @@ define([
             var that = this;
             this.subscriptions.set(id, updater.entity.definitionChanged.addEventListener(function(entity, propertyName, newValue, oldValue) {
                 if (propertyName === 'isShowing') {
-                    that.showsUpdated.set(entity.id, updater);
+                    that.showsUpdated.set(updater.id, updater);
                 }
             }));
         }
     };
 
     Batch.prototype.remove = function(updater) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
             this.updatersWithAttributes.remove(id);
@@ -140,7 +140,7 @@ define([
             var waitingOnCreate = this.waitingOnCreate;
             for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this.geometry.get(updater.entity.id);
+                var instance = this.geometry.get(updater.id);
 
                 attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
@@ -193,7 +193,7 @@ define([
         var length = showsUpdated.length;
         for (var i = 0; i < length; i++) {
             var updater = showsUpdated[i];
-            var instance = this.geometry.get(updater.entity.id);
+            var instance = this.geometry.get(updater.id);
 
             var attributes = this.attributes.get(instance.id.id);
             if (!defined(attributes)) {
@@ -210,17 +210,17 @@ define([
         this.showsUpdated.removeAll();
     };
 
-    Batch.prototype.contains = function(entity) {
-        return this.updaters.contains(entity.id);
+    Batch.prototype.contains = function(updater) {
+        return this.updaters.contains(updater.id);
     };
 
-    Batch.prototype.getBoundingSphere = function(entity, result) {
+    Batch.prototype.getBoundingSphere = function(updater, result) {
         var primitive = this.primitive;
         if (!primitive.ready) {
             return BoundingSphereState.PENDING;
         }
 
-        var bs = primitive.getBoundingSphere(entity);
+        var bs = primitive.getBoundingSphere(updater.entity);
         if (!defined(bs)) {
             return BoundingSphereState.FAILED;
         }
@@ -325,13 +325,13 @@ define([
         return isUpdated;
     };
 
-    StaticGroundGeometryColorBatch.prototype.getBoundingSphere = function(entity, result) {
+    StaticGroundGeometryColorBatch.prototype.getBoundingSphere = function(updater, result) {
         var batchesArray = this._batches.values;
         var batchCount = batchesArray.length;
         for (var i = 0; i < batchCount; ++i) {
             var batch = batchesArray[i];
-            if (batch.contains(entity)) {
-                return batch.getBoundingSphere(entity, result);
+            if (batch.contains(updater)) {
+                return batch.getBoundingSphere(updater, result);
             }
         }
 

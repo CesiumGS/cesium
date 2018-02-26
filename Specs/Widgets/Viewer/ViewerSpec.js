@@ -621,14 +621,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws if using imageryProvider with BaseLayerPicker enabled', function() {
-        expect(function() {
-            return createViewer(container, {
-                imageryProvider : testProvider
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('extend throws with undefined mixin', function() {
         viewer = createViewer(container);
         expect(function() {

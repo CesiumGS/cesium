@@ -97,8 +97,10 @@ define([
          */
         this.buttonImageUrl = undefined;
         knockout.defineProperty(this, 'buttonImageUrl', function() {
-            var viewModel = this.selectedImagery;
-            return defined(viewModel) ? viewModel.iconUrl : undefined;
+            var selectedImagery = this.selectedImagery;
+            if (defined(selectedImagery)) {
+                return selectedImagery.iconUrl;
+            }
         });
 
         /**
@@ -124,12 +126,14 @@ define([
                 var currentImageryProviders = this._currentImageryProviders;
                 var currentImageryProvidersLength = currentImageryProviders.length;
                 var imageryLayers = this._globe.imageryLayers;
+                var hadExistingBaseLayer = false;
                 for (i = 0; i < currentImageryProvidersLength; i++) {
                     var layersLength = imageryLayers.length;
                     for ( var x = 0; x < layersLength; x++) {
                         var layer = imageryLayers.get(x);
                         if (layer.imageryProvider === currentImageryProviders[i]) {
                             imageryLayers.remove(layer);
+                            hadExistingBaseLayer = true;
                             break;
                         }
                     }
@@ -145,7 +149,15 @@ define([
                         this._currentImageryProviders = newProviders.slice(0);
                     } else {
                         this._currentImageryProviders = [newProviders];
-                        imageryLayers.addImageryProvider(newProviders, 0);
+                        if (hadExistingBaseLayer) {
+                            imageryLayers.addImageryProvider(newProviders, 0);
+                        } else {
+                            var baseLayer = imageryLayers.get(0);
+                            if (defined(baseLayer)) {
+                                imageryLayers.remove(baseLayer);
+                            }
+                            imageryLayers.addImageryProvider(newProviders, 0);
+                        }
                     }
                 }
                 selectedImageryViewModel(value);

@@ -126,6 +126,7 @@ defineSuite([
         var entity = createBasicCorridor();
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor = undefined;
+        updater._onEntityPropertyChanged(entity, 'corridor');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -137,6 +138,7 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.fill = new ConstantProperty(false);
         entity.corridor.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'corridor');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -147,7 +149,7 @@ defineSuite([
         var entity = createBasicCorridor();
         var updater = new CorridorGeometryUpdater(entity, scene);
 
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
@@ -164,6 +166,8 @@ defineSuite([
         var entity = createBasicCorridor();
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.fillMaterialProperty).toBe(entity.corridor.material);
     });
 
@@ -171,6 +175,8 @@ defineSuite([
         var entity = createBasicCorridor();
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.extrudedHeight = new ConstantProperty(1000);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isClosed).toBe(true);
     });
 
@@ -179,6 +185,8 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.outlineWidth = new SampledProperty(Number);
         entity.corridor.outlineWidth.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -194,6 +202,8 @@ defineSuite([
 
         entity.corridor.positions = new PropertyArray();
         entity.corridor.positions.setValue([point1, point2, point3]);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -202,6 +212,8 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.height = new SampledProperty(Number);
         entity.corridor.height.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -210,6 +222,8 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.extrudedHeight = new SampledProperty(Number);
         entity.corridor.extrudedHeight.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -218,6 +232,8 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.granularity = new SampledProperty(Number);
         entity.corridor.granularity.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -226,6 +242,8 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         entity.corridor.width = new SampledProperty(Number);
         entity.corridor.width.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -238,6 +256,8 @@ defineSuite([
             stop : JulianDate.now(),
             data : CornerType.ROUNDED
         }));
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -247,6 +267,8 @@ defineSuite([
         var color = new SampledProperty(Color);
         color.addSample(time, Color.WHITE);
         entity.corridor.material = new ColorMaterialProperty(color);
+        updater._onEntityPropertyChanged(entity, 'corridor');
+
         expect(updater.isDynamic).toBe(groundPrimitiveSupported);
     });
 
@@ -510,7 +532,7 @@ defineSuite([
         var updater = new CorridorGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
         var groundPrimitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
@@ -529,24 +551,29 @@ defineSuite([
         expect(options.cornerType).toEqual(corridor.cornerType.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
         entity.show = true;
+        updater._onEntityPropertyChanged(entity, 'show');
 
         //If a dynamic show returns false, the primitive should go away.
         corridor.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'corridor');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
 
         corridor.show.setValue(true);
+        updater._onEntityPropertyChanged(entity, 'corridor');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
         expect(groundPrimitives.length).toBe(0);
 
         //If a dynamic position returns undefined, the primitive should go away.
         corridor.positions.setValue(undefined);
+        updater._onEntityPropertyChanged(entity, 'corridor');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
@@ -602,22 +629,28 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.corridor.positions = new ConstantProperty([]);
+        updater._onEntityPropertyChanged(entity, 'corridor');
         expect(listener.calls.count()).toEqual(1);
 
         entity.corridor.height = new ConstantProperty(82);
+        updater._onEntityPropertyChanged(entity, 'corridor');
         expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(3);
 
         entity.corridor.positions = undefined;
+        updater._onEntityPropertyChanged(entity, 'corridor');
         expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.corridor.height = undefined;
+        updater._onEntityPropertyChanged(entity, 'corridor');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(4);
     });
 
@@ -654,46 +687,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicCorridor();
-        var updater = new CorridorGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicCorridor();
-        entity.corridor.height = new SampledProperty(Number);
-        entity.corridor.height.addSample(time, 4);
-        var updater = new CorridorGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicCorridor();
         entity.corridor.height = new SampledProperty(Number);
         entity.corridor.height.addSample(time, 4);
         var updater = new CorridorGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new CorridorGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicCorridor();
-        expect(function() {
-            return new CorridorGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

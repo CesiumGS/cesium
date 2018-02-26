@@ -101,6 +101,7 @@ defineSuite([
         var entity = createBasicPlane();
         var updater = new PlaneGeometryUpdater(entity, scene);
         entity.plane = undefined;
+        updater._onEntityPropertyChanged(entity, 'plane');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -112,6 +113,7 @@ defineSuite([
         var updater = new PlaneGeometryUpdater(entity, scene);
         entity.plane.fill = new ConstantProperty(false);
         entity.plane.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'plane');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -139,6 +141,8 @@ defineSuite([
         var entity = createBasicPlane();
         var updater = new PlaneGeometryUpdater(entity, scene);
         entity.plane.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'plane');
+
         expect(updater.fillMaterialProperty).toBe(entity.plane.material);
     });
 
@@ -146,6 +150,8 @@ defineSuite([
         var entity = createBasicPlane();
         var updater = new PlaneGeometryUpdater(entity, scene);
         entity.plane.outlineWidth = createDynamicProperty();
+        updater._onEntityPropertyChanged(entity, 'plane');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -153,6 +159,7 @@ defineSuite([
         var entity = createBasicPlane();
         var updater = new PlaneGeometryUpdater(entity, scene);
         entity.plane.plane = createDynamicProperty();
+        updater._onEntityPropertyChanged(entity, 'plane');
 
         expect(updater.isDynamic).toBe(true);
     });
@@ -161,6 +168,7 @@ defineSuite([
         var entity = createBasicPlane();
         var updater = new PlaneGeometryUpdater(entity, scene);
         entity.plane.dimensions = createDynamicProperty();
+        updater._onEntityPropertyChanged(entity, 'plane');
 
         expect(updater.isDynamic).toBe(true);
     });
@@ -348,7 +356,7 @@ defineSuite([
 
         var updater = new PlaneGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(primitives.length).toBe(0);
 
         dynamicUpdater.update(JulianDate.now());
@@ -360,21 +368,26 @@ defineSuite([
         expect(dynamicUpdater._options.dimensions).toEqual(planeGraphics.dimensions.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         entity.show = true;
+        updater._onEntityPropertyChanged(entity, 'show');
 
         planeGraphics.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'plane');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
         planeGraphics.show.setValue(true);
         planeGraphics.fill.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'plane');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
 
         planeGraphics.fill.setValue(true);
         planeGraphics.outline.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'plane');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
 
@@ -390,19 +403,24 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.plane.dimensions = new ConstantProperty();
+        updater._onEntityPropertyChanged(entity, 'plane');
         expect(listener.calls.count()).toEqual(1);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(2);
 
         entity.plane.dimensions = undefined;
+        updater._onEntityPropertyChanged(entity, 'plane');
         expect(listener.calls.count()).toEqual(3);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.plane.height = undefined;
+        updater._onEntityPropertyChanged(entity, 'plane');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(3);
     });
 
@@ -439,45 +457,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicPlane();
-        var updater = new PlaneGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicPlane();
-        entity.plane.dimensions = createDynamicProperty(new Cartesian2(1.0, 2.0
-        ));
-        var updater = new PlaneGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicPlane();
         entity.plane.dimensions = createDynamicProperty(new Cartesian2(1.0, 2.0));
         var updater = new PlaneGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new PlaneGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicPlane();
-        expect(function() {
-            return new PlaneGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 

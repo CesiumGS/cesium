@@ -105,6 +105,7 @@ defineSuite([
         var entity = createBasicPolylineVolume();
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         entity.polylineVolume = undefined;
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -116,6 +117,7 @@ defineSuite([
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         entity.polylineVolume.fill = new ConstantProperty(false);
         entity.polylineVolume.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -142,6 +144,8 @@ defineSuite([
         var entity = createBasicPolylineVolume();
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         entity.polylineVolume.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
+
         expect(updater.fillMaterialProperty).toBe(entity.polylineVolume.material);
     });
 
@@ -149,6 +153,8 @@ defineSuite([
         var entity = createBasicPolylineVolume();
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         entity.polylineVolume.outlineWidth = createDynamicProperty(1);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -156,6 +162,8 @@ defineSuite([
         var entity = createBasicPolylineVolume();
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         entity.polylineVolume.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -163,6 +171,8 @@ defineSuite([
         var entity = createBasicPolylineVolume();
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         entity.polylineVolume.shape = createDynamicProperty(shape);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -170,6 +180,8 @@ defineSuite([
         var entity = createBasicPolylineVolume();
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         entity.polylineVolume.granularity = createDynamicProperty(1);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -182,6 +194,8 @@ defineSuite([
             stop : JulianDate.now(),
             data : CornerType.ROUNDED
         }));
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -387,7 +401,7 @@ defineSuite([
 
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
 
@@ -402,21 +416,26 @@ defineSuite([
         expect(options.cornerType).toEqual(polylineVolume.cornerType.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         entity.show = true;
+        updater._onEntityPropertyChanged(entity, 'show');
 
         //If a dynamic show returns false, the primitive should go away.
         polylineVolume.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
 
         polylineVolume.show.setValue(true);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
 
         //If a dynamic position returns undefined, the primitive should go away.
         polylineVolume.positions.setValue(undefined);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
 
@@ -431,22 +450,28 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.polylineVolume.positions = new ConstantProperty([]);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
         expect(listener.calls.count()).toEqual(1);
 
         entity.polylineVolume.shape = new ConstantProperty(shape);
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
         expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(3);
 
         entity.polylineVolume.positions = undefined;
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
         expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.polylineVolume.shape = undefined;
+        updater._onEntityPropertyChanged(entity, 'polylineVolume');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(4);
     });
 
@@ -483,46 +508,16 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicPolylineVolume();
-        var updater = new PolylineVolumeGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicPolylineVolume();
-        entity.polylineVolume.outlineWidth = createDynamicProperty(1);
-        var updater = new PolylineVolumeGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicPolylineVolume();
         entity.polylineVolume.outlineWidth = createDynamicProperty(1);
         var updater = new PolylineVolumeGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new PolylineVolumeGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicPolylineVolume();
-        expect(function() {
-            return new PolylineVolumeGeometryUpdater(entity, undefined);
-        }).toThrowDeveloperError();
-    });
 
     var entity = createBasicPolylineVolume();
     entity.polylineVolume.shape = createDynamicProperty(shape);

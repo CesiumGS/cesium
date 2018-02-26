@@ -679,12 +679,17 @@ define([
         //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
         this._brokenUrlWorkaround = false;
 
+        this._credits = undefined;
+
         var that = this;
         var tilesetResource;
         when(options.url)
             .then(function(url) {
                 var basePath;
                 var resource = Resource.createIfNeeded(url);
+
+                // ion resources have a credits property we can use for additional attribution.
+                that._credits = resource.credits;
 
                 tilesetResource = resource;
 
@@ -1897,8 +1902,17 @@ define([
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
         if (defined(clippingPlanes)) {
-            // Signal that clipping plane shaders have been updated
+            // Mark that clipping plane shaders have been regenerated in this update
             clippingPlanes.shouldRegenerateShaders = false;
+        }
+        if (statistics.selected !== 0) {
+            var credits = this._credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    frameState.creditDisplay.addCredit(credits[i]);
+                }
+            }
         }
     };
 

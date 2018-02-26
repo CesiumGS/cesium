@@ -96,6 +96,7 @@ defineSuite([
         var entity = createBasicBox();
         var updater = new BoxGeometryUpdater(entity, scene);
         entity.box = undefined;
+        updater._onEntityPropertyChanged(entity, 'box');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -107,6 +108,7 @@ defineSuite([
         var updater = new BoxGeometryUpdater(entity, scene);
         entity.box.fill = new ConstantProperty(false);
         entity.box.outline = new ConstantProperty(false);
+        updater._onEntityPropertyChanged(entity, 'box');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -134,6 +136,8 @@ defineSuite([
         var entity = createBasicBox();
         var updater = new BoxGeometryUpdater(entity, scene);
         entity.box.material = new GridMaterialProperty(Color.BLUE);
+        updater._onEntityPropertyChanged(entity, 'box');
+
         expect(updater.fillMaterialProperty).toBe(entity.box.material);
     });
 
@@ -141,6 +145,8 @@ defineSuite([
         var entity = createBasicBox();
         var updater = new BoxGeometryUpdater(entity, scene);
         entity.box.outlineWidth = createDynamicProperty();
+        updater._onEntityPropertyChanged(entity, 'box');
+
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -148,6 +154,7 @@ defineSuite([
         var entity = createBasicBox();
         var updater = new BoxGeometryUpdater(entity, scene);
         entity.box.dimensions = createDynamicProperty();
+        updater._onEntityPropertyChanged(entity, 'box');
 
         expect(updater.isDynamic).toBe(true);
     });
@@ -335,7 +342,7 @@ defineSuite([
 
         var updater = new BoxGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         expect(primitives.length).toBe(0);
 
         dynamicUpdater.update(JulianDate.now());
@@ -346,21 +353,26 @@ defineSuite([
         expect(dynamicUpdater._options.dimensions).toEqual(box.dimensions.getValue());
 
         entity.show = false;
+        updater._onEntityPropertyChanged(entity, 'show');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
         entity.show = true;
+updater._onEntityPropertyChanged(entity, 'show');
 
         box.show.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'box');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
         box.show.setValue(true);
         box.fill.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'box');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
 
         box.fill.setValue(true);
         box.outline.setValue(false);
+        updater._onEntityPropertyChanged(entity, 'box');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(1);
 
@@ -382,11 +394,12 @@ defineSuite([
 
         var updater = new BoxGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
 
-        box.dimensions.setValue(new  Cartesian3(1, 2, 3));
+        box.dimensions.setValue(new Cartesian3(1, 2, 3));
+        updater._onEntityPropertyChanged(entity, 'box');
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(2);
         updater.destroy();
@@ -399,19 +412,24 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.box.dimensions = new ConstantProperty();
+        updater._onEntityPropertyChanged(entity, 'box');
         expect(listener.calls.count()).toEqual(1);
 
         entity.availability = new TimeIntervalCollection();
+        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(2);
 
         entity.box.dimensions = undefined;
+        updater._onEntityPropertyChanged(entity, 'box');
         expect(listener.calls.count()).toEqual(3);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.box.height = undefined;
+        updater._onEntityPropertyChanged(entity, 'box');
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
+        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(3);
     });
 
@@ -448,44 +466,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createDynamicUpdater throws if not dynamic', function() {
-        var entity = createBasicBox();
-        var updater = new BoxGeometryUpdater(entity, scene);
-        expect(function() {
-            return updater.createDynamicUpdater(new PrimitiveCollection());
-        }).toThrowDeveloperError();
-    });
-
-    it('createDynamicUpdater throws if primitives undefined', function() {
-        var entity = createBasicBox();
-        entity.box.dimensions = createDynamicProperty(new Cartesian3(1, 2, 3));
-        var updater = new BoxGeometryUpdater(entity, scene);
-        expect(updater.isDynamic).toBe(true);
-        expect(function() {
-            return updater.createDynamicUpdater(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('dynamicUpdater.update throws if no time specified', function() {
         var entity = createBasicBox();
         entity.box.dimensions = createDynamicProperty(new Cartesian3(1, 2, 3));
         var updater = new BoxGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no Entity supplied', function() {
-        expect(function() {
-            return new BoxGeometryUpdater(undefined, scene);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws if no scene supplied', function() {
-        var entity = createBasicBox();
-        expect(function() {
-            return new BoxGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
     });
 
