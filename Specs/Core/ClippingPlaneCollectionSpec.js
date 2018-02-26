@@ -375,6 +375,11 @@ defineSuite([
         it('reallocates textures when above capacity or below 1/4 capacity', function() {
             var scene = createScene();
 
+            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+                // Don't fail just because float textures aren't supported
+                return;
+            }
+
             clippingPlanes = new ClippingPlaneCollection({
                 planes : planes,
                 enabled : false,
