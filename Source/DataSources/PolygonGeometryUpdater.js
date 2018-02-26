@@ -3,7 +3,6 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
@@ -16,18 +15,15 @@ define([
         '../Scene/GroundPrimitive',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
-        './MaterialProperty',
         './Property'
     ], function(
         Check,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
-        destroyObject,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
@@ -40,11 +36,9 @@ define([
         GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        Primitive,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
-        MaterialProperty,
         Property) {
     'use strict';
 

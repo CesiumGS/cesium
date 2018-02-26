@@ -6,7 +6,6 @@ define([
         '../Core/CylinderGeometry',
         '../Core/CylinderOutlineGeometry',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
@@ -14,11 +13,9 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
-        './MaterialProperty',
         './Property'
     ], function(
         Cartesian3,
@@ -28,7 +25,6 @@ define([
         CylinderGeometry,
         CylinderOutlineGeometry,
         defined,
-        destroyObject,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
@@ -36,11 +32,9 @@ define([
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        Primitive,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
-        MaterialProperty,
         Property) {
     'use strict';
 
@@ -73,8 +67,6 @@ define([
             geometryPropertyName: 'cylinder',
             observedPropertyNames: ['availability', 'position', 'orientation', 'cylinder']
         });
-
-        this._isClosed = true;
     }
 
     if (defined(Object.create)) {

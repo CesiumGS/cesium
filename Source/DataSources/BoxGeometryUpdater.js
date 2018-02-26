@@ -6,7 +6,6 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
@@ -14,11 +13,9 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
-        './MaterialProperty',
         './Property'
     ], function(
         BoxGeometry,
@@ -28,7 +25,6 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         defined,
-        destroyObject,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
@@ -36,11 +32,9 @@ define([
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        Primitive,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
-        MaterialProperty,
         Property) {
     'use strict';
 
@@ -69,8 +63,6 @@ define([
             geometryPropertyName : 'box',
             observedPropertyNames : ['availability', 'position', 'orientation', 'box']
         });
-
-        this._isClosed = true;
     }
 
     if (defined(Object.create)) {

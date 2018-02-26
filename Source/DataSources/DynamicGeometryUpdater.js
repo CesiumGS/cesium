@@ -42,6 +42,12 @@ define([
      * @private
      */
     function DynamicGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('geometryUpdater', geometryUpdater);
+        Check.defined('primitives', primitives);
+        Check.defined('groundPrimitives', groundPrimitives);
+        //>>includeEnd('debug');
+
         this._primitives = primitives;
         this._groundPrimitives = groundPrimitives;
         this._primitive = undefined;
