@@ -782,7 +782,6 @@ define([
 
         var removeGlobeCallbacks = [];
         if (defined(globe)) {
-            removeGlobeCallbacks.push(globe.tileLoadedEvent.addEventListener(requestRenderAfterFrame(scene)));
             removeGlobeCallbacks.push(globe.imageryLayersUpdatedEvent.addEventListener(requestRenderAfterFrame(scene)));
             removeGlobeCallbacks.push(globe.terrainProviderChanged.addEventListener(requestRenderAfterFrame(scene)));
         }
@@ -3011,6 +3010,10 @@ define([
 
         if (defined(scene.globe)) {
             scene.globe.endFrame(frameState);
+
+            if (!scene.globe.tilesLoaded) {
+                scene._renderRequested = true;
+            }
         }
 
         frameState.creditDisplay.endFrame();
