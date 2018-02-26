@@ -3,9 +3,8 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/DistanceDisplayCondition',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
+        'Core/Math',
         'Core/Quaternion',
         'Core/TimeIntervalCollection',
         'DataSources/ColorMaterialProperty',
@@ -25,9 +24,8 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
+        CesiumMath,
         Quaternion,
         TimeIntervalCollection,
         ColorMaterialProperty,
@@ -284,24 +282,20 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var ddc = new DistanceDisplayCondition(10.0, 100.0);
         ellipsoid.fill.setValue(false);
         ellipsoid.outline.setValue(false);
         ellipsoid.outlineColor = createDynamicProperty(Color.YELLOW);
         ellipsoid.material = new ColorMaterialProperty(Color.ORANGE);
-        ellipsoid.distanceDisplayCondition = ddc;
         updater._onEntityPropertyChanged(entity, 'ellipsoid');
         dynamicUpdater.update(time);
 
         var attributes = primitives.get(0).getGeometryInstanceAttributes(entity);
         expect(attributes.show[0]).toEqual(0);
-        expect(attributes.distanceDisplayCondition).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(ddc));
         expect(primitives.get(0).appearance.material.uniforms.color).toEqual(ellipsoid.material.color.getValue());
 
         attributes = primitives.get(1).getGeometryInstanceAttributes(entity);
         expect(attributes.show[0]).toEqual(0);
         expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(ellipsoid.outlineColor.getValue()));
-        expect(attributes.distanceDisplayCondition).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(ddc));
     });
 
     it('geometryChanged event is raised when expected', function() {
