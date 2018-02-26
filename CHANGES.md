@@ -3,15 +3,25 @@ Change Log
 
 ### 1.43 - 2018-03-01
 
+##### Major Announcements :loudspeaker:
+
+* Say hello to [Cesium ion](https://cesium.com/blog/2018/03/01/hello-cesium-ion/)
+* Cesium, the JavaScript library, is now officially renamed to CesiumJS (no code changes required)
+* The STK World Terrain tileset is deprecated and will be available until September 1, 2018. Check out the new high-resolution [Cesium World Terrain](https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/)
+
 ##### Breaking Changes :mega:
 * Removed `GeometryUpdater.perInstanceColorAppearanceType` and `GeometryUpdater.materialAppearanceType`. [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
 * `GeometryVisualizer` no longer uses a `type` parameter. [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
 * `GeometryVisualizer` no longer displays polylines.  Use `PolylineVisualizer` instead. [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
+* The experimental `CesiumIon` object has been completely refactored and renamed to `Ion`.
 
 ##### Deprecated :hourglass_flowing_sand:
+* The STK World Terrain, ArcticDEM, and PAMAP Terrain tilesets hosted on `assets.agi.com` are deprecated and will be available until September 1, 2018. To continue using them, access them via [Cesium ion](https://cesium.com/blog/2018/03/01/hello-cesium-ion/)
 * In the `Resource` class, `addQueryParameters` and `addTemplateValues` have been deprecated and will be removed in Cesium 1.45. Please use `setQueryParameters` and `setTemplateValues` instead.
 
 ##### Additions :tada:
+* Added new `Ion`, `IonResource`, and `IonImageryProvider` objects for loading data hosted on [Cesium ion](https://cesium.com/blog/2018/03/01/hello-cesium-ion/).
+* Added `createWorldTerrain` helper function for easily constructing the new Cesium World Terrain.
 * Added support for a promise to a resource for `CesiumTerrainProvider`, `createTileMapServiceImageryProvider` and `Cesium3DTileset` [#6204](https://github.com/AnalyticalGraphicsInc/cesium/pull/6204)
 * Added `Cesium.Math.cbrt`. [#6222](https://github.com/AnalyticalGraphicsInc/cesium/pull/6222)
 * Added `PolylineVisualizer` for displaying polyline entities [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
