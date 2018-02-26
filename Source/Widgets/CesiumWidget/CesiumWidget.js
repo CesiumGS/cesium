@@ -176,12 +176,10 @@ define([
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
      *
-     * //Widget with OpenStreetMaps imagery provider and Cesium terrain provider hosted by AGI.
+     * //Widget with OpenStreetMaps imagery provider and Cesium World Terrain.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
-     *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
-     *     }),
+     *     terrainProvider : Cesium.createWorldTerrain(),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
      *         sources : {
