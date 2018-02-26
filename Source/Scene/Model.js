@@ -639,6 +639,7 @@ define([
         // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
         this._sourcePrograms = undefined;
         this._sourceShaders = undefined;
+        this._quantizedVertexShaders = {};
 
         this._nodeCommands = [];
         this._pickIds = [];
@@ -1925,6 +1926,8 @@ define([
     function createProgram(id, model, context, firstBuild) {
         var programs = model._sourcePrograms;
         var shaders = model._sourceShaders;
+        var quantizedVertexShaders = model._quantizedVertexShaders;
+
         var program = programs[id];
 
         var clippingPlaneCollection = model.clippingPlanes;
@@ -1946,7 +1949,12 @@ define([
         }
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            vs = modifyShaderForQuantizedAttributes(vs, id, model);
+            var quantizedVs = quantizedVertexShaders[id];
+            if (!defined(quantizedVs)) {
+                quantizedVs = modifyShaderForQuantizedAttributes(vs, id, model);
+                quantizedVertexShaders[id] = quantizedVs;
+            }
+            vs = quantizedVs;
         }
 
         var finalFS = fs;
