@@ -1463,12 +1463,13 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
-        globe.tileLoadedEvent.raiseEvent();
 
+        scene.requestRender();
+        Object.defineProperty(globe, 'tilesLoaded', { value: false });
         scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         expect(scene._renderRequested).toBe(true);
-
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
