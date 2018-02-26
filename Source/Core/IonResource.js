@@ -3,6 +3,7 @@ define([
         './Credit',
         './defaultValue',
         './defined',
+        './defineProperties',
         './Ion',
         './Resource',
         './RuntimeError',
@@ -12,6 +13,7 @@ define([
         Credit,
         defaultValue,
         defined,
+        defineProperties,
         Ion,
         Resource,
         RuntimeError,
@@ -48,7 +50,7 @@ define([
                 url: endpoint.url,
                 retryAttempts: 1,
                 queryParameters: { access_token: endpoint.accessToken },
-                retryCallback: createRetryCallback(endpoint, endpointResource)
+                retryCallback: retryCallback
             };
         } else if (externalType === '3DTILES' || externalType === 'STK_TERRAIN_SERVER') {
             // 3D Tiles and STK Terrain Server external assets can still be represented as an IonResource
@@ -60,21 +62,6 @@ define([
 
         Resource.call(this, options);
 
-        /**
-         * Gets the credits required for attribution of the asset.
-         *
-         * @type {Credit[]}
-         * @readonly
-         */
-        this.credits = endpoint.attributions.map(function(attribution) {
-            return new Credit({
-                text: attribution.text,
-                link: attribution.url,
-                imageUrl: attribution.image,
-                showOnScreen: defined(attribution.collapsible) && !attribution.collapsible
-            });
-        });
-
         // The asset endpoint data returned from ion.
         this._ionEndpoint = endpoint;
 
@@ -83,6 +70,10 @@ define([
 
         // The primary IonResource from which an instance is derived
         this._ionRoot = undefined;
+
+        // Shared promise for endpooint requests amd credits (only ever set on the root request)
+        this._pendingPromise = undefined;
+        this._credits = undefined;
     }
 
     if (defined(Object.create)) {
@@ -119,6 +110,40 @@ define([
             });
     };
 
+    defineProperties(IonResource.prototype, {
+        /**
+         * Gets the credits required for attribution of the asset.
+         *
+         * @memberof IonResource.prototype
+         * @type {Credit[]}
+         * @readonly
+         */
+        credits: {
+            get: function() {
+                // Only we're not the root, return its credits;
+                if (defined(this._ionRoot)) {
+                    return this._ionRoot.credits;
+                }
+
+                // We are the root
+                if (defined(this._credits)) {
+                    return this._credits;
+                }
+
+                this._credits = this._ionEndpoint.attributions.map(function(attribution) {
+                    return new Credit({
+                        text: attribution.text,
+                        link: attribution.url,
+                        imageUrl: attribution.image,
+                        showOnScreen: defined(attribution.collapsible) && !attribution.collapsible
+                    });
+                });
+
+                return this._credits;
+            }
+        }
+    });
+
     /** @inheritdoc */
     IonResource.prototype.clone = function(result) {
         // We always want to use the root's information because it's the most up-to-date
@@ -133,6 +158,7 @@ define([
         if (defined(ionRoot.queryParameters.access_token)) {
             result.queryParameters.access_token = ionRoot.queryParameters.access_token;
         }
+
         return result;
     };
 
@@ -160,56 +186,41 @@ define([
         return server.getDerivedResource(resourceOptions);
     };
 
-    function createRetryCallback(endpoint, endpointResource) {
+    function retryCallback(that, error) {
+        var ionRoot = defaultValue(that._ionRoot, that);
+        var endpointResource = ionRoot._ionEndpointResource;
+
+        // We only want to retry in the case of invalid credentials (401) or image
+        // requests(since Image failures can not provide a status code)
+        if (!defined(error) || (error.statusCode !== 401 && !(error.target instanceof Image))) {
+            return when.resolve(false);
+        }
+
         // We use a shared pending promise for all derived assets, since they share
         // a common access_token.  If we're already requesting a new token for this
         // asset, we wait on the same promise.
-        var pendingPromise;
+        if (!defined(ionRoot._pendingPromise)) {
+            ionRoot._pendingPromise = endpointResource.fetchJson()
+                .then(function(newEndpoint) {
+                    //Set the token for root resource so new derived resources automatically pick it up
+                    ionRoot._ionEndpoint = newEndpoint;
+                    ionRoot.queryParameters.access_token = newEndpoint.accessToken;
+                    return newEndpoint;
+                })
+                .always(function(newEndpoint) {
+                    // Pass or fail, we're done with this promise, the next failure should use a new one.
+                    ionRoot._pendingPromise = undefined;
+                    return newEndpoint;
+                });
+        }
 
-        var retryCallback = function(that, error) {
-            // We only want to retry in the case of invalid credentials (401) or image
-            // requests(since Image failures can not provide a status code)
-            if (!defined(error) || (error.statusCode !== 401 && !(error.target instanceof Image))) {
-                return when.resolve(false);
-            }
-
-            if (!defined(pendingPromise)) {
-                pendingPromise = endpointResource.fetchJson()
-                    .then(function(newEndpoint) {
-                        //Set the token for root resource so derived resources automatically pick it up
-                        var ionRoot = that._ionRoot;
-                        if (defined(ionRoot)) {
-                            ionRoot._ionEndpoint = newEndpoint;
-                            ionRoot.queryParameters.access_token = newEndpoint.accessToken;
-                        }
-                        return newEndpoint;
-                    })
-                    .always(function(newEndpoint) {
-                        // Pass or fail, we're done with this promise, the next failure should use a new one.
-                        pendingPromise = undefined;
-
-                        // We need this return because our old busted version of when
-                        // doesn't conform to spec of returning the result of the above `then`.
-                        return newEndpoint;
-                    });
-            }
-
-            return pendingPromise.then(function(newEndpoint) {
-                // Set the new token and endpoint for this resource
-                that._ionEndpoint = newEndpoint;
-                that.queryParameters.access_token = newEndpoint.accessToken;
-                return true;
-            });
-        };
-
-        //Exposed for testing
-        retryCallback._pendingPromise = pendingPromise;
-
-        return retryCallback;
+        return ionRoot._pendingPromise.then(function(newEndpoint) {
+            // Set the new token and endpoint for this resource
+            that._ionEndpoint = newEndpoint;
+            that.queryParameters.access_token = newEndpoint.accessToken;
+            return true;
+        });
     }
-
-    //Exposed for testing
-    IonResource._createRetryCallback = createRetryCallback;
 
     return IonResource;
 });
