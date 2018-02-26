@@ -17,6 +17,7 @@ define([
         './Matrix4',
         './PixelFormat',
         './Plane',
+        '../Renderer/ContextLimits',
         '../Renderer/PixelDatatype',
         '../Renderer/Sampler',
         '../Renderer/Texture',
@@ -42,6 +43,7 @@ define([
         Matrix4,
         PixelFormat,
         Plane,
+        ContextLimits,
         PixelDatatype,
         Sampler,
         Texture,
@@ -124,8 +126,8 @@ define([
          // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
 
-        // Packed uniform for plane count, denormalization parameters, and clipping union (0 false, 1 true)
-        this._lengthRangeUnion = new Cartesian4();
+        // For denormalization parameters uniform.
+        this._range = new Cartesian2();
 
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
@@ -189,7 +191,6 @@ define([
                 }
                 this._unionClippingRegions = value;
                 this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
-                this._lengthRangeUnion.w = this._unionClippingRegions ? 1.0 : 0.0;
                 this.shouldRegenerateShaders = true;
             }
         },
@@ -228,15 +229,15 @@ define([
         },
 
         /**
-         * Length of clipping plane collection, range for inflating the normalized distances in the clipping plane texture,
-         * and union mode packed to a vec4 for use as a uniform.
+         * Range for inflating the normalized distances in the clipping plane texture when using
+         * uint8 RGBA textures.
          *
-         * @type {Cartesian4}
+         * @type {Cartesian2}
          * @readonly
          */
-        lengthRangeUnion : {
+        range : {
             get : function() {
-                return this._lengthRangeUnion;
+                return this._range;
             }
         },
 
@@ -274,12 +275,6 @@ define([
      * @see ClippingPlaneCollection#removeAll
      */
     ClippingPlaneCollection.prototype.add = function(plane) {
-        //>>includeStart('debug', pragmas.debug);
-        if (this.length >= ClippingPlaneCollection.MAX_CLIPPING_PLANES) {
-            throw new DeveloperError('The maximum number of clipping planes supported is ' + ClippingPlaneCollection.MAX_CLIPPING_PLANES);
-        }
-        //>>includeEnd('debug');
-
         var newPlaneIndex = this._planes.length;
         if (plane instanceof ClippingPlane) {
             var that = this;
@@ -371,6 +366,8 @@ define([
                 planeToKeep.index = i;
             }
         }
+
+        // Indicate planes texture is dirty
         this._manyDirtyPlanes = true;
         planes.length = length;
 
@@ -448,8 +445,7 @@ define([
         var length = planes.length;
         var byteIndex;
 
-        var lengthRangeUnion = clippingPlaneCollection._lengthRangeUnion;
-        lengthRangeUnion.x = length;
+        var range = clippingPlaneCollection._range;
 
         // Pack all plane normals and get min/max of all distances.
         // Check each normal for changes.
@@ -477,8 +473,8 @@ define([
 
         // Normalize all the distances to the range and record them in the typed array.
         // Check each distance for changes.
-        lengthRangeUnion.y = distanceMin;
-        lengthRangeUnion.z = distanceMax;
+        range.x = distanceMin;
+        range.y = distanceMax;
         var distanceRangeSize = distanceMax - distanceMin;
         for (i = 0; i < length; ++i) {
             var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
@@ -491,11 +487,6 @@ define([
     function packPlanesAsFloats(clippingPlaneCollection, startIndex, endIndex) {
         var float32View = clippingPlaneCollection._float32View;
         var planes = clippingPlaneCollection._planes;
-        var length = planes.length;
-
-        var lengthRangeUnion = clippingPlaneCollection._lengthRangeUnion;
-        lengthRangeUnion.x = length;
-        lengthRangeUnion.w = clippingPlaneCollection._unionClippingRegions ? 1.0 : 0.0;
 
         var floatIndex = 0;
         for (var i = startIndex; i < endIndex; ++i) {
@@ -511,6 +502,7 @@ define([
         }
     }
 
+    var textureResolutionScratch = new Cartesian2();
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * build the resources for clipping planes.
@@ -523,7 +515,27 @@ define([
         var context = frameState.context;
         var useFloatTexture = ClippingPlaneCollection.useFloatTexture(context);
 
+        // Compute texture requirements for current planes
+        // In RGBA FLOAT, A plane is 4 floats packed to a RGBA.
+        // In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal,
+        // so 8 bits or 2 pixels in RGBA.
+        var pixelsNeeded = useFloatTexture ? this.length : this.length * 2;
+        var requiredResolution = computeTextureResolution(pixelsNeeded, textureResolutionScratch);
+
+        if (defined(clippingPlanesTexture)) {
+            var currentPixelCount = clippingPlanesTexture.width * clippingPlanesTexture.height;
+            // Recreate the texture if it isn't big enough or is 4 times larger than it needs to be
+            if (currentPixelCount < pixelsNeeded ||
+                pixelsNeeded < 0.25 * currentPixelCount) {
+                    clippingPlanesTexture.destroy();
+                    clippingPlanesTexture = undefined;
+                }
+        }
+
         if (!defined(clippingPlanesTexture)) {
+            // Allocate twice as much space as needed to avoid frequent texture reallocation.
+            requiredResolution.x *= 2;
+
             var sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -534,25 +546,25 @@ define([
             if (useFloatTexture) {
                 clippingPlanesTexture = new Texture({
                     context : context,
-                    width : ClippingPlaneCollection.TEXTURE_WIDTH,
-                    height : ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT,
+                    width : requiredResolution.x,
+                    height : requiredResolution.y,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT,
                     sampler : sampler,
                     flipY : false
                 });
-                this._float32View = new Float32Array(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT * 4);
+                this._float32View = new Float32Array(requiredResolution.x * requiredResolution.y * 4);
             } else {
                 clippingPlanesTexture = new Texture({
                     context : context,
-                    width : ClippingPlaneCollection.TEXTURE_WIDTH,
-                    height : ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8,
+                    width : requiredResolution.x,
+                    height : requiredResolution.y,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                     sampler : sampler,
                     flipY : false
                 });
-                this._uint8View = new Uint8Array(ClippingPlaneCollection.TEXTURE_WIDTH * ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8 * 4);
+                this._uint8View = new Uint8Array(requiredResolution.x * requiredResolution.y * 4);
             }
 
             this._clippingPlanesTexture = clippingPlanesTexture;
@@ -571,8 +583,8 @@ define([
         if (!refreshFullTexture && useFloatTexture) {
             // partial update possible
             packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
-            var offsetY = dirtyIndex / clippingPlanesTexture.width;
-            var offsetX = dirtyIndex - offsetY * clippingPlanesTexture.width;
+            var offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
+            var offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
 
             clippingPlanesTexture.copyFrom({
                 width : 1,
@@ -700,55 +712,14 @@ define([
         return this._unionClippingRegions ? this._planes.length : -this._planes.length;
     };
 
-    /**
-     * The maximum number of supported clipping planes.
-     * @private
-     *
-     * @type {number}
-     * @constant
-     */
-    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 2048; // See maxClippingPlanes.glsl
-
-    var textureWidth = CesiumMath.nextPowerOfTwo(Math.ceil(Math.sqrt(ClippingPlaneCollection.MAX_CLIPPING_PLANES * 2)));
-    /**
-     * The pixel width of a power-of-two RGBA UNSIGNED_BYTE texture or power-of-two RGBA FLOAT texture.
-     * with enough pixels to support MAX_CLIPPING_PLANES.
-     *
-     * In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal, so 8 bits or 2 pixels in RGBA.
-     * For odd-power PoT numbers of clipping planes, this is a PoT square.
-     *
-     * In RGBA FLOAT, A plane is 4 floats packed to a RGBA. For odd-power PoT numbers of clipping planes, this works out to half a PoT square.
-     * @private
-     *
-     * @type {number}
-     * @constant
-     */
-    ClippingPlaneCollection.TEXTURE_WIDTH = textureWidth;
-
-    /**
-     * The pixel width of a power-of-two RGBA UNSIGNED_BYTE texture.
-     * with enough pixels to support MAX_CLIPPING_PLANES.
-     *
-     * In RGBA UNSIGNED_BYTE, A plane is a float in [0, 1) packed to RGBA and an Oct32 quantized normal, so 8 bits or 2 pixels in RGBA.
-     * For odd-power PoT numbers of clipping planes, this is a PoT square.
-     * @private
-     *
-     * @type {number}
-     * @constant
-     */
-    ClippingPlaneCollection.TEXTURE_HEIGHT_UINT8 = (ClippingPlaneCollection.MAX_CLIPPING_PLANES * 2) / textureWidth;
-
-    /**
-     * The pixel width of a power-of-two RGBA FLOAT texture.
-     * with enough pixels to support MAX_CLIPPING_PLANES.
-     *
-     * In RGBA FLOAT, A plane is 4 floats packed to a RGBA. For odd-power PoT numbers of clipping planes, this works out to half a PoT square.
-     * @private
-     *
-     * @type {number}
-     * @constant
-     */
-    ClippingPlaneCollection.TEXTURE_HEIGHT_FLOAT = ClippingPlaneCollection.MAX_CLIPPING_PLANES / textureWidth;
+    function computeTextureResolution(pixelsNeeded, result) {
+        var maxSize = ContextLimits.maximumTextureSize;
+        var width = Math.min(pixelsNeeded, maxSize);
+        var height = Math.ceil(pixelsNeeded / width);
+        result.x = width;
+        result.y = height;
+        return result;
+    }
 
     /**
      * Sets the owner for the input ClippingPlaneCollection if there wasn't another owner.

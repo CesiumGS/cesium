@@ -97,13 +97,23 @@ define([
     function getClippingPlaneFloat(width, height) {
         var pixelWidth = 1.0 / width;
         var pixelHeight = 1.0 / height;
+
+        var pixelWidthString = pixelWidth + '';
+        if (pixelWidthString.indexOf('.') === -1) {
+            pixelWidthString += '.0';
+        }
+        var pixelHeightString = pixelHeight + '';
+        if (pixelHeightString.indexOf('.' === -1)) {
+            pixelHeightString += '.0';
+        }
+
         var functionString =
             'vec4 getClippingPlane(sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n' +
             '{\n' +
             '    int pixY = clippingPlaneNumber / ' + width + ';\n' +
             '    int pixX = clippingPlaneNumber - (pixY * ' + width + ');\n' +
-            '    float u = (float(pixX) + 0.5) * ' + pixelWidth + ';\n' + // sample from center of pixel
-            '    float v = (float(pixY) + 0.5) * ' + pixelHeight + ';\n' +
+            '    float u = (float(pixX) + 0.5) * ' + pixelWidthString + ';\n' + // sample from center of pixel
+            '    float v = (float(pixY) + 0.5) * ' + pixelHeightString + ';\n' +
             '    vec4 plane = texture2D(packedClippingPlanes, vec2(u, v));\n' +
             '    return czm_transformPlane(transform, plane);\n' +
             '}\n';
@@ -113,21 +123,31 @@ define([
     function getClippingPlaneUint8(width, height) {
         var pixelWidth = 1.0 / width;
         var pixelHeight = 1.0 / height;
+
+        var pixelWidthString = pixelWidth + '';
+        if (pixelWidthString.indexOf('.') === -1) {
+            pixelWidthString += '.0';
+        }
+        var pixelHeightString = pixelHeight + '';
+        if (pixelHeightString.indexOf('.' === -1)) {
+            pixelHeightString += '.0';
+        }
+
         var functionString =
             'vec4 getClippingPlane(sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform, vec2 range)\n' +
             '{\n' +
             '    int clippingPlaneStartIndex = clippingPlaneNumber * 2;\n' + // clipping planes are two pixels each
             '    int pixY = clippingPlaneStartIndex / ' + width + ';\n' +
             '    int pixX = clippingPlaneStartIndex - (pixY * ' + width + ');\n' +
-            '    float u = (float(pixX) + 0.5) * ' + pixelWidth + ';\n' + // sample from center of pixel
-            '    float v = (float(pixY) + 0.5) * ' + pixelHeight + ';\n' +
+            '    float u = (float(pixX) + 0.5) * ' + pixelWidthString + ';\n' + // sample from center of pixel
+            '    float v = (float(pixY) + 0.5) * ' + pixelHeightString + ';\n' +
 
             '    vec4 oct32 = texture2D(packedClippingPlanes, vec2(u, v)) * 255.0;\n' +
             '    vec2 oct = vec2(oct32.x * 256.0 + oct32.y, oct32.z * 256.0 + oct32.w);\n' +
 
             '    vec4 plane;\n' +
             '    plane.xyz = czm_octDecode(oct, 65535.0);\n' +
-            '    plane.w = czm_unpackDepth(texture2D(packedClippingPlanes, vec2(u + ' + pixelWidth + ', v))) * (range.y - range.x) + range.x;\n' +
+            '    plane.w = czm_unpackDepth(texture2D(packedClippingPlanes, vec2(u + ' + pixelWidthString + ', v))) * (range.y - range.x) + range.x;\n' +
 
             '    return czm_transformPlane(transform, plane);\n' +
             '}\n';

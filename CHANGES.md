@@ -17,7 +17,7 @@ Change Log
   * Added `setQueryParameters` and `appendQueryParameters` to allow for better handling of query strings.
 * Enable terrain in the `CesiumViewer` demo application [#6198](https://github.com/AnalyticalGraphicsInc/cesium/pull/6198)
 * `ClippingPlaneCollection` updates [#6201](https://github.com/AnalyticalGraphicsInc/cesium/pull/6201)
-  * Increased maximum number of clipping planes from 6 to 2048.
+  * Removed the 6-clipping-plane limit.
   * Added support for Internet Explorer.
   * Added a `ClippingPlane` object to be used with `ClippingPlaneCollection`.
 

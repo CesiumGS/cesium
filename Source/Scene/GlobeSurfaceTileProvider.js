@@ -936,10 +936,6 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
-            u_clippingPlanesLengthRangeUnion : function() {
-                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
-                return defined(clippingPlanes) ? clippingPlanes.lengthRangeUnion : Cartesian4.ZERO;
-            },
             u_clippingPlanes : function() {
                 var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
                 if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
@@ -999,6 +995,15 @@ define([
                 clippingPlanesEdgeWidth : 0.0
             }
         };
+
+        if (!ClippingPlaneCollection.useFloatTexture(frameState.context)) {
+            uniformMap = combine(uniformMap, {
+                u_clippingPlanesRange : function() {
+                    var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
+                    return defined(clippingPlanes) ? clippingPlanes.range : Cartesian2.ZERO;
+                }
+            });
+        }
 
         return uniformMap;
     }

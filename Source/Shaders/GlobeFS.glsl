@@ -54,7 +54,9 @@ uniform vec2 u_lightingFadeDistance;
 
 #ifdef ENABLE_CLIPPING_PLANES
 uniform sampler2D u_clippingPlanes;
-uniform vec4 u_clippingPlanesLengthRangeUnion;
+#ifndef FLOAT_CLIPPING_PLANES
+uniform vec2 u_clippingPlanesRange;
+#endif
 uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
@@ -161,7 +163,7 @@ void main()
     #ifdef FLOAT_CLIPPING_PLANES
         float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
     #else
-        float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix, u_clippingPlanesLengthRangeUnion.yz);
+        float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix, u_clippingPlanesRange);
     #endif
 #endif
 

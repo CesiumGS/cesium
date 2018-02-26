@@ -125,10 +125,6 @@ define([
         this._hasNormals = false;
         this._hasBatchIds = false;
 
-        // Used to regenerate shader when clipping on this tile changes
-        //this._isClipped = false;
-        //this._unionClippingRegions = false;
-
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
         this._backFaceCulling = false;
@@ -580,13 +576,6 @@ define([
             u_constantColor : function() {
                 return content._constantColor;
             },
-            u_clippingPlanesLengthRangeUnion : function() {
-                var clippingPlanes = content._tileset.clippingPlanes;
-                if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
-                    return Cartesian4.ZERO;
-                }
-                return clippingPlanes.lengthRangeUnion;
-            },
             u_clippingPlanes : function() {
                 var clippingPlanes = content._tileset.clippingPlanes;
                 return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? context.defaultTexture : clippingPlanes.texture;
@@ -609,6 +598,18 @@ define([
                 return Matrix4.multiply(content._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
             }
         };
+
+        if (!ClippingPlaneCollection.useFloatTexture(context)) {
+            uniformMap = combine(uniformMap, {
+                u_clippingPlanesRange : function() {
+                    var clippingPlanes = content._tileset.clippingPlanes;
+                    if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
+                        return Cartesian2.ZERO;
+                    }
+                    return clippingPlanes.range;
+                }
+            });
+        }
 
         if (isQuantized) {
             uniformMap = combine(uniformMap, {
@@ -1135,9 +1136,12 @@ define([
 
         var fs = 'varying vec4 v_color; \n';
 
+        var usingRgbaTexture = !ClippingPlaneCollection.useFloatTexture(context);
         if (hasClippedContent) {
-            fs += 'uniform vec4 u_clippingPlanesLengthRangeUnion; \n' +
-                  'uniform sampler2D u_clippingPlanes; \n' +
+            if (usingRgbaTexture) {
+                fs += 'uniform vec2 u_clippingPlanesRange; \n';
+            }
+            fs += 'uniform sampler2D u_clippingPlanes; \n' +
                   'uniform mat4 u_clippingPlanesMatrix; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
             fs += '\n';
@@ -1150,7 +1154,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            fs += '    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix' + (ClippingPlaneCollection.useFloatTexture(context) ? ');\n' : ', u_clippingPlanesLengthRangeUnion.yz);\n') +
+            fs += '    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix' + (usingRgbaTexture ? ', u_clippingPlanesRange);\n' : ');\n') +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
                   '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +
