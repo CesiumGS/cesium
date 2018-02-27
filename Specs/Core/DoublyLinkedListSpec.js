@@ -63,6 +63,77 @@ defineSuite([
         expect(node2.next).toEqual(node3);
     });
 
+    it('adds to the front of the list', function() {
+        var list = new DoublyLinkedList();
+        var node = list.addFront(1);
+
+        //   node
+        //  ^     ^
+        //  |     |
+        // head  tail
+        expect(list.head).toEqual(node);
+        expect(list.tail).toEqual(node);
+        expect(list.length).toEqual(1);
+
+        expect(node).toBeDefined();
+        expect(node.item).toEqual(1);
+        expect(node.previous).not.toBeDefined();
+        expect(node.next).not.toBeDefined();
+
+        var node2 = list.addFront(2);
+
+        //  node2 <-> node
+        //  ^         ^
+        //  |         |
+        // head      tail
+        expect(list.head).toEqual(node2);
+        expect(list.tail).toEqual(node);
+        expect(list.length).toEqual(2);
+
+        expect(node2).toBeDefined();
+        expect(node2.item).toEqual(2);
+        expect(node2.previous).toBeUndefined();
+        expect(node2.next).toBe(node);
+
+        expect(node.previous).toBe(node2);
+        expect(node.next).toBeUndefined(node2);
+
+        var node3 = list.addFront(3);
+
+        //  node3 <-> node2 <-> node
+        //  ^                    ^
+        //  |                    |
+        // head                 tail
+        expect(list.head).toEqual(node3);
+        expect(list.tail).toEqual(node);
+        expect(list.length).toEqual(3);
+
+        expect(node3).toBeDefined();
+        expect(node3.item).toEqual(3);
+        expect(node3.previous).toBeUndefined();
+        expect(node3.next).toBe(node2);
+
+        expect(node2.previous).toEqual(node3);
+        expect(node2.next).toEqual(node);
+    });
+
+    it('moves node to the front of the list', function() {
+        var list = new DoublyLinkedList();
+        var node = list.add(1);
+        var node2 = list.add(2);
+        var node3 = list.add(3);
+        var node4 = list.add(4);
+
+        list.moveToFront(node);
+        expectOrder(list, [node, node2, node3, node4]);
+
+        list.moveToFront(node4);
+        expectOrder(list, [node4, node, node2, node3]);
+
+        list.moveToFront(node2);
+        expectOrder(list, [node2, node4, node, node3]);
+    });
+
     it('removes from a list with one item', function() {
         var list = new DoublyLinkedList();
         var node = list.add(1);

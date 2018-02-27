@@ -1,10 +1,16 @@
 define([
         '../ThirdParty/when',
-        './Check'
+        './defined',
+        './Check',
+        './LRUCache'
     ], function(
         when,
-        Check) {
+        defined,
+        Check,
+        LRUCache) {
     'use strict';
+
+    var cache = new LRUCache(100);
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -86,14 +92,31 @@ define([
         var tilePromises = [];
         for (i = 0; i < tileRequests.length; ++i) {
             var tileRequest = tileRequests[i];
-            var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
-            var tilePromise = when(requestPromise, createInterpolateFunction(tileRequest), createMarkFailedFunction(tileRequest));
+            var cacheKey = tileRequest.x + '-' + tileRequest.y + '-' + tileRequest.level;
+            var requestPromise;
+            var cachedTile = cache.get(cacheKey);
+            if (defined(cachedTile)) {
+                requestPromise = cachedTile;
+            } else {
+                requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level)
+                    .then(setCache(cacheKey));
+            }
+            var tilePromise = when(requestPromise)
+                .then(createInterpolateFunction(tileRequest))
+                .otherwise(createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);
         }
 
         return when.all(tilePromises, function() {
             return positions;
         });
+    }
+
+    function setCache(cacheKey) {
+        return function(terrainData) {
+            cache.set(cacheKey, terrainData);
+            return terrainData;
+        };
     }
 
     function createInterpolateFunction(tileRequest) {

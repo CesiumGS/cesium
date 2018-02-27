@@ -46,6 +46,35 @@ define([
         return node;
     };
 
+    DoublyLinkedList.prototype.addFront = function(item) {
+        var node = new DoublyLinkedListNode(item, undefined, this.head);
+
+        if (defined(this.head)) {
+            this.head.previous = node;
+            this.head = node;
+        } else {
+            // Insert into empty linked list
+            this.head = node;
+            this.tail = node;
+        }
+
+        ++this._length;
+
+        return node;
+    };
+
+    DoublyLinkedList.prototype.moveToFront = function(node) {
+        if (this.head === node) {
+            return;
+        }
+
+        remove(this, node);
+        node.next = this.head;
+        node.previous = undefined;
+        this.head.previous = node;
+        this.head = node;
+    };
+
     function remove(list, node) {
         if (defined(node.previous) && defined(node.next)) {
             node.previous.next = node.next;
