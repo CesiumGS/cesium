@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Create imagery layers from multiple sources.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials, Showcases">
+    <meta name="description" content="NASA-generated imagery of the earth at night hosted on Cesium ion. Also known as Black Marble and Night Lights.">
+    <meta name="cesium-sandcastle-labels" content="ion Assets">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -28,21 +28,8 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
-        url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-    }),
-    baseLayerPicker : false
+    imageryProvider: new Cesium.IonImageryProvider({ assetId: 3812 })
 });
-
-var layers = viewer.imageryLayers;
-var earthAtNight = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId: 3812 }));
-earthAtNight.alpha = 0.5;
-earthAtNight.brightness = 2.0;
-
-layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-    url : '../images/Cesium_Logo_overlay.png',
-    rectangle : Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75)
-}));
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
