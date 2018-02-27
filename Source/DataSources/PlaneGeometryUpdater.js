@@ -7,7 +7,6 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
@@ -17,11 +16,9 @@ define([
         '../Core/Quaternion',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
-        './MaterialProperty',
         './Property'
     ], function(
         PlaneGeometry,
@@ -32,7 +29,6 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         defined,
-        destroyObject,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
@@ -42,11 +38,9 @@ define([
         Quaternion,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        Primitive,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
-        MaterialProperty,
         Property) {
     'use strict';
 
@@ -132,9 +126,6 @@ define([
         var modelMatrix = entity.computeModelMatrix(time);
         var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
         var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
-            return;
-        }
 
         options.plane = plane;
         options.dimensions = dimensions;
@@ -176,9 +167,6 @@ define([
         var modelMatrix = entity.computeModelMatrix(time);
         var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
         var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
-            return;
-        }
 
         options.plane = plane;
         options.dimensions = dimensions;
@@ -201,7 +189,7 @@ define([
         return !defined(plane.plane) || !defined(plane.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, plane);
     };
 
-    GeometryUpdater.prototype._getIsClosed = function(options) {
+    PlaneGeometryUpdater.prototype._getIsClosed = function(options) {
         return false;
     };
 

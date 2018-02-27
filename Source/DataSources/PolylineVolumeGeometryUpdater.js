@@ -3,7 +3,6 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
@@ -13,18 +12,15 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
-        './MaterialProperty',
         './Property'
     ], function(
         Check,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
-        destroyObject,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
@@ -34,11 +30,9 @@ define([
         ShowGeometryInstanceAttribute,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        Primitive,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
-        MaterialProperty,
         Property) {
     'use strict';
 
@@ -69,8 +63,6 @@ define([
             geometryPropertyName : 'polylineVolume',
             observedPropertyNames : ['availability', 'polylineVolume']
         });
-
-        this._isClosed = true;
     }
 
     if (defined(Object.create)) {
