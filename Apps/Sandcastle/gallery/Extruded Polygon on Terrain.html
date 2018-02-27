@@ -48,7 +48,7 @@ var redPolygon = viewer.entities.add({
     polygon : {
         hierarchy : hierarchy,
         material : Cesium.Color.RED,
-        height : 1800.0,
+        height : new Cesium.RelativeToTerrainHeightProperty(viewer.terrainProvider, hierarchy, 400.0),
         extrudedHeight : new Cesium.MinimumTerrainHeightProperty(hierarchy)
     }
 });

@@ -105,7 +105,7 @@ define([
     });
 
     /**
-     * Gets the minimum terrain height based on the positions positions at the provided time.
+     * Gets the minimum terrain height based on the positions at the provided time.
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @returns {Number} The minimum terrain height
