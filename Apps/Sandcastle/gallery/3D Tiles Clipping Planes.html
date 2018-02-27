@@ -147,6 +147,7 @@ function loadTileset(url) {
 
             planeEntities.push(planeEntity);
         }
+        return tileset;
     }).otherwise(function(error) {
         console.log(error);
     });
@@ -205,9 +206,9 @@ function loadModel(url) {
 }
 
 // Power Plant design model provided by Bentley Systems
-var bimUrl = Cesium.CesiumIon.createResource(3837);
-var pointCloudUrl = Cesium.CesiumIon.createResource(3838);
-var instancedUrl = Cesium.CesiumIon.createResource(3876);
+var bimUrl = Cesium.IonResource.fromAssetId(3837);
+var pointCloudUrl = Cesium.IonResource.fromAssetId(3838);
+var instancedUrl = Cesium.IonResource.fromAssetId(3876);
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
 loadTileset(bimUrl);
@@ -220,20 +221,19 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(function(newValue) {
     reset();
 
-    var tileset;
     if (newValue === clipObjects[0]) {
-        return loadTileset(bimUrl);
+        loadTileset(bimUrl);
     } else if (newValue === clipObjects[1]) {
-        tileset = loadTileset(pointCloudUrl);
-        tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        return tileset;
+        loadTileset(pointCloudUrl).then(function(tileset) {
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
     } else if (newValue === clipObjects[2]) {
-         tileset = loadTileset(instancedUrl);
-        tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        return tileset;
+        loadTileset(instancedUrl).then(function(tileset) {
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
+    } else {
+        loadModel(modelUrl);
     }
-
-    loadModel(modelUrl);
 });
 
 Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(value) {

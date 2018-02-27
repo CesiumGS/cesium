@@ -58,12 +58,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var layers = viewer.imageryLayers;
-var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : 'https://cesiumjs.org/blackmarble',
-    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
-    flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
-}));
-blackMarble.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
+var earthAtNight = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId: 3812 }));
+earthAtNight.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
 
 // Sync the position of the slider with the split position
 var slider = document.getElementById('slider');

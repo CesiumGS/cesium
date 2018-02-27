@@ -1,6 +1,6 @@
 defineSuite([
     'Scene/IonImageryProvider',
-    'Core/CesiumIon',
+    'Core/IonResource',
     'Core/Credit',
     'Core/defaultValue',
     'Core/RequestScheduler',
@@ -18,7 +18,7 @@ defineSuite([
     'ThirdParty/when'
 ], function(
     IonImageryProvider,
-    CesiumIon,
+    IonResource,
     Credit,
     defaultValue,
     RequestScheduler,
@@ -46,14 +46,14 @@ defineSuite([
 
         var assetId = 12335;
         var options = { assetId: assetId };
-        var endpointResource = CesiumIon._createEndpointResource(assetId, options);
-        spyOn(CesiumIon, '_createEndpointResource').and.returnValue(endpointResource);
+        var endpointResource = IonResource._createEndpointResource(assetId, options);
+        spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
 
         spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
 
         var provider = new IonImageryProvider(options);
 
-        expect(CesiumIon._createEndpointResource).toHaveBeenCalledWith(assetId, options);
+        expect(IonResource._createEndpointResource).toHaveBeenCalledWith(assetId, options);
         return provider;
     }
 

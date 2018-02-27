@@ -226,11 +226,7 @@ function disableDepthTest() {
     Sandcastle.declare(disableDepthTest);
 
     terrainProvider = viewer.terrainProvider;
-    viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-        requestWaterMask : true,
-        requestVertexNormals : true
-    });
+    viewer.terrainProvider = Cesium.createWorldTerrain();
     viewer.scene.globe.depthTestAgainstTerrain = true;
 
     viewer.entities.add({

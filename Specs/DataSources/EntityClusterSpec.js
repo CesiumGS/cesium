@@ -49,6 +49,7 @@ defineSuite([
                 }
             },
             tileLoadedEvent : new Event(),
+            terrainProviderChanged : new Event(),
             imageryLayersUpdatedEvent : new Event(),
             beginFrame : function() {},
             update : function() {},

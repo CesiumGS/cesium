@@ -29,7 +29,7 @@ function startup(Cesium) {
 // Power Plant design model provided by Bentley Systems
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.CesiumIon.createResource(3837) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3837) });
 
 tileset.readyPromise.then(function(tileset) {
     viewer.scene.primitives.add(tileset);

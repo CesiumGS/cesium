@@ -16,13 +16,16 @@ defineSuite([
     var imgSrc = 'imagesrc';
     var delimiter = 'cesium-credit-delimiter';
     var creditDisplay;
+    var defaultCredit;
 
     beforeEach(function() {
         container = document.createElement('div');
         container.id = 'credit-container';
+        defaultCredit = CreditDisplay.cesiumCredit;
     });
 
     afterEach(function(){
+        CreditDisplay.cesiumCredit = defaultCredit;
         if (defined(creditDisplay)) {
             creditDisplay.destroy();
             creditDisplay = undefined;
@@ -630,5 +633,47 @@ defineSuite([
         expect(creditList.childNodes.length).toEqual(0);
 
         creditDisplay.hideLightbox();
+    });
+
+    it('works if Cesium credit removed', function() {
+        creditDisplay = new CreditDisplay(container);
+        CreditDisplay.cesiumCredit = undefined;
+        creditDisplay.beginFrame();
+        expect(creditDisplay._currentFrameCredits.imageCredits.length).toEqual(0);
+        creditDisplay.endFrame();
+    });
+
+    it('works if Cesium credit replaced', function() {
+        var credit = new Credit({ text: '' });
+        CreditDisplay.cesiumCredit = credit;
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.beginFrame();
+        expect(creditDisplay._currentFrameCredits.imageCredits[credit.id]).toBe(credit);
+        creditDisplay.endFrame();
+    });
+
+    it('replaces Cesium credit if ion asset detected', function() {
+        var ionCredit = new Credit({ text: 'Cesium ion' });
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.beginFrame();
+
+        expect(creditDisplay._currentFrameCredits.imageCredits[CreditDisplay.cesiumCredit.id]).toBe(CreditDisplay.cesiumCredit);
+        creditDisplay.addCredit(ionCredit);
+        expect(creditDisplay._currentFrameCredits.imageCredits[CreditDisplay.cesiumCredit.id]).toBe(ionCredit);
+        creditDisplay.endFrame();
+    });
+
+    it('adds ion credit detected if Cesium credit replaced', function() {
+        var ionCredit = new Credit({ text: 'Cesium ion' });
+        CreditDisplay.cesiumCredit = new Credit({ text: 'not Cesium' });
+        creditDisplay = new CreditDisplay(container);
+        creditDisplay.beginFrame();
+
+        expect(creditDisplay._currentFrameCredits.imageCredits[CreditDisplay.cesiumCredit.id]).toBe(CreditDisplay.cesiumCredit);
+
+        creditDisplay.addCredit(ionCredit);
+
+        expect(creditDisplay._currentFrameCredits.imageCredits[ionCredit.id]).toBe(ionCredit);
+        creditDisplay.endFrame();
     });
 });

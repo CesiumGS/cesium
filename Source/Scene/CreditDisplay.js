@@ -205,11 +205,11 @@ define([
             margin : 'auto'
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > a, .cesium-credit-lightbox > ul > li > a:visited', {
+        style += addStyle('.cesium-credit-lightbox > ul > li > span > a, .cesium-credit-lightbox > ul > li > span > a:visited', {
             color: textColor
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > a:hover', {
+        style += addStyle('.cesium-credit-lightbox > ul > li > span > a:hover', {
             color: highlightColor
         });
 
@@ -305,12 +305,15 @@ define([
         var lightboxCredits = document.createElement('div');
         lightboxCredits.className = 'cesium-credit-lightbox';
         lightbox.appendChild(lightboxCredits);
-        lightbox.onclick = function(event) {
-            if (event.target === lightboxCredits) {
+
+        function hideLightbox(event) {
+            if (lightboxCredits.contains(event.target)) {
                 return;
             }
             that.hideLightbox();
-        };
+        }
+        lightbox.addEventListener('click', hideLightbox, false);
+
 
         var title = document.createElement('div');
         title.className = 'cesium-credit-lightbox-title';
@@ -350,6 +353,7 @@ define([
         this._lightboxCredits = lightboxCredits;
         this._creditList = creditList;
         this._lightbox = lightbox;
+        this._hideLightbox = hideLightbox;
         this._expandLink = expandLink;
         this._expanded = false;
         this._defaultImageCredits = [];
@@ -385,15 +389,21 @@ define([
         Check.defined('credit', credit);
         //>>includeEnd('debug');
 
+        var imageCredits = this._currentFrameCredits.imageCredits;
+
         if (credit.text === 'Cesium ion') {
             // We don't want to clutter the screen with the Cesium logo and the Cesium ion
             // logo at the same time. Since the ion logo is required, we just replace the
-            // Cesium logo.  This will also add the logo if the Cesium one was removed.
-            this._currentFrameCredits.imageCredits[cesiumCredit.id] = credit;
+            // Cesium logo or add the logo if the Cesium one was removed.
+            if (defined(imageCredits[cesiumCredit.id])) {
+                imageCredits[cesiumCredit.id] = credit;
+            } else {
+                imageCredits[credit.id] = credit;
+            }
         } else if (!credit.showOnScreen) {
             this._currentFrameCredits.lightboxCredits[credit.id] = credit;
         } else if (credit.hasImage()) {
-            this._currentFrameCredits.imageCredits[credit.id] = credit;
+            imageCredits[credit.id] = credit;
         } else {
             this._currentFrameCredits.textCredits[credit.id] = credit;
         }
@@ -478,9 +488,13 @@ define([
      */
     CreditDisplay.prototype.beginFrame = function() {
         this._currentFrameCredits.imageCredits.length = 0;
-        this._currentFrameCredits.imageCredits[cesiumCredit.id] = cesiumCredit;
         this._currentFrameCredits.textCredits.length = 0;
         this._currentFrameCredits.lightboxCredits.length = 0;
+
+        var cesiumCredit = CreditDisplay.cesiumCredit;
+        if (defined(cesiumCredit)) {
+            this._currentFrameCredits.imageCredits[cesiumCredit.id] = cesiumCredit;
+        }
     };
 
     /**
@@ -520,6 +534,8 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     CreditDisplay.prototype.destroy = function() {
+        this._lightbox.removeEventListener('click', this._hideLightbox, false);
+
         this.container.removeChild(this._textContainer);
         this.container.removeChild(this._imageContainer);
         this.container.removeChild(this._expandLink);
@@ -537,6 +553,12 @@ define([
     CreditDisplay.prototype.isDestroyed = function() {
         return false;
     };
+
+    /**
+     * Gets or sets the Cesium logo credit.
+     * @type {Credit}
+     */
+    CreditDisplay.cesiumCredit = cesiumCredit;
 
     return CreditDisplay;
 });
