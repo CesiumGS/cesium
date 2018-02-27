@@ -188,11 +188,6 @@ define([
 
         this._hasMixedContent = false;
 
-        this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
-        this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
-            selectionHeuristic : selectionHeuristic
-        });
-
         this._backfaceCommands = new ManagedArray();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
@@ -1384,15 +1379,6 @@ define([
         tileset._dynamicScreenSpaceErrorComputedDensity = density;
     }
 
-    function selectionHeuristic(tileset, ancestor, tile) {
-        var skipLevels = tileset._skipLevelOfDetail ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset._skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
-
-        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLevelOfDetail) &&
-               (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
-               (tile._depth > ancestor._depth + skipLevels);
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
     function requestContent(tileset, tile) {
@@ -1441,10 +1427,7 @@ define([
         });
     }
 
-    function requestTiles(tileset, outOfCore) {
-        if (!outOfCore) {
-            return;
-        }
+    function requestTiles(tileset) {
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
         for (var i = 0; i < length; ++i) {
@@ -1630,15 +1613,12 @@ define([
         var lengthBeforeUpdate = commandList.length;
         for (i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
-            // tiles may get unloaded and destroyed between selection and update
-            if (tile.selected) {
-                // Raise the tileVisible event before update in case the tileVisible event
-                // handler makes changes that update needs to apply to WebGL resources
-                tileVisible.raiseEvent(tile);
-                tile.update(tileset, frameState);
-                statistics.incrementSelectionCounts(tile.content);
-                ++statistics.selected;
-            }
+            // Raise the tileVisible event before update in case the tileVisible event
+            // handler makes changes that update needs to apply to WebGL resources
+            tileVisible.raiseEvent(tile);
+            tile.update(tileset, frameState);
+            statistics.incrementSelectionCounts(tile.content);
+            ++statistics.selected;
         }
         var lengthAfterUpdate = commandList.length;
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
@@ -1820,16 +1800,16 @@ define([
         var statistics = this._statistics;
         statistics.clear();
 
-        if (outOfCore) {
-            processTiles(this, frameState);
-        }
-
         if (this.dynamicScreenSpaceError) {
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        Cesium3DTilesetTraversal.selectTiles(this, frameState, outOfCore);
-        requestTiles(this, outOfCore);
+        if (outOfCore) {
+            Cesium3DTilesetTraversal.selectTiles(this, frameState);
+            requestTiles(this);
+            processTiles(this, frameState);
+        }
+
         updateTiles(this, frameState);
 
         if (outOfCore) {
