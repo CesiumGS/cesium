@@ -674,6 +674,9 @@ defineSuite([
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+
+                scene.renderForSpecs();
+
                 expect(replacementQueue.count).toBe(0);
             });
         });
@@ -691,6 +694,7 @@ defineSuite([
 
             surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
 
+            scene.renderForSpecs();
             scene.renderForSpecs();
 
             levelZeroTiles = surface._levelZeroTiles;

@@ -61,7 +61,7 @@ defineSuite([
         return pollToPromise(function() {
             globe._surface._debug.enableDebugOutput = true;
             scene.render();
-            return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
+            return globe.tilesLoaded;
         });
     }
 
@@ -148,6 +148,37 @@ defineSuite([
         expect(spyListener).toHaveBeenCalledWith(terrainProvider);
     });
 
+    it('tilesLoaded return true when tile load queue is empty', function() {
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueHigh.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueHigh.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueMedium.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueMedium.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueLow.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueLow.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+         var terrainProvider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : true
+        });
+
+        globe.terrainProvider = terrainProvider;
+        scene.render();
+        expect(globe.tilesLoaded).toBe(false);
+    });
+
     it('renders terrain with enableLighting', function() {
         globe.enableLighting = true;
 
@@ -167,18 +198,13 @@ defineSuite([
         });
 
         globe.terrainProvider = terrainProvider;
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
-        return pollToPromise(function() {
-            return terrainProvider.ready;
-        }).then(function() {
-            scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+        return updateUntilDone(globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
 
-            return updateUntilDone(globe).then(function() {
-                scene.globe.show = false;
-                expect(scene).toRender([0, 0, 0, 255]);
-                scene.globe.show = true;
-                expect(scene).notToRender([0, 0, 0, 255]);
-            });
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
         });
     });
 }, 'WebGL');
