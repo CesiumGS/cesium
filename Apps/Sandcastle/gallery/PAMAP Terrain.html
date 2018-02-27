@@ -27,8 +27,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// High resolution terrain of Pennsylvania curated by Pennsylvania Spatial Data Access (PASDA)
+// http://www.pasda.psu.edu/
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    // Load PA terrain
     terrainProvider: new Cesium.CesiumTerrainProvider({
         url: Cesium.IonResource.fromAssetId(3957)
     })
