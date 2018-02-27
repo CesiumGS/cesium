@@ -1,4 +1,4 @@
-Copyright 2011-2017 Cesium Contributors
+Copyright 2011-2018 CesiumJS Contributors
 
                                  Apache License
                            Version 2.0, January 2004
@@ -188,7 +188,7 @@ Copyright 2011-2017 Cesium Contributors
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2011-2017 Cesium Contributors
+   Copyright 2011-2018 CesiumJS Contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -207,7 +207,7 @@ Patents 9153063 and 9865085
 Third-Party Code
 ================
 
-Cesium includes the following third-party code.
+CesiumJS includes the following third-party code.
 
 ### Sean O'Neil
 
@@ -673,7 +673,7 @@ https://github.com/KhronosGroup/glTF-WebGL-PBR
 Tests
 =====
 
-The Cesium tests use the following third-party libraries and data.
+The CesiumJS tests use the following third-party libraries and data.
 
 ### Jasmine
 
@@ -688,10 +688,10 @@ Copyright (c) 2008-2014 Pivotal Labs
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-Cesium Documentation
+CesiumJS Documentation
 ====================
 
-The Cesium documentation files include the following third-party content.
+The CesiumJS documentation files include the following third-party content.
 
 ### Source Sans Pro (Font)
 
@@ -703,7 +703,7 @@ Source® Sans Pro, Adobe's first open source typeface family, was designed by Pa
 Example Applications
 ====================
 
-The Cesium example applications include the following third-party libraries and data.
+The CesiumJS example applications include the following third-party libraries and data.
 
 ### Dojo Toolkit
 
