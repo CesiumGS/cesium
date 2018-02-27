@@ -72,6 +72,8 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -199,7 +201,15 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.BOTH
+         */
+        classificationType : createPropertyDescriptor('classificationType')
     });
 
     /**
@@ -226,6 +236,7 @@ define([
         result.cornerType = this.cornerType;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
         return result;
     };
 
@@ -256,6 +267,7 @@ define([
         this.cornerType = defaultValue(this.cornerType, source.cornerType);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
     };
 
     return CorridorGraphics;
