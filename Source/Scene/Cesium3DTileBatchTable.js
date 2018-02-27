@@ -1355,9 +1355,15 @@ define([
                     }
                     tileset._backfaceCommands.push(derivedCommands.zback);
                 }
-                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {
+                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil)) {
+                    // if (defined(derivedCommands.stencil)) {
+                    //     var currentSelectionDepth = tile._selectionDepth;
+                    //     var newSelectionDepth = getLastSelectionDepth(derivedCommands.stencil);
+                    //     console.log('My selection depth: ' + tile._selectionDepth);
+                    //     console.log('Previous selection depth: ' + (defined(derivedCommands.stencil) ? getLastSelectionDepth(derivedCommands.stencil) : 'None'));
+                    //
+                    // }
                     derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
-                    tile._lastSelectionDepth = tile._selectionDepth;
                 }
                 updateDerivedCommand(derivedCommands.stencil, command);
             }
@@ -1480,6 +1486,10 @@ define([
             derivedCommand.renderState = RenderState.fromCache(rs);
         }
         return derivedCommand;
+    }
+
+    function getLastSelectionDepth(stencilCommand) {
+        return stencilCommand.renderState.stencilTest.reference >>> 4;
     }
 
     function getTranslucentRenderState(renderState) {

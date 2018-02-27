@@ -29,6 +29,7 @@ define([
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileOptimizations',
+        './Cesium3DTileRefine',
         './Cesium3DTilesetCache',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
@@ -74,6 +75,7 @@ define([
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileOptimizations,
+        Cesium3DTileRefine,
         Cesium3DTilesetCache,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
@@ -187,13 +189,9 @@ define([
         this._timeSinceLoad = 0.0;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
+        this._allTilesAdditive = true;
 
         this._hasMixedContent = false;
-
-        this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
-        this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
-            selectionHeuristic : selectionHeuristic
-        });
 
         this._backfaceCommands = new ManagedArray();
 
@@ -1269,14 +1267,12 @@ define([
         // Append the tileset version to the tilesetResource
         if (!defined(tilesetResource.queryParameters.v)) {
             var versionQuery = {
-                v: defaultValue(asset.tilesetVersion, '0.0')
+                v : defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
             tilesetResource.setQueryParameters(versionQuery);
         }
 
-        // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
-        // Get the basePath relative to the external tileset.
         var rootTile = new Cesium3DTile(this, tilesetResource, tilesetJson.root, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
@@ -1286,35 +1282,27 @@ define([
             rootTile._depth = parentTile._depth + 1;
         }
 
-        ++statistics.numberOfTilesTotal;
-
         var stack = [];
-        stack.push({
-            header : tilesetJson.root,
-            tile3D : rootTile
-        });
+        stack.push(rootTile);
 
         while (stack.length > 0) {
             var tile = stack.pop();
-            var tile3D = tile.tile3D;
-            var children = tile.header.children;
+            ++statistics.numberOfTilesTotal;
+            this._allTilesAdditive = this._allTilesAdditive && (tile.refine === Cesium3DTileRefine.ADD);
+            var children = tile._header.children;
             if (defined(children)) {
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
-                    var childTile = new Cesium3DTile(this, tilesetResource, childHeader, tile3D);
-                    tile3D.children.push(childTile);
-                    childTile._depth = tile3D._depth + 1;
-                    ++statistics.numberOfTilesTotal;
-                    stack.push({
-                        header : childHeader,
-                        tile3D : childTile
-                    });
+                    var childTile = new Cesium3DTile(this, tilesetResource, childHeader, tile);
+                    tile.children.push(childTile);
+                    childTile._depth = tile._depth + 1;
+                    stack.push(childTile);
                 }
             }
 
             if (this._cullWithChildrenBounds) {
-                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D);
+                Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
             }
         }
 
@@ -1400,15 +1388,6 @@ define([
         tileset._dynamicScreenSpaceErrorComputedDensity = density;
     }
 
-    function selectionHeuristic(tileset, ancestor, tile) {
-        var skipLevels = tileset._skipLevelOfDetail ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset._skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
-
-        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLevelOfDetail) &&
-               (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
-               (tile._depth > ancestor._depth + skipLevels);
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
     function requestContent(tileset, tile) {
@@ -1457,10 +1436,7 @@ define([
         });
     }
 
-    function requestTiles(tileset, outOfCore) {
-        if (!outOfCore) {
-            return;
-        }
+    function requestTiles(tileset) {
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
         for (var i = 0; i < length; ++i) {
@@ -1635,6 +1611,8 @@ define([
         var tileVisible = tileset.tileVisible;
         var i;
 
+        console.log(tileset._hasMixedContent);
+
         var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
 
         tileset._backfaceCommands.length = 0;
@@ -1646,15 +1624,12 @@ define([
         var lengthBeforeUpdate = commandList.length;
         for (i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
-            // tiles may get unloaded and destroyed between selection and update
-            if (tile.selected) {
-                // Raise the tileVisible event before update in case the tileVisible event
-                // handler makes changes that update needs to apply to WebGL resources
-                tileVisible.raiseEvent(tile);
-                tile.update(tileset, frameState);
-                statistics.incrementSelectionCounts(tile.content);
-                ++statistics.selected;
-            }
+            // Raise the tileVisible event before update in case the tileVisible event
+            // handler makes changes that update needs to apply to WebGL resources
+            tileVisible.raiseEvent(tile);
+            tile.update(tileset, frameState);
+            statistics.incrementSelectionCounts(tile.content);
+            ++statistics.selected;
         }
         var lengthAfterUpdate = commandList.length;
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
@@ -1842,16 +1817,16 @@ define([
         var statistics = this._statistics;
         statistics.clear();
 
-        if (outOfCore) {
-            processTiles(this, frameState);
-        }
-
         if (this.dynamicScreenSpaceError) {
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        Cesium3DTilesetTraversal.selectTiles(this, frameState, outOfCore);
-        requestTiles(this, outOfCore);
+        if (outOfCore) {
+            Cesium3DTilesetTraversal.selectTiles(this, frameState);
+            requestTiles(this);
+            processTiles(this, frameState);
+        }
+
         updateTiles(this, frameState);
 
         if (outOfCore) {

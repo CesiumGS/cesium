@@ -1021,7 +1021,7 @@ defineSuite([
 
             // No longer renders the tile with a request volume
             setZoom(1500.0);
-            root.hasRenderableContent = true; // mock content
+            root.contentAvailable = true; // mock content
             scene.renderForSpecs();
             expect(statistics.numberOfCommands).toEqual(4);
             expect(root.selected).toBe(true); // one child is no longer selected. root is chosen instead

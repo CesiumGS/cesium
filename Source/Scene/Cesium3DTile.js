@@ -252,8 +252,6 @@ define([
         /**
          * The corresponding node in the cache.
          *
-         * See {@link Cesium3DTilesetCache}
-         *
          * @type {DoublyLinkedListNode}
          * @readonly
          *
@@ -286,15 +284,6 @@ define([
         this.expireDate = expireDate;
 
         /**
-         * Marks if the tile is selected this frame.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.selected = false;
-
-        /**
          * The time when a style was last applied to this tile.
          *
          * @type {Number}
@@ -324,22 +313,21 @@ define([
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
-        this._visibilityPlaneMask = 0;
-        this._childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
-        this._lastSelectedFrameNumber = -1;
+        this._centerZDepth = 0; // TODO : remove?
         this._screenSpaceError = 0;
-        this._screenSpaceErrorComputedFrame = -1;
+        this._visibilityPlaneMask = 0;
+
         this._finalResolution = true;
         this._depth = 0;
-        this._centerZDepth = 0;
         this._stackLength = 0;
-        this._selectedFrame = -1;
         this._selectionDepth = 0;
-        this._lastSelectionDepth = undefined;
-        this._requestedFrame = undefined;
-        this._lastVisitedFrame = undefined;
-        this._ancestorWithContent = undefined;
-        this._ancestorWithLoadedContent = undefined;
+
+        this._updatedVisibilityFrame = 0;
+        this._touchedFrame = 0;
+        this._selectedFrame = 0;
+        this._ancestorWithContentAvailable = undefined;
+        this._refines = false;
+        this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
 
@@ -457,13 +445,13 @@ define([
          */
         contentAvailable : {
             get : function() {
-                return this.contentReady || (defined(this._expiredContent) && this._contentState !== Cesium3DTileContentState.FAILED);
+                return (this.contentReady && this.hasRenderableContent) || (defined(this._expiredContent) && this._contentState !== Cesium3DTileContentState.FAILED);
             }
         },
 
         /**
-         * Determines if the tile is ready to render. <code>true</code> if the tile
-         * is ready to render; otherwise, <code>false</code>.
+         * Determines if the tile's content is ready. This is automatically <code>true</code> for
+         * tile's with empty content.
          *
          * @memberof Cesium3DTile.prototype
          *
@@ -608,7 +596,7 @@ define([
 
     function createPriorityFunction(tile) {
         return function() {
-            return tile._distanceToCamera;
+            return tile._priority;
         };
     }
 
