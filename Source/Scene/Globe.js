@@ -240,7 +240,6 @@ define([
         /**
          * Returns <code>true</code> when the tile load queue is empty, <code>false</code> otherwise.  When the load queue is empty,
          * all terrain and imagery for the current view have been loaded.
-         * 
          * @memberof Globe.prototype
          * @type {Boolean}
          * @readonly
