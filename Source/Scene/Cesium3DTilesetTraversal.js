@@ -95,6 +95,11 @@ define([
         // set tile._selectionDepth on all tiles
         traverseAndSelect(tileset, root, frameState);
 
+        // Compute descendant geometric errors for point attenuation with additive refinement
+        if (hasAdditiveContent(root) && tileset.pointCloudShading.attenuation) {
+            findDescendantGeometricError(root, frameState);
+        }
+
         tileset._desiredTiles.trim();
     }
 
@@ -148,6 +153,50 @@ define([
 
     var scratchStack = [];
     var scratchStack2 = [];
+
+    function findDescendantGeometricError(tile, frameState) {
+        var children = tile.children;
+        var childrenLength = children.length;
+        var geometricError;
+
+        // Is an actual leaf. Return the base resolution.
+        if (tile.geometricError === 0.0) {
+            // var content = tile.content;
+            //geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+            geometricError = tile.parent.geometricError / 2.0;
+            tile._descendantGeometricError = geometricError;
+            tile._leafDescendants = 1;
+            tile._accumulatedGeometricError = geometricError;
+            return;
+        }
+
+        var leafDescendants = 0;
+        var accumulatedGeometricError = 0.0;
+        for (var i = 0; i < childrenLength; ++i) {
+            var child = children[i];
+            var selected = child.selected && child._selectedFrame === frameState.frameNumber && child.hasRenderableContent;
+            var empty = child.hasEmptyContent || child.hasTilesetContent;
+            if (selected || empty) {
+                findDescendantGeometricError(child, frameState);
+                leafDescendants += child._leafDescendants;
+                accumulatedGeometricError += child._accumulatedGeometricError;
+            }
+        }
+
+        // Is a "leaf" of the tree. None of its children are selected. Return the geometric error.
+        if (leafDescendants === 0) {
+            geometricError = tile.geometricError;
+            tile._descendantGeometricError = geometricError;
+            tile._leafDescendants = 1;
+            tile._accumulatedGeometricError = geometricError;
+            return
+        }
+
+        var averageGeometricError = accumulatedGeometricError / leafDescendants;
+        tile._descendantGeometricError = CesiumMath.lerp(tile.geometricError, averageGeometricError, 0.8);
+        tile._leafDescendants = leafDescendants;
+        tile._accumulatedGeometricError = accumulatedGeometricError;
+    }
 
     /**
      * Traverse the tree while tiles are visible and check if their selected frame is the current frame.

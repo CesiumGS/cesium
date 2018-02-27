@@ -549,10 +549,14 @@ define([
                 scratch.y = content._tileset.timeSinceLoad;
 
                 if (content._attenuation) {
-                    var geometricError = content.tile.geometricError;
-                    if (geometricError === 0) {
-                        geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+                    var geometricError = content._tile._descendantGeometricError; // additive
+                    if (!defined(geometricError)) {
+                        geometricError = content.tile.geometricError;
+                        if (geometricError === 0) {
+                            geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+                        }
                     }
+
                     var frustum = frameState.camera.frustum;
                     var depthMultiplier;
                     // Attenuation is maximumAttenuation in 2D/ortho
@@ -1118,8 +1122,9 @@ define([
 
         var fs = 'varying vec4 v_color; \n';
 
+
         if (hasClippedContent) {
-            fs += 'uniform int u_clippingPlanesLength;' +
+            fs += 'uniform int u_clippingPlanesLength; \n' +
                   'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
         }
