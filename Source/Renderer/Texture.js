@@ -477,8 +477,6 @@ define([
         var target = this._textureTarget;
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
@@ -488,6 +486,8 @@ define([
             if (xOffset === 0 && yOffset === 0 && source.width === this._width && source.height === this._height) {
                 // initialize the entire texture
                 if (defined(source.arrayBufferView)) {
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                     gl.texImage2D(target, 0, this._pixelFormat, this._width, this._height, 0, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
                 } else {
                     // Only valid for DOM-Element uploads
@@ -498,6 +498,9 @@ define([
                 }
                 uploaded = true;
             } else {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 // initialize the entire texture to zero
                 var bufferView = PixelFormat.createTypedArray(this._pixelFormat, this._pixelDatatype, this._width, this._height);
                 gl.texImage2D(target, 0, this._pixelFormat, this._width, this._height, 0, this._pixelFormat, this._pixelDatatype, bufferView);
@@ -507,6 +510,9 @@ define([
 
         if (!uploaded) {
             if (source.arrayBufferView) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 gl.texSubImage2D(target, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
             } else {
                 // Only valid for DOM-Element uploads
