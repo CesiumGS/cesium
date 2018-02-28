@@ -40,7 +40,7 @@ define([
      * @constructor
      *
      * @param {TerrainProvider} terrainProvider The terrain provider used on the globe
-     * @param {Property} [positions] A Property specifying the {@link PolygonHierarchy} or an array of {@link Cartesian3} positions.
+     * @param {PositionProperty} position A Property specifying the position the height should be relative to.
      * @param {Property} [heightRelativeToTerrain] A Property specifying the numeric height value relative to terrain
      *
      * @example
@@ -53,12 +53,12 @@ define([
      *     }
      * });
      */
-    function RelativeToTerrainHeightProperty(terrainProvider, positions, heightRelativeToTerrain) {
+    function RelativeToTerrainHeightProperty(terrainProvider, position, heightRelativeToTerrain) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('terrainProvider', terrainProvider);
         //>>includeEnd('debug');
 
-        this._positions = undefined;
+        this._position = undefined;
         this._subscription = undefined;
         this._heightRelativeToTerrain = undefined;
         this._heightRelativeToTerrainSubscription = undefined;
@@ -68,7 +68,7 @@ define([
         this._cartographicPosition = new Cartographic();
         this._terrainHeight = 0;
 
-        this.positions = positions;
+        this.position = position;
         this.heightRelativeToTerrain = heightRelativeToTerrain;
     }
 
@@ -98,14 +98,14 @@ define([
             }
         },
         /**
-         * Gets or sets the positions property used to compute the value.
+         * Gets or sets the position property used to compute the value.
          * @memberof RelativeToTerrainHeightProperty.prototype
          *
-         * @type {Property}
+         * @type {PositionProperty}
          */
-        positions : {
+        position : {
             get : function() {
-                return this._positions;
+                return this._position;
             },
             set : function(value) {
                 var oldValue = this._positions;
@@ -114,59 +114,41 @@ define([
                         this._subscription();
                     }
 
-                    this._positions = value;
+                    this._position = value;
 
                     if (defined(value)) {
                         if (!value.isConstant) {
-                            throw new RuntimeError('positions must be a constant property');
+                            throw new RuntimeError('position must be a constant property');
                         }
                         this._subscription = value._definitionChanged.addEventListener(function() {
                             this._fetchTerrainHeight();
-                            this._definitionChanged.raiseEvent(this);
                         }, this);
                     }
 
                     this._fetchTerrainHeight();
-                    this._definitionChanged.raiseEvent(this);
                 }
             }
         },
         heightRelativeToTerrain : createPropertyDescriptor('heightRelativeToTerrain')
     });
 
-    var centroidScratch = new Cartesian3();
-    function computeCentroid(positions) {
-        var centroid = Cartesian3.clone(Cartesian3.ZERO, centroidScratch);
-        var length = positions.length;
-        for (var i = 0; i < length; i++) {
-            centroid = Cartesian3.add(positions[i], centroid, centroid);
-        }
-        return Cartesian3.multiplyByScalar(centroid, 1/length, centroid);
-    }
-
     /**
      * @private
      */
     RelativeToTerrainHeightProperty.prototype._fetchTerrainHeight = function() {
         this._terrainHeight = 0;
-        var property = this._positions;
-        if (!defined(property)) {
+        var property = this._position;
+        var position = Property.getValueOrUndefined(property, Iso8601.MINIMUM_VALUE);
+        if (!defined(position)) {
             return;
         }
-        var positions = property.getValue(Iso8601.MINIMUM_VALUE);
-        if (!defined(positions)) {
-            return;
-        }
-        if (!isArray(positions)) {
-            positions = positions.positions; //positions is a PolygonHierarchy, just use the outer ring
-        }
-        var centroid = computeCentroid(positions);
-        var carto = Cartographic.fromCartesian(centroid, undefined, this._cartographicPosition);
+
+        var carto = Cartographic.fromCartesian(position, undefined, this._cartographicPosition);
         carto.height = 0.0;
         var that = this;
         sampleTerrainMostDetailed(this._terrainProvider, [carto])
             .then(function(results) {
-                if (that._positions !== property) {
+                if (that._position !== property || !Cartesian3.equals(position, Property.getValueOrUndefined(that._position, Iso8601.MINIMUM_VALUE))) {
                     return;
                 }
                 that._terrainHeight = defaultValue(results[0].height, 0);
@@ -180,7 +162,7 @@ define([
      * @returns {Number} The height relative to terrain
      */
     RelativeToTerrainHeightProperty.prototype.getValue = function(time) {
-        return this._terrainHeight + this.heightRelativeToTerrain.getValue(time);
+        return this._terrainHeight + Property.getValueOrDefault(this.heightRelativeToTerrain, time, 0);
     };
 
     /**
@@ -193,7 +175,7 @@ define([
     RelativeToTerrainHeightProperty.prototype.equals = function(other) {
         return this === other ||//
                (other instanceof RelativeToTerrainHeightProperty &&
-                Property.equals(this._positions, other._positions) &&
+                Property.equals(this._position, other._position) &&
                 Property.equals(this.heightRelativeToTerrain, other.heightRelativeToTerrain));
     };
 

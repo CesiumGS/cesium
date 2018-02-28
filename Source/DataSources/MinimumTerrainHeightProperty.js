@@ -6,6 +6,7 @@ define([
     '../Core/Check',
     '../Core/Event',
     '../Core/Rectangle',
+    './createPropertyDescriptor',
     './Property'
 ], function(
     ApproximateTerrainHeights,
@@ -15,6 +16,7 @@ define([
     Check,
     Event,
     Rectangle,
+    createPropertyDescriptor,
     Property) {
     'use strict';
 
@@ -27,22 +29,22 @@ define([
      * @alias MinimumTerrainHeightProperty
      * @constructor
      *
-     * @param {Property} [positions] A Property specifying the {@link PolygonHierarchy} or an array of {@link Cartesian3} positions.
+     * @param {Property} [positions] A Property specifying an array of {@link Cartesian3} positions.
      *
      * @example
-     * var hierarchy = new Cesium.ConstantProperty(polygonPositions);
+     * var polygonPositions = new Cesium.ConstantProperty(polygonPositions);
      * var redPolygon = viewer.entities.add({
      *     polygon : {
-     *         hierarchy : hierarchy,
+     *         hierarchy : polygonPositions,
      *         material : Cesium.Color.RED,
      *         height : 1800.0,
-     *         extrudedHeight : new Cesium.MinimumTerrainHeightProperty(hierarchy)
+     *         extrudedHeight : new Cesium.MinimumTerrainHeightProperty(polygonPositions)
      *     }
      * });
      */
     function MinimumTerrainHeightProperty(positions) {
         this._positions = undefined;
-        this._subscription = undefined;
+        this._positionsSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.positions = positions;
@@ -79,29 +81,7 @@ define([
          *
          * @type {Property}
          */
-        positions : {
-            get : function() {
-                return this._positions;
-            },
-            set : function(value) {
-                var oldValue = this._positions;
-                if (oldValue !== value) {
-                    if (defined(oldValue)) {
-                        this._subscription();
-                    }
-
-                    this._positions = value;
-
-                    if (defined(value)) {
-                        this._subscription = value._definitionChanged.addEventListener(function() {
-                            this._definitionChanged.raiseEvent(this);
-                        }, this);
-                    }
-
-                    this._definitionChanged.raiseEvent(this);
-                }
-            }
-        }
+        positions : createPropertyDescriptor('positions')
     });
 
     /**
@@ -115,16 +95,9 @@ define([
         Check.defined('time', time);
         //>>includeEnd('debug');
 
-        var property = this._positions;
-        if (!defined(property)) {
-            return;
-        }
-        var positions = property.getValue(time);
+        var positions = Property.getValueOrUndefined(this._positions, time);
         if (!defined(positions)) {
             return;
-        }
-        if (!isArray(positions)) {
-            positions = positions.positions; //positions is a PolygonHierarchy, just use the outer ring
         }
         var rectangle = Rectangle.fromCartesianArray(positions, undefined, scratchRectangle);
         return ApproximateTerrainHeights.getApproximateTerrainHeights(rectangle).minimumTerrainHeight;

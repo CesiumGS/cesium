@@ -6,7 +6,6 @@ defineSuite([
     'Core/ExtrapolationType',
     'Core/JulianDate',
     'Core/Math',
-    'Core/PolygonHierarchy',
     'DataSources/CallbackProperty',
     'DataSources/ConstantProperty'
 ], function(
@@ -17,7 +16,6 @@ defineSuite([
     ExtrapolationType,
     JulianDate,
     CesiumMath,
-    PolygonHierarchy,
     CallbackProperty,
     ConstantProperty) {
     'use strict';
@@ -57,7 +55,7 @@ defineSuite([
 
         var positions = new ConstantProperty();
         property.positions = positions;
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'positions', positions, undefined);
     });
 
     it('subscribes and unsubscribes to position definitionChanged and propagates up', function() {
@@ -69,7 +67,7 @@ defineSuite([
 
         //Position changing should raise out property change event
         positions.definitionChanged.raiseEvent(positions);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'positions', positions, positions);
 
         //Make sure it unsubscribes when value is changed
         property.positions = undefined;
@@ -91,10 +89,10 @@ defineSuite([
     });
 
     it('produces correct value', function() {
-        var positions = new ConstantProperty(new PolygonHierarchy(Cartesian3.fromDegreesArray([-120.0, 40.0,
+        var positions = new ConstantProperty(Cartesian3.fromDegreesArray([-120.0, 40.0,
                                                                                                -119.0, 40.0,
                                                                                                -119.0, 41.0,
-                                                                                               -120.0, 41.0])));
+                                                                                               -120.0, 41.0]));
         var property = new MinimumTerrainHeightProperty(positions);
 
         expect(property.getValue(time)).toEqualEpsilon(-382.8696126443784, CesiumMath.EPSILON10);

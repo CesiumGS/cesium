@@ -38,18 +38,19 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     })
 });
 viewer.scene.globe.depthTestAgainstTerrain = true;
-var hierarchy = new Cesium.ConstantProperty(Cesium.Cartesian3.fromDegreesArray([-110.9365046146508,37.45609196222294,
+var positions = Cesium.Cartesian3.fromDegreesArray([-110.9365046146508,37.45609196222294,
                                                     -110.9371577263633,37.46126425372983,
                                                     -110.9455523711973,37.45766987108922,
                                                     -110.9433924350152,37.45268714057247,
-                                                    -110.9365046146508,37.45609196222294]));
+                                                    -110.9365046146508,37.45609196222294]);
 
+var centroid = new Cesium.CentroidPositionProperty(positions);
 var redPolygon = viewer.entities.add({
     polygon : {
-        hierarchy : hierarchy,
+        hierarchy : positions,
         material : Cesium.Color.RED,
-        height : new Cesium.RelativeToTerrainHeightProperty(viewer.terrainProvider, hierarchy, 400.0),
-        extrudedHeight : new Cesium.MinimumTerrainHeightProperty(hierarchy)
+        height : new Cesium.RelativeToTerrainHeightProperty(viewer.terrainProvider, centroid, 400.0),
+        extrudedHeight : new Cesium.MinimumTerrainHeightProperty(positions)
     }
 });
 
