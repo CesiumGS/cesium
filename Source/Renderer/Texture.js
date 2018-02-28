@@ -171,14 +171,15 @@ define([
         var texture = gl.createTexture();
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
         if (defined(source)) {
             if (defined(source.arrayBufferView)) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 // Source: typed array
                 if (isCompressed) {
                     gl.compressedTexImage2D(textureTarget, 0, internalFormat, width, height, 0, source.arrayBufferView);
@@ -186,6 +187,9 @@ define([
                     gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
                 }
             } else if (defined(source.framebuffer)) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 // Source: framebuffer
                 if (source.framebuffer !== context.defaultFramebuffer) {
                     source.framebuffer._bind();
