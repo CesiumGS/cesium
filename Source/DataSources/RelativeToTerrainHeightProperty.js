@@ -46,10 +46,10 @@ define([
      * @example
      * var hierarchy = new Cesium.ConstantProperty(polygonPositions);
      * var redPolygon = viewer.entities.add({
-     *     polygon : {
+     *     ellipse : {
      *         hierarchy : hierarchy,
      *         material : Cesium.Color.RED,
-     *         height : new Cesium.RelativeToTerrainHeightProperty(hierarchy, 11.0)
+     *         height : new Cesium.RelativeToTerrainHeightProperty(viewer.terrainProvider, positions, 11.0)
      *     }
      * });
      */
@@ -67,6 +67,7 @@ define([
         this._terrainProvider = terrainProvider;
         this._cartographicPosition = new Cartographic();
         this._terrainHeight = 0;
+        this._pending = false;
 
         this.position = position;
         this.heightRelativeToTerrain = heightRelativeToTerrain;
@@ -117,9 +118,6 @@ define([
                     this._position = value;
 
                     if (defined(value)) {
-                        if (!value.isConstant) {
-                            throw new RuntimeError('position must be a constant property');
-                        }
                         this._subscription = value._definitionChanged.addEventListener(function() {
                             this._fetchTerrainHeight();
                         }, this);
@@ -136,6 +134,9 @@ define([
      * @private
      */
     RelativeToTerrainHeightProperty.prototype._fetchTerrainHeight = function() {
+        if (this._pending) {
+            return;
+        }
         this._terrainHeight = 0;
         var property = this._position;
         var position = Property.getValueOrUndefined(property, Iso8601.MINIMUM_VALUE);
@@ -146,13 +147,17 @@ define([
         var carto = Cartographic.fromCartesian(position, undefined, this._cartographicPosition);
         carto.height = 0.0;
         var that = this;
-        sampleTerrainMostDetailed(this._terrainProvider, [carto])
+        this._pending = true;
+        RelativeToTerrainHeightProperty._sampleTerrainMostDetailed(this._terrainProvider, [carto])
             .then(function(results) {
                 if (that._position !== property || !Cartesian3.equals(position, Property.getValueOrUndefined(that._position, Iso8601.MINIMUM_VALUE))) {
                     return;
                 }
                 that._terrainHeight = defaultValue(results[0].height, 0);
                 that._definitionChanged.raiseEvent(that);
+            })
+            .always(function() {
+                that._pending = false;
             });
     };
 
@@ -175,9 +180,13 @@ define([
     RelativeToTerrainHeightProperty.prototype.equals = function(other) {
         return this === other ||//
                (other instanceof RelativeToTerrainHeightProperty &&
+                this._terrainProvider === other._terrainProvider &&
                 Property.equals(this._position, other._position) &&
                 Property.equals(this.heightRelativeToTerrain, other.heightRelativeToTerrain));
     };
+
+    //for specs
+    RelativeToTerrainHeightProperty._sampleTerrainMostDetailed = sampleTerrainMostDetailed;
 
     return RelativeToTerrainHeightProperty;
 });

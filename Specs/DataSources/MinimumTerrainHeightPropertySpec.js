@@ -98,16 +98,6 @@ defineSuite([
         expect(property.getValue(time)).toEqualEpsilon(-382.8696126443784, CesiumMath.EPSILON10);
     });
 
-    it('produces correct value for flat array of positions', function() {
-        var positions = new ConstantProperty(Cartesian3.fromDegreesArray([-120.0, 40.0,
-                                                                          -119.0, 40.0,
-                                                                          -119.0, 41.0,
-                                                                          -120.0, 41.0]));
-        var property = new MinimumTerrainHeightProperty(positions);
-
-        expect(property.getValue(time)).toEqualEpsilon(-382.8696126443784, CesiumMath.EPSILON10);
-    });
-
     it('equals works', function() {
         var positions = new ConstantProperty();
 
