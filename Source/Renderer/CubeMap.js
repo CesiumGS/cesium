@@ -122,10 +122,9 @@ define([
 
         function createFace(target, sourceFace, preMultiplyAlpha, flipY) {
             // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
             if (sourceFace.arrayBufferView) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                 gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, sourceFace.arrayBufferView);
             } else {
                 // Only valid for DOM-Element uploads
