@@ -30,7 +30,11 @@ define([
          * @type {Number}
          * @constant
          */
-        BOTH : 2
+        BOTH : 2,
+        /**
+         * @private
+         */
+        NUMBER_OF_CLASSIFICATION_TYPES : 3
     };
 
     return freezeObject(ClassificationType);

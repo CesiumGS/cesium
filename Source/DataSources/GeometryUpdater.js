@@ -10,6 +10,7 @@ define([
     '../Core/Event',
     '../Core/Iso8601',
     '../Core/oneTimeWarning',
+    '../Scene/ClassificationType',
     '../Scene/ShadowMode',
     './ColorMaterialProperty',
     './ConstantProperty',
@@ -26,6 +27,7 @@ define([
     Event,
     Iso8601,
     oneTimeWarning,
+    ClassificationType,
     ShadowMode,
     ColorMaterialProperty,
     ConstantProperty,
@@ -39,6 +41,7 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     /**
      * A {@link GeometryUpdater} for boxes.
@@ -80,6 +83,7 @@ define([
         this._outlineWidth = 1.0;
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
+        this._classificationTypeProperty = undefined;
         this._options = options.geometryOptions;
         this._geometryPropertyName = geometryPropertyName;
         this._id = geometryPropertyName + '-' + entity.id;
@@ -226,6 +230,18 @@ define([
         distanceDisplayConditionProperty : {
             get : function() {
                 return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying if this geometry will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof GeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        classificationTypeProperty : {
+            get : function() {
+                return this._classificationTypeProperty;
             }
         },
         /**
@@ -440,6 +456,7 @@ define([
         this._outlineColorProperty = outlineEnabled ? defaultValue(geometry.outlineColor, defaultOutlineColor) : undefined;
         this._shadowsProperty = defaultValue(geometry.shadows, defaultShadows);
         this._distanceDisplayConditionProperty = defaultValue(geometry.distanceDisplayCondition, defaultDistanceDisplayCondition);
+        this._classificationTypeProperty = defaultValue(geometry.classificationType, defaultClassificationType);
 
         this._fillEnabled = fillEnabled;
 
