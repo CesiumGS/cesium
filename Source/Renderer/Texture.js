@@ -499,20 +499,7 @@ define([
                 uploaded = true;
             } else {
                 // initialize the entire texture to zero
-                var constructor;
-                var sizeInBytes = PixelDatatype.sizeInBytes(this._pixelDatatype);
-                if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
-                    constructor = Uint8Array;
-                } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
-                    constructor = Uint16Array.BYTES_PER_ELEMENT;
-                } else if (sizeInBytes === Float32Array.BYTES_PER_ELEMENT && this._pixelDatatype === PixelDatatype.FLOAT) {
-                    constructor = Float32Array;
-                } else {
-                    constructor = Uint32Array;
-                }
-
-                var size = PixelFormat.componentsLength(this._pixelFormat) * this._width * this._height;
-                var bufferView = new constructor(size);
+                var bufferView = PixelFormat.createTypedArray(this._pixelFormat, this._pixelDatatype, this._width, this._height);
                 gl.texImage2D(target, 0, this._pixelFormat, this._width, this._height, 0, this._pixelFormat, this._pixelDatatype, bufferView);
             }
             this._initialized = true;
