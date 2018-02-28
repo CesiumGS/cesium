@@ -11,7 +11,6 @@ define([
         '../Core/getMagic',
         '../Core/Intersect',
         '../Core/JulianDate',
-        '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Plane',
@@ -46,7 +45,6 @@ define([
         getMagic,
         Intersect,
         JulianDate,
-        loadArrayBuffer,
         Matrix3,
         Matrix4,
         Plane,
@@ -621,7 +619,7 @@ define([
         var expired = this.contentExpired;
         if (expired) {
             // Append a query parameter of the tile expiration date to prevent caching
-            resource.addQueryParameters({
+            resource.setQueryParameters({
                 expired: this.expireDate.toString()
             });
         }
@@ -636,7 +634,7 @@ define([
 
         resource.request = request;
 
-        var promise = loadArrayBuffer(resource);
+        var promise = resource.fetchArrayBuffer();
 
         if (!defined(promise)) {
             return false;

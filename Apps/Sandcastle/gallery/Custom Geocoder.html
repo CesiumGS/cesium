@@ -51,10 +51,16 @@ function OpenStreetMapNominatimGeocoder() {
  * @returns {Promise<GeocoderResult[]>}
  */
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
-    var endpoint = 'https://nominatim.openstreetmap.org/search?';
-    var query = 'format=json&q=' + input;
-    var requestString = endpoint + query;
-    return Cesium.loadJson(requestString)
+    var endpoint = 'https://nominatim.openstreetmap.org/search';
+    var resource = new Cesium.Resource({
+        url: endpoint,
+        queryParameters: {
+            format: 'json',
+            q: input
+        }
+    });
+
+    return resource.fetchJson()
         .then(function (results) {
             var bboxDegrees;
             return results.map(function (resultObject) {

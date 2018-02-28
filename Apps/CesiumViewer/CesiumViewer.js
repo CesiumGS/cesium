@@ -1,5 +1,6 @@
 define([
         'Cesium/Core/Cartesian3',
+        'Cesium/Core/createWorldTerrain',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/Math',
@@ -15,6 +16,7 @@ define([
         'domReady!'
     ], function(
         Cartesian3,
+        createWorldTerrain,
         defined,
         formatError,
         CesiumMath,
@@ -52,11 +54,23 @@ define([
     var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
+        var hasBaseLayerPicker = !defined(imageryProvider);
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
-            baseLayerPicker : !defined(imageryProvider),
-            scene3DOnly : endUserOptions.scene3DOnly
+            baseLayerPicker : hasBaseLayerPicker,
+            scene3DOnly : endUserOptions.scene3DOnly,
+            requestRenderMode : true
         });
+
+        if (hasBaseLayerPicker) {
+            var viewModel = viewer.baseLayerPicker.viewModel;
+            viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
+        } else {
+            viewer.terrainProvider = createWorldTerrain({
+                requestWaterMask: true,
+                requestVertexNormals: true
+            });
+        }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);

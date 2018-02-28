@@ -17,8 +17,6 @@ define([
         '../Core/getMagic',
         '../Core/isDataUri',
         '../Core/JulianDate',
-        '../Core/loadArrayBuffer',
-        '../Core/loadJson',
         '../Core/ManagedArray',
         '../Core/Math',
         '../Core/Matrix4',
@@ -36,6 +34,8 @@ define([
         './Cesium3DTileStyleEngine',
         './ClassificationType',
         './LabelCollection',
+        './PointCloudShading',
+        './PointCloudEyeDomeLighting',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -60,8 +60,6 @@ define([
         getMagic,
         isDataUri,
         JulianDate,
-        loadArrayBuffer,
-        loadJson,
         ManagedArray,
         CesiumMath,
         Matrix4,
@@ -79,6 +77,8 @@ define([
         Cesium3DTileStyleEngine,
         ClassificationType,
         LabelCollection,
+        PointCloudShading,
+        PointCloudEyeDomeLighting,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -94,7 +94,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
+     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
@@ -124,6 +124,7 @@ define([
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
+     * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
@@ -164,26 +165,9 @@ define([
         Check.defined('options.url', options.url);
         //>>includeEnd('debug');
 
-        var resource = Resource.createIfNeeded(options.url);
-
-        var tilesetResource = resource;
-        var basePath;
-
-        if (resource.extension === 'json') {
-            basePath = resource.getBaseUri(true);
-        } else if (resource.isDataUri) {
-            basePath = '';
-        } else {
-            resource.appendForwardSlash();
-            tilesetResource = resource.getDerivedResource({
-                url: 'tileset.json'
-            });
-            basePath = resource.url;
-        }
-
-        this._url = resource.url;
-        this._tilesetUrl = tilesetResource.url;
-        this._basePath = basePath;
+        this._url = undefined;
+        this._tilesetUrl = undefined;
+        this._basePath = undefined;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
@@ -333,6 +317,14 @@ define([
          * @default 0.5
          */
         this.colorBlendAmount = 0.5;
+
+        /**
+         * Options for controlling point size based on geometric error and eye dome lighting.
+         * @type {PointCloudShading}
+         */
+        this.pointCloudShading = new PointCloudShading(options.pointCloudShading);
+
+        this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -689,10 +681,39 @@ define([
         //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
         this._brokenUrlWorkaround = false;
 
-        var that = this;
+        this._credits = undefined;
 
-        // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        Cesium3DTileset.loadJson(tilesetResource)
+        var that = this;
+        var tilesetResource;
+        when(options.url)
+            .then(function(url) {
+                var basePath;
+                var resource = Resource.createIfNeeded(url);
+
+                // ion resources have a credits property we can use for additional attribution.
+                that._credits = resource.credits;
+
+                tilesetResource = resource;
+
+                if (resource.extension === 'json') {
+                    basePath = resource.getBaseUri(true);
+                } else if (resource.isDataUri) {
+                    basePath = '';
+                } else {
+                    resource.appendForwardSlash();
+                    tilesetResource = resource.getDerivedResource({
+                        url: 'tileset.json'
+                    });
+                    basePath = resource.url;
+                }
+
+                that._url = resource.url;
+                that._tilesetUrl = tilesetResource.url;
+                that._basePath = basePath;
+
+                // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
+                return Cesium3DTileset.loadJson(tilesetResource);
+            })
             .then(function(tilesetJson) {
                 return detectBrokenUrlWorkaround(that, tilesetResource, tilesetJson);
             })
@@ -725,7 +746,7 @@ define([
             url : testUrl
         });
 
-        return loadArrayBuffer(testResource)
+        return testResource.fetchArrayBuffer()
             .then(function(buffer) {
                 var uint8Array = new Uint8Array(buffer);
                 var magic = getMagic(uint8Array);
@@ -1211,7 +1232,8 @@ define([
      * @returns {Promise.<Object>} A promise that resolves with the fetched json data
      */
     Cesium3DTileset.loadJson = function(tilesetUrl) {
-        return loadJson(tilesetUrl);
+        var resource = Resource.createIfNeeded(tilesetUrl);
+        return resource.fetchJson();
     };
 
     /**
@@ -1244,7 +1266,7 @@ define([
                 v: defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
-            tilesetResource.addQueryParameters(versionQuery);
+            tilesetResource.setQueryParameters(versionQuery);
         }
 
         // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
@@ -1632,6 +1654,7 @@ define([
             }
         }
         var lengthAfterUpdate = commandList.length;
+        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1661,7 +1684,6 @@ define([
              */
 
             var backfaceCommands = tileset._backfaceCommands.values;
-            var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
             commandList.length += backfaceCommandsLength;
@@ -1679,6 +1701,13 @@ define([
 
         // Number of commands added by each update above
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+
+        // Only run EDL if simple attenuation is on
+        if (tileset.pointCloudShading.attenuation &&
+            tileset.pointCloudShading.eyeDomeLighting &&
+            (addedCommandsLength > 0)) {
+            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset);
+        }
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
             if (!defined(tileset._tileDebugLabels)) {
@@ -1854,6 +1883,16 @@ define([
         // Update last statistics
         var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+
+        if (statistics.selected !== 0) {
+            var credits = this._credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    frameState.creditDisplay.addCredit(credits[i]);
+                }
+            }
+        }
     };
 
     /**

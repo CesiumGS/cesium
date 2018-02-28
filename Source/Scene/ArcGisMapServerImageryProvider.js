@@ -10,8 +10,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
-        '../Core/loadJson',
-        '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -35,8 +33,6 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
-        loadJson,
-        loadJsonp,
         CesiumMath,
         Rectangle,
         Resource,
@@ -129,7 +125,7 @@ define([
         resource.appendForwardSlash();
 
         if (defined(options.token)) {
-            resource.addQueryParameters({
+            resource.setQueryParameters({
                 token: options.token
             });
         }
@@ -240,7 +236,7 @@ define([
                     f: 'json'
                 }
             });
-            var metadata = loadJsonp(resource);
+            var metadata = resource.fetchJsonp();
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -667,7 +663,7 @@ define([
             queryParameters: query
         });
 
-        return loadJson(resource).then(function(json) {
+        return resource.fetchJson().then(function(json) {
             var result = [];
 
             var features = json.results;

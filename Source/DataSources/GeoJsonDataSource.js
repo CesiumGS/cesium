@@ -8,7 +8,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
-        '../Core/loadJson',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/Resource',
@@ -38,7 +37,6 @@ define([
         DeveloperError,
         Event,
         getFilenameFromUri,
-        loadJson,
         PinBuilder,
         PolygonHierarchy,
         Resource,
@@ -827,7 +825,7 @@ define([
         if (typeof data === 'string' || (data instanceof Resource)) {
             data = Resource.createIfNeeded(data);
 
-            promise = loadJson(data);
+            promise = data.fetchJson();
 
             sourceUri = defaultValue(sourceUri, data.getUrlComponent());
         }

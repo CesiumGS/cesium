@@ -31,47 +31,35 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 // A normal b3dm tileset of photogrammetry
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg'
-}));
-
-// Move the camera to view the tileset on load.
-viewer.zoomTo(tileset).otherwise(function(error) {
-    throw(error);
+var tileset = new Cesium.Cesium3DTileset({
+    url: Cesium.IonResource.fromAssetId(3836)
 });
+viewer.scene.primitives.add(tileset);
+viewer.zoomTo(tileset);
 
 // A b3dm tileset used to classify the photogrammetry tileset
-var classification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://beta.cesium.com/api/assets/3625?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDI4YzA2Ny03YTIwLTQ5ZWEtODY3My1hMzU0OTJmMjEwMWQiLCJpZCI6NDQsImFzc2V0cyI6WzM2MjVdLCJpYXQiOjE1MTU1OTMxODN9.cntiWhEEBAeUb9Lq4ECpwpUuz9yZzEqOvucYopTjA5k',
-    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
-}));
-
-classification.readyPromise.then(function() {
-    classification.style = new Cesium.Cesium3DTileStyle({
-        color : 'rgba(255, 0, 0, 0.5)'
-    });
-}).otherwise(function(error) {
-    throw(error);
+var classificationTileset = new Cesium.Cesium3DTileset({
+    url: Cesium.IonResource.fromAssetId(3843),
+    classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
 });
+classificationTileset.style = new Cesium.Cesium3DTileStyle({
+    color: 'rgba(255, 0, 0, 0.5)'
+});
+viewer.scene.primitives.add(classificationTileset);
 
 // The same b3dm tileset used for classification, but rendered normally for comparison.
-var nonClassification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://beta.cesium.com/api/assets/3625?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhZDI4YzA2Ny03YTIwLTQ5ZWEtODY3My1hMzU0OTJmMjEwMWQiLCJpZCI6NDQsImFzc2V0cyI6WzM2MjVdLCJpYXQiOjE1MTU1OTMxODN9.cntiWhEEBAeUb9Lq4ECpwpUuz9yZzEqOvucYopTjA5k',
-    show : false
-}));
-nonClassification.readyPromise.then(function() {
-    nonClassification.style = new Cesium.Cesium3DTileStyle({
-        color : 'rgba(255, 0, 0, 0.5)'
-    });
-}).otherwise(function(error) {
-    throw(error);
+var nonClassificationTileset = new Cesium.Cesium3DTileset({
+    url: Cesium.IonResource.fromAssetId(3843),
+    show: false
 });
+nonClassificationTileset.style = new Cesium.Cesium3DTileStyle({
+    color: 'rgba(255, 0, 0, 0.5)'
+});
+viewer.scene.primitives.add(nonClassificationTileset);
 
-Cesium.when.join(classification.readyPromise, nonClassification.readyPromise).then(function() {
-    Sandcastle.addToggleButton('Show classification', true, function(checked) {
-        classification.show = checked;
-        nonClassification.show = !checked;
-    });
+Sandcastle.addToggleButton('Show classification', true, function(checked) {
+    classificationTileset.show = checked;
+    nonClassificationTileset.show = !checked;
 });
 //Sandcastle_End
 Sandcastle.finishedLoading();

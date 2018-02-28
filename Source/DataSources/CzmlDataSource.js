@@ -24,7 +24,6 @@ define([
         '../Core/JulianDate',
         '../Core/LagrangePolynomialApproximation',
         '../Core/LinearApproximation',
-        '../Core/loadJson',
         '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/Quaternion',
@@ -113,7 +112,6 @@ define([
         JulianDate,
         LagrangePolynomialApproximation,
         LinearApproximation,
-        loadJson,
         CesiumMath,
         NearFarScalar,
         Quaternion,
@@ -1830,8 +1828,6 @@ define([
         processPacketData(Boolean, rectangle, 'outline', rectangleData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, rectangle, 'outlineColor', rectangleData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'outlineWidth', rectangleData.outlineWidth, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, rectangle, 'closeBottom', rectangleData.closeBottom, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, rectangle, 'shadows', rectangleData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, rectangle, 'distanceDisplayCondition', rectangleData.distanceDisplayCondition, interval, sourceUri, entityCollection);
     }
@@ -1987,7 +1983,7 @@ define([
                 queryParameters: query
             });
 
-            promise = loadJson(czml);
+            promise = czml.fetchJson();
 
             sourceUri = defaultValue(sourceUri, czml.clone());
         }

@@ -4,7 +4,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './loadJsonp',
         './Rectangle',
         './Resource'
     ], function(
@@ -13,7 +12,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        loadJsonp,
         Rectangle,
         Resource) {
     'use strict';
@@ -96,7 +94,7 @@ define([
             }
         });
 
-        return loadJsonp(resource, 'jsonp').then(function(result) {
+        return resource.fetchJsonp('jsonp').then(function(result) {
             if (result.resourceSets.length === 0) {
                 return [];
             }

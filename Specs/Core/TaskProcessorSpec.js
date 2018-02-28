@@ -124,4 +124,49 @@ defineSuite([
             expect(error).toContain('postMessage failed');
         });
     });
+
+    it('successful task raises the taskCompletedEvent', function() {
+        taskProcessor = new TaskProcessor('returnParameters');
+
+        var parameters = {
+            prop : 'blah',
+            obj : {
+                val : true
+            }
+        };
+        var eventRaised = false;
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
+            expect(eventRaised).toBe(true);
+        }).always(function () {
+            removeListenerCallback();
+        });
+    });
+
+    it('unsuccessful task raises the taskCompletedEvent with error', function() {
+        taskProcessor = new TaskProcessor('returnNonCloneable');
+
+        var message = 'foo';
+        var parameters = {
+            message : message
+        };
+
+        var eventRaised = false;
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function(error) {
+            eventRaised = true;
+            expect(error).toBeDefined();
+        });
+
+        return taskProcessor.scheduleTask(parameters).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(eventRaised).toBe(true);
+
+        }).always(function () {
+            removeListenerCallback();
+        });
+    });
 });

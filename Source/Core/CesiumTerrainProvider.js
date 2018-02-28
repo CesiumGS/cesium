@@ -14,8 +14,6 @@ define([
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
-        './loadArrayBuffer',
-        './loadJson',
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
@@ -40,8 +38,6 @@ define([
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
-        loadArrayBuffer,
-        loadJson,
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
@@ -72,7 +68,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The URL of the Cesium terrain server.
+     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the Cesium terrain server.
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -80,29 +76,15 @@ define([
      *
      *
      * @example
-     * // Construct a terrain provider that uses per vertex normals for lighting
-     * // to add shading detail to an imagery provider.
-     * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-     *     requestVertexNormals : true
-     * });
-     *
-     * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
-     * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
-     * var imageryProvider = Cesium.createTileMapServiceImageryProvider({
-     *        url : 'http://localhost:8080/Source/Assets/Textures/NaturalEarthII',
-     *        fileExtension : 'jpg'
-     *    });
-     *
+     * // Create Arctic DEM terrain with normals.
      * var viewer = new Cesium.Viewer('cesiumContainer', {
-     *     imageryProvider : imageryProvider,
-     *     baseLayerPicker : false,
-     *     terrainProvider : terrainProvider
+     *     terrainProvider : new Cesium.CesiumTerrainProvider({
+     *         url : Cesium.IonResource.fromAssetId(3956),
+     *         requestVertexNormals : true
+     *     });
      * });
      *
-     * // The globe must enable lighting to make use of the terrain's vertex normals
-     * viewer.scene.globe.enableLighting = true;
-     *
+     * @see createWorldTerrain
      * @see TerrainProvider
      */
     function CesiumTerrainProvider(options) {
@@ -115,11 +97,6 @@ define([
         if (defined(options.proxy)) {
             deprecationWarning('CesiumTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
         }
-
-        var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
-        resource.appendForwardSlash();
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -160,20 +137,50 @@ define([
 
         this._availability = undefined;
 
+        var deferred = when.defer();
         this._ready = false;
-        this._readyPromise = when.defer();
-
-        var lastResource = resource;
-        var metadataResource = lastResource.getDerivedResource({
-            url: 'layer.json'
-        });
+        this._readyPromise = deferred;
+        this._tileCredits = undefined;
 
         var that = this;
+        var lastResource;
+        var metadataResource;
         var metadataError;
 
         var layers = this._layers = [];
         var attribution = '';
         var overallAvailability = [];
+        when(options.url)
+            .then(function(url) {
+                var resource = Resource.createIfNeeded(url, {
+                    proxy: options.proxy
+                });
+                resource.appendForwardSlash();
+                lastResource = resource;
+                metadataResource = lastResource.getDerivedResource({
+                    url: 'layer.json'
+                });
+
+                var uri = new Uri(metadataResource.url);
+                if (uri.authority === 'assets.agi.com') {
+                    var deprecationText = 'The STK World Terrain tileset is deprecated and will be available until September 1, 2018';
+                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain';
+                    var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
+                    that._tileCredits = [
+                        new Credit({ text: deprecationText, showOnScreen: true }),
+                        new Credit({ text: deprecationLinkText, link: deprecationLink, showOnScreen: true })
+                    ];
+                    deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
+                } else {
+                    // ion resources have a credits property we can use for additional attribution.
+                    that._tileCredits = resource.credits;
+                }
+
+                requestMetadata();
+            })
+            .otherwise(function(e) {
+                deferred.reject(e);
+            });
 
         function parseMetadataSuccess(data) {
             var message;
@@ -289,7 +296,7 @@ define([
                 metadataResource = lastResource.getDerivedResource({
                     url: 'layer.json'
                 });
-                var parentMetadata = loadJson(metadataResource);
+                var parentMetadata = metadataResource.fetchJson();
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
             }
 
@@ -320,8 +327,12 @@ define([
                         }
                     }
 
-                    if (!defined(that._credit) && attribution.length > 0) {
-                        that._credit = new Credit({text: attribution});
+                    var layerJsonCredit = new Credit({ text: attribution });
+
+                    if (defined(that._tileCredits)) {
+                        that._tileCredits.push(layerJsonCredit);
+                    } else {
+                        that._tileCredits = [layerJsonCredit];
                     }
 
                     that._ready = true;
@@ -347,11 +358,10 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadJson(metadataResource);
-            when(metadata, metadataSuccess, metadataFailure);
+            when(metadataResource.fetchJson())
+                .then(metadataSuccess)
+                .otherwise(metadataFailure);
         }
-
-        requestMetadata();
     }
 
     /**
@@ -401,7 +411,8 @@ define([
             waterMask : new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1),
             width : provider._heightmapWidth,
             height : provider._heightmapWidth,
-            structure : provider._heightmapStructure
+            structure : provider._heightmapStructure,
+            credits: provider._tileCredits
         });
     }
 
@@ -546,7 +557,8 @@ define([
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
             childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
-            waterMask: waterMaskBuffer
+            waterMask: waterMaskBuffer,
+            credits: provider._tileCredits
         });
     }
 
@@ -623,7 +635,7 @@ define([
             request: request
         });
 
-        var promise = loadArrayBuffer(resource);
+        var promise = resource.fetchArrayBuffer();
 
         if (!defined(promise)) {
             return undefined;

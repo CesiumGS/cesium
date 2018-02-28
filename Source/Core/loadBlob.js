@@ -2,13 +2,11 @@ define([
         './Check',
         './defined',
         './deprecationWarning',
-        './loadWithXhr',
         './Resource'
     ], function(
         Check,
         defined,
         deprecationWarning,
-        loadWithXhr,
         Resource) {
     'use strict';
 
@@ -21,6 +19,8 @@ define([
      * @exports loadBlob
      *
      * @param {Resource|String} urlOrResource The URL of the data.
+     * @param {Object} [headers] HTTP headers to send with the requests.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Blob>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @example
@@ -33,27 +33,22 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
     function loadBlob(urlOrResource, headers, request) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
 
-        if (defined(headers)) {
-            deprecationWarning('loadBlob.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
-        }
-
-        if (defined(request)) {
-            deprecationWarning('loadBlob.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
-        }
+        deprecationWarning('loadBlob', 'loadBlob is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchBlob instead.');
 
         var resource = Resource.createIfNeeded(urlOrResource, {
             headers: headers,
             request: request
         });
 
-        resource.responseType = 'blob';
-        return loadWithXhr(resource);
+        return resource.fetchBlob();
     }
 
     return loadBlob;

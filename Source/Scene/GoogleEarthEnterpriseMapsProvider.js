@@ -7,7 +7,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
-        '../Core/loadText',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -24,7 +23,6 @@ define([
         DeveloperError,
         Event,
         GeographicTilingScheme,
-        loadText,
         Rectangle,
         Resource,
         RuntimeError,
@@ -120,9 +118,14 @@ define([
 
         var url = options.url;
         var path = defaultValue(options.path, '/default_map');
-        var resource = Resource.createIfNeeded(url + path, {
-            proxy: options.proxy
+
+        var resource = Resource.createIfNeeded(url, {
+            proxy : options.proxy
+        }).getDerivedResource({
+            // We used to just append path to url, so now that we do proper URI resolution, removed the /
+            url : (path[0] === '/') ? path.substring(1) : path
         });
+
         resource.appendForwardSlash();
 
         this._resource = resource;
@@ -238,7 +241,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadText(metadataResource);
+            var metadata = metadataResource.fetchText();
             when(metadata, metadataSuccess, metadataFailure);
         }
 

@@ -31,9 +31,7 @@ define([
      *
      * @example
      * // Query the terrain height of two Cartographic positions
-     * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
-     * });
+     * var terrainProvider = Cesium.createWorldTerrain();
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
      *     Cesium.Cartographic.fromDegrees(87.0, 28.0)

@@ -520,8 +520,6 @@
         ]
       },
       "outlineWidth":59794,
-      "closeTop":true,
-      "closeBottom":true,
       "shadows":"CAST_ONLY",
       "distanceDisplayCondition":{
         "distanceDisplayCondition":[
@@ -6369,12 +6367,6 @@
       },
       "outlineWidth":{
         "reference":"Constant#rectangle.outlineWidth"
-      },
-      "closeTop":{
-        "reference":"Constant#rectangle.closeTop"
-      },
-      "closeBottom":{
-        "reference":"Constant#rectangle.closeBottom"
       },
       "shadows":{
         "reference":"Constant#rectangle.shadows"
