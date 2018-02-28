@@ -3064,13 +3064,16 @@ define([
             // Render
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, time, render);
-            this._postRender.raiseEvent(this, time);
 
             RequestScheduler.update();
         }
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         callAfterRenderFunctions(this);
+
+        if (shouldRender) {
+            this._postRender.raiseEvent(this, time);
+        }
     };
 
     /**

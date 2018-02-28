@@ -43,6 +43,7 @@ Change Log
 * Fixed issue where `CESIUM_BASE_URL` wouldn't work without a trailing `/`. [#6225](https://github.com/AnalyticalGraphicsInc/cesium/issues/6225)
 * Fixed coloring for polyline entities with a dynamic color for the depth fail material [#6245](https://github.com/AnalyticalGraphicsInc/cesium/pull/6245)
 * Fixed an issue causing the Bing Maps key to be sent unnecessarily with every tile request. [#6250](https://github.com/AnalyticalGraphicsInc/cesium/pull/6250)
+* Fixed bug with zooming to dynamic geometry. [#6269](https://github.com/AnalyticalGraphicsInc/cesium/issues/6269)
 * Fixed documentation issue for the `Cesium.Math` class. [#6233](https://github.com/AnalyticalGraphicsInc/cesium/issues/6233)
 
 ### 1.42.1 - 2018-02-01
