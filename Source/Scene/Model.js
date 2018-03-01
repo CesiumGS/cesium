@@ -1,5 +1,4 @@
 define([
-        '../Core/arraySlice',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -36,6 +35,7 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Core/TaskProcessor',
         '../Core/Transforms',
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
@@ -50,7 +50,6 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
-        '../ThirdParty/draco-decoder-gltf',
         '../ThirdParty/GltfPipeline/addDefaults',
         '../ThirdParty/GltfPipeline/addPipelineExtras',
         '../ThirdParty/GltfPipeline/ForEach',
@@ -78,7 +77,6 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
-        arraySlice,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -115,6 +113,7 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        TaskProcessor,
         Transforms,
         WebGLConstants,
         Buffer,
@@ -129,7 +128,6 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
-        draco,
         addDefaults,
         addPipelineExtras,
         ForEach,
@@ -4081,121 +4079,116 @@ define([
         return addBufferToModelResources(model, indexBuffer);
     }
 
-    /*
-     * Instance of the draco decoder module.
-     * @private
-     */
-    Model._dracoDecoder = undefined;
+    function addDecodededBuffers(primitive, model, context) {
+        return function (result) {
+            var decodedBufferView = addNewIndexBuffer(result.indexArray, model, context);
+
+            var attributes = {};
+            var decodedAttributeData = result.attributeData;
+            for (var attributeName in decodedAttributeData) {
+                if (decodedAttributeData.hasOwnProperty(attributeName)) {
+                    var attribute = decodedAttributeData[attributeName];
+                    var vertexArray = attribute.array;
+                    var vertexBufferView = addNewVertexBuffer(vertexArray, model, context);
+
+                    var data = attribute.data;
+                    data.bufferView = vertexBufferView;
+
+                    attributes[attributeName] = data;
+                }
+            }
+
+            model._decodedData[primitive.mesh + '.primitive.' + primitive.primitive] = {
+                bufferView : decodedBufferView,
+                attributes : attributes
+            };
+        };
+    }
 
     function parseDraco(model, context) {
-        if (!defined(model.extensionsRequired['KHR_draco_mesh_compression']) || !defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
+        if (!defined(model.extensionsRequired['KHR_draco_mesh_compression'])
+            || !defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
             return;
         }
 
-        if (!defined(Model._dracoDecoder)) {
-            Model._dracoDecoder = new draco.Decoder();
+        var loadResources = model._loadResources;
+        if (loadResources.primitivesToDecode.length === 0) {
+            if (loadResources.decoding) {
+                // Done decoding
+                return;
+            }
+
+            loadResources.decoding = true;
+
+            var gltf = model.gltf;
+            ForEach.mesh(gltf, function(mesh, meshId) {
+                ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
+                    if (!defined(primitive.extensions)) {
+                        return;
+                    }
+
+                    var compressionData = primitive.extensions['KHR_draco_mesh_compression'];
+                    if (!defined(compressionData)) {
+                        return;
+                    }
+
+                    var bufferView = gltf.bufferViews[compressionData.bufferView];
+                    var rawBuffer = gltf.buffers[bufferView.buffer];
+                    var data = rawBuffer.extras._pipeline.source;
+                    data = data.slice(0, data.length);
+
+                    loadResources.primitivesToDecode.enqueue({
+                        mesh : meshId,
+                        primitive : primitiveId,
+                        array : data,
+                        bufferView : bufferView,
+                        compressedAttributes : compressionData.attributes
+                    });
+                });
+            });
         }
 
-        var buffer;
-        var dracoGeometry;
-        var gltf = model.gltf;
-        var dracoDecoder = Model._dracoDecoder;
-        ForEach.mesh(gltf, function(mesh, meshId) {
-            ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
-                if (!defined(primitive.extensions)) {
-                    return;
-                }
+        var decoderTaskProcessor = Model._getDecoderTaskProcessor();
+        var taskData = loadResources.primitivesToDecode.peek();
+        var decodingPromises = [];
+        var promise;
 
-                var compressionData = primitive.extensions['KHR_draco_mesh_compression'];
-                if (!defined(compressionData)) {
-                    return;
-                }
+        if (defined(taskData)) {
+            promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
+        }
 
-                var bufferView = gltf.bufferViews[compressionData.bufferView];
-                var rawBuffer = gltf.buffers[bufferView.buffer];
-                var typedArray = arraySlice(rawBuffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
+        while (defined(promise)) {
+            loadResources.finishedDecoding = false;
+            loadResources.primitivesToDecode.dequeue();
+            var decodedPromise = promise.then(addDecodededBuffers(taskData, model, context))
+                .otherwise(function (error) {
+                    model._state = ModelState.FAILED;
+                    model._readyPromise.reject(new RuntimeError('Failed to load model: ' + model.basePath + '\n' + error.message));
+                });
 
-                buffer = new draco.DecoderBuffer();
-                buffer.Init(typedArray, bufferView.byteLength);
+            decodingPromises.push(decodedPromise);
 
-                var geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
-                if (geometryType !== draco.TRIANGULAR_MESH) {
-                    throw new RuntimeError('Unsupported draco mesh geometry type.');
-                }
+            promise = undefined;
+            taskData = loadResources.primitivesToDecode.peek();
+            if (defined(taskData)) {
+                promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
+            }
+        }
 
-                dracoGeometry = new draco.Mesh();
-                var decodingStatus = dracoDecoder.DecodeBufferToMesh(buffer, dracoGeometry);
-                if (!decodingStatus.ok() || dracoGeometry.ptr === 0) {
-                    throw new RuntimeError('Error decoding draco mesh geometry: ' + decodingStatus.error_msg());
-                }
-
-                draco.destroy(buffer);
-
-                var numPoints = dracoGeometry.num_points();
-                var numFaces = dracoGeometry.num_faces();
-
-                var faceIndices = new draco.DracoInt32Array();
-                var indexArray = IndexDatatype.createTypedArray(numPoints, numFaces * 3);
-
-                var i;
-                for (i = 0; i < numFaces; ++i) {
-                    dracoDecoder.GetFaceFromMesh(dracoGeometry, i, faceIndices);
-
-                    var offset = i * 3;
-                    indexArray[offset + 0] = faceIndices.GetValue(0);
-                    indexArray[offset + 1] = faceIndices.GetValue(1);
-                    indexArray[offset + 2] = faceIndices.GetValue(2);
-                }
-                var decodedBufferView = addNewIndexBuffer(indexArray, model, context);
-                draco.destroy(faceIndices);
-
-                var compressedAttributes = compressionData.attributes;
-                var decodedAttributeData = {};
-                var attributeData;
-                var vertexArray;
-                for (var attributeName in compressedAttributes) {
-                    if (compressedAttributes.hasOwnProperty(attributeName)) {
-                        var compressedAttribute = compressedAttributes[attributeName];
-                        var attribute = dracoDecoder.GetAttributeByUniqueId(dracoGeometry, compressedAttribute);
-                        var numComponents = attribute.num_components();
-
-                        if (attribute.data_type() === 4) {
-                            attributeData = new draco.DracoInt32Array();
-                            vertexArray = new Uint16Array(numPoints * numComponents);
-                            dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
-                        } else {
-                            attributeData = new draco.DracoFloat32Array();
-                            vertexArray = new Float32Array(numPoints * numComponents);
-                            dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
-                        }
-
-                        for (i = 0; i < vertexArray.length; ++i) {
-                            vertexArray[i] = attributeData.GetValue(i);
-                        }
-
-                        draco.destroy(attributeData);
-
-                        var vertexBufferView = addNewVertexBuffer(vertexArray, model, context);
-                        decodedAttributeData[attributeName] = {
-                            componentsPerAttribute : numComponents,
-                            byteOffset : attribute.byte_offset(),
-                            byteStride : attribute.byte_stride(),
-                            bufferView : vertexBufferView,
-                            normalized : attribute.normalized(),
-                            componentDatatype : ComponentDatatype.fromTypedArray(vertexArray)
-                        };
-                    }
-                }
-
-                draco.destroy(dracoGeometry);
-
-                model._decodedData[meshId + '.primitive.' + primitiveId] = {
-                    bufferView : decodedBufferView,
-                    attributes : decodedAttributeData
-                };
-            });
+        when.all(decodingPromises).then(function () {
+            loadResources.finishedDecoding = true;
         });
     }
+
+    Model._maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);  // Maximum concurrency to use wehn deocding draco models
+    Model._decoderTaskProcessor = undefined;
+    Model._getDecoderTaskProcessor = function () {
+        if (!defined(Model._decoderTaskProcessor)) {
+            Model._decoderTaskProcessor = new TaskProcessor('decodeDraco', Model._maxDecodingConcurrency);
+        }
+
+        return Model._decoderTaskProcessor;
+    };
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -4282,40 +4275,50 @@ define([
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
                 if (!this._updatedGltfVersion) {
-                    var options = {
-                        optimizeForCesium: true,
-                        addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
-                    };
-                    frameState.brdfLutGenerator.update(frameState);
-                    updateVersion(this.gltf);
-                    ModelUtility.checkSupportedExtensions(this.extensionsRequired);
-                    addPipelineExtras(this.gltf);
-                    addDefaults(this.gltf);
-                    processModelMaterialsCommon(this.gltf, options);
-                    processPbrMetallicRoughness(this.gltf, options);
-                    parseDraco(this, context);
+                    if (loadResources.decoding) {
+                        parseDraco(this, context);
+                    } else {
+                        var options = {
+                            optimizeForCesium: true,
+                            addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
+                        };
+                        frameState.brdfLutGenerator.update(frameState);
+                        updateVersion(this.gltf);
+                        ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                        addPipelineExtras(this.gltf);
+                        addDefaults(this.gltf);
+                        processModelMaterialsCommon(this.gltf, options);
+                        processPbrMetallicRoughness(this.gltf, options);
 
-                    // We do this after to make sure that the ids don't change
-                    addBuffersToLoadResources(this);
-
-                    if (!this._loadRendererResourcesFromCache) {
-                        parseBufferViews(this);
-                        parseShaders(this);
-                        parsePrograms(this);
-                        parseTextures(this, context);
+                        parseDraco(this, context);
                     }
-                    parseMaterials(this);
-                    parseMeshes(this);
-                    parseNodes(this);
 
-                    this._boundingSphere = computeBoundingSphere(this);
-                    this._initialRadius = this._boundingSphere.radius;
-                    this._updatedGltfVersion = true;
+                    // We must wait until the geometry is decoded
+                    if (loadResources.decodingComplete()) {
+                        // We do this after to make sure that the ids don't change
+                        addBuffersToLoadResources(this);
+
+                        if (!this._loadRendererResourcesFromCache) {
+                            parseBufferViews(this);
+                            parseShaders(this);
+                            parsePrograms(this);
+                            parseTextures(this, context);
+                        }
+                        parseMaterials(this);
+                        parseMeshes(this);
+                        parseNodes(this);
+
+                        this._boundingSphere = computeBoundingSphere(this);
+                        this._initialRadius = this._boundingSphere.radius;
+                        this._updatedGltfVersion = true;
+                    }
                 }
+
                 if (this._updatedGltfVersion && loadResources.pendingShaderLoads === 0) {
                     createResources(this, frameState);
                 }
             }
+
             if (loadResources.finished() ||
                 (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
                 this._state = ModelState.LOADED;

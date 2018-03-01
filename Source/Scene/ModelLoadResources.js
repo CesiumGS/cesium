@@ -31,6 +31,10 @@ define([
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
 
+        this.decoding = false;
+        this.primitivesToDecode = new Queue();
+        this.finishedDecoding = false;
+
         this.skinnedNodesIds = [];
     }
 
@@ -79,11 +83,15 @@ define([
             (this.programsToCreate.length === 0) &&
             (this.pendingBufferViewToImage === 0);
 
-        return finishedPendingLoads && finishedResourceCreation;
+        return this.decodingComplete() && finishedPendingLoads && finishedResourceCreation;
+    };
+
+    ModelLoadResources.prototype.decodingComplete = function() {
+        return !this.decoding || (this.primitivesToDecode.length === 0 && this.finishedDecoding);
     };
 
     ModelLoadResources.prototype.finished = function() {
-        return this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
+        return this.decodingComplete() && this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
     };
 
     return ModelLoadResources;
