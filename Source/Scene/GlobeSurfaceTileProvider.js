@@ -996,15 +996,6 @@ define([
             }
         };
 
-        if (!ClippingPlaneCollection.useFloatTexture(frameState.context)) {
-            uniformMap = combine(uniformMap, {
-                u_clippingPlanesRange : function() {
-                    var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
-                    return defined(clippingPlanes) ? clippingPlanes.range : Cartesian2.ZERO;
-                }
-            });
-        }
-
         return uniformMap;
     }
 

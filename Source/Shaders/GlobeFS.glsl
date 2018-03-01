@@ -54,9 +54,6 @@ uniform vec2 u_lightingFadeDistance;
 
 #ifdef ENABLE_CLIPPING_PLANES
 uniform sampler2D u_clippingPlanes;
-#ifndef FLOAT_CLIPPING_PLANES
-uniform vec2 u_clippingPlanesRange;
-#endif
 uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
@@ -160,11 +157,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 void main()
 {
 #ifdef ENABLE_CLIPPING_PLANES
-    #ifdef FLOAT_CLIPPING_PLANES
-        float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
-    #else
-        float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix, u_clippingPlanesRange);
-    #endif
+    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
 #endif
 
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0

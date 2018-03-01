@@ -2858,16 +2858,6 @@ define([
         };
     }
 
-    function createClippingPlanesRangeFunction(model) {
-        return function() {
-            var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
-                return Cartesian2.ZERO;
-            }
-            return clippingPlanes.range;
-        };
-    }
-
     var scratchClippingPlaneMatrix = new Matrix4();
     function createClippingPlanesMatrixFunction(model) {
         return function() {
@@ -2998,12 +2988,6 @@ define([
                 gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model),
                 gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model)
             });
-
-            if (!ClippingPlaneCollection.useFloatTexture(context)) {
-                uniformMap = combine(uniformMap, {
-                    gltf_clippingPlanesRange: createClippingPlanesRangeFunction(model)
-                });
-            }
 
             // Allow callback to modify the uniformMap
             if (defined(model._uniformMapLoaded)) {
@@ -3804,14 +3788,8 @@ define([
     }
 
     function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
-        var usingRgbaTexture = !ClippingPlaneCollection.useFloatTexture(context);
-
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
-        if (usingRgbaTexture) {
-            shader +=
-            'uniform vec2 gltf_clippingPlanesRange; \n';
-        }
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
             'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
@@ -3819,7 +3797,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-        '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix' + (usingRgbaTexture ? ', gltf_clippingPlanesRange);\n' : ');\n') +
+        '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix);' +
         '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
         '    clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
         '    float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +

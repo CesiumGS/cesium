@@ -599,18 +599,6 @@ define([
             }
         };
 
-        if (!ClippingPlaneCollection.useFloatTexture(context)) {
-            uniformMap = combine(uniformMap, {
-                u_clippingPlanesRange : function() {
-                    var clippingPlanes = content._tileset.clippingPlanes;
-                    if (!defined(clippingPlanes) || !clippingPlanes.enabled) {
-                        return Cartesian2.ZERO;
-                    }
-                    return clippingPlanes.range;
-                }
-            });
-        }
-
         if (isQuantized) {
             uniformMap = combine(uniformMap, {
                 u_quantizedVolumeScale : function() {
@@ -1136,11 +1124,7 @@ define([
 
         var fs = 'varying vec4 v_color; \n';
 
-        var usingRgbaTexture = !ClippingPlaneCollection.useFloatTexture(context);
         if (hasClippedContent) {
-            if (usingRgbaTexture) {
-                fs += 'uniform vec2 u_clippingPlanesRange; \n';
-            }
             fs += 'uniform sampler2D u_clippingPlanes; \n' +
                   'uniform mat4 u_clippingPlanesMatrix; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
@@ -1154,7 +1138,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            fs += '    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix' + (usingRgbaTexture ? ', u_clippingPlanesRange);\n' : ');\n') +
+            fs += '    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);\n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
                   '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +

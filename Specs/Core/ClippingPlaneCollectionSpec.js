@@ -47,18 +47,14 @@ defineSuite([
     var transform = new Matrix4.fromTranslation(new Cartesian3(1.0, 3.0, 2.0));
     var boundingVolume  = new BoundingSphere(Cartesian3.ZERO, 1.0);
 
-    var unpackVec4 = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
-    var unormScratch = new Cartesian4();
-    function decodeUint8Plane(pixel1, pixel2, distanceRange) {
+    function decodeUint8Plane(pixel1, pixel2) {
         // expect pixel1 to be the normal
         var xOct16 = pixel1.x * 256 + pixel1.y;
         var yOct16 = pixel1.z * 256 + pixel1.w;
         var normal = AttributeCompression.octDecodeInRange(xOct16, yOct16, 65535, new Cartesian3());
 
         // expect pixel2 to be the distance
-        var unormPixel2 = Cartesian4.multiplyByScalar(pixel2, 1 / 255, unormScratch);
-        var normalizedDistance = Cartesian4.dot(unpackVec4, unormPixel2);
-        var distance = (distanceRange.y - distanceRange.x) * normalizedDistance + distanceRange.x;
+        var distance = Cartesian4.unpackFloat(pixel2);
         return new Plane(normal, distance);
     }
 
@@ -180,35 +176,6 @@ defineSuite([
             scene.destroyForSpecs();
         });
 
-        it('update populates uniforms for unpacking the clipping plane texture', function() {
-            var scene = createScene();
-            clippingPlanes = new ClippingPlaneCollection({
-                planes : planes,
-                enabled : false,
-                edgeColor : Color.RED,
-                modelMatrix : transform
-            });
-
-            clippingPlanes.update(scene.frameState);
-            var expectedRange = new Cartesian2(1.0, 2.0);
-            var actualRange = new Cartesian2();
-
-            var range = clippingPlanes.range;
-            actualRange.x = range.x;
-            actualRange.y = range.y;
-            expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
-
-            clippingPlanes.unionClippingRegions = true;
-            clippingPlanes.update(scene.frameState);
-
-            actualRange.x = range.x;
-            actualRange.y = range.y;
-            expect(Cartesian2.equalsEpsilon(expectedRange, actualRange, CesiumMath.EPSILON3)).toEqual(true);
-
-            clippingPlanes.destroy();
-            scene.destroyForSpecs();
-        });
-
         it('update fills the clipping plane texture with packed planes', function() {
             var scene = createScene();
 
@@ -238,9 +205,8 @@ defineSuite([
             var pixel3 = Cartesian4.fromArray(rgba, 8);
             var pixel4 = Cartesian4.fromArray(rgba, 12);
 
-            var range = clippingPlanes.range;
-            var plane1 = decodeUint8Plane(pixel1, pixel2, range);
-            var plane2 = decodeUint8Plane(pixel3, pixel4, range);
+            var plane1 = decodeUint8Plane(pixel1, pixel2);
+            var plane2 = decodeUint8Plane(pixel3, pixel4);
 
             expect(Cartesian3.equalsEpsilon(plane1.normal, planes[0].normal, CesiumMath.EPSILON3)).toEqual(true);
             expect(Cartesian3.equalsEpsilon(plane2.normal, planes[1].normal, CesiumMath.EPSILON3)).toEqual(true);

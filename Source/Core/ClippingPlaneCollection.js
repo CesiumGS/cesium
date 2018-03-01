@@ -126,9 +126,6 @@ define([
          // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
 
-        // For denormalization parameters uniform.
-        this._range = new Cartesian2();
-
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
         this.unionClippingRegions = defaultValue(options.unionClippingRegions, false); // set using setter
@@ -225,19 +222,6 @@ define([
         texture : {
             get : function() {
                 return this._clippingPlanesTexture;
-            }
-        },
-
-        /**
-         * Range for inflating the normalized distances in the clipping plane texture when using
-         * uint8 RGBA textures.
-         *
-         * @type {Cartesian2}
-         * @readonly
-         */
-        range : {
-            get : function() {
-                return this._range;
             }
         },
 
@@ -397,32 +381,6 @@ define([
         this.shouldRegenerateShaders = true;
     };
 
-    // See Aras Pranckevičius' post Encoding Floats to RGBA
-    // http://aras-p.info/blog/2009/07/30/encoding-floats-to-rgba-the-final/
-    var floatEncode = new Cartesian4(1.0, 255.0, 65025.0, 16581375.0);
-    function packNormalizedFloat(float, result) {
-        Cartesian4.multiplyByScalar(floatEncode, float, result);
-        result.x = result.x - Math.floor(result.x);
-        result.y = result.y - Math.floor(result.y);
-        result.z = result.z - Math.floor(result.z);
-        result.w = result.w - Math.floor(result.w);
-
-        result.x -= result.y / 255.0;
-        result.y -= result.z / 255.0;
-        result.z -= result.w / 255.0;
-
-        return result;
-    }
-
-    var encodingScratch = new Cartesian4();
-    function insertNormalizedFloat(uint8Buffer, float, byteIndex) {
-        packNormalizedFloat(float, encodingScratch);
-        uint8Buffer[byteIndex] = encodingScratch.x * 255;
-        uint8Buffer[byteIndex + 1] = encodingScratch.y * 255;
-        uint8Buffer[byteIndex + 2] = encodingScratch.z * 255;
-        uint8Buffer[byteIndex + 3] = encodingScratch.w * 255;
-    }
-
     var octEncodeScratch = new Cartesian2();
     var rightShift = 1.0 / 256.0;
     /**
@@ -438,24 +396,14 @@ define([
         return result;
     }
 
+    var distanceEncodeScratch = new Cartesian4();
     var oct32EncodeScratch = new Cartesian4();
-    function packAllUint8s(clippingPlaneCollection) {
+    function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
         var uint8View = clippingPlaneCollection._uint8View;
         var planes = clippingPlaneCollection._planes;
-        var length = planes.length;
-        var byteIndex;
-
-        var range = clippingPlaneCollection._range;
-
-        // Pack all plane normals and get min/max of all distances.
-        // Check each normal for changes.
-        var distanceMin = Number.POSITIVE_INFINITY;
-        var distanceMax = Number.NEGATIVE_INFINITY;
-        var i;
-        for (i = 0; i < length; ++i) {
+        var byteIndex = 0;
+        for (var i = startIndex; i < endIndex; ++i) {
             var plane = planes[i];
-
-            byteIndex = i * 8; // each plane is 4 bytes normal, 4 bytes distance
 
             var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
             uint8View[byteIndex] = oct32Normal.x;
@@ -463,23 +411,13 @@ define([
             uint8View[byteIndex + 2] = oct32Normal.z;
             uint8View[byteIndex + 3] = oct32Normal.w;
 
-            var distance = plane.distance;
-            distanceMin = Math.min(distance, distanceMin);
-            distanceMax = Math.max(distance, distanceMax);
-        }
+            var encodedDistance = Cartesian4.packFloat(plane.distance, distanceEncodeScratch);
+            uint8View[byteIndex + 4] = encodedDistance.x;
+            uint8View[byteIndex + 5] = encodedDistance.y;
+            uint8View[byteIndex + 6] = encodedDistance.z;
+            uint8View[byteIndex + 7] = encodedDistance.w;
 
-        // Expand distance range a little bit to prevent packing 1s
-        distanceMax += (distanceMax - distanceMin) * CesiumMath.EPSILON3;
-
-        // Normalize all the distances to the range and record them in the typed array.
-        // Check each distance for changes.
-        range.x = distanceMin;
-        range.y = distanceMax;
-        var distanceRangeSize = distanceMax - distanceMin;
-        for (i = 0; i < length; ++i) {
-            var normalizedDistance = (planes[i].distance - distanceMin) / distanceRangeSize;
-            byteIndex = i * 8 + 4;
-            insertNormalizedFloat(uint8View, normalizedDistance, byteIndex);
+            byteIndex += 8;
         }
     }
 
@@ -572,7 +510,7 @@ define([
         }
 
         // Use of Plane objects will be deprecated.
-        // But until then, we have no way of telling if they changed since last frame.
+        // But until then, we have no way of telling if they changed since last frame, so we have to do a full udpate.
         var refreshFullTexture = this._manyDirtyPlanes || this._containsUntrackablePlanes;
         var dirtyIndex = this._dirtyIndex;
 
@@ -580,17 +518,25 @@ define([
             return;
         }
 
-        if (!refreshFullTexture && useFloatTexture) {
-            // partial update possible
-            packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
+        if (!refreshFullTexture) {
+            // partial updates possible
             var offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
             var offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
-
-            clippingPlanesTexture.copyFrom({
-                width : 1,
-                height : 1,
-                arrayBufferView : this._float32View
-            }, offsetX, offsetY);
+            if (useFloatTexture) {
+                packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
+                clippingPlanesTexture.copyFrom({
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : this._float32View
+                }, offsetX, offsetY);
+            } else {
+                packPlanesAsUint8(this, dirtyIndex, dirtyIndex + 1);
+                clippingPlanesTexture.copyFrom({
+                    width : 2,
+                    height : 1,
+                    arrayBufferView : this._uint8View
+                }, offsetX, offsetY);
+            }
         } else if (useFloatTexture) {
             packPlanesAsFloats(this, 0, this._planes.length);
             clippingPlanesTexture.copyFrom({
@@ -599,8 +545,7 @@ define([
                 arrayBufferView : this._float32View
             });
         } else {
-            // don't do "partial" updates at all for uint8 because all plane normalizations may change
-            packAllUint8s(this);
+            packPlanesAsUint8(this, 0, this._planes.length);
             clippingPlanesTexture.copyFrom({
                 width : clippingPlanesTexture.width,
                 height : clippingPlanesTexture.height,

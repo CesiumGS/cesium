@@ -181,9 +181,6 @@ define([
 
             if (enableClippingPlanes) {
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
-                if (ClippingPlaneCollection.useFloatTexture(frameState.context)) {
-                    fs.defines.push('FLOAT_CLIPPING_PLANES');
-                }
             }
 
             var computeDayColor = '\

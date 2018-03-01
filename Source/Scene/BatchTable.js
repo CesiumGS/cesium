@@ -16,7 +16,8 @@ define([
         '../Renderer/Sampler',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter'
+        '../Renderer/TextureMinificationFilter',
+        './getUnpackFloatFunction'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -35,7 +36,8 @@ define([
         Sampler,
         Texture,
         TextureMagnificationFilter,
-        TextureMinificationFilter) {
+        TextureMinificationFilter,
+        getUnpackFloatFunction) {
     'use strict';
 
     /**
@@ -226,48 +228,18 @@ define([
 
     var scratchPackedFloatCartesian4 = new Cartesian4();
 
-    var SHIFT_LEFT_8 = 256.0;
-    var SHIFT_LEFT_16 = 65536.0;
-    var SHIFT_LEFT_24 = 16777216.0;
-
-    var SHIFT_RIGHT_8 = 1.0 / SHIFT_LEFT_8;
-    var SHIFT_RIGHT_16 = 1.0 / SHIFT_LEFT_16;
-    var SHIFT_RIGHT_24 = 1.0 / SHIFT_LEFT_24;
-
-    var BIAS = 38.0;
-
-    function unpackFloat(value) {
-        var temp = value.w / 2.0;
-        var exponent = Math.floor(temp);
-        var sign = (temp - exponent) * 2.0;
-        exponent = exponent - BIAS;
-
-        sign = sign * 2.0 - 1.0;
-        sign = -sign;
-
-        if (exponent >= BIAS) {
-            return sign < 0.0 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
-        }
-
-        var unpacked = sign * value.x * SHIFT_RIGHT_8;
-        unpacked += sign * value.y * SHIFT_RIGHT_16;
-        unpacked += sign * value.z * SHIFT_RIGHT_24;
-
-        return unpacked * Math.pow(10.0, exponent);
-    }
-
     function getPackedFloat(array, index, result) {
         var packed = Cartesian4.unpack(array, index, scratchPackedFloatCartesian4);
-        var x = unpackFloat(packed);
+        var x = Cartesian4.unpackFloat(packed);
 
         packed = Cartesian4.unpack(array, index + 4, scratchPackedFloatCartesian4);
-        var y = unpackFloat(packed);
+        var y = Cartesian4.unpackFloat(packed);
 
         packed = Cartesian4.unpack(array, index + 8, scratchPackedFloatCartesian4);
-        var z = unpackFloat(packed);
+        var z = Cartesian4.unpackFloat(packed);
 
         packed = Cartesian4.unpack(array, index + 12, scratchPackedFloatCartesian4);
-        var w = unpackFloat(packed);
+        var w = Cartesian4.unpackFloat(packed);
 
         return Cartesian4.fromElements(x, y, z, w, result);
     }
@@ -275,50 +247,18 @@ define([
     if (!FeatureDetection.supportsTypedArrays()) {
         return;
     }
-    var scratchFloatArray = new Float32Array(1);
-
-    function packFloat(value, result) {
-        scratchFloatArray[0] = value;
-        value = scratchFloatArray[0];
-
-        if (value === 0.0) {
-            return Cartesian4.clone(Cartesian4.ZERO, result);
-        }
-
-        var sign = value < 0.0 ? 1.0 : 0.0;
-        var exponent;
-
-        if (!isFinite(value)) {
-            value = 0.1;
-            exponent = BIAS;
-        } else {
-            value = Math.abs(value);
-            exponent = Math.floor(CesiumMath.logBase(value, 10)) + 1.0;
-            value = value / Math.pow(10.0, exponent);
-        }
-
-        var temp = value * SHIFT_LEFT_8;
-        result.x = Math.floor(temp);
-        temp = (temp - result.x) * SHIFT_LEFT_8;
-        result.y = Math.floor(temp);
-        temp = (temp - result.y) * SHIFT_LEFT_8;
-        result.z = Math.floor(temp);
-        result.w = (exponent + BIAS) * 2.0 + sign;
-
-        return result;
-    }
 
     function setPackedAttribute(value, array, index) {
-        var packed = packFloat(value.x, scratchPackedFloatCartesian4);
+        var packed = Cartesian4.packFloat(value.x, scratchPackedFloatCartesian4);
         Cartesian4.pack(packed, array, index);
 
-        packed = packFloat(value.y, packed);
+        packed = Cartesian4.packFloat(value.y, packed);
         Cartesian4.pack(packed, array, index + 4);
 
-        packed = packFloat(value.z, packed);
+        packed = Cartesian4.packFloat(value.z, packed);
         Cartesian4.pack(packed, array, index + 8);
 
-        packed = packFloat(value.w, packed);
+        packed = Cartesian4.packFloat(value.w, packed);
         Cartesian4.pack(packed, array, index + 12);
     }
 
@@ -527,20 +467,7 @@ define([
             return '';
         }
 
-        return 'float unpackFloat(vec4 value) \n' +
-               '{ \n' +
-               '    value *= 255.0; \n' +
-               '    float temp = value.w / 2.0; \n' +
-               '    float exponent = floor(temp); \n' +
-               '    float sign = (temp - exponent) * 2.0; \n' +
-               '    exponent = exponent - float(' + BIAS + '); \n' +
-               '    sign = sign * 2.0 - 1.0; \n' +
-               '    sign = -sign; \n' +
-               '    float unpacked = sign * value.x * float(' + SHIFT_RIGHT_8 + '); \n' +
-               '    unpacked += sign * value.y * float(' + SHIFT_RIGHT_16 + '); \n' +
-               '    unpacked += sign * value.z * float(' + SHIFT_RIGHT_24 + '); \n' +
-               '    return unpacked * pow(10.0, exponent); \n' +
-               '} \n';
+        return getUnpackFloatFunction('unpackFloat');
     }
 
     function getComponentType(componentsPerAttribute) {

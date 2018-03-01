@@ -1,12 +1,21 @@
 define([
         '../Core/Check',
-        '../Renderer/PixelDatatype'
+        '../Renderer/PixelDatatype',
+        './getUnpackFloatFunction'
     ], function(
         Check,
-        PixelDatatype
+        PixelDatatype,
+        getUnpackFloatFunction
     ) {
     'use strict';
 
+    /**
+     * Gets the glsl functions needed to retrieve clipping planes from a ClippingPlaneCollection's texture.
+     *
+     * @param {ClippingPlaneCollection} clippingPlaneCollection ClippingPlaneCollection with a defined texture.
+     * @returns {String} A string containing glsl functions for retrieving clipping planes.
+     * @private
+     */
     function getClippingFunction(clippingPlaneCollection) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('clippingPlaneCollection', clippingPlaneCollection);
@@ -26,7 +35,7 @@ define([
 
     function clippingFunctionUnion(usingFloatTexture, clippingPlaneCount) {
         var functionString =
-            'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix' + (usingFloatTexture ? ')\n' : ', vec2 range)\n') +
+            'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n' +
             '{\n' +
             '    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n' +
             '    vec3 clipNormal = vec3(0.0);\n' +
@@ -37,7 +46,7 @@ define([
 
             '    for (int i = 0; i < ' + clippingPlaneCount + '; ++i)\n' +
             '    {\n' +
-            '        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix' + (usingFloatTexture ? ');\n' : ', range);\n') +
+            '        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n' +
 
             '        clipNormal = clippingPlane.xyz;\n' +
             '        clipPosition = -clippingPlane.w * clipNormal;\n' +
@@ -62,7 +71,7 @@ define([
 
     function clippingFunctionIntersect(usingFloatTexture, clippingPlaneCount) {
         var functionString =
-            'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix' + (usingFloatTexture ? ')\n' : ', vec2 range)\n') +
+            'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n' +
             '{\n' +
             '    bool clipped = true;\n' +
             '    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n' +
@@ -73,7 +82,7 @@ define([
 
             '    for (int i = 0; i < ' + clippingPlaneCount + '; ++i)\n' +
             '    {\n' +
-            '        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix' + (usingFloatTexture ? ');\n' : ', range);\n') +
+            '        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n' +
 
             '        clipNormal = clippingPlane.xyz;\n' +
             '        clipPosition = -clippingPlane.w * clipNormal;\n' +
@@ -134,7 +143,9 @@ define([
         }
 
         var functionString =
-            'vec4 getClippingPlane(sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform, vec2 range)\n' +
+            getUnpackFloatFunction('unpackFloatDistance') +
+            '\n' +
+            'vec4 getClippingPlane(sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n' +
             '{\n' +
             '    int clippingPlaneStartIndex = clippingPlaneNumber * 2;\n' + // clipping planes are two pixels each
             '    int pixY = clippingPlaneStartIndex / ' + width + ';\n' +
@@ -147,7 +158,7 @@ define([
 
             '    vec4 plane;\n' +
             '    plane.xyz = czm_octDecode(oct, 65535.0);\n' +
-            '    plane.w = czm_unpackDepth(texture2D(packedClippingPlanes, vec2(u + ' + pixelWidthString + ', v))) * (range.y - range.x) + range.x;\n' +
+            '    plane.w = unpackFloatDistance(texture2D(packedClippingPlanes, vec2(u + ' + pixelWidthString + ', v)));\n' +
 
             '    return czm_transformPlane(transform, plane);\n' +
             '}\n';
