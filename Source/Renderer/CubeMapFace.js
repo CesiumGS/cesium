@@ -1,15 +1,15 @@
 define([
-    '../Core/Check',
-    '../Core/defaultValue',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    './PixelDatatype'
-], function(
-    Check,
-    defaultValue,
-    defineProperties,
-    DeveloperError,
-    PixelDatatype) {
+        '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        './PixelDatatype'
+    ], function(
+        Check,
+        defaultValue,
+        defineProperties,
+        DeveloperError,
+        PixelDatatype) {
     'use strict';
 
     /**
