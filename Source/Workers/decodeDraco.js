@@ -4,7 +4,7 @@ define([
         '../Core/defined',
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
-        '../ThirdParty/Workers/draco-decoder-gltf',
+        '../ThirdParty/draco-decoder-gltf',
         './createTaskProcessorWorker'
     ], function(
         arraySlice,
