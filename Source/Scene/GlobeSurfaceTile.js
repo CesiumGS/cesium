@@ -658,7 +658,15 @@ define([
                 return;
             }
         } else {
+            var flippedWaterMask;
+            flippedWaterMask = new Uint8Array(waterMaskLength);
             var textureSize = Math.sqrt(waterMaskLength);
+            for (var i = 0; i < textureSize; ++i) {
+                for (var j = 0; j < textureSize; ++j) {
+                    flippedWaterMask[(textureSize - i - 1) * textureSize + j] = waterMask[i * textureSize + j];
+                }
+            }
+
             texture = new Texture({
                 context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
@@ -666,7 +674,7 @@ define([
                 source : {
                     width : textureSize,
                     height : textureSize,
-                    arrayBufferView : waterMask
+                    arrayBufferView : flippedWaterMask
                 },
                 sampler : waterMaskData.sampler
             });
