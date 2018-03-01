@@ -95,17 +95,7 @@
                     },
                     "indices": 0,
                     "mode": 4,
-                    "material": 0,
-                    "extensions": {
-                        "KHR_draco_mesh_compression": {
-                            "bufferView": 0,
-                            "attributes": {
-                                "TEXCOORD_0": 2,
-                                "NORMAL": 0,
-                                "POSITION": 1
-                            }
-                        }
-                    }
+                    "material": 0
                 },
                 {
                     "attributes": {
@@ -115,15 +105,7 @@
                     "indices": 4,
                     "mode": 4,
                     "material": 1,
-                    "extensions": {
-                        "KHR_draco_mesh_compression": {
-                            "bufferView": 1,
-                            "attributes": {
-                                "NORMAL": 0,
-                                "POSITION": 1
-                            }
-                        }
-                    }
+                    "extensions": {}
                 },
                 {
                     "attributes": {

@@ -2350,25 +2350,24 @@ defineSuite([
         });
     });
 
-    it('loading a glTF with unsupported draco geometry type throws runtime error', function() {
-        spyOn(Model._dracoDecoder, 'GetEncodedGeometryType').and.returnValue(0);
+    fit('error decoding a glTF causes model loading to fail', function() {
+        var decoder = Model._getDecoderTaskProcessor();
+        spyOn(decoder, 'scheduleTask').and.returnValue(when.reject('error'));
 
-        return loadModel(dracoCompressedModelUrl).otherwise(function (m) {
-            expect(function() {
-                scene.renderForSpecs();
-            }).toThrowRuntimeError();
+        var model = primitives.add(Model.fromGltf({
+            url : dracoCompressedModelWithErrorUrl
+        }));
 
-            primitives.remove(m);
-        });
-    });
-
-    it('error decoding a glTF throws runtime error', function() {
-        return loadModel(dracoCompressedModelWithErrorUrl).otherwise(function (m) {
-            expect(function() {
-                scene.renderForSpecs();
-            }).toThrowRuntimeError();
-
-            primitives.remove(m);
+        return pollToPromise(function() {
+            scene.renderForSpecs();
+            return model.ready;
+        }, { timeout: 10000 }).then(function() {
+            model.readyPromise.then(function () {
+                fail('should not resolve');
+            }).otherwise(function(e) {
+                expect(e).toBeDefined();
+                primitives.remove(model);
+            });
         });
     });
 
