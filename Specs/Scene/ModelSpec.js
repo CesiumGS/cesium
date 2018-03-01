@@ -2350,7 +2350,7 @@ defineSuite([
         });
     });
 
-    fit('error decoding a glTF causes model loading to fail', function() {
+    it('error decoding a glTF causes model loading to fail', function() {
         var decoder = Model._getDecoderTaskProcessor();
         spyOn(decoder, 'scheduleTask').and.returnValue(when.reject('error'));
 
