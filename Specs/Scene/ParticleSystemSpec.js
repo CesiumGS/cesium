@@ -2,8 +2,8 @@ defineSuite([
         'Scene/ParticleSystem',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/loadImage',
         'Core/Matrix4',
+        'Core/Resource',
         'Scene/CircleEmitter',
         'Scene/ParticleBurst',
         'Specs/createScene'
@@ -11,8 +11,8 @@ defineSuite([
         ParticleSystem,
         Cartesian3,
         Color,
-        loadImage,
         Matrix4,
+        Resource,
         CircleEmitter,
         ParticleBurst,
         createScene) {
@@ -23,7 +23,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        return loadImage('./Data/Images/Green2x2.png').then(function(result) {
+        return Resource.fetchImage('./Data/Images/Green2x2.png').then(function(result) {
             greenImage = result;
         });
     });

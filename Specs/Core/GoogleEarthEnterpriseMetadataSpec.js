@@ -4,7 +4,6 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/GoogleEarthEnterpriseTileInformation',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/Request',
         'Core/Resource',
@@ -15,7 +14,6 @@ defineSuite([
         DefaultProxy,
         defaultValue,
         GoogleEarthEnterpriseTileInformation,
-        loadWithXhr,
         CesiumMath,
         Request,
         Resource,
@@ -155,14 +153,14 @@ defineSuite([
         var baseurl = 'http://fake.fake.invalid/';
 
         var req = 0;
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(responseType).toEqual('arraybuffer');
             if (req === 0) {
                 expect(url).toEqual(baseurl + 'dbRoot.v5?output=proto');
                 deferred.reject(); // Reject dbRoot request and use defaults
             } else {
                 expect(url).toEqual(baseurl + 'flatfile?q2-0-q.1');
-                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
             }
             ++req;
         });
@@ -199,14 +197,14 @@ defineSuite([
         });
 
         var req = 0;
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(responseType).toEqual('arraybuffer');
             if (req === 0) {
                 expect(url).toEqual(baseurl + 'dbRoot.v5?output=proto');
                 deferred.reject(); // Reject dbRoot request and use defaults
             } else {
                 expect(url).toEqual(baseurl + 'flatfile?q2-0-q.1');
-                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
             }
             ++req;
         });
@@ -252,14 +250,14 @@ defineSuite([
         var baseurl = 'http://fake.fake.invalid/';
 
         var req = 0;
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(responseType).toEqual('arraybuffer');
             if (req === 0) {
                 expect(url).toEqual(proxy.getURL(baseurl + 'dbRoot.v5?output=proto'));
                 deferred.reject(); // Reject dbRoot request and use defaults
             } else {
                 expect(url).toEqual(proxy.getURL(baseurl + 'flatfile?q2-0-q.1'));
-                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
             }
             ++req;
         });

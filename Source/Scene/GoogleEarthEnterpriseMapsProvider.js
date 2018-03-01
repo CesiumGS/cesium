@@ -118,9 +118,14 @@ define([
 
         var url = options.url;
         var path = defaultValue(options.path, '/default_map');
-        var resource = Resource.createIfNeeded(url + path, {
-            proxy: options.proxy
+
+        var resource = Resource.createIfNeeded(url, {
+            proxy : options.proxy
+        }).getDerivedResource({
+            // We used to just append path to url, so now that we do proper URI resolution, removed the /
+            url : (path[0] === '/') ? path.substring(1) : path
         });
+
         resource.appendForwardSlash();
 
         this._resource = resource;

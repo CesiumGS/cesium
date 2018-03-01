@@ -15,9 +15,6 @@ defineSuite([
         'Core/FeatureDetection',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
-        'Core/loadArrayBuffer',
-        'Core/loadJson',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
@@ -54,9 +51,6 @@ defineSuite([
         FeatureDetection,
         HeadingPitchRange,
         JulianDate,
-        loadArrayBuffer,
-        loadJson,
-        loadWithXhr,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -301,7 +295,7 @@ defineSuite([
     });
 
     it('fromGltf takes Resource as url and basePath parameters', function() {
-        spyOn(loadWithXhr, 'load').and.callThrough();
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callThrough();
 
         var url = new Resource({
             url: texturedBoxUrl
@@ -314,7 +308,7 @@ defineSuite([
             basePath: basePath
         });
         expect(model._resource).toEqual(basePath);
-        expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(url.url);
+        expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(url.url);
     });
 
     it('renders', function() {
@@ -401,7 +395,7 @@ defineSuite([
     });
 
     it('Renders x-up model', function() {
-        return loadJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to x-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
 
@@ -417,7 +411,7 @@ defineSuite([
     });
 
     it('Renders y-up model', function() {
-        return loadJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to y-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
 
@@ -433,7 +427,7 @@ defineSuite([
     });
 
     it('Renders z-up model', function() {
-        return loadJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be the identity.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
 
@@ -455,7 +449,7 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        return loadJson(boomBoxUrl).then(function(gltf) {
+        return Resource.fetchJson(boomBoxUrl).then(function(gltf) {
             gltf.images[0].uri = 'invalid.png';
             var model = primitives.add(new Model({
                 gltf : gltf
@@ -777,7 +771,7 @@ defineSuite([
     ///////////////////////////////////////////////////////////////////////////
 
     it('Throws because of invalid extension', function() {
-        return loadJson(boxUrl).then(function(gltf) {
+        return Resource.fetchJson(boxUrl).then(function(gltf) {
             gltf.extensionsRequired = ['NOT_supported_extension'];
             var model = primitives.add(new Model({
                 gltf : gltf
@@ -791,7 +785,7 @@ defineSuite([
     });
 
     it('Throws because of invalid extension', function() {
-        return loadJson(boxUrl).then(function(gltf) {
+        return Resource.fetchJson(boxUrl).then(function(gltf) {
             gltf.extensionsRequired = ['CESIUM_binary_glTF'];
             var model = primitives.add(new Model({
                 gltf : gltf
@@ -850,7 +844,7 @@ defineSuite([
     });
 
     it('loads a model with the KHR_binary_glTF extension as an ArrayBuffer using new Model', function() {
-        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
             return loadModelJson(arrayBuffer).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
@@ -859,7 +853,7 @@ defineSuite([
     });
 
     it('loads a model with the KHR_binary_glTF extension as an Uint8Array using new Model', function() {
-        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
             return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
@@ -2054,7 +2048,7 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with alphaMode set to OPAQUE', function() {
-        return loadJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             gltf.materials[0].alphaMode = 'OPAQUE';
 
             return loadModelJson(gltf).then(function(m) {
@@ -2065,7 +2059,7 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with alphaMode set to MASK', function() {
-        return loadJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             gltf.materials[0].alphaMode = 'MASK';
             gltf.materials[0].alphaCutoff = 0.5;
 
@@ -2077,7 +2071,7 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with alphaMode set to BLEND', function() {
-        return loadJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             gltf.materials[0].alphaMode = 'BLEND';
 
             return loadModelJson(gltf).then(function(m) {
@@ -2136,7 +2130,7 @@ defineSuite([
     }
 
     it('loads a glTF 2.0 with doubleSided set to false', function() {
-        return loadJson(twoSidedPlaneUrl).then(function(gltf) {
+        return Resource.fetchJson(twoSidedPlaneUrl).then(function(gltf) {
             gltf.materials[0].doubleSided = false;
             return loadModelJson(gltf).then(function(m) {
                 m.show = true;

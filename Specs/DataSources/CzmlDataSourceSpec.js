@@ -14,8 +14,6 @@ defineSuite([
         'Core/ExtrapolationType',
         'Core/Iso8601',
         'Core/JulianDate',
-        'Core/loadJson',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Quaternion',
@@ -54,8 +52,6 @@ defineSuite([
         ExtrapolationType,
         Iso8601,
         JulianDate,
-        loadJson,
-        loadWithXhr,
         CesiumMath,
         NearFarScalar,
         Quaternion,
@@ -164,10 +160,10 @@ defineSuite([
 
     beforeAll(function() {
         return when.join(
-            loadJson(simpleUrl).then(function(result) {
+            Resource.fetchJson(simpleUrl).then(function(result) {
                 simple = result;
             }),
-            loadJson(vehicleUrl).then(function(result) {
+            Resource.fetchJson(vehicleUrl).then(function(result) {
                 vehicle = result;
             }));
     });
@@ -662,7 +658,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         var requestNetworkLink = when.defer();
 
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestNetworkLink.resolve(url);
             deferred.reject();
         });
@@ -2935,8 +2931,6 @@ defineSuite([
                 granularity : 3,
                 rotation : 4,
                 stRotation : 5,
-                closeBottom : true,
-                closeTop : false,
                 show : true,
                 outline : true,
                 outlineColor : {
@@ -2962,8 +2956,6 @@ defineSuite([
             expect(entity.rectangle.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
             expect(entity.rectangle.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.rotation);
             expect(entity.rectangle.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.stRotation);
-            expect(entity.rectangle.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeBottom);
-            expect(entity.rectangle.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeTop);
             expect(entity.rectangle.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
             expect(entity.rectangle.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
             expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
@@ -3804,8 +3796,6 @@ defineSuite([
             expect(e.rectangle.outline.getValue(date)).toEqual(true);
             expect(e.rectangle.outlineColor.getValue(date)).toEqual(Color.fromBytes(196, 59, 142, 36));
             expect(e.rectangle.outlineWidth.getValue(date)).toEqual(59794.0);
-            expect(e.rectangle.closeTop.getValue(date)).toEqual(true);
-            expect(e.rectangle.closeBottom.getValue(date)).toEqual(true);
             expect(e.rectangle.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.rectangle.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(21388, 23379));
             expect(e.wall.show.getValue(date)).toEqual(true);
@@ -4615,8 +4605,6 @@ defineSuite([
             expect(e.rectangle.outline.getValue(date)).toEqual(constant.rectangle.outline.getValue(date));
             expect(e.rectangle.outlineColor.getValue(date)).toEqual(constant.rectangle.outlineColor.getValue(date));
             expect(e.rectangle.outlineWidth.getValue(date)).toEqual(constant.rectangle.outlineWidth.getValue(date));
-            expect(e.rectangle.closeTop.getValue(date)).toEqual(constant.rectangle.closeTop.getValue(date));
-            expect(e.rectangle.closeBottom.getValue(date)).toEqual(constant.rectangle.closeBottom.getValue(date));
             expect(e.rectangle.shadows.getValue(date)).toEqual(constant.rectangle.shadows.getValue(date));
             expect(e.rectangle.distanceDisplayCondition.getValue(date)).toEqual(constant.rectangle.distanceDisplayCondition.getValue(date));
             expect(e.wall.show.getValue(date)).toEqual(constant.wall.show.getValue(date));

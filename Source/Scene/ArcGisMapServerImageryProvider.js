@@ -125,7 +125,7 @@ define([
         resource.appendForwardSlash();
 
         if (defined(options.token)) {
-            resource.addQueryParameters({
+            resource.setQueryParameters({
                 token: options.token
             });
         }
