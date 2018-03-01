@@ -1,4 +1,4 @@
-Thanks for contributing to Cesium.  You rock!  Are you
+Thanks for contributing to CesiumJS.  You rock!  Are you
 
 * [submitting an issue](#submitting-an-issue),
 * [getting started contributing](#getting-started-contributing), or
@@ -10,7 +10,7 @@ To ensure an inclusive community, contributors and users in the Cesium community
 
 If you have a question, do not submit an issue; instead, search the [Cesium forum](http://cesiumjs.org/forum.html).  The forum is very active and there are years of informative archives, often with answers from the core Cesium team.  If you do not find an answer to your question, start a new thread and you'll likely get a quick response.
 
-If you think you've found a bug in Cesium, first search the [issues](https://github.com/AnalyticalGraphicsInc/cesium/issues).  If an issue already exists, please add a comment expressing your interest and any additional information.  This helps us prioritize issues.
+If you think you've found a bug in CesiumJS, first search the [issues](https://github.com/AnalyticalGraphicsInc/cesium/issues).  If an issue already exists, please add a comment expressing your interest and any additional information.  This helps us prioritize issues.
 
 If a related issue does not exist, submit a new one.  Please be concise and include as much of the following information as is relevant:
 * Minimum amount of sample code (and data) shared through [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html&label=Showcases) using a [GitHub gist](http://cesiumjs.org/2016/04/14/Share-Sandcastle-Examples-Easily-with-GitHub-Gists/).
@@ -22,9 +22,9 @@ If a related issue does not exist, submit a new one.  Please be concise and incl
 
 # Getting Started Contributing
 
-Everyone is welcome to contribute to Cesium!
+Everyone is welcome to contribute to CesiumJS!
 
-In addition to contributing core Cesium code, we appreciate many types of contributions:
+In addition to contributing core CesiumJS code, we appreciate many types of contributions:
 
 * Being active on the [Cesium forum](http://cesiumjs.org/forum.html) by answering questions and providing input on Cesium's direction.
 * Showcasing your Cesium apps on the [demos page](http://cesiumjs.org/demos.html) or writing a guest post blog on the [Cesium blog](http://cesiumjs.org/blog.html).  To do either, contact [Sarah Chow](http://cesiumjs.org/team/SarahChow.html), schow@agi.com.
@@ -33,7 +33,7 @@ In addition to contributing core Cesium code, we appreciate many types of contri
 * Triaging issues.  Browse the [issues](https://github.com/AnalyticalGraphicsInc/cesium/issues) and comment on issues that are no longer reproducible or on issues which you have additional information.
 * Creating ecosystem projects for [glTF](https://github.com/KhronosGroup/glTF/issues/456), [CZML](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide), and [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles).
 
-For ideas for Cesium code contributions, see:
+For ideas for CesiumJS code contributions, see:
 
 * issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner) and
 * issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap).
@@ -55,26 +55,27 @@ Before we can merge a pull request, we require a signed Contributor License Agre
 * [individuals](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt) and
 * [corporations](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt).
 
-This only needs to be completed once, and enables contributions to all of the projects under the [Analytical Graphics Inc](https://github.com/AnalyticalGraphicsInc) organization, including Cesium.  The CLA ensures you retain copyright to your contributions, and provides us the right to use, modify, and redistribute your contributions using the [Apache 2.0 License](LICENSE.md).
+This only needs to be completed once, and enables contributions to all of the projects under the [Analytical Graphics Inc](https://github.com/AnalyticalGraphicsInc) organization, including CesiumJS.  The CLA ensures you retain copyright to your contributions, and provides us the right to use, modify, and redistribute your contributions using the [Apache 2.0 License](LICENSE.md).
 
 Please email a completed CLA with all fields filled in to [cla@agi.com](mailto:cla@agi.com).  Related questions are also welcome.
 
 ## Pull Request Guidelines
 
-Our code is our lifeblood so maintaining Cesium's high code quality is important to us.
+Our code is our lifeblood so maintaining CesiumJS's high code quality is important to us.
 
-* Review the [Contributor Guides](Documentation/Contributors/README.md).  In addition to Cesium-specific topics, they contain a lot of general software development best practices.
-* If this is your first contribution to Cesium, add your name to [CONTRIBUTORS.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md).
+* Review the [Contributor Guides](Documentation/Contributors/README.md).  In addition to CesiumJS-specific topics, they contain a lot of general software development best practices.
+* If this is your first contribution to CesiumJS, add your name to [CONTRIBUTORS.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md).
 * For an overview of our workflow see [github pull request workflows](http://cesiumjs.org/2013/10/08/GitHub-Pull-Request-Workflows/).
 * Pull request tips
+   * After you open a pull request, the friendly [cesium-concierge](https://github.com/AnalyticalGraphicsInc/cesium-concierge) bot will comment with a short automated review.  At least one human will also review your pull request.
    * If your pull request fixes an existing issue, include a link to the issue in the description (like this: [#1](https://github.com/AnalyticalGraphicsInc/cesium/issues/1)).  Likewise, if your pull request fixes an issue reported on the Cesium forum, include a link to the thread.
    * If your pull request needs additional work, include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments).
    * Once you are done making new commits to address feedback, add a comment to the pull request such as `"this is ready"` since GitHub doesn't notify us about commits.
 * Code and tests
    * Follow the [Coding Guide](Documentation/Contributors/CodingGuide/README.md).
-   * Verify your code passes [ESLint](http://www.eslint.org/).  Run ESLint for all of Cesium with `npm run eslint` or automatically run ESLint when files are saved with `npm run eslint-watch`.  See the [Build Guide](Documentation/Contributors/BuildGuide/README.md).
+   * Verify your code passes [ESLint](http://www.eslint.org/).  Run ESLint for all of CesiumJS with `npm run eslint` or automatically run ESLint when files are saved with `npm run eslint-watch`.  See the [Build Guide](Documentation/Contributors/BuildGuide/README.md).
    * Verify that all tests pass, and write new tests with excellent code coverage for new code.  Follow the [Testing Guide](Documentation/Contributors/TestingGuide/README.md).
-   * If you added new identifiers to the Cesium API:
+   * If you added new identifiers to the CesiumJS API:
       * Update [CHANGES.md](CHANGES.md).
       * Include reference documentation with code examples.  Follow the [Documentation Guide](Documentation/Contributors/DocumentationGuide/README.md).
       * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.

@@ -175,10 +175,10 @@ define([
                 TileMatrixSet : tileMatrixSetID
             };
 
-            resource.addTemplateValues(templateValues);
+            resource.setTemplateValues(templateValues);
             this._useKvp = false;
         } else {
-            resource.addQueryParameters(defaultParameters);
+            resource.setQueryParameters(defaultParameters);
             this._useKvp = true;
         }
 
@@ -265,14 +265,14 @@ define([
             resource = imageryProvider._resource.getDerivedResource({
                 request: request
             });
-            resource.addTemplateValues(templateValues);
+            resource.setTemplateValues(templateValues);
 
             if (defined(staticDimensions)) {
-                resource.addTemplateValues(staticDimensions);
+                resource.setTemplateValues(staticDimensions);
             }
 
             if (defined(dynamicIntervalData)) {
-                resource.addTemplateValues(dynamicIntervalData);
+                resource.setTemplateValues(dynamicIntervalData);
             }
         } else {
             // build KVP request

@@ -8,11 +8,11 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
-        'Core/loadArrayBuffer',
         'Core/Math',
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/Resource',
         'Core/Transforms',
         'Renderer/Pass',
         'Scene/ClassificationType',
@@ -31,11 +31,11 @@ defineSuite([
         Ellipsoid,
         GeometryInstance,
         HeadingPitchRange,
-        loadArrayBuffer,
         CesiumMath,
         Matrix4,
         Rectangle,
         RectangleGeometry,
+        Resource,
         Transforms,
         Pass,
         ClassificationType,
@@ -129,7 +129,7 @@ defineSuite([
         var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
 
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
             var model = scene.primitives.add(new ClassificationModel({
                 gltf : arrayBuffer,
                 classificationType : ClassificationType.CESIUM_3D_TILE,
@@ -159,7 +159,7 @@ defineSuite([
         var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
 
-        return loadArrayBuffer(quantizedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(quantizedModel).then(function(arrayBuffer) {
             var model = scene.primitives.add(new ClassificationModel({
                 gltf : arrayBuffer,
                 classificationType : ClassificationType.CESIUM_3D_TILE,
@@ -186,7 +186,7 @@ defineSuite([
     });
 
     it('throws with invalid number of nodes', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
             var gltf = new Uint8Array(arrayBuffer);
             gltf = parseBinaryGltf(gltf);
             gltf.nodes.push({});
@@ -199,7 +199,7 @@ defineSuite([
     });
 
     it('throws with invalid number of meshes', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
             var gltf = new Uint8Array(arrayBuffer);
             gltf = parseBinaryGltf(gltf);
             gltf.meshes.push({});
@@ -212,7 +212,7 @@ defineSuite([
     });
 
     it('throws with invalid number of primitives', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
             var gltf = new Uint8Array(arrayBuffer);
             gltf = parseBinaryGltf(gltf);
             gltf.meshes[0].primitives.push({});
@@ -225,7 +225,7 @@ defineSuite([
     });
 
     it('throws with position semantic', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
             var gltf = new Uint8Array(arrayBuffer);
             gltf = parseBinaryGltf(gltf);
             gltf.meshes[0].primitives[0].attributes.POSITION = undefined;
@@ -238,7 +238,7 @@ defineSuite([
     });
 
     it('throws with batch id semantic', function() {
-        return loadArrayBuffer(batchedModel).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(batchedModel).then(function(arrayBuffer) {
             var gltf = new Uint8Array(arrayBuffer);
             gltf = parseBinaryGltf(gltf);
             gltf.meshes[0].primitives[0].attributes._BATCHID = undefined;

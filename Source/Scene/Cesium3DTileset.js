@@ -94,7 +94,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
+     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
@@ -165,26 +165,9 @@ define([
         Check.defined('options.url', options.url);
         //>>includeEnd('debug');
 
-        var resource = Resource.createIfNeeded(options.url);
-
-        var tilesetResource = resource;
-        var basePath;
-
-        if (resource.extension === 'json') {
-            basePath = resource.getBaseUri(true);
-        } else if (resource.isDataUri) {
-            basePath = '';
-        } else {
-            resource.appendForwardSlash();
-            tilesetResource = resource.getDerivedResource({
-                url: 'tileset.json'
-            });
-            basePath = resource.url;
-        }
-
-        this._url = resource.url;
-        this._tilesetUrl = tilesetResource.url;
-        this._basePath = basePath;
+        this._url = undefined;
+        this._tilesetUrl = undefined;
+        this._basePath = undefined;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
@@ -698,10 +681,39 @@ define([
         //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
         this._brokenUrlWorkaround = false;
 
-        var that = this;
+        this._credits = undefined;
 
-        // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        Cesium3DTileset.loadJson(tilesetResource)
+        var that = this;
+        var tilesetResource;
+        when(options.url)
+            .then(function(url) {
+                var basePath;
+                var resource = Resource.createIfNeeded(url);
+
+                // ion resources have a credits property we can use for additional attribution.
+                that._credits = resource.credits;
+
+                tilesetResource = resource;
+
+                if (resource.extension === 'json') {
+                    basePath = resource.getBaseUri(true);
+                } else if (resource.isDataUri) {
+                    basePath = '';
+                } else {
+                    resource.appendForwardSlash();
+                    tilesetResource = resource.getDerivedResource({
+                        url: 'tileset.json'
+                    });
+                    basePath = resource.url;
+                }
+
+                that._url = resource.url;
+                that._tilesetUrl = tilesetResource.url;
+                that._basePath = basePath;
+
+                // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
+                return Cesium3DTileset.loadJson(tilesetResource);
+            })
             .then(function(tilesetJson) {
                 return detectBrokenUrlWorkaround(that, tilesetResource, tilesetJson);
             })
@@ -1254,7 +1266,7 @@ define([
                 v: defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
-            tilesetResource.addQueryParameters(versionQuery);
+            tilesetResource.setQueryParameters(versionQuery);
         }
 
         // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
@@ -1871,6 +1883,16 @@ define([
         // Update last statistics
         var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+
+        if (statistics.selected !== 0) {
+            var credits = this._credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    frameState.creditDisplay.addCredit(credits[i]);
+                }
+            }
+        }
     };
 
     /**

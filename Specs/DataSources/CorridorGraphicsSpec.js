@@ -5,6 +5,7 @@ defineSuite([
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
@@ -15,6 +16,7 @@ defineSuite([
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
@@ -35,7 +37,8 @@ defineSuite([
             outlineWidth : 5,
             cornerType : CornerType.BEVELED,
             shadows : ShadowMode.DISABLED,
-            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            classificationType : ClassificationType.TERRAIN
         };
 
         var corridor = new CorridorGraphics(options);
@@ -53,6 +56,7 @@ defineSuite([
         expect(corridor.cornerType).toBeInstanceOf(ConstantProperty);
         expect(corridor.shadows).toBeInstanceOf(ConstantProperty);
         expect(corridor.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(corridor.classificationType).toBeInstanceOf(ConstantProperty);
 
         expect(corridor.material.color.getValue()).toEqual(options.material);
         expect(corridor.positions.getValue()).toEqual(options.positions);
@@ -68,6 +72,7 @@ defineSuite([
         expect(corridor.cornerType.getValue()).toEqual(options.cornerType);
         expect(corridor.shadows.getValue()).toEqual(options.shadows);
         expect(corridor.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(corridor.classificationType.getValue()).toEqual(options.classificationType);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -86,6 +91,7 @@ defineSuite([
         source.cornerType = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
 
         var target = new CorridorGraphics();
         target.merge(source);
@@ -104,6 +110,7 @@ defineSuite([
         expect(target.cornerType).toBe(source.cornerType);
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.classificationType).toBe(source.classificationType);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -123,6 +130,7 @@ defineSuite([
         var cornerType = new ConstantProperty();
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
+        var classificationType = new ConstantProperty();
 
         var target = new CorridorGraphics();
         target.material = material;
@@ -139,6 +147,7 @@ defineSuite([
         target.cornerType = cornerType;
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
+        target.classificationType = classificationType;
 
         target.merge(source);
 
@@ -156,6 +165,7 @@ defineSuite([
         expect(target.cornerType).toBe(cornerType);
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.classificationType).toBe(classificationType);
     });
 
     it('clone works', function() {
@@ -174,6 +184,7 @@ defineSuite([
         source.cornerType = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -190,6 +201,7 @@ defineSuite([
         expect(result.cornerType).toBe(source.cornerType);
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.classificationType).toBe(source.classificationType);
     });
 
     it('merge throws if source undefined', function() {
@@ -215,5 +227,6 @@ defineSuite([
         testDefinitionChanged(property, 'cornerType', CornerType.BEVELED, CornerType.MITERED);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
+        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
     });
 });

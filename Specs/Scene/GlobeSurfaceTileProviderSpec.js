@@ -653,7 +653,7 @@ defineSuite([
 
         var terrainCredit = new Credit({text: 'terrain credit'});
         scene.terrainProvider = new CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain',
             credit : terrainCredit
         });
 
@@ -674,6 +674,9 @@ defineSuite([
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+
+                scene.renderForSpecs();
+
                 expect(replacementQueue.count).toBe(0);
             });
         });
@@ -691,6 +694,7 @@ defineSuite([
 
             surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
 
+            scene.renderForSpecs();
             scene.renderForSpecs();
 
             levelZeroTiles = surface._levelZeroTiles;

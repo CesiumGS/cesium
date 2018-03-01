@@ -434,4 +434,12 @@ defineSuite([
             CesiumMath.logBase(64, undefined);
         }).toThrowDeveloperError();
     });
+
+    it('cbrt', function() {
+        expect(CesiumMath.cbrt(27.0)).toEqual(3.0);
+        expect(CesiumMath.cbrt(-27.0)).toEqual(-3.0);
+        expect(CesiumMath.cbrt(0.0)).toEqual(0.0);
+        expect(CesiumMath.cbrt(1.0)).toEqual(1.0);
+        expect(CesiumMath.cbrt()).toEqual(NaN);
+    });
 });

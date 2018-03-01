@@ -52,10 +52,6 @@ define([
         }
     };
 
-    var terrainHeightsResource = new Resource({
-        url: buildModuleUrl('Assets/approximateTerrainHeights.json')
-    });
-
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
      * Batching multiple geometries is not yet supported.
@@ -667,7 +663,7 @@ define([
             return initPromise;
         }
 
-        GroundPrimitive._initPromise = terrainHeightsResource.fetchJson().then(function(json) {
+        GroundPrimitive._initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
             GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });

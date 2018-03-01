@@ -1326,7 +1326,7 @@ defineSuite([
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
 
         scene.destroyForSpecs();
     });
@@ -1463,12 +1463,13 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
-        globe.tileLoadedEvent.raiseEvent();
 
+        scene.requestRender();
+        Object.defineProperty(globe, 'tilesLoaded', { value: false });
         scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         expect(scene._renderRequested).toBe(true);
-
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
@@ -1502,6 +1503,34 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    it('Globe changing terrain providers triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.terrainProviderChanged.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+
     it('scene morphing causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
         scene.renderForSpecs();
@@ -1522,7 +1551,7 @@ defineSuite([
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphToColumbusView(1.0);
@@ -1534,7 +1563,7 @@ defineSuite([
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphTo3D(1.0);
@@ -1546,7 +1575,7 @@ defineSuite([
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
 
         scene.destroyForSpecs();
     });
@@ -1567,10 +1596,10 @@ defineSuite([
 
         scene.maximumRenderTimeChange = 100.0;
 
-        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.0, new JulianDate()));
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate()));
+        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
 
-        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 100.1, new JulianDate()));
+        scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate()));
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
         scene.destroyForSpecs();
