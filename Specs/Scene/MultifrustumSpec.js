@@ -8,9 +8,9 @@ defineSuite([
         'Core/defined',
         'Core/destroyObject',
         'Core/GeometryPipeline',
-        'Core/loadImage',
         'Core/Math',
         'Core/Matrix4',
+        'Core/Resource',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
         'Renderer/Pass',
@@ -35,9 +35,9 @@ defineSuite([
         defined,
         destroyObject,
         GeometryPipeline,
-        loadImage,
         CesiumMath,
         Matrix4,
+        Resource,
         BufferUsage,
         DrawCommand,
         Pass,
@@ -65,13 +65,13 @@ defineSuite([
 
     beforeAll(function() {
         return when.join(
-            loadImage('./Data/Images/Green.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
                 greenImage = image;
             }),
-            loadImage('./Data/Images/Blue.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
                 blueImage = image;
             }),
-            loadImage('./Data/Images/White.png').then(function(image) {
+            Resource.fetchImage('./Data/Images/White.png').then(function(image) {
                 whiteImage = image;
             }));
     });

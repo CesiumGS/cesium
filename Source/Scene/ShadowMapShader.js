@@ -90,13 +90,17 @@ define([
 
         if (isPointLight) {
             fsSource +=
-                'float distance = length(' + positionVaryingName + '); \n' +
-                'distance /= shadowMap_lightPositionEC.w; // radius \n' +
-                'gl_FragColor = czm_packDepth(distance); \n';
+                '    float distance = length(' + positionVaryingName + '); \n' +
+                '    if (distance >= shadowMap_lightPositionEC.w) \n' +
+                '    { \n' +
+                '        discard; \n' +
+                '    } \n' +
+                '    distance /= shadowMap_lightPositionEC.w; // radius \n' +
+                '    gl_FragColor = czm_packDepth(distance); \n';
         } else if (usesDepthTexture) {
-            fsSource += 'gl_FragColor = vec4(1.0); \n';
+            fsSource += '    gl_FragColor = vec4(1.0); \n';
         } else {
-            fsSource += 'gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';
+            fsSource += '    gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';
         }
 
         fsSource += '} \n';

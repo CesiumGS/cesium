@@ -1241,6 +1241,30 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('projects vector a onto vector b', function() {
+        var a = new Cartesian3(0.0, 1.0, 0.0);
+        var b = new Cartesian3(1.0, 0.0, 0.0);
+        var result = Cartesian3.projectVector(a, b, new Cartesian3());
+        expect(result).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+
+        a = new Cartesian3(1.0, 1.0, 0.0);
+        b = new Cartesian3(1.0, 0.0, 0.0);
+        result = Cartesian3.projectVector(a, b, new Cartesian3());
+        expect(result).toEqual(new Cartesian3(1.0, 0.0, 0.0));
+    });
+
+    it('projectVector throws when missing parameters', function() {
+        expect(function() {
+            return Cartesian3.projectVector(undefined, new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+        expect(function() {
+            return Cartesian3.projectVector(new Cartesian3(), undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+        expect(function() {
+            return Cartesian3.projectVector(new Cartesian3(), new Cartesian3(), undefined);
+        }).toThrowDeveloperError();
+    });
+
     createPackableSpecs(Cartesian3, new Cartesian3(1, 2, 3), [1, 2, 3]);
     createPackableArraySpecs(Cartesian3, [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6)], [1, 2, 3, 4, 5, 6]);
 });

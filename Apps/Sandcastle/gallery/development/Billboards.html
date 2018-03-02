@@ -141,8 +141,8 @@ function fadeByDistance() {
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
     Cesium.when.all([
-         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-         Cesium.loadImage('../images/facility.gif')
+         Cesium.Resource.createIfNeeded('../images/Cesium_Logo_overlay.png').fetchImage(),
+         Cesium.Resource.createIfNeeded('../images/facility.gif').fetchImage()
         ],
         function(images) {
             var billboards = scene.primitives.add(new Cesium.BillboardCollection());

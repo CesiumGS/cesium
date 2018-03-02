@@ -11,22 +11,18 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
-        '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
-        '../Core/joinUrls',
-        '../Core/loadArrayBuffer',
         '../Core/loadCRN',
-        '../Core/loadImage',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
-        '../Core/loadText',
         '../Core/Math',
         '../Core/Matrix2',
         '../Core/Matrix3',
@@ -34,6 +30,7 @@ define([
         '../Core/PixelFormat',
         '../Core/Plane',
         '../Core/PrimitiveType',
+        '../Core/Resource',
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
@@ -90,22 +87,18 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
         FeatureDetection,
         getAbsoluteUri,
-        getBaseUri,
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
-        joinUrls,
-        loadArrayBuffer,
         loadCRN,
-        loadImage,
         loadImageFromTypedArray,
         loadKTX,
-        loadText,
         CesiumMath,
         Matrix2,
         Matrix3,
@@ -113,6 +106,7 @@ define([
         PixelFormat,
         Plane,
         PrimitiveType,
+        Resource,
         Quaternion,
         Queue,
         RuntimeError,
@@ -251,7 +245,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
-     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -280,7 +274,7 @@ define([
      *
      * @see Model.fromGltf
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
     function Model(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -329,9 +323,8 @@ define([
         }
         setCachedGltf(this, cachedGltf);
 
-        this._basePath = defaultValue(options.basePath, '');
-        var baseUri = getBaseUri(document.location.href);
-        this._baseUri = joinUrls(baseUri, this._basePath);
+        var basePath = defaultValue(options.basePath, '');
+        this._resource = Resource.createIfNeeded(basePath);
 
         /**
          * Determines if the model primitive will be shown.
@@ -664,7 +657,7 @@ define([
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
          * geometry, textures, and animations are embedded in the .gltf file, which is the
-         * default for the {@link http://cesiumjs.org/convertmodel.html|Cesium model converter}.
+         * default for the {@link https://cesiumjs.org/convertmodel.html|Cesium model converter}.
          * This is especially useful for cases like 3D buildings, where each .gltf model is unique
          * and caching the glTF JSON is not effective.
          *
@@ -721,7 +714,7 @@ define([
          */
         basePath : {
             get : function() {
-                return this._basePath;
+                return this._resource.url;
             }
         },
 
@@ -1044,9 +1037,8 @@ define([
      * </p>
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url to the .gltf file.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
-     * @param {String} [options.basePath] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} options.url The url to the .gltf file.
+     * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1110,25 +1102,34 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (defined(options.headers)) {
+            deprecationWarning('Model.fromGltf.headers', 'The options.headers parameter has been deprecated. Specify options.url as a Resource instance and set the headers property there.');
+        }
+
         var url = options.url;
+        options = clone(options);
+
+        // Create resource for the model file
+        var modelResource = Resource.createIfNeeded(url, {
+            headers : options.headers
+        });
+
+        // Setup basePath to get dependent files
+        var basePath = defaultValue(options.basePath, modelResource.clone());
+        var resource = Resource.createIfNeeded(basePath, {
+            headers : options.headers
+        });
+
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
-        var basePath = defaultValue(options.basePath, getBaseUri(url, true));
-
-        options = clone(options);
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(modelResource.url));
         if (defined(options.basePath) && !defined(options.cacheKey)) {
-            cacheKey += basePath;
+            cacheKey += resource.url;
         }
-
         options.cacheKey = cacheKey;
-        options.basePath = basePath;
-        var model = new Model(options);
+        options.basePath = resource;
 
-        options.headers = defined(options.headers) ? clone(options.headers) : {};
-        if (!defined(options.headers.Accept)) {
-            options.headers.Accept = defaultModelAccept;
-        }
+        var model = new Model(options);
 
         var cachedGltf = gltfCache[cacheKey];
         if (!defined(cachedGltf)) {
@@ -1140,7 +1141,12 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+            // Add Accept header if we need it
+            if (!defined(modelResource.headers.Accept)) {
+                modelResource.headers.Accept = defaultModelAccept;
+            }
+
+            modelResource.fetchArrayBuffer().then(function(arrayBuffer) {
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
@@ -1154,7 +1160,7 @@ define([
                 }
             }).otherwise(getFailedLoadFunction(model, 'model', url));
         } else if (!cachedGltf.ready) {
-            // Cache hit but the loadArrayBuffer() or loadText() request is still pending
+            // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
             cachedGltf.modelsToLoad.push(model);
         }
@@ -1333,9 +1339,11 @@ define([
                 if (defined(buffer.extras._pipeline.source)) {
                     loadResources.buffers[id] = buffer.extras._pipeline.source;
                 } else {
-                    var bufferPath = joinUrls(model._baseUri, buffer.uri);
+                    var bufferResource = model._resource.getDerivedResource({
+                        url : buffer.uri
+                    });
                     ++loadResources.pendingBufferLoads;
-                    loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                    bufferResource.fetchArrayBuffer().then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.url));
                 }
             }
         }
@@ -1410,8 +1418,12 @@ define([
                 };
             } else {
                 ++model._loadResources.pendingShaderLoads;
-                var shaderPath = joinUrls(model._baseUri, shader.uri);
-                loadText(shaderPath).then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+
+                var shaderResource = model._resource.getDerivedResource({
+                    url : shader.uri
+                });
+
+                shaderResource.fetchText().then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderResource.url));
             }
         });
     }
@@ -1503,18 +1515,20 @@ define([
                 });
             } else {
                 ++model._loadResources.pendingTextureLoads;
-                uri = new Uri(uri);
-                var imagePath = joinUrls(model._baseUri, uri);
+
+                var imageResource = model._resource.getDerivedResource({
+                    url : uri
+                });
 
                 var promise;
-                if (ktxRegex.test(imagePath)) {
-                    promise = loadKTX(imagePath);
-                } else if (crnRegex.test(imagePath)) {
-                    promise = loadCRN(imagePath);
+                if (ktxRegex.test(uri)) {
+                    promise = loadKTX(imageResource);
+                } else if (crnRegex.test(uri)) {
+                    promise = loadCRN(imageResource);
                 } else {
-                    promise = loadImage(imagePath);
+                    promise = imageResource.fetchImage();
                 }
-                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imageResource.url));
             }
         });
     }
@@ -3924,10 +3938,10 @@ define([
         }
 
         var scene = model._scene;
-        if (!defined(scene) || (model.heightReference === HeightReference.NONE)) {
+        if (!defined(scene) || !defined(scene.globe) || (model.heightReference === HeightReference.NONE)) {
             //>>includeStart('debug', pragmas.debug);
             if (model.heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene.');
+                throw new DeveloperError('Height reference is not supported without a scene and globe.');
             }
             //>>includeEnd('debug');
             model._clampedModelMatrix = undefined;

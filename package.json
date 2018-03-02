@@ -1,6 +1,6 @@
 {
   "name": "@camptocamp/cesium",
-  "version": "1.41.0",
+  "version": "1.43.0",
   "description": "Cesium is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. This is the Camptocamp fork with dedicated features",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
@@ -8,6 +8,12 @@
     "name": "Analytical Graphics, Inc.",
     "url": "http://www.agi.com"
   },
+  "contributors": [
+    {
+      "name": "CesiumJS community",
+      "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+    }
+  ],
   "keywords": [
     "3D",
     "webgl",
@@ -30,6 +36,7 @@
     "almond": "^0.3.3",
     "aws-sdk": "^2.18.0",
     "bluebird": "^3.4.6",
+    "cloc": "^2.3.3",
     "compressible": "^2.0.9",
     "compression": "^1.6.2",
     "electron": "^1.6.1",

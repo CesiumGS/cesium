@@ -152,7 +152,7 @@ define([
      * @see Billboard
      * @see LabelCollection
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      *
      * @example
      * // Create a billboard collection with two billboards
@@ -1557,7 +1557,7 @@ define([
             vertDefines = [];
             if (defined(this._batchTable)) {
                 vertDefines.push('VECTOR_TILE');
-                vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId')(vsSource);
+                vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(vsSource);
                 fsSource = this._batchTable.getFragmentShaderCallback(false, undefined)(fsSource);
             }
 

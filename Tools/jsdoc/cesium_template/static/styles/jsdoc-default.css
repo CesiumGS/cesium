@@ -26,6 +26,10 @@ code {
     font-size: 12px;
 }
 
+#ClassList > li {
+    font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
+}
+
 .description code {
     border-radius: 3px;
     background-color: #f8f8f8;
@@ -55,7 +59,7 @@ a:visited {
 
 a:hover,
 a:focus {
-    color: ##004AB8;
+    color: #004AB8;
     text-decoration: underline;
 }
 
@@ -341,6 +345,7 @@ footer {
     background-color: #f4f4ff;
     margin: 0;
     border-bottom: 1px solid #ccc;
+    font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
 }
 
 #mainIndex .page-title {
@@ -428,6 +433,9 @@ h6
 
 .nameContainer .signature {
     font-weight: normal;
+}
+.nameContainer .name {
+    font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
 }
 
 .details { margin-top: 14px; }

@@ -48,8 +48,12 @@ defineSuite([
                     tilesWaitingForChildren : 0
                 }
             },
+            tileLoadedEvent : new Event(),
+            terrainProviderChanged : new Event(),
+            imageryLayersUpdatedEvent : new Event(),
             beginFrame : function() {},
             update : function() {},
+            render : function() {},
             endFrame : function() {}
 
         };

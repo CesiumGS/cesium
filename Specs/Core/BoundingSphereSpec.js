@@ -906,5 +906,12 @@ defineSuite([
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
 
+    it('computes the volume of a BoundingSphere', function() {
+        var sphere = new BoundingSphere(new Cartesian3(), 1.0);
+        var computedVolume = sphere.volume();
+        var expectedVolume = (4.0 / 3.0) * CesiumMath.PI;
+        expect(computedVolume).toEqualEpsilon(expectedVolume, CesiumMath.EPSILON6);
+    });
+
     createPackableSpecs(BoundingSphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0), [1.0, 2.0, 3.0, 4.0]);
 });

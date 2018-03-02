@@ -48,7 +48,7 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/VectorData/README.md|Vector}
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData|Vector}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
@@ -59,10 +59,10 @@ define([
      *
      * @private
      */
-    function Vector3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
 
         this._polygons = undefined;
         this._polylines = undefined;
@@ -198,7 +198,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
@@ -371,14 +371,17 @@ define([
         }
 
         var rectangle;
-        if (defined(featureTableJson.RECTANGLE)) {
-            rectangle = Rectangle.unpack(featureTableJson.RECTANGLE);
+        var minHeight;
+        var maxHeight;
+        if (defined(featureTableJson.REGION)) {
+            var region = featureTableJson.REGION;
+            rectangle = Rectangle.unpack(region);
+            minHeight = region[4];
+            maxHeight = region[5];
         } else {
-            throw new RuntimeError('Rectangle is required in the feature table.');
+            throw new RuntimeError('REGION is required in the feature table.');
         }
 
-        var minHeight = featureTableJson.MINIMUM_HEIGHT;
-        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
         var modelMatrix = content._tile.computedTransform;
 
         var center;

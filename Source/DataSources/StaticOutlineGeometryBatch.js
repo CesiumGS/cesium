@@ -42,7 +42,7 @@ define([
         this.showsUpdated = new AssociativeArray();
     }
     Batch.prototype.add = function(updater, instance) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
@@ -52,14 +52,14 @@ define([
             var that = this;
             this.subscriptions.set(id, updater.entity.definitionChanged.addEventListener(function(entity, propertyName, newValue, oldValue) {
                 if (propertyName === 'isShowing') {
-                    that.showsUpdated.set(entity.id, updater);
+                    that.showsUpdated.set(updater.id, updater);
                 }
             }));
         }
     };
 
     Batch.prototype.remove = function(updater) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
             this.updatersWithAttributes.remove(id);
@@ -151,7 +151,7 @@ define([
             var waitingOnCreate = this.waitingOnCreate;
             for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this.geometry.get(updater.entity.id);
+                var instance = this.geometry.get(updater.id);
 
                 attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
@@ -202,7 +202,7 @@ define([
         var length = showsUpdated.length;
         for (var i = 0; i < length; i++) {
             var updater = showsUpdated[i];
-            var instance = this.geometry.get(updater.entity.id);
+            var instance = this.geometry.get(updater.id);
 
             var attributes = this.attributes.get(instance.id.id);
             if (!defined(attributes)) {
@@ -219,16 +219,16 @@ define([
         this.showsUpdated.removeAll();
     };
 
-    Batch.prototype.contains = function(entity) {
-        return this.updaters.contains(entity.id);
+    Batch.prototype.contains = function(updater) {
+        return this.updaters.contains(updater.id);
     };
 
-    Batch.prototype.getBoundingSphere = function(entity, result) {
+    Batch.prototype.getBoundingSphere = function(updater, result) {
         var primitive = this.primitive;
         if (!primitive.ready) {
             return BoundingSphereState.PENDING;
         }
-        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        var attributes = primitive.getGeometryInstanceAttributes(updater.entity);
         if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
             (defined(attributes.show) && attributes.show[0] === 0)) {
             return BoundingSphereState.FAILED;
@@ -365,15 +365,15 @@ define([
         return isUpdated;
     };
 
-    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(entity, result) {
+    StaticOutlineGeometryBatch.prototype.getBoundingSphere = function(updater, result) {
         var i;
 
         var solidBatches = this._solidBatches.values;
         var solidBatchesLength = solidBatches.length;
         for (i = 0; i < solidBatchesLength; i++) {
             var solidBatch = solidBatches[i];
-            if(solidBatch.contains(entity)){
-                return solidBatch.getBoundingSphere(entity, result);
+            if(solidBatch.contains(updater)){
+                return solidBatch.getBoundingSphere(updater, result);
             }
         }
 
@@ -381,8 +381,8 @@ define([
         var translucentBatchesLength = translucentBatches.length;
         for (i = 0; i < translucentBatchesLength; i++) {
             var translucentBatch = translucentBatches[i];
-            if(translucentBatch.contains(entity)){
-                return translucentBatch.getBoundingSphere(entity, result);
+            if(translucentBatch.contains(updater)){
+                return translucentBatch.getBoundingSphere(updater, result);
             }
         }
 

@@ -119,7 +119,7 @@ define([
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         unionClippingRegions : {
             get : function() {
