@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.44 - 2018-04-02
+
+##### Fixes :wrench:
+* Fixed support of glTF-supplied tangent vectors. [#6302](https://github.com/AnalyticalGraphicsInc/cesium/pull/6302)
+
 ### 1.43 - 2018-03-01
 
 ##### Major Announcements :loudspeaker:
