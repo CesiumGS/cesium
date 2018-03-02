@@ -128,7 +128,7 @@ define([
                 });
                 model.id = entity;
                 primitives.add(model);
-                
+
                 modelData = {
                     modelPrimitive : model,
                     url : resource.url,
