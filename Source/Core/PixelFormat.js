@@ -150,6 +150,7 @@ define([
                 // Many GPUs store RGB as RGBA internally
                 // https://devtalk.nvidia.com/default/topic/699479/general-graphics-programming/rgb-auto-converted-to-rgba/post/4142379/#4142379
                 case PixelFormat.RGB:
+                    return 3;
                 case PixelFormat.RGBA:
                     return 4;
                 case PixelFormat.LUMINANCE_ALPHA:
@@ -301,6 +302,21 @@ define([
 
             var size = PixelFormat.componentsLength(pixelFormat) * width * height;
             return new constructor(size);
+        },
+
+        /**
+         * @private
+         */
+        flipY : function(bufferView, pixelFormat, pixelDatatype, width, height) {
+            var flipped = PixelFormat.createTypedArray(pixelFormat, pixelDatatype, width, height);
+            var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
+            var textureWidth = width * numberOfComponents;
+            for (var i = 0; i < height; ++i) {
+                for (var j = 0; j < textureWidth; ++j) {
+                    flipped[(height - i - 1) * height + j] = bufferView[i * height + j];
+                }
+            }
+            return flipped;
         }
     };
 
