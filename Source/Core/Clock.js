@@ -237,7 +237,7 @@ define([
          * {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}.
          * @memberof Clock.prototype
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         shouldAnimate : {
             get : function() {
