@@ -13,9 +13,11 @@ define([
         '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/isArray',
+        '../Core/loadJson',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Resource',
+        '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
@@ -34,9 +36,11 @@ define([
         Event,
         GeographicTilingScheme,
         isArray,
+        loadJson,
         CesiumMath,
         Rectangle,
         Resource,
+        TileProviderError,
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
@@ -590,24 +594,24 @@ define([
                     }
                 }
                 return defer.resolve(options);
-            }
+            };
 
             var metadataFailure = function(data) {
                 var message = 'An error occurred while accessing ' + metadataUrl + '.';
+                // eslint-disable-next-line no-use-before-define
                 metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
                 return defer.resolve(options); // success!
-            }
+            };
 
             var requestMetadata = function() {
                 var metadata = loadJson(metadataUrl);
                 return when(metadata, metadataSuccess, metadataFailure);
-            }
+            };
 
             return requestMetadata();
-        } else {
-           defer.resolve(options);
-           return defer;
         }
+        defer.resolve(options);
+        return defer;
     };
 
     /**
@@ -720,15 +724,14 @@ define([
                 return false;
             }
             return true;
-        } else {
-            if (level >= available.length) {
-                return false;
-            }
-            var levelAvailable = available[level];
-            var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-            var tmsY = (yTiles - y - 1);
-            return isTileInRange(levelAvailable, x, tmsY);
         }
+        if (level >= available.length) {
+            return false;
+        }
+        var levelAvailable = available[level];
+        var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
+        var tmsY = (yTiles - y - 1);
+        return isTileInRange(levelAvailable, x, tmsY);
     };
 
     UrlTemplateImageryProvider.transparentCanvas = (function() {
@@ -766,7 +769,6 @@ define([
             return UrlTemplateImageryProvider.transparentCanvas;
         }
 
-        var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
     };
 

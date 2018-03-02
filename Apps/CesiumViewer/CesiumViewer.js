@@ -62,23 +62,10 @@ define([
     var availableLevelsTerrain = [8, 11, 13, 15, 17];
     var availableLevelsImagery = [8, 11, 13, 15, 17, 18];
 
-    var imageryProvider;
-    if (endUserOptions.tmsImageryUrl) {
-        imageryProvider = createTileMapServiceImageryProvider({
-            url : endUserOptions.tmsImageryUrl
-        });
-    }
-              //availableLevels: availableLevels
-    imageryProvider = new BingMapsImageryProvider({
-      url : '//dev.virtualearth.net',
-      availableLevels: endUserOptions.limitImagery ? availableLevelsImagery : undefined
-    });
-
-
     var SSECorrector = function() {
       var params = {};
-      location.search.substr(1).split("&").reduce(function(previous, current) {
-        var splitted = current.split("=");
+      location.search.substr(1).split('&').reduce(function(previous, current) {
+        var splitted = current.split('=');
         if (splitted.length === 2) {
           params[splitted[0]] = splitted[1];
         } else {
@@ -98,7 +85,6 @@ define([
       this.shouldCut = !params['nocut'];
       this.noheight = !!params['noheight'];
       this.maxerrorfactor = parseFloat(params['maxerrorfactor'] || '0.25');
-      this.cameraHeight;
     };
 
     SSECorrector.prototype.newFrameState = function(frameState) {
@@ -143,20 +129,17 @@ define([
         if (distance < this.max) {
           if (distance < this.min || this.min === this.max) {
             return original;
-          } else {
-            var linearFactor = this.a * distance + this.b;
-            return linearFactor * original;
           }
-        } else {
-          return this.maxerrorfactor * original;
+          var linearFactor = this.a * distance + this.b;
+          return linearFactor * original;
         }
+        return this.maxerrorfactor * original;
     };
 
 
     var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
-        var hasBaseLayerPicker = !defined(imageryProvider);
         viewer = new Viewer('cesiumContainer', {
             baseLayerPicker : false,
             terrainProvider: new CesiumTerrainProvider({
@@ -165,7 +148,7 @@ define([
               rectangle: Rectangle.fromDegrees(5.013926957923385, 45.35600133779394, 11.477436312994008, 48.27502358353741)
             }),
             imageryProvider: new UrlTemplateImageryProvider({
-                url: "//wmts{s}.geo.admin.ch/1.0.0/ch.swisstopo.swissimage-product/default/20151231_50/4326/{z}/{y}/{x}.jpeg",
+                url: '//wmts{s}.geo.admin.ch/1.0.0/ch.swisstopo.swissimage-product/default/20151231_50/4326/{z}/{y}/{x}.jpeg',
                 subdomains: '56789',
                 //url: "//wmts{s}.geo.admin.ch/1.0.0/ch.swisstopo.swisstlm3d-wanderwege/default/20150101/4326/{z}/{x}/{y}.png",
                 //subdomains: ['10', '11', '12', '13', '14'],
