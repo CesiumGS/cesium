@@ -100,7 +100,6 @@ define([
             var resource;
             var modelData = modelHash[entity.id];
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
-
             var modelMatrix;
             if (show) {
                 modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
@@ -127,7 +126,9 @@ define([
                     scene : this._scene
                 });
 
-                model.readyPromise.otherwise(onModelError);
+                model.readyPromise.otherwise(function(error){
+                    onModelError(error);
+                    modelHash[entity.id].fail = true});
 
                 model.id = entity;
                 primitives.add(model);
@@ -250,7 +251,7 @@ define([
         //>>includeEnd('debug');
 
         var modelData = this._modelHash[entity.id];
-        if (!defined(modelData)) {
+        if (!defined(modelData) || modelData.fail) {
             return BoundingSphereState.FAILED;
         }
 
@@ -325,6 +326,7 @@ define([
     }
 
     function onModelError(error) {
+
         console.error(error);
     }
 
