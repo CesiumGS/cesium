@@ -100,6 +100,7 @@ define([
             var resource;
             var modelData = modelHash[entity.id];
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
+
             var modelMatrix;
             if (show) {
                 modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
@@ -127,6 +128,7 @@ define([
                 });
                 model.id = entity;
                 primitives.add(model);
+                
                 modelData = {
                     modelPrimitive : model,
                     url : resource.url,
