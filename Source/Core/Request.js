@@ -1,9 +1,11 @@
 define([
         './defaultValue',
+        './defined',
         './RequestState',
         './RequestType'
     ], function(
         defaultValue,
+        defined,
         RequestState,
         RequestType) {
     'use strict';
@@ -146,6 +148,37 @@ define([
      */
     Request.prototype.cancel = function() {
         this.cancelled = true;
+    };
+
+
+    /**
+     * Duplicates a Request instance.
+     *
+     * @param {Request} [result] The object onto which to store the result.
+     *
+     * @returns {Request} The modified result parameter or a new Resource instance if one was not provided.
+     */
+    Request.prototype.clone = function(result) {
+        if (!defined(result)) {
+            return new Request(this);
+        }
+
+        result.url = this.url;
+        result.requestFunction = this.requestFunction;
+        result.cancelFunction = this.cancelFunction;
+        result.priorityFunction = this.priorityFunction;
+        result.priority = this.priority;
+        result.throttle = this.throttle;
+        result.throttleByServer = this.throttleByServer;
+        result.type = this.type;
+        result.serverKey = this.serverKey;
+
+        // These get defaulted because the cloned request hasn't been issued
+        result.state = this.RequestState.UNISSUED;
+        result.deferred = undefined;
+        result.cancelled = false;
+
+        return result;
     };
 
     /**

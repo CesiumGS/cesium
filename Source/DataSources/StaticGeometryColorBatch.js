@@ -75,7 +75,7 @@ define([
     };
 
     Batch.prototype.add = function(updater, instance) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
@@ -85,14 +85,14 @@ define([
             var that = this;
             this.subscriptions.set(id, updater.entity.definitionChanged.addEventListener(function(entity, propertyName, newValue, oldValue) {
                 if (propertyName === 'isShowing') {
-                    that.showsUpdated.set(entity.id, updater);
+                    that.showsUpdated.set(updater.id, updater);
                 }
             }));
         }
     };
 
     Batch.prototype.remove = function(updater) {
-        var id = updater.entity.id;
+        var id = updater.id;
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
             this.updatersWithAttributes.remove(id);
@@ -198,7 +198,7 @@ define([
             var waitingOnCreate = this.waitingOnCreate;
             for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this.geometry.get(updater.entity.id);
+                var instance = this.geometry.get(updater.id);
 
                 attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
@@ -208,22 +208,22 @@ define([
 
                 if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
                     var colorProperty = updater.fillMaterialProperty.color;
-                    colorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastColor, colorScratch)) {
-                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
-                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                    var resultColor = colorProperty.getValue(time, colorScratch);
+                    if (!Color.equals(attributes._lastColor, resultColor)) {
+                        attributes._lastColor = Color.clone(resultColor, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(resultColor, attributes.color);
                         if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
                             this.itemsToRemove[removedCount++] = updater;
                         }
                     }
                 }
 
-                if (defined(this.depthFailAppearanceType) && this.depthFailAppearanceType instanceof ColorMaterialProperty && (!updater.depthFailMaterialProperty.isConstant || waitingOnCreate)) {
+                if (defined(this.depthFailAppearanceType) && updater.depthFailMaterialProperty instanceof ColorMaterialProperty && (!updater.depthFailMaterialProperty.isConstant || waitingOnCreate)) {
                     var depthFailColorProperty = updater.depthFailMaterialProperty.color;
-                    depthFailColorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastDepthFailColor, colorScratch)) {
-                        attributes._lastDepthFailColor = Color.clone(colorScratch, attributes._lastDepthFailColor);
-                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.depthFailColor);
+                    var depthColor = depthFailColorProperty.getValue(time, colorScratch);
+                    if (!Color.equals(attributes._lastDepthFailColor, depthColor)) {
+                        attributes._lastDepthFailColor = Color.clone(depthColor, attributes._lastDepthFailColor);
+                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(depthColor, attributes.depthFailColor);
                     }
                 }
 
@@ -257,7 +257,7 @@ define([
         var length = showsUpdated.length;
         for (var i = 0; i < length; i++) {
             var updater = showsUpdated[i];
-            var instance = this.geometry.get(updater.entity.id);
+            var instance = this.geometry.get(updater.id);
 
             var attributes = this.attributes.get(instance.id.id);
             if (!defined(attributes)) {
@@ -274,16 +274,16 @@ define([
         this.showsUpdated.removeAll();
     };
 
-    Batch.prototype.contains = function(entity) {
-        return this.updaters.contains(entity.id);
+    Batch.prototype.contains = function(updater) {
+        return this.updaters.contains(updater.id);
     };
 
-    Batch.prototype.getBoundingSphere = function(entity, result) {
+    Batch.prototype.getBoundingSphere = function(updater, result) {
         var primitive = this.primitive;
         if (!primitive.ready) {
             return BoundingSphereState.PENDING;
         }
-        var attributes = primitive.getGeometryInstanceAttributes(entity);
+        var attributes = primitive.getGeometryInstanceAttributes(updater.entity);
         if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
             (defined(attributes.show) && attributes.show[0] === 0)) {
             return BoundingSphereState.FAILED;
@@ -445,21 +445,21 @@ define([
         return isUpdated;
     };
 
-    function getBoundingSphere(items, entity, result) {
+    function getBoundingSphere(items, updater, result) {
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var item = items[i];
-            if(item.contains(entity)){
-                return item.getBoundingSphere(entity, result);
+            if(item.contains(updater)){
+                return item.getBoundingSphere(updater, result);
             }
         }
         return BoundingSphereState.FAILED;
     }
 
-    StaticGeometryColorBatch.prototype.getBoundingSphere = function(entity, result) {
-        var boundingSphere = getBoundingSphere(this._solidItems, entity, result);
+    StaticGeometryColorBatch.prototype.getBoundingSphere = function(updater, result) {
+        var boundingSphere = getBoundingSphere(this._solidItems, updater, result);
         if (boundingSphere === BoundingSphereState.FAILED) {
-            return getBoundingSphere(this._translucentItems, entity, result);
+            return getBoundingSphere(this._translucentItems, updater, result);
         }
         return boundingSphere;
     };

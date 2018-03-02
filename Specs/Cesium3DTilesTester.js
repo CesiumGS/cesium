@@ -3,6 +3,7 @@ define([
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
+        'Core/Resource',
         'Scene/Cesium3DTileContentFactory',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
@@ -12,6 +13,7 @@ define([
         Color,
         defaultValue,
         defined,
+        Resource,
         Cesium3DTileContentFactory,
         Cesium3DTileset,
         TileBoundingSphere,
@@ -119,7 +121,7 @@ define([
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var url = '';
+        var url = Resource.createIfNeeded('');
         expect(function() {
             return Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         }).toThrowRuntimeError();
@@ -127,7 +129,7 @@ define([
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var url = '';
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
         return content;
@@ -140,7 +142,7 @@ define([
         var tileset = {
             basePath : counter++
         };
-        var url = '';
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
 
@@ -351,9 +353,9 @@ define([
         var featureTableJsonByteLength = 0;
         var defineFeatureTable = defaultValue(options.defineFeatureTable, true);
         if (defineFeatureTable) {
-            var defineRectangle = defaultValue(options.defineRectangle, true);
+            var defineRegion = defaultValue(options.defineRegion, true);
             var featureTableJson = {
-                RECTANGLE : defineRectangle ? [-1.0, -1.0, 1.0, 1.0] : undefined,
+                REGION : defineRegion ? [-1.0, -1.0, 1.0, 1.0, -1.0, 1.0] : undefined,
                 POLYGONS_LENGTH : defaultValue(options.polygonsLength, 0),
                 POLYLINES_LENGTH : defaultValue(options.polylinesLength, 0),
                 POINTS_LENGTH : defaultValue(options.pointsLength, 0),

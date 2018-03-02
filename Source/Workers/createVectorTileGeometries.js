@@ -31,7 +31,7 @@ define([
     var packedBoxLength = Matrix4.packedLength + Cartesian3.packedLength;
     var packedCylinderLength = Matrix4.packedLength + 2;
     var packedEllipsoidLength = Matrix4.packedLength + Cartesian3.packedLength;
-    var packedSphereLength = Matrix4.packedLength + 1;
+    var packedSphereLength = Cartesian3.packedLength + 1;
 
     var scratchModelMatrixAndBV = {
         modelMatrix : new Matrix4(),
@@ -92,7 +92,8 @@ define([
 
         var sphereRadius = spheres[sphereIndex++];
 
-        var sphereModelMatrix = Matrix4.unpack(spheres, sphereIndex, scratchModelMatrixAndBV.modelMatrix);
+        var sphereTranslation = Cartesian3.unpack(spheres, sphereIndex, scratchCartesian);
+        var sphereModelMatrix = Matrix4.fromTranslation(sphereTranslation, scratchModelMatrixAndBV.modelMatrix);
         Matrix4.multiplyByUniformScale(sphereModelMatrix, sphereRadius, sphereModelMatrix);
 
         var boundingVolume = scratchModelMatrixAndBV.boundingVolume;

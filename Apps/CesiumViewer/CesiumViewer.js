@@ -2,6 +2,7 @@ define([
         'Cesium/Core/Cartesian3',
         'Cesium/Core/Cartesian2',
         'Cesium/Core/Color',
+        'Cesium/Core/createWorldTerrain',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/Math',
@@ -25,6 +26,7 @@ define([
         Cartesian3,
         Cartesian2,
         Color,
+        createWorldTerrain,
         defined,
         formatError,
         CesiumMath,
@@ -154,6 +156,7 @@ define([
     var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
+        var hasBaseLayerPicker = !defined(imageryProvider);
         viewer = new Viewer('cesiumContainer', {
             baseLayerPicker : false,
             terrainProvider: new CesiumTerrainProvider({

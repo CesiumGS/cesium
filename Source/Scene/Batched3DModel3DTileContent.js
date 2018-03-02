@@ -8,7 +8,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
         '../Core/RequestType',
@@ -30,7 +29,6 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getAbsoluteUri,
         getBaseUri,
         getStringFromTypedArray,
         RequestType,
@@ -63,10 +61,10 @@ define([
      *
      * @private
      */
-    function Batched3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Batched3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._model = undefined;
         this._batchTable = undefined;
         this._features = undefined;
@@ -178,7 +176,7 @@ define([
          */
         url: {
             get: function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
@@ -206,12 +204,13 @@ define([
     }
 
     function getVertexShaderCallback(content) {
-        return function(vs) {
+        return function(vs, programId) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
             var handleTranslucent = !defined(content._tileset.classificationType);
             var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var callback = batchTable.getVertexShaderCallback(handleTranslucent, batchIdAttributeName);
+            var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+            var callback = batchTable.getVertexShaderCallback(handleTranslucent, batchIdAttributeName, diffuseAttributeOrUniformName);
             return defined(callback) ? callback(vs) : vs;
         };
     }
@@ -227,12 +226,12 @@ define([
     }
 
     function getFragmentShaderCallback(content) {
-        return function(fs) {
+        return function(fs, programId) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
             var handleTranslucent = !defined(content._tileset.classificationType);
-            var diffuseUniformName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-            var callback = batchTable.getFragmentShaderCallback(handleTranslucent, diffuseUniformName);
+            var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+            var callback = batchTable.getFragmentShaderCallback(handleTranslucent, diffuseAttributeOrUniformName);
             return defined(callback) ? callback(fs) : fs;
         };
     }
@@ -254,7 +253,7 @@ define([
     function initialize(content, arrayBuffer, byteOffset) {
         var tileset = content._tileset;
         var tile = content._tile;
-        var basePath = getAbsoluteUri(getBaseUri(content._url, true));
+        var resource = content._resource;
 
         var byteStart = defaultValue(byteOffset, 0);
         byteOffset = byteStart;
@@ -396,7 +395,7 @@ define([
                 cull : false,           // The model is already culled by 3D Tiles
                 releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
                 opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
-                basePath : basePath,
+                basePath : resource,
                 requestType : RequestType.TILES3D,
                 modelMatrix : tile.computedTransform,
                 upAxis : tileset._gltfUpAxis,
@@ -419,7 +418,7 @@ define([
             content._model = new ClassificationModel({
                 gltf : gltfView,
                 cull : false,           // The model is already culled by 3D Tiles
-                basePath : basePath,
+                basePath : resource,
                 requestType : RequestType.TILES3D,
                 modelMatrix : tile.computedTransform,
                 upAxis : tileset._gltfUpAxis,

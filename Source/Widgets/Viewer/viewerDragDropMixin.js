@@ -272,7 +272,8 @@ define([
                         sourceUri : fileName,
                         proxy : proxy,
                         camera : scene.camera,
-                        canvas : scene.canvas
+                        canvas : scene.canvas,
+                        clampToGround: clampToGround
                     });
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);

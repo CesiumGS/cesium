@@ -170,7 +170,7 @@ define([
     Vector3DTileGeometry.packedBoxLength = Matrix4.packedLength + Cartesian3.packedLength;
     Vector3DTileGeometry.packedCylinderLength = Matrix4.packedLength + 2;
     Vector3DTileGeometry.packedEllipsoidLength = Matrix4.packedLength + Cartesian3.packedLength;
-    Vector3DTileGeometry.packedSphereLength = Matrix4.packedLength + 1;
+    Vector3DTileGeometry.packedSphereLength = Cartesian3.packedLength + 1;
 
     function packBuffer(geometries) {
         var packedBuffer = new Float64Array(Matrix4.packedLength + Cartesian3.packedLength);

@@ -1,25 +1,17 @@
 define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './combine',
-        './defaultValue',
+        './clone',
         './defined',
+        './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
-        './objectToQuery',
-        './queryToObject',
-        './Request',
-        './RequestScheduler'
+        './Resource'
     ], function(
-        Uri,
-        when,
-        combine,
-        defaultValue,
+        clone,
         defined,
+        defineProperties,
+        deprecationWarning,
         DeveloperError,
-        objectToQuery,
-        queryToObject,
-        Request,
-        RequestScheduler) {
+        Resource) {
     'use strict';
 
     /**
@@ -27,102 +19,71 @@ define([
      *
      * @exports loadJsonp
      *
-     * @param {String} url The URL to request.
-     * @param {Object} [options] Object with the following properties:
-     * @param {Object} [options.parameters] Any extra query parameters to append to the URL.
-     * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
-     * @param {Proxy} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Resource|String} urlOrResource The URL to request.
+     * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
      * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
      * // load a data asynchronously
-     * Cesium.loadJsonp('some/webservice').then(function(data) {
+     * resource.loadJsonp().then(function(data) {
      *     // use the loaded data
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
-    function loadJsonp(url, options, request) {
+    function loadJsonp(urlOrResource, callbackParameterName, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(urlOrResource)) {
+            throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        deprecationWarning('loadJsonp', 'loadJsonp is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchJsonp instead.');
 
-        //generate a unique function name
-        var functionName;
-        do {
-            functionName = 'loadJsonp' + Math.random().toString().substring(2, 8);
-        } while (defined(window[functionName]));
-
-        var uri = new Uri(url);
-
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
-        if (defined(options.parameters)) {
-            queryOptions = combine(options.parameters, queryOptions);
+        var proxy;
+        var queryParameters;
+        if (typeof callbackParameterName === 'object') {
+            var options = callbackParameterName;
+            if (defined(options.parameters)) {
+                queryParameters = clone(options.parameters);
+            }
+            if (defined(options.proxy)) {
+                proxy = options.proxy;
+            }
+            callbackParameterName = options.callbackParameterName;
         }
 
-        var callbackParameterName = defaultValue(options.callbackParameterName, 'callback');
-        queryOptions[callbackParameterName] = functionName;
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            proxy : proxy,
+            queryParameters : queryParameters,
+            request: request
+        });
 
-        uri.query = objectToQuery(queryOptions);
-
-        url = uri.toString();
-
-        var proxy = options.proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        request = defined(request) ? request : new Request();
-        request.url = url;
-        request.requestFunction = function() {
-            var deferred = when.defer();
-
-            //assign a function with that name in the global scope
-            window[functionName] = function(data) {
-                deferred.resolve(data);
-
-                try {
-                    delete window[functionName];
-                } catch (e) {
-                    window[functionName] = undefined;
-                }
-            };
-
-            loadJsonp.loadAndExecuteScript(url, functionName, deferred);
-            return deferred.promise;
-        };
-
-        return RequestScheduler.request(request);
+        return resource.fetchJsonp(callbackParameterName);
     }
 
-    // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
-        var script = document.createElement('script');
-        script.async = true;
-        script.src = url;
+    defineProperties(loadJsonp, {
+        loadAndExecuteScript : {
+            get : function() {
+                return Resource._Implementations.loadAndExecuteScript;
+            },
+            set : function(value) {
+                Resource._Implementations.loadAndExecuteScript = value;
+            }
+        },
 
-        var head = document.getElementsByTagName('head')[0];
-        script.onload = function() {
-            script.onload = undefined;
-            head.removeChild(script);
-        };
-        script.onerror = function(e) {
-            deferred.reject(e);
-        };
-
-        head.appendChild(script);
-    };
-
-    loadJsonp.defaultLoadAndExecuteScript = loadJsonp.loadAndExecuteScript;
+        defaultLoadAndExecuteScript : {
+            get : function() {
+                return Resource._DefaultImplementations.loadAndExecuteScript;
+            }
+        }
+    });
 
     return loadJsonp;
 });

@@ -1,13 +1,13 @@
 defineSuite([
         'Core/loadImageFromTypedArray',
-        'Core/loadArrayBuffer'
+        'Core/Resource'
     ], function(
         loadImageFromTypedArray,
-        loadArrayBuffer) {
+        Resource) {
     'use strict';
 
     it('can load an image', function() {
-        return loadArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
             var arr = new Uint8Array(arrayBuffer);
             return loadImageFromTypedArray(arr, 'image/png').then(function(image) {
                 expect(image.width).toEqual(10);

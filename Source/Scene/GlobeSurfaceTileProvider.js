@@ -145,6 +145,8 @@ define([
         this._imageryLayers.layerRemoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerRemoved, this);
         this._imageryLayers.layerMoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerMoved, this);
         this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
+        this._tileLoadedEvent = new Event();
+        this._imageryLayersUpdatedEvent = new Event();
 
         this._layerOrderChanged = false;
 
@@ -254,6 +256,28 @@ define([
         },
 
         /**
+         * Gets an event that is raised when an globe surface tile is loaded and ready to be rendered.
+         * @memberof GlobeSurfaceTileProvider.prototype
+         * @type {Event}
+         */
+        tileLoadedEvent : {
+            get : function() {
+                return this._tileLoadedEvent;
+            }
+        },
+
+        /**
+         * Gets an event that is raised when an imagery layer is added, shown, hidden, moved, or removed.
+         * @memberof GlobeSurfaceTileProvider.prototype
+         * @type {Event}
+         */
+        imageryLayersUpdatedEvent : {
+            get : function() {
+                return this._imageryLayersUpdatedEvent;
+            }
+        },
+
+        /**
          * Gets or sets the terrain provider that describes the surface geometry.
          * @memberof GlobeSurfaceTileProvider.prototype
          * @type {TerrainProvider}
@@ -297,6 +321,14 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+     /**
+     * Make updates to the tile provider that are not involved in rendering. Called before the render update cycle.
+     */
+    GlobeSurfaceTileProvider.prototype.update = function(frameState) {
+        // update collection: imagery indices, base layers, raise layer show/hide event
+        this._imageryLayers._update();
+    };
+
     function freeVertexArray(vertexArray) {
         var indexBuffer = vertexArray.indexBuffer;
         vertexArray.destroy();
@@ -309,17 +341,29 @@ define([
         }
     }
 
+    function updateCredits(surface, frameState) {
+        var creditDisplay = frameState.creditDisplay;
+        if (surface._terrainProvider.ready && defined(surface._terrainProvider.credit)) {
+            creditDisplay.addCredit(surface._terrainProvider.credit);
+        }
+
+        var imageryLayers = surface._imageryLayers;
+        for (var i = 0, len = imageryLayers.length; i < len; ++i) {
+            var imageryProvider = imageryLayers.get(i).imageryProvider;
+            GlobeSurfaceTile.irregularZoomLevels |= !!imageryProvider._availableLevels;
+            if (imageryProvider.ready && defined(imageryProvider.credit)) {
+                creditDisplay.addCredit(imageryProvider.credit);
+            }
+        }
+    }
+
     /**
      * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
-        var imageryLayers = this._imageryLayers;
-
-        // update collection: imagery indices, base layers, raise layer show/hide event
-        imageryLayers._update();
         // update each layer for texture reprojection.
-        imageryLayers.queueReprojectionCommands(frameState);
+        this._imageryLayers.queueReprojectionCommands(frameState);
 
         if (this._layerOrderChanged) {
             this._layerOrderChanged = false;
@@ -331,19 +375,7 @@ define([
         }
 
         // Add credits for terrain and imagery providers.
-        var creditDisplay = frameState.creditDisplay;
-
-        if (this._terrainProvider.ready && defined(this._terrainProvider.credit)) {
-            creditDisplay.addCredit(this._terrainProvider.credit);
-        }
-
-        for (var i = 0, len = imageryLayers.length; i < len; ++i) {
-            var imageryProvider = imageryLayers.get(i).imageryProvider;
-            GlobeSurfaceTile.irregularZoomLevels |= !!imageryProvider._availableLevels;
-            if (imageryProvider.ready && defined(imageryProvider.credit)) {
-                creditDisplay.addCredit(imageryProvider.credit);
-            }
-        }
+        updateCredits(this, frameState);
 
         var vertexArraysToDestroy = this._vertexArraysToDestroy;
         var length = vertexArraysToDestroy.length;
@@ -474,6 +506,11 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
         GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
+        var tileLoadedEvent = this._tileLoadedEvent;
+        tile._loadedCallbacks['tileLoadedEvent'] = function (tile) {
+            tileLoadedEvent.raiseEvent();
+            return true;
+        };
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -679,12 +716,14 @@ define([
 
             var that = this;
             var imageryProvider = layer.imageryProvider;
+            var tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
             imageryProvider._reload = function() {
                 // Clear the layer's cache
                 layer._imageryCache = {};
 
                 that._quadtree.forEachLoadedTile(function(tile) {
-                    if (tile.state !== QuadtreeTileLoadState.DONE) {
+                    // If this layer is still waiting to for the loaded callback, just return
+                    if (defined(tile._loadedCallbacks[layer._layerIndex])) {
                         return;
                     }
 
@@ -720,7 +759,7 @@ define([
                     // Create new TileImageries for all loaded tiles
                     if (layer._createTileImagerySkeletons(tile, terrainProvider, insertionPoint)) {
                         // Add callback to remove old TileImageries when the new TileImageries are ready
-                        tile._loadedCallbacks.push(getTileReadyCallback(tileImageriesToFree, layer, terrainProvider));
+                        tile._loadedCallbacks[layer._layerIndex] = getTileReadyCallback(tileImageriesToFree, layer, terrainProvider);
 
                         tile.state = QuadtreeTileLoadState.LOADING;
                     }
@@ -735,6 +774,7 @@ define([
             });
 
             this._layerOrderChanged = true;
+            tileImageryUpdatedEvent.raiseEvent();
         }
     };
 
@@ -772,10 +812,13 @@ define([
         if (defined(layer.imageryProvider)) {
             layer.imageryProvider._reload = undefined;
         }
+
+        this._imageryLayersUpdatedEvent.raiseEvent();
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
         this._layerOrderChanged = true;
+        this._imageryLayersUpdatedEvent.raiseEvent();
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function(layer, index, show) {
