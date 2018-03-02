@@ -18,6 +18,7 @@ uniform float u_globeMinimumAltitude;
 
 #ifndef VECTOR_TILE
 varying vec4 v_color;
+varying vec4 v_sphericalExtents;
 #endif
 
 void main()
@@ -26,6 +27,7 @@ void main()
     gl_Position = czm_depthClampFarPlane(u_modifiedModelViewProjection * vec4(position, 1.0));
 #else
     v_color = color;
+    v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);
 
     vec4 position = czm_computePosition();
 

@@ -17,6 +17,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/Resource',
+        '../Core/SphericalExtentsGeometryInstanceAttribute',
         '../Renderer/Pass',
         '../ThirdParty/when',
         './ClassificationPrimitive',
@@ -41,6 +42,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         Resource,
+        SphericalExtentsGeometryInstanceAttribute,
         Pass,
         when,
         ClassificationPrimitive,
@@ -209,16 +211,11 @@ define([
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
-        var sphericalExtents = new Cartesian4();
         var uniformMap = {
             u_globeMinimumAltitude: function() {
                 return 55000.0;
-            },
-            u_sphericalExtents: function() {
-                return sphericalExtents;
             }
         };
-        this._sphericalExtents = sphericalExtents;
         this._uniformMap = uniformMap;
 
         var that = this;
@@ -728,7 +725,7 @@ define([
                 geometry = instance.geometry;
                 var instanceRectangle = getRectangle(frameState, geometry);
                 if (!defined(rectangle)) {
-                    rectangle = instanceRectangle;
+                    rectangle = Rectangle.clone(instanceRectangle);
                 } else if (defined(instanceRectangle)) {
                     Rectangle.union(rectangle, instanceRectangle, rectangle);
                 }
@@ -758,10 +755,22 @@ define([
                 instance = instances[i];
                 geometry = instance.geometry;
                 instanceType = geometry.constructor;
+
+                // TODO: what to do if not all the geometryInstances are polygonHierarchies? TODO: does this even happen here?
+                var attributes = {
+                    sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(geometry._rectangle)
+                };
+                var instanceAttributes = instance.attributes;
+                for (var attributeKey in instanceAttributes) {
+                    if (instanceAttributes.hasOwnProperty(attributeKey)) {
+                        attributes[attributeKey] = instanceAttributes[attributeKey];
+                    }
+                }
+
                 groundInstances[i] = new GeometryInstance({
                     geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
                         getComputeMaximumHeightFunction(this)),
-                    attributes : instance.attributes,
+                    attributes : attributes,
                     id : instance.id
                 });
             }
@@ -774,26 +783,6 @@ define([
             primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
-
-            // grab spherical extents. TODO: what to do if not all the geometryInstances are polygonHierarchies? TODO: does this even happen here?
-            var rectangleSphericalExtents = undefined;
-            for (i = 0; i < length; i++) {
-                var geometry = groundInstances[i].geometry;
-                if (defined(geometry._rectangle)) {
-                    if (!defined(rectangleSphericalExtents)) {
-                        rectangleSphericalExtents = Rectangle.clone(geometry._rectangle);
-                    } else {
-                        Rectangle.union(rectangleSphericalExtents, geometry._rectangle, rectangleSphericalExtents);
-                    }
-                }
-            }
-            console.log(rectangleSphericalExtents);
-            var sphericalExtentsVec4 = this._sphericalExtents;
-            sphericalExtentsVec4.x = rectangleSphericalExtents.west;
-            sphericalExtentsVec4.y = rectangleSphericalExtents.south;
-            sphericalExtentsVec4.z = 1.0 / (rectangleSphericalExtents.east - rectangleSphericalExtents.west);
-            sphericalExtentsVec4.w = 1.0 / (rectangleSphericalExtents.north - rectangleSphericalExtents.south);
-            console.log(sphericalExtentsVec4);
 
             this._primitive = new ClassificationPrimitive(primitiveOptions);
             this._primitive.readyPromise.then(function(primitive) {

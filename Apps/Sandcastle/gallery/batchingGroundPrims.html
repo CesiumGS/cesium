@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    selectionIndicator: false
+});
+var scene = viewer.scene;
+
+viewer.scene.globe.depthTestAgainstTerrain = true;
+viewer.scene.copyGlobeDepth = true;
+
+function offsetPositions(positions, degreeOffset) {
+    positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
+    var delta = Cesium.Math.toRadians(degreeOffset);
+    for (var i = 0; i < positions.length; ++i) {
+        var position = positions[i];
+        position.latitude += delta;
+        position.longitude += delta;
+    }
+    return scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
+}
+
+var cartographicScratch = new Cesium.Cartographic();
+var cartesian3Scratch = new Cesium.Cartesian3();
+function latLongToSpherical(latitude, longitude, result) {
+    var carto = cartographicScratch;
+    carto.latitude = latitude;
+    carto.longitude = longitude;
+    carto.height = 0.0;
+
+    var cartesian = Cesium.Cartographic.toCartesian(carto, Cesium.Ellipsoid.WGS84, cartesian3Scratch);
+    var sphereNormal = Cesium.Cartesian3.normalize(cartesian, cartesian);
+
+    var sphereLatitude = Math.asin(sphereNormal.z); // find a dress for the ball Sinderella
+    var sphereLongitude = Math.atan2(sphereNormal.y, sphereNormal.x); // the kitTans weep
+    result.x = Cesium.Math.toDegrees(sphereLongitude);
+    result.y = Cesium.Math.toDegrees(sphereLatitude);
+
+    return result;
+}
+
+
+var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4581158.5714175375),
+                new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
+                new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
+                new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)];
+
+// polygons with non-overlapping extents seem to be batchable without problems
+/*
+var redPolygon1 = viewer.entities.add({
+    name : 'Red polygon on surface',
+    polygon : {
+        hierarchy : offsetPositions(positions, 0.0),
+        material : Cesium.Color.RED.withAlpha(0.5)
+    }
+});*/
+
+var redPolygon2 = viewer.entities.add({
+    name : 'Red polygon on surface',
+    polygon : {
+        hierarchy : offsetPositions(positions, -0.01),
+        material : Cesium.Color.GREEN.withAlpha(0.5)
+    }
+});
+
+var redPolygon3 = viewer.entities.add({
+    name : 'Red polygon on surface',
+    polygon : {
+        hierarchy : offsetPositions(positions, 0.01),
+        material : Cesium.Color.BLUE.withAlpha(0.5)
+    }
+});
+/*
+var rectangle = viewer.entities.add({
+    name : 'Red polygon on surface',
+    rectangle : {
+        coordinates : Cesium.Rectangle.fromDegrees(-122.1956, 45.1914, -122.1856, 45.2014),
+        material : Cesium.Color.GREEN.withAlpha(0.5)
+    }
+});*/
+
+// click the globe to see the cartographic position
+var leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+leftHandler.setInputAction(function(movement) {
+    var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
+    if (cartesian) {
+        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        console.log(cartographic);
+        console.log(latLongToSpherical(cartographic.latitude, cartographic.longitude, new Cesium.Cartesian2()));
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+var rightHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+rightHandler.setInputAction(function(movement) {
+    var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
+    if (cartesian) {
+        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        var lat = Cesium.Math.toDegrees(cartographic.latitude);
+        var long = Cesium.Math.toDegrees(cartographic.longitude);
+
+        viewer.entities.removeAll();
+        viewer.entities.add({
+            name : lat + ' ' + long,
+            rectangle : {
+                coordinates : Cesium.Rectangle.fromDegrees(long - 0.01, lat - 0.01, long + 0.01, lat + 0.01),
+                material : Cesium.Color.GREEN.withAlpha(0.5)
+            }
+        });
+    }
+}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+viewer.zoomTo(viewer.entities);
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

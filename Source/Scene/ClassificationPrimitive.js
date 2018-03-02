@@ -858,9 +858,9 @@ define([
                 instance = instances[i];
                 var attributes = instance.attributes;
                 if (!defined(attributes) || !defined(attributes.color)) {
-                    throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    //throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
                 } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                    throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    //throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
                 } else if (!defined(color)) {
                     color = attributes.color;
                 }
@@ -936,7 +936,7 @@ define([
             this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
         }
 
-        this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        this._primitive.debugShowBoundingVolume = true;//this.debugShowBoundingVolume;
         this._primitive.update(frameState);
     };
 

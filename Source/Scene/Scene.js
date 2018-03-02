@@ -624,10 +624,10 @@ define([
         /**
          * Set to true to copy the depth texture after rendering the globe. Makes czm_globeDepthTexture valid.
          * @type {Boolean}
-         * @default false
+         * @default true
          * @private
          */
-        this.copyGlobeDepth = false;
+        this.copyGlobeDepth = true;
 
         /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional

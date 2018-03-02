@@ -619,7 +619,7 @@ defineSuite([
             attributes : {
                 color : rectColorAttribute,
                 distanceDisplayCondition : new DistanceDisplayConditionGeometryInstanceAttribute(near, far)
-            }
+            } // Dan: attributes added here "automagically" show up in the shader in the batch table. Look at DistanceDisplayConditionGeometryInstanceAttribute
         });
 
         primitive = new GroundPrimitive({

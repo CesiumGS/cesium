@@ -259,7 +259,7 @@ define([
         var instance = updater.createFillGeometryInstance(time);
         var batches = this._batches;
         // instance.attributes.color.value is a Uint8Array, so just read it as a Uint32 and make that the key
-        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0];
+        var batchKey = 1;//new Uint32Array(instance.attributes.color.value.buffer)[0];
         var batch;
         if (batches.contains(batchKey)) {
             batch = batches.get(batchKey);
