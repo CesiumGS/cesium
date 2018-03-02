@@ -125,14 +125,8 @@ define([
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
                     scene : this._scene
                 });
-
-                model.readyPromise.otherwise(function(error){
-                    onModelError(error);
-                    modelHash[entity.id].fail = true});
-
                 model.id = entity;
                 primitives.add(model);
-
                 modelData = {
                     modelPrimitive : model,
                     url : resource.url,
@@ -141,6 +135,9 @@ define([
                     originalNodeMatrixHash : {}
                 };
                 modelHash[entity.id] = modelData;
+
+                model.readyPromise.otherwise(onModelError, (modelHash[entity.id].loadFail = true));
+
             }
 
             model.show = true;
@@ -251,7 +248,7 @@ define([
         //>>includeEnd('debug');
 
         var modelData = this._modelHash[entity.id];
-        if (!defined(modelData) || modelData.fail) {
+        if (!defined(modelData) || modelData.loadFail) {
             return BoundingSphereState.FAILED;
         }
 
@@ -326,7 +323,6 @@ define([
     }
 
     function onModelError(error) {
-
         console.error(error);
     }
 
