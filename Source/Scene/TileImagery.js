@@ -55,7 +55,7 @@ define([
         } else {
             loadingImagery.state = ImageryState.INVALID;
         }
-        
+
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
                 this.readyImagery.releaseReference();
