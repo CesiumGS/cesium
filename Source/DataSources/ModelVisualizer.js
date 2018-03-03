@@ -328,12 +328,10 @@ define([
         console.error(error);
     }
     function checkModelLoad(model, entity, modelHash){
-
         model.readyPromise.otherwise(function(error){
             onModelError(error);
             modelHash[entity.id].loadFail = true;
         });
-
     }
 
     return ModelVisualizer;
