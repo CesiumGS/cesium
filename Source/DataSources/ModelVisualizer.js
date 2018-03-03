@@ -134,11 +134,14 @@ define([
                     url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {}
+                    originalNodeMatrixHash : {},
+                    loadFail: false
                 };
                 modelHash[entity.id] = modelData;
 
-                model.readyPromise.otherwise(onModelError, (modelHash[entity.id].loadFail = true));
+                checkModelLoad(model, entity, modelHash);
+
+
 
             }
 
@@ -326,6 +329,14 @@ define([
 
     function onModelError(error) {
         console.error(error);
+    }
+    function checkModelLoad(model, entity, modelHash){
+
+        model.readyPromise.otherwise(function(error){
+            onModelError(error);
+            modelHash[entity.id].loadFail = true;
+        });
+
     }
 
     return ModelVisualizer;
