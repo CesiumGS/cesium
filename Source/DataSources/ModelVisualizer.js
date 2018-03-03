@@ -140,9 +140,6 @@ define([
                 modelHash[entity.id] = modelData;
 
                 checkModelLoad(model, entity, modelHash);
-
-
-
             }
 
             model.show = true;
