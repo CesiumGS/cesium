@@ -14,22 +14,13 @@ define([
         Ellipsoid) {
     'use strict';
 
-    function asinRef(x) {
-        var negate = x < 0.0 ? -1.0 : 1.0;
-        x = Math.abs(x);
-        var ret = -0.0187293;
-        ret *= x;
-        ret += 0.0742610;
-        ret *= x;
-        ret -= 0.2121144;
-        ret *= x;
-        ret += 1.5707288;
-        ret = 3.14159265358979 * 0.5 - Math.sqrt(1.0 - x) * ret;
-        return ret - 2.0 * negate * ret;
+    function completelyFakeAsin(x)
+    {
+        return (x * x * x + x) * 0.78539816339;
     }
 
     function atan2Ref(y, x) {
-        var t0, t1, t2, t3, t4;
+        var t0, t1, t3, t4;
 
         t3 = Math.abs(x);
         t1 = Math.abs(y);
@@ -65,7 +56,7 @@ define([
         var cartesian = Cartographic.toCartesian(carto, Ellipsoid.WGS84, cartesian3Scratch);
         var sphereNormal = Cartesian3.normalize(cartesian, cartesian);
 
-        var sphereLatitude = asinRef(sphereNormal.z); // find a dress for the ball Sinderella
+        var sphereLatitude = completelyFakeAsin(sphereNormal.z); // find a dress for the ball Sinderella
         var sphereLongitude = atan2Ref(sphereNormal.y, sphereNormal.x); // the kitTans weep
         result.x = sphereLatitude;
         result.y = sphereLongitude;
@@ -75,9 +66,7 @@ define([
 
     var sphericalScratch = new Cartesian2();
     function SphericalExtentsGeometryInstanceAttribute(rectangle) {
-        // cartographic coords !== spherical because it's on an ellipsoid
-        console.log(rectangle);
-
+        // rectangle cartographic coords !== spherical because it's on an ellipsoid
         var southWestExtents = latLongToSpherical(rectangle.south, rectangle.west, sphericalScratch);
         var south = southWestExtents.x;
         var west = southWestExtents.y;
@@ -89,9 +78,7 @@ define([
         var longitudeRange = 1.0 / (east - west);
         var latitudeRange = 1.0 / (north - south);
 
-
-        //console.log(rectangle);
-        //console.log('west: ' + west + ' east: ' + east + ' longitude range: ' + 1.0 / longitudeRange + ' latitude range: ' + 1.0 / latitudeRange)
+        console.log('north: ' + north + ' south: ' + south + ' east: ' + east + ' west: ' + west);
 
         this.value = new Float32Array([west, south, longitudeRange, latitudeRange]);
     }

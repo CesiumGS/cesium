@@ -13,6 +13,7 @@ define([
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Shaders/ShadowVolumeColorFS',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
@@ -40,6 +41,7 @@ define([
         RenderState,
         ShaderProgram,
         ShaderSource,
+        ShadowVolumeColorFS,
         ShadowVolumeFS,
         ShadowVolumeVS,
         when,
@@ -170,6 +172,7 @@ define([
         this._sp = undefined;
         this._spStencil = undefined;
         this._spPick = undefined;
+        this._spColor = undefined;
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
@@ -594,6 +597,18 @@ define([
             fragmentShaderSource : fsSource,
             attributeLocations : attributeLocations
         });
+
+        var fsColorSource = new ShaderSource({
+            sources : [ShadowVolumeColorFS]
+        });
+
+        classificationPrimitive._spColor = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : classificationPrimitive._spColor,
+            vertexShaderSource : vsSource,
+            fragmentShaderSource : fsColorSource,
+            attributeLocations : attributeLocations
+        });
     }
 
     function createColorCommands(classificationPrimitive, colorCommands) {
@@ -648,7 +663,7 @@ define([
 
             command.vertexArray = vertexArray;
             command.renderState = classificationPrimitive._rsColorPass;
-            command.shaderProgram = classificationPrimitive._sp;
+            command.shaderProgram = classificationPrimitive._spColor;
             command.uniformMap = uniformMap;
         }
 
@@ -936,7 +951,7 @@ define([
             this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
         }
 
-        this._primitive.debugShowBoundingVolume = true;//this.debugShowBoundingVolume;
+        this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
     };
 
@@ -999,6 +1014,7 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
+        this._spColor = this._spColor && this._spColor.destroy();
         return destroyObject(this);
     };
 
