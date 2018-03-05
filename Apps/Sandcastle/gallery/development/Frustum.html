@@ -31,7 +31,6 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 
-
 var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0, 20.0);
 
 var enu = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);

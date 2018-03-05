@@ -188,7 +188,6 @@ define([
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
     };
 
-
     WallGeometryUpdater.DynamicGeometryUpdater = DynamicWallGeometryUpdater;
 
     /**

@@ -126,7 +126,6 @@ define([
         return result;
     };
 
-
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
