@@ -227,7 +227,6 @@ define([
             }
         },
 
-
         /**
          * Indicates whether {@link Clock#tick} should attempt to advance time.
          * The clock will only advance time when both

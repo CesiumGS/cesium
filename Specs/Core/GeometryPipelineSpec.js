@@ -1324,7 +1324,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-
     it('computeNormal computes normal for one triangle', function() {
         var geometry = new Geometry({
             attributes: {

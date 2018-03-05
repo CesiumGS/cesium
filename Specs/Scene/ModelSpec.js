@@ -2135,7 +2135,6 @@ defineSuite([
         });
     });
 
-
     it('loads a glTF 2.0 with doubleSided set to true', function() {
         return loadModel(twoSidedPlaneUrl).then(function(m) {
             m.show = true;

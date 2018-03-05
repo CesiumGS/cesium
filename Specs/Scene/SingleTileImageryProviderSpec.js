@@ -60,7 +60,6 @@ defineSuite([
         });
     });
 
-
     it('rejects readyPromise on error', function() {
         var provider = new SingleTileImageryProvider({
             url : 'invalid.image.url'

@@ -893,7 +893,6 @@ defineSuite([
         });
     }, 'WebGL');
 
-
     describe('Extruded PolygonGeometry', function() {
         var instance;
         var extrudedHeight;
@@ -1024,7 +1023,6 @@ defineSuite([
             render3D(instance, afterView);
         });
     }, 'WebGL');
-
 
     describe('WallGeometry', function() {
         var instance;
@@ -1350,7 +1348,6 @@ defineSuite([
             render3D(instance, afterView);
         });
     }, 'WebGL');
-
 
     describe('SimplePolylineGeometry', function() {
         var instance;
