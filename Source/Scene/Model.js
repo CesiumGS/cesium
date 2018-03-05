@@ -63,6 +63,7 @@ define([
         './Axis',
         './BlendingState',
         './ColorBlendMode',
+        './CullFace',
         './HeightReference',
         './JobType',
         './ModelAnimationCache',
@@ -139,6 +140,7 @@ define([
         Axis,
         BlendingState,
         ColorBlendMode,
+        CullFace,
         HeightReference,
         JobType,
         ModelAnimationCache,
@@ -2950,6 +2952,12 @@ define([
             }
 
             var rs = rendererRenderStates[material.technique];
+
+            if (rs.cull.enabled && Matrix4.determinant(runtimeNode.computedMatrix) < 0.0) {
+                rs = clone(rs, true);
+                rs.cull.face = (rs.cull.face === CullFace.BACK) ? CullFace.FRONT : CullFace.BACK;
+                rs = RenderState.fromCache(rs);
+            }
 
             // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
             var isTranslucent = rs.blending.enabled;

@@ -2376,6 +2376,20 @@ define([
     };
 
     /**
+     * Computes the determinant of the provided matrix.
+     *
+     * @param {Matrix4} matrix The matrix.
+     * @returns {Number} The modified result parameter.
+     */
+    Matrix4.determinant = function(matrix) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('matrix', matrix);
+        //>>includeEnd('debug');
+
+        return matrix[0] * ((matrix[5] * matrix[10]) - (matrix[6] * matrix[9])) - matrix[4] * (matrix[1] * matrix[10] - matrix[2] * matrix[9]) + matrix[8] * (matrix[1] * matrix[6] - matrix[2] * matrix[5]);
+    };
+
+    /**
      * An immutable Matrix4 instance initialized to the identity matrix.
      *
      * @type {Matrix4}
