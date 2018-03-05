@@ -205,7 +205,16 @@ defineSuite([
 
         expect(billboardCall).toBeDefined();
         expect(billboardCall.args.length).toEqual(2);
-        expect(billboardCall.object.shaderProgram.fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
+
+        var found = false;
+        var sources = billboardCall.object.shaderProgram.fragmentShaderSource.sources;
+        for (var j = 0; j < sources.length; ++j) {
+            if (sources[i].indexOf('czm_Debug_main') !== -1) {
+                found = true;
+                break;
+            }
+        }
+        expect(found).toBe(true);
     });
 
     function createPrimitive(bounded, closestFrustum) {

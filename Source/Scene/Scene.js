@@ -1443,6 +1443,8 @@ define([
                 derivedCommands.logDepth = createLogDepthCommand(command, context, derivedCommands.logDepth);
                 logDepthCommand = derivedCommands.logDepth.logDepthCommand;
                 logDepthDerivedCommands = logDepthCommand.derivedCommands;
+            } else {
+                derivedCommands.logDepth = undefined;
             }
 
             if (scene.frameState.passes.pick) {
@@ -3097,7 +3099,7 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
-        this._frustumChanged = this._camera !== this._cameraClone.frustum;
+        this._frustumChanged = this._camera.frustum !== this._cameraClone.frustum;
         if (this._frustumChanged && this._logDepthBuffer && !(this._camera.frustum instanceof OrthographicFrustum || this._camera.frustum instanceof OrthographicOffCenterFrustum)) {
             this._camera.frustum.near = 1.0;
             this._camera.frustum.far = 10000000000.0;
