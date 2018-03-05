@@ -5,6 +5,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed support of glTF-supplied tangent vectors. [#6302](https://github.com/AnalyticalGraphicsInc/cesium/pull/6302)
+* Added option `logDepthBuffer` to `Viewer`. With this option the globe is typically rendered in a single frustum using logarithmic depth. This helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
 
 ### 1.43 - 2018-03-01
 
@@ -215,7 +216,6 @@ _This is an npm-only release to fix an issue with using Cesium in Node.js.__
 * Fixed loading of binary glTFs containing CRN or KTX textures. [#5753](https://github.com/AnalyticalGraphicsInc/cesium/pull/5753)
 * Fixed specular computation for certain models using the `KHR_materials_common` extension. [#5773](https://github.com/AnalyticalGraphicsInc/cesium/pull/5773)
 * Fixed a picking bug in the `3D Tiles Interactivity` Sandcastle demo. [#5703](https://github.com/AnalyticalGraphicsInc/cesium/issues/5703)
-* Added option "logDepthBuffer" to Cesium.Viewer. With this option globe is rendered in 1 frustum with logarithmic depth. It helps to avoid artifacts on the connection of two frustums.
 * Updated knockout from 3.4.0 to 3.4.2 [#5703](https://github.com/AnalyticalGraphicsInc/cesium/pull/5829)
 
 ### 1.36 - 2017-08-01
