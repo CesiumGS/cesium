@@ -333,7 +333,6 @@ define([
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
 
-
         var uri = new Uri(options.url);
         parseQuery(uri, this, true, true);
 
@@ -1811,7 +1810,7 @@ define([
         // While non-standard, file protocol always returns a status of 0 on success
         var localFile = false;
         if (typeof url === 'string') {
-            localFile = url.indexOf('file://') === 0;
+            localFile = (url.indexOf('file://') === 0) || window.location.origin === 'file://';
         }
 
         xhr.onload = function() {

@@ -183,6 +183,12 @@ defineSuite([
         scene.camera.moveDown(200.0);
     }
 
+    function viewBottomRight() {
+        viewAllTiles();
+        scene.camera.moveRight(200.0);
+        scene.camera.moveDown(200.0);
+    }
+
     function viewInstances() {
         setZoom(30.0);
     }
@@ -2653,8 +2659,8 @@ defineSuite([
         });
     });
 
-    it('immediatelyLoadDesiredLevelOfDetail', function() {
-        viewBottomLeft();
+    xit('immediatelyLoadDesiredLevelOfDetail', function() {
+        viewBottomRight();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetOfTilesetsUrl,
             immediatelyLoadDesiredLevelOfDetail : true

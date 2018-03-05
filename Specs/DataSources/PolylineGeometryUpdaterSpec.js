@@ -524,7 +524,7 @@ defineSuite([
         dynamicUpdater.update(time);
 
         var result = new BoundingSphere(0);
-        var state = dynamicUpdater.getBoundingSphere(entity, result);
+        var state = dynamicUpdater.getBoundingSphere(result);
         expect(state).toBe(BoundingSphereState.DONE);
 
         var primitive = scene.primitives.get(0);
@@ -542,23 +542,8 @@ defineSuite([
         var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
 
         var result = new BoundingSphere();
-        var state = dynamicUpdater.getBoundingSphere(entity, result);
+        var state = dynamicUpdater.getBoundingSphere(result);
         expect(state).toBe(BoundingSphereState.FAILED);
-
-        updater.destroy();
-        scene.primitives.removeAll();
-    });
-
-    it('Compute dynamic geometry bounding sphere throws without entity.', function() {
-        var entity = createBasicPolyline();
-        entity.polyline.width = createDynamicProperty(1);
-        var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
-
-        var result = new BoundingSphere();
-        expect(function() {
-            dynamicUpdater.getBoundingSphere(undefined, result);
-        }).toThrowDeveloperError();
 
         updater.destroy();
         scene.primitives.removeAll();
@@ -571,7 +556,7 @@ defineSuite([
         var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
 
         expect(function() {
-            dynamicUpdater.getBoundingSphere(entity, undefined);
+            dynamicUpdater.getBoundingSphere(undefined);
         }).toThrowDeveloperError();
 
         updater.destroy();

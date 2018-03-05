@@ -2041,7 +2041,6 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
-
     it('get rectangle coordinate returns camera position if scene mode is morphing', function() {
         var rectangle = new Rectangle(
             -CesiumMath.PI_OVER_TWO,

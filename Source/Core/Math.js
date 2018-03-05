@@ -14,6 +14,7 @@ define([
      * Math functions.
      *
      * @exports CesiumMath
+     * @alias Math
      */
     var CesiumMath = {};
 
@@ -750,7 +751,6 @@ define([
     CesiumMath.nextRandomNumber = function() {
         return randomNumberGenerator.random();
     };
-
 
     /**
      * Generates a random number between two numbers.

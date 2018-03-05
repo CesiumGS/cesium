@@ -239,7 +239,7 @@ define([
             vertexShaderMain += '    vec3 weightedNormal = a_normal;\n';
         }
         if (hasTangents) {
-            vertexShaderMain += '    vec3 weightedTangent = a_tangent;\n';
+            vertexShaderMain += '    vec4 weightedTangent = a_tangent;\n';
         }
         if (hasMorphTargets) {
             for (var k = 0; k < morphTargets.length; k++) {
@@ -258,7 +258,7 @@ define([
                         } else if (targetAttribute === 'NORMAL') {
                             vertexShaderMain += '    weightedNormal += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         } else if (targetAttribute === 'TANGENT') {
-                            vertexShaderMain += '    weightedTangent += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
+                            vertexShaderMain += '    weightedTangent.xyz += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         }
                     }
                 }
@@ -305,13 +305,14 @@ define([
             techniqueAttributes.a_tangent = 'tangent';
             techniqueParameters.tangent = {
                 semantic : 'TANGENT',
-                type : WebGLConstants.FLOAT_VEC3
+                type : WebGLConstants.FLOAT_VEC4
             };
-            vertexShader += 'attribute vec3 a_tangent;\n';
-            vertexShader += 'varying vec3 v_tangent;\n';
-            vertexShaderMain += '    v_tangent = (u_modelViewMatrix * vec4(weightedTangent, 1.0)).xyz;\n';
+            vertexShader += 'attribute vec4 a_tangent;\n';
+            vertexShader += 'varying vec4 v_tangent;\n';
+            vertexShaderMain += '    v_tangent.xyz = u_normalMatrix * weightedTangent.xyz;\n';
+            vertexShaderMain += '    v_tangent.w = weightedTangent.w;\n';
 
-            fragmentShader += 'varying vec3 v_tangent;\n';
+            fragmentShader += 'varying vec4 v_tangent;\n';
         }
 
         // Add texture coordinates if the material uses them
@@ -420,8 +421,8 @@ define([
             if (defined(parameterValues.normalTexture)) {
                 if (hasTangents) {
                     // Read tangents from varying
-                    fragmentShader += '    vec3 t = normalize(v_tangent);\n';
-                    fragmentShader += '    vec3 b = normalize(cross(ng, t));\n';
+                    fragmentShader += '    vec3 t = normalize(v_tangent.xyz);\n';
+                    fragmentShader += '    vec3 b = normalize(cross(ng, t) * v_tangent.w);\n';
                     fragmentShader += '    mat3 tbn = mat3(t, b, ng);\n';
                     fragmentShader += '    vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
                     fragmentShader += '    n = normalize(tbn * (2.0 * n - 1.0));\n';

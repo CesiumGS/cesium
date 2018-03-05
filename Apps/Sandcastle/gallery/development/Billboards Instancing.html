@@ -32,15 +32,13 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
+
 var scene = viewer.scene;
 var context = scene.context;
 
-var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
-});
-
-viewer.terrainProvider = cesiumTerrainProviderMeshes;
 scene.debugShowFramesPerSecond = true;
 
 var ellipsoid = scene.globe.ellipsoid;

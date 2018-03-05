@@ -113,7 +113,6 @@ defineSuite([
         expect(intervals.isStopIncluded).toBe(true);
     });
 
-
     it('contains works for a simple interval collection.', function() {
         var intervals = new TimeIntervalCollection();
         var interval1 = new TimeInterval({

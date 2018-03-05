@@ -1093,6 +1093,7 @@ define([
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
+                    '    tile_main(); \n' +
                     '    gl_FragColor = tile_featureColor; \n' +
                     '}';
             } else {
@@ -1101,6 +1102,7 @@ define([
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
+                    '    tile_main(); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
                     '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
                     '        discard; \n' +

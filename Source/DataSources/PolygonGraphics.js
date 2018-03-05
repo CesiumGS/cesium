@@ -70,7 +70,6 @@ define([
         this._outlineWidthSubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
-        this._definitionChanged = new Event();
         this._closeTop = undefined;
         this._closeTopSubscription = undefined;
         this._closeBottom = undefined;
@@ -79,6 +78,9 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
+        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -222,7 +224,15 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.BOTH
+         */
+        classificationType : createPropertyDescriptor('classificationType')
     });
 
     /**
@@ -251,6 +261,7 @@ define([
         result.closeBottom = this.closeBottom;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
         return result;
     };
 
@@ -283,6 +294,7 @@ define([
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
     };
 
     return PolygonGraphics;
