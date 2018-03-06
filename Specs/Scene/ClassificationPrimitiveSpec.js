@@ -326,7 +326,9 @@ defineSuite([
         verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
-    it('renders in Columbus view when scene3DOnly is false', function() {
+    // Rendering in 2D/CV is broken:
+    // https://github.com/AnalyticalGraphicsInc/cesium/issues/6308
+    xit('renders in Columbus view when scene3DOnly is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
@@ -340,7 +342,7 @@ defineSuite([
         verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
-    it('renders in 2D when scene3DOnly is false', function() {
+    xit('renders in 2D when scene3DOnly is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }

@@ -987,7 +987,7 @@ define([
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
-        this._logFarDistance = 2.0 / Math.log2(frustum.far + 1.0);
+        this._logFarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;

@@ -1126,6 +1126,8 @@ define([
          *
          * @alias czm_logFarDistance
          * @glslUniform
+         *
+         * @private
          */
         czm_logFarDistance : new AutomaticUniform({
             size : 1,

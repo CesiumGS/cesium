@@ -1,5 +1,4 @@
 varying vec4 positionEC;
-varying float flogz;
 
 void main()
 {

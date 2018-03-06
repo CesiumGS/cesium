@@ -2577,7 +2577,7 @@ define([
      * Return the distance from the camera to the front of the bounding sphere.
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
-     * @returns {Number} The distance to the bounding sphere.
+     * @returns {Number} The signed distance to the bounding sphere.
      */
     Camera.prototype.distanceToBoundingSphere = function(boundingSphere) {
         //>>includeStart('debug', pragmas.debug);
@@ -2587,8 +2587,10 @@ define([
         //>>includeEnd('debug');
 
         var toCenter = Cartesian3.subtract(this.positionWC, boundingSphere.center, scratchToCenter);
-        var proj = Cartesian3.multiplyByScalar(this.directionWC, Cartesian3.dot(toCenter, this.directionWC), scratchProj);
-        return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+        var distance = -Cartesian3.dot(toCenter, this.directionWC);
+        var proj = Cartesian3.multiplyByScalar(this.directionWC, distance, scratchProj);
+        var unsignedDistance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+        return distance < 0.0 ? -unsignedDistance : unsignedDistance;
     };
 
     var scratchPixelSize = new Cartesian2();
@@ -2615,6 +2617,9 @@ define([
         //>>includeEnd('debug');
 
         var distance = this.distanceToBoundingSphere(boundingSphere);
+        if (distance < 0.0) {
+            return 0.0;
+        }
         var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
         return Math.max(pixelSize.x, pixelSize.y);
     };
