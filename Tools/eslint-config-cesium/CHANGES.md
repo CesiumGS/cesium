@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 4.0.0 - 2018-03-05
+* Enable [no-multiple-empty-lines](https://eslint.org/docs/rules/no-multiple-empty-lines).
+
 ### 3.0.0 - 2017-11-12
 * Set default `ecmaVersion` to 6 for Node.js.
 * Enable [comma-dangle](https://eslint.org/docs/rules/comma-dangle).

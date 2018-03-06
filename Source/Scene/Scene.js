@@ -2095,6 +2095,8 @@ define([
 
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                globeDepth.update(context, passState);
+                globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -3064,13 +3066,16 @@ define([
             // Render
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, time, render);
-            this._postRender.raiseEvent(this, time);
 
             RequestScheduler.update();
         }
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         callAfterRenderFunctions(this);
+
+        if (shouldRender) {
+            this._postRender.raiseEvent(this, time);
+        }
     };
 
     /**

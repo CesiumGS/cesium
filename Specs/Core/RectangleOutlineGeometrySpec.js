@@ -133,7 +133,6 @@ defineSuite([
         expect(actual).toEqualEpsilon(rotatedNWCorner, CesiumMath.EPSILON6);
     });
 
-
     it('computes non-extruded rectangle if height is small', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
         var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({

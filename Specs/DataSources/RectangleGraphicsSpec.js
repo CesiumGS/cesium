@@ -5,6 +5,7 @@ defineSuite([
         'Core/Rectangle',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
@@ -15,6 +16,7 @@ defineSuite([
         Rectangle,
         ColorMaterialProperty,
         ConstantProperty,
+        ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
@@ -35,7 +37,8 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 10,
             shadows : ShadowMode.DISABLED,
-            distanceDisplayCondition : new DistanceDisplayCondition()
+            distanceDisplayCondition : new DistanceDisplayCondition(),
+            classificationType : ClassificationType.TERRAIN
         };
 
         var rectangle = new RectangleGraphics(options);
@@ -53,6 +56,7 @@ defineSuite([
         expect(rectangle.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(rectangle.shadows).toBeInstanceOf(ConstantProperty);
         expect(rectangle.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.classificationType).toBeInstanceOf(ConstantProperty);
 
         expect(rectangle.material.color.getValue()).toEqual(options.material);
         expect(rectangle.show.getValue()).toEqual(options.show);
@@ -68,6 +72,7 @@ defineSuite([
         expect(rectangle.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(rectangle.shadows.getValue()).toEqual(options.shadows);
         expect(rectangle.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(rectangle.classificationType.getValue()).toEqual(options.classificationType);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -86,6 +91,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
 
         var target = new RectangleGraphics();
         target.merge(source);
@@ -104,6 +110,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.classificationType).toBe(source.classificationType);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -123,6 +130,7 @@ defineSuite([
         var outlineWidth = new ConstantProperty();
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
+        var classificationType = new ConstantProperty();
 
         var target = new RectangleGraphics();
         target.material = material;
@@ -139,6 +147,7 @@ defineSuite([
         target.outlineWidth = outlineWidth;
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
+        target.classificationType = classificationType;
 
         target.merge(source);
 
@@ -156,6 +165,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.classificationType).toBe(classificationType);
     });
 
     it('clone works', function() {
@@ -174,6 +184,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -190,6 +201,7 @@ defineSuite([
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.classificationType).toBe(source.classificationType);
     });
 
     it('merge throws if source undefined', function() {
@@ -215,5 +227,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
+        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
     });
 });
