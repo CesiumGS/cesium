@@ -88,7 +88,6 @@ defineSuite([
         expect(line.attributes.color.values.length).toEqual(numVertices * 4);
     });
 
-
     it('constructor computes all vertex attributes, no subdivision', function() {
         var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({

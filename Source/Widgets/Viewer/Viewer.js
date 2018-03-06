@@ -555,7 +555,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         // These need to be set after the BaseLayerPicker is created in order to take effect
-        if (defined(options.imageryProvider)) {
+        if (defined(options.imageryProvider) && options.imageryProvider !== false) {
             if (createBaseLayerPicker) {
                 baseLayerPicker.viewModel.selectedImagery = undefined;
             }

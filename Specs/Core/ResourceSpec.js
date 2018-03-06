@@ -401,7 +401,6 @@ defineSuite([
         });
     });
 
-
     it('setTemplateValues with useAsDefault set to true', function() {
         var resource = new Resource({
             url: 'http://test.com/terrain/{z}/{x}/{y}.terrain',

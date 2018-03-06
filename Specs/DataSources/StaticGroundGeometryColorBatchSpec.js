@@ -6,6 +6,7 @@ defineSuite([
     'DataSources/CallbackProperty',
     'DataSources/EllipseGeometryUpdater',
     'DataSources/Entity',
+    'Scene/ClassificationType',
     'Scene/GroundPrimitive',
     'Specs/createScene',
     'Specs/pollToPromise'
@@ -17,6 +18,7 @@ defineSuite([
     CallbackProperty,
     EllipseGeometryUpdater,
     Entity,
+    ClassificationType,
     GroundPrimitive,
     createScene,
     pollToPromise) {
@@ -50,7 +52,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives);
+        var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives, ClassificationType.BOTH);
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
             ellipse : {
