@@ -135,7 +135,7 @@ define([
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
                     originalNodeMatrixHash : {},
-                    loadFail: false
+                    loadFail : false
                 };
                 modelHash[entity.id] = modelData;
 
@@ -324,12 +324,9 @@ define([
         }
     }
 
-    function onModelError(error) {
-        console.error(error);
-    }
     function checkModelLoad(model, entity, modelHash){
         model.readyPromise.otherwise(function(error){
-            onModelError(error);
+            console.error(error);
             modelHash[entity.id].loadFail = true;
         });
     }
