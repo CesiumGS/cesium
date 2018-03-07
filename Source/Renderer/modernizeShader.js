@@ -19,16 +19,19 @@ define([
      * @private
      */
     function modernizeShader(source, isFragmentShader) {
-        var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
-        var splitSource = source.split('\n');
-
         if (/#version 300 es/g.test(source)) {
             return source;
         }
 
+        var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
+        var splitSource = source.split('\n');
+
+        var i;
+        var line;
+        var splitSourceLength = splitSource.length;
+
         var outputDeclarationLine = -1;
-        var i, line;
-        for (i = 0; i < splitSource.length; ++i) {
+        for (i = 0; i < splitSourceLength; ++i) {
             line = splitSource[i];
             if (outputDeclarationRegex.test(line)) {
                 outputDeclarationLine = i;
@@ -36,13 +39,15 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (outputDeclarationLine === -1) {
             throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION!');
         }
+        //>>includeEnd('debug');
 
         var outputVariables = [];
 
-        for (i = 0; i < 10; i++) {
+        for (i = 0; i < 10; ++i) {
             var fragDataString = 'gl_FragData\\[' + i + '\\]';
             var newOutput = 'czm_out' + i;
             var regex = new RegExp(fragDataString, 'g');
@@ -50,7 +55,7 @@ define([
                 setAdd(newOutput, outputVariables);
                 replaceInSourceString(fragDataString, newOutput, splitSource);
                 splitSource.splice(outputDeclarationLine, 0, 'layout(location = ' + i + ') out vec4 ' + newOutput + ';');
-                outputDeclarationLine += 1;
+                ++outputDeclarationLine;
             }
         }
 
@@ -59,12 +64,12 @@ define([
             setAdd(czmFragColor, outputVariables);
             replaceInSourceString('gl_FragColor', czmFragColor, splitSource);
             splitSource.splice(outputDeclarationLine, 0, 'layout(location = 0) out vec4 czm_fragColor;');
-            outputDeclarationLine += 1;
+            ++outputDeclarationLine;
         }
 
         var variableMap = getVariablePreprocessorBranch(outputVariables, splitSource);
         var lineAdds = {};
-        for (i = 0; i < splitSource.length; i++) {
+        for (i = 0; i < splitSourceLength; ++i) {
             line = splitSource[i];
             for (var variable in variableMap) {
                 if (variableMap.hasOwnProperty(variable)) {
@@ -83,7 +88,7 @@ define([
                 var entry = variableMap[variableName];
                 var depth = entry.length;
                 var d;
-                for (d = 0; d < depth; d++) {
+                for (d = 0; d < depth; ++d) {
                     splitSource.splice(lineNumber, 0, entry[d]);
                 }
                 lineNumber += depth + 1;
@@ -95,7 +100,7 @@ define([
 
         var versionThree = '#version 300 es';
         var foundVersion = false;
-        for (i = 0; i < splitSource.length; i++) {
+        for (i = 0; i < splitSourceLength; ++i) {
             if (/#version/.test(splitSource[i])) {
                 splitSource[i] = versionThree;
                 foundVersion = true;
@@ -108,6 +113,7 @@ define([
 
         removeExtension('EXT_draw_buffers', splitSource);
         removeExtension('EXT_frag_depth', splitSource);
+        removeExtension('OES_standard_derivatives', splitSource);
 
         replaceInSourceString('texture2D', 'texture', splitSource);
         replaceInSourceString('texture3D', 'texture', splitSource);
@@ -178,10 +184,11 @@ define([
     function getVariablePreprocessorBranch(layoutVariables, splitSource) {
         var variableMap = {};
 
-        var numLayoutVariables = layoutVariables.length;
+        var layoutVariablesLength = layoutVariables.length;
 
         var stack = [];
-        for (var i = 0; i < splitSource.length; ++i) {
+        var length = splitSource.length;
+        for (var i = 0; i < length; ++i) {
             var line = splitSource[i];
             var hasIF = /(#ifdef|#if)/g.test(line);
             var hasELSE = /#else/g.test(line);
@@ -200,7 +207,7 @@ define([
             } else if (hasENDIF) {
                 stack.pop();
             } else if (!/layout/g.test(line)) {
-                for (var varIndex = 0; varIndex < numLayoutVariables; ++varIndex) {
+                for (var varIndex = 0; varIndex < layoutVariablesLength; ++varIndex) {
                     var varName = layoutVariables[varIndex];
                     if (line.indexOf(varName) !== -1) {
                         if (!defined(variableMap[varName])) {

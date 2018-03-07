@@ -242,7 +242,7 @@ define([
             }
         }
 
-        // GLSLModernizer inserts its own layout qualifiers
+        // modernizeShader inserts its own layout qualifiers
         // at this position in the source
         if (context.webgl2) {
             result += '#define OUTPUT_DECLARATION\n\n';
