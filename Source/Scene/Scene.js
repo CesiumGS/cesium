@@ -266,6 +266,7 @@ define([
         }
 
         this._logDepthBuffer = context.fragmentDepth;
+        this._logDepthBufferChanged = true;
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
@@ -1379,6 +1380,22 @@ define([
                 //>>includeEnd('debug');
                 this._minimumDisableDepthTestDistance = value;
             }
+        },
+
+        /**
+         * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
+         * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
+         */
+        logDepthBuffer : {
+            get : function() {
+                return this._logDepthBuffer;
+            },
+            set : function(value) {
+                if (this._context.fragmentDepth && this._logDepthBuffer !== value) {
+                    this._logDepthBuffer = value;
+                    this._logDepthBufferChanged = true;
+                }
+            }
         }
     });
 
@@ -1432,7 +1449,7 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if ((scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
+        if ((scene._logDepthBufferChanged || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
 
             var frustum = scene.camera.frustum;
@@ -3099,14 +3116,14 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
-        this._frustumChanged = this._camera.frustum !== this._cameraClone.frustum;
+        this._frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
         if (this._frustumChanged && this._logDepthBuffer && !(this._camera.frustum instanceof OrthographicFrustum || this._camera.frustum instanceof OrthographicOffCenterFrustum)) {
             this._camera.frustum.near = 1.0;
             this._camera.frustum.far = 10000000000.0;
         }
 
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferChanged || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
@@ -3115,6 +3132,7 @@ define([
         if (shouldRender) {
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
+            this._logDepthBufferChanged = false;
 
             // Render
             this._preRender.raiseEvent(this, time);

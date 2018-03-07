@@ -1,3 +1,9 @@
+#ifdef WRITE_DEPTH
+#ifdef GL_EXT_frag_depth
+#extension GL_EXT_frag_depth : enable
+#endif
+#endif
+
 uniform vec3 u_radii;
 uniform vec3 u_oneOverEllipsoidRadiiSquared;
 
@@ -90,7 +96,16 @@ void main()
     t = (intersection.start != 0.0) ? intersection.start : intersection.stop;
     vec3 positionEC = czm_pointAlongRay(ray, t);
     vec4 positionCC = czm_projection * vec4(positionEC, 1.0);
+#ifdef LOG_DEPTH
     czm_writeLogZ(1.0 + positionCC.w);
+#else
+    float z = positionCC.z / positionCC.w;
+
+    float n = czm_depthRange.near;
+    float f = czm_depthRange.far;
+
+    gl_FragDepthEXT = (z * (f - n) + f + n) * 0.5;
+#endif
 #endif
 #endif
 }
