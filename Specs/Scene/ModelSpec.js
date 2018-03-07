@@ -10,6 +10,7 @@ defineSuite([
         'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
+        'Core/DracoLoader',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/FeatureDetection',
@@ -46,6 +47,7 @@ defineSuite([
         defined,
         defineProperties,
         DistanceDisplayCondition,
+        DracoLoader,
         Ellipsoid,
         Event,
         FeatureDetection,
@@ -2351,7 +2353,7 @@ defineSuite([
     });
 
     it('error decoding a glTF causes model loading to fail', function() {
-        var decoder = Model._getDecoderTaskProcessor();
+        var decoder = DracoLoader._getDecoderTaskProcessor();
         spyOn(decoder, 'scheduleTask').and.returnValue(when.reject('error'));
 
         var model = primitives.add(Model.fromGltf({

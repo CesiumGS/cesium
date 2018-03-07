@@ -1,5 +1,4 @@
 define([
-        '../Core/arraySlice',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -9,7 +8,6 @@ define([
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -36,7 +34,6 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
-        '../Core/TaskProcessor',
         '../Core/Transforms',
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
@@ -66,6 +63,7 @@ define([
         './Axis',
         './BlendingState',
         './ColorBlendMode',
+        './DracoLoader',
         './HeightReference',
         './JobType',
         './ModelAnimationCache',
@@ -78,7 +76,6 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
-        arraySlice,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -88,7 +85,6 @@ define([
         clone,
         Color,
         combine,
-        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -115,7 +111,6 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
-        TaskProcessor,
         Transforms,
         WebGLConstants,
         Buffer,
@@ -145,6 +140,7 @@ define([
         Axis,
         BlendingState,
         ColorBlendMode,
+        DracoLoader,
         HeightReference,
         JobType,
         ModelAnimationCache,
@@ -4051,154 +4047,6 @@ define([
         return (distance2 >= nearSquared) && (distance2 <= farSquared);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    function addBufferToModelResources(model, buffer) {
-        var resourceBuffers = model._rendererResources.buffers;
-        var id = Object.keys(resourceBuffers).length;
-        resourceBuffers[id] = buffer;
-        model._geometryByteLength += buffer.sizeInBytes;
-
-        return id;
-    }
-
-    function addNewVertexBuffer(typedArray, model, context) {
-        var vertexBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : typedArray,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        vertexBuffer.vertexArrayDestroyable = false;
-
-        return addBufferToModelResources(model, vertexBuffer);
-    }
-
-    function addNewIndexBuffer(typedArray, model, context) {
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : typedArray,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : ComponentDatatype.fromTypedArray(typedArray)
-        });
-        indexBuffer.vertexArrayDestroyable = false;
-
-        return addBufferToModelResources(model, indexBuffer);
-    }
-
-    function addDecodededBuffers(primitive, model, context) {
-        return function (result) {
-            var decodedBufferView = addNewIndexBuffer(result.indexArray, model, context);
-
-            var attributes = {};
-            var decodedAttributeData = result.attributeData;
-            for (var attributeName in decodedAttributeData) {
-                if (decodedAttributeData.hasOwnProperty(attributeName)) {
-                    var attribute = decodedAttributeData[attributeName];
-                    var vertexArray = attribute.array;
-                    var vertexBufferView = addNewVertexBuffer(vertexArray, model, context);
-
-                    var data = attribute.data;
-                    data.bufferView = vertexBufferView;
-
-                    attributes[attributeName] = data;
-                }
-            }
-
-            model._decodedData[primitive.mesh + '.primitive.' + primitive.primitive] = {
-                bufferView : decodedBufferView,
-                attributes : attributes
-            };
-        };
-    }
-
-    function scheduleDecodingTask (decoderTaskProcessor, model, loadResources, context) {
-        var taskData = loadResources.primitivesToDecode.peek();
-        if (!defined(taskData)) {
-            // All primitives are processing
-            return;
-        }
-
-        var promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
-        if (!defined(promise)) {
-            // Cannot schedule another task this frame
-            return;
-        }
-
-        loadResources.finishedDecoding = false;
-        loadResources.primitivesToDecode.dequeue();
-        return promise.then(addDecodededBuffers(taskData, model, context))
-            .otherwise(getFailedLoadFunction(model, 'model', model.basePath));
-    }
-
-    function parseDraco(model, context) {
-        if (!defined(model.extensionsRequired['KHR_draco_mesh_compression'])
-            || !defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
-            return;
-        }
-
-        var loadResources = model._loadResources;
-        if (loadResources.primitivesToDecode.length === 0) {
-            if (loadResources.decoding) {
-                // Done decoding
-                return;
-            }
-
-            loadResources.decoding = true;
-
-            var gltf = model.gltf;
-            ForEach.mesh(gltf, function(mesh, meshId) {
-                ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
-                    if (!defined(primitive.extensions)) {
-                        return;
-                    }
-
-                    var compressionData = primitive.extensions['KHR_draco_mesh_compression'];
-                    if (!defined(compressionData)) {
-                        return;
-                    }
-
-                    var bufferView = gltf.bufferViews[compressionData.bufferView];
-                    var typedArray = gltf.buffers[bufferView.buffer].extras._pipeline.source;
-                    typedArray = arraySlice(typedArray, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
-
-                    loadResources.primitivesToDecode.enqueue({
-                        mesh : meshId,
-                        primitive : primitiveId,
-                        array : typedArray,
-                        bufferView : bufferView,
-                        compressedAttributes : compressionData.attributes
-                    });
-                });
-            });
-        }
-
-        var decoderTaskProcessor = Model._getDecoderTaskProcessor();
-        var decodingPromises = [];
-
-        var promise = scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context);
-        while (defined(promise)) {
-            decodingPromises.push(promise);
-            promise = scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context);
-        }
-
-        when.all(decodingPromises).then(function () {
-            loadResources.finishedDecoding = true;
-        });
-    }
-
-    // Maximum concurrency to use when deocding draco models
-    Model._maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
-
-    // Exposed for testing purposes
-    Model._decoderTaskProcessor = undefined;
-    Model._getDecoderTaskProcessor = function () {
-        if (!defined(Model._decoderTaskProcessor)) {
-            Model._decoderTaskProcessor = new TaskProcessor('decodeDraco', Model._maxDecodingConcurrency);
-        }
-
-        return Model._decoderTaskProcessor;
-    };
-
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -4283,47 +4131,53 @@ define([
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
-                if (!this._updatedGltfVersion) {
-                    if (loadResources.decoding) {
-                        parseDraco(this, context);
-                    } else {
-                        var options = {
-                            optimizeForCesium: true,
-                            addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
-                        };
-                        frameState.brdfLutGenerator.update(frameState);
-                        updateVersion(this.gltf);
-                        ModelUtility.checkSupportedExtensions(this.extensionsRequired);
-                        addPipelineExtras(this.gltf);
-                        addDefaults(this.gltf);
-                        processModelMaterialsCommon(this.gltf, options);
-                        processPbrMetallicRoughness(this.gltf, options);
+                if (!loadResources.initialized) {
+                    // glTF pipeline updates
+                    var options = {
+                        optimizeForCesium: true,
+                        addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
+                    };
+                    frameState.brdfLutGenerator.update(frameState);
+                    updateVersion(this.gltf);
+                    ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                    addPipelineExtras(this.gltf);
+                    addDefaults(this.gltf);
+                    processModelMaterialsCommon(this.gltf, options);
+                    processPbrMetallicRoughness(this.gltf, options);
 
-                        parseDraco(this, context);
-                    }
+                    // Start draco decoding
+                    DracoLoader.parse(this);
 
-                    // We must wait until the geometry is decoded
-                    if (loadResources.decodingComplete()) {
-                        // We do this after to make sure that the ids don't change
-                        addBuffersToLoadResources(this);
-
-                        if (!this._loadRendererResourcesFromCache) {
-                            parseBufferViews(this);
-                            parseShaders(this);
-                            parsePrograms(this);
-                            parseTextures(this, context);
-                        }
-                        parseMaterials(this);
-                        parseMeshes(this);
-                        parseNodes(this);
-
-                        this._boundingSphere = computeBoundingSphere(this);
-                        this._initialRadius = this._boundingSphere.radius;
-                        this._updatedGltfVersion = true;
-                    }
+                    loadResources.initialized = true;
                 }
 
-                if (this._updatedGltfVersion && loadResources.pendingShaderLoads === 0) {
+                if (!loadResources.finishedDecoding()) {
+                    DracoLoader.decode(this, context)
+                        .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
+                }
+
+                if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
+                    // We do this after to make sure that the ids don't change
+                    addBuffersToLoadResources(this);
+
+                    if (!this._loadRendererResourcesFromCache) {
+                        parseBufferViews(this);
+                        parseShaders(this);
+                        parsePrograms(this);
+                        parseTextures(this, context);
+                    }
+                    parseMaterials(this);
+                    parseMeshes(this);
+                    parseNodes(this);
+
+                    this._boundingSphere = computeBoundingSphere(this);
+                    this._initialRadius = this._boundingSphere.radius;
+
+                    loadResources.resourcesParsed = true;
+                }
+
+                if (loadResources.resourcesParsed &&
+                    loadResources.pendingShaderLoads === 0) {
                     createResources(this, frameState);
                 }
             }
