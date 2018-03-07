@@ -1060,15 +1060,13 @@ define([
         // - clipping plane count
         // - clipping function (union v. intersection)
         var clippingPlanes = tileset.clippingPlanes;
-        if (defined(clippingPlanes)) {
-            var enabled = this._isClipped && clippingPlanes.enabled;
-            var currentClippingPlanesState = enabled ? clippingPlanes.clippingPlanesState() : 0;
-            if (currentClippingPlanesState !== this._clippingPlanesState) {
-                this._clippingPlanesState = currentClippingPlanesState;
-                this._content.clippingPlanesDirty = true;
-            }
-        } else if (this._clippingPlanesState !== 0) { // indicates active clipping plane collection was removed
-            this._clippingPlanesState = 0;
+        var currentClippingPlanesState = 0;
+        if (defined(clippingPlanes) && this._isClipped && clippingPlanes.enabled) {
+            currentClippingPlanesState = clippingPlanes.clippingPlanesState();
+        }
+        // If clippingPlaneState for this tile changed, mark content as clippingPlanesDirty
+        if (currentClippingPlanesState !== this._clippingPlanesState) {
+            this._clippingPlanesState = currentClippingPlanesState;
             this._content.clippingPlanesDirty = true;
         }
 

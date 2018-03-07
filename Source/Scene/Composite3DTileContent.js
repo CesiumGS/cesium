@@ -44,6 +44,11 @@ define([
         this._contents = [];
         this._readyPromise = when.defer();
 
+        /**
+         * @inheritdoc Cesium3DTileContent#clippingPlanesDirty
+         */
+        this.clippingPlanesDirty = false;
+
         initialize(this, arrayBuffer, byteOffset, factory);
     }
 
@@ -282,7 +287,9 @@ define([
         var contents = this._contents;
         var length = contents.length;
         for (var i = 0; i < length; ++i) {
+            contents[i].clippingPlanesDirty = this.clippingPlanesDirty;
             contents[i].update(tileset, frameState);
+            contents[i].clippingPlanesDirty = false;
         }
     };
 
