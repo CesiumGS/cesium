@@ -67,19 +67,6 @@ defineSuite([
         expect(clippingPlane).toBe(scratchClippingPlane);
     });
 
-    it('can be used to produce a Plane', function() {
-        var clippingPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
-        var plane = ClippingPlane.toPlane(clippingPlane);
-        expect(Cartesian3.equals(plane.normal, clippingPlane.normal)).toBe(true);
-        expect(plane.distance).toEqual(clippingPlane.distance);
-
-        var scratchPlane = new Plane(Cartesian3.UNIT_Y, 0.0);
-        plane = ClippingPlane.toPlane(clippingPlane, scratchPlane);
-        expect(Cartesian3.equals(plane.normal, clippingPlane.normal)).toBe(true);
-        expect(plane.distance).toEqual(clippingPlane.distance);
-        expect(plane).toBe(scratchPlane);
-    });
-
     it('clones', function() {
         var clippingPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
         var cloneClippingPlane = ClippingPlane.clone(clippingPlane);

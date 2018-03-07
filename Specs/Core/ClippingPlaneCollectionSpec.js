@@ -268,6 +268,7 @@ defineSuite([
 
             if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
                 // Don't fail just because float textures aren't supported
+                scene.destroyForSpecs();
                 return;
             }
 
@@ -302,6 +303,7 @@ defineSuite([
 
             if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
                 // Don't fail just because float textures aren't supported
+                scene.destroyForSpecs();
                 return;
             }
 
@@ -343,6 +345,7 @@ defineSuite([
 
             if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
                 // Don't fail just because float textures aren't supported
+                scene.destroyForSpecs();
                 return;
             }
 
@@ -602,40 +605,16 @@ defineSuite([
         clippingPlanes = new ClippingPlaneCollection();
         clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, -1.0));
 
-        expect(clippingPlanes.getShaderState()).toEqual(-1);
+        expect(clippingPlanes.clippingPlanesState()).toEqual(-1);
 
         var holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
         clippingPlanes.add(holdThisPlane);
-        expect(clippingPlanes.getShaderState()).toEqual(-2);
+        expect(clippingPlanes.clippingPlanesState()).toEqual(-2);
 
         clippingPlanes.unionClippingRegions = true;
-        expect(clippingPlanes.getShaderState()).toEqual(2);
+        expect(clippingPlanes.clippingPlanesState()).toEqual(2);
 
         clippingPlanes.remove(holdThisPlane);
-        expect(clippingPlanes.getShaderState()).toEqual(1);
-    });
-
-    it('tracks and indicates need for shader changes', function() {
-        clippingPlanes = new ClippingPlaneCollection();
-        expect(clippingPlanes.shouldRegenerateShaders).toBe(false);
-
-        var holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
-
-        clippingPlanes.add(holdThisPlane);
-        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
-        clippingPlanes.shouldRegenerateShaders = false;
-
-        clippingPlanes.enabled = false;
-        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
-        clippingPlanes.enabled = true;
-        clippingPlanes.shouldRegenerateShaders = false;
-
-        clippingPlanes.unionClippingRegions = true;
-        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
-        clippingPlanes.shouldRegenerateShaders = false;
-
-        clippingPlanes.remove(holdThisPlane);
-        expect(clippingPlanes.shouldRegenerateShaders).toBe(true);
-        clippingPlanes.shouldRegenerateShaders = false;
+        expect(clippingPlanes.clippingPlanesState()).toEqual(1);
     });
 });

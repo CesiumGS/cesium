@@ -329,7 +329,7 @@ define([
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
         this._isClipped = true;
-        this._clippingShaderState = 0; // encapsulates if shader should clip (_isClipped, clippingPlanes.enabled) and number/function
+        this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -1062,11 +1062,14 @@ define([
         var clippingPlanes = tileset.clippingPlanes;
         if (defined(clippingPlanes)) {
             var enabled = this._isClipped && clippingPlanes.enabled;
-            var currentClippingShaderState = enabled ? clippingPlanes.getShaderState() : 0;
-            if (currentClippingShaderState !== this._clippingShaderState) {
-                this._clippingShaderState = currentClippingShaderState;
-                this._content.shadersDirty = true; // indicate shader rebuild
+            var currentClippingPlanesState = enabled ? clippingPlanes.clippingPlanesState() : 0;
+            if (currentClippingPlanesState !== this._clippingPlanesState) {
+                this._clippingPlanesState = currentClippingPlanesState;
+                this._content.clippingPlanesDirty = true;
             }
+        } else if (this._clippingPlanesState !== 0) { // indicates active clipping plane collection was removed
+            this._clippingPlanesState = 0;
+            this._content.clippingPlanesDirty = true;
         }
 
         var initCommandLength = frameState.commandList.length;
@@ -1074,7 +1077,7 @@ define([
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
 
-        this._content.shadersDirty = false; // reset to prevent unnecessary shader rebuilds
+        this._content.clippingPlanesDirty = false; // reset after content update
     };
 
     var scratchCommandList = [];

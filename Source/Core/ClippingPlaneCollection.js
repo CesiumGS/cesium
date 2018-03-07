@@ -60,7 +60,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Plane[]} [options.planes=[]] An array of up to 2048 {@link ClippingPlane} objects used to selectively disable rendering on the outside of each plane.
+     * @param {ClippingPlane[]} [options.planes=[]] An array of {@link ClippingPlane} objects used to selectively disable rendering on the outside of each plane.
      * @param {Boolean} [options.enabled=true] Determines whether the clipping planes are active.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
      * @param {Boolean} [options.unionClippingRegions=false] If true, a region will be clipped if included in any plane in the collection. Otherwise, the region to be clipped must intersect the regions defined by all planes in this collection.
@@ -82,18 +82,12 @@ define([
         // Use of Plane objects will be deprecated.
         var planes = options.planes;
         if (defined(planes)) {
-            var planeCount = planes.length;
-            for (var i = 0; i < planeCount; i++) {
+            var planesLength = planes.length;
+            for (var i = 0; i < planesLength; ++i) {
                 this.add(planes[i]);
             }
         }
 
-        /**
-         * Determines whether the clipping planes are active.
-         *
-         * @type {Boolean}
-         * @default true
-         */
         this._enabled = false;
         this.enabled = defaultValue(options.enabled, true); // set using setter
 
@@ -122,8 +116,8 @@ define([
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
-         // If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
-         // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
+        // If this ClippingPlaneCollection has an owner, only its owner should update or destroy it.
+        // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
 
         this._testIntersection = undefined;
@@ -134,16 +128,6 @@ define([
         this._float32View = undefined;
 
         this._clippingPlanesTexture = undefined;
-
-        /**
-         * Flag for if changes since the last call to update necessitate shader changes.
-         * Used by Model.js to rebuild shaders when it owns the ClippingPlaneCollection.
-         * Terrain and 3D Tilesets handle this at the tile-level using getShaderState() and bounding volume checks instead.
-         *
-         * @type {Boolean}
-         * @private
-         */
-        this.shouldRegenerateShaders = false;
     }
 
     function unionIntersectFunction(value) {
@@ -188,7 +172,6 @@ define([
                 }
                 this._unionClippingRegions = value;
                 this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
-                this.shouldRegenerateShaders = true;
             }
         },
 
@@ -208,7 +191,6 @@ define([
                     return;
                 }
                 this._enabled = value;
-                this.shouldRegenerateShaders = true;
             }
         },
 
@@ -218,6 +200,7 @@ define([
          * @memberof ClippingPlaneCollection.prototype
          * @type {Texture}
          * @readonly
+         * @private
          */
         texture : {
             get : function() {
@@ -228,6 +211,7 @@ define([
         /**
          * A reference to the ClippingPlaneCollection's owner, if any.
          *
+         * @memberof ClippingPlaneCollection.prototype
          * @readonly
          * @private
          */
@@ -238,21 +222,19 @@ define([
         }
     });
 
-    ClippingPlaneCollection.prototype.setIndexDirty = function(index) {
+    function setIndexDirty(collection, index) {
         // If there's already a different _dirtyIndex set, more than one plane has changed since update.
         // Entire texture must be reloaded
-        this._manyDirtyPlanes = this._manyDirtyPlanes || (this._dirtyIndex !== -1 && this._dirtyIndex !== index);
-        this._dirtyIndex = index;
-    };
+        collection._manyDirtyPlanes = collection._manyDirtyPlanes || (collection._dirtyIndex !== -1 && collection._dirtyIndex !== index);
+        collection._dirtyIndex = index;
+    }
 
     /**
      * Adds the specified {@link ClippingPlane} to the collection to be used to selectively disable rendering
      * on the outside of each plane. Use {@link ClippingPlaneCollection#unionClippingRegions} to modify
      * how modify the clipping behavior of multiple planes.
      *
-     * @param {ClippingPlanePlane} plane The clipping plane plane to add to the collection. Use of Plane objects will be deprecated.
-     *
-     * @exception {DeveloperError} The clipping plane added exceeds the maximum number of supported clipping planes.
+     * @param {ClippingPlane} plane The ClippingPlane to add to the collection.
      *
      * @see ClippingPlaneCollection#unionClippingRegions
      * @see ClippingPlaneCollection#remove
@@ -263,15 +245,14 @@ define([
         if (plane instanceof ClippingPlane) {
             var that = this;
             plane.onChangeCallback = function(index) {
-                that.setIndexDirty(index);
+                setIndexDirty(that, index);
             };
             plane.index = newPlaneIndex;
         } else {
             this._containsUntrackablePlanes = true;
         }
-        this.setIndexDirty(newPlaneIndex);
+        setIndexDirty(this, newPlaneIndex);
         this._planes.push(plane);
-        this.shouldRegenerateShaders = true;
     };
 
     /**
@@ -282,7 +263,7 @@ define([
      * in the collection.
      *
      * @param {Number} index The zero-based index of the plane.
-     * @returns {Plane} The plane at the specified index.
+     * @returns {ClippingPlane} The ClippingPlane at the specified index.
      *
      * @see ClippingPlaneCollection#length
      */
@@ -306,39 +287,39 @@ define([
     }
 
     /**
-     * Checks whether this collection contains a plane equal to the given plane.
+     * Checks whether this collection contains a ClippingPlane equal to the given ClippingPlane.
      *
-     * @param {Plane} [plane] The plane or ClippingPlane to check for.
-     * @returns {Boolean} true if this collection contains the plane, false otherwise.
+     * @param {ClippingPlane} [clippingPlane] The ClippingPlane to check for.
+     * @returns {Boolean} true if this collection contains the ClippingPlane, false otherwise.
      *
      * @see ClippingPlaneCollection#get
      */
-    ClippingPlaneCollection.prototype.contains = function(plane) {
-        return indexOf(this._planes, plane) !== -1;
+    ClippingPlaneCollection.prototype.contains = function(clippingPlane) {
+        return indexOf(this._planes, clippingPlane) !== -1;
     };
 
     /**
-     * Removes the first occurrence of the given plane from the collection.
+     * Removes the first occurrence of the given ClippingPlane from the collection.
      *
-     * @param {Plane} plane
+     * @param {ClippingPlane} clippingPlane
      * @returns {Boolean} <code>true</code> if the plane was removed; <code>false</code> if the plane was not found in the collection.
      *
      * @see ClippingPlaneCollection#add
      * @see ClippingPlaneCollection#contains
      * @see ClippingPlaneCollection#removeAll
      */
-    ClippingPlaneCollection.prototype.remove = function(plane) {
+    ClippingPlaneCollection.prototype.remove = function(clippingPlane) {
         var planes = this._planes;
-        var index = indexOf(planes, plane);
+        var index = indexOf(planes, clippingPlane);
 
         if (index === -1) {
             return false;
         }
 
         // Unlink this ClippingPlaneCollection from the ClippingPlane
-        if (plane instanceof ClippingPlane) {
-            plane.onChangeCallback = undefined;
-            plane.index = -1;
+        if (clippingPlane instanceof ClippingPlane) {
+            clippingPlane.onChangeCallback = undefined;
+            clippingPlane.index = -1;
         }
 
         // Shift and update indices
@@ -355,7 +336,6 @@ define([
         this._manyDirtyPlanes = true;
         planes.length = length;
 
-        this.shouldRegenerateShaders = true;
         return true;
     };
 
@@ -369,7 +349,7 @@ define([
         // Dereference this ClippingPlaneCollection from all ClippingPlanes
         var planes = this._planes;
         var planesCount = planes.length;
-        for (var i = 0; i < planesCount; i++) {
+        for (var i = 0; i < planesCount; ++i) {
             var plane = planes[i];
             if (plane instanceof ClippingPlane) {
                 plane.onChangeCallback = undefined;
@@ -378,7 +358,6 @@ define([
         }
         this._manyDirtyPlanes = true;
         this._planes = [];
-        this.shouldRegenerateShaders = true;
     };
 
     var octEncodeScratch = new Cartesian2();
@@ -584,7 +563,7 @@ define([
             var resultPlane = result._planes[i];
             resultPlane.index = i;
             resultPlane.onChangeCallback = function(index) {
-                result.setIndexDirty(index);
+                setIndexDirty(result, index);
             };
             ClippingPlane.clone(this._planes[i], resultPlane);
         }
@@ -601,17 +580,17 @@ define([
     var scratchMatrix = new Matrix4();
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     /**
-     * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link BoundingVolume}.
+     * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link TileBoundingVolume}.
      * @private
      *
-     * @param {Object} boundingVolume The volume to determine the intersection with the planes.
+     * @param {Object} tileBoundingVolume The volume to determine the intersection with the planes.
      * @param {Matrix4} [transform] An optional, additional matrix to transform the plane to world coordinates.
      * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the planes
      *                      the normal is pointing and should be entirely rendered, {@link Intersect.OUTSIDE}
      *                      if the entire volume is on the opposite side and should be clipped, and
      *                      {@link Intersect.INTERSECTING} if the volume intersects the planes.
      */
-    ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = function(boundingVolume, transform) {
+    ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = function(tileBoundingVolume, transform) {
         var planes = this._planes;
         var length = planes.length;
 
@@ -634,7 +613,7 @@ define([
 
             Plane.transform(plane, modelMatrix, scratchPlane); // ClippingPlane can be used for Plane math
 
-            var value = boundingVolume.intersectPlane(scratchPlane);
+            var value = tileBoundingVolume.intersectPlane(scratchPlane);
             if (value === Intersect.INTERSECTING) {
                 intersection = value;
             } else if (this._testIntersection(value)) {
@@ -646,14 +625,15 @@ define([
     };
 
     /**
-     * Returns a Number for checking if shaders built for this ClippingPlaneCollection need to be updated
-     * due to changes in plane count or clipping mode.
+     * Returns a Number encapsulating the state for this ClippingPlaneCollection.
      *
      * Clipping mode is encoded in the sign of the number, which is just the plane count.
+     * Used for checking if shader regeneration is necessary.
      *
-     * @returns {Number} A Number that describes the shaders needed to use this ClippingPlaneCollection.
+     * @returns {Number} A Number that describes the ClippingPlaneCollection's state.
+     * @private
      */
-    ClippingPlaneCollection.prototype.getShaderState = function() {
+    ClippingPlaneCollection.prototype.clippingPlanesState = function() {
         return this._unionClippingRegions ? this._planes.length : -this._planes.length;
     };
 

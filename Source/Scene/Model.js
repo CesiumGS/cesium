@@ -514,21 +514,20 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-        this.needsColorShadingCode = needsColorShadingCode(this);
+        this.colorShadingEnabled = isColorShadingEnabled(this);
 
         this._clippingPlanes = undefined;
-
-        ClippingPlaneCollection.setOwnership(options.clippingPlanes, this, '_clippingPlanes');
+        this.clippingPlanes = options.clippingPlanes;
+        // Used for checking if shaders need to be regenerated due to clipping plane changes.
+        this._clippingPlanesState = 0;
 
         /**
-         * Flag to specify that shaders should be regenerated.
-         * Typically used to rebuild shaders if a ClippingPlaneCollection is added or removed.
+         * Flag for indicating to ModelInstanceCollection that shaders were changed, necessitating updates.
          *
          * @type {Boolean}
-         * @default false
          * @private
          */
-        this.shouldRegenerateShaders = false;
+        this.changedShadersOnLastUpdate = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1034,7 +1033,6 @@ define([
                 }
                 // Handle destroying, checking of unknown, checking for existing ownership
                 ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
-                this.shouldRegenerateShaders = true;
             }
         }
     });
@@ -1043,11 +1041,11 @@ define([
         return context.stencilBuffer;
     }
 
-    function needsColorShadingCode(model) {
+    function isColorShadingEnabled(model) {
         return !Color.equals(model.color, Color.WHITE) || (model.colorBlendMode !== ColorBlendMode.HIGHLIGHT);
     }
 
-    function needsClippingCode(model) {
+    function isClippingEnabled(model) {
         var clippingPlanes = model._clippingPlanes;
         return defined(clippingPlanes) && clippingPlanes.enabled;
     }
@@ -1923,19 +1921,85 @@ define([
 
     // When building programs for the first time, do not include modifiers for clipping planes and color
     // since this is the version of the program that will be cached.
-    function createProgram(id, model, context, firstBuild) {
-        var programs = model._sourcePrograms;
+    function createProgram(id, model, context) {
+        var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
 
-        var program = programs[id];
-
-        var clippingPlaneCollection = model.clippingPlanes;
-        var addClippingPlaneCode = !firstBuild && needsClippingCode(model);
-
-        var attributeLocations = createAttributeLocations(model, program.attributes);
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
+
+        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+            var quantizedVS = quantizedVertexShaders[id];
+            if (!defined(quantizedVS)) {
+                quantizedVS = modifyShaderForQuantizedAttributes(vs, id, model);
+                quantizedVertexShaders[id] = quantizedVS;
+            }
+            vs = quantizedVS;
+        }
+
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+
+        var pickFS, pickVS;
+        if (model.allowPicking) {
+            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
+            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
+
+            if (!model._pickFragmentShaderLoaded) {
+                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+            }
+        }
+        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+    }
+
+    function recreateProgram(id, model, context) {
+        var program = model._sourcePrograms[id];
+        var shaders = model._sourceShaders;
+        var quantizedVertexShaders = model._quantizedVertexShaders;
+
+        var clippingPlaneCollection = model.clippingPlanes;
+        var addClippingPlaneCode = isClippingEnabled(model);
+
+        var vs = shaders[program.vertexShader].extras._pipeline.source;
+        var fs = shaders[program.fragmentShader].extras._pipeline.source;
+
+        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+            vs = quantizedVertexShaders[id];
+        }
+
+        var finalFS = fs;
+        if (isColorShadingEnabled(model)) {
+            finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
+        }
+        if (addClippingPlaneCode) {
+            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection);
+        }
+
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
+
+        var pickFS, pickVS;
+        if (model.allowPicking) {
+            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
+            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
+
+            if (!model._pickFragmentShaderLoaded) {
+                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+            }
+
+            if (addClippingPlaneCode) {
+                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
+            }
+        }
+        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+    }
+
+    function createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context) {
+        var program = model._sourcePrograms[id];
+        var attributeLocations = createAttributeLocations(model, program.attributes);
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1948,26 +2012,6 @@ define([
             }
         }
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            var quantizedVs = quantizedVertexShaders[id];
-            if (!defined(quantizedVs)) {
-                quantizedVs = modifyShaderForQuantizedAttributes(vs, id, model);
-                quantizedVertexShaders[id] = quantizedVs;
-            }
-            vs = quantizedVs;
-        }
-
-        var finalFS = fs;
-        if (needsColorShadingCode(model)) {
-            finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
-        }
-        if (addClippingPlaneCode) {
-            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
-        }
-
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
-
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : drawVS,
@@ -1976,18 +2020,6 @@ define([
         });
 
         if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            var pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
-
-            if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection, context);
-            }
-
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : pickVS,
@@ -2026,7 +2058,7 @@ define([
         } else {
             // Create all loaded programs this frame
             while (programsToCreate.length > 0) {
-                createProgram(programsToCreate.dequeue(), model, context, true);
+                createProgram(programsToCreate.dequeue(), model, context);
             }
         }
     }
@@ -3243,7 +3275,6 @@ define([
         model._sourceShaders = model.gltf.shaders;
         model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
 
-
         ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
@@ -3787,7 +3818,7 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
+    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
         shader +=
@@ -3797,13 +3828,13 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-        '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix);' +
-        '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-        '    clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
-        '    float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
-        '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
+            '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix);' +
+            '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+            '    clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
+            '    float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
+            '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
             '    { \n' +
-        '        gl_FragColor = clippingPlanesEdgeColor;\n' +
+            '        gl_FragColor = clippingPlanesEdgeColor;\n' +
             '    } \n' +
             '} \n';
         return shader;
@@ -3837,7 +3868,6 @@ define([
             if (clippingPlanes.enabled) {
                 clippingPlanes.update(frameState);
             }
-            clippingPlanes.shouldRegenerateShaders = false;
         }
     }
 
@@ -4057,6 +4087,8 @@ define([
      * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(frameState) {
+        this.changedShadersOnLastUpdate = false;
+
         if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
@@ -4254,15 +4286,6 @@ define([
                 }
             }
 
-            var clippingPlanes = this._clippingPlanes;
-            var clippingPlanesShouldRegenerateShaders = false;
-            if (defined(clippingPlanes)) {
-                if (clippingPlanes.enabled) {
-                    Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
-                }
-                clippingPlanesShouldRegenerateShaders = clippingPlanes.shouldRegenerateShaders;
-            }
-
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
@@ -4284,16 +4307,26 @@ define([
             updateShadows(this);
             updateClippingPlanes(this, frameState);
 
-            // Regenerate shader if color shading changed from last update
-            var currentlyNeedsColorCode = needsColorShadingCode(this);
-            if (currentlyNeedsColorCode !== this.needsColorShadingCode) {
-                this.needsColorShadingCode = currentlyNeedsColorCode;
-                this.shouldRegenerateShaders = true;
+            // Regnerate shaders if ClippingPlaneCollection state changed or it was removed
+            var clippingPlanes = this._clippingPlanes;
+            var currentClippingPlanesState = 0;
+            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+                currentClippingPlanesState = clippingPlanes.clippingPlanesState();
             }
 
-            if (this.shouldRegenerateShaders || clippingPlanesShouldRegenerateShaders) {
+            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
+            this._clippingPlanesState = currentClippingPlanesState;
+
+            // Regenerate shaders if color shading changed from last update
+            var currentlyColorShadingEnabled = isColorShadingEnabled(this);
+            if (currentlyColorShadingEnabled !== this.colorShadingEnabled) {
+                this.colorShadingEnabled = currentlyColorShadingEnabled;
+                shouldRegenerateShaders = true;
+            }
+
+            if (shouldRegenerateShaders) {
                 regenerateShaders(this, frameState);
-                this.shouldRegenerateShaders = false;
             } else {
                 updateColor(this, frameState, false);
                 updateSilhouette(this, frameState, false);
@@ -4390,7 +4423,7 @@ define([
 
     // Run from update iff:
     // - everything is loaded
-    // - clipping planes state change (shouldRegenerateShaders) OR color state set
+    // - clipping planes state change OR color state set
     // Run this from destructor after removing color state and clipping plane state
     function regenerateShaders(model, frameState) {
         // In regards to _cachedRendererResources:
@@ -4399,15 +4432,19 @@ define([
         // - delink _rendererResources.*programs and create new dictionaries.
         // - do NOT destroy any programs - might be used by copies of the model or by might be needed in the future if clipping planes/model color is deactivated
 
-        // If clipping planes/model color inactive:
+        // If clipping planes and model color inactive:
         // - destroy _rendererResources.*programs
         // - relink _rendererResources.*programs to _cachedRendererResources
 
         // In both cases, need to mark commands as dirty, re-run derived commands (elsewhere)
 
         var rendererResources = model._rendererResources;
+        var cachedRendererResources = model._cachedRendererResources;
+        destroyIfNotCached(rendererResources, cachedRendererResources);
 
-        if (needsClippingCode(model) || needsColorShadingCode(model)) {
+        model.changedShadersOnLastUpdate = true;
+
+        if (isClippingEnabled(model) || isColorShadingEnabled(model)) {
             rendererResources.programs = {};
             rendererResources.pickPrograms = {};
             rendererResources.silhouettePrograms = {};
@@ -4415,12 +4452,9 @@ define([
             var sourcePrograms = model._sourcePrograms;
 
             ForEach.object(sourcePrograms, function(program, id) {
-                createProgram(id, model, frameState.context, false);
+                recreateProgram(id, model, frameState.context);
             });
         } else {
-            var cachedRendererResources = model._cachedRendererResources;
-            destroyIfNotCached(rendererResources, cachedRendererResources);
-
             rendererResources.programs = cachedRendererResources.programs;
             rendererResources.pickPrograms = cachedRendererResources.pickPrograms;
             rendererResources.silhouettePrograms = cachedRendererResources.silhouettePrograms;
@@ -4519,6 +4553,7 @@ define([
         releaseCachedGltf(this);
         this._sourcePrograms = undefined;
         this._sourceShaders = undefined;
+        this._quantizedVertexShaders = undefined;
 
         // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
         // _clippingPlanes references a ClippingPlaneCollection that this model does not own.

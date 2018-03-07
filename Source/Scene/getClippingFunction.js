@@ -21,7 +21,7 @@ define([
         Check.typeOf.object('clippingPlaneCollection', clippingPlaneCollection);
         //>>includeEnd('debug');
         var unionClippingRegions = clippingPlaneCollection.unionClippingRegions;
-        var clippingPlaneCount = clippingPlaneCollection.length;
+        var clippingPlanesLength = clippingPlaneCollection.length;
         var texture = clippingPlaneCollection.texture;
         var usingFloatTexture = texture.pixelDatatype === PixelDatatype.FLOAT;
         var width = texture.width;
@@ -29,11 +29,11 @@ define([
 
         var functions = usingFloatTexture ? getClippingPlaneFloat(width, height) : getClippingPlaneUint8(width, height);
         functions += '\n';
-        functions += unionClippingRegions ? clippingFunctionUnion(usingFloatTexture, clippingPlaneCount) : clippingFunctionIntersect(usingFloatTexture, clippingPlaneCount);
+        functions += unionClippingRegions ? clippingFunctionUnion(usingFloatTexture, clippingPlanesLength) : clippingFunctionIntersect(usingFloatTexture, clippingPlanesLength);
         return functions;
     }
 
-    function clippingFunctionUnion(usingFloatTexture, clippingPlaneCount) {
+    function clippingFunctionUnion(usingFloatTexture, clippingPlanesLength) {
         var functionString =
             'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n' +
             '{\n' +
@@ -44,7 +44,7 @@ define([
             '    float pixelWidth = czm_metersPerPixel(position);\n' +
             '    bool breakAndDiscard = false;\n' +
 
-            '    for (int i = 0; i < ' + clippingPlaneCount + '; ++i)\n' +
+            '    for (int i = 0; i < ' + clippingPlanesLength + '; ++i)\n' +
             '    {\n' +
             '        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n' +
 
@@ -69,7 +69,7 @@ define([
         return functionString;
     }
 
-    function clippingFunctionIntersect(usingFloatTexture, clippingPlaneCount) {
+    function clippingFunctionIntersect(usingFloatTexture, clippingPlanesLength) {
         var functionString =
             'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n' +
             '{\n' +
@@ -80,7 +80,7 @@ define([
             '    float clipAmount = 0.0;\n' +
             '    float pixelWidth = czm_metersPerPixel(position);\n' +
 
-            '    for (int i = 0; i < ' + clippingPlaneCount + '; ++i)\n' +
+            '    for (int i = 0; i < ' + clippingPlanesLength + '; ++i)\n' +
             '    {\n' +
             '        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n' +
 

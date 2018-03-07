@@ -72,9 +72,9 @@ define([
         this._diffuseAttributeOrUniformName = {};
 
         /**
-         * @inheritdoc Cesium3DTileContent#shadersDirty
+         * @inheritdoc Cesium3DTileContent#clippingPlanesDirty
          */
-        this.shadersDirty = false;
+        this.clippingPlanesDirty = false;
 
         /**
          * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
@@ -509,14 +509,9 @@ define([
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
-        // Set to rebuild model shaders
-        if (this.shadersDirty) {
-            this._model.shouldRegenerateShaders = true;
-        }
-
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        if (defined(tilesetClippingPlanes)) {
+        if (this.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
             // Dereference the clipping planes from the model if they are irrelevant.
             // Link/Dereference directly to avoid ownership checks.
             // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.

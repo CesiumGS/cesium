@@ -550,7 +550,7 @@ define([
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
         this._clippingPlanes = undefined;
-        ClippingPlaneCollection.setOwnership(options.clippingPlanes, this, '_clippingPlanes');
+        this.clippingPlanes = options.clippingPlanes;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1901,10 +1901,6 @@ define([
         var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
-        if (defined(clippingPlanes)) {
-            // Mark that clipping plane shaders have been regenerated in this update
-            clippingPlanes.shouldRegenerateShaders = false;
-        }
         if (statistics.selected !== 0) {
             var credits = this._credits;
             if (defined(credits)) {

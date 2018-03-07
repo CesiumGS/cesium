@@ -929,7 +929,6 @@ define([
 
         var instancingSupported = this._instancingSupported;
         var model = this._model;
-        var modelShadersChanged = model.shouldRegenerateShaders;
 
         model.update(frameState);
 
@@ -978,7 +977,7 @@ define([
         }
 
         // If the model was set to rebuild shaders during update, rebuild instanced commands.
-        if (modelShadersChanged) {
+        if (model.changedShadersOnLastUpdate) {
             generateModelCommands(this, instancingSupported);
         }
 

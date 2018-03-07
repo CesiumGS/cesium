@@ -307,13 +307,13 @@ defineSuite([
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            content.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
             tile._isClipped = false;
-            content.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeUndefined();
         });
@@ -324,7 +324,6 @@ defineSuite([
 
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var tile = tileset._root;
-            var content = tile.content;
 
             var clippingPlaneCollection = new ClippingPlaneCollection({
                 planes : [
@@ -333,8 +332,7 @@ defineSuite([
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            content.shadersDirty = true;
-            content.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState);
 
             expect(Model._getClippingFunction.calls.count()).toEqual(2);
         });

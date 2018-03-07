@@ -35,8 +35,8 @@ define([
         this.featurePropertiesDirty = false;
 
         /**
-         * Gets or sets if the tile's shaders should be rebuilt.
-         * Used for regenerating shaders due to clipping plane changes.
+         * Gets or sets if the tile's relationship with a ClippingPlaneCollection has changed with regards
+         * to the ClippingPlaneCollection's state.
          * <p>
          * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
          * not part of the public Cesium API.
@@ -46,7 +46,7 @@ define([
          *
          * @private
          */
-        this.shadersDirty = false;
+        this.clippingPlanesDirty = false;
     }
 
     defineProperties(Cesium3DTileContent.prototype, {

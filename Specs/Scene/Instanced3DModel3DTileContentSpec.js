@@ -322,13 +322,13 @@ defineSuite([
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            content.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
             tile._isClipped = false;
-            content.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeUndefined();
         });
@@ -348,8 +348,8 @@ defineSuite([
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            content.shadersDirty = true;
-            content.update(tileset, scene.frameState);
+            content.clippingPlanesDirty = true;
+            tile.update(tileset, scene.frameState);
 
             expect(Model._getClippingFunction.calls.count()).toEqual(2);
         });
