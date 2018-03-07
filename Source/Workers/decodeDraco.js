@@ -1,5 +1,4 @@
 define([
-        '../Core/arraySlice',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/IndexDatatype',
@@ -7,7 +6,6 @@ define([
         '../ThirdParty/draco-decoder-gltf',
         './createTaskProcessorWorker'
     ], function(
-        arraySlice,
         ComponentDatatype,
         defined,
         IndexDatatype,
@@ -60,7 +58,8 @@ define([
                     dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
                 }
 
-                for (var i = 0; i < vertexArray.length; ++i) {
+                var vertexArrayLength = vertexArray.length;
+                for (var i = 0; i < vertexArrayLength; ++i) {
                     vertexArray[i] = attributeData.GetValue(i);
                 }
 
@@ -82,16 +81,14 @@ define([
         return decodedAttributeData;
     }
 
-    function decodeDracoPrimitive(parameters, transferableObjects) {
+    function decodeDracoPrimitive(parameters) {
         if (!defined(dracoDecoder)) {
             dracoDecoder = new draco.Decoder();
         }
 
         var bufferView = parameters.bufferView;
-        var typedArray = arraySlice(parameters.array, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
-
         var buffer = new draco.DecoderBuffer();
-        buffer.Init(typedArray, bufferView.byteLength);
+        buffer.Init(parameters.array, bufferView.byteLength);
 
         var geometryType = dracoDecoder.GetEncodedGeometryType(buffer);
         if (geometryType !== draco.TRIANGULAR_MESH) {

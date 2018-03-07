@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -77,6 +78,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        arraySlice,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -1308,10 +1310,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getFailedLoadFunction(model, type, path) {
-        return function() {
+    function getFailedLoadFunction(model, type, path, message) {
+        return function(error) {
             model._state = ModelState.FAILED;
-            model._readyPromise.reject(new RuntimeError('Failed to load ' + type + ': ' + path));
+            var message = 'Failed to load ' + type + ': ' + path;
+            if (defined(error)) {
+                message += '\n' + error.message;
+            }
+            model._readyPromise.reject(new RuntimeError(message));
         };
     }
 
@@ -4105,6 +4111,25 @@ define([
         };
     }
 
+    function scheduleDecodingTask (decoderTaskProcessor, model, loadResources, context) {
+        var taskData = loadResources.primitivesToDecode.peek();
+        if (!defined(taskData)) {
+            // All primitives are processing
+            return;
+        }
+
+        var promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
+        if (!defined(promise)) {
+            // Cannot schedule another task this frame
+            return;
+        }
+
+        loadResources.finishedDecoding = false;
+        loadResources.primitivesToDecode.dequeue();
+        return promise.then(addDecodededBuffers(taskData, model, context))
+            .otherwise(getFailedLoadFunction(model, 'model', model.basePath));
+    }
+
     function parseDraco(model, context) {
         if (!defined(model.extensionsRequired['KHR_draco_mesh_compression'])
             || !defined(model.extensionsUsed['KHR_draco_mesh_compression'])) {
@@ -4133,14 +4158,13 @@ define([
                     }
 
                     var bufferView = gltf.bufferViews[compressionData.bufferView];
-                    var rawBuffer = gltf.buffers[bufferView.buffer];
-                    var data = rawBuffer.extras._pipeline.source;
-                    data = data.slice(0, data.length);
+                    var typedArray = gltf.buffers[bufferView.buffer].extras._pipeline.source;
+                    typedArray = arraySlice(typedArray, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
 
                     loadResources.primitivesToDecode.enqueue({
                         mesh : meshId,
                         primitive : primitiveId,
-                        array : data,
+                        array : typedArray,
                         bufferView : bufferView,
                         compressedAttributes : compressionData.attributes
                     });
@@ -4149,30 +4173,12 @@ define([
         }
 
         var decoderTaskProcessor = Model._getDecoderTaskProcessor();
-        var taskData = loadResources.primitivesToDecode.peek();
         var decodingPromises = [];
-        var promise;
 
-        if (defined(taskData)) {
-            promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
-        }
-
+        var promise = scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context);
         while (defined(promise)) {
-            loadResources.finishedDecoding = false;
-            loadResources.primitivesToDecode.dequeue();
-            var decodedPromise = promise.then(addDecodededBuffers(taskData, model, context))
-                .otherwise(function (error) {
-                    model._state = ModelState.FAILED;
-                    model._readyPromise.reject(new RuntimeError('Failed to load model: ' + model.basePath + '\n' + error.message));
-                });
-
-            decodingPromises.push(decodedPromise);
-
-            promise = undefined;
-            taskData = loadResources.primitivesToDecode.peek();
-            if (defined(taskData)) {
-                promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
-            }
+            decodingPromises.push(promise);
+            promise = scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context);
         }
 
         when.all(decodingPromises).then(function () {
@@ -4180,7 +4186,10 @@ define([
         });
     }
 
-    Model._maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);  // Maximum concurrency to use wehn deocding draco models
+    // Maximum concurrency to use when deocding draco models
+    Model._maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
+
+    // Exposed for testing purposes
     Model._decoderTaskProcessor = undefined;
     Model._getDecoderTaskProcessor = function () {
         if (!defined(Model._decoderTaskProcessor)) {
