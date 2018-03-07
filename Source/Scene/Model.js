@@ -1306,7 +1306,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getFailedLoadFunction(model, type, path, message) {
+    function getFailedLoadFunction(model, type, path) {
         return function(error) {
             model._state = ModelState.FAILED;
             var message = 'Failed to load ' + type + ': ' + path;
