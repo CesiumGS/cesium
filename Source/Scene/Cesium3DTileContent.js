@@ -33,20 +33,6 @@ define([
          * @private
          */
         this.featurePropertiesDirty = false;
-
-        /**
-         * Gets or sets if the tile's relationship with a ClippingPlaneCollection has changed with regards
-         * to the ClippingPlaneCollection's state.
-         * <p>
-         * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-         * not part of the public Cesium API.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.clippingPlanesDirty = false;
     }
 
     defineProperties(Cesium3DTileContent.prototype, {

@@ -871,6 +871,19 @@ define([
         };
     }
 
+    function commandsDirty(model) {
+        var nodeCommands = model._nodeCommands;
+        var length = nodeCommands.length;
+
+        for (var i = 0; i < length; i++) {
+            var nc = nodeCommands[i];
+            if (nc.command.dirty) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function generateModelCommands(modelInstanceCollection, instancingSupported) {
         modelInstanceCollection._drawCommands = [];
         modelInstanceCollection._pickCommands = [];
@@ -977,7 +990,7 @@ define([
         }
 
         // If the model was set to rebuild shaders during update, rebuild instanced commands.
-        if (model.changedShadersOnLastUpdate) {
+        if (commandsDirty(model)) {
             generateModelCommands(this, instancingSupported);
         }
 

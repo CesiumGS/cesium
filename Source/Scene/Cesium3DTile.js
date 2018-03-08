@@ -310,6 +310,16 @@ define([
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
+        /**
+         * Tracks if the tile's relationship with a ClippingPlaneCollection has changed with regards
+         * to the ClippingPlaneCollection's state.
+         *
+         * @type {Boolean}
+         *
+         * @private
+         */
+        this.clippingPlanesDirty = false;
+
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
         this._visibilityPlaneMask = 0;
@@ -1049,33 +1059,36 @@ define([
         content.update(tileset, frameState);
     }
 
-    /**
-     * Get the draw commands needed to render this tile.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.update = function(tileset, frameState) {
+    function updateClippingPlanes(tile, tileset) {
         // Compute and compare ClippingPlanes state:
         // - enabled-ness - are clipping planes enabled? is this tile clipped?
         // - clipping plane count
         // - clipping function (union v. intersection)
         var clippingPlanes = tileset.clippingPlanes;
         var currentClippingPlanesState = 0;
-        if (defined(clippingPlanes) && this._isClipped && clippingPlanes.enabled) {
+        if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
             currentClippingPlanesState = clippingPlanes.clippingPlanesState();
         }
-        // If clippingPlaneState for this tile changed, mark content as clippingPlanesDirty
-        if (currentClippingPlanesState !== this._clippingPlanesState) {
-            this._clippingPlanesState = currentClippingPlanesState;
-            this._content.clippingPlanesDirty = true;
+        // If clippingPlaneState for tile changed, mark clippingPlanesDirty so content can update
+        if (currentClippingPlanesState !== tile._clippingPlanesState) {
+            tile._clippingPlanesState = currentClippingPlanesState;
+            tile.clippingPlanesDirty = true;
         }
+    }
 
+    /**
+     * Get the draw commands needed to render this tile.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.update = function(tileset, frameState) {
         var initCommandLength = frameState.commandList.length;
+        updateClippingPlanes(this, tileset);
         applyDebugSettings(this, tileset, frameState);
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
 
-        this._content.clippingPlanesDirty = false; // reset after content update
+        this.clippingPlanesDirty = false; // reset after content update
     };
 
     var scratchCommandList = [];

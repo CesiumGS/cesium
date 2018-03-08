@@ -514,20 +514,12 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-        this.colorShadingEnabled = isColorShadingEnabled(this);
+        this._colorShadingEnabled = isColorShadingEnabled(this);
 
         this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
         // Used for checking if shaders need to be regenerated due to clipping plane changes.
         this._clippingPlanesState = 0;
-
-        /**
-         * Flag for indicating to ModelInstanceCollection that shaders were changed, necessitating updates.
-         *
-         * @type {Boolean}
-         * @private
-         */
-        this.changedShadersOnLastUpdate = false;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1914,7 +1906,7 @@ define([
     };
 
     CreateProgramJob.prototype.execute = function() {
-        createProgram(this.id, this.model, this.context, true);
+        createProgram(this.id, this.model, this.context);
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -4087,8 +4079,6 @@ define([
      * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(frameState) {
-        this.changedShadersOnLastUpdate = false;
-
         if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
@@ -4320,8 +4310,8 @@ define([
 
             // Regenerate shaders if color shading changed from last update
             var currentlyColorShadingEnabled = isColorShadingEnabled(this);
-            if (currentlyColorShadingEnabled !== this.colorShadingEnabled) {
-                this.colorShadingEnabled = currentlyColorShadingEnabled;
+            if (currentlyColorShadingEnabled !== this._colorShadingEnabled) {
+                this._colorShadingEnabled = currentlyColorShadingEnabled;
                 shouldRegenerateShaders = true;
             }
 
@@ -4441,8 +4431,6 @@ define([
         var rendererResources = model._rendererResources;
         var cachedRendererResources = model._cachedRendererResources;
         destroyIfNotCached(rendererResources, cachedRendererResources);
-
-        model.changedShadersOnLastUpdate = true;
 
         if (isClippingEnabled(model) || isColorShadingEnabled(model)) {
             rendererResources.programs = {};

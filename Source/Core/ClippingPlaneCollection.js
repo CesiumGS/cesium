@@ -419,6 +419,15 @@ define([
         }
     }
 
+    function computeTextureResolution(pixelsNeeded, result) {
+        var maxSize = ContextLimits.maximumTextureSize;
+        var width = Math.min(pixelsNeeded, maxSize);
+        var height = Math.ceil(pixelsNeeded / width);
+        result.x = width;
+        result.y = height;
+        return result;
+    }
+
     var textureResolutionScratch = new Cartesian2();
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -636,15 +645,6 @@ define([
     ClippingPlaneCollection.prototype.clippingPlanesState = function() {
         return this._unionClippingRegions ? this._planes.length : -this._planes.length;
     };
-
-    function computeTextureResolution(pixelsNeeded, result) {
-        var maxSize = ContextLimits.maximumTextureSize;
-        var width = Math.min(pixelsNeeded, maxSize);
-        var height = Math.ceil(pixelsNeeded / width);
-        result.x = width;
-        result.y = height;
-        return result;
-    }
 
     /**
      * Sets the owner for the input ClippingPlaneCollection if there wasn't another owner.

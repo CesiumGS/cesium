@@ -2,16 +2,12 @@ define([
         './Cartesian3',
         './Check',
         './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Plane'
+        './defineProperties'
     ], function(
         Cartesian3,
         Check,
         defined,
-        defineProperties,
-        DeveloperError,
-        Plane
+        defineProperties
     ) {
     'use strict';
 
@@ -19,6 +15,7 @@ define([
      * A Plane in Hessian Normal form to be used with ClippingPlaneCollection.
      * Compatible with mathematics functions in Plane.js
      *
+     * @alias ClippingPlane
      * @constructor
      *
      * @param {Cartesian3} normal The plane's normal (normalized).
@@ -108,6 +105,7 @@ define([
      * Clones the ClippingPlane without setting its ownership.
      * @param {ClippingPlane} clippingPlane The ClippingPlane to be cloned
      * @param {ClippingPlane} [result] The object on which to store the cloned parameters.
+     * @returns {ClippingPlane} a clone of the input ClippingPlane
      */
     ClippingPlane.clone = function(clippingPlane, result) {
         if (!defined(result)) {

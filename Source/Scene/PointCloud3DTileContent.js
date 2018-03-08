@@ -153,11 +153,6 @@ define([
          */
         this.featurePropertiesDirty = false;
 
-        /**
-         * @inheritdoc Cesium3DTileContent#clippingPlanesDirty
-         */
-        this.clippingPlanesDirty = false;
-
         // Options for geometric error based attenuation
         this._attenuation = false;
         this._geometricErrorScale = undefined;
@@ -1292,7 +1287,7 @@ define([
         }
 
         // update for clipping planes
-        if (this.clippingPlanesDirty) {
+        if (this._tile.clippingPlanesDirty) {
             createShaders(this, frameState, tileset.style);
         }
 

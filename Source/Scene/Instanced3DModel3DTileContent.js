@@ -82,11 +82,6 @@ define([
         this._features = undefined;
 
         /**
-         * @inheritdoc Cesium3DTileContent#clippingPlanesDirty
-         */
-        this.clippingPlanesDirty = false;
-
-        /**
          * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
         this.featurePropertiesDirty = false;
@@ -520,7 +515,7 @@ define([
         if (defined(model)) {
             // Update for clipping planes
             var tilesetClippingPlanes = this._tileset.clippingPlanes;
-            if (this.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+            if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
                 // Dereference the clipping planes from the model if they are irrelevant - saves on shading
                 // Link/Dereference directly to avoid ownership checks.
                 model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
