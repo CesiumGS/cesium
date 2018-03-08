@@ -10,7 +10,6 @@ defineSuite([
         'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
-        'Core/DracoLoader',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/FeatureDetection',
@@ -30,6 +29,7 @@ defineSuite([
         'Renderer/ShaderSource',
         'Scene/Axis',
         'Scene/ColorBlendMode',
+        'Scene/DracoLoader',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -47,7 +47,6 @@ defineSuite([
         defined,
         defineProperties,
         DistanceDisplayCondition,
-        DracoLoader,
         Ellipsoid,
         Event,
         FeatureDetection,
@@ -67,6 +66,7 @@ defineSuite([
         ShaderSource,
         Axis,
         ColorBlendMode,
+        DracoLoader,
         HeightReference,
         ModelAnimationLoop,
         createScene,
@@ -127,7 +127,6 @@ defineSuite([
     var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
-    var dracoCompressedModelWithErrorUrl = './Data/Models/DracoCompression/ShouldError/CesiumMilkTruck.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -2352,22 +2351,30 @@ defineSuite([
         });
     });
 
-    it('error decoding a glTF causes model loading to fail', function() {
+    it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
+        return loadModel(dracoCompressedModelWithAnimationUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('error decoding a draco compressed glTF causes model loading to fail', function() {
         var decoder = DracoLoader._getDecoderTaskProcessor();
-        spyOn(decoder, 'scheduleTask').and.returnValue(when.reject('error'));
+        spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
 
         var model = primitives.add(Model.fromGltf({
-            url : dracoCompressedModelWithErrorUrl
+            url : dracoCompressedModelUrl
         }));
 
         return pollToPromise(function() {
             scene.renderForSpecs();
-            return model.ready;
+            return model._state === 3; // FAILED
         }, { timeout: 10000 }).then(function() {
-            model.readyPromise.then(function () {
+            model.readyPromise.then(function (e) {
                 fail('should not resolve');
             }).otherwise(function(e) {
                 expect(e).toBeDefined();
+                expect(e.message).toEqual('Failed to load model: ./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf\nmy error');
                 primitives.remove(model);
             });
         });
