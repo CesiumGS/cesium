@@ -261,7 +261,6 @@ define([
             }
         },
 
-
         /**
          * Gets the Bing Maps key.
          * @memberof BingMapsImageryProvider.prototype
@@ -337,7 +336,6 @@ define([
                 return this._tileHeight;
             }
         },
-
 
         /**
          * Gets the maximum level-of-detail that can be requested.  This function should

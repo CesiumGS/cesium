@@ -81,7 +81,6 @@ defineSuite([
         });
     });
 
-
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new UrlTemplateImageryProvider({
             url: 'made/up/tms/server/'

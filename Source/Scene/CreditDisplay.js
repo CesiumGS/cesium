@@ -314,7 +314,6 @@ define([
         }
         lightbox.addEventListener('click', hideLightbox, false);
 
-
         var title = document.createElement('div');
         title.className = 'cesium-credit-lightbox-title';
         title.textContent = 'Data provided by:';

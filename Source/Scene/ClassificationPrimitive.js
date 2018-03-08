@@ -418,7 +418,6 @@ define([
         };
     }
 
-
     function getColorRenderState(enableStencil) {
         return {
             stencilTest : {
