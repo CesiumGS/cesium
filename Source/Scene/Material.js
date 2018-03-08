@@ -791,10 +791,8 @@ define([
             }
 
             if (uniformValue !== material._texturePaths[uniformId]) {
-                if (typeof uniformValue === 'string') {
-                    var resource = new Resource({
-                        url: uniformValue
-                    });
+                if (typeof uniformValue === 'string' || uniformValue instanceof Resource) {
+                    var resource = Resource.createIfNeeded(uniformValue);
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
                         promise = loadKTX(resource);
@@ -967,7 +965,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
+            } else if (type === 'string' || uniformValue instanceof Resource ||uniformValue instanceof HTMLCanvasElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {

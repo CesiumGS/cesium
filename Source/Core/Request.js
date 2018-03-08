@@ -150,7 +150,6 @@ define([
         this.cancelled = true;
     };
 
-
     /**
      * Duplicates a Request instance.
      *

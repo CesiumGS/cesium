@@ -1,12 +1,12 @@
 defineSuite([
         'Core/BingMapsGeocoderService',
-        'Core/loadJsonp',
         'Core/Rectangle',
+        'Core/Resource',
         'Specs/createScene'
     ], function(
         BingMapsGeocoderService,
-        loadJsonp,
         Rectangle,
+        Resource,
         createScene) {
     'use strict';
 
@@ -22,7 +22,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
     });
 
     it('constructor throws without scene', function() {
@@ -41,7 +41,7 @@ defineSuite([
                 }]
             }]
         };
-        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
             deferred.resolve(data);
         };
         service.geocode(query).then(function(results) {
@@ -57,7 +57,7 @@ defineSuite([
         var data = {
             resourceSets: []
         };
-        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
             deferred.resolve(data);
         };
         service.geocode(query).then(function(results) {
@@ -73,7 +73,7 @@ defineSuite([
                 resources: []
             }]
         };
-        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
             deferred.resolve(data);
         };
         service.geocode(query).then(function(results) {

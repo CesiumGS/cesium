@@ -45,43 +45,43 @@ var viewModel = {
     tilesets: [
         {
             name: 'Tileset',
-            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
+            resource: Cesium.IonResource.fromAssetId(3883)
         }, {
             name: 'Translucent',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
+            resource: Cesium.IonResource.fromAssetId(3871)
         }, {
             name: 'Translucent/Opaque',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/'
+            resource: Cesium.IonResource.fromAssetId(3872)
         }, {
             name: 'Multi-color',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedColors/'
+            resource: Cesium.IonResource.fromAssetId(3870)
         }, {
             name: 'Request Volume',
-            url: '../../../Specs/Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/'
+            resource: Cesium.IonResource.fromAssetId(3884)
         }, {
             name: 'Batched',
-            url: '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/'
+            resource: Cesium.IonResource.fromAssetId(3873)
         }, {
             name: 'Instanced',
-            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/'
+            resource: Cesium.IonResource.fromAssetId(3877)
         }, {
             name: 'Instanced/Orientation',
-            url: '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/'
+            resource: Cesium.IonResource.fromAssetId(3876)
         }, {
             name: 'Composite',
-            url: '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
+            resource: Cesium.IonResource.fromAssetId(3874)
         }, {
             name: 'PointCloud',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudRGB/'
+            resource: Cesium.IonResource.fromAssetId(3881)
         }, {
             name: 'PointCloudConstantColor',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudConstantColor/'
+            resource: Cesium.IonResource.fromAssetId(3879)
         }, {
             name: 'PointCloudNormals',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded/'
+            resource: Cesium.IonResource.fromAssetId(3880)
         }, {
             name: 'PointCloudBatched',
-            url: '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudBatched/'
+            resource: Cesium.IonResource.fromAssetId(3878)
         }
     ],
     selectedTileset: undefined,
@@ -105,13 +105,13 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
         inspectorViewModel.tileset = undefined;
         return;
     }
-    tileset = new Cesium.Cesium3DTileset({
-        url: options.url
-    });
-    inspectorViewModel.tileset = tileset;
-    scene.primitives.add(tileset);
-    tileset.readyPromise.then(function(tileset) {
 
+    tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+        url : options.resource
+    }));
+
+    tileset.readyPromise.then(function() {
+        inspectorViewModel.tileset = tileset;
         viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0, -2.0, Math.max(100.0 - tileset.boundingSphere.radius, 0.0)));
 
         var properties = tileset.properties;

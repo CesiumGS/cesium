@@ -13,13 +13,50 @@ define([
     var nextCreditId = 0;
     var creditToId = {};
 
+    function getElement(credit) {
+        var element = document.createElement('span');
+        var text = credit.text;
+        var link = credit.link;
+        var a;
+        if (credit._hasImage) {
+            var content = document.createElement('img');
+            content.src = credit.imageUrl;
+            if (defined(text)) {
+                content.alt = text;
+                content.title = text;
+            }
+            if (credit._hasLink) {
+                a = document.createElement('a');
+                a.appendChild(content);
+                a.href = link;
+                a.target = '_blank';
+                element.appendChild(a);
+            } else {
+                element.appendChild(content);
+            }
+            element.className = 'cesium-credit-image';
+        } else {
+            if (credit._hasLink) {
+                a = document.createElement('a');
+                a.textContent = text;
+                a.href = link;
+                a.target = '_blank';
+                element.appendChild(a);
+            } else {
+                element.textContent = text;
+            }
+            element.className = 'cesium-credit-text';
+        }
+        return element;
+    }
+
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
      * @param {Object} [options] An object with the following properties
      * @param {String} [options.text] The text to be displayed on the screen if no imageUrl is specified.
      * @param {String} [options.imageUrl] The source location for an image
      * @param {String} [options.link] A URL location for which the credit will be hyperlinked
-     * @param {String} [options.showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+     * @param {Boolean} [options.showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
      *
      * @alias Credit
      * @constructor
@@ -75,6 +112,8 @@ define([
         }
 
         this._id = id;
+
+        this._element = undefined;
     }
 
     defineProperties(Credit.prototype, {
@@ -136,6 +175,21 @@ define([
         showOnScreen : {
             get : function() {
                 return this._showOnScreen;
+            }
+        },
+
+        /**
+         * Gets the credit element
+         * @memberof Credit.prototype
+         * @type {HTMLElement}
+         * @readonly
+         */
+        element: {
+            get: function() {
+                if (!defined(this._element)) {
+                    this._element = getElement(this);
+                }
+                return this._element;
             }
         }
     });

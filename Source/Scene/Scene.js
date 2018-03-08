@@ -782,8 +782,8 @@ define([
 
         var removeGlobeCallbacks = [];
         if (defined(globe)) {
-            removeGlobeCallbacks.push(globe.tileLoadedEvent.addEventListener(requestRenderAfterFrame(scene)));
             removeGlobeCallbacks.push(globe.imageryLayersUpdatedEvent.addEventListener(requestRenderAfterFrame(scene)));
+            removeGlobeCallbacks.push(globe.terrainProviderChanged.addEventListener(requestRenderAfterFrame(scene)));
         }
         scene._removeGlobeCallbacks = removeGlobeCallbacks;
     }
@@ -2095,6 +2095,8 @@ define([
 
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                globeDepth.update(context, passState);
+                globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -3010,6 +3012,10 @@ define([
 
         if (defined(scene.globe)) {
             scene.globe.endFrame(frameState);
+
+            if (!scene.globe.tilesLoaded) {
+                scene._renderRequested = true;
+            }
         }
 
         frameState.creditDisplay.endFrame();
@@ -3060,13 +3066,16 @@ define([
             // Render
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, time, render);
-            this._postRender.raiseEvent(this, time);
 
             RequestScheduler.update();
         }
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         callAfterRenderFunctions(this);
+
+        if (shouldRender) {
+            this._postRender.raiseEvent(this, time);
+        }
     };
 
     /**
