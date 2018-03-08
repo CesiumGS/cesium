@@ -50,6 +50,8 @@ define([
 
                 if (attribute.data_type() === 4) {
                     attributeData = new draco.DracoInt32Array();
+                    // Uint16Array is used becasue there is not currently a way to retreive the maximum
+                    // value up front via the draco decoder API.  Max values over 65535 require a Uint32Array.
                     vertexArray = new Uint16Array(numPoints * numComponents);
                     dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
                 } else {

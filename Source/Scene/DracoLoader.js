@@ -17,8 +17,7 @@ define([
         Buffer,
         BufferUsage,
         ForEach,
-        when
-    ) {
+        when) {
     'use strict';
 
     /**
@@ -102,7 +101,7 @@ define([
         };
     }
 
-    function scheduleDecodingTask (decoderTaskProcessor, model, loadResources, context) {
+    function scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context) {
         var taskData = loadResources.primitivesToDecode.peek();
         if (!defined(taskData)) {
             // All primitives are processing
@@ -147,7 +146,6 @@ define([
                 }
 
                 var bufferView = gltf.bufferViews[compressionData.bufferView];
-                //console.log(gltf.buffers[bufferView.buffer].extras._pipeline);
                 var typedArray = arraySlice(gltf.buffers[bufferView.buffer].extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
 
                 loadResources.primitivesToDecode.enqueue({
