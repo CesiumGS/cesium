@@ -21,6 +21,7 @@ defineSuite([
         'DataSources/StaticGeometryPerMaterialBatch',
         'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
+        'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
@@ -51,6 +52,7 @@ defineSuite([
         StaticGeometryPerMaterialBatch,
         StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
+        ClassificationType,
         GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -349,6 +351,55 @@ defineSuite([
 
     it('Creates and removes geometry with shadow receiving only', function() {
         return createAndRemoveGeometryWithShadows(ShadowMode.RECEIVE_ONLY);
+    });
+
+    function createAndRemoveGeometryWithClassificationType(type) {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, objects);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+        ellipse.classificationType = new ConstantProperty(type);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.groundPrimitives.get(0);
+            expect(primitive.classificationType).toBe(type);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    }
+
+    it('Creates and removes geometry classifying terrain', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.TERRAIN);
+    });
+
+    it('Creates and removes geometry classifying 3D Tiles', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.CESIUM_3D_TILE);
+    });
+
+    it('Creates and removes geometry classifying both terrain and 3D Tiles', function() {
+        return createAndRemoveGeometryWithClassificationType(ClassificationType.BOTH);
     });
 
     it('Correctly handles geometry changing batches', function() {

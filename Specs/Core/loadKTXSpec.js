@@ -254,7 +254,6 @@ defineSuite([
         expect(rejectedError).toBeUndefined();
     });
 
-
     it('cannot parse invalid KTX buffer', function() {
         var invalidKTX = new Uint8Array(validCompressed);
         invalidKTX[0] = 0;

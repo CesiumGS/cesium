@@ -307,7 +307,6 @@ define([
         }
     });
 
-
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the brightness of the imagery.

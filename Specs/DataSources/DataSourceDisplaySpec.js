@@ -312,7 +312,6 @@ defineSuite([
         display.update(Iso8601.MINIMUM_VALUE);
         expect(display.ready).toBe(true);
 
-
         spyOn(MockVisualizer.prototype, 'update').and.returnValue(false);
         display.update(Iso8601.MINIMUM_VALUE);
         expect(display.ready).toBe(false);

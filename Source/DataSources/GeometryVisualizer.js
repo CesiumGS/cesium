@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/EventHelper',
+        '../Scene/ClassificationType',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/ShadowMode',
@@ -36,6 +37,7 @@ define([
         DeveloperError,
         Event,
         EventHelper,
+        ClassificationType,
         MaterialAppearance,
         PerInstanceColorAppearance,
         ShadowMode,
@@ -139,7 +141,8 @@ define([
         this._openColorBatches = new Array(numberOfShadowModes);
         this._openMaterialBatches = new Array(numberOfShadowModes);
 
-        for (var i = 0; i < numberOfShadowModes; ++i) {
+        var i;
+        for (i = 0; i < numberOfShadowModes; ++i) {
             this._outlineBatches[i] = new StaticOutlineGeometryBatch(primitives, scene, i);
 
             this._closedColorBatches[i] = new StaticGeometryColorBatch(primitives, PerInstanceColorAppearance, undefined, true, i);
@@ -148,10 +151,16 @@ define([
             this._openMaterialBatches[i] = new StaticGeometryPerMaterialBatch(primitives, MaterialAppearance, undefined, false, i);
         }
 
-        this._groundColorBatch = new StaticGroundGeometryColorBatch(groundPrimitives);
+        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+        this._groundColorBatches = new Array(numberOfClassificationTypes);
+
+        for (i = 0; i < numberOfClassificationTypes; ++i) {
+            this._groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+        }
+
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatch, this._dynamicBatch);
+        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaterSets = new AssociativeArray();
@@ -362,7 +371,8 @@ define([
 
         if (updater.fillEnabled) {
             if (updater.onTerrain) {
-                this._groundColorBatch.add(time, updater);
+                var classificationType = updater.classificationTypeProperty.getValue(time);
+                this._groundColorBatches[classificationType].add(time, updater);
             } else if (updater.isClosed) {
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
                     this._closedColorBatches[shadows].add(time, updater);

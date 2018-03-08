@@ -57,6 +57,7 @@ define([
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};
 
+    var scratchColor = new Color();
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
@@ -327,17 +328,21 @@ define([
 
         var currentColor;
         if (this._materialProperty instanceof ColorMaterialProperty) {
-            currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
-                currentColor = this._materialProperty.color.getValue(time);
+                currentColor = this._materialProperty.color.getValue(time, scratchColor);
+            }
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
             }
             attributes.color = ColorGeometryInstanceAttribute.fromColor(currentColor);
         }
 
         if (defined(this._depthFailMaterialProperty) && this._depthFailMaterialProperty instanceof ColorMaterialProperty) {
-            currentColor = Color.WHITE;
             if (defined(this._depthFailMaterialProperty.color) && (this._depthFailMaterialProperty.color.isConstant || isAvailable)) {
-                currentColor = this._depthFailMaterialProperty.color.getValue(time);
+                currentColor = this._depthFailMaterialProperty.color.getValue(time, scratchColor);
+            }
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
             }
             attributes.depthFailColor = ColorGeometryInstanceAttribute.fromColor(currentColor);
         }

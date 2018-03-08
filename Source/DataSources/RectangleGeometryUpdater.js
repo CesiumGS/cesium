@@ -38,6 +38,7 @@ define([
         Property) {
     'use strict';
 
+    var scratchColor = new Color();
 
     function RectangleGeometryOptions(entity) {
         this.id = entity;
@@ -101,9 +102,12 @@ define([
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
-            var currentColor = Color.WHITE;
+            var currentColor;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
-                currentColor = this._materialProperty.color.getValue(time);
+                currentColor = this._materialProperty.color.getValue(time, scratchColor);
+            }
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
             }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
@@ -144,7 +148,7 @@ define([
 
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
-        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         return new GeometryInstance({

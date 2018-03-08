@@ -23,8 +23,9 @@ define([
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
-    function Batch(primitives, color, key) {
+    function Batch(primitives, classificationType, color, key) {
         this.primitives = primitives;
+        this.classificationType = classificationType;
         this.color = color;
         this.key = key;
         this.createPrimitive = false;
@@ -110,7 +111,8 @@ define([
 
                 primitive = new GroundPrimitive({
                     asynchronous : true,
-                    geometryInstances : geometries
+                    geometryInstances : geometries,
+                    classificationType : this.classificationType
                 });
                 primitives.add(primitive);
                 isUpdated = false;
@@ -250,9 +252,10 @@ define([
     /**
      * @private
      */
-    function StaticGroundGeometryColorBatch(primitives) {
+    function StaticGroundGeometryColorBatch(primitives, classificationType) {
         this._batches = new AssociativeArray();
         this._primitives = primitives;
+        this._classificationType = classificationType;
     }
 
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
@@ -264,7 +267,7 @@ define([
         if (batches.contains(batchKey)) {
             batch = batches.get(batchKey);
         } else {
-            batch = new Batch(this._primitives, instance.attributes.color.value, batchKey);
+            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, batchKey);
             batches.set(batchKey, batch);
         }
         batch.add(updater, instance);

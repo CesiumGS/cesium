@@ -1530,7 +1530,6 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-
     it('scene morphing causes a new frame to be rendered in requestRenderMode', function() {
         var scene = createScene();
         scene.renderForSpecs();
