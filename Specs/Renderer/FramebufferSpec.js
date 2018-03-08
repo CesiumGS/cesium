@@ -675,7 +675,6 @@ defineSuite([
         expect(framebuffer.status).not.toEqual(WebGLConstants.FRAMEBUFFER_COMPLETE);
     });
 
-
     it('destroys', function() {
         var f = new Framebuffer({
             context : context

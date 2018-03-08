@@ -268,7 +268,6 @@ define([
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
-
         result.x = Math.min(first.x, second.x);
         result.y = Math.min(first.y, second.y);
 

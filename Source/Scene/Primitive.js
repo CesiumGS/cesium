@@ -801,7 +801,6 @@ define([
                     '    return u_modifiedModelView * position;\n' +
                     '}\n\n';
 
-
                 vertexShaderSource = vertexShaderSource.replace(/czm_modelViewRelativeToEye\s+\*\s+/g, '');
                 vertexShaderSource = vertexShaderSource.replace(/czm_modelViewProjectionRelativeToEye/g, 'czm_projection');
             }

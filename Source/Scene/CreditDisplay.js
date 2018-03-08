@@ -205,11 +205,11 @@ define([
             margin : 'auto'
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > a, .cesium-credit-lightbox > ul > li > a:visited', {
+        style += addStyle('.cesium-credit-lightbox > ul > li > span > a, .cesium-credit-lightbox > ul > li > span > a:visited', {
             color: textColor
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > a:hover', {
+        style += addStyle('.cesium-credit-lightbox > ul > li > span > a:hover', {
             color: highlightColor
         });
 
@@ -305,12 +305,14 @@ define([
         var lightboxCredits = document.createElement('div');
         lightboxCredits.className = 'cesium-credit-lightbox';
         lightbox.appendChild(lightboxCredits);
-        lightbox.onclick = function(event) {
-            if (event.target === lightboxCredits) {
+
+        function hideLightbox(event) {
+            if (lightboxCredits.contains(event.target)) {
                 return;
             }
             that.hideLightbox();
-        };
+        }
+        lightbox.addEventListener('click', hideLightbox, false);
 
         var title = document.createElement('div');
         title.className = 'cesium-credit-lightbox-title';
@@ -350,6 +352,7 @@ define([
         this._lightboxCredits = lightboxCredits;
         this._creditList = creditList;
         this._lightbox = lightbox;
+        this._hideLightbox = hideLightbox;
         this._expandLink = expandLink;
         this._expanded = false;
         this._defaultImageCredits = [];
@@ -530,6 +533,8 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     CreditDisplay.prototype.destroy = function() {
+        this._lightbox.removeEventListener('click', this._hideLightbox, false);
+
         this.container.removeChild(this._textContainer);
         this.container.removeChild(this._imageContainer);
         this.container.removeChild(this._expandLink);

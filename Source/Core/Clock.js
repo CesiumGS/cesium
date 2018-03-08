@@ -227,7 +227,6 @@ define([
             }
         },
 
-
         /**
          * Indicates whether {@link Clock#tick} should attempt to advance time.
          * The clock will only advance time when both
@@ -237,7 +236,7 @@ define([
          * {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}.
          * @memberof Clock.prototype
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         shouldAnimate : {
             get : function() {

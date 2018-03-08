@@ -318,10 +318,8 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer', {
      *     //Start in Columbus Viewer
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-     *     //Use standard Cesium terrain
-     *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
-     *     }),
+     *     //Use Cesium World Terrain
+     *     terrainProvider : Cesium.createWorldTerrain(),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
@@ -557,7 +555,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         // These need to be set after the BaseLayerPicker is created in order to take effect
-        if (defined(options.imageryProvider)) {
+        if (defined(options.imageryProvider) && options.imageryProvider !== false) {
             if (createBaseLayerPicker) {
                 baseLayerPicker.viewModel.selectedImagery = undefined;
             }

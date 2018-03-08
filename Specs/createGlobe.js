@@ -27,6 +27,7 @@ define([
             _surface : {},
             tileLoadedEvent : new Event(),
             imageryLayersUpdatedEvent : new Event(),
+            terrainProviderChanged : new Event(),
             destroy : function() {}
         };
 

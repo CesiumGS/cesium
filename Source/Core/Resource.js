@@ -333,7 +333,6 @@ define([
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
 
-
         var uri = new Uri(options.url);
         parseQuery(uri, this, true, true);
 

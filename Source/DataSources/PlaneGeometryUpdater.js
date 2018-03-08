@@ -7,7 +7,6 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
@@ -17,11 +16,9 @@ define([
         '../Core/Quaternion',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
-        './MaterialProperty',
         './Property'
     ], function(
         PlaneGeometry,
@@ -32,7 +29,6 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         defined,
-        destroyObject,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
@@ -42,15 +38,14 @@ define([
         Quaternion,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        Primitive,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
-        MaterialProperty,
         Property) {
     'use strict';
 
     var positionScratch = new Cartesian3();
+    var scratchColor = new Color();
 
     function PlaneGeometryOptions(entity) {
         this.id = entity;
@@ -110,9 +105,12 @@ define([
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
-            var currentColor = Color.WHITE;
+            var currentColor;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
-                currentColor = this._materialProperty.color.getValue(time);
+                currentColor = this._materialProperty.color.getValue(time, scratchColor);
+            }
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
             }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
@@ -132,9 +130,6 @@ define([
         var modelMatrix = entity.computeModelMatrix(time);
         var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
         var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
-            return;
-        }
 
         options.plane = plane;
         options.dimensions = dimensions;
@@ -168,7 +163,7 @@ define([
 
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
-        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         var planeGraphics = entity.plane;
@@ -176,9 +171,6 @@ define([
         var modelMatrix = entity.computeModelMatrix(time);
         var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
         var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
-            return;
-        }
 
         options.plane = plane;
         options.dimensions = dimensions;
@@ -201,7 +193,7 @@ define([
         return !defined(plane.plane) || !defined(plane.dimensions) || !defined(entity.position) || GeometryUpdater.prototype._isHidden.call(this, entity, plane);
     };
 
-    GeometryUpdater.prototype._getIsClosed = function(options) {
+    PlaneGeometryUpdater.prototype._getIsClosed = function(options) {
         return false;
     };
 

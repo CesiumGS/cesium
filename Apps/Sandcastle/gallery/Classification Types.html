@@ -38,43 +38,28 @@ tileset.readyPromise.then(function(){
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 });
 
-var cartographics = [new Cesium.Cartographic(-1.3194369277314022, 0.6988062530900625),
-                     new Cesium.Cartographic(-1.3193955980204217, 0.6988091578771254),
-                     new Cesium.Cartographic(-1.3193931220959367, 0.698743632490865),
-                     new Cesium.Cartographic(-1.3194358224045408, 0.6987471965556998)];
-var rectangle = Cesium.Rectangle.fromCartographicArray(cartographics);
-var rectanglePrimitive = viewer.scene.primitives.add(new Cesium.GroundPrimitive({
-    geometryInstances : new Cesium.GeometryInstance({
-        geometry : new Cesium.RectangleGeometry({
-            rectangle : rectangle
-        }),
-        attributes: {
-            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
-        }
-    }),
-    classificationType : Cesium.ClassificationType.BOTH
-}));
+var entity = viewer.entities.add({
+    polygon : {
+        hierarchy : new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromRadiansArray([-1.3194369277314022, 0.6988062530900625, -1.3193955980204217, 0.6988091578771254, -1.3193931220959367, 0.698743632490865, -1.3194358224045408, 0.6987471965556998])),
+        material : Cesium.Color.RED.withAlpha(0.5),
+        classificationType : Cesium.ClassificationType.BOTH
+    }
+});
 
 var options = [{
     text : 'Classify Both',
     onselect : function() {
-        if (Cesium.defined(rectanglePrimitive)) {
-            rectanglePrimitive.classificationType = Cesium.ClassificationType.BOTH;
-        }
+        entity.polygon.classificationType = Cesium.ClassificationType.BOTH;
     }
 }, {
     text : 'Classify Terrain',
     onselect : function() {
-        if (Cesium.defined(rectanglePrimitive)) {
-            rectanglePrimitive.classificationType = Cesium.ClassificationType.TERRAIN;
-        }
+        entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN;
     }
 }, {
     text : 'Classify 3D Tiles',
     onselect : function() {
-        if (Cesium.defined(rectanglePrimitive)) {
-            rectanglePrimitive.classificationType = Cesium.ClassificationType.CESIUM_3D_TILE;
-        }
+        entity.polygon.classificationType = Cesium.ClassificationType.CESIUM_3D_TILE;
     }
 }];
 Sandcastle.addToolbarMenu(options);

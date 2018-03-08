@@ -49,6 +49,7 @@ defineSuite([
                 }
             },
             tileLoadedEvent : new Event(),
+            terrainProviderChanged : new Event(),
             imageryLayersUpdatedEvent : new Event(),
             beginFrame : function() {},
             update : function() {},
@@ -403,7 +404,6 @@ defineSuite([
         expect(cluster._labelCollection).toBeDefined();
         expect(cluster._pointCollection).toBeDefined();
     });
-
 
     it('does not remove entity collection indices when at least one of billboard, label and point remain', function() {
         cluster = new EntityCluster();

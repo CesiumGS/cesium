@@ -238,6 +238,21 @@ define([
             }
         },
         /**
+         * Returns <code>true</code> when the tile load queue is empty, <code>false</code> otherwise.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.
+         * @memberof Globe.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        tilesLoaded: {
+            get: function() {
+                if (!defined(this._surface)) {
+                    return true;
+                }
+                return (this._surface.tileProvider.ready && this._surface._tileLoadQueueHigh.length === 0 && this._surface._tileLoadQueueMedium.length === 0 && this._surface._tileLoadQueueLow.length === 0);
+            }
+        },
+        /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof Globe.prototype
          * @type {Color}

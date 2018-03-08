@@ -377,7 +377,6 @@ defineSuite([
             expect(packedTexture.width).toEqual(10);
             expect(packedTexture.height).toEqual(1);
 
-
             clippingPlanes.removeAll();
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
 

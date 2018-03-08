@@ -66,16 +66,12 @@ define([
      *  }));
      *
      *  imageryViewModels.push(new Cesium.ProviderViewModel({
-     *      name : 'Black Marble',
+     *      name : 'Earth at Night',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
      * in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
-     *          return Cesium.createTileMapServiceImageryProvider({
-     *              url : 'https://cesiumjs.org/blackmarble',
-     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory',
-     *              flipXY : true
-     *          });
+     *          return new Cesium.IonImageryProvider({ assetId: 3812 });
      *      }
      *  }));
      *
