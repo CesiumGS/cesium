@@ -249,6 +249,9 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
+        var originalLogDepth = scene.logDepthBuffer;
+        scene.logDepthBuffer = false;
+
         var c = new DrawCommand({
             shaderProgram : simpleShaderProgram,
             renderState : simpleRenderState,
@@ -262,9 +265,14 @@ defineSuite([
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.renderForSpecs();
         expect(c.execute).toHaveBeenCalled();
+
+        scene.logDepthBuffer = originalLogDepth;
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
+        var originalLogDepth = scene.logDepthBuffer;
+        scene.logDepthBuffer = false;
+
         var radius = 10.0;
         var center = Cartesian3.add(scene.camera.position, scene.camera.direction, new Cartesian3());
 
@@ -283,9 +291,14 @@ defineSuite([
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);  // Red bounding sphere
         });
+
+        scene.logDepthBuffer = originalLogDepth;
     });
 
     it('debugShowCommands tints commands', function() {
+        var originalLogDepth = scene.logDepthBuffer;
+        scene.logDepthBuffer = false;
+
         var c = new DrawCommand({
             shaderProgram : simpleShaderProgram,
             renderState : simpleRenderState,
@@ -306,6 +319,8 @@ defineSuite([
         scene.renderForSpecs();
         expect(c._debugColor).toBeDefined();
         scene.debugShowCommands = false;
+
+        scene.logDepthBuffer = originalLogDepth;
     });
 
     it('debugShowFramesPerSecond', function() {

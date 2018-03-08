@@ -255,13 +255,13 @@ void main()
     }
 #endif
 
+#ifdef LOG_DEPTH
+    czm_vertexLogZ(czm_projection * positionEC);
+#endif
+
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
-
-#ifdef LOG_DEPTH
-    czm_vertexLogZ(czm_modelViewProjectionRelativeToEye * p);
-#endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
