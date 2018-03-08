@@ -108,7 +108,6 @@ define([
             return;
         }
 
-        loadResources.decoding = true;
         var promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
         if (!defined(promise)) {
             // Cannot schedule another task this frame
@@ -170,7 +169,7 @@ define([
 
         var loadResources = model._loadResources;
         if (loadResources.primitivesToDecode.length === 0) {
-            // Done decoding
+            // No more tasks to schedule
             return when.resolve();
         }
 
@@ -184,7 +183,8 @@ define([
         }
 
         return when.all(decodingPromises).then(function () {
-            loadResources.decoding = false;
+            // Done decoding when there are no more active tasks
+            loadResources.decoding = (decoderTaskProcessor._activeTasks !== 0);
         });
     };
 
