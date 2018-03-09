@@ -34,6 +34,7 @@ define([
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
         '../Core/RequestScheduler',
+        '../Core/sampleTerrain',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/TaskProcessor',
         '../Core/Transforms',
@@ -113,6 +114,7 @@ define([
         PerspectiveOffCenterFrustum,
         PixelFormat,
         RequestScheduler,
+        sampleTerrain,
         ShowGeometryInstanceAttribute,
         TaskProcessor,
         Transforms,
@@ -2964,6 +2966,7 @@ define([
         }
 
         frameState.creditDisplay.update();
+        sampleTerrain._update();
     }
 
     function render(scene, time) {

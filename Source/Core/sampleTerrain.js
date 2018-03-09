@@ -10,7 +10,7 @@ define([
         LRUCache) {
     'use strict';
 
-    var cache = new LRUCache(100);
+    var cache = new LRUCache(100, 60000);
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -58,6 +58,10 @@ define([
         return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions); });
     }
 
+    sampleTerrain._update = function() {
+        cache.prune();
+    };
+
     function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;
 
@@ -94,12 +98,12 @@ define([
             var tileRequest = tileRequests[i];
             var cacheKey = tileRequest.x + '-' + tileRequest.y + '-' + tileRequest.level;
             var requestPromise;
-            var cachedTile = cache.get(cacheKey);
-            if (defined(cachedTile)) {
-                requestPromise = cachedTile;
+            var cachedTilePromise = cache.get(cacheKey);
+            if (defined(cachedTilePromise)) {
+                requestPromise = cachedTilePromise;
             } else {
-                requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level)
-                    .then(setCache(cacheKey));
+                requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
+                cache.set(cacheKey, requestPromise);
             }
             var tilePromise = when(requestPromise)
                 .then(createInterpolateFunction(tileRequest))
@@ -110,13 +114,6 @@ define([
         return when.all(tilePromises, function() {
             return positions;
         });
-    }
-
-    function setCache(cacheKey) {
-        return function(terrainData) {
-            cache.set(cacheKey, terrainData);
-            return terrainData;
-        };
     }
 
     function createInterpolateFunction(tileRequest) {

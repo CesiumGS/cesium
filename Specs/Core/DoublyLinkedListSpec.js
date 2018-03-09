@@ -193,6 +193,62 @@ defineSuite([
         expect(list.length).toEqual(1);
     });
 
+    it('removeAfter removes nothing', function() {
+        var list = new DoublyLinkedList();
+        var node = list.add(1);
+
+        list.removeAfter(undefined);
+
+        expect(list.head).toEqual(node);
+        expect(list.tail).toEqual(node);
+        expect(list.length).toEqual(1);
+
+        list.removeAfter(list.length);
+
+        expect(list.head).toEqual(node);
+        expect(list.tail).toEqual(node);
+        expect(list.length).toEqual(1);
+    });
+
+    it('removeAfter removes all', function() {
+        var list = new DoublyLinkedList();
+        list.add(1);
+        list.add(2);
+
+        list.removeAfter(0);
+
+        expect(list.head).toBeUndefined();
+        expect(list.tail).toBeUndefined();
+        expect(list.length).toEqual(0);
+    });
+
+    it('removeAfter removes tail', function() {
+        var list = new DoublyLinkedList();
+        var node = list.add(1);
+        list.add(2);
+
+        list.removeAfter(1);
+
+        expect(list.head).toEqual(node);
+        expect(list.tail).toEqual(node);
+        expect(list.length).toEqual(1);
+    });
+
+    it('removeAfter removes nodes after index (inclusive)', function() {
+        var list = new DoublyLinkedList();
+        var node1 = list.add(1);
+        var node2 = list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+
+        list.removeAfter(2);
+
+        expect(list.head).toEqual(node1);
+        expect(list.tail).toEqual(node2);
+        expect(list.length).toEqual(2);
+    });
+
     function expectOrder(list, nodes) {
         // Assumes at least one node is in the list
         var length = nodes.length;

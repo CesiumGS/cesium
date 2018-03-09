@@ -1,7 +1,9 @@
 defineSuite([
-    'Core/LRUCache'
+    'Core/LRUCache',
+    'Core/getTimestamp'
 ], function(
-    LRUCache) {
+    LRUCache,
+    getTimestamp) {
     'use strict';
 
     it('can manipulate values', function() {
@@ -73,5 +75,44 @@ defineSuite([
         expect(cache.get('key2')).toBeUndefined();
         expect(cache.get('key3')).toEqual(3);
         expect(cache.get('key4')).toEqual(4);
+    });
+
+    function spinWait(milliseconds) {
+        var endTime = getTimestamp() + milliseconds;
+        /*eslint-disable no-empty*/
+        while (getTimestamp() < endTime) {
+        }
+        /*eslint-enable no-empty*/
+    }
+
+    it('prune has no effect when no expiration is set', function() {
+        var cache = new LRUCache(3);
+        cache.set('key1', 1);
+        cache.set('key2', 2);
+        cache.set('key3', 3);
+
+        spinWait(3);
+
+        cache.prune();
+
+        expect(cache.get('key1')).toEqual(1);
+        expect(cache.get('key2')).toEqual(2);
+        expect(cache.get('key3')).toEqual(3);
+    });
+
+    it('prune removes expired entries', function() {
+        var cache = new LRUCache(3, 10);
+        cache.set('key1', 1);
+        cache.set('key2', 2);
+        spinWait(10);
+        cache.set('key3', 3);
+
+        cache.prune();
+
+        expect(cache.get('key1')).toBeUndefined();
+        expect(cache.get('key2')).toBeUndefined();
+        expect(cache.get('key3')).toEqual(3);
+
+        expect(cache._list.length).toBe(1);
     });
 });
