@@ -105,23 +105,24 @@ define([
         var pruneAfter = currentTime - this._expiration;
 
         var list = this._list;
-        var node = list.head;
-        var index = 0;
-        while (defined(node) && node.item.timestamp > pruneAfter) {
-            node = node.next;
-            index++;
+        var node = list.tail;
+        var index = list.length;
+        while (defined(node) && node.item.timestamp < pruneAfter) {
+            node = node.previous;
+            index--;
         }
 
         if (!defined(node)) {
             return;
         }
 
-        list.removeAfter(index);
-
+        node = node.next;
         while(defined(node)) {
             delete this._hash[node.item.key];
             node = node.next;
         }
+
+        list.removeAfter(index);
     };
 
     return LRUCache;
