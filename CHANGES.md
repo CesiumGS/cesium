@@ -38,6 +38,7 @@ Change Log
   * Added `put`, `patch`, `delete`, `options` and `head` methods, so it can be used for all XHR requests.
   * Added `preserveQueryParameters` parameter to `getDerivedResource`, to allow us to append query parameters instead of always replacing them.
   * Added `setQueryParameters` and `appendQueryParameters` to allow for better handling of query strings.
+* Enable terrain in the `CesiumViewer` demo application [#6198](https://github.com/AnalyticalGraphicsInc/cesium/pull/6198)
 * Added `Globe.tilesLoaded` getter property to determine if all terrain and imagery is loaded. [#6194](https://github.com/AnalyticalGraphicsInc/cesium/pull/6194)
 * Added `classificationType` property to entities which specifies whether an entity on the ground, like a polygon or rectangle, should be clamped to terrain, 3D Tiles, or both. [#6195](https://github.com/AnalyticalGraphicsInc/cesium/issues/6195)
 
@@ -52,7 +53,6 @@ Change Log
 * Fixed `Resource.fetch` when called with no arguments [#6206](https://github.com/AnalyticalGraphicsInc/cesium/issues/6206)
 * Fixed `Resource.clone` to clone the `Request` object, so resource can be used in parallel. [#6208](https://github.com/AnalyticalGraphicsInc/cesium/issues/6208)
 * Fixed `Material` so it can now take a `Resource` object as an image. [#6199](https://github.com/AnalyticalGraphicsInc/cesium/issues/6199)
-* Enable terrain in the `CesiumViewer` demo application [#6198](https://github.com/AnalyticalGraphicsInc/cesium/pull/6198)
 * Fixed an issue causing the Bing Maps key to be sent unnecessarily with every tile request. [#6250](https://github.com/AnalyticalGraphicsInc/cesium/pull/6250)
 * Fixed documentation issue for the `Cesium.Math` class. [#6233](https://github.com/AnalyticalGraphicsInc/cesium/issues/6233)
 * Fixed rendering 3D Tiles as classification volumes. [#6295](https://github.com/AnalyticalGraphicsInc/cesium/pull/6295)
