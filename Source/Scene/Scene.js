@@ -3430,6 +3430,7 @@ define([
     }
 
     var logDepthRegex = /\s+czm_writeLogZ\(/;
+    var extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
 
     function getLogDepthShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'logDepth');
@@ -3443,11 +3444,7 @@ define([
             fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
             fs.defines.push('LOG_DEPTH');
 
-            var logSource =
-                '#ifdef GL_EXT_frag_depth \n' +
-                '#extension GL_EXT_frag_depth : enable \n' +
-                '#endif \n\n';
-
+            var addExtension = true;
             var writesLogDepth = false;
             var sources = fs.sources;
             var length = sources.length;
@@ -3455,8 +3452,18 @@ define([
             for (i = 0; i < length; ++i) {
                 if (logDepthRegex.test(sources[i])) {
                     writesLogDepth = true;
-                    break;
                 }
+                if (extensionRegex.test(sources[i])) {
+                    addExtension = false;
+                }
+            }
+
+            var logSource = '';
+            if (addExtension) {
+                logSource +=
+                    '#ifdef GL_EXT_frag_depth \n' +
+                    '#extension GL_EXT_frag_depth : enable \n' +
+                    '#endif \n\n';
             }
 
             if (!writesLogDepth) {

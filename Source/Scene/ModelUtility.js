@@ -52,7 +52,7 @@ define([
         };
     };
 
-    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId) {
+    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId, ignoreNodes) {
         var techniques = gltf.techniques;
         var parameter;
         for (var techniqueName in techniques) {
@@ -67,7 +67,7 @@ define([
                 for (var attributeName in attributes) {
                     if (attributes.hasOwnProperty(attributeName)) {
                         parameter = parameters[attributes[attributeName]];
-                        if (defined(parameter) && parameter.semantic === semantic) {
+                        if (defined(parameter) && parameter.semantic === semantic && (!ignoreNodes || !defined(parameter.node))) {
                             return attributeName;
                         }
                     }
@@ -75,7 +75,7 @@ define([
                 for (var uniformName in uniforms) {
                     if (uniforms.hasOwnProperty(uniformName)) {
                         parameter = parameters[uniforms[uniformName]];
-                        if (defined(parameter) && parameter.semantic === semantic) {
+                        if (defined(parameter) && parameter.semantic === semantic && (!ignoreNodes || !defined(parameter.node))) {
                             return uniformName;
                         }
                     }
@@ -297,14 +297,14 @@ define([
             positionName = decodedPositionName;
         }
 
-        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEWPROJECTION');
-        if (!defined(modelViewProjectionName)) {
-            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION');
-            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEW');
+        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEWPROJECTION', undefined, true);
+        if (!defined(modelViewProjectionName) || shader.indexOf(modelViewProjectionName) === -1) {
+            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION', undefined, true);
+            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEW', undefined, true);
             if (shader.indexOf('czm_instanced_modelView ') !== -1) {
                 modelViewName = 'czm_instanced_modelView';
             } else if (!defined(modelViewName)) {
-                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'CESIUM_RTC_MODELVIEW');
+                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'CESIUM_RTC_MODELVIEW', undefined, true);
             }
             modelViewProjectionName = projectionName + ' * ' + modelViewName;
         }

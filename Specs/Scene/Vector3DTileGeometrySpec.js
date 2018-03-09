@@ -355,7 +355,7 @@ defineSuite([
         });
 
         it('renders a single ellipsoid' + webglMessage, function() {
-            var radii = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
+            var radii = new Cartesian3(500000.0, 500000.0, 500000.0);
             var ellipsoid = packEllipsoids([{
                 modelMatrix : Matrix4.IDENTITY,
                 radii : radii
@@ -390,7 +390,7 @@ defineSuite([
         });
 
         it('renders a single sphere' + webglMessage, function() {
-            var radius = 1000000.0;
+            var radius = 500000.0;
             var sphere = packSpheres([{
                 radius : radius,
                 modelMatrix : Matrix4.IDENTITY
