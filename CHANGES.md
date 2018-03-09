@@ -38,7 +38,6 @@ Change Log
   * Added `put`, `patch`, `delete`, `options` and `head` methods, so it can be used for all XHR requests.
   * Added `preserveQueryParameters` parameter to `getDerivedResource`, to allow us to append query parameters instead of always replacing them.
   * Added `setQueryParameters` and `appendQueryParameters` to allow for better handling of query strings.
-* Enable terrain in the `CesiumViewer` demo application [#6198](https://github.com/AnalyticalGraphicsInc/cesium/pull/6198)
 * Added `Globe.tilesLoaded` getter property to determine if all terrain and imagery is loaded. [#6194](https://github.com/AnalyticalGraphicsInc/cesium/pull/6194)
 * Added `classificationType` property to entities which specifies whether an entity on the ground, like a polygon or rectangle, should be clamped to terrain, 3D Tiles, or both. [#6195](https://github.com/AnalyticalGraphicsInc/cesium/issues/6195)
 
