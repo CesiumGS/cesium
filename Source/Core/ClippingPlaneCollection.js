@@ -10,6 +10,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './destroyObject',
         './DeveloperError',
         './FeatureDetection',
@@ -36,6 +37,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         FeatureDetection,
@@ -249,6 +251,7 @@ define([
             };
             plane.index = newPlaneIndex;
         } else {
+            deprecationWarning('ClippingPlaneCollection.add', 'Ability to use Plane objects with ClippingPlaneCollection.add is deprecated and will be removed in Cesium 1.45. Please use ClippingPlane objects instead.');
             this._containsUntrackablePlanes = true;
         }
         setIndexDirty(this, newPlaneIndex);
@@ -680,6 +683,7 @@ define([
      * @deprecated
      */
     ClippingPlaneCollection.isSupported = function() {
+        deprecationWarning('ClippingPlaneCollection.isSupported', 'ClippingPlaneCollection.isSupported is deprecated and will be removed in Cesium 1.45. Clipping Planes are now supported on all platforms capable of running Cesium.');
         return true;
     };
 
