@@ -5,8 +5,7 @@ define([
     ], function(
         Check,
         PixelDatatype,
-        getUnpackFloatFunction
-    ) {
+        getUnpackFloatFunction) {
     'use strict';
 
     /**

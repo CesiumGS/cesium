@@ -1,9 +1,8 @@
 define([
-    '../Core/defined'
-], function(
-    defined
-) {
-'use strict';
+        '../Core/defined'
+    ], function(
+        defined) {
+    'use strict';
 
     var SHIFT_RIGHT_8 = 1.0 / 256.0;
     var SHIFT_RIGHT_16 = 1.0 / 65536.0;

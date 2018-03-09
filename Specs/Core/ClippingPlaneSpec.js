@@ -1,18 +1,18 @@
 defineSuite([
-    'Core/ClippingPlane',
-    'Core/Cartesian3',
-    'Core/Math',
-    'Core/Matrix3',
-    'Core/Matrix4',
-    'Core/Plane'
-], function(
-    ClippingPlane,
-    Cartesian3,
-    CesiumMath,
-    Matrix3,
-    Matrix4,
-    Plane) {
-'use strict';
+        'Core/ClippingPlane',
+        'Core/Cartesian3',
+        'Core/Math',
+        'Core/Matrix3',
+        'Core/Matrix4',
+        'Core/Plane'
+    ], function(
+        ClippingPlane,
+        Cartesian3,
+        CesiumMath,
+        Matrix3,
+        Matrix4,
+        Plane) {
+    'use strict';
 
     it('constructs', function() {
         var normal = Cartesian3.UNIT_X;

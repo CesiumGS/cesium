@@ -7,8 +7,7 @@ define([
         Cartesian3,
         Check,
         defined,
-        defineProperties
-    ) {
+        defineProperties) {
     'use strict';
 
     /**
