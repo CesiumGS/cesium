@@ -63,6 +63,7 @@ define([
         './Axis',
         './BlendingState',
         './ColorBlendMode',
+        './DracoLoader',
         './getClippingFunction',
         './HeightReference',
         './JobType',
@@ -140,6 +141,7 @@ define([
         Axis,
         BlendingState,
         ColorBlendMode,
+        DracoLoader,
         getClippingFunction,
         HeightReference,
         JobType,
@@ -619,6 +621,7 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
+        this._decodedData = {};
 
         this._cachedGeometryByteLength = 0;
         this._cachedTexturesByteLength = 0;
@@ -1340,9 +1343,13 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getFailedLoadFunction(model, type, path) {
-        return function() {
+        return function(error) {
             model._state = ModelState.FAILED;
-            model._readyPromise.reject(new RuntimeError('Failed to load ' + type + ': ' + path));
+            var message = 'Failed to load ' + type + ': ' + path;
+            if (defined(error)) {
+                message += '\n' + error.message;
+            }
+            model._readyPromise.reject(new RuntimeError(message));
         };
     }
 
@@ -1405,8 +1412,11 @@ define([
         // through glTF accessors to create the bufferview's index buffer.
         ForEach.accessor(model.gltf, function(accessor) {
             var bufferViewId = accessor.bufferView;
-            var bufferView = bufferViews[bufferViewId];
+            if (!defined(bufferViewId)) {
+                return;
+            }
 
+            var bufferView = bufferViews[bufferViewId];
             if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(indexBufferIds[bufferViewId])) {
                 indexBufferIds[bufferViewId] = true;
                 indexBuffersToCreate.enqueue({
@@ -2475,6 +2485,7 @@ define([
 
                 for (var i = 0; i < primitivesLength; ++i) {
                     var primitive = primitives[i];
+                    var decodedData = model._decodedData[meshId + '.primitive.' + i];
 
                     // GLTF_SPEC: This does not take into account attribute arrays,
                     // indicated by when an attribute points to a parameter with a
@@ -2494,7 +2505,27 @@ define([
                             // Skip if the attribute is not used by the material, e.g., because the asset was exported
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
+                                // Use attributes of previously decoded draco geometry
+                                if (defined(decodedData)) {
+                                    var decodedAttributes = decodedData.attributes;
+                                    if (decodedAttributes.hasOwnProperty(attributeName)) {
+                                        var decodedAttribute = decodedAttributes[attributeName];
+                                        attributes.push({
+                                            index : attributeLocation,
+                                            vertexBuffer : rendererBuffers[decodedAttribute.bufferView],
+                                            componentsPerAttribute : decodedAttribute.componentsPerAttribute,
+                                            componentDatatype : decodedAttribute.componentDatatype,
+                                            normalize: decodedAttribute.normalized,
+                                            offsetInBytes : decodedAttribute.byteOffset,
+                                            strideInBytes : decodedAttribute.byteStride
+                                        });
+
+                                        continue;
+                                    }
+                                }
+
                                 var a = accessors[primitiveAttributes[attributeName]];
+
                                 var normalize = false;
                                 if (defined(a.normalized) && a.normalized) {
                                     normalize = true;
@@ -2531,7 +2562,14 @@ define([
                     var indexBuffer;
                     if (defined(primitive.indices)) {
                         var accessor = accessors[primitive.indices];
-                        indexBuffer = rendererBuffers[accessor.bufferView];
+                        var bufferView = accessor.bufferView;
+
+                        // Used decoded draco buffer if available
+                        if (defined(decodedData)) {
+                            bufferView = decodedData.bufferView;
+                        }
+
+                        indexBuffer = rendererBuffers[bufferView];
                     }
                     rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
                         context : context,
@@ -2966,6 +3004,7 @@ define([
             var material = materials[primitive.material];
             var technique = techniques[material.technique];
             var programId = technique.program;
+            var decodedData = model._decodedData[id + '.primitive.' + i];
 
             var boundingSphere;
             var positionAccessor = primitive.attributes.POSITION;
@@ -2979,6 +3018,12 @@ define([
             var count;
             if (defined(ix)) {
                 count = ix.count;
+
+                // Use indices of the previously decoded Draco geometry.
+                if (defined(decodedData)) {
+                    count = decodedData.numberOfIndices;
+                }
+
                 offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
             }
             else {
@@ -4152,7 +4197,8 @@ define([
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
-                if (!this._updatedGltfVersion) {
+                if (!loadResources.initialized) {
+                    // glTF pipeline updates
                     var options = {
                         optimizeForCesium: true,
                         addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
@@ -4164,6 +4210,19 @@ define([
                     addDefaults(this.gltf);
                     processModelMaterialsCommon(this.gltf, options);
                     processPbrMetallicRoughness(this.gltf, options);
+
+                    // Start draco decoding
+                    DracoLoader.parse(this);
+
+                    loadResources.initialized = true;
+                }
+
+                if (!loadResources.finishedDecoding()) {
+                    DracoLoader.decode(this, context)
+                        .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
+                }
+
+                if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
 
@@ -4179,12 +4238,16 @@ define([
 
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
-                    this._updatedGltfVersion = true;
+
+                    loadResources.resourcesParsed = true;
                 }
-                if (this._updatedGltfVersion && loadResources.pendingShaderLoads === 0) {
+
+                if (loadResources.resourcesParsed &&
+                    loadResources.pendingShaderLoads === 0) {
                     createResources(this, frameState);
                 }
             }
+
             if (loadResources.finished() ||
                 (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
                 this._state = ModelState.LOADED;
