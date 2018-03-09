@@ -2417,7 +2417,7 @@ define([
                             // Skip if the attribute is not used by the material, e.g., because the asset was exported
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
-                                // Use decoded draco attributes if available
+                                // Use attributes of previously decoded draco geometry
                                 if (defined(decodedData)) {
                                     var decodedAttributes = decodedData.attributes;
                                     if (decodedAttributes.hasOwnProperty(attributeName)) {
@@ -2943,7 +2943,7 @@ define([
             if (defined(ix)) {
                 count = ix.count;
 
-                // Use decoded draco data if available
+                // Use indices of the previously decoded Draco geometry.
                 if (defined(decodedData)) {
                     count = decodedData.numberOfIndices;
                 }
@@ -2954,7 +2954,7 @@ define([
                 var positions = accessors[primitive.attributes.POSITION];
                 count = positions.count;
                 offset = 0;
-           }
+            }
 
             // Update model triangle count using number of indices
             model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
