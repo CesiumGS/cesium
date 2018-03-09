@@ -210,7 +210,7 @@ define([
                 '#ifndef LOG_DEPTH \n' +
                 '    return czm_windowToEyeCoordinates(gl_FragCoord); \n' +
                 '#else \n' +
-                '    return czm_windowToEyeCoordinates(v_glPosition); \n' +
+                '    return vec4(v_logPositionEC, 1.0); \n' +
                 '#endif \n';
         }
 
@@ -221,7 +221,7 @@ define([
             'uniform vec4 shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness; \n' +
             'uniform vec4 shadowMap_texelSizeDepthBiasAndNormalShadingSmooth; \n' +
             '#ifdef LOG_DEPTH \n' +
-            'varying vec4 v_glPosition; \n' +
+            'varying vec3 v_logPositionEC; \n' +
             '#endif \n' +
             'vec4 getPositionEC() \n' +
             '{ \n' +

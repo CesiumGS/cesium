@@ -1,11 +1,12 @@
 #ifdef LOG_DEPTH
 varying float v_logZ;
-varying vec4 v_glPosition;
+varying vec3 v_logPositionEC;
 #endif
 
 void czm_updateZ() {
 #ifdef LOG_DEPTH
-    v_glPosition = gl_Position;
+    v_logPositionEC = (czm_inverseProjection * gl_Position).xyz;
+
     gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * czm_logFarDistance - 1.0;
     gl_Position.z *= gl_Position.w;
 #endif
