@@ -48,7 +48,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox: false,
     selectionIndicator: false,
-    shouldAnimate : true
+    shouldAnimate : true,
+    projectionPicker : true
 });
 
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
