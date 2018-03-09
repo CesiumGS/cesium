@@ -2417,8 +2417,6 @@ define([
                             // Skip if the attribute is not used by the material, e.g., because the asset was exported
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
-                                var a = accessors[primitiveAttributes[attributeName]];
-
                                 // Use decoded draco attributes if available
                                 if (defined(decodedData)) {
                                     var decodedAttributes = decodedData.attributes;
@@ -2437,6 +2435,8 @@ define([
                                         continue;
                                     }
                                 }
+
+                                var a = accessors[primitiveAttributes[attributeName]];
 
                                 var normalize = false;
                                 if (defined(a.normalized) && a.normalized) {
@@ -2928,6 +2928,7 @@ define([
             var material = materials[primitive.material];
             var technique = techniques[material.technique];
             var programId = technique.program;
+            var decodedData = model._decodedData[id + '.primitive.' + i];
 
             var boundingSphere;
             var positionAccessor = primitive.attributes.POSITION;
@@ -2941,13 +2942,19 @@ define([
             var count;
             if (defined(ix)) {
                 count = ix.count;
+
+                // Use decoded draco data if available
+                if (defined(decodedData)) {
+                    count = decodedData.numberOfIndices;
+                }
+
                 offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
             }
             else {
                 var positions = accessors[primitive.attributes.POSITION];
                 count = positions.count;
                 offset = 0;
-            }
+           }
 
             // Update model triangle count using number of indices
             model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);

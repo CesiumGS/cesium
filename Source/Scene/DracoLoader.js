@@ -45,11 +45,11 @@ define([
 
     function addBufferToModelResources(model, buffer) {
         var resourceBuffers = model._rendererResources.buffers;
-        var id = Object.keys(resourceBuffers).length;
-        resourceBuffers[id] = buffer;
+        var bufferViewId = Object.keys(resourceBuffers).length;
+        resourceBuffers[bufferViewId] = buffer;
         model._geometryByteLength += buffer.sizeInBytes;
 
-        return id;
+        return bufferViewId;
     }
 
     function addNewVertexBuffer(typedArray, model, context) {
@@ -72,12 +72,16 @@ define([
         });
         indexBuffer.vertexArrayDestroyable = false;
 
-        return addBufferToModelResources(model, indexBuffer);
+        var bufferViewId = addBufferToModelResources(model, indexBuffer);
+        return {
+            bufferViewId: bufferViewId,
+            numberOfIndices : indexBuffer.numberOfIndices
+        };
     }
 
     function addDecodededBuffers(primitive, model, context) {
         return function (result) {
-            var decodedBufferView = addNewIndexBuffer(result.indexArray, model, context);
+            var decodedIndexBuffer = addNewIndexBuffer(result.indexArray, model, context);
 
             var attributes = {};
             var decodedAttributeData = result.attributeData;
@@ -95,7 +99,8 @@ define([
             }
 
             model._decodedData[primitive.mesh + '.primitive.' + primitive.primitive] = {
-                bufferView : decodedBufferView,
+                bufferView : decodedIndexBuffer.bufferViewId,
+                numberOfIndices : decodedIndexBuffer.numberOfIndices,
                 attributes : attributes
             };
         };
