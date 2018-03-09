@@ -366,4 +366,20 @@ defineSuite([
             fragmentShader : fs
         }).contextToRender();
     });
+
+    it('has czm_transformPlane', function() {
+        var fs =
+            'void main() { ' +
+            '  mat4 uniformScale2 = mat4(2.0, 0.0, 0.0, 0.0,' +
+            '                            0.0, 2.0, 0.0, 0.0,' +
+            '                            0.0, 0.0, 2.0, 0.0,' +
+            '                            0.0, 0.0, 0.0, 1.0);' +
+            '  gl_FragColor = vec4(all(equal(czm_transformPlane(uniformScale2, vec4(1.0, 0.0, 0.0, 10.0)), vec4(1.0, 0.0, 0.0, 20.0))));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
 }, 'WebGL');

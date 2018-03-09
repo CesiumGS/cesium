@@ -861,6 +861,18 @@ define([
             get : function() {
                 return this._invertClassificationColor;
             }
+        },
+
+        /**
+         * Whether or not the current projection is orthographic in 3D.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Boolean}
+         */
+        orthographicIn3D : {
+            get : function() {
+                return this._orthographicIn3D;
+            }
         }
     });
 
