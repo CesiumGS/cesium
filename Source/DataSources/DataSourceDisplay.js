@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EventHelper',
         '../Scene/GroundPrimitive',
+        '../Scene/PrimitiveCollection',
         './BillboardVisualizer',
         './BoundingSphereState',
         './CustomDataSource',
@@ -27,6 +28,7 @@ define([
         DeveloperError,
         EventHelper,
         GroundPrimitive,
+        PrimitiveCollection,
         BillboardVisualizer,
         BoundingSphereState,
         CustomDataSource,
@@ -65,9 +67,12 @@ define([
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
         this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
+        this._eventHelper.add(dataSourceCollection.dataSourceMoved, this._onDataSourceMoved, this);
 
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
+        this._primitives = scene.primitives.add(new PrimitiveCollection());
+        this._groundPrimitives = scene.groundPrimitives.add(new PrimitiveCollection());
         this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
@@ -90,7 +95,7 @@ define([
     DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
         var entities = dataSource.entities;
         return [new BillboardVisualizer(entityCluster, entities),
-                new GeometryVisualizer(scene, entities),
+                new GeometryVisualizer(scene, dataSource),
                 new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
@@ -180,6 +185,8 @@ define([
      */
     DataSourceDisplay.prototype.destroy = function() {
         this._eventHelper.removeAll();
+        this._scene.primitives.remove(this._primitives);
+        this._scene.groundPrimitives.remove(this._groundPrimitives);
 
         var dataSourceCollection = this._dataSourceCollection;
         for (var i = 0, length = dataSourceCollection.length; i < length; ++i) {
@@ -318,19 +325,35 @@ define([
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var scene = this._scene;
+        var displayPrimitives = this._primitives;
+        var displayGroundPrimitives = this._groundPrimitives;
+
+        var primitives = displayPrimitives.add(new PrimitiveCollection());
+        var groundPrimitives = displayGroundPrimitives.add(new PrimitiveCollection());
+
+        dataSource._primitives = primitives;
+        dataSource._groundPrimitives = groundPrimitives;
 
         var entityCluster = dataSource.clustering;
         entityCluster._initialize(scene);
 
-        scene.primitives.add(entityCluster);
+        primitives.add(entityCluster);
 
         dataSource._visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
-        var scene = this._scene;
+        var displayPrimitives = this._primitives;
+        var displayGroundPrimitives = this._groundPrimitives;
+
+        var primitives = dataSource._primitives;
+        var groundPrimitives = dataSource._groundPrimitives;
+
         var entityCluster = dataSource.clustering;
-        scene.primitives.remove(entityCluster);
+        primitives.remove(entityCluster);
+
+        displayPrimitives.remove(primitives);
+        displayGroundPrimitives.remove(groundPrimitives);
 
         var visualizers = dataSource._visualizers;
         var length = visualizers.length;
@@ -339,6 +362,28 @@ define([
         }
 
         dataSource._visualizers = undefined;
+    };
+
+    DataSourceDisplay.prototype._onDataSourceMoved = function(dataSource, newIndex, oldIndex) {
+        var displayPrimitives = this._primitives;
+        var displayGroundPrimitives = this._groundPrimitives;
+
+        var primitives = dataSource._primitives;
+        var groundPrimitives = dataSource._groundPrimitives;
+
+        if (newIndex === oldIndex + 1) {
+            displayPrimitives.raise(primitives);
+            displayGroundPrimitives.raise(groundPrimitives);
+        } else if (newIndex === oldIndex - 1) {
+            displayPrimitives.lower(primitives);
+            displayGroundPrimitives.lower(groundPrimitives);
+        } else if (newIndex === 0) {
+            displayPrimitives.lowerToBottom(primitives);
+            displayGroundPrimitives.lowerToBottom(groundPrimitives);
+        } else {
+            displayPrimitives.raiseToTop(primitives);
+            displayGroundPrimitives.raiseToTop(groundPrimitives);
+        }
     };
 
     /**

@@ -116,16 +116,18 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {EntityCollection} entityCollection The entityCollection to visualize.
+     * @param {DataSource} dataSource The dataSource to visualize.
      */
-    function GeometryVisualizer(scene, entityCollection) {
+    function GeometryVisualizer(scene, dataSource) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
-        Check.defined('entityCollection', entityCollection);
+        Check.defined('dataSource', dataSource);
         //>>includeEnd('debug');
 
-        var primitives = scene.primitives;
-        var groundPrimitives = scene.groundPrimitives;
+        var entityCollection = dataSource.entities;
+        var primitives = dataSource._primitives;
+        var groundPrimitives = dataSource._groundPrimitives;
+
         this._scene = scene;
         this._primitives = primitives;
         this._groundPrimitives = groundPrimitives;
