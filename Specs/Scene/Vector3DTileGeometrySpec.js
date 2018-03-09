@@ -662,13 +662,13 @@ defineSuite([
             geometry = scene.primitives.add(new Vector3DTileGeometry({
                 ellipsoids : packEllipsoids([{
                     modelMatrix : Matrix4.IDENTITY,
-                    radii : new Cartesian3(1000000.0, 1000000.0, 1000000.0)
+                    radii : new Cartesian3(500000.0, 500000.0, 500000.0)
                 }]),
                 ellipsoidBatchIds : new Uint16Array([0]),
                 center : center,
                 modelMatrix : modelMatrix,
                 batchTable : batchTable,
-                boundingVolume : new BoundingSphere(center, 1000000.0)
+                boundingVolume : new BoundingSphere(center, 500000.0)
             }));
             return loadGeometries(geometry).then(function() {
                 scene.camera.setView({
