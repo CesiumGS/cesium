@@ -1,4 +1,4 @@
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to CesiumJS.  The following people have contributed to CesiumJS, under the following agreements:
 
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
 
@@ -171,3 +171,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Nacho Carnicero](https://github.com/nacho-carnicero)
 * [Y.Selim Abidin](https://github.com/SelimAbidin)
 * [Tamar Cohen](https://github.com/tamarmot)
+* [Stephen Wiseman](https://github.com/srwiseman)

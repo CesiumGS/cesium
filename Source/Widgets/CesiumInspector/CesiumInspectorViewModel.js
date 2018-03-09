@@ -626,7 +626,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to toggle the visibility of a BoundingSphere for a primitive
          * @memberof CesiumInspectorViewModel.prototype
@@ -663,7 +662,6 @@ define([
             }
         },
 
-
         /**
          * Gets the command to increment the depth frustum index to be shown
          * @memberof CesiumInspectorViewModel.prototype
@@ -687,7 +685,6 @@ define([
                 return this._decrementDepthFrustum;
             }
         },
-
 
         /**
          * Gets the command to toggle the visibility of tile coordinates

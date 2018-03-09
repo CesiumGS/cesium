@@ -28,4 +28,34 @@ defineSuite([
 
         expect(r.exec('assets/foo/bar.cesium.js')).toBeNull();
     });
+
+    it('CESIUM_BASE_URL works with trailing slash', function() {
+        // Set new variables
+        var oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
+        window.CESIUM_BASE_URL = 'http://test.com/source/';
+        buildModuleUrl._clearBaseResource();
+
+        // Verify we use CESIUM_BASE_URL
+        var url = buildModuleUrl._buildModuleUrlFromBaseUrl('Core/Cartesian3.js');
+        expect(url).toEqual('http://test.com/source/Core/Cartesian3.js');
+
+        // Reset old values
+        window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
+        buildModuleUrl._clearBaseResource();
+    });
+
+    it('CESIUM_BASE_URL works without trailing slash', function() {
+        // Set new variables
+        var oldCESIUM_BASE_URL = window.CESIUM_BASE_URL;
+        window.CESIUM_BASE_URL = 'http://test.com/source';
+        buildModuleUrl._clearBaseResource();
+
+        // Verify we use CESIUM_BASE_URL
+        var url = buildModuleUrl._buildModuleUrlFromBaseUrl('Core/Cartesian3.js');
+        expect(url).toEqual('http://test.com/source/Core/Cartesian3.js');
+
+        // Reset old values
+        window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
+        buildModuleUrl._clearBaseResource();
+    });
 });

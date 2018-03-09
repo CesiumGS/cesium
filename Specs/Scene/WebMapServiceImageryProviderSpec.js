@@ -971,7 +971,6 @@ defineSuite([
             });
         });
 
-
         it('works with unknown XML responses', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',

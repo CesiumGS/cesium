@@ -237,7 +237,6 @@ defineSuite([
         expect(provider.minimumLevel).toEqual(1);
     });
 
-
     it('when no credit is supplied, the provider adds a default credit', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',

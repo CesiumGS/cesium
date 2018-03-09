@@ -44,13 +44,8 @@ function startup(Cesium) {
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     skyAtmosphere: false,
-    shouldAnimate : true
-});
-
-viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask : true,
-    requestVertexNormals : true
+    shouldAnimate : true,
+    terrainProvider: Cesium.createWorldTerrain()
 });
 
 var position = Cesium.Cartesian3.fromRadians(-2.0862979473351286, 0.6586620013036164, 1400.0);

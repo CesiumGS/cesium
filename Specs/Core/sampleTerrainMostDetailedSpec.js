@@ -1,16 +1,16 @@
 defineSuite([
         'Core/sampleTerrainMostDetailed',
         'Core/Cartographic',
-        'Core/CesiumTerrainProvider'
+        'Core/CesiumTerrainProvider',
+        'Core/createWorldTerrain'
     ], function(
         sampleTerrainMostDetailed,
         Cartographic,
-        CesiumTerrainProvider) {
+        CesiumTerrainProvider,
+        createWorldTerrain) {
     "use strict";
 
-    var terrainProvider = new CesiumTerrainProvider({
-        url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
-    });
+    var worldTerrain = createWorldTerrain();
 
     it('queries heights', function() {
         var positions = [
@@ -18,7 +18,7 @@ defineSuite([
             Cartographic.fromDegrees(87.0, 28.0)
         ];
 
-        return sampleTerrainMostDetailed(terrainProvider, positions).then(function(passedPositions) {
+        return sampleTerrainMostDetailed(worldTerrain, positions).then(function(passedPositions) {
             expect(passedPositions).toBe(positions);
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
@@ -49,7 +49,7 @@ defineSuite([
             Cartographic.fromDegrees(87.0, 28.0)
         ];
 
-        return sampleTerrainMostDetailed(terrainProvider, positions).then(function() {
+        return sampleTerrainMostDetailed(worldTerrain, positions).then(function() {
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
             expect(positions[1].height).toBeGreaterThan(5000);
@@ -68,19 +68,15 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            sampleTerrainMostDetailed(terrainProvider, undefined);
+            sampleTerrainMostDetailed(worldTerrain, undefined);
         }).toThrowDeveloperError();
 
     });
 
     it('works for a dodgy point right near the edge of a tile', function() {
-        var stkWorldTerrain = new CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
-        });
-
         var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
 
-        return sampleTerrainMostDetailed(stkWorldTerrain, positions).then(function() {
+        return sampleTerrainMostDetailed(worldTerrain, positions).then(function() {
             expect(positions[0].height).toBeDefined();
         });
     });

@@ -48,6 +48,7 @@ define([
         baseResource = new Resource({
             url: baseUrlString
         });
+        baseResource.appendForwardSlash();
 
         return baseResource;
     }
@@ -98,6 +99,10 @@ define([
 
     // exposed for testing
     buildModuleUrl._cesiumScriptRegex = cesiumScriptRegex;
+    buildModuleUrl._buildModuleUrlFromBaseUrl = buildModuleUrlFromBaseUrl;
+    buildModuleUrl._clearBaseResource = function() {
+        baseResource = undefined;
+    };
 
     /**
      * Sets the base URL for resolving modules.
