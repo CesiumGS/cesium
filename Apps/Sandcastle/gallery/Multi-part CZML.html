@@ -35,7 +35,9 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var statusDisplay = document.createElement('div');
+var fuelDisplay = document.createElement('div');
 var czmlPath = '../../SampleData/';
+var vehicleEntity;
 
 // Add a blank CzmlDataSource to hold our multi-part entity/entities.
 var dataSource = new Cesium.CzmlDataSource();
@@ -84,7 +86,7 @@ function processPart(part) {
 
         // Follow the vehicle with the camera.
         if (!viewer.trackedEntity) {
-            viewer.trackedEntity = dataSource.entities.getById('Vehicle');
+            viewer.trackedEntity = vehicleEntity = dataSource.entities.getById('Vehicle');
         }
     });
 }
@@ -109,6 +111,13 @@ viewer.clock.onTick.addEventListener(function(clock) {
     }).forEach(function(part) {
         processPart(part);
     });
+
+    if (vehicleEntity) {
+        var fuel = vehicleEntity.properties.fuel_remaining.getValue(clock.currentTime);
+        if (Cesium.defined(fuel)) {
+            fuelDisplay.textContent = 'Fuel: ' + fuel.toFixed(2) + ' gal';
+        }
+    }
 });
 
 // Add a reset button, for convenience.
@@ -130,6 +139,12 @@ Sandcastle.addToolbarButton('Reset demo', function() {
 statusDisplay.style.background = 'rgba(42, 42, 42, 0.7)';
 statusDisplay.style.padding = '5px 10px';
 document.getElementById('toolbar').appendChild(statusDisplay);
+
+// Show a multi-part custom property being read from CZML.
+fuelDisplay.style.background = 'rgba(42, 42, 42, 0.7)';
+fuelDisplay.style.padding = '5px 10px';
+fuelDisplay.style.marginTop = '5px';
+document.getElementById('toolbar').appendChild(fuelDisplay);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

@@ -5,6 +5,14 @@
   },
   {
     "id":"Vehicle",
+    "properties" : {
+        "fuel_remaining" : {
+            "epoch":"2012-08-04T16:00:00Z",
+            "number": [
+                3000, 19.9
+            ]
+        }
+    },
     "position":{
       "interpolationAlgorithm":"LAGRANGE",
       "interpolationDegree":1,
