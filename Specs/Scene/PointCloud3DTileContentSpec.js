@@ -499,19 +499,6 @@ defineSuite([
 
     it('modulates attenuation using the baseResolution parameter', function() {
         return attenuationTest(function(scene, tileset) {
-            tileset.pointCloudShading.attenuation = true;
-            tileset.pointCloudShading.geometricErrorScale = 1.0;
-            tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = CesiumMath.EPSILON20;
-            tileset.maximumScreenSpaceError = 16;
-            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
-                expect(pixelCount).toEqual(noAttenuationPixelCount);
-            });
-        });
-    });
-
-    it('modulates attenuation using the baseResolution parameter', function() {
-        return attenuationTest(function(scene, tileset) {
             // pointCloudNoColorUrl is a single tile with GeometricError = 0,
             // which results in default baseResolution being computed
             tileset.pointCloudShading.attenuation = true;

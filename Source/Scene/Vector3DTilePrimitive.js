@@ -1056,7 +1056,6 @@ define([
         commandLength = commandsIgnoreShow.length;
         for (i = 0; i < commandLength; ++i) {
             command = commandsIgnoreShow[i];
-            command.pass = pass;
             commandList.push(command);
         }
     }
