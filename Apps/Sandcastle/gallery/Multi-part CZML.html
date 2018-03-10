@@ -81,6 +81,11 @@ function processPart(part) {
     dataSource.process(czmlPath + part.url).then(function() {
         part.loaded = true;
         updateStatusDisplay();
+
+        // Follow the vehicle with the camera.
+        if (!viewer.trackedEntity) {
+            viewer.trackedEntity = dataSource.entities.getById('Vehicle');
+        }
     });
 }
 
@@ -104,14 +109,6 @@ viewer.clock.onTick.addEventListener(function(clock) {
     }).forEach(function(part) {
         processPart(part);
     });
-});
-
-// Set the initial camera view.
-viewer.scene.camera.setView({
-    destination:  Cesium.Cartesian3.fromDegrees(-116.52, 35.02, 95000),
-    orientation: {
-        heading: 6
-    }
 });
 
 // Add a reset button, for convenience.

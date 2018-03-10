@@ -6,28 +6,6 @@
   {
     "id":"Vehicle",
     "availability":"2012-08-04T16:00:00Z/2012-08-04T17:04:54.9962195740191Z",
-    "billboard":{
-      "eyeOffset":{
-        "cartesian":[
-          0.0,0.0,0.0
-        ]
-      },
-      "horizontalOrigin":"CENTER",
-      "image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEISURBVEhLvVXBDYQwDOuojHKj8LhBbpTbpBCEkZsmIVTXq1RVQGrHiWlLmTTqPiZBlyLgy/KSZQ5JSHDQ/mCYCsC8106kDU0AdwRnvYZArWRcAl0dcYJq1hWCb3hBrumbDAVMwAC82WoRvgMnVMDBnB0nYZFTbE6BBvdUGqVqCbjBIk3PyFFR/NU7EKzru+qZsau3ryPwwCRLKYOzutZuCL6fUmWeJGzNzL/RxAMrUmASSCkkAayk2IxPlwhAAYGpsiHQjbLccfdOY5gKkCXAMi7SscAwbQpAnKyctWyUZ6z8ja3OGMepwD8asz+9FnSvbhU8uVOHFIwQsI3/p0CfhuqCSQuxLqsN6mu8SS+N42MAAAAASUVORK5CYII=",
-      "pixelOffset":{
-        "cartesian2":[
-          0.0,0.0
-        ]
-      },
-      "scale":0.8333333333333334,
-      "show":[
-        {
-          "interval":"2012-08-04T16:00:00Z/2012-08-04T18:00:00Z",
-          "boolean":true
-        }
-      ],
-      "verticalOrigin":"BOTTOM"
-    },
     "label":{
       "fillColor":[
         {
@@ -38,7 +16,7 @@
         }
       ],
       "font":"bold 10pt Segoe UI Semibold",
-      "horizontalOrigin":"LEFT",
+      "horizontalOrigin":"CENTER",
       "outlineColor":{
         "rgba":[
           0,0,0,255
@@ -46,7 +24,7 @@
       },
       "pixelOffset":{
         "cartesian2":[
-          10.0,0.0
+          0.0,20.0
         ]
       },
       "scale":1.0,
@@ -57,8 +35,19 @@
         }
       ],
       "style":"FILL",
-      "text":"Vehicle",
+      "text":"Test Vehicle",
       "verticalOrigin":"CENTER"
+    },
+    "model":{
+      "gltf":"models/CesiumMilkTruck/CesiumMilkTruck.glb",
+      "minimumPixelSize":100,
+      "maximumScale":50
+    },
+    "orientation" : {
+      "velocityReference": "#position"
+    },
+    "viewFrom": {
+      "cartesian": [ -2080, -1715, 779 ]
     },
     "path":{
       "material":{
