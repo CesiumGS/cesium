@@ -96,12 +96,12 @@ viewer.clock.onTick.addEventListener(function(clock) {
     var timeOffset = Cesium.JulianDate.secondsDifference(clock.currentTime, clock.startTime);
 
     // Filter the list of parts to just the ones that need loading right now.
-    var partToLoad = partsToLoad.filter(function(part) {
+    // Then, process each part that needs loading.
+    partsToLoad.filter(function(part) {
         return (!part.requested) &&
             (timeOffset >= part.range[0] - preloadTimeInSeconds) &&
             (timeOffset <= part.range[1]);
     }).forEach(function(part) {
-        // Process each part that needs loading.
         processPart(part);
     });
 });
