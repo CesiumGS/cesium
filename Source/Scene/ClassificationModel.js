@@ -675,7 +675,7 @@ define([
         var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEWPROJECTION');
 
         var uniformDecl;
-        var computePosition;
+        var toClip;
 
         if (!defined(modelViewProjectionName)) {
             var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION');
@@ -687,11 +687,13 @@ define([
             uniformDecl =
                 'uniform mat4 ' + modelViewName + ';\n' +
                 'uniform mat4 ' + projectionName + ';\n';
-            computePosition = '    vec4 positionInClipCoords = ' + projectionName + ' * ' + modelViewName + ' * vec4(' + positionName + ', 1.0);\n';
+            toClip = projectionName + ' * ' + modelViewName + ' * vec4(' + positionName + ', 1.0)';
         } else {
             uniformDecl = 'uniform mat4 ' + modelViewProjectionName + ';\n';
-            computePosition = '    vec4 positionInClipCoords = ' + modelViewProjectionName + ' * vec4(' + positionName + ', 1.0);\n';
+            toClip = modelViewProjectionName + ' * vec4(' + positionName + ', 1.0)';
         }
+
+        var computePosition = '    vec4 positionInClipCoords = ' + toClip + ';\n';
 
         var vs =
             'attribute vec3 ' + positionName + ';\n' +
@@ -718,7 +720,7 @@ define([
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
-        drawVS = ModelUtility.modifyVertexShaderForLogDepth(gltf, drawVS);
+        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClip);
         drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
         model._shaderProgram = {
@@ -731,7 +733,7 @@ define([
         var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
         var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
 
-        pickVS = ModelUtility.modifyVertexShaderForLogDepth(gltf, pickVS);
+        pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClip);
         pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
 
         model._pickShaderProgram = {

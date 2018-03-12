@@ -278,20 +278,7 @@ define([
         };
     };
 
-    ModelUtility.modifyFragmentShaderForLogDepth = function(shader) {
-        shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
-        shader +=
-            '\n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_depth_main(); \n' +
-            '    czm_writeLogDepth(); \n' +
-            '} \n';
-
-        return shader;
-    };
-
-    ModelUtility.modifyVertexShaderForLogDepth = function(gltf, shader) {
+    ModelUtility.toClipCoordinatesGLSL = function(gltf, shader) {
         var positionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'POSITION');
         var decodedPositionName = positionName.replace('a_', 'gltf_a_dec_');
         if (shader.indexOf(decodedPositionName) !== -1) {
@@ -310,13 +297,30 @@ define([
             modelViewProjectionName = projectionName + ' * ' + modelViewName;
         }
 
+        return modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)';
+    };
+
+    ModelUtility.modifyFragmentShaderForLogDepth = function(shader) {
         shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
         shader +=
             '\n' +
             'void main() \n' +
             '{ \n' +
             '    czm_depth_main(); \n' +
-            '    czm_vertexLogDepth(' + modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)); \n' +
+            '    czm_writeLogDepth(); \n' +
+            '} \n';
+
+        return shader;
+    };
+
+    ModelUtility.modifyVertexShaderForLogDepth = function(shader, toClipCoordinatesGLSL) {
+        shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
+        shader +=
+            '\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_depth_main(); \n' +
+            '    czm_vertexLogDepth(' + toClipCoordinatesGLSL + '); \n' +
             '} \n';
 
         return shader;
