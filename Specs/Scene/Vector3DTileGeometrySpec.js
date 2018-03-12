@@ -570,7 +570,7 @@ defineSuite([
         });
 
         it('renders with inverted classification' + webglMessage, function() {
-            var radii = new Cartesian3(10.0, 10.0, 1000.0);
+            var radii = new Cartesian3(100.0, 100.0, 1000.0);
             var ellipsoids = packEllipsoids([{
                 modelMatrix : Matrix4.IDENTITY,
                 radii : radii
@@ -597,17 +597,15 @@ defineSuite([
                 batchTable : batchTable
             }));
             return loadGeometries(geometry).then(function() {
-                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(radii.x, 0.0, 1.0));
+                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 1.0));
+                expect(scene).toRender([255, 255, 255, 255]);
 
+                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(radii.x, 0.0, 1.0));
                 expect(scene).toRender([255, 0, 0, 255]);
 
                 scene.invertClassification = true;
                 scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
-
                 expect(scene).toRender([64, 0, 0, 255]);
-
-                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 1.0));
-                expect(scene).toRender([255, 255, 255, 255]);
 
                 scene.invertClassification = false;
             });
