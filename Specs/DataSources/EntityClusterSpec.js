@@ -30,8 +30,8 @@ defineSuite([
 
     var scene;
     var cluster;
-
-    var depth = 0.1;
+    var depth;
+    var farDepth;
 
     beforeAll(function() {
         scene = createScene({
@@ -86,6 +86,13 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
+
+        if (scene.logarithmicDepthBuffer) {
+            depth = farDepth = 0.1;
+        } else {
+            depth = 0.5;
+            farDepth = 0.9;
+        }
     });
 
     afterAll(function() {
@@ -508,13 +515,13 @@ defineSuite([
         var billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), farDepth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), farDepth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -552,13 +559,13 @@ defineSuite([
         var point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), farDepth);
 
         entity = new Entity();
         point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), farDepth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
