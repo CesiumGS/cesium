@@ -266,7 +266,7 @@ define([
         }
 
         this._logDepthBuffer = context.fragmentDepth;
-        this._logDepthBufferChanged = true;
+        this._logDepthBufferDirty = true;
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
@@ -458,6 +458,7 @@ define([
          * @default 1.0
          */
         this.morphTime = 1.0;
+
         /**
          * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
          *
@@ -465,6 +466,13 @@ define([
          * @default 1000.0
          */
         this.farToNearRatio = 1000.0;
+
+        /**
+         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer. The default is 1e6.
+         * @type {Number}
+         * @default 1000000.0
+         */
+        this.logarithmicDepthFarToNearRatio = 1000000.0;
 
         /**
          * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
@@ -698,6 +706,11 @@ define([
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
         this._frustumChanged = true;
 
+        if (this._logDepthBuffer) {
+            this._camera.frustum.near = 1.0;
+            this._camera.frustum.far = 10000000000.0;
+        }
+
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
         // of celestial and environment effects that need to be updated/rendered in
@@ -768,13 +781,7 @@ define([
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
-        var farToNearRatio;
-
-        if (this._logDepthBuffer) {
-            farToNearRatio = this.farToNearRatio * this.farToNearRatio;
-        } else {
-            farToNearRatio = this.farToNearRatio;
-        }
+        var farToNearRatio = this._logDepthBuffer ? this.logarithmicDepthFarToNearRatio : this.farToNearRatio;
 
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         updateFrustums(near, far, farToNearRatio, numFrustums, this._logDepthBuffer, this._frustumCommandsList, false, undefined);
@@ -1386,14 +1393,14 @@ define([
          * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
          * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
          */
-        logDepthBuffer : {
+        logarithmicDepthBuffer : {
             get : function() {
                 return this._logDepthBuffer;
             },
             set : function(value) {
                 if (this._context.fragmentDepth && this._logDepthBuffer !== value) {
                     this._logDepthBuffer = value;
-                    this._logDepthBufferChanged = true;
+                    this._logDepthBufferDirty = true;
                 }
             }
         }
@@ -1449,7 +1456,7 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if ((scene._logDepthBufferChanged || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
+        if ((scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
 
             var frustum = scene.camera.frustum;
@@ -1758,14 +1765,11 @@ define([
         // last frame, else compute the new frustums and sort them by frustum again.
         var is2D = scene.mode === SceneMode.SCENE2D;
         var logDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
-        var farToNearRatio = scene.farToNearRatio;
+        var farToNearRatio = logDepth ? scene.logarithmicDepthFarToNearRatio : scene.farToNearRatio;
         var numFrustums;
 
         if (!is2D) {
             // The multifrustum for 3D/CV is non-uniformly distributed.
-            if (logDepth) {
-                farToNearRatio *= farToNearRatio;
-            }
             numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         } else {
             // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
@@ -3115,13 +3119,9 @@ define([
         this._postUpdate.raiseEvent(this, time);
 
         this._frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
-        if (this._frustumChanged && this._logDepthBuffer && !(this._camera.frustum instanceof OrthographicFrustum || this._camera.frustum instanceof OrthographicOffCenterFrustum)) {
-            this._camera.frustum.near = 1.0;
-            this._camera.frustum.far = 10000000000.0;
-        }
 
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferChanged || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
@@ -3130,7 +3130,7 @@ define([
         if (shouldRender) {
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
-            this._logDepthBufferChanged = false;
+            this._logDepthBufferDirty = false;
 
             // Render
             this._preRender.raiseEvent(this, time);
@@ -3427,7 +3427,7 @@ define([
         return result;
     }
 
-    var logDepthRegex = /\s+czm_writeLogZ\(/;
+    var logDepthRegex = /\s+czm_writeLogDepth\(/;
     var extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
 
     function getLogDepthShaderProgram(context, shaderProgram) {
@@ -3474,7 +3474,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    czm_log_depth_main(); \n' +
-                    '    czm_writeLogZ(); \n' +
+                    '    czm_writeLogDepth(); \n' +
                     '} \n';
 
                 var vertexSources = vs.sources;
@@ -3488,7 +3488,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    czm_log_depth_main(); \n' +
-                    '    czm_vertexLogZ(); \n' +
+                    '    czm_vertexLogDepth(); \n' +
                     '} \n';
                 vertexSources.push(logMain);
             }

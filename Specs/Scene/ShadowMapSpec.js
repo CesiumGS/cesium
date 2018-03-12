@@ -1117,7 +1117,7 @@ defineSuite([
         }
 
         var callCount;
-        if (!scene.logDepthBuffer) {
+        if (!scene.logarithmicDepthBuffer) {
             // Expect derived commands to be updated twice for both the floor and box,
             // once on the first frame and again when the shadow map is dirty
             callCount = 4;

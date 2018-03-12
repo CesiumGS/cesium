@@ -2574,7 +2574,10 @@ define([
     var scratchProj = new Cartesian3();
 
     /**
-     * Return the distance from the camera to the front of the bounding sphere.
+     * Return the signed distance from the camera to the front of the bounding sphere.
+     * <p>
+     * Positive values indicate that the bounding sphere is in the positive half-plane of the camera position and view direction while a negative value indicates it is in the negative half-plane.
+     * </p>
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
      * @returns {Number} The signed distance to the bounding sphere.

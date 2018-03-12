@@ -18,5 +18,5 @@ void main()
         discard;
     }
 
-    czm_writeLogZ();
+    czm_writeLogDepth();
 }

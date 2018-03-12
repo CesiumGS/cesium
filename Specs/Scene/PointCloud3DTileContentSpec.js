@@ -441,11 +441,12 @@ defineSuite([
         });
     });
 
-    var noAttenuationPixelCount = 16;
+    var noAttenuationPixelCount;
     function attenuationTest(postLoadCallback) {
         var scene = createScene({
             canvas : createCanvas(10, 10)
         });
+        noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
         var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
         scene.fxaa = false;

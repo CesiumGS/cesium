@@ -98,6 +98,6 @@ void main()
     czm_pickColor = pickColor;
 
 #ifdef LOG_DEPTH
-    czm_vertexLogZ(czm_modelViewProjectionRelativeToEye * p);
+    czm_vertexLogDepth(czm_modelViewProjectionRelativeToEye * p);
 #endif
 }

@@ -284,7 +284,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    czm_depth_main(); \n' +
-            '    czm_writeLogZ(); \n' +
+            '    czm_writeLogDepth(); \n' +
             '} \n';
 
         return shader;
@@ -315,7 +315,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    czm_depth_main(); \n' +
-            '    czm_vertexLogZ(' + modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)); \n' +
+            '    czm_vertexLogDepth(' + modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)); \n' +
             '} \n';
 
         return shader;

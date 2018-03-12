@@ -21,6 +21,6 @@ void main()
     gl_Position = czm_viewportOrthographic * positionWC;
 
 #ifdef LOG_DEPTH
-    czm_vertexLogZ(czm_projection * p);
+    czm_vertexLogDepth(czm_projection * p);
 #endif
 }

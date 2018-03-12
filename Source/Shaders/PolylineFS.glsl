@@ -18,5 +18,5 @@ void main()
     gl_FragColor *= u_highlightColor;
 #endif
 
-    czm_writeLogZ();
+    czm_writeLogDepth();
 }

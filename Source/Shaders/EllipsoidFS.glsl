@@ -97,7 +97,7 @@ void main()
     vec3 positionEC = czm_pointAlongRay(ray, t);
     vec4 positionCC = czm_projection * vec4(positionEC, 1.0);
 #ifdef LOG_DEPTH
-    czm_writeLogZ(1.0 + positionCC.w);
+    czm_writeLogDepth(1.0 + positionCC.w);
 #else
     float z = positionCC.z / positionCC.w;
 

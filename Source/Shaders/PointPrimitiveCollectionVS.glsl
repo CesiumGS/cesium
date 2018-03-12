@@ -148,7 +148,7 @@ void main()
 #endif
 
 #ifdef LOG_DEPTH
-    czm_vertexLogZ(czm_projection * positionEC);
+    czm_vertexLogDepth(czm_projection * positionEC);
 #endif
 
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
@@ -171,7 +171,7 @@ void main()
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
 #ifdef LOG_DEPTH
-            czm_vertexLogZ(vec4(czm_currentFrustum.x));
+            czm_vertexLogDepth(vec4(czm_currentFrustum.x));
 #endif
         }
     }
