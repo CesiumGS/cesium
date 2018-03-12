@@ -91,7 +91,7 @@ defineSuite([
     beforeEach(function() {
         scene.morphTo3D(0);
 
-        rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
+        rectangle = Rectangle.fromDegrees(-75.0, 25.0, -70.0, 30.0);
 
         var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
         depthColor = depthColorAttribute.value;
