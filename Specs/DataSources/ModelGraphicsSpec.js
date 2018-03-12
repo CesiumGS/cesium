@@ -1,7 +1,7 @@
 defineSuite([
         'DataSources/ModelGraphics',
         'Core/Cartesian3',
-        'Core/ClippingPlaneCollection',
+        'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',

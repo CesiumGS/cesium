@@ -4,7 +4,7 @@ defineSuite([
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
         'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
+        'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/combine',
         'Core/defaultValue',

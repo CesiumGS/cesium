@@ -4,7 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/ClippingPlaneCollection',
+        '../Scene/ClippingPlaneCollection',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',

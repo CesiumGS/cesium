@@ -2,7 +2,7 @@ defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
+        'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',

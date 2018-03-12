@@ -1,5 +1,5 @@
 define([
-        '../Core/ClippingPlaneCollection',
+        '../Scene/ClippingPlaneCollection',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/TerrainQuantization',

@@ -3,7 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
         'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
+        'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/Credit',
         'Core/defined',

@@ -3,7 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
-        '../Core/ClippingPlaneCollection',
+        '../Scene/ClippingPlaneCollection',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',

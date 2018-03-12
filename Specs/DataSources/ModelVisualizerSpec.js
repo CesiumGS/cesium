@@ -3,7 +3,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
+        'Scene/ClippingPlaneCollection',
         'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
