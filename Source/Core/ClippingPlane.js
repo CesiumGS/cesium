@@ -11,8 +11,8 @@ define([
     'use strict';
 
     /**
-     * A Plane in Hessian Normal form to be used with ClippingPlaneCollection.
-     * Compatible with mathematics functions in Plane.js
+     * A Plane in Hessian Normal form to be used with {@link ClippingPlaneCollection}.
+     * Compatible with mathematics functions in {@link Plane}
      *
      * @alias ClippingPlane
      * @constructor
@@ -25,6 +25,9 @@ define([
      * opposite to the normal; if zero, the plane passes through the origin.
      */
     function ClippingPlane(normal, distance) {
+        Check.typeOf.object('normal', normal);
+        Check.typeOf.number('distance', distance);
+
         this._distance = distance;
         this._normal = new UpdateChangedCartesian3(normal, this);
         this.onChangeCallback = undefined;
@@ -128,7 +131,7 @@ define([
         this._cartesian3 = Cartesian3.clone(normal);
     }
 
-    function makeGetterStter(key) {
+    function makeGetterSetter(key) {
         return {
             get : function() {
                 return this._cartesian3[key];
@@ -146,9 +149,9 @@ define([
     }
 
     defineProperties(UpdateChangedCartesian3.prototype, {
-        x : makeGetterStter('x'),
-        y : makeGetterStter('y'),
-        z : makeGetterStter('z')
+        x : makeGetterSetter('x'),
+        y : makeGetterSetter('y'),
+        z : makeGetterSetter('z')
     });
 
     return ClippingPlane;

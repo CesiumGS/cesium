@@ -315,7 +315,7 @@ define([
                 return this._clippingPlanes;
             },
             set : function(value) {
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         }
     });

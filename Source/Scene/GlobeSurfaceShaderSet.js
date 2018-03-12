@@ -100,7 +100,7 @@ define([
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
-            currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState() : 0;
+            currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&

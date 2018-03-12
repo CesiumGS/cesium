@@ -114,7 +114,7 @@ function updatePlanes() {
 }
 
 function computePlanes() {
-    var stepDegrees = 6.28319 / steps;
+    var stepDegrees = Cesium.Math.TWO_PI / steps;
     clippingPlanes = [];
 
     for (var i = 0; i < steps; i++) {
@@ -122,15 +122,14 @@ function computePlanes() {
         var dir = new Cesium.Cartesian3();
         dir.x = 1.0;
         dir.y = Math.tan(angle);
-        if (angle > 1.57079632679) {
+        if (angle > Cesium.Math.PI_OVER_TWO) {
             dir.x = -1.0;
             dir.y *= -1.0;
         }
-        if (angle > 3.14159265359) {
+        if (angle > Cesium.Math.PI) {
             dir.x = -1.0;
-            dir.y = dir.y;
         }
-        if (angle > 4.71238898038) {
+        if (angle > (Cesium.Math.PI_OVER_TWO * 3)) {
             dir.x = 1.0;
             dir.y = -dir.y;
         }

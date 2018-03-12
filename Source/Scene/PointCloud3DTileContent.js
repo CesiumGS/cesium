@@ -35,6 +35,7 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
+        './getClipAndStyleCode',
         './getClippingFunction',
         './SceneMode',
         './ShadowMode'
@@ -75,6 +76,7 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
+        getClipAndStyleCode,
         getClippingFunction,
         SceneMode,
         ShadowMode) {
@@ -1133,14 +1135,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            fs += '    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);\n' +
-                  '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-                  '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
-                  '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +
-                  '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-                  '    { \n' +
-                  '        gl_FragColor = clippingPlanesEdgeColor; \n' +
-                  '    } \n';
+            fs += getClipAndStyleCode('u_clippingPlanes', 'u_clippingPlanesMatrix', 'u_clippingPlanesEdgeStyle');
         }
 
         fs += '} \n';

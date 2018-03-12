@@ -822,7 +822,7 @@ define([
                 return this._clippingPlanes;
             },
             set : function(value) {
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         },
 
@@ -1944,10 +1944,7 @@ define([
      * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
-        // Destroy debug labels
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
-
-        // Destroy clipping plane collection
         this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
         // Traverse the tree and destroy all tiles

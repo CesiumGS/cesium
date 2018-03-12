@@ -454,7 +454,7 @@ defineSuite([
             modelMatrix : transform
         });
 
-        ClippingPlaneCollection.setOwnership(clippingPlanes1, clippedObject1, 'clippingPlanes');
+        ClippingPlaneCollection.setOwner(clippingPlanes1, clippedObject1, 'clippingPlanes');
         expect(clippedObject1.clippingPlanes).toBe(clippingPlanes1);
         expect(clippingPlanes1._owner).toBe(clippedObject1);
 
@@ -466,16 +466,16 @@ defineSuite([
         });
 
         // Expect detached clipping planes to be destroyed
-        ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject1, 'clippingPlanes');
+        ClippingPlaneCollection.setOwner(clippingPlanes2, clippedObject1, 'clippingPlanes');
         expect(clippingPlanes1.isDestroyed()).toBe(true);
 
         // Expect setting the same ClippingPlaneCollection again to not destroy the ClippingPlaneCollection
-        ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject1, 'clippingPlanes');
+        ClippingPlaneCollection.setOwner(clippingPlanes2, clippedObject1, 'clippingPlanes');
         expect(clippingPlanes2.isDestroyed()).toBe(false);
 
         // Expect failure when attaching one ClippingPlaneCollection to two objects
         expect(function() {
-            ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject2, 'clippingPlanes');
+            ClippingPlaneCollection.setOwner(clippingPlanes2, clippedObject2, 'clippingPlanes');
         }).toThrowDeveloperError();
     });
 
@@ -604,16 +604,16 @@ defineSuite([
         clippingPlanes = new ClippingPlaneCollection();
         clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, -1.0));
 
-        expect(clippingPlanes.clippingPlanesState()).toEqual(-1);
+        expect(clippingPlanes.clippingPlanesState).toEqual(-1);
 
         var holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
         clippingPlanes.add(holdThisPlane);
-        expect(clippingPlanes.clippingPlanesState()).toEqual(-2);
+        expect(clippingPlanes.clippingPlanesState).toEqual(-2);
 
         clippingPlanes.unionClippingRegions = true;
-        expect(clippingPlanes.clippingPlanesState()).toEqual(2);
+        expect(clippingPlanes.clippingPlanesState).toEqual(2);
 
         clippingPlanes.remove(holdThisPlane);
-        expect(clippingPlanes.clippingPlanesState()).toEqual(1);
+        expect(clippingPlanes.clippingPlanesState).toEqual(1);
     });
 });
