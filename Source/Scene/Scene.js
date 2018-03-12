@@ -701,15 +701,16 @@ define([
 
         var camera = new Camera(this);
         this._camera = camera;
-        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
-        this._frustumChanged = true;
 
         if (this._logDepthBuffer) {
             this._camera.frustum.near = 1.0;
             this._camera.frustum.far = 10000000000.0;
         }
+
+        this._cameraClone = Camera.clone(camera);
+        this._frustumChanged = true;
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
