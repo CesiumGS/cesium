@@ -7,7 +7,7 @@ define([
     /**
      * Whether a classification affects terrain, 3D Tiles or both.
      *
-     * @exports ClassificationOption
+     * @exports ClassificationType
      */
     var ClassificationType = {
         /**
