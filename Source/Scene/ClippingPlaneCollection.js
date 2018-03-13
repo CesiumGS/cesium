@@ -442,8 +442,8 @@ define([
         var maxSize = ContextLimits.maximumTextureSize;
         var width = Math.min(pixelsNeeded, maxSize);
         var height = Math.ceil(pixelsNeeded / width);
-        result.x = width;
-        result.y = height;
+        result.x = Math.max(width, 1);
+        result.y = Math.max(height, 1);
         return result;
     }
 
