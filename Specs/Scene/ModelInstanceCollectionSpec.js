@@ -550,6 +550,9 @@ defineSuite([
             expect(drawCommand.receiveShadows).toBe(true);
             collection.shadows = ShadowMode.DISABLED;
             scene.renderForSpecs();
+
+            // Expect commands to have been recreated
+            drawCommand = collection._drawCommands[0];
             expect(drawCommand.castShadows).toBe(false);
             expect(drawCommand.receiveShadows).toBe(false);
         });

@@ -117,7 +117,10 @@ defineSuite([
         expect(listener.calls.count()).toEqual(3);
     });
 
-    createGeometryUpdaterSpecs(PlaneGeometryUpdater, 'plane', createBasicPlane, createScene);
+    function getScene() {
+        return scene;
+    }
+    createGeometryUpdaterSpecs(PlaneGeometryUpdater, 'plane', createBasicPlane, getScene);
 
-    createDynamicGeometryUpdaterSpecs(PlaneGeometryUpdater, 'plane', createDynamicPlane, createScene);
+    createDynamicGeometryUpdaterSpecs(PlaneGeometryUpdater, 'plane', createDynamicPlane, getScene);
 }, 'WebGL');

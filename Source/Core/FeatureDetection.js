@@ -158,7 +158,6 @@ define([
         return isWindowsResult;
     }
 
-
     function firefoxVersion() {
         return isFirefox() && firefoxVersionResult;
     }
