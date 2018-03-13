@@ -93,7 +93,7 @@ defineSuite([
 
         spinWait(3);
 
-        cache.prune();
+        LRUCache._prune(cache);
 
         expect(cache.get('key1')).toEqual(1);
         expect(cache.get('key2')).toEqual(2);
@@ -101,13 +101,17 @@ defineSuite([
     });
 
     it('prune removes expired entries', function() {
+        spyOn(LRUCache, '_checkExpiration');
+
         var cache = new LRUCache(3, 10);
         cache.set('key1', 1);
         cache.set('key2', 2);
+
         spinWait(10);
+
         cache.set('key3', 3);
 
-        cache.prune();
+        LRUCache._prune(cache);
 
         expect(cache.get('key1')).toBeUndefined();
         expect(cache.get('key2')).toBeUndefined();

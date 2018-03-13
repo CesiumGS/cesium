@@ -26,11 +26,16 @@ define([
             index--;
         }
 
-        if (!defined(node)) {
+        if (node === list.tail) {
             return;
         }
 
-        node = node.next;
+        if (!defined(node)) {
+            node = list.head;
+        } else {
+            node = node.next;
+        }
+
         while (defined(node)) {
             delete cache._hash[node.item.key];
             node = node.next;
@@ -146,7 +151,7 @@ define([
             node = list.addFront(item);
             hash[key] = node;
             if (this._hasExpiration && !this._expirationLoopRunning) {
-                checkExpiration(this);
+                LRUCache._checkExpiration(this);
             }
             if (this._hasCapacity && list.length > this._capacity) {
                 var tail = list.tail;
@@ -160,6 +165,10 @@ define([
             list.moveToFront(node);
         }
     };
+
+    //exposed for testing
+    LRUCache._checkExpiration = checkExpiration;
+    LRUCache._prune = prune;
 
     return LRUCache;
 });
