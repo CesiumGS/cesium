@@ -10,7 +10,7 @@ define([
         LRUCache) {
     'use strict';
 
-    var cache = new LRUCache(100, 60000);
+    var cache = new LRUCache(256, 30000);
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -57,10 +57,6 @@ define([
 
         return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions); });
     }
-
-    sampleTerrain._update = function() {
-        cache.prune();
-    };
 
     function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;

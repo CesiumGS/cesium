@@ -1,16 +1,62 @@
 define([
     './defined',
+    './defineProperties',
     './getTimestamp',
+    './requestAnimationFrame',
     './DeveloperError',
     './DoublyLinkedList'
 ], function(
     defined,
+    defineProperties,
     getTimestamp,
+    requestAnimationFrame,
     DeveloperError,
     DoublyLinkedList) {
     'use strict';
 
-    function Item (key, value) {
+    function prune(cache) {
+        var currentTime = getTimestamp();
+        var pruneAfter = currentTime - cache._expiration;
+
+        var list = cache._list;
+        var node = list.tail;
+        var index = list.length;
+        while (defined(node) && node.item.timestamp < pruneAfter) {
+            node = node.previous;
+            index--;
+        }
+
+        if (!defined(node)) {
+            return;
+        }
+
+        node = node.next;
+        while (defined(node)) {
+            delete cache._hash[node.item.key];
+            node = node.next;
+        }
+
+        list.removeAfter(index);
+    }
+
+    function checkExpiration(cache) {
+        if (!cache._hasExpiration || cache.length === 0) {
+            cache._expirationLoopRunning = false;
+            return;
+        }
+
+        cache._expirationLoopRunning = true;
+
+        prune(cache);
+
+        if (cache.length > 0) {
+            requestAnimationFrame(checkExpiration);
+        } else {
+            cache._expirationLoopRunning = false;
+        }
+    }
+
+    function Item(key, value) {
         this.key = key;
         this.value = value;
         this.timestamp = getTimestamp();
@@ -32,9 +78,25 @@ define([
         this._hash = {};
         this._hasCapacity = defined(capacity);
         this._capacity = capacity;
+
         this._hasExpiration = defined(expiration);
         this._expiration = expiration;
+        this._expirationLoopRunning = false;
     }
+
+    defineProperties(LRUCache.prototype, {
+        /**
+         * Gets the cache length
+         * @memeberof LRUCache.prototype
+         * @type {Number}
+         * @readonly
+         */
+        length : {
+            get : function() {
+                return this._list.length;
+            }
+        }
+    });
 
     /**
      * Retrieves the value associated with the provided key.
@@ -80,6 +142,9 @@ define([
             item = new Item(key, value);
             node = list.addFront(item);
             hash[key] = node;
+            if (this._hasExpiration && !this._expirationLoopRunning) {
+                checkExpiration(this);
+            }
             if (this._hasCapacity && list.length > this._capacity) {
                 var tail = list.tail;
                 delete this._hash[tail.item.key];
@@ -91,38 +156,6 @@ define([
             item.touch();
             list.moveToFront(node);
         }
-    };
-
-    /**
-     * Removes expired items from the cache.
-     */
-    LRUCache.prototype.prune = function() {
-        if (!this._hasExpiration || this._list.length === 0) {
-            return;
-        }
-
-        var currentTime = getTimestamp();
-        var pruneAfter = currentTime - this._expiration;
-
-        var list = this._list;
-        var node = list.tail;
-        var index = list.length;
-        while (defined(node) && node.item.timestamp < pruneAfter) {
-            node = node.previous;
-            index--;
-        }
-
-        if (!defined(node)) {
-            return;
-        }
-
-        node = node.next;
-        while(defined(node)) {
-            delete this._hash[node.item.key];
-            node = node.next;
-        }
-
-        list.removeAfter(index);
     };
 
     return LRUCache;
