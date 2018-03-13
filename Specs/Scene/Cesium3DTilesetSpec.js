@@ -1,7 +1,7 @@
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
-        'Core/ClippingPlane',
+        'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/CullingVolume',

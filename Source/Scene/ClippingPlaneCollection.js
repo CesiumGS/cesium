@@ -5,7 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Math',
         '../Core/Check',
-        '../Core/ClippingPlane',
+        '../Scene/ClippingPlane',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',

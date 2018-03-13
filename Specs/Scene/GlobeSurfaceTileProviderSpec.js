@@ -2,7 +2,7 @@ defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
-        'Core/ClippingPlane',
+        'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/Credit',

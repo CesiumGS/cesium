@@ -1,8 +1,8 @@
 define([
-        './Cartesian3',
-        './Check',
-        './defined',
-        './defineProperties'
+        '../Core/Cartesian3',
+        '../Core/Check',
+        '../Core/defined',
+        '../Core/defineProperties'
     ], function(
         Cartesian3,
         Check,

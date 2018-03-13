@@ -1,6 +1,6 @@
 defineSuite([
         'Core/Cartesian3',
-        'Core/ClippingPlane',
+        'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',

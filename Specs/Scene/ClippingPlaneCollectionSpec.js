@@ -5,7 +5,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/ClippingPlane',
+        'Scene/ClippingPlane',
         'Core/Color',
         'Core/Math',
         'Core/PixelFormat',

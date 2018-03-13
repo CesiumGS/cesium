@@ -2,7 +2,7 @@ defineSuite([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
-        'Core/ClippingPlane',
+        'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Core/defined',
         'Core/DistanceDisplayCondition',
