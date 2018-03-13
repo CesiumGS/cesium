@@ -10,7 +10,7 @@ define([
         LRUCache) {
     'use strict';
 
-    var cache = new LRUCache(256, 30000);
+    var cache = new LRUCache(256, 10000);
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by

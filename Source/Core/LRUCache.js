@@ -40,20 +40,23 @@ define([
     }
 
     function checkExpiration(cache) {
-        if (!cache._hasExpiration || cache.length === 0) {
-            cache._expirationLoopRunning = false;
-            return;
+        function loop() {
+            if (!cache._hasExpiration || cache.length === 0) {
+                cache._expirationLoopRunning = false;
+                return;
+            }
+
+            cache._expirationLoopRunning = true;
+
+            prune(cache);
+
+            if (cache.length > 0) {
+                requestAnimationFrame(loop);
+            } else {
+                cache._expirationLoopRunning = false;
+            }
         }
-
-        cache._expirationLoopRunning = true;
-
-        prune(cache);
-
-        if (cache.length > 0) {
-            requestAnimationFrame(checkExpiration);
-        } else {
-            cache._expirationLoopRunning = false;
-        }
+        loop();
     }
 
     function Item(key, value) {
