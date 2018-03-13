@@ -49,9 +49,7 @@ defineSuite([
 
     function decodeUint8Plane(pixel1, pixel2) {
         // expect pixel1 to be the normal
-        var xOct16 = pixel1.x * 256 + pixel1.y;
-        var yOct16 = pixel1.z * 256 + pixel1.w;
-        var normal = AttributeCompression.octDecodeInRange(xOct16, yOct16, 65535, new Cartesian3());
+        var normal = AttributeCompression.octDecodeFromCartesian4(pixel1.x, pixel1.y, pixel1.z, pixel1.w, new Cartesian3());
 
         // expect pixel2 to be the distance
         var distance = Cartesian4.unpackFloat(pixel2);

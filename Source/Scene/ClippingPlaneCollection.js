@@ -379,21 +379,6 @@ define([
         this._planes = [];
     };
 
-    var octEncodeScratch = new Cartesian2();
-    var rightShift = 1.0 / 256.0;
-    /**
-     * Encodes a normalized vector into 4 SNORM values in the range [0-255] following the 'oct' encoding.
-     * oct32 precision is higher than the default oct16, hence the additional 2 uint16 values.
-     */
-    function oct32EncodeNormal(vector, result) {
-        AttributeCompression.octEncodeInRange(vector, 65535, octEncodeScratch);
-        result.x = octEncodeScratch.x * rightShift;
-        result.y = octEncodeScratch.x;
-        result.z = octEncodeScratch.y * rightShift;
-        result.w = octEncodeScratch.y;
-        return result;
-    }
-
     var distanceEncodeScratch = new Cartesian4();
     var oct32EncodeScratch = new Cartesian4();
     function packPlanesAsUint8(clippingPlaneCollection, startIndex, endIndex) {
@@ -403,7 +388,7 @@ define([
         for (var i = startIndex; i < endIndex; ++i) {
             var plane = planes[i];
 
-            var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
+            var oct32Normal = AttributeCompression.octEncodeToCartesian4(plane.normal, oct32EncodeScratch);
             uint8View[byteIndex] = oct32Normal.x;
             uint8View[byteIndex + 1] = oct32Normal.y;
             uint8View[byteIndex + 2] = oct32Normal.z;
