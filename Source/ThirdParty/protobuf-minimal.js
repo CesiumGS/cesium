@@ -502,7 +502,6 @@ protobuf.configure    = configure;
 /* istanbul ignore next */
 /**
  * Reconfigures the library according to the environment.
- * @returns {undefined}
  */
 function configure() {
     protobuf.Reader._configure(protobuf.BufferReader);
@@ -1065,7 +1064,6 @@ var rpc = exports;
  * @param {Method|rpc.ServiceMethod} method Reflected or static method being called
  * @param {Uint8Array} requestData Request data
  * @param {RPCImplCallback} callback Callback function
- * @returns {undefined}
  * @example
  * function rpcImpl(method, requestData, callback) {
  *     if (protobuf.util.lcFirst(method.name) !== "myMethod") // compatible with static code
@@ -1082,7 +1080,6 @@ var rpc = exports;
  * @type {function}
  * @param {?Error} error Error, if any, otherwise `null`
  * @param {?Uint8Array} [response] Response data or `null` to signal end of stream, if there hasn't been an error
- * @returns {undefined}
  */
 
 rpc.Service = require(11);
@@ -1104,7 +1101,6 @@ var util = require(13);
  * @type {function}
  * @param {?Error} error Error, if any
  * @param {?Message} [response] Response message
- * @returns {undefined}
  */
 
 /**
@@ -1171,7 +1167,6 @@ function Service(rpcImpl, requestDelimited, responseDelimited) {
  * @param {function} responseCtor Response constructor
  * @param {Message|Object.<string,*>} request Request message or plain object
  * @param {rpc.ServiceMethodCallback} callback Service callback
- * @returns {undefined}
  */
 Service.prototype.rpcCall = function rpcCall(method, requestCtor, responseCtor, request, callback) {
 
@@ -1752,7 +1747,6 @@ util.oneOfSetter = function setOneOf(fieldNames) {
 
     /**
      * @param {string} name Field name
-     * @returns {undefined}
      * @this Object
      * @ignore
      */
@@ -1767,7 +1761,6 @@ util.oneOfSetter = function setOneOf(fieldNames) {
  * Lazily resolves fully qualified type names against the specified root.
  * @param {Root} root Root instanceof
  * @param {Object.<number,string|ReflectionObject>} lazyTypes Type names
- * @returns {undefined}
  */
 util.lazyResolve = function lazyResolve(root, lazyTypes) {
     for (var i = 0; i < lazyTypes.length; ++i) {
