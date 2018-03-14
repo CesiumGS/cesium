@@ -45,6 +45,7 @@ defineSuite([
         if (!display.isDestroyed()) {
             display.destroy();
         }
+        dataSourceCollection.removeAll();
     });
 
     function MockVisualizer() {
@@ -376,5 +377,87 @@ defineSuite([
             display.update(Iso8601.MINIMUM_VALUE);
             expect(display.ready).toBe(true);
         });
+    });
+
+    it('sets dataSource primitives on add', function() {
+        var source = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source);
+
+        expect(source._primitives).toBeDefined();
+        expect(source._groundPrimitives).toBeDefined();
+
+        expect(display._primitives.contains(source._primitives)).toBe(true);
+        expect(display._groundPrimitives.contains(source._groundPrimitives)).toBe(true);
+    });
+
+    it('cleans up primitives on dataSource removed', function() {
+        var source = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source);
+
+        expect(display._primitives.contains(source._primitives)).toBe(true);
+        expect(display._groundPrimitives.contains(source._groundPrimitives)).toBe(true);
+
+        dataSourceCollection.remove(source);
+
+        expect(display._primitives.length).toBe(1);
+        expect(display._groundPrimitives.length).toBe(1);
+    });
+
+    it('re-orders primitives on dataSource moved', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
+
+        expect(display._primitives.get(1)).toBe(source1._primitives);
+        expect(display._primitives.get(2)).toBe(source2._primitives);
+        expect(display._primitives.get(3)).toBe(source3._primitives);
+
+        dataSourceCollection.raise(source1);
+
+        expect(display._primitives.get(1)).toBe(source2._primitives);
+        expect(display._primitives.get(2)).toBe(source1._primitives);
+        expect(display._primitives.get(3)).toBe(source3._primitives);
+
+        dataSourceCollection.lower(source1);
+
+        expect(display._primitives.get(1)).toBe(source1._primitives);
+        expect(display._primitives.get(2)).toBe(source2._primitives);
+        expect(display._primitives.get(3)).toBe(source3._primitives);
+
+        dataSourceCollection.raiseToTop(source1);
+
+        expect(display._primitives.get(1)).toBe(source2._primitives);
+        expect(display._primitives.get(2)).toBe(source3._primitives);
+        expect(display._primitives.get(3)).toBe(source1._primitives);
+
+        dataSourceCollection.lowerToBottom(source1);
+
+        expect(display._primitives.get(1)).toBe(source1._primitives);
+        expect(display._primitives.get(2)).toBe(source2._primitives);
+        expect(display._primitives.get(3)).toBe(source3._primitives);
     });
 }, 'WebGL');

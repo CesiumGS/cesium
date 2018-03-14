@@ -72,7 +72,7 @@ define([
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
         this._primitives = scene.primitives.add(new PrimitiveCollection());
-        this._groundPrimitives = scene.groundPrimitives.add(new PrimitiveCollection());
+        this._groundPrimitives = scene.primitives.add(new PrimitiveCollection());
         this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
@@ -95,7 +95,7 @@ define([
     DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
         var entities = dataSource.entities;
         return [new BillboardVisualizer(entityCluster, entities),
-                new GeometryVisualizer(scene, dataSource),
+                new GeometryVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives),
                 new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
@@ -185,14 +185,15 @@ define([
      */
     DataSourceDisplay.prototype.destroy = function() {
         this._eventHelper.removeAll();
-        this._scene.primitives.remove(this._primitives);
-        this._scene.groundPrimitives.remove(this._groundPrimitives);
 
         var dataSourceCollection = this._dataSourceCollection;
         for (var i = 0, length = dataSourceCollection.length; i < length; ++i) {
             this._onDataSourceRemoved(this._dataSourceCollection, dataSourceCollection.get(i));
         }
         this._onDataSourceRemoved(undefined, this._defaultDataSource);
+
+        this._scene.primitives.remove(this._primitives);
+        this._scene.groundPrimitives.remove(this._groundPrimitives);
 
         return destroyObject(this);
     };
@@ -325,6 +326,7 @@ define([
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var scene = this._scene;
+
         var displayPrimitives = this._primitives;
         var displayGroundPrimitives = this._groundPrimitives;
 
@@ -380,6 +382,8 @@ define([
         } else if (newIndex === 0) {
             displayPrimitives.lowerToBottom(primitives);
             displayGroundPrimitives.lowerToBottom(groundPrimitives);
+            displayPrimitives.raise(primitives); // keep defaultDataSource primitives at index 0 since it's not in the collection
+            displayGroundPrimitives.raise(groundPrimitives);
         } else {
             displayPrimitives.raiseToTop(primitives);
             displayGroundPrimitives.raiseToTop(groundPrimitives);

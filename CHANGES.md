@@ -3,6 +3,9 @@ Change Log
 
 ### 1.44 - 2018-04-02
 
+##### Breaking Changes :mega:
+* `GeometryVisualizer` now requires `primitive` and `groundPrimitive` parameters. [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
+
 ##### Deprecated :hourglass_flowing_sand:
 * `ClippingPlaneCollection` is now supported in Internet Explorer, so `ClippingPlaneCollection.isSupported` has been deprecated and will be removed in Cesium 1.45.
 * `ClippingPlaneCollection` should now be used with `ClippingPlane` objects instead of `Plane`. Use of `Plane` objects has been deprecated and will be removed in Cesium 1.45.
@@ -15,6 +18,9 @@ Change Log
   * Added a `ClippingPlane` object to be used with `ClippingPlaneCollection`.
 * Updated `WebMapServiceImageryProvider` so it can take an srs or crs string to pass to the resource query parameters based on the WMS version. [#6223](https://github.com/AnalyticalGraphicsInc/cesium/issues/6223)
 * Added a multi-part CZML example to Sandcastle. [#6320](https://github.com/AnalyticalGraphicsInc/cesium/pull/6320)
+* Added support for ordering in `DataSourceCollection` [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
+  * All ground geometry from one `DataSource` will render in front of all ground geometry from another `DataSource` in the same collection with a lower index.
+  * Use `DataSourceCollection.raise`, `DataSourceCollection.lower`, `DataSourceCollection.raiseToTop` and `DataSourceCollection.lowerToBottom` functions to change the ordering of a `DataSource` in the collection. 
 
 ##### Fixes :wrench:
 * Fixed support of glTF-supplied tangent vectors. [#6302](https://github.com/AnalyticalGraphicsInc/cesium/pull/6302)
