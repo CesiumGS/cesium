@@ -95,7 +95,7 @@ define([
     defineProperties(LRUCache.prototype, {
         /**
          * Gets the cache length
-         * @memeberof LRUCache.prototype
+         * @memberof LRUCache.prototype
          * @type {Number}
          * @readonly
          */
