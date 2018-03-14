@@ -582,7 +582,6 @@ define([
      */
     EntityCluster.prototype.getLabel = createGetEntity('_labelCollection', LabelCollection, '_unusedLabelIndices', 'labelIndex');
 
-
     /**
      * Removes the {@link Label} associated with an entity so it can be reused by another entity.
      * @param {Entity} entity The entity that will uses the returned {@link Label} for visualization.
@@ -617,7 +616,6 @@ define([
      * @private
      */
     EntityCluster.prototype.getBillboard = createGetEntity('_billboardCollection', BillboardCollection, '_unusedBillboardIndices', 'billboardIndex');
-
 
     /**
      * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.

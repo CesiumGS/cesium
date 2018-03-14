@@ -61,6 +61,9 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
+                   '!Source/ThirdParty/draco-decoder-gltf.js',
+                   '!Source/ThirdParty/pako_inflate.js',
+                   '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
 
 var buildFiles = ['Specs/**/*.js',
@@ -144,7 +147,7 @@ gulp.task('cloc', ['clean'], function() {
     //Run cloc on primary Source files only
     var source = new Promise(function(resolve, reject) {
         cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0' +
-                  ' Source/ --exclude-dir=Assets,ThirdParty --exclude-list-file=copyrightHeader.js';
+                  ' Source/ --exclude-dir=Assets,ThirdParty --not-match-f=copyrightHeader.js';
 
         child_process.exec(cmdLine, function(error, stdout, stderr) {
             if (error) {

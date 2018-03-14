@@ -42,7 +42,6 @@ define([
         Check.defined('p2', p2);
         //>>includeEnd('debug');
 
-
         if (!defined(result)) {
             result = new Cartesian3();
         }

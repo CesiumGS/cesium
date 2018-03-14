@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
+        '../Core/ClippingPlaneCollection',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -46,6 +47,7 @@ define([
         Cartesian3,
         Cartographic,
         Check,
+        ClippingPlaneCollection,
         defaultValue,
         defined,
         defineProperties,
@@ -111,7 +113,7 @@ define([
      * @param {Number} [options.skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
      * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
      * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
+     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
      * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -548,11 +550,7 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
-        /**
-         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
-         *
-         * @type {ClippingPlaneCollection}
-         */
+        this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
 
         /**
@@ -684,12 +682,17 @@ define([
         //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
         this._brokenUrlWorkaround = false;
 
+        this._credits = undefined;
+
         var that = this;
         var tilesetResource;
         when(options.url)
             .then(function(url) {
                 var basePath;
                 var resource = Resource.createIfNeeded(url);
+
+                // ion resources have a credits property we can use for additional attribution.
+                that._credits = resource.credits;
 
                 tilesetResource = resource;
 
@@ -810,6 +813,19 @@ define([
                 //>>includeEnd('debug');
 
                 return this._asset;
+            }
+        },
+        /**
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+         *
+         * @type {ClippingPlaneCollection}
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._clippingPlanes;
+            },
+            set : function(value) {
+                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
             }
         },
 
@@ -1264,7 +1280,7 @@ define([
                 v: defaultValue(asset.tilesetVersion, '0.0')
             };
             this._basePath += '?v=' + versionQuery.v;
-            tilesetResource.addQueryParameters(versionQuery);
+            tilesetResource.setQueryParameters(versionQuery);
         }
 
         // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
@@ -1854,6 +1870,12 @@ define([
             this._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
+        // Update clipping planes
+        var clippingPlanes = this._clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
+
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
 
         this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail;
@@ -1891,6 +1913,16 @@ define([
         // Update last statistics
         var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+
+        if (statistics.selected !== 0) {
+            var credits = this._credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    frameState.creditDisplay.addCredit(credits[i]);
+                }
+            }
+        }
     };
 
     /**
@@ -1927,6 +1959,9 @@ define([
     Cesium3DTileset.prototype.destroy = function() {
         // Destroy debug labels
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
+
+        // Destroy clipping plane collection
+        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {

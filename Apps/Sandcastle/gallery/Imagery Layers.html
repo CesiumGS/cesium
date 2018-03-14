@@ -35,13 +35,9 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var layers = viewer.imageryLayers;
-var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : 'https://cesiumjs.org/blackmarble',
-    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
-    flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
-}));
-blackMarble.alpha = 0.5;
-blackMarble.brightness = 2.0;
+var earthAtNight = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId: 3812 }));
+earthAtNight.alpha = 0.5;
+earthAtNight.brightness = 2.0;
 
 layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
     url : '../images/Cesium_Logo_overlay.png',

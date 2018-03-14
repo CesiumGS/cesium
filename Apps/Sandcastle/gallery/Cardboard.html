@@ -28,17 +28,12 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    vrButton : true
+    vrButton: true,
+    terrainProvider: Cesium.createWorldTerrain()
 });
 // Click the VR button in the bottom right of the screen to switch to VR mode.
 
 viewer.scene.globe.enableLighting = true;
-
-viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestVertexNormals : true
-});
-
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
 // Follow the path of a plane. See the interpolation Sandcastle example.

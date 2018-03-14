@@ -8,6 +8,9 @@ define([
      * @private
      */
     function ModelLoadResources() {
+        this.initialized = false;
+        this.resourcesParsed = false;
+
         this.vertexBuffersToCreate = new Queue();
         this.indexBuffersToCreate = new Queue();
         this.buffers = {};
@@ -30,6 +33,9 @@ define([
         this.createRenderStates = true;
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
+
+        this.decoding = false;
+        this.primitivesToDecode = new Queue();
 
         this.skinnedNodesIds = [];
     }
@@ -79,11 +85,15 @@ define([
             (this.programsToCreate.length === 0) &&
             (this.pendingBufferViewToImage === 0);
 
-        return finishedPendingLoads && finishedResourceCreation;
+        return this.finishedDecoding() && finishedPendingLoads && finishedResourceCreation;
+    };
+
+    ModelLoadResources.prototype.finishedDecoding = function() {
+        return !this.decoding && this.primitivesToDecode.length === 0;
     };
 
     ModelLoadResources.prototype.finished = function() {
-        return this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
+        return this.finishedDecoding() && this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
     };
 
     return ModelLoadResources;
