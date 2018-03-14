@@ -348,6 +348,11 @@ define([
             throw new RuntimeError('Feature table global property: POINTS_LENGTH must be defined');
         }
 
+        if (pointsLength === 0) {
+            content._pointsLength = 0;
+            return;
+        }
+
         // Get the positions
         var positions;
         var isQuantized = false;
