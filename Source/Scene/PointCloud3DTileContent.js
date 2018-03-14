@@ -1320,6 +1320,10 @@ define([
      * @inheritdoc Cesium3DTileContent#update
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
+        if (this._pointsLength === 0) {
+            return;
+        }
+
         var modelMatrix = this._tile.computedTransform;
         var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
         var updateModelMatrix = modelMatrixChanged || this._mode !== frameState.mode;
