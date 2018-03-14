@@ -279,7 +279,7 @@ define([
     }
 
     function log2(number) {
-        return CesiumMath.log2(number, 2.0);
+        return CesiumMath.log2(number);
     }
 
     function getEvaluateUnaryComponentwise(operation) {

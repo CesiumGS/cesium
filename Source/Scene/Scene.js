@@ -265,9 +265,6 @@ define([
             creditViewport = canvas.parentNode;
         }
 
-        this._logDepthBuffer = context.fragmentDepth;
-        this._logDepthBufferDirty = true;
-
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
         this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
@@ -289,6 +286,10 @@ define([
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
+
+        this._logDepthBuffer = undefined;
+        this._logDepthBufferDirty = true;
+        this.logarithmicDepthBuffer = context.fragmentDepth;
 
         this._tweens = new TweenCollection();
 
@@ -792,7 +793,7 @@ define([
         this.initializeFrame();
     }
 
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9;
+    var OPAQUE_FRUSTUM_NEAR_OFFSET;
 
     function updateGlobeListeners(scene, globe) {
         for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
@@ -1402,6 +1403,8 @@ define([
                 if (this._context.fragmentDepth && this._logDepthBuffer !== value) {
                     this._logDepthBuffer = value;
                     this._logDepthBufferDirty = true;
+
+                    OPAQUE_FRUSTUM_NEAR_OFFSET = this._logDepthBuffer ? 0.9 : 0.9999;
                 }
             }
         }
