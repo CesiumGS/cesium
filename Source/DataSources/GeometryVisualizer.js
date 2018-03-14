@@ -2,6 +2,7 @@ define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
         '../Core/Check',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -32,6 +33,7 @@ define([
         AssociativeArray,
         BoundingSphere,
         Check,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -117,16 +119,17 @@ define([
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
-     * @param {PrimitiveCollection} primitives A collection to add primitives related to the entities
-     * @param {PrimitiveCollection} groundPrimitives A collection to add ground primitives related to the entities
+     * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
+     * @param {PrimitiveCollection} [groundPrimitives=scene.groundPrimitives] A collection to add ground primitives related to the entities
      */
     function GeometryVisualizer(scene, entityCollection, primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
         Check.defined('entityCollection', entityCollection);
-        Check.defined('primitives', primitives);
-        Check.defined('groundPrimitives', groundPrimitives);
         //>>includeEnd('debug');
+
+        primitives = defaultValue(primitives, scene.primitives);
+        groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
 
         this._scene = scene;
         this._primitives = primitives;

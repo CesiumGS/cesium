@@ -570,20 +570,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('Constructor throws without primitives', function() {
-        var objects = new EntityCollection();
-        expect(function() {
-            return new GeometryVisualizer(scene, objects, undefined, scene.groundPrimitives);
-        }).toThrowDeveloperError();
-    });
-
-    it('Constructor throws without groundPrimitives', function() {
-        var objects = new EntityCollection();
-        expect(function() {
-            return new GeometryVisualizer(scene, objects, undefined, scene.groundPrimitives);
-        }).toThrowDeveloperError();
-    });
-
     it('Update throws without time parameter', function() {
         var visualizer = new GeometryVisualizer(scene, new EntityCollection(), scene.primitives, scene.groundPrimitives);
         expect(function() {
