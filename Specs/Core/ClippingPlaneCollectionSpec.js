@@ -259,6 +259,9 @@ defineSuite([
             // One RGBA uint8 clipping plane consume 2 pixels of texture, allocation to be double that
             expect(packedTexture.width).toEqual(4);
             expect(packedTexture.height).toEqual(1);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
         });
     });
 
@@ -388,6 +391,9 @@ defineSuite([
             // One RGBA float clipping plane consume 1 pixels of texture, allocation to be double that
             expect(packedTexture.width).toEqual(2);
             expect(packedTexture.height).toEqual(1);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
         });
     });
 
