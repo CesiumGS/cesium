@@ -105,7 +105,7 @@ define([
         }
     };
     
-        function prune(cache) {
+    function prune(cache) {
         var currentTime = getTimestamp();
         var pruneAfter = currentTime - cache._expiration;
 
