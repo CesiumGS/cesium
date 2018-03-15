@@ -90,7 +90,7 @@ define([
         return uint8ForceArray[0];
     }
     /**
-     * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
+     * @param {Cartesian3} vector The normalized vector to be compressed into 4 byte 'oct' encoding.
      * @param {Cartesian4} result The 4 byte oct-encoded unit length vector.
      * @returns {Cartesian4} The 4 byte oct-encoded unit length vector.
      *
@@ -162,10 +162,7 @@ define([
     /**
      * Decodes a unit-length vector in 4 byte 'oct' encoding to a normalized 3-component vector.
      *
-     * @param {Number} x The x component of the oct-encoded unit length vector.
-     * @param {Number} y The y component of the oct-encoded unit length vector.
-     * @param {Number} z The z component of the oct-encoded unit length vector.
-     * @param {Number} w The w component of the oct-encoded unit length vector.
+     * @param {Cartesian4} encoded The oct-encoded unit length vector.
      * @param {Cartesian3} result The decoded and normalized vector.
      * @returns {Cartesian3} The decoded and normalized vector.
      *
@@ -174,7 +171,15 @@ define([
      * @see AttributeCompression.octDecodeInRange
      * @see AttributeCompression.octEncodeToCartesian4
      */
-    AttributeCompression.octDecodeFromCartesian4 = function(x, y, z, w, result) {
+    AttributeCompression.octDecodeFromCartesian4 = function(encoded, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('encoded', encoded);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+        var x = encoded.x;
+        var y = encoded.y;
+        var z = encoded.z;
+        var w = encoded.w;
         //>>includeStart('debug', pragmas.debug);
         if (x < 0 || x > 255 || y < 0 || y > 255 || z < 0 || z > 255 || w < 0 || w > 255) {
             throw new DeveloperError('x, y, z, and w must be unsigned normalized integers between 0 and 255');

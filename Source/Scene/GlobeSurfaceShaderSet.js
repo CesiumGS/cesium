@@ -1,18 +1,18 @@
 define([
-        '../Scene/ClippingPlaneCollection',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
         '../Scene/SceneMode',
+        './ClippingPlaneCollection',
         './getClippingFunction'
     ], function(
-        ClippingPlaneCollection,
         defined,
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
         SceneMode,
+        ClippingPlaneCollection,
         getClippingFunction) {
     'use strict';
 

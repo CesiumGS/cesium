@@ -1,7 +1,5 @@
 defineSuite([
         'Core/Cartesian3',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/defined',
@@ -13,6 +11,8 @@ defineSuite([
         'Core/Transforms',
         'Renderer/Pass',
         'Scene/Cesium3DTileStyle',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
@@ -20,8 +20,6 @@ defineSuite([
         'ThirdParty/when'
     ], 'Scene/PointCloud3DTileContent', function(
         Cartesian3,
-        ClippingPlane,
-        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defined,
@@ -33,6 +31,8 @@ defineSuite([
         Transforms,
         Pass,
         Cesium3DTileStyle,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Expression,
         Cesium3DTilesTester,
         createCanvas,

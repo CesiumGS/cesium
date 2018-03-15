@@ -115,19 +115,19 @@ defineSuite([
     it('throws 4-component oct decode out of bounds', function() {
         var result = new Cartesian3();
         expect(function() {
-            AttributeCompression.octDecodeFromCartesian4(256, 0, 0, 0, result);
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(256, 0, 0, 0), result);
         }).toThrowDeveloperError();
 
         expect(function() {
-            AttributeCompression.octDecodeFromCartesian4(0, 256, 0, 0, result);
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(0, 256, 0, 0), result);
         }).toThrowDeveloperError();
 
         expect(function() {
-            AttributeCompression.octDecodeFromCartesian4(0, 0, 256, 0, result);
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(0, 0, 256, 0), result);
         }).toThrowDeveloperError();
 
         expect(function() {
-            AttributeCompression.octDecodeFromCartesian4(0, 0, 0, 256, result);
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(0, 0, 0, 256), result);
         }).toThrowDeveloperError();
     });
 
@@ -279,67 +279,67 @@ defineSuite([
         var result = new Cartesian3();
         var normal = new Cartesian3(0.0, 0.0, 1.0);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(0.0, 0.0, -1.0);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(0.0, 1.0, 0.0);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(0.0, -1.0, 0.0);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(1.0, 0.0, 0.0);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(-1.0, 0.0, 0.0);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(1.0, 1.0, 1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(1.0, -1.0, 1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(-1.0, -1.0, 1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(-1.0, 1.0, 1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(1.0, 1.0, -1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(1.0, -1.0, -1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(-1.0, 1.0, -1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
 
         normal = new Cartesian3(-1.0, -1.0, -1.0);
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeToCartesian4(normal, encoded);
-        expect(AttributeCompression.octDecodeFromCartesian4(encoded.x, encoded.y, encoded.z, encoded.w, result)).toEqualEpsilon(normal, epsilon);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
     });
 
     it('octFloat encoding', function() {

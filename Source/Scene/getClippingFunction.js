@@ -109,7 +109,7 @@ define([
             pixelWidthString += '.0';
         }
         var pixelHeightString = pixelHeight + '';
-        if (pixelHeightString.indexOf('.' === -1)) {
+        if (pixelHeightString.indexOf('.') === -1) {
             pixelHeightString += '.0';
         }
 
@@ -135,7 +135,7 @@ define([
             pixelWidthString += '.0';
         }
         var pixelHeightString = pixelHeight + '';
-        if (pixelHeightString.indexOf('.' === -1)) {
+        if (pixelHeightString.indexOf('.') === -1) {
             pixelHeightString += '.0';
         }
 

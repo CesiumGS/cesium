@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Scene/ClippingPlaneCollection',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -62,6 +61,7 @@ define([
         './AttributeType',
         './Axis',
         './BlendingState',
+        './ClippingPlaneCollection',
         './ColorBlendMode',
         './DracoLoader',
         './getClipAndStyleCode',
@@ -83,7 +83,6 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        ClippingPlaneCollection,
         clone,
         Color,
         combine,
@@ -141,6 +140,7 @@ define([
         AttributeType,
         Axis,
         BlendingState,
+        ClippingPlaneCollection,
         ColorBlendMode,
         DracoLoader,
         getClipAndStyleCode,
@@ -518,7 +518,7 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-        this._colorShadingEnabled = isColorShadingEnabled(this);
+        this._colorShadingEnabled = false;
 
         this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;

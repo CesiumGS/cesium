@@ -50,10 +50,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var globe = viewer.scene.globe;
 
-var demos = ['Cesium Man', 'St. Helens'];
+var exampleTypes = ['Cesium Man', 'St. Helens'];
 var viewModel = {
-    exampleTypes : demos,
-    currentExampleType : demos[0],
+    exampleTypes : exampleTypes,
+    currentExampleType : exampleTypes[0],
     clippingPlanesEnabled : true,
     edgeStylingEnabled : true
 };
@@ -61,7 +61,7 @@ var toolbar = document.getElementById('toolbar');
 Cesium.knockout.track(viewModel);
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-// For tracking state when switching demos
+// For tracking state when switching exampleTypes
 var clippingPlanesEnabled = true;
 var edgeStylingEnabled = true;
 
@@ -104,7 +104,8 @@ function loadCesiumMan() {
             new Cesium.ClippingPlane(new Cesium.Cartesian3( 0.0, -1.0, 0.0), -700.0)
         ],
         edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
-        edgeColor: Cesium.Color.WHITE
+        edgeColor: Cesium.Color.WHITE,
+        enabled : clippingPlanesEnabled
     });
 
     viewer.trackedEntity = entity;
@@ -129,12 +130,12 @@ function loadStHelens() {
         new Cesium.Cartesian3(-2358539.5426236596, -3742680.720902901, 4581692.0260975715)
     ];
 
-    var pointCount = points.length;
+    var pointsLength = points.length;
 
-    // Create centerpoints for each clipping plane
+    // Create center points for each clipping plane
     var clippingPlanes = [];
-    for (var i = 0; i < pointCount; i++) {
-        var nextIndex = (i + 1) % pointCount;
+    for (var i = 0; i < pointsLength; ++i) {
+        var nextIndex = (i + 1) % pointsLength;
         var midpoint = Cesium.Cartesian3.add(points[i], points[nextIndex], new Cesium.Cartesian3());
         midpoint = Cesium.Cartesian3.multiplyByScalar(midpoint, 0.5, midpoint);
 
@@ -154,7 +155,8 @@ function loadStHelens() {
     globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
         planes : clippingPlanes,
         edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
-        edgeColor: Cesium.Color.WHITE
+        edgeColor: Cesium.Color.WHITE,
+        enabled : clippingPlanesEnabled
     });
 
     // Load tileset
@@ -197,9 +199,9 @@ Cesium.knockout.getObservable(viewModel, 'edgeStylingEnabled').subscribe(functio
 
 Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(function(newValue) {
     reset();
-    if (newValue === demos[0]) {
+    if (newValue === exampleTypes[0]) {
         loadCesiumMan();
-    } else if (newValue === demos[1]) {
+    } else if (newValue === exampleTypes[1]) {
         loadStHelens();
     }
 });

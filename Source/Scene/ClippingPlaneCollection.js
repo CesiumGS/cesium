@@ -181,7 +181,7 @@ define([
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
-         * @default false
+         * @default true
          */
         enabled : {
             get : function() {
