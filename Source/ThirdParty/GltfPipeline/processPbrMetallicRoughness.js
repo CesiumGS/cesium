@@ -94,9 +94,16 @@ define([
         var joints = (defined(skin)) ? skin.joints : [];
         var jointCount = joints.length;
         var primitiveInfo = material.extras._pipeline.primitive;
-        var skinningInfo = primitiveInfo.skinning;
-        var hasSkinning = skinningInfo.skinned;
-        var hasVertexColors = primitiveInfo.hasVertexColors;
+
+        var skinningInfo;
+        var hasSkinning = false;
+        var hasVertexColors = false;
+
+        if (defined(primitiveInfo)) {
+            skinningInfo = primitiveInfo.skinning;
+            hasSkinning = skinningInfo.skinned;
+            hasVertexColors = primitiveInfo.hasVertexColors;
+        }
 
         var hasNormals = true;
         var hasTangents = false;
