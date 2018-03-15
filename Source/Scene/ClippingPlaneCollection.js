@@ -1,30 +1,30 @@
 define([
-        './AttributeCompression',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartesian4',
-        './Math',
-        './Check',
-        './ClippingPlane',
-        './Color',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './deprecationWarning',
-        './destroyObject',
-        './DeveloperError',
-        './FeatureDetection',
-        './Intersect',
-        './Matrix4',
-        './PixelFormat',
-        './Plane',
+        '../Core/AttributeCompression',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Math',
+        '../Core/Check',
+        '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/deprecationWarning',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/FeatureDetection',
+        '../Core/Intersect',
+        '../Core/Matrix4',
+        '../Core/PixelFormat',
+        '../Core/Plane',
         '../Renderer/ContextLimits',
         '../Renderer/PixelDatatype',
         '../Renderer/Sampler',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
+        '../Renderer/TextureWrap',
+        './ClippingPlane'
     ], function(
         AttributeCompression,
         Cartesian2,
@@ -32,7 +32,6 @@ define([
         Cartesian4,
         CesiumMath,
         Check,
-        ClippingPlane,
         Color,
         defaultValue,
         defined,
@@ -51,7 +50,8 @@ define([
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        ClippingPlane) {
     'use strict';
 
     /**
@@ -78,7 +78,7 @@ define([
         // Do partial texture updates if just one plane is dirty.
         // If many planes are dirty, refresh the entire texture.
         this._dirtyIndex = -1;
-        this._manyDirtyPlanes = false;
+        this._multipleDirtyPlanes = false;
 
         // Add each plane to check if it's actually a Plane object instead of a ClippingPlane.
         // Use of Plane objects will be deprecated.
@@ -90,8 +90,7 @@ define([
             }
         }
 
-        this._enabled = false;
-        this.enabled = defaultValue(options.enabled, true); // set using setter
+        this._enabled = defaultValue(options.enabled, true);
 
         /**
          * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes
@@ -122,9 +121,9 @@ define([
         // This is because in a Cesium3DTileset multiple models may reference the tileset's ClippingPlaneCollection.
         this._owner = undefined;
 
-        this._testIntersection = undefined;
-        this._unionClippingRegions = undefined;
-        this.unionClippingRegions = defaultValue(options.unionClippingRegions, false); // set using setter
+        var unionClippingRegions = defaultValue(options.unionClippingRegions, false);
+        this._unionClippingRegions = unionClippingRegions;
+        this._testIntersection = unionClippingRegions ? unionIntersectFunction : defaultIntersectFunction;
 
         this._uint8View = undefined;
         this._float32View = undefined;
@@ -182,7 +181,7 @@ define([
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
-         * @default false
+         * @default true
          */
         enabled : {
             get : function() {
@@ -221,13 +220,30 @@ define([
             get : function() {
                 return this._owner;
             }
+        },
+
+        /**
+         * Returns a Number encapsulating the state for this ClippingPlaneCollection.
+         *
+         * Clipping mode is encoded in the sign of the number, which is just the plane count.
+         * Used for checking if shader regeneration is necessary.
+         *
+         * @memberof ClippingPlaneCollection.prototype
+         * @returns {Number} A Number that describes the ClippingPlaneCollection's state.
+         * @readonly
+         * @private
+         */
+        clippingPlanesState : {
+            get : function() {
+                return this._unionClippingRegions ? this._planes.length : -this._planes.length;
+            }
         }
     });
 
     function setIndexDirty(collection, index) {
         // If there's already a different _dirtyIndex set, more than one plane has changed since update.
         // Entire texture must be reloaded
-        collection._manyDirtyPlanes = collection._manyDirtyPlanes || (collection._dirtyIndex !== -1 && collection._dirtyIndex !== index);
+        collection._multipleDirtyPlanes = collection._multipleDirtyPlanes || (collection._dirtyIndex !== -1 && collection._dirtyIndex !== index);
         collection._dirtyIndex = index;
     }
 
@@ -336,7 +352,7 @@ define([
         }
 
         // Indicate planes texture is dirty
-        this._manyDirtyPlanes = true;
+        this._multipleDirtyPlanes = true;
         planes.length = length;
 
         return true;
@@ -359,24 +375,9 @@ define([
                 plane.index = -1;
             }
         }
-        this._manyDirtyPlanes = true;
+        this._multipleDirtyPlanes = true;
         this._planes = [];
     };
-
-    var octEncodeScratch = new Cartesian2();
-    var rightShift = 1.0 / 256.0;
-    /**
-     * Encodes a normalized vector into 4 SNORM values in the range [0-255] following the 'oct' encoding.
-     * oct32 precision is higher than the default oct16, hence the additional 2 uint16 values.
-     */
-    function oct32EncodeNormal(vector, result) {
-        AttributeCompression.octEncodeInRange(vector, 65535, octEncodeScratch);
-        result.x = octEncodeScratch.x * rightShift;
-        result.y = octEncodeScratch.x;
-        result.z = octEncodeScratch.y * rightShift;
-        result.w = octEncodeScratch.y;
-        return result;
-    }
 
     var distanceEncodeScratch = new Cartesian4();
     var oct32EncodeScratch = new Cartesian4();
@@ -387,7 +388,7 @@ define([
         for (var i = startIndex; i < endIndex; ++i) {
             var plane = planes[i];
 
-            var oct32Normal = oct32EncodeNormal(plane.normal, oct32EncodeScratch);
+            var oct32Normal = AttributeCompression.octEncodeToCartesian4(plane.normal, oct32EncodeScratch);
             uint8View[byteIndex] = oct32Normal.x;
             uint8View[byteIndex + 1] = oct32Normal.y;
             uint8View[byteIndex + 2] = oct32Normal.z;
@@ -426,8 +427,8 @@ define([
         var maxSize = ContextLimits.maximumTextureSize;
         var width = Math.min(pixelsNeeded, maxSize);
         var height = Math.ceil(pixelsNeeded / width);
-        result.x = width;
-        result.y = height;
+        result.x = Math.max(width, 1);
+        result.y = Math.max(height, 1);
         return result;
     }
 
@@ -453,7 +454,11 @@ define([
 
         if (defined(clippingPlanesTexture)) {
             var currentPixelCount = clippingPlanesTexture.width * clippingPlanesTexture.height;
-            // Recreate the texture if it isn't big enough or is 4 times larger than it needs to be
+            // Recreate the texture to double current requirement if it isn't big enough or is 4 times larger than it needs to be.
+            // Optimization note: this isn't exactly the classic resizeable array algorithm
+            // * not necessarily checking for resize after each add/remove operation
+            // * random-access deletes instead of just pops
+            // * alloc ops likely more expensive than demonstrable via big-O analysis
             if (currentPixelCount < pixelsNeeded ||
                 pixelsNeeded < 0.25 * currentPixelCount) {
                     clippingPlanesTexture.destroy();
@@ -497,12 +502,12 @@ define([
             }
 
             this._clippingPlanesTexture = clippingPlanesTexture;
-            this._manyDirtyPlanes = true;
+            this._multipleDirtyPlanes = true;
         }
 
         // Use of Plane objects will be deprecated.
         // But until then, we have no way of telling if they changed since last frame, so we have to do a full udpate.
-        var refreshFullTexture = this._manyDirtyPlanes || this._containsUntrackablePlanes;
+        var refreshFullTexture = this._multipleDirtyPlanes || this._containsUntrackablePlanes;
         var dirtyIndex = this._dirtyIndex;
 
         if (!refreshFullTexture && dirtyIndex === -1) {
@@ -544,7 +549,7 @@ define([
             });
         }
 
-        this._manyDirtyPlanes = false;
+        this._multipleDirtyPlanes = false;
         this._dirtyIndex = -1;
     };
 
@@ -637,19 +642,6 @@ define([
     };
 
     /**
-     * Returns a Number encapsulating the state for this ClippingPlaneCollection.
-     *
-     * Clipping mode is encoded in the sign of the number, which is just the plane count.
-     * Used for checking if shader regeneration is necessary.
-     *
-     * @returns {Number} A Number that describes the ClippingPlaneCollection's state.
-     * @private
-     */
-    ClippingPlaneCollection.prototype.clippingPlanesState = function() {
-        return this._unionClippingRegions ? this._planes.length : -this._planes.length;
-    };
-
-    /**
      * Sets the owner for the input ClippingPlaneCollection if there wasn't another owner.
      * Destroys the owner's previous ClippingPlaneCollection if setting is successful.
      *
@@ -658,7 +650,7 @@ define([
      * @param {String} key The Key for the Object to reference the ClippingPlaneCollection
      * @private
      */
-    ClippingPlaneCollection.setOwnership = function(clippingPlaneCollection, owner, key) {
+    ClippingPlaneCollection.setOwner = function(clippingPlaneCollection, owner, key) {
         // Don't destroy the ClippingPlaneCollection if it is already owned by newOwner
         if (clippingPlaneCollection === owner[key]) {
             return;
