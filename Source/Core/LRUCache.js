@@ -1,17 +1,15 @@
 define([
-    './defined',
-    './defineProperties',
-    './getTimestamp',
-    './requestAnimationFrame',
-    './DeveloperError',
-    './DoublyLinkedList'
-], function(
-    defined,
-    defineProperties,
-    getTimestamp,
-    requestAnimationFrame,
-    DeveloperError,
-    DoublyLinkedList) {
+        './defined',
+        './defineProperties',
+        './getTimestamp',
+        './DeveloperError',
+        './DoublyLinkedList'
+    ], function(
+        defined,
+        defineProperties,
+        getTimestamp,
+        DeveloperError,
+        DoublyLinkedList) {
     'use strict';
 
     function prune(cache) {
@@ -45,23 +43,24 @@ define([
     }
 
     function checkExpiration(cache) {
+        if (defined(cache._interval)) {
+            return;
+        }
         function loop() {
             if (!cache._hasExpiration || cache.length === 0) {
-                cache._expirationLoopRunning = false;
+                clearInterval(cache._interval);
+                cache._interval = undefined;
                 return;
             }
 
-            cache._expirationLoopRunning = true;
-
             prune(cache);
 
-            if (cache.length > 0) {
-                requestAnimationFrame(loop);
-            } else {
-                cache._expirationLoopRunning = false;
+            if (cache.length === 0) {
+                clearInterval(cache._interval);
+                cache._interval = undefined;
             }
         }
-        loop();
+        cache._interval = setInterval(loop, 1000);
     }
 
     function Item(key, value) {
@@ -78,8 +77,9 @@ define([
      * A cache for storing key-value pairs
      * @param {Number} [capacity] The capacity of the cache.  If undefined, the size will be unlimited.
      * @param {Number} [expiration] The number of milliseconds before an item in the cache expires and will be discarded when LRUCache.prune is called.  If undefined, items do not expire.
-     * @alias AssociativeArray
+     * @alias LRUCache
      * @constructor
+     * @private
      */
     function LRUCache(capacity, expiration) {
         this._list = new DoublyLinkedList();
@@ -89,7 +89,7 @@ define([
 
         this._hasExpiration = defined(expiration);
         this._expiration = expiration;
-        this._expirationLoopRunning = false;
+        this._interval = undefined;
     }
 
     defineProperties(LRUCache.prototype, {
@@ -150,7 +150,7 @@ define([
             item = new Item(key, value);
             node = list.addFront(item);
             hash[key] = node;
-            if (this._hasExpiration && !this._expirationLoopRunning) {
+            if (this._hasExpiration) {
                 LRUCache._checkExpiration(this);
             }
             if (this._hasCapacity && list.length > this._capacity) {

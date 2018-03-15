@@ -6,12 +6,6 @@ define([
         defineProperties) {
     'use strict';
 
-    function DoublyLinkedListNode(item, previous, next) {
-        this.item = item;
-        this.previous  = previous;
-        this.next = next;
-    }
-
     /**
      * @private
      */
@@ -29,6 +23,12 @@ define([
         }
     });
 
+    function DoublyLinkedListNode(item, previous, next) {
+        this.item = item;
+        this.previous  = previous;
+        this.next = next;
+    }
+
     /**
      * Adds the item to the end of the list
      * @param {Object} [item]
@@ -41,7 +41,6 @@ define([
             this.tail.next = node;
             this.tail = node;
         } else {
-            // Insert into empty linked list
             this.head = node;
             this.tail = node;
         }
@@ -63,7 +62,6 @@ define([
             this.head.previous = node;
             this.head = node;
         } else {
-            // Insert into empty linked list
             this.head = node;
             this.tail = node;
         }
@@ -147,9 +145,8 @@ define([
             return;
         }
 
-        var i;
         var node = this.head;
-        for (i = 0; i < startIndex; i++) {
+        for (var i = 0; i < startIndex; ++i) {
             node = node.next;
         }
 

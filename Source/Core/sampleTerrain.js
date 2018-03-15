@@ -101,7 +101,7 @@ define([
                 requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
                 cache.set(cacheKey, requestPromise);
             }
-            var tilePromise = when(requestPromise)
+            var tilePromise = requestPromise
                 .then(createInterpolateFunction(tileRequest))
                 .otherwise(createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);

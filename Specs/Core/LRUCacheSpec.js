@@ -1,9 +1,9 @@
 defineSuite([
-    'Core/LRUCache',
-    'Core/getTimestamp'
-], function(
-    LRUCache,
-    getTimestamp) {
+        'Core/LRUCache',
+        'Core/getTimestamp'
+    ], function(
+        LRUCache,
+        getTimestamp) {
     'use strict';
 
     it('can manipulate values', function() {
@@ -24,16 +24,16 @@ defineSuite([
     });
 
     it('set throws with undefined key', function() {
-        var associativeArray = new LRUCache();
+        var cache = new LRUCache();
         expect(function() {
-            associativeArray.set(undefined, 1);
+            cache.set(undefined, 1);
         }).toThrowDeveloperError();
     });
 
     it('get throws with undefined key', function() {
-        var associativeArray = new LRUCache();
+        var cache = new LRUCache();
         expect(function() {
-            associativeArray.get(undefined);
+            cache.get(undefined);
         }).toThrowDeveloperError();
     });
 
