@@ -1,6 +1,7 @@
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian3',
+        'Core/Cartesian4',
         'Core/EncodedCartesian3',
         'Specs/createCamera',
         'Specs/createContext',
@@ -8,6 +9,7 @@ defineSuite([
     ], 'Renderer/BuiltinFunctions', function(
         BoundingRectangle,
         Cartesian3,
+        Cartesian4,
         EncodedCartesian3,
         createCamera,
         createContext,
@@ -366,4 +368,33 @@ defineSuite([
             fragmentShader : fs
         }).contextToRender();
     });
+
+    it('has czm_transformPlane', function() {
+        var fs =
+            'void main() { ' +
+            '  mat4 uniformScale2 = mat4(2.0, 0.0, 0.0, 0.0,' +
+            '                            0.0, 2.0, 0.0, 0.0,' +
+            '                            0.0, 0.0, 2.0, 0.0,' +
+            '                            0.0, 0.0, 0.0, 1.0);' +
+            '  gl_FragColor = vec4(all(equal(czm_transformPlane(vec4(1.0, 0.0, 0.0, 10.0), uniformScale2), vec4(1.0, 0.0, 0.0, 20.0))));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_unpackFloat', function() {
+        var packed = Cartesian4.packFloat(1);
+        var vec4 = 'vec4(' + packed.x + ', ' + packed.y + ', ' + packed.z + ', ' + packed.w + ')';
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_unpackFloat(' + vec4 + '));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
 }, 'WebGL');
