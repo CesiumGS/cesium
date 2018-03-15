@@ -66,7 +66,7 @@ define([
             return item.value;
         }
     };
-    
+
     /**
      * Associates the provided key with the provided value.  If the key already
      * exists, it is overwritten with the new value.
@@ -104,7 +104,7 @@ define([
             list.moveToFront(node);
         }
     };
-    
+
     function prune(cache) {
         var currentTime = getTimestamp();
         var pruneAfter = currentTime - cache._expiration;
