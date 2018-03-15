@@ -3,17 +3,17 @@ define([
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode',
         './ClippingPlaneCollection',
-        './getClippingFunction'
+        './getClippingFunction',
+        './SceneMode'
     ], function(
         defined,
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
-        SceneMode,
         ClippingPlaneCollection,
-        getClippingFunction) {
+        getClippingFunction,
+        SceneMode) {
     'use strict';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {

@@ -5,7 +5,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Scene/ClippingPlane',
         'Core/Color',
         'Core/Math',
         'Core/PixelFormat',
@@ -16,7 +15,8 @@ defineSuite([
         'Specs/createScene',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
-        'Renderer/TextureWrap'
+        'Renderer/TextureWrap',
+        'Scene/ClippingPlane'
     ], function(
         ClippingPlaneCollection,
         AttributeCompression,
@@ -24,7 +24,6 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        ClippingPlane,
         Color,
         CesiumMath,
         PixelFormat,
@@ -35,7 +34,8 @@ defineSuite([
         createScene,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        ClippingPlane) {
     'use strict';
 
     var clippingPlanes;

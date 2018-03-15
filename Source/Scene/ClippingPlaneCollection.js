@@ -5,7 +5,6 @@ define([
         '../Core/Cartesian4',
         '../Core/Math',
         '../Core/Check',
-        '../Scene/ClippingPlane',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -24,7 +23,8 @@ define([
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
+        '../Renderer/TextureWrap',
+        './ClippingPlane'
     ], function(
         AttributeCompression,
         Cartesian2,
@@ -32,7 +32,6 @@ define([
         Cartesian4,
         CesiumMath,
         Check,
-        ClippingPlane,
         Color,
         defaultValue,
         defined,
@@ -51,7 +50,8 @@ define([
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        ClippingPlane) {
     'use strict';
 
     /**

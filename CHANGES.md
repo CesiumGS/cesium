@@ -13,9 +13,9 @@ Change Log
   * Removed the 6-clipping-plane limit.
   * Added support for Internet Explorer.
   * Added a `ClippingPlane` object to be used with `ClippingPlaneCollection`.
+  * Added 3D Tiles use-case to Terrain Clipping Planes Sandcastle
 * Updated `WebMapServiceImageryProvider` so it can take an srs or crs string to pass to the resource query parameters based on the WMS version. [#6223](https://github.com/AnalyticalGraphicsInc/cesium/issues/6223)
 * Added a multi-part CZML example to Sandcastle. [#6320](https://github.com/AnalyticalGraphicsInc/cesium/pull/6320)
-* Added 3D Tiles use-case to Terrain Clipping Planes Sandcastle
 
 ##### Fixes :wrench:
 * Fixed support of glTF-supplied tangent vectors. [#6302](https://github.com/AnalyticalGraphicsInc/cesium/pull/6302)
