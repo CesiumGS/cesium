@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
-        '../Core/ClippingPlaneCollection',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -34,6 +33,7 @@ define([
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './ClassificationType',
+        './ClippingPlaneCollection',
         './LabelCollection',
         './PointCloudShading',
         './PointCloudEyeDomeLighting',
@@ -47,7 +47,6 @@ define([
         Cartesian3,
         Cartographic,
         Check,
-        ClippingPlaneCollection,
         defaultValue,
         defined,
         defineProperties,
@@ -78,6 +77,7 @@ define([
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         ClassificationType,
+        ClippingPlaneCollection,
         LabelCollection,
         PointCloudShading,
         PointCloudEyeDomeLighting,
@@ -822,7 +822,7 @@ define([
                 return this._clippingPlanes;
             },
             set : function(value) {
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         },
 
@@ -1944,10 +1944,7 @@ define([
      * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
-        // Destroy debug labels
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
-
-        // Destroy clipping plane collection
         this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
         // Traverse the tree and destroy all tiles

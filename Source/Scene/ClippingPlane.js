@@ -1,8 +1,8 @@
 define([
-        './Cartesian3',
-        './Check',
-        './defined',
-        './defineProperties'
+        '../Core/Cartesian3',
+        '../Core/Check',
+        '../Core/defined',
+        '../Core/defineProperties'
     ], function(
         Cartesian3,
         Check,
@@ -11,8 +11,8 @@ define([
     'use strict';
 
     /**
-     * A Plane in Hessian Normal form to be used with ClippingPlaneCollection.
-     * Compatible with mathematics functions in Plane.js
+     * A Plane in Hessian Normal form to be used with {@link ClippingPlaneCollection}.
+     * Compatible with mathematics functions in {@link Plane}
      *
      * @alias ClippingPlane
      * @constructor
@@ -25,6 +25,11 @@ define([
      * opposite to the normal; if zero, the plane passes through the origin.
      */
     function ClippingPlane(normal, distance) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('normal', normal);
+        Check.typeOf.number('distance', distance);
+        //>>includeEnd('debug');
+
         this._distance = distance;
         this._normal = new UpdateChangedCartesian3(normal, this);
         this.onChangeCallback = undefined;
@@ -128,27 +133,49 @@ define([
         this._cartesian3 = Cartesian3.clone(normal);
     }
 
-    function makeGetterStter(key) {
-        return {
+    defineProperties(UpdateChangedCartesian3.prototype, {
+        x : {
             get : function() {
-                return this._cartesian3[key];
+                return this._cartesian3.x;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number('value', value);
                 //>>includeEnd('debug');
-                if (defined(this._clippingPlane.onChangeCallback) && value !== this._cartesian3[key]) {
+                if (defined(this._clippingPlane.onChangeCallback) && value !== this._cartesian3.x) {
                     this._clippingPlane.onChangeCallback(this._clippingPlane.index);
                 }
-                this._cartesian3[key] = value;
+                this._cartesian3.x = value;
             }
-        };
-    }
-
-    defineProperties(UpdateChangedCartesian3.prototype, {
-        x : makeGetterStter('x'),
-        y : makeGetterStter('y'),
-        z : makeGetterStter('z')
+        },
+        y : {
+            get : function() {
+                return this._cartesian3.y;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('value', value);
+                //>>includeEnd('debug');
+                if (defined(this._clippingPlane.onChangeCallback) && value !== this._cartesian3.y) {
+                    this._clippingPlane.onChangeCallback(this._clippingPlane.index);
+                }
+                this._cartesian3.y = value;
+            }
+        },
+        z : {
+            get : function() {
+                return this._cartesian3.z;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number('value', value);
+                //>>includeEnd('debug');
+                if (defined(this._clippingPlane.onChangeCallback) && value !== this._cartesian3.z) {
+                    this._clippingPlane.onChangeCallback(this._clippingPlane.index);
+                }
+                this._cartesian3.z = value;
+            }
+        }
     });
 
     return ClippingPlane;

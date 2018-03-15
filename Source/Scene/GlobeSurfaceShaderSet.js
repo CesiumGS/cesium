@@ -1,19 +1,19 @@
 define([
-        '../Core/ClippingPlaneCollection',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode',
-        './getClippingFunction'
+        './ClippingPlaneCollection',
+        './getClippingFunction',
+        './SceneMode'
     ], function(
-        ClippingPlaneCollection,
         defined,
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
-        SceneMode,
-        getClippingFunction) {
+        ClippingPlaneCollection,
+        getClippingFunction,
+        SceneMode) {
     'use strict';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {
@@ -100,7 +100,7 @@ define([
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
-            currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState() : 0;
+            currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&

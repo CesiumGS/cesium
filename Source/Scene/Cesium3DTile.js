@@ -1067,7 +1067,7 @@ define([
         var clippingPlanes = tileset.clippingPlanes;
         var currentClippingPlanesState = 0;
         if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
-            currentClippingPlanesState = clippingPlanes.clippingPlanesState();
+            currentClippingPlanesState = clippingPlanes.clippingPlanesState;
         }
         // If clippingPlaneState for tile changed, mark clippingPlanesDirty so content can update
         if (currentClippingPlanesState !== tile._clippingPlanesState) {

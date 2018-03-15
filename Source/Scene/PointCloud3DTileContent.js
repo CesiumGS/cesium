@@ -2,7 +2,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -35,6 +34,8 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
+        './ClippingPlaneCollection',
+        './getClipAndStyleCode',
         './getClippingFunction',
         './SceneMode',
         './ShadowMode'
@@ -42,7 +43,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        ClippingPlaneCollection,
         Color,
         combine,
         ComponentDatatype,
@@ -75,6 +75,8 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
+        ClippingPlaneCollection,
+        getClipAndStyleCode,
         getClippingFunction,
         SceneMode,
         ShadowMode) {
@@ -1133,14 +1135,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            fs += '    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);\n' +
-                  '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-                  '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
-                  '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +
-                  '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-                  '    { \n' +
-                  '        gl_FragColor = clippingPlanesEdgeColor; \n' +
-                  '    } \n';
+            fs += getClipAndStyleCode('u_clippingPlanes', 'u_clippingPlanesMatrix', 'u_clippingPlanesEdgeStyle');
         }
 
         fs += '} \n';
