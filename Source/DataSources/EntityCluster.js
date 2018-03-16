@@ -778,8 +778,6 @@ define([
      * Unlike other objects that use WebGL resources, this object can be reused. For example, if a data source is removed
      * from a data source collection and added to another.
      * </p>
-     *
-     * @returns {undefined}
      */
     EntityCluster.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();

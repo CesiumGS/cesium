@@ -207,8 +207,6 @@ define([
      *
      * @memberof QuadtreeTileProvider
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
