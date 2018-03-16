@@ -352,14 +352,14 @@ define([
         var entityCluster = dataSource.clustering;
         primitives.remove(entityCluster);
 
-        displayPrimitives.remove(primitives);
-        displayGroundPrimitives.remove(groundPrimitives);
-
         var visualizers = dataSource._visualizers;
         var length = visualizers.length;
         for (var i = 0; i < length; i++) {
             visualizers[i].destroy();
         }
+
+        displayPrimitives.remove(primitives);
+        displayGroundPrimitives.remove(groundPrimitives);
 
         dataSource._visualizers = undefined;
     };
