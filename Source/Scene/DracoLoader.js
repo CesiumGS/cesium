@@ -79,33 +79,6 @@ define([
         };
     }
 
-    function addDecodededBuffers(model, context) {
-        return function (result) {
-            var decodedIndexBuffer = addNewIndexBuffer(result.indexArray, model, context);
-
-            var attributes = {};
-            var decodedAttributeData = result.attributeData;
-            for (var attributeName in decodedAttributeData) {
-                if (decodedAttributeData.hasOwnProperty(attributeName)) {
-                    var attribute = decodedAttributeData[attributeName];
-                    var vertexArray = attribute.array;
-                    var vertexBufferView = addNewVertexBuffer(vertexArray, model, context);
-
-                    var data = attribute.data;
-                    data.bufferView = vertexBufferView;
-
-                    attributes[attributeName] = data;
-                }
-            }
-
-            return {
-                bufferView : decodedIndexBuffer.bufferViewId,
-                numberOfIndices : decodedIndexBuffer.numberOfIndices,
-                attributes : attributes
-            };
-        };
-    }
-
     function scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context) {
         var taskData = loadResources.primitivesToDecode.peek();
         if (!defined(taskData)) {
@@ -121,11 +94,45 @@ define([
 
         loadResources.activeDecodingTasks++;
         loadResources.primitivesToDecode.dequeue();
-        return promise.then(addDecodededBuffers(model, context))
-            .then(function(result) {
-                model._decodedData[taskData.mesh + '.primitive.' + taskData.primitive] = result;
-                loadResources.activeDecodingTasks--;
-             });
+        return promise.then(function (result) {
+            loadResources.activeDecodingTasks--;
+            loadResources.pendingDecodedData.enqueue({
+                mesh : taskData.mesh,
+                primitive : taskData.primitive,
+                indexArray : result.indexArray,
+                attributeData : result.attributeData
+            });
+        });
+    }
+
+    function addDecodedDataToModel(model, loadResources, context) {
+        var decodedData = loadResources.pendingDecodedData.dequeue();
+        while (defined(decodedData)) {
+            var decodedIndexBuffer = addNewIndexBuffer(decodedData.indexArray, model, context);
+
+            var attributes = {};
+            var decodedAttributeData = decodedData.attributeData;
+            for (var attributeName in decodedAttributeData) {
+                if (decodedAttributeData.hasOwnProperty(attributeName)) {
+                    var attribute = decodedAttributeData[attributeName];
+                    var vertexArray = attribute.array;
+                    var vertexBufferView = addNewVertexBuffer(vertexArray, model, context);
+
+                    var data = attribute.data;
+                    data.bufferView = vertexBufferView;
+
+                    attributes[attributeName] = data;
+                }
+            }
+
+            model._decodedData[decodedData.mesh + '.primitive.' + decodedData.primitive] = {
+                bufferView : decodedIndexBuffer.bufferViewId,
+                numberOfIndices : decodedIndexBuffer.numberOfIndices,
+                attributes : attributes
+            };
+
+            decodedData = loadResources.pendingDecodedData.dequeue();
+        }
     }
 
     /**
@@ -176,6 +183,10 @@ define([
         }
 
         var loadResources = model._loadResources;
+
+        // Add decoded buffers from previous frames
+        addDecodedDataToModel(model, loadResources, context);
+
         if (loadResources.primitivesToDecode.length === 0) {
             // No more tasks to schedule
             return when.resolve();
