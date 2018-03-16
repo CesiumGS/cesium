@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/ClippingPlaneCollection',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -62,8 +61,10 @@ define([
         './AttributeType',
         './Axis',
         './BlendingState',
+        './ClippingPlaneCollection',
         './ColorBlendMode',
         './DracoLoader',
+        './getClipAndStyleCode',
         './getClippingFunction',
         './HeightReference',
         './JobType',
@@ -82,7 +83,6 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        ClippingPlaneCollection,
         clone,
         Color,
         combine,
@@ -140,8 +140,10 @@ define([
         AttributeType,
         Axis,
         BlendingState,
+        ClippingPlaneCollection,
         ColorBlendMode,
         DracoLoader,
+        getClipAndStyleCode,
         getClippingFunction,
         HeightReference,
         JobType,
@@ -516,7 +518,7 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-        this._colorShadingEnabled = isColorShadingEnabled(this);
+        this._colorShadingEnabled = false;
 
         this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
@@ -1027,7 +1029,7 @@ define([
                     return;
                 }
                 // Handle destroying, checking of unknown, checking for existing ownership
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         }
     });
@@ -3860,19 +3862,12 @@ define([
         shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
-            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +
+            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix);' +
-            '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-            '    clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
-            '    float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
-            '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-            '    { \n' +
-            '        gl_FragColor = clippingPlanesEdgeColor;\n' +
-            '    } \n' +
+            getClipAndStyleCode('gltf_clippingPlanes', 'gltf_clippingPlanesMatrix', 'gltf_clippingPlanesEdgeStyle') +
             '} \n';
         return shader;
     }
@@ -4365,7 +4360,7 @@ define([
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
                 Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
-                currentClippingPlanesState = clippingPlanes.clippingPlanesState();
+                currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
             var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;

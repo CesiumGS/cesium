@@ -1,18 +1,16 @@
 define([
         '../Core/Check',
-        '../Renderer/PixelDatatype',
-        './getUnpackFloatFunction'
+        '../Renderer/PixelDatatype'
     ], function(
         Check,
-        PixelDatatype,
-        getUnpackFloatFunction) {
+        PixelDatatype) {
     'use strict';
 
     /**
-     * Gets the glsl functions needed to retrieve clipping planes from a ClippingPlaneCollection's texture.
+     * Gets the GLSL functions needed to retrieve clipping planes from a ClippingPlaneCollection's texture.
      *
      * @param {ClippingPlaneCollection} clippingPlaneCollection ClippingPlaneCollection with a defined texture.
-     * @returns {String} A string containing glsl functions for retrieving clipping planes.
+     * @returns {String} A string containing GLSL functions for retrieving clipping planes.
      * @private
      */
     function getClippingFunction(clippingPlaneCollection) {
@@ -111,7 +109,7 @@ define([
             pixelWidthString += '.0';
         }
         var pixelHeightString = pixelHeight + '';
-        if (pixelHeightString.indexOf('.' === -1)) {
+        if (pixelHeightString.indexOf('.') === -1) {
             pixelHeightString += '.0';
         }
 
@@ -123,7 +121,7 @@ define([
             '    float u = (float(pixX) + 0.5) * ' + pixelWidthString + ';\n' + // sample from center of pixel
             '    float v = (float(pixY) + 0.5) * ' + pixelHeightString + ';\n' +
             '    vec4 plane = texture2D(packedClippingPlanes, vec2(u, v));\n' +
-            '    return czm_transformPlane(transform, plane);\n' +
+            '    return czm_transformPlane(plane, transform);\n' +
             '}\n';
         return functionString;
     }
@@ -137,13 +135,11 @@ define([
             pixelWidthString += '.0';
         }
         var pixelHeightString = pixelHeight + '';
-        if (pixelHeightString.indexOf('.' === -1)) {
+        if (pixelHeightString.indexOf('.') === -1) {
             pixelHeightString += '.0';
         }
 
         var functionString =
-            getUnpackFloatFunction('unpackFloatDistance') +
-            '\n' +
             'vec4 getClippingPlane(sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n' +
             '{\n' +
             '    int clippingPlaneStartIndex = clippingPlaneNumber * 2;\n' + // clipping planes are two pixels each
@@ -157,9 +153,9 @@ define([
 
             '    vec4 plane;\n' +
             '    plane.xyz = czm_octDecode(oct, 65535.0);\n' +
-            '    plane.w = unpackFloatDistance(texture2D(packedClippingPlanes, vec2(u + ' + pixelWidthString + ', v)));\n' +
+            '    plane.w = czm_unpackFloat(texture2D(packedClippingPlanes, vec2(u + ' + pixelWidthString + ', v)));\n' +
 
-            '    return czm_transformPlane(transform, plane);\n' +
+            '    return czm_transformPlane(plane, transform);\n' +
             '}\n';
         return functionString;
     }

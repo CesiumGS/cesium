@@ -1,5 +1,5 @@
 defineSuite([
-        'Core/ClippingPlane',
+        'Scene/ClippingPlane',
         'Core/Cartesian3',
         'Core/Math',
         'Core/Matrix3',

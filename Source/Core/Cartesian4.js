@@ -880,6 +880,7 @@ define([
      *
      * @param {Cartesian4} packedFloat A Cartesian4 containing a float packed to 4 values representable using uint8.
      * @returns {Number} The unpacked float.
+     * @private
      */
     Cartesian4.unpackFloat = function(packedFloat) {
         //>>includeStart('debug', pragmas.debug);

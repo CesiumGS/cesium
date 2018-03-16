@@ -1,11 +1,10 @@
 defineSuite([
-        'Core/ClippingPlaneCollection',
+        'Scene/ClippingPlaneCollection',
         'Core/AttributeCompression',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/ClippingPlane',
         'Core/Color',
         'Core/Math',
         'Core/PixelFormat',
@@ -16,7 +15,8 @@ defineSuite([
         'Specs/createScene',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
-        'Renderer/TextureWrap'
+        'Renderer/TextureWrap',
+        'Scene/ClippingPlane'
     ], function(
         ClippingPlaneCollection,
         AttributeCompression,
@@ -24,7 +24,6 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        ClippingPlane,
         Color,
         CesiumMath,
         PixelFormat,
@@ -35,7 +34,8 @@ defineSuite([
         createScene,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        ClippingPlane) {
     'use strict';
 
     var clippingPlanes;
@@ -49,9 +49,7 @@ defineSuite([
 
     function decodeUint8Plane(pixel1, pixel2) {
         // expect pixel1 to be the normal
-        var xOct16 = pixel1.x * 256 + pixel1.y;
-        var yOct16 = pixel1.z * 256 + pixel1.w;
-        var normal = AttributeCompression.octDecodeInRange(xOct16, yOct16, 65535, new Cartesian3());
+        var normal = AttributeCompression.octDecodeFromCartesian4(pixel1, new Cartesian3());
 
         // expect pixel2 to be the distance
         var distance = Cartesian4.unpackFloat(pixel2);
@@ -259,6 +257,9 @@ defineSuite([
             // One RGBA uint8 clipping plane consume 2 pixels of texture, allocation to be double that
             expect(packedTexture.width).toEqual(4);
             expect(packedTexture.height).toEqual(1);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
         });
     });
 
@@ -388,6 +389,9 @@ defineSuite([
             // One RGBA float clipping plane consume 1 pixels of texture, allocation to be double that
             expect(packedTexture.width).toEqual(2);
             expect(packedTexture.height).toEqual(1);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
         });
     });
 
@@ -454,7 +458,7 @@ defineSuite([
             modelMatrix : transform
         });
 
-        ClippingPlaneCollection.setOwnership(clippingPlanes1, clippedObject1, 'clippingPlanes');
+        ClippingPlaneCollection.setOwner(clippingPlanes1, clippedObject1, 'clippingPlanes');
         expect(clippedObject1.clippingPlanes).toBe(clippingPlanes1);
         expect(clippingPlanes1._owner).toBe(clippedObject1);
 
@@ -466,16 +470,16 @@ defineSuite([
         });
 
         // Expect detached clipping planes to be destroyed
-        ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject1, 'clippingPlanes');
+        ClippingPlaneCollection.setOwner(clippingPlanes2, clippedObject1, 'clippingPlanes');
         expect(clippingPlanes1.isDestroyed()).toBe(true);
 
         // Expect setting the same ClippingPlaneCollection again to not destroy the ClippingPlaneCollection
-        ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject1, 'clippingPlanes');
+        ClippingPlaneCollection.setOwner(clippingPlanes2, clippedObject1, 'clippingPlanes');
         expect(clippingPlanes2.isDestroyed()).toBe(false);
 
         // Expect failure when attaching one ClippingPlaneCollection to two objects
         expect(function() {
-            ClippingPlaneCollection.setOwnership(clippingPlanes2, clippedObject2, 'clippingPlanes');
+            ClippingPlaneCollection.setOwner(clippingPlanes2, clippedObject2, 'clippingPlanes');
         }).toThrowDeveloperError();
     });
 
@@ -604,16 +608,16 @@ defineSuite([
         clippingPlanes = new ClippingPlaneCollection();
         clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, -1.0));
 
-        expect(clippingPlanes.clippingPlanesState()).toEqual(-1);
+        expect(clippingPlanes.clippingPlanesState).toEqual(-1);
 
         var holdThisPlane = new ClippingPlane(Cartesian3.UNIT_X, -1.0);
         clippingPlanes.add(holdThisPlane);
-        expect(clippingPlanes.clippingPlanesState()).toEqual(-2);
+        expect(clippingPlanes.clippingPlanesState).toEqual(-2);
 
         clippingPlanes.unionClippingRegions = true;
-        expect(clippingPlanes.clippingPlanesState()).toEqual(2);
+        expect(clippingPlanes.clippingPlanesState).toEqual(2);
 
         clippingPlanes.remove(holdThisPlane);
-        expect(clippingPlanes.clippingPlanesState()).toEqual(1);
+        expect(clippingPlanes.clippingPlanesState).toEqual(1);
     });
 });
