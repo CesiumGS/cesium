@@ -79,7 +79,7 @@ define([
         };
     }
 
-    function addDecodededBuffers(primitive, model, context) {
+    function addDecodededBuffers(model, context) {
         return function (result) {
             var decodedIndexBuffer = addNewIndexBuffer(result.indexArray, model, context);
 
@@ -98,7 +98,7 @@ define([
                 }
             }
 
-            model._decodedData[primitive.mesh + '.primitive.' + primitive.primitive] = {
+            return {
                 bufferView : decodedIndexBuffer.bufferViewId,
                 numberOfIndices : decodedIndexBuffer.numberOfIndices,
                 attributes : attributes
@@ -119,8 +119,13 @@ define([
             return;
         }
 
+        loadResources.activeDecodingTasks++;
         loadResources.primitivesToDecode.dequeue();
-        return promise.then(addDecodededBuffers(taskData, model, context));
+        return promise.then(addDecodededBuffers(model, context))
+            .then(function(result) {
+                model._decodedData[taskData.mesh + '.primitive.' + taskData.primitive] = result;
+                loadResources.activeDecodingTasks--;
+             });
     }
 
     /**
@@ -135,8 +140,6 @@ define([
         }
 
         var loadResources = model._loadResources;
-        loadResources.decoding = true;
-
         var gltf = model.gltf;
         ForEach.mesh(gltf, function(mesh, meshId) {
             ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
@@ -187,10 +190,7 @@ define([
             promise = scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context);
         }
 
-        return when.all(decodingPromises).then(function () {
-            // Done decoding when there are no more active tasks
-            loadResources.decoding = (decoderTaskProcessor._activeTasks !== 0);
-        });
+        return when.all(decodingPromises);
     };
 
     return DracoLoader;

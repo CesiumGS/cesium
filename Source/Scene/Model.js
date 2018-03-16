@@ -245,6 +245,22 @@ define([
      * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
      * relative to a local origin.
      * </p>
+     * <p>
+     * Cesium supports glTF assets with the following extensions:
+     * <ul>
+     * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li>
+     * </ul>
+     * </p>
      *
      * @alias Model
      * @constructor
