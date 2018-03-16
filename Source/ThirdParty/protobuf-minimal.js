@@ -1171,7 +1171,7 @@ function Service(rpcImpl, requestDelimited, responseDelimited) {
  * @param {function} responseCtor Response constructor
  * @param {Message|Object.<string,*>} request Request message or plain object
  * @param {rpc.ServiceMethodCallback} callback Service callback
- *  @returns {undefined}
+ * @returns {undefined}
  */
 Service.prototype.rpcCall = function rpcCall(method, requestCtor, responseCtor, request, callback) {
 
