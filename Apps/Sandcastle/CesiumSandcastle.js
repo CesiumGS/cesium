@@ -717,27 +717,15 @@ require({
         return requestDemo(demo.name).then(function(value) {
             demo.code = value;
 
-            var parser = new DOMParser();
-            var doc = parser.parseFromString(demo.code, 'text/html');
-
-            var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
-            if (!script) {
-                appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-                return;
+            if (typeof demo.bucket === 'string') {
+                loadBucket(demo.bucket);
             }
-
-            var scriptMatch = scriptCodeRegex.exec(script.textContent);
-            if (!scriptMatch) {
-                appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-                return;
-            }
-
-            var scriptCode = scriptMatch[1];
-            demoCode = scriptCode.replace(/\s/g, '');
 
             function applyLoadedDemo(code, html) {
                 jsEditor.setValue(code);
+                jsEditor.clearHistory();
                 htmlEditor.setValue(html);
+                htmlEditor.clearHistory();
                 demoCode = code.replace(/\s/g, '');
                 demoHtml = html.replace(/\s/g, '');
                 CodeMirror.commands.runCesium(jsEditor);
@@ -754,9 +742,9 @@ require({
                         var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
                         applyLoadedDemo(code, html);
                     }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist , true);
+                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
                         console.log(error);
-                });
+                    });
             } else if (defined(queryObject.code)) {
                 //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
                 json = JSON.parse(window.atob(queryObject.code));
@@ -782,26 +770,34 @@ require({
 
                 applyLoadedDemo(code, html);
             } else {
-                jsEditor.setValue(scriptCode);
-            }
-            jsEditor.clearHistory();
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(demo.code, 'text/html');
 
-            var htmlText = '';
-            var childIndex = 0;
-            var childNode = doc.body.childNodes[childIndex];
-            while (childIndex < doc.body.childNodes.length && childNode !== script) {
-                htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
-                childNode = doc.body.childNodes[++childIndex];
-            }
-            htmlText = htmlText.replace(/^\s+/, '');
-            demoHtml = htmlText.replace(/\s/g, '');
-            htmlEditor.setValue(htmlText);
-            htmlEditor.clearHistory();
+                var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+                if (!script) {
+                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                    return;
+                }
 
-            if (typeof demo.bucket === 'string') {
-                loadBucket(demo.bucket);
+                var scriptMatch = scriptCodeRegex.exec(script.textContent);
+                if (!scriptMatch) {
+                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                    return;
+                }
+
+                var scriptCode = scriptMatch[1];
+
+                var htmlText = '';
+                var childIndex = 0;
+                var childNode = doc.body.childNodes[childIndex];
+                while (childIndex < doc.body.childNodes.length && childNode !== script) {
+                    htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
+                    childNode = doc.body.childNodes[++childIndex];
+                }
+                htmlText = htmlText.replace(/^\s+/, '');
+
+                applyLoadedDemo(scriptCode, htmlText);
             }
-            CodeMirror.commands.runCesium(jsEditor);
         });
     }
 
