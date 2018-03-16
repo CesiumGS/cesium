@@ -241,11 +241,6 @@ define([
      * resources are created.
      * </p>
      * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
-     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
-     * relative to a local origin.
-     * </p>
-     * <p>
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
@@ -260,6 +255,11 @@ define([
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li>
      * </ul>
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
+     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
+     * relative to a local origin.
      * </p>
      *
      * @alias Model
@@ -1088,7 +1088,23 @@ define([
      * KHR_binary_glTF extension with a .glb extension.
      * </p>
      * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * Cesium supports glTF assets with the following extensions:
+     * <ul>
+     * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li>
+     * </ul>
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
      * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
      * relative to a local origin.
      * </p>
