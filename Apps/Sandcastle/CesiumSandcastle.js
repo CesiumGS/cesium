@@ -50,11 +50,11 @@ require({
         'dojo/query',
         'dojo/when',
         'Sandcastle/LinkButton',
+        'Source/Cesium',
         'Source/Core/defined',
         'Source/Core/Resource',
-        'Source/Cesium',
-        'ThirdParty/pako.min',
         'ThirdParty/clipboard.min',
+        'ThirdParty/pako.min',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
         'CodeMirror/mode/javascript/javascript',
@@ -97,12 +97,11 @@ require({
         query,
         when,
         LinkButton,
+        Cesium,
         defined,
         Resource,
-        Cesium,
-        pako,
-        ClipboardJS
-) {
+        ClipboardJS,
+        pako) {
     'use strict';
 
     // attach clipboard handling to our Copy button

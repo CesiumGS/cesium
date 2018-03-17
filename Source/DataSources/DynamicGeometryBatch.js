@@ -1,29 +1,29 @@
 define([
-    '../Core/AssociativeArray',
-    '../Core/Color',
-    '../Core/ColorGeometryInstanceAttribute',
-    '../Core/defined',
-    '../Core/DistanceDisplayCondition',
-    '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-    '../Core/ShowGeometryInstanceAttribute',
-    '../Scene/Primitive',
-    './BoundingSphereState',
-    './ColorMaterialProperty',
-    './MaterialProperty',
-    './Property'
-], function(
-    AssociativeArray,
-    Color,
-    ColorGeometryInstanceAttribute,
-    defined,
-    DistanceDisplayCondition,
-    DistanceDisplayConditionGeometryInstanceAttribute,
-    ShowGeometryInstanceAttribute,
-    Primitive,
-    BoundingSphereState,
-    ColorMaterialProperty,
-    MaterialProperty,
-    Property) {
+        '../Core/AssociativeArray',
+        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
+        '../Core/defined',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/Primitive',
+        './BoundingSphereState',
+        './ColorMaterialProperty',
+        './MaterialProperty',
+        './Property'
+    ], function(
+        AssociativeArray,
+        Color,
+        ColorGeometryInstanceAttribute,
+        defined,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
+        ShowGeometryInstanceAttribute,
+        Primitive,
+        BoundingSphereState,
+        ColorMaterialProperty,
+        MaterialProperty,
+        Property) {
     'use strict';
 
     /**

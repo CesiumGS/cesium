@@ -1,15 +1,15 @@
 define([
-    '../Core/Check',
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/destroyObject'
-], function(
-    Check,
-    Credit,
-    defaultValue,
-    defined,
-    destroyObject) {
+        '../Core/Check',
+        '../Core/Credit',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/destroyObject'
+    ], function(
+        Check,
+        Credit,
+        defaultValue,
+        defined,
+        destroyObject) {
     'use strict';
 
     var mobileWidth = 576;

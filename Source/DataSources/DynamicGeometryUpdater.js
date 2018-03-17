@@ -1,31 +1,31 @@
 define([
-    '../Core/defined',
-    '../Core/destroyObject',
-    '../Core/BoundingSphere',
-    '../Core/Check',
-    '../Core/DeveloperError',
-    '../Scene/GroundPrimitive',
-    '../Scene/MaterialAppearance',
-    '../Scene/PerInstanceColorAppearance',
-    '../Scene/Primitive',
-    './BoundingSphereState',
-    './ColorMaterialProperty',
-    './MaterialProperty',
-    './Property'
-], function(
-    defined,
-    destroyObject,
-    BoundingSphere,
-    Check,
-    DeveloperError,
-    GroundPrimitive,
-    MaterialAppearance,
-    PerInstanceColorAppearance,
-    Primitive,
-    BoundingSphereState,
-    ColorMaterialProperty,
-    MaterialProperty,
-    Property) {
+        '../Core/BoundingSphere',
+        '../Core/Check',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Scene/GroundPrimitive',
+        '../Scene/MaterialAppearance',
+        '../Scene/PerInstanceColorAppearance',
+        '../Scene/Primitive',
+        './BoundingSphereState',
+        './ColorMaterialProperty',
+        './MaterialProperty',
+        './Property'
+    ], function(
+        BoundingSphere,
+        Check,
+        defined,
+        destroyObject,
+        DeveloperError,
+        GroundPrimitive,
+        MaterialAppearance,
+        PerInstanceColorAppearance,
+        Primitive,
+        BoundingSphereState,
+        ColorMaterialProperty,
+        MaterialProperty,
+        Property) {
     'use strict';
 
     /**

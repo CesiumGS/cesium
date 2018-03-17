@@ -19,8 +19,8 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
         '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
@@ -53,8 +53,8 @@ define([
         PixelDatatype,
         RenderState,
         Sampler,
-        ShaderSource,
         ShaderProgram,
+        ShaderSource,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -65,8 +65,7 @@ define([
         BlendingState,
         StencilFunction,
         StencilOperation,
-        PointCloudEyeDomeLightingShader
-    ) {
+        PointCloudEyeDomeLightingShader) {
     'use strict';
 
     /**

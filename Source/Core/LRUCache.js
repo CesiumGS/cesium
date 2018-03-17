@@ -1,15 +1,15 @@
 define([
         './defined',
         './defineProperties',
-        './getTimestamp',
         './DeveloperError',
-        './DoublyLinkedList'
+        './DoublyLinkedList',
+        './getTimestamp'
     ], function(
         defined,
         defineProperties,
-        getTimestamp,
         DeveloperError,
-        DoublyLinkedList) {
+        DoublyLinkedList,
+        getTimestamp) {
     'use strict';
 
     /**

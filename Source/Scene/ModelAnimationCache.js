@@ -1,5 +1,4 @@
 define([
-        './AttributeType',
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -11,9 +10,9 @@ define([
         '../Core/WebGLConstants',
         '../Core/WeightSpline',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType'
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+        './AttributeType'
     ], function(
-        AttributeType,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
@@ -25,7 +24,8 @@ define([
         WebGLConstants,
         WeightSpline,
         getAccessorByteStride,
-        numberOfComponentsForType) {
+        numberOfComponentsForType,
+        AttributeType) {
     'use strict';
 
     /**
