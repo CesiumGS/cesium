@@ -18,9 +18,9 @@ defineSuite([
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
-        'ThirdParty/GltfPipeline/parseBinaryGltf',
         'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/GltfPipeline/parseBinaryGltf'
     ], function(
         ClassificationModel,
         Cartesian3,
@@ -41,9 +41,9 @@ defineSuite([
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
-        parseBinaryGltf,
         createScene,
-        pollToPromise) {
+        pollToPromise,
+        parseBinaryGltf) {
     'use strict';
 
     var scene;
