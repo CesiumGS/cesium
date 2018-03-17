@@ -15,6 +15,7 @@ Change Log
   * Added a `ClippingPlane` object to be used with `ClippingPlaneCollection`.
   * Added 3D Tiles use-case to Terrain Clipping Planes Sandcastle
 * Updated `WebMapServiceImageryProvider` so it can take an srs or crs string to pass to the resource query parameters based on the WMS version. [#6223](https://github.com/AnalyticalGraphicsInc/cesium/issues/6223)
+* Sharing Sandcastle examples now works by storing the full example directly in the URL instead of creating GitHub gists, because anonymous gist creation was removed by GitHub. Loading existing gists will still work. [#6342](https://github.com/AnalyticalGraphicsInc/cesium/pull/6342)
 * Added additional query parameter options to the CesiumViewer demo application:
   * sourceType specifies the type of data source if the URL doesn't have a known file extension.
   * flyTo=false optionally disables the automatic flyTo after loading the data source.
