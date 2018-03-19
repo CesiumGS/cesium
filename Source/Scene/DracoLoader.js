@@ -44,6 +44,7 @@ define([
     }
 
     function addBufferToLoadResources(loadResources, typedArray) {
+        // Create a new id to differentiate from original glTF bufferViews
         var bufferViewId = 'runtime.' + Object.keys(loadResources.createdBufferViews).length;
 
         var loadResourceBuffers = loadResources.buffers;
