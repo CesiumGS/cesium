@@ -52,10 +52,7 @@ define([
         }
 
         if (!defined(errorCredit)) {
-            errorCredit = new Credit({
-                text : errorString,
-                showOnScreen : true
-            });
+            errorCredit = new Credit(errorString, true);
         }
 
         return errorCredit;

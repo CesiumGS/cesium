@@ -185,14 +185,7 @@ define([
                     imageryProvider = factory(endpoint.options);
                 }
 
-                that._tileCredits = endpoint.attributions.map(function(attribution) {
-                    return new Credit({
-                        text: attribution.text,
-                        link: attribution.url,
-                        imageUrl: attribution.image,
-                        showOnScreen: defined(attribution.collapsible) && !attribution.collapsible
-                    });
-                });
+                that._tileCredits = endpoint.attributions.map(Credit.getIonCredit);
 
                 return imageryProvider;
             })
