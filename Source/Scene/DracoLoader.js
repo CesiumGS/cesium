@@ -43,39 +43,40 @@ define([
             || defined(model.extensionsUsed.KHR_draco_mesh_compression));
     }
 
-    function addBufferToModelResources(model, buffer) {
-        var resourceBuffers = model._rendererResources.buffers;
-        var bufferViewId = Object.keys(resourceBuffers).length;
-        resourceBuffers[bufferViewId] = buffer;
-        model._geometryByteLength += buffer.sizeInBytes;
+    function addBufferToLoadResources(loadResources, typedArray) {
+        var bufferViewId = 'runtime.' + Object.keys(loadResources.createdBufferViews).length;
+
+        var loadResourceBuffers = loadResources.buffers;
+        var id = Object.keys(loadResourceBuffers).length;
+        loadResourceBuffers[id] = typedArray;
+        loadResources.createdBufferViews[bufferViewId] = {
+            buffer : id,
+            byteOffset : 0,
+            byteLength : typedArray.byteLength
+        };
 
         return bufferViewId;
     }
 
     function addNewVertexBuffer(typedArray, model, context) {
-        var vertexBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : typedArray,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        vertexBuffer.vertexArrayDestroyable = false;
-
-        return addBufferToModelResources(model, vertexBuffer);
+        var loadResources = model._loadResources;
+        var id = addBufferToLoadResources(loadResources, typedArray);
+        loadResources.vertexBuffersToCreate.enqueue(id);
+        return id;
     }
 
-    function addNewIndexBuffer(typedArray, model, context) {
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : typedArray,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : ComponentDatatype.fromTypedArray(typedArray)
+    function addNewIndexBuffer(indexArray, model, context) {
+        var typedArray = indexArray.typedArray;
+        var loadResources = model._loadResources;
+        var id = addBufferToLoadResources(loadResources, typedArray);
+        loadResources.indexBuffersToCreate.enqueue({
+            id : id,
+            componentType : ComponentDatatype.fromTypedArray(typedArray)
         });
-        indexBuffer.vertexArrayDestroyable = false;
 
-        var bufferViewId = addBufferToModelResources(model, indexBuffer);
         return {
-            bufferViewId: bufferViewId,
-            numberOfIndices : indexBuffer.numberOfIndices
+            bufferViewId : id,
+            numberOfIndices : indexArray.numberOfIndices
         };
     }
 
@@ -96,22 +97,11 @@ define([
         loadResources.primitivesToDecode.dequeue();
         return promise.then(function (result) {
             loadResources.activeDecodingTasks--;
-            loadResources.pendingDecodedData.enqueue({
-                mesh : taskData.mesh,
-                primitive : taskData.primitive,
-                indexArray : result.indexArray,
-                attributeData : result.attributeData
-            });
-        });
-    }
 
-    function addDecodedDataToModel(model, loadResources, context) {
-        var decodedData = loadResources.pendingDecodedData.dequeue();
-        while (defined(decodedData)) {
-            var decodedIndexBuffer = addNewIndexBuffer(decodedData.indexArray, model, context);
+            var decodedIndexBuffer = addNewIndexBuffer(result.indexArray, model, context);
 
             var attributes = {};
-            var decodedAttributeData = decodedData.attributeData;
+            var decodedAttributeData = result.attributeData;
             for (var attributeName in decodedAttributeData) {
                 if (decodedAttributeData.hasOwnProperty(attributeName)) {
                     var attribute = decodedAttributeData[attributeName];
@@ -125,14 +115,12 @@ define([
                 }
             }
 
-            model._decodedData[decodedData.mesh + '.primitive.' + decodedData.primitive] = {
+            model._decodedData[taskData.mesh + '.primitive.' + taskData.primitive] = {
                 bufferView : decodedIndexBuffer.bufferViewId,
                 numberOfIndices : decodedIndexBuffer.numberOfIndices,
                 attributes : attributes
             };
-
-            decodedData = loadResources.pendingDecodedData.dequeue();
-        }
+        });
     }
 
     /**
@@ -161,7 +149,6 @@ define([
 
                 var bufferView = gltf.bufferViews[compressionData.bufferView];
                 var typedArray = arraySlice(gltf.buffers[bufferView.buffer].extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
-
                 loadResources.primitivesToDecode.enqueue({
                     mesh : meshId,
                     primitive : primitiveId,
@@ -183,10 +170,6 @@ define([
         }
 
         var loadResources = model._loadResources;
-
-        // Add decoded buffers from previous frames
-        addDecodedDataToModel(model, loadResources, context);
-
         if (loadResources.primitivesToDecode.length === 0) {
             // No more tasks to schedule
             return when.resolve();

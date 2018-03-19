@@ -1743,6 +1743,11 @@ define([
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
 
+         // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
+
         var vertexBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : loadResources.getBuffer(bufferView),
@@ -1779,6 +1784,11 @@ define([
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
 
         var indexBuffer = Buffer.createIndexBuffer({
             context : context,
@@ -4234,6 +4244,18 @@ define([
                     processModelMaterialsCommon(this.gltf, options);
                     processPbrMetallicRoughness(this.gltf, options);
 
+                    // We do this after to make sure that the ids don't change
+                    addBuffersToLoadResources(this);
+                    if (!this._loadRendererResourcesFromCache) {
+                        parseBufferViews(this);
+                        parseShaders(this);
+                        parsePrograms(this);
+                        parseTextures(this, context);
+                    }
+                    parseMaterials(this);
+                    parseMeshes(this);
+                    parseNodes(this);
+
                     // Start draco decoding
                     DracoLoader.parse(this);
 
@@ -4246,19 +4268,6 @@ define([
                 }
 
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
-                    // We do this after to make sure that the ids don't change
-                    addBuffersToLoadResources(this);
-
-                    if (!this._loadRendererResourcesFromCache) {
-                        parseBufferViews(this);
-                        parseShaders(this);
-                        parsePrograms(this);
-                        parseTextures(this, context);
-                    }
-                    parseMaterials(this);
-                    parseMeshes(this);
-                    parseNodes(this);
-
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
 

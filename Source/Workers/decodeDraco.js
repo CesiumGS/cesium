@@ -21,7 +21,8 @@ define([
         var numFaces = dracoGeometry.num_faces();
 
         var faceIndices = new draco.DracoInt32Array();
-        var indexArray = IndexDatatype.createTypedArray(numPoints, numFaces * 3);
+        var numIndices = numFaces * 3;
+        var indexArray = IndexDatatype.createTypedArray(numPoints, numIndices);
 
         var offset = 0;
         for (var i = 0; i < numFaces; ++i) {
@@ -35,7 +36,10 @@ define([
 
         draco.destroy(faceIndices);
 
-        return indexArray;
+        return {
+            typedArray : indexArray,
+            numberOfIndices : numIndices
+        };
     }
 
     function decodeAttributeData(dracoGeometry, compressedAttributes) {
