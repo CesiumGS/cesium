@@ -10,6 +10,7 @@ defineSuite([
         'Core/Math',
         'Core/queryToObject',
         'Core/Rectangle',
+        'Core/Request',
         'Core/RequestScheduler',
         'Core/RequestState',
         'Core/Resource',
@@ -35,6 +36,7 @@ defineSuite([
         CesiumMath,
         queryToObject,
         Rectangle,
+        Request,
         RequestScheduler,
         RequestState,
         Resource,
@@ -855,21 +857,21 @@ defineSuite([
     });
 
     describe('pickFeatures', function() {
-        it('works with GeoJSON responses', function() {
+        it('works with GeoJSON responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-GeoJSON.json', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -881,21 +883,21 @@ defineSuite([
             });
         });
 
-        it('works with MapInfo MXP responses', function() {
+        it('works with MapInfo MXP responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -906,21 +908,21 @@ defineSuite([
             });
         });
 
-        it('works with Esri WMS responses', function() {
+        it('works with Esri WMS responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-Esri.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -931,21 +933,21 @@ defineSuite([
             });
         });
 
-        it('works with THREDDS XML format', function() {
+        it('works with THREDDS XML format', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-THREDDS.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -956,21 +958,21 @@ defineSuite([
             });
         });
 
-        it('works with msGMLOutput format', function() {
+        it('works with msGMLOutput format', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-msGMLOutput.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -981,21 +983,21 @@ defineSuite([
             });
         });
 
-        it('works with unknown XML responses', function() {
+        it('works with unknown XML responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-Unknown.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -1006,109 +1008,109 @@ defineSuite([
             });
         });
 
-        it('resolves to undefined on a ServiceException', function() {
+        it('resolves to undefined on a ServiceException', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-ServiceException.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult).toBeUndefined();
                 });
             });
         });
 
-        it('returns undefined if list of feature info formats is empty', function() {
+        it('returns undefined if list of feature info formats is empty', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer',
-                getFeatureInfoFormats : []
+                url: 'made/up/wms/server',
+                layers: 'someLayer',
+                getFeatureInfoFormats: []
             });
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
+            }).then(function () {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
             });
         });
 
-        it('returns undefined if enablePickFeatures is false', function() {
+        it('returns undefined if enablePickFeatures is false', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer',
-                enablePickFeatures : false
+                url: 'made/up/wms/server',
+                layers: 'someLayer',
+                enablePickFeatures: false
             });
 
             expect(provider.enablePickFeatures).toBe(false);
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
+            }).then(function () {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
             });
         });
 
-        it('returns undefined if enablePickFeatures is set to false after initialization', function() {
+        it('returns undefined if enablePickFeatures is set to false after initialization', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer',
-                enablePickFeatures : true
+                url: 'made/up/wms/server',
+                layers: 'someLayer',
+                enablePickFeatures: true
             });
 
             provider.enablePickFeatures = false;
             expect(provider.enablePickFeatures).toBe(false);
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
+            }).then(function () {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
             });
         });
 
-        it('does not return undefined if enablePickFeatures is set to true after initialization as false', function() {
+        it('does not return undefined if enablePickFeatures is set to true after initialization as false', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer',
-                enablePickFeatures : false
+                url: 'made/up/wms/server',
+                layers: 'someLayer',
+                enablePickFeatures: false
             });
 
             provider.enablePickFeatures = true;
             expect(provider.enablePickFeatures).toBe(true);
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
+            }).then(function () {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).not.toBeUndefined();
             });
         });
 
-        it('requests XML exclusively if specified in getFeatureInfoFormats', function() {
+        it('requests XML exclusively if specified in getFeatureInfoFormats', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer',
-                getFeatureInfoFormats : [
+                url: 'made/up/wms/server',
+                layers: 'someLayer',
+                getFeatureInfoFormats: [
                     new GetFeatureInfoFormat('xml')
                 ]
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 expect(url).not.toContain('json');
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -1119,19 +1121,19 @@ defineSuite([
             });
         });
 
-        it('requests GeoJSON exclusively if specified in getFeatureInfoFormats', function() {
+        it('requests GeoJSON exclusively if specified in getFeatureInfoFormats', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer',
-                getFeatureInfoFormats : [
+                url: 'made/up/wms/server',
+                layers: 'someLayer',
+                getFeatureInfoFormats: [
                     new GetFeatureInfoFormat('json')
                 ]
             });
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            }).then(function () {
+                Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                     expect(url).toContain('GetFeatureInfo');
 
                     if (url.indexOf('json') >= 0) {
@@ -1142,14 +1144,14 @@ defineSuite([
                     }
                 };
 
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (features) {
                     expect(features.length).toBe(0);
-                }).otherwise(function() {
+                }).otherwise(function () {
                 });
             });
         });
 
-        it('uses custom GetFeatureInfo handling function if specified', function() {
+        it('uses custom GetFeatureInfo handling function if specified', function () {
             function fooProcessor(response) {
                 var json = JSON.parse(response);
                 expect(json.custom).toBe(true);
@@ -1159,17 +1161,17 @@ defineSuite([
             }
 
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer',
-                getFeatureInfoFormats : [
+                url: 'made/up/wms/server',
+                layers: 'someLayer',
+                getFeatureInfoFormats: [
                     new GetFeatureInfoFormat('foo', 'application/foo', fooProcessor)
                 ]
             });
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            }).then(function () {
+                Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                     expect(url).toContain('GetFeatureInfo');
 
                     if (url.indexOf(encodeURIComponent('application/foo')) < 0) {
@@ -1179,20 +1181,20 @@ defineSuite([
                     return Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-Custom.json', responseType, method, data, headers, deferred, overrideMimeType);
                 };
 
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (features) {
                     expect(features.length).toBe(1);
                     expect(features[0].name).toEqual('Foo processed!');
                 });
             });
         });
 
-        it('works with HTML response', function() {
+        it('works with HTML response', function () {
             var provider = new WebMapServiceImageryProvider({
-                url : 'made/up/wms/server',
-                layers : 'someLayer'
+                url: 'made/up/wms/server',
+                layers: 'someLayer'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 if (url.indexOf(encodeURIComponent('text/html')) < 0) {
                     deferred.reject();
@@ -1200,10 +1202,10 @@ defineSuite([
                 Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo.html', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
-            return pollToPromise(function() {
+            return pollToPromise(function () {
                 return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
+            }).then(function () {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (pickResult) {
                     expect(pickResult.length).toBe(1);
 
                     var firstResult = pickResult[0];
@@ -1213,11 +1215,13 @@ defineSuite([
                 });
             });
         });
+    });
 
+    describe('verifyClockTimes', function() {
         it('requires clock if times is specified', function() {
             function createWithoutClock() {
                 return new WebMapServiceImageryProvider({
-                    layer : 'someLayer',
+                    layers : 'someLayer',
                     url : 'http://wms.invalid/',
                     times : new TimeIntervalCollection()
                 });
@@ -1241,7 +1245,7 @@ defineSuite([
             });
 
             var provider = new WebMapServiceImageryProvider({
-                layer : 'someLayer',
+                layers : 'someLayer',
                 style : 'someStyle',
                 url : 'http://wms.invalid/',
                 clock : clock,
@@ -1292,7 +1296,7 @@ defineSuite([
             });
 
             var provider = new WebMapServiceImageryProvider({
-                layer : 'someLayer',
+                layers : 'someLayer',
                 style : 'someStyle',
                 url : 'http://wms.invalid/',
                 clock : clock,
@@ -1353,7 +1357,7 @@ defineSuite([
             };
 
             var provider = new WebMapServiceImageryProvider({
-                layer : 'someLayer',
+                layers : 'someLayer',
                 style : 'someStyle',
                 url : 'http://wms.invalid/',
                 clock : clock,
