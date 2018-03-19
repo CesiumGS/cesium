@@ -417,7 +417,7 @@ defineSuite([
         expect(display._groundPrimitives.length).toBe(1);
     });
 
-    it('re-orders primitives on dataSource moved', function() {
+    it('raises primitives on dataSource raise', function() {
         var source1 = new MockDataSource();
         var source2 = new MockDataSource();
         var source3 = new MockDataSource();
@@ -432,32 +432,118 @@ defineSuite([
         dataSourceCollection.add(source2);
         dataSourceCollection.add(source3);
 
-        expect(display._primitives.get(1)).toBe(source1._primitives);
-        expect(display._primitives.get(2)).toBe(source2._primitives);
-        expect(display._primitives.get(3)).toBe(source3._primitives);
-
         dataSourceCollection.raise(source1);
 
         expect(display._primitives.get(1)).toBe(source2._primitives);
         expect(display._primitives.get(2)).toBe(source1._primitives);
         expect(display._primitives.get(3)).toBe(source3._primitives);
+    });
 
-        dataSourceCollection.lower(source1);
+    it('lowers primitives on dataSource lower', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
+
+        dataSourceCollection.lower(source3);
 
         expect(display._primitives.get(1)).toBe(source1._primitives);
-        expect(display._primitives.get(2)).toBe(source2._primitives);
-        expect(display._primitives.get(3)).toBe(source3._primitives);
+        expect(display._primitives.get(2)).toBe(source3._primitives);
+        expect(display._primitives.get(3)).toBe(source2._primitives);
+    });
+
+    it('raises primitives to top on dataSource raiseToTop', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
 
         dataSourceCollection.raiseToTop(source1);
 
         expect(display._primitives.get(1)).toBe(source2._primitives);
         expect(display._primitives.get(2)).toBe(source3._primitives);
         expect(display._primitives.get(3)).toBe(source1._primitives);
+    });
 
-        dataSourceCollection.lowerToBottom(source1);
+    it('lowers primitives to bottom on dataSource lowerToBottom', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
 
-        expect(display._primitives.get(1)).toBe(source1._primitives);
-        expect(display._primitives.get(2)).toBe(source2._primitives);
-        expect(display._primitives.get(3)).toBe(source3._primitives);
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
+
+        dataSourceCollection.lowerToBottom(source3);
+
+        expect(display._primitives.get(1)).toBe(source3._primitives);
+        expect(display._primitives.get(2)).toBe(source1._primitives);
+        expect(display._primitives.get(3)).toBe(source2._primitives);
+    });
+
+    it('adds primitives to scene when dataSource is added to the collection', function() {
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        expect(scene.primitives.contains(display._primitives)).toBe(false);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(false);
+
+        dataSourceCollection.add(new MockDataSource());
+
+        expect(scene.primitives.contains(display._primitives)).toBe(true);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
+    });
+
+    it('adds primitives to scene if dataSourceCollection is not empty', function() {
+        dataSourceCollection.add(new MockDataSource());
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        expect(scene.primitives.contains(display._primitives)).toBe(true);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
+    });
+
+    it('adds primitives to the scene when entities are added to the default dataSource', function() {
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        expect(scene.primitives.contains(display._primitives)).toBe(false);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(false);
+
+        display.defaultDataSource.entities.add(new Entity());
+
+        expect(scene.primitives.contains(display._primitives)).toBe(true);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
     });
 }, 'WebGL');

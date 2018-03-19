@@ -71,9 +71,20 @@ define([
 
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
-        this._primitives = scene.primitives.add(new PrimitiveCollection());
-        this._groundPrimitives = scene.primitives.add(new PrimitiveCollection());
         this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
+
+        var primitivesAdded = false;
+        var primitives = new PrimitiveCollection();
+        var groundPrimitives = new PrimitiveCollection();
+
+        if (dataSourceCollection.length > 0) {
+            scene.primitives.add(primitives);
+            scene.groundPrimitives.add(groundPrimitives);
+            primitivesAdded = true;
+        }
+
+        this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
@@ -82,6 +93,25 @@ define([
         var defaultDataSource = new CustomDataSource();
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
+
+        var removeDefaultDataSoureListener;
+        var removeDataSourceCollectionListener;
+        if (!primitivesAdded) {
+            var that = this;
+            var addPrimitives = function() {
+                scene.primitives.add(primitives);
+                scene.groundPrimitives.add(groundPrimitives);
+                removeDefaultDataSoureListener();
+                removeDataSourceCollectionListener();
+                that._removeDefaultDataSoureListener = undefined;
+                that._removeDataSourceCollectionListener = undefined;
+            };
+            removeDefaultDataSoureListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
+            removeDataSourceCollectionListener = dataSourceCollection.dataSourceAdded.addEventListener(addPrimitives);
+        }
+
+        this._removeDefaultDataSoureListener = removeDefaultDataSoureListener;
+        this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
 
         this._ready = false;
     }
@@ -190,8 +220,13 @@ define([
         }
         this._onDataSourceRemoved(undefined, this._defaultDataSource);
 
-        this._scene.primitives.remove(this._primitives);
-        this._scene.groundPrimitives.remove(this._groundPrimitives);
+        if (defined(this._removeDefaultDataSoureListener)) {
+            this._removeDefaultDataSoureListener();
+            this._removeDataSourceCollectionListener();
+        } else {
+            this._scene.primitives.remove(this._primitives);
+            this._scene.groundPrimitives.remove(this._groundPrimitives);
+        }
 
         return destroyObject(this);
     };
