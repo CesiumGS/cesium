@@ -653,6 +653,7 @@ define([
         };
     }
 
+    /*
     var scratchEnuToFixedMatrix = new Matrix4();
     var scratchFixedToEnuMatrix = new Matrix4();
     var scratchRotationMatrix = new Matrix3();
@@ -668,9 +669,18 @@ define([
         for (i = 0; i < 4; ++i) {
             Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
         }
+
+        // get the AABB of the entire OBB. This is a very conservative bound.
         scratchRectanglePoints[0].x += semiMajorAxis;
-        scratchRectanglePoints[1].x -= semiMajorAxis;
+        scratchRectanglePoints[0].y += semiMinorAxis;
+
+        scratchRectanglePoints[1].x += semiMajorAxis;
+        scratchRectanglePoints[1].y -= semiMinorAxis;
+
+        scratchRectanglePoints[2].x -= semiMajorAxis;
         scratchRectanglePoints[2].y += semiMinorAxis;
+
+        scratchRectanglePoints[3].x -= semiMajorAxis;
         scratchRectanglePoints[3].y -= semiMinorAxis;
 
         Matrix3.fromRotationZ(rotation, scratchRotationMatrix);
@@ -678,6 +688,47 @@ define([
             // Apply the rotation
             Matrix3.multiplyByVector(scratchRotationMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
 
+            // Convert back to fixed and then to cartographic
+            Matrix4.multiplyByPoint(scratchEnuToFixedMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
+            ellipsoid.cartesianToCartographic(scratchRectanglePoints[i], scratchCartographicPoints[i]);
+        }
+
+        return Rectangle.fromCartographicArray(scratchCartographicPoints);
+    }*/
+
+
+    var scratchEnuToFixedMatrix = new Matrix4();
+    var scratchRotationMatrix = new Matrix3();
+    var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    var scratchCartographicPoints = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
+    var semiMajorVectorScratch = new Cartesian2();
+    var semiMinorVectorScratch = new Cartesian2();
+    function computeRectangle(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
+        Transforms.eastNorthUpToFixedFrame(center, ellipsoid, scratchEnuToFixedMatrix);
+
+        // Find the 4 extreme points of the ellipse in ENU
+        var i;
+        for (i = 0; i < 4; ++i) {
+            Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
+        }
+
+        var semiMajorVector = semiMajorVectorScratch;
+        semiMajorVector.x = semiMajorAxis * Math.sin(rotation + CesiumMath.PI_OVER_TWO);
+        semiMajorVector.y = semiMajorAxis * Math.cos(rotation + CesiumMath.PI_OVER_TWO);
+
+        var semiMinorVector = semiMinorVectorScratch;
+        semiMinorVector.x = semiMinorAxis * Math.sin(rotation);
+        semiMinorVector.y = semiMinorAxis * Math.cos(rotation);
+
+        var horizontalHalfWidth = Math.sqrt(semiMinorVector.x * semiMinorVector.x + semiMajorVector.x * semiMajorVector.x);
+        var verticalHalfWidth = Math.sqrt(semiMinorVector.y * semiMinorVector.y + semiMajorVector.y * semiMajorVector.y);
+
+        scratchRectanglePoints[0].x += horizontalHalfWidth;
+        scratchRectanglePoints[1].x -= horizontalHalfWidth;
+        scratchRectanglePoints[2].y += verticalHalfWidth;
+        scratchRectanglePoints[3].y -= verticalHalfWidth;
+
+        for (i = 0; i < 4; ++i) {
             // Convert back to fixed and then to cartographic
             Matrix4.multiplyByPoint(scratchEnuToFixedMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
             ellipsoid.cartesianToCartographic(scratchRectanglePoints[i], scratchCartographicPoints[i]);
