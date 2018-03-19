@@ -13,8 +13,8 @@ define([
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         './GetFeatureInfoFormat',
-        './UrlTemplateImageryProvider',
-        '../Scene/TimeDynamicImagery'
+        './TimeDynamicImagery',
+        './UrlTemplateImageryProvider'
     ], function(
         combine,
         defaultValue,
@@ -30,8 +30,8 @@ define([
         WebMercatorTilingScheme,
         Uri,
         GetFeatureInfoFormat,
-        UrlTemplateImageryProvider,
-        TimeDynamicImagery) {
+        TimeDynamicImagery,
+        UrlTemplateImageryProvider        ) {
     'use strict';
 
     /**
@@ -210,15 +210,23 @@ define([
         var dynamicIntervalData = defined(interval) ? interval.data : undefined;
         var resource = imageryProvider._tileProvider._resource; // We actually want to set the time parameter within the tile provider.
         var parameters = {};
-
+        var keys = [];
         if (defined(dynamicIntervalData)) {
-            if (!isNaN(dynamicIntervalData)){
-                parameters['time'] = interval.start.toString();
-            } else {
-                Object.keys(dynamicIntervalData).forEach(function(key,index) {
-                    parameters[key] = dynamicIntervalData[key];
-                });
+            if (dynamicIntervalData instanceof Object){
+                try {
+                    Object.keys(dynamicIntervalData).forEach(function (key, index) {
+                        parameters[key] = dynamicIntervalData[key];
+                        keys.push(key.toLowerCase());
+                    });
+                } catch (err){
+                    // Warn the user, this may not be a problem
+                    console.warn('Data from interval has problems.', err);
+                }
             }
+        }
+        if (!('time' in keys)){
+            // Get the time from the clock if a value was not provided in the data from the interval.
+            parameters['time'] = imageryProvider.clock.currentTime;
         }
         resource.setQueryParameters(parameters);
 

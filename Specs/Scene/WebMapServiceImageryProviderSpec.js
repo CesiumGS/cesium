@@ -1389,5 +1389,52 @@ defineSuite([
                     expect(calls[1].returnValue).toBeDefined();
                 });
             });
+
+        it('Data in request comes from the time interval collection', function() {
+            var times = TimeIntervalCollection.fromIso8601({
+                iso8601: '2017-04-26/2017-04-30/P1D',
+                dataCallback: function(interval, index) {
+                    return {
+                        Time: JulianDate.toIso8601(interval.start),
+                        Test: 'testValue'
+                    };
+                }
+            });
+            var clock = new Clock({
+                currentTime : JulianDate.fromIso8601('2017-04-26'),
+                clockStep : ClockStep.TICK_DEPENDENT,
+                shouldAnimate : false
+            });
+
+            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var provider = new WebMapServiceImageryProvider({
+                layers : 'someLayer',
+                style : 'someStyle',
+                url : 'http://wms.invalid/',
+                clock : clock,
+                times : times
+            });
+
+            provider._reload = jasmine.createSpy();
+            spyOn(provider._timeDynamicImagery, 'getFromCache').and.callThrough();
+
+            return pollToPromise(function() {
+                return provider.ready;
+            })
+                .then(function() {
+                    return provider.requestImage(0, 0, 0, new Request());
+                })
+                .then(function() {
+                    var queryParameters = provider._tileProvider._resource.queryParameters;
+                    expect(queryParameters.Time).toEqual('2017-04-26T00:00:00Z');
+                    expect(queryParameters.Test).toEqual('testValue');
+
+                });
+            });
+
+
         });
 });
