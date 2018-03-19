@@ -1743,7 +1743,7 @@ define([
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
 
-         // Use bufferView created at runtime
+        // Use bufferView created at runtime
         if (!defined(bufferView)) {
             bufferView = loadResources.createdBufferViews[bufferViewId];
         }
