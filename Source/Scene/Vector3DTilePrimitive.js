@@ -1042,9 +1042,8 @@ define([
         var commandList = frameState.commandList;
         var commandLength = commands.length;
         var i;
-        var command;
         for (i = 0; i < commandLength; ++i) {
-            command = commands[i];
+            var command = commands[i];
             command.pass = pass;
             commandList.push(command);
         }
@@ -1055,9 +1054,7 @@ define([
 
         commandLength = commandsIgnoreShow.length;
         for (i = 0; i < commandLength; ++i) {
-            command = commandsIgnoreShow[i];
-            command.pass = pass;
-            commandList.push(command);
+            commandList.push(commandsIgnoreShow[i]);
         }
     }
 
