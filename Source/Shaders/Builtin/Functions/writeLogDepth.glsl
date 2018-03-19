@@ -20,7 +20,11 @@ void czm_writeLogDepth(float logZ)
 {
 #if defined(GL_EXT_frag_depth) && defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)
     float halfLogFarDistance = czm_logFarDistance * 0.5;
-    gl_FragDepthEXT = log2(logZ) * halfLogFarDistance;
+    float depth = log2(logZ);
+    if (depth < log2(czm_currentFrustum.x)) {
+        discard;
+    }
+    gl_FragDepthEXT = depth * halfLogFarDistance;
 #endif
 }
 

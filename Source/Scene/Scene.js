@@ -705,8 +705,9 @@ define([
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
+        this.logarithmicDepthFarToNearRatio = 1000000000.0;
         if (this._logDepthBuffer) {
-            this._camera.frustum.near = 1.0;
+            this._camera.frustum.near = 0.1;
             this._camera.frustum.far = 10000000000.0;
         }
 

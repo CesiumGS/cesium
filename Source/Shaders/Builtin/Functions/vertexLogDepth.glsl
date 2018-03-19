@@ -4,7 +4,7 @@ varying vec3 v_logPositionEC;
 #endif
 
 void czm_updatePositionDepth() {
-#ifdef LOG_DEPTH
+#if defined(LOG_DEPTH) && !defined(DISABLE_GL_POSITION_LOG_DEPTH)
     v_logPositionEC = (czm_inverseProjection * gl_Position).xyz;
 
     gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * czm_logFarDistance - 1.0;
