@@ -369,4 +369,101 @@ defineSuite([
         expect(creditDisplay._cesiumCreditContainer.childNodes.length).toBe(1);
         expect(creditDisplay._cesiumCreditContainer.childNodes[0]).toBe(CreditDisplay.cesiumCredit.element);
     });
+
+    // Deprecated specs below, remove for Cesium 1.46
+    it('credit display displays text credit', function() {
+        creditDisplay = new CreditDisplay(container);
+        var credit = new Credit({
+            text: 'credit1',
+            showOnScreen: true
+        });
+        beginFrame(creditDisplay);
+        creditDisplay.addCredit(credit);
+        creditDisplay.endFrame();
+        expect(container.childNodes.length).toEqual(3);
+        var creditContainer = container.childNodes[1];
+        expect(creditContainer.childNodes.length).toEqual(1);
+        expect(creditContainer.childNodes[0].innerHTML).toEqual('<span>credit1</span>');
+    });
+
+    it('credit display displays image credit', function() {
+        creditDisplay = new CreditDisplay(container);
+        var imgSrc = '/path/to/image.png';
+        var credit = new Credit({
+            imageUrl: imgSrc,
+            showOnScreen: true
+        });
+        beginFrame(creditDisplay);
+        creditDisplay.addCredit(credit);
+        creditDisplay.endFrame();
+
+        var creditContainer = container.childNodes[1];
+        expect(creditContainer.childNodes.length).toEqual(1);
+        var creditSpan = creditContainer.childNodes[0];
+        expect(creditSpan.childNodes.length).toEqual(1);
+        expect(creditSpan.childNodes[0].childNodes[0].src).toContain(imgSrc);
+    });
+
+    it('credit display displays hyperlink credit', function() {
+        creditDisplay = new CreditDisplay(container);
+        var link = 'http://cesiumjs.org/';
+        var credit = new Credit({
+            link: link,
+            showOnScreen: true
+        });
+        beginFrame(creditDisplay);
+        creditDisplay.addCredit(credit);
+        creditDisplay.endFrame();
+
+        var creditContainer = container.childNodes[1];
+        expect(creditContainer.childNodes.length).toEqual(1);
+        var creditSpan = creditContainer.childNodes[0];
+        expect(creditSpan.childNodes.length).toEqual(1);
+        expect(creditSpan.childNodes[0].childNodes[0].href).toEqual(link);
+        expect(creditSpan.childNodes[0].childNodes[0].innerHTML).toEqual(link);
+    });
+
+    it('credit display uses text as title for image credit', function() {
+        var imgSrc = '/path/to/image.png';
+        var credit1 = new Credit({
+            text: 'credit text',
+            imageUrl: imgSrc,
+            showOnScreen: true
+        });
+        creditDisplay = new CreditDisplay(container);
+        beginFrame(creditDisplay);
+        creditDisplay.addCredit(credit1);
+        creditDisplay.endFrame();
+
+        var creditContainer = container.childNodes[1];
+        expect(creditContainer.childNodes.length).toEqual(1);
+        var creditSpan = creditContainer.childNodes[0];
+        expect(creditSpan.childNodes.length).toEqual(1);
+        creditSpan = creditSpan.childNodes[0];
+        expect(creditSpan.childNodes[0].src).toContain(imgSrc);
+        expect(creditSpan.childNodes[0].alt).toEqual('credit text');
+        expect(creditSpan.childNodes[0].title).toEqual('credit text');
+    });
+
+    it('credit display creates image credit with hyperlink', function() {
+        var imgSrc = '/path/to/image.png';
+        var credit1 = new Credit({
+            imageUrl: imgSrc,
+            link: 'http://link.com',
+            showOnScreen: true
+        });
+        creditDisplay = new CreditDisplay(container);
+        beginFrame(creditDisplay);
+        creditDisplay.addCredit(credit1);
+        creditDisplay.endFrame();
+
+        var creditContainer = container.childNodes[1];
+        expect(creditContainer.childNodes.length).toEqual(1);
+        var creditSpan = creditContainer.childNodes[0];
+        expect(creditSpan.childNodes.length).toEqual(1);
+        var creditContent = creditSpan.childNodes[0].childNodes[0];
+        expect(creditContent.href).toContain('link.com');
+        expect(creditContent.childNodes.length).toEqual(1);
+        expect(creditContent.childNodes[0].src).toContain(imgSrc);
+    });
 });

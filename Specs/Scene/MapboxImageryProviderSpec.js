@@ -242,7 +242,7 @@ defineSuite([
             url : 'made/up/mapbox/server/',
             mapId: 'test-id'
         });
-        expect(provider.credit.html).toBe(MapboxImageryProvider._defaultCredit);
+        expect(provider.credit).toBe(MapboxImageryProvider._defaultCredit);
     });
 
     it('turns the supplied credit into a logo', function() {
