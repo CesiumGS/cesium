@@ -1,14 +1,19 @@
 defineSuite([
         'Scene/WebMapServiceImageryProvider',
         'Core/Cartographic',
+        'Core/Clock',
+        'Core/ClockStep',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
+        'Core/JulianDate',
         'Core/Math',
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/RequestState',
         'Core/Resource',
+        'Core/TimeIntervalCollection',
         'Core/WebMercatorTilingScheme',
         'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
@@ -21,14 +26,19 @@ defineSuite([
     ], function(
         WebMapServiceImageryProvider,
         Cartographic,
+        Clock,
+        ClockStep,
         DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
+        JulianDate,
         CesiumMath,
         queryToObject,
         Rectangle,
         RequestScheduler,
+        RequestState,
         Resource,
+        TimeIntervalCollection,
         WebMercatorTilingScheme,
         GetFeatureInfoFormat,
         Imagery,
@@ -1203,5 +1213,177 @@ defineSuite([
                 });
             });
         });
-    });
+
+        it('requires clock if times is specified', function() {
+            function createWithoutClock() {
+                return new WebMapServiceImageryProvider({
+                    layer : 'someLayer',
+                    url : 'http://wms.invalid/',
+                    times : new TimeIntervalCollection()
+                });
+            }
+
+            expect(createWithoutClock).toThrowDeveloperError();
+        });
+
+        it('tiles preload on requestImage as we approach the next time interval', function() {
+            var times = TimeIntervalCollection.fromIso8601({
+                iso8601: '2017-04-26/2017-04-30/P1D',
+                dataCallback: function(interval, index) {
+                    return {
+                        Time: JulianDate.toIso8601(interval.start)
+                    };
+                }
+            });
+            var clock = new Clock({
+                currentTime : JulianDate.fromIso8601('2017-04-26'),
+                shouldAnimate : true
+            });
+
+            var provider = new WebMapServiceImageryProvider({
+                layer : 'someLayer',
+                style : 'someStyle',
+                url : 'http://wms.invalid/',
+                clock : clock,
+                times : times
+            });
+
+            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var entry;
+            return pollToPromise(function() {
+                return provider.ready;
+            })
+                .then(function() {
+                    clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:56Z');
+                    return provider.requestImage(0, 0, 0, new Request());
+                })
+                .then(function() {
+                    RequestScheduler.update();
+
+                    // Test tile 0,0,0 was prefetched
+                    var cache = provider._timeDynamicImagery._tileCache;
+                    expect(cache['1']).toBeDefined();
+                    entry = cache['1']['0-0-0'];
+                    expect(entry).toBeDefined();
+                    expect(entry.promise).toBeDefined();
+                    return entry.promise;
+                })
+                .then(function() {
+                    expect(entry.request).toBeDefined();
+                    expect(entry.request.state).toEqual(RequestState.RECEIVED);
+                });
+        });
+
+        it('tiles preload onTick event as we approach the next time interval', function() {
+            var times = TimeIntervalCollection.fromIso8601({
+                iso8601: '2017-04-26/2017-04-30/P1D',
+                dataCallback: function(interval, index) {
+                    return {
+                        Time: JulianDate.toIso8601(interval.start)
+                    };
+                }
+            });
+            var clock = new Clock({
+                currentTime : JulianDate.fromIso8601('2017-04-26'),
+                shouldAnimate : true
+            });
+
+            var provider = new WebMapServiceImageryProvider({
+                layer : 'someLayer',
+                style : 'someStyle',
+                url : 'http://wms.invalid/',
+                clock : clock,
+                times : times
+            });
+
+            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var entry;
+            return pollToPromise(function() {
+                return provider.ready;
+            })
+                .then(function() {
+                    return provider.requestImage(0, 0, 0, new Request());
+                })
+                .then(function() {
+                    // Test tile 0,0,0 wasn't prefetched
+                    var cache = provider._timeDynamicImagery._tileCache;
+                    expect(cache['1']).toBeUndefined();
+
+                    // Update the clock and process any requests
+                    clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:55Z');
+                    clock.tick();
+                    RequestScheduler.update();
+
+                    // Test tile 0,0,0 was prefetched
+                    expect(cache['1']).toBeDefined();
+                    entry = cache['1']['0-0-0'];
+                    expect(entry).toBeDefined();
+                    expect(entry.promise).toBeDefined();
+                    return entry.promise;
+                })
+                .then(function() {
+                    expect(entry.request).toBeDefined();
+                    expect(entry.request.state).toEqual(RequestState.RECEIVED);
+                });
+        });
+
+        it('reload is called once we cross into next interval', function() {
+            var times = TimeIntervalCollection.fromIso8601({
+                iso8601: '2017-04-26/2017-04-30/P1D',
+                dataCallback: function(interval, index) {
+                    return {
+                        Time: JulianDate.toIso8601(interval.start)
+                    };
+                }
+            });
+            var clock = new Clock({
+                currentTime : JulianDate.fromIso8601('2017-04-26'),
+                clockStep : ClockStep.TICK_DEPENDENT,
+                shouldAnimate : true
+            });
+
+            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            var provider = new WebMapServiceImageryProvider({
+                layer : 'someLayer',
+                style : 'someStyle',
+                url : 'http://wms.invalid/',
+                clock : clock,
+                times : times
+            });
+
+            provider._reload = jasmine.createSpy();
+            spyOn(provider._timeDynamicImagery, 'getFromCache').and.callThrough();
+
+            return pollToPromise(function() {
+                return provider.ready;
+            })
+                .then(function() {
+                    clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:59Z');
+                    return provider.requestImage(0, 0, 0, new Request());
+                })
+                .then(function() {
+                    RequestScheduler.update();
+                    clock.tick();
+
+                    return provider.requestImage(0, 0, 0, new Request());
+                })
+                .then(function() {
+                    expect(provider._reload.calls.count()).toEqual(1);
+
+                    var calls = provider._timeDynamicImagery.getFromCache.calls.all();
+                    expect(calls.length).toBe(2);
+                    expect(calls[0].returnValue).toBeUndefined();
+                    expect(calls[1].returnValue).toBeDefined();
+                });
+            });
+        });
 });

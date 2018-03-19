@@ -207,25 +207,23 @@ define([
     }
 
     function requestImage(imageryProvider, col, row, level, request, interval) {
-        let dynamicIntervalData = defined(interval) ? interval.data : undefined;
-
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
         var resource = imageryProvider._tileProvider._resource; // We actually want to set the time parameter within the tile provider.
-
         var parameters = {};
+
         if (defined(dynamicIntervalData)) {
             if (!isNaN(dynamicIntervalData)){
                 parameters['time'] = interval.start.toString();
             } else {
-                for (var key in dynamicIntervalData) {
+                Object.keys(dynamicIntervalData).forEach(function(key,index) {
                     parameters[key] = dynamicIntervalData[key];
-                }
+                });
             }
         }
         resource.setQueryParameters(parameters);
 
         return imageryProvider._tileProvider.requestImage(col, row, level, request);
     }
-
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**

@@ -15,6 +15,7 @@ Change Log
   * Added a `ClippingPlane` object to be used with `ClippingPlaneCollection`.
   * Added 3D Tiles use-case to Terrain Clipping Planes Sandcastle
 * Updated `WebMapServiceImageryProvider` so it can take an srs or crs string to pass to the resource query parameters based on the WMS version. [#6223](https://github.com/AnalyticalGraphicsInc/cesium/issues/6223)
+* Updated `WebMapServiceImageryProvider` so it can optionally take a clock and times and pass time as a parameter with the requests for image tiles.
 * Added additional query parameter options to the CesiumViewer demo application:
   * sourceType specifies the type of data source if the URL doesn't have a known file extension.
   * flyTo=false optionally disables the automatic flyTo after loading the data source.
@@ -24,6 +25,7 @@ Change Log
 * Fixed support of glTF-supplied tangent vectors. [#6302](https://github.com/AnalyticalGraphicsInc/cesium/pull/6302)
 * Fixed improper zoom during model load failure. [#6305](https://github.com/AnalyticalGraphicsInc/cesium/pull/6305)
 * Fixed model loading failure when containing unused materials. [6315](https://github.com/AnalyticalGraphicsInc/cesium/pull/6315)
+* Fixed WMS-T (time) support in WebMapServiceImageryProvider [#2581](https://github.com/AnalyticalGraphicsInc/cesium/issues/2581)
 
 ### 1.43 - 2018-03-01
 
