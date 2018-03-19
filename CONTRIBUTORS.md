@@ -171,3 +171,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Nacho Carnicero](https://github.com/nacho-carnicero)
 * [Y.Selim Abidin](https://github.com/SelimAbidin)
 * [Tamar Cohen](https://github.com/tamarmot)
+* [Stephen Wiseman](https://github.com/srwiseman)
+* [Gabriel Macario](https://github.com/gabriel-macario)

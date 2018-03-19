@@ -1,7 +1,6 @@
 define([
         './Cartesian3',
         './Cartographic',
-        './Math',
         './Check',
         './defaultValue',
         './defined',
@@ -9,13 +8,13 @@ define([
         './GeographicProjection',
         './Intersect',
         './Interval',
+        './Math',
         './Matrix3',
         './Matrix4',
         './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
-        CesiumMath,
         Check,
         defaultValue,
         defined,
@@ -23,6 +22,7 @@ define([
         GeographicProjection,
         Intersect,
         Interval,
+        CesiumMath,
         Matrix3,
         Matrix4,
         Rectangle) {

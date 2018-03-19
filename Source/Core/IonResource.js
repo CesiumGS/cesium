@@ -1,4 +1,5 @@
 define([
+        '../ThirdParty/when',
         './Check',
         './Credit',
         './defaultValue',
@@ -6,9 +7,9 @@ define([
         './defineProperties',
         './Ion',
         './Resource',
-        './RuntimeError',
-        '../ThirdParty/when'
+        './RuntimeError'
     ], function(
+        when,
         Check,
         Credit,
         defaultValue,
@@ -16,8 +17,7 @@ define([
         defineProperties,
         Ion,
         Resource,
-        RuntimeError,
-        when) {
+        RuntimeError) {
 'use strict';
 
     /**

@@ -1,17 +1,17 @@
 defineSuite([
-    'Core/IonResource',
-    'Core/Ion',
-    'Core/RequestErrorEvent',
-    'Core/Resource',
-    'Core/RuntimeError',
-    'ThirdParty/when'
-], function(
-    IonResource,
-    Ion,
-    RequestErrorEvent,
-    Resource,
-    RuntimeError,
-    when) {
+        'Core/IonResource',
+        'Core/Ion',
+        'Core/RequestErrorEvent',
+        'Core/Resource',
+        'Core/RuntimeError',
+        'ThirdParty/when'
+    ], function(
+        IonResource,
+        Ion,
+        RequestErrorEvent,
+        Resource,
+        RuntimeError,
+        when) {
 'use strict';
 
     var assetId = 123890213;

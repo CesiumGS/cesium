@@ -1,13 +1,13 @@
 defineSuite([
-    'DataSources/GeometryUpdater',
-    'DataSources/Entity',
-    'Scene/PrimitiveCollection',
-    'Specs/createScene'
-], function(
-    GeometryUpdater,
-    Entity,
-    PrimitiveCollection,
-    createScene) {
+        'DataSources/GeometryUpdater',
+        'DataSources/Entity',
+        'Scene/PrimitiveCollection',
+        'Specs/createScene'
+    ], function(
+        GeometryUpdater,
+        Entity,
+        PrimitiveCollection,
+        createScene) {
     'use strict';
 
     var scene;

@@ -1,7 +1,6 @@
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
-        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -29,7 +28,6 @@ define([
     ], function(
         AttributeCompression,
         Cartesian3,
-        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -511,23 +509,20 @@ define([
         this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
-        this._modelInstanceCollection.update(frameState);
 
-        // Update clipping planes
-        var tilesetClippingPlanes = this._tileset.clippingPlanes;
         var model = this._modelInstanceCollection._model;
-        var modelClippingPlanes = model.clippingPlanes;
-        if (defined(tilesetClippingPlanes)) {
-            if (!defined(modelClippingPlanes)) {
-                model.clippingPlanes = new ClippingPlaneCollection();
-                modelClippingPlanes = model.clippingPlanes;
-            }
 
-            tilesetClippingPlanes.clone(modelClippingPlanes);
-            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
-        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
-            modelClippingPlanes.enabled = false;
+        if (defined(model)) {
+            // Update for clipping planes
+            var tilesetClippingPlanes = this._tileset.clippingPlanes;
+            if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+                // Dereference the clipping planes from the model if they are irrelevant - saves on shading
+                // Link/Dereference directly to avoid ownership checks.
+                model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+            }
         }
+
+        this._modelInstanceCollection.update(frameState);
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;

@@ -605,8 +605,6 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     Vector3DTilePolylines.prototype.destroy = function() {

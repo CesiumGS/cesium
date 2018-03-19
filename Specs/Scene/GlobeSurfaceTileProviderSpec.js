@@ -2,7 +2,6 @@ defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/Credit',
         'Core/defined',
@@ -10,17 +9,19 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
         'Core/Intersect',
-        'Core/Plane',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
         'Renderer/RenderState',
         'Scene/BlendingState',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
         'Scene/ImagerySplitDirection',
+        'Scene/Model',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
@@ -32,7 +33,6 @@ defineSuite([
         GlobeSurfaceTileProvider,
         Cartesian3,
         CesiumTerrainProvider,
-        ClippingPlaneCollection,
         Color,
         Credit,
         defined,
@@ -40,17 +40,19 @@ defineSuite([
         EllipsoidTerrainProvider,
         GeographicProjection,
         Intersect,
-        Plane,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
         RenderState,
         BlendingState,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         ImagerySplitDirection,
+        Model,
         QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
@@ -759,7 +761,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10000.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10000.0);
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -790,7 +792,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -1000.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -1000.0);
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -825,8 +827,8 @@ defineSuite([
 
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -10000.0),
-                    new Plane(Cartesian3.UNIT_X, -1000.0)
+                    new ClippingPlane(Cartesian3.UNIT_Z, -10000.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, -1000.0)
                 ],
                 unionClippingRegions: true
             });
@@ -854,7 +856,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, -1000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, -1000000.0)
             ]
         });
 
@@ -872,7 +874,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 0.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 0.0)
             ]
         });
 
@@ -890,7 +892,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 10000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
         });
 
@@ -902,6 +904,37 @@ defineSuite([
             expect(tile.isClipped).toBe(false);
             expect(scene.frameState.commandList.length).toBe(4);
         });
+    });
+
+    it('destroys attached ClippingPlaneCollections that have been detached', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var globe = scene.globe;
+        globe.clippingPlanes = clippingPlanes;
+        expect(clippingPlanes.isDestroyed()).toBe(false);
+
+        globe.clippingPlanes = undefined;
+        expect(clippingPlanes.isDestroyed()).toBe(true);
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to a Model', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var model = scene.primitives.add(Model.fromGltf({
+            url : './Data/Models/Box/CesiumBoxTest.gltf'
+        }));
+        model.clippingPlanes = clippingPlanes;
+        var globe = scene.globe;
+
+        expect(function() {
+            globe.clippingPlanes = clippingPlanes;
+        }).toThrowDeveloperError();
     });
 
 }, 'WebGL');

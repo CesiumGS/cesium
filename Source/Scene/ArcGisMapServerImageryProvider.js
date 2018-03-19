@@ -559,7 +559,6 @@ define([
         }
     });
 
-
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *

@@ -1,14 +1,13 @@
 define([
-        '../Core/defined',
-        '../Core/combine',
         '../Core/BoundingSphere',
+        '../Core/combine',
+        '../Core/defined',
         '../Core/EasingFunction'
     ], function(
-        defined,
-        combine,
         BoundingSphere,
-        EasingFunction
-    ) {
+        combine,
+        defined,
+        EasingFunction) {
     'use strict';
     /**
      * @alias KmlTourFlyTo
