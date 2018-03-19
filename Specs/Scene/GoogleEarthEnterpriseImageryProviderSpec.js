@@ -16,8 +16,8 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/when',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'ThirdParty/when'
     ], function(
         GoogleEarthEnterpriseImageryProvider,
         decodeGoogleEarthEnterpriseData,
@@ -36,8 +36,8 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        when,
-        Uri) {
+        Uri,
+        when) {
     'use strict';
 
     beforeEach(function() {

@@ -1,12 +1,12 @@
 define([
         '../ThirdParty/when',
-        './defined',
         './Check',
+        './defined',
         './LRUCache'
     ], function(
         when,
-        defined,
         Check,
+        defined,
         LRUCache) {
     'use strict';
 

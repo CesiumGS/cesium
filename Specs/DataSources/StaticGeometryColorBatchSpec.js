@@ -1,31 +1,31 @@
 defineSuite([
-    'DataSources/StaticGeometryColorBatch',
-    'Core/Cartesian3',
-    'Core/Color',
-    'Core/JulianDate',
-    'DataSources/CallbackProperty',
-    'DataSources/EllipseGeometryUpdater',
-    'DataSources/Entity',
-    'DataSources/PolylineGeometryUpdater',
-    'Scene/PerInstanceColorAppearance',
-    'Scene/PolylineColorAppearance',
-    'Scene/ShadowMode',
-    'Specs/createScene',
-    'Specs/pollToPromise'
-], function(
-    StaticGeometryColorBatch,
-    Cartesian3,
-    Color,
-    JulianDate,
-    CallbackProperty,
-    EllipseGeometryUpdater,
-    Entity,
-    PolylineGeometryUpdater,
-    PerInstanceColorAppearance,
-    PolylineColorAppearance,
-    ShadowMode,
-    createScene,
-    pollToPromise) {
+        'DataSources/StaticGeometryColorBatch',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/JulianDate',
+        'DataSources/CallbackProperty',
+        'DataSources/EllipseGeometryUpdater',
+        'DataSources/Entity',
+        'DataSources/PolylineGeometryUpdater',
+        'Scene/PerInstanceColorAppearance',
+        'Scene/PolylineColorAppearance',
+        'Scene/ShadowMode',
+        'Specs/createScene',
+        'Specs/pollToPromise'
+    ], function(
+        StaticGeometryColorBatch,
+        Cartesian3,
+        Color,
+        JulianDate,
+        CallbackProperty,
+        EllipseGeometryUpdater,
+        Entity,
+        PolylineGeometryUpdater,
+        PerInstanceColorAppearance,
+        PolylineColorAppearance,
+        ShadowMode,
+        createScene,
+        pollToPromise) {
     'use strict';
 
     var time = JulianDate.now();
