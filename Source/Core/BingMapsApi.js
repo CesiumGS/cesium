@@ -1,9 +1,9 @@
 define([
-    './Credit',
-    './defined'
-], function(
-    Credit,
-    defined) {
+        './Credit',
+        './defined'
+    ], function(
+        Credit,
+        defined) {
     'use strict';
 
     /**

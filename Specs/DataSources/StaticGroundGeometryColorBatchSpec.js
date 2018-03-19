@@ -1,27 +1,27 @@
 defineSuite([
-    'DataSources/StaticGroundGeometryColorBatch',
-    'Core/Color',
-    'Core/Cartesian3',
-    'Core/JulianDate',
-    'DataSources/CallbackProperty',
-    'DataSources/EllipseGeometryUpdater',
-    'DataSources/Entity',
-    'Scene/ClassificationType',
-    'Scene/GroundPrimitive',
-    'Specs/createScene',
-    'Specs/pollToPromise'
-], function(
-    StaticGroundGeometryColorBatch,
-    Color,
-    Cartesian3,
-    JulianDate,
-    CallbackProperty,
-    EllipseGeometryUpdater,
-    Entity,
-    ClassificationType,
-    GroundPrimitive,
-    createScene,
-    pollToPromise) {
+        'DataSources/StaticGroundGeometryColorBatch',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/JulianDate',
+        'DataSources/CallbackProperty',
+        'DataSources/EllipseGeometryUpdater',
+        'DataSources/Entity',
+        'Scene/ClassificationType',
+        'Scene/GroundPrimitive',
+        'Specs/createScene',
+        'Specs/pollToPromise'
+    ], function(
+        StaticGroundGeometryColorBatch,
+        Cartesian3,
+        Color,
+        JulianDate,
+        CallbackProperty,
+        EllipseGeometryUpdater,
+        Entity,
+        ClassificationType,
+        GroundPrimitive,
+        createScene,
+        pollToPromise) {
     'use strict';
 
     var time = JulianDate.now();

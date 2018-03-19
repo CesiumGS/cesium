@@ -1,13 +1,13 @@
 defineSuite([
-    'Core/Resource',
-    'Core/DefaultProxy',
-    'Core/Request',
-    'ThirdParty/when'
-], function(
-    Resource,
-    DefaultProxy,
-    Request,
-    when) {
+        'Core/Resource',
+        'Core/DefaultProxy',
+        'Core/Request',
+        'ThirdParty/when'
+    ], function(
+        Resource,
+        DefaultProxy,
+        Request,
+        when) {
     'use strict';
 
     it('Constructor sets correct properties', function() {

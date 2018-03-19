@@ -1,21 +1,21 @@
 define([
-    'Core/BoundingSphere',
-    'Core/JulianDate',
-    'Core/Math',
-    'DataSources/BoundingSphereState',
-    'DataSources/EllipsoidGeometryUpdater',
-    'Scene/PrimitiveCollection',
-    'Specs/createDynamicProperty',
-    'Specs/pollToPromise'
-], function(
-    BoundingSphere,
-    JulianDate,
-    CesiumMath,
-    BoundingSphereState,
-    EllipsoidGeometryUpdater,
-    PrimitiveCollection,
-    createDynamicProperty,
-    pollToPromise) {
+        'Core/BoundingSphere',
+        'Core/JulianDate',
+        'Core/Math',
+        'DataSources/BoundingSphereState',
+        'DataSources/EllipsoidGeometryUpdater',
+        'Scene/PrimitiveCollection',
+        'Specs/createDynamicProperty',
+        'Specs/pollToPromise'
+    ], function(
+        BoundingSphere,
+        JulianDate,
+        CesiumMath,
+        BoundingSphereState,
+        EllipsoidGeometryUpdater,
+        PrimitiveCollection,
+        createDynamicProperty,
+        pollToPromise) {
     'use strict';
 
     function createDynamicGeometryUpdaterSpecs(Updater, geometryPropertyName, createDynamicEntity, getScene) {
