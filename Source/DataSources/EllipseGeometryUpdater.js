@@ -172,9 +172,9 @@ define([
     };
 
     EllipseGeometryUpdater.prototype._isOnTerrain = function(entity, ellipse) {
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
+        //var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
 
-        return this._fillEnabled && !defined(ellipse.height) && !defined(ellipse.extrudedHeight) && isColorMaterial && GroundPrimitive.isSupported(this._scene);
+        return this._fillEnabled && !defined(ellipse.height) && !defined(ellipse.extrudedHeight) && GroundPrimitive.isSupported(this._scene); //&& isColorMaterial;
     };
 
     EllipseGeometryUpdater.prototype._isDynamic = function(entity, ellipse) {

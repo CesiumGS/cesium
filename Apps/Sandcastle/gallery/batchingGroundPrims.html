@@ -29,20 +29,24 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    selectionIndicator: false
+
+var worldTerrain = Cesium.createWorldTerrain({
+    requestWaterMask: true,
+    requestVertexNormals: true
 });
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    selectionIndicator: false,
+    terrainProvider: worldTerrain
+});
+/*
+viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
+var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
+*/
 var scene = viewer.scene;
 
 viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.copyGlobeDepth = true;
-/*
-var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask : true,
-    requestVertexNormals : true
-});
-viewer.terrainProvider = cesiumTerrainProviderMeshes;*/
 
 function offsetPositions(positions, degreeOffset) {
     positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
@@ -55,70 +59,34 @@ function offsetPositions(positions, degreeOffset) {
     return scene.globe.ellipsoid.cartographicArrayToCartesianArray(positions);
 }
 
-function asinRef(x) {
-    var negate = x < 0.0 ? -1.0 : 1.0;
-    x = Math.abs(x);
-    var ret = -0.0187293;
-    ret *= x;
-    ret += 0.0742610;
-    ret *= x;
-    ret -= 0.2121144;
-    ret *= x;
-    ret += 1.5707288;
-    ret = 3.14159265358979 * 0.5 - Math.sqrt(1.0 - x) * ret;
-    return ret - 2.0 * negate * ret;
-}
-
-function atan2Ref(y, x) {
-    var t0, t1, t2, t3, t4;
-
-    t3 = Math.abs(x);
-    t1 = Math.abs(y);
-    t0 = Math.max(t3, t1);
-    t1 = Math.min(t3, t1);
-    t3 = 1.0 / t0;
-    t3 = t1 * t3;
-
-    t4 = t3 * t3;
-    t0 =         - 0.013480470;
-    t0 = t0 * t4 + 0.057477314;
-    t0 = t0 * t4 - 0.121239071;
-    t0 = t0 * t4 + 0.195635925;
-    t0 = t0 * t4 - 0.332994597;
-    t0 = t0 * t4 + 0.999995630;
-    t3 = t0 * t3;
-
-    t3 = (Math.abs(y) > Math.abs(x)) ? 1.570796327 - t3 : t3;
-    t3 = (x < 0) ?  3.141592654 - t3 : t3;
-    t3 = (y < 0) ? -t3 : t3;
-
-    return t3;
-}
-
-var cartographicScratch = new Cesium.Cartographic();
-var cartesian3Scratch = new Cesium.Cartesian3();
-function latLongToSpherical(latitude, longitude, result) {
-    var carto = cartographicScratch;
-    carto.latitude = latitude;
-    carto.longitude = longitude;
-    carto.height = 0.0;
-
-    var cartesian = Cesium.Cartographic.toCartesian(carto, Cesium.Ellipsoid.WGS84, cartesian3Scratch);
-    var sphereNormal = Cesium.Cartesian3.normalize(cartesian, cartesian);
-
-    var sphereLatitude = asinRef(sphereNormal.z); // find a dress for the ball Sinderella
-    var sphereLongitude = atan2Ref(sphereNormal.y, sphereNormal.x); // the kitTans weep
-    result.x = Cesium.Math.toDegrees(sphereLongitude);
-    result.y = Cesium.Math.toDegrees(sphereLatitude);
-
-    return result;
-}
-
-
 var positions = [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4581158.5714175375),
                 new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
                 new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
                 new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)];
+
+var concavePositions = [
+    new Cesium.Cartesian3(-2353381.4891308164, -3747386.1222378365, 4577999.291515961),
+    new Cesium.Cartesian3(-2359513.937204245, -3743087.2343810294, 4578357.188560644),
+    new Cesium.Cartesian3(-2356102.0286082155, -3739921.552293276, 4582670.218770547),
+    new Cesium.Cartesian3(-2353889.0353209395, -3741183.2274413602, 4582776.909071608),
+    new Cesium.Cartesian3(-2355072.390487758, -3742865.615615464, 4580808.044684757),
+    new Cesium.Cartesian3(-2356109.6661414686, -3741994.0607898533, 4580985.489703348),
+    new Cesium.Cartesian3(-2357041.8328847606, -3743225.9693035223, 4579509.2148039425),
+    new Cesium.Cartesian3(-2354586.752280607, -3744890.9511893727, 4579411.591389144),
+    new Cesium.Cartesian3(-2353213.0268325945, -3743712.1202877173, 4581070.08828045),
+    new Cesium.Cartesian3(-2353637.930711704, -3743402.9513476435, 4581104.219550749),
+    new Cesium.Cartesian3(-2352875.095159641, -3742564.819171856, 4582173.540953957),
+    new Cesium.Cartesian3(-2350669.646050987, -3743751.6823160048, 4582334.8406995395)
+];
+
+// concave polygon
+var redPolygon1 = viewer.entities.add({
+    name : 'concave polygon on surface',
+    polygon : {
+        hierarchy : offsetPositions(concavePositions, 0.0),
+        material : '../images/Cesium_Logo_Color.jpg'
+    }
+});
 
 // polygons with non-overlapping extents seem to be batchable without problems
 /*
@@ -128,8 +96,8 @@ var redPolygon1 = viewer.entities.add({
         hierarchy : offsetPositions(positions, 0.0),
         material : Cesium.Color.RED.withAlpha(0.5)
     }
-});*/
-/*
+});
+
 var redPolygon2 = viewer.entities.add({
     name : 'Red polygon on surface',
     polygon : {
@@ -144,43 +112,62 @@ var redPolygon3 = viewer.entities.add({
         hierarchy : offsetPositions(positions, 0.01),
         material : Cesium.Color.BLUE.withAlpha(0.5)
     }
+});
+
+var redPolygon4 = viewer.entities.add({
+    name : 'Red polygon on surface',
+    polygon : {
+        hierarchy : offsetPositions(positions, 0.02),
+        material : '../images/Cesium_Logo_Color.jpg'
+    }
+});
+
+var redPolygon5 = viewer.entities.add({
+    name : 'Red polygon on surface',
+    polygon : {
+        hierarchy : offsetPositions(positions, 0.03),
+        material :
+        new Cesium.CheckerboardMaterialProperty({
+            evenColor : Cesium.Color.WHITE,
+            oddColor : Cesium.Color.BLACK,
+            repeat : new Cesium.Cartesian2(4, 4)
+        })
+    }
 });*/
 
-var rectangle = viewer.entities.add({
-    name : 'Red polygon on surface',
+// nearly overlapping rectangles over mt. st. helens
+/*
+var latitude = 46.1922;
+var longitude = -122.1934;
+
+viewer.entities.add({
     rectangle : {
-        coordinates : Cesium.Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01),
+        coordinates : Cesium.Rectangle.fromDegrees(longitude + 0.001, latitude + 0.001, longitude + 0.2, latitude + 0.2),
+        material : Cesium.Color.BLUE.withAlpha(0.5)
+    }
+});
+
+viewer.entities.add({
+    rectangle : {
+        coordinates : Cesium.Rectangle.fromDegrees(longitude - 0.2, latitude + 0.001, longitude, latitude + 0.2),
         material : Cesium.Color.GREEN.withAlpha(0.5)
     }
 });
 
-var rectangle1 = viewer.entities.add({
-    name : 'Red polygon on surface',
+viewer.entities.add({
     rectangle : {
-        coordinates : Cesium.Rectangle.fromDegrees(0.011, 0.011, 0.031, 0.031),
-        material : Cesium.Color.GREEN.withAlpha(0.5)
+        coordinates : Cesium.Rectangle.fromDegrees(longitude - 0.2, latitude - 0.2, longitude, latitude),
+        material : Cesium.Color.RED.withAlpha(0.5)
     }
 });
 
-var rectangle2 = viewer.entities.add({
-    name : 'Red polygon on surface',
+viewer.entities.add({
     rectangle : {
-        coordinates : Cesium.Rectangle.fromDegrees(-0.031, -0.031, -0.011, -0.011),
-        material : Cesium.Color.GREEN.withAlpha(0.5)
+        coordinates : Cesium.Rectangle.fromDegrees(longitude + 0.001, latitude - 0.2, longitude + 0.2, latitude),
+        material : Cesium.Color.YELLOW.withAlpha(0.5)
     }
 });
-
-// click the globe to see the cartographic position
-var leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-leftHandler.setInputAction(function(movement) {
-    var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
-    if (cartesian) {
-        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-        console.log(cartographic);
-        console.log(latLongToSpherical(cartographic.latitude, cartographic.longitude, new Cesium.Cartesian2()));
-    }
-}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
+*/
 var rightHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 rightHandler.setInputAction(function(movement) {
     var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
@@ -196,12 +183,25 @@ rightHandler.setInputAction(function(movement) {
         viewer.entities.add({
             name : lat + ' ' + long,
             rectangle : {
-                coordinates : Cesium.Rectangle.fromDegrees(long - 10.01, lat - 10.01, long + 10.01, lat + 10.01),
-                material : Cesium.Color.GREEN.withAlpha(0.5)
+                coordinates : Cesium.Rectangle.fromDegrees(long - 0.2, lat - 0.1, long + 0.2, lat + 0.1),
+                material :
+                new Cesium.CheckerboardMaterialProperty({
+                    evenColor : Cesium.Color.ORANGE,
+                    oddColor : Cesium.Color.YELLOW,
+                    repeat : new Cesium.Cartesian2(14, 14)
+                })
             }
         });
     }
 }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+var rightHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+rightHandler.setInputAction(function(movement) {
+    var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
+    if (cartesian) {
+        console.log('new Cesium.Cartesian3(' + cartesian.x + ', ' + cartesian.y + ', ' + cartesian.z + '),');
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 viewer.zoomTo(viewer.entities);
 

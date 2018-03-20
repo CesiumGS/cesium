@@ -26,6 +26,7 @@ define([
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
         './StaticGroundGeometryColorBatch',
+        './StaticGroundGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch',
         './WallGeometryUpdater'
     ], function(
@@ -56,6 +57,7 @@ define([
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
         StaticGroundGeometryColorBatch,
+        StaticGroundGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch,
         WallGeometryUpdater) {
     'use strict';
@@ -153,14 +155,16 @@ define([
 
         var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
         this._groundColorBatches = new Array(numberOfClassificationTypes);
+        this._groundMaterialBatches = new Array(numberOfClassificationTypes); // TODO: why is this?
 
         for (i = 0; i < numberOfClassificationTypes; ++i) {
-            this._groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+            this._groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, PerInstanceColorAppearance, i);
+            this._groundMaterialBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance, i);
         }
 
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, this._dynamicBatch);
+        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, this._groundMaterialBatches, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaterSets = new AssociativeArray();
@@ -372,7 +376,11 @@ define([
         if (updater.fillEnabled) {
             if (updater.onTerrain) {
                 var classificationType = updater.classificationTypeProperty.getValue(time);
-                this._groundColorBatches[classificationType].add(time, updater);
+                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                    this._groundColorBatches[classificationType].add(time, updater);
+                } else {
+                    this._groundMaterialBatches[classificationType].add(time, updater);
+                }
             } else if (updater.isClosed) {
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
                     this._closedColorBatches[shadows].add(time, updater);

@@ -6,7 +6,7 @@ uniform mat4 u_modifiedModelViewProjection;
 #else
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
-attribute vec4 color;
+//attribute vec4 color;
 attribute float batchId;
 #endif
 
@@ -17,8 +17,11 @@ uniform float u_globeMinimumAltitude;
 #endif
 
 #ifndef VECTOR_TILE
-varying vec4 v_color;
 varying vec4 v_sphericalExtents;
+#endif
+
+#ifdef PER_INSTANCE_COLOR
+varying vec4 v_color;
 #endif
 
 void main()
@@ -26,7 +29,11 @@ void main()
 #ifdef VECTOR_TILE
     gl_Position = czm_depthClampFarPlane(u_modifiedModelViewProjection * vec4(position, 1.0));
 #else
-    v_color = color;
+
+#ifdef PER_INSTANCE_COLOR
+    v_color = czm_batchTable_color(batchId);
+#endif
+
     v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);
 
     vec4 position = czm_computePosition();

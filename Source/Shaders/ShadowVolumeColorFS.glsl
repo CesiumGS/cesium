@@ -5,8 +5,11 @@
 #ifdef VECTOR_TILE
 uniform vec4 u_highlightColor;
 #else
-varying vec4 v_color;
 varying vec4 v_sphericalExtents;
+#endif
+
+#ifdef PER_INSTANCE_COLOR
+varying vec4 v_color;
 #endif
 
 float rez = 0.1;
@@ -47,19 +50,25 @@ float completelyFakeAsin(float x)
     return (x * x * x + x) * 0.78539816339;
 }
 
+vec3 getWorldPos(vec2 fragCoord) {
+    vec2 coords = fragCoord / czm_viewport.zw;
+    float depth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));
+    vec4 windowCoord = vec4(fragCoord, depth, 1.0);
+    vec4 eyeCoord = czm_windowToEyeCoordinates(windowCoord);
+    vec4 worldCoord4 = czm_inverseView * eyeCoord;
+    vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;
+    return worldCoord;
+}
+
 void main(void)
 {
 #ifdef VECTOR_TILE
     gl_FragColor = u_highlightColor;
 #else
-    vec2 coords = gl_FragCoord.xy / czm_viewport.zw;
-    float depth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));
-
-    vec4 windowCoord = vec4(gl_FragCoord.xy, depth, 1.0);
-    vec4 eyeCoord = czm_windowToEyeCoordinates(windowCoord);
-    vec4 worldCoord4 = czm_inverseView * eyeCoord;
-    vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;
-
+    #ifdef PER_INSTANCE_COLOR
+    gl_FragColor = v_color;
+    #else
+    vec3 worldCoord = getWorldPos(gl_FragCoord.xy);
     vec3 sphereNormal = normalize(worldCoord);
 
     float latitude = completelyFakeAsin(sphereNormal.z); // find a dress for the ball Sinderella
@@ -68,16 +77,42 @@ void main(void)
     float u = (latitude - v_sphericalExtents.y) * v_sphericalExtents.w;
     float v = (longitude - v_sphericalExtents.x) * v_sphericalExtents.z;
 
+    /*
     if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {
         discard;
-    } else {
-        // UV checkerboard
-        if (((mod(floor(u / rez), 2.0) == 1.0) && (mod(floor(v / rez), 2.0) == 0.0)) || ((mod(floor(u / rez), 2.0) == 0.0) && (mod(floor(v / rez), 2.0) == 1.0))) {
-            gl_FragColor = vec4(u, v, 0.0, 1.0);
-        } else {
-            gl_FragColor = v_color;
-        }
-    }
+    }*/
+
+    vec3 positionToEyeEC = -(czm_modelView * vec4(worldCoord, 1.0)).xyz;
+
+    // compute normal
+    vec2 fragCoord = gl_FragCoord.xy;
+    float d = 1.0;
+
+    // sample up, down, left, and right in screen space
+    vec3 downUp = getWorldPos(fragCoord + vec2(0.0, d)) - getWorldPos(fragCoord - vec2(0.0, d));
+    vec3 leftRight = getWorldPos(fragCoord - vec2(d, 0.0)) - getWorldPos(fragCoord + vec2(d, 0.0));
+    vec3 normal = normalize(cross(downUp, leftRight));
+
+    //vec3 normal = sphereNormal; // TODO: do better?
+
+    // TODO: might need optional rotations down here...
+    vec3 normalEC = czm_normal * normal;
+    vec3 tangent = cross(vec3(0, 0, 1), normal);
+    vec3 tangentEC = czm_normal * tangent;
+    vec3 bitangentEC = czm_normal * cross(normal, tangent);
+
+    czm_materialInput materialInput;
+    materialInput.normalEC = normalEC;
+    materialInput.tangentToEyeMatrix = czm_tangentToEyeSpaceMatrix(normalEC, tangentEC, bitangentEC);
+    //materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoord, normalEC);
+    materialInput.positionToEyeEC = positionToEyeEC;
+    materialInput.st.x = v;
+    materialInput.st.y = u;
+    czm_material material = czm_getMaterial(materialInput);
+
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    //gl_FragColor = vec4(u, v, 0.0, 1.0);
+    #endif
 
 #endif
     czm_writeDepthClampedToFarPlane();

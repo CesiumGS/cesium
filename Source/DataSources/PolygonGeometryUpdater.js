@@ -173,10 +173,10 @@ define([
     };
 
     PolygonGeometryUpdater.prototype._isOnTerrain = function(entity, polygon) {
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
+        //var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
         var perPositionHeightProperty = polygon.perPositionHeight;
         var perPositionHeightEnabled = defined(perPositionHeightProperty) && (perPositionHeightProperty.isConstant ? perPositionHeightProperty.getValue(Iso8601.MINIMUM_VALUE) : true);
-        return this._fillEnabled && !defined(polygon.height) && !defined(polygon.extrudedHeight) && isColorMaterial &&
+        return this._fillEnabled && !defined(polygon.height) && !defined(polygon.extrudedHeight) &&// isColorMaterial &&
                !perPositionHeightEnabled && GroundPrimitive.isSupported(this._scene);
     };
 

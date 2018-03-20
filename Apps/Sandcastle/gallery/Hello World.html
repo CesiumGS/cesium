@@ -28,6 +28,76 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
+
+var instance = new Cesium.GeometryInstance({
+  geometry : new Cesium.EllipseGeometry({
+      center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
+      semiMinorAxis : 500000.0,
+      semiMajorAxis : 1000000.0,
+      rotation : Cesium.Math.PI_OVER_FOUR,
+      vertexFormat : Cesium.VertexFormat.POSITION_AND_ST
+  }),
+  id : 'object returned when this instance is picked and to get/set per-instance attributes'
+});
+
+var checkerboardMaterial = Cesium.Material.fromType('Checkerboard');
+
+var ellipsoidSurfaceAppearance1 = new Cesium.EllipsoidSurfaceAppearance({
+    material : checkerboardMaterial
+});
+
+var stripeMaterial = Cesium.Material.fromType('Stripe');
+
+var ellipsoidSurfaceAppearance2 = new Cesium.EllipsoidSurfaceAppearance({
+    material : stripeMaterial
+});
+
+var perInstanceColorAppearance = new Cesium.PerInstanceColorAppearance({
+    flat : true
+});
+
+var elPrimitive = viewer.scene.primitives.add(new Cesium.GroundPrimitive({
+  geometryInstances : instance,
+  appearance : ellipsoidSurfaceAppearance1
+}));
+/*
+var greenRectangle = viewer.entities.add({
+    name : 'Green translucent, rotated, and extruded rectangle at height with outline',
+    rectangle : {
+        coordinates : Cesium.Rectangle.fromRadians(-1.8582078985933261, 0.23654029197299448, -1.6230525464414889, 0.4570541830085829),
+        material : Cesium.Color.GREEN.withAlpha(0.5),
+        height : 0,
+        outline : true, // height must be set for outline to display
+        outlineColor : Cesium.Color.BLACK
+    }
+});
+*/
+Sandcastle.addToolbarButton('switch appearances to stripe material', function() {
+    ellipsoidSurfaceAppearance1.material = stripeMaterial;
+    ellipsoidSurfaceAppearance2.material = stripeMaterial;
+});
+
+Sandcastle.addToolbarButton('switch appearances to check material', function() {
+    ellipsoidSurfaceAppearance1.material = checkerboardMaterial;
+    ellipsoidSurfaceAppearance2.material = checkerboardMaterial;
+});
+
+Sandcastle.addToolbarButton('switch to appearance 1', function() {
+    elPrimitive.appearance = ellipsoidSurfaceAppearance1;
+});
+
+Sandcastle.addToolbarButton('switch to appearance 2', function() {
+    elPrimitive.appearance = ellipsoidSurfaceAppearance2;
+});
+
+Sandcastle.addToolbarButton('switch to color appearance', function() {
+    elPrimitive.appearance = perInstanceColorAppearance;
+});
+
+Sandcastle.addToolbarButton('switch to undefined appearance', function() {
+    elPrimitive.appearance = undefined;
+});
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

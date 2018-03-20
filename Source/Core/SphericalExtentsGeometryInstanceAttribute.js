@@ -68,17 +68,19 @@ define([
     function SphericalExtentsGeometryInstanceAttribute(rectangle) {
         // rectangle cartographic coords !== spherical because it's on an ellipsoid
         var southWestExtents = latLongToSpherical(rectangle.south, rectangle.west, sphericalScratch);
-        var south = southWestExtents.x;
-        var west = southWestExtents.y;
+
+        // Slightly pad extents to avoid floating point error when fragment culling at edges.
+        // TODO: what's the best value for this?
+        // TODO: should we undo this in the shader?
+        var south = southWestExtents.x - 0.00001;
+        var west = southWestExtents.y - 0.00001;
 
         var northEastExtents = latLongToSpherical(rectangle.north, rectangle.east, sphericalScratch);
-        var north = northEastExtents.x;
-        var east = northEastExtents.y;
+        var north = northEastExtents.x + 0.00001;
+        var east = northEastExtents.y + 0.00001;
 
         var longitudeRange = 1.0 / (east - west);
         var latitudeRange = 1.0 / (north - south);
-
-        console.log('north: ' + north + ' south: ' + south + ' east: ' + east + ' west: ' + west);
 
         this.value = new Float32Array([west, south, longitudeRange, latitudeRange]);
     }

@@ -57,8 +57,7 @@ define([
      * A primitive combines the geometry instance with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
-     * and match most of them and add a new geometry or appearance independently of each other. Only the {@link PerInstanceColorAppearance}
-     * is supported at this time.
+     * and match most of them and add a new geometry or appearance independently of each other.
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
@@ -73,6 +72,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -134,6 +134,7 @@ define([
     function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        this.appearance = options.appearance;
         /**
          * The geometry instance rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
@@ -200,7 +201,7 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        this._primitive = undefined;
+        this._classificationPrimitive = undefined;
 
         this._maxHeight = undefined;
         this._minHeight = undefined;
@@ -219,8 +220,9 @@ define([
         this._uniformMap = uniformMap;
 
         var that = this;
-        this._primitiveOptions = {
+        this._classificationPrimitiveOptions = {
             geometryInstances : undefined,
+            appearance : undefined,
             vertexCacheOptimize : defaultValue(options.vertexCacheOptimize, false),
             interleave : defaultValue(options.interleave, false),
             releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
@@ -248,7 +250,7 @@ define([
          */
         vertexCacheOptimize : {
             get : function() {
-                return this._primitiveOptions.vertexCacheOptimize;
+                return this._classificationPrimitiveOptions.vertexCacheOptimize;
             }
         },
 
@@ -264,7 +266,7 @@ define([
          */
         interleave : {
             get : function() {
-                return this._primitiveOptions.interleave;
+                return this._classificationPrimitiveOptions.interleave;
             }
         },
 
@@ -280,7 +282,7 @@ define([
          */
         releaseGeometryInstances : {
             get : function() {
-                return this._primitiveOptions.releaseGeometryInstances;
+                return this._classificationPrimitiveOptions.releaseGeometryInstances;
             }
         },
 
@@ -296,7 +298,7 @@ define([
          */
         allowPicking : {
             get : function() {
-                return this._primitiveOptions.allowPicking;
+                return this._classificationPrimitiveOptions.allowPicking;
             }
         },
 
@@ -312,7 +314,7 @@ define([
          */
         asynchronous : {
             get : function() {
-                return this._primitiveOptions.asynchronous;
+                return this._classificationPrimitiveOptions.asynchronous;
             }
         },
 
@@ -328,7 +330,7 @@ define([
          */
         compressVertices : {
             get : function() {
-                return this._primitiveOptions.compressVertices;
+                return this._classificationPrimitiveOptions.compressVertices;
             }
         },
 
@@ -616,7 +618,7 @@ define([
             }
 
             if (frameState.invertClassification) {
-                var ignoreShowCommands = groundPrimitive._primitive._commandsIgnoreShow;
+                var ignoreShowCommands = groundPrimitive._classificationPrimitive._commandsIgnoreShow;
                 var ignoreShowCommandsLength = ignoreShowCommands.length;
 
                 for (i = 0; i < ignoreShowCommandsLength; ++i) {
@@ -634,7 +636,7 @@ define([
 
         if (passes.pick) {
             var pickLength = pickCommands.length;
-            var primitive = groundPrimitive._primitive._primitive;
+            var primitive = groundPrimitive._classificationPrimitive._primitive;
             var pickOffsets = primitive._pickOffsets;
             for (var j = 0; j < pickLength; ++j) {
                 var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
@@ -689,7 +691,7 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
-        if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+        if (!this.show || (!defined(this._classificationPrimitive) && !defined(this.geometryInstances))) {
             return;
         }
 
@@ -705,9 +707,9 @@ define([
         }
 
         var that = this;
-        var primitiveOptions = this._primitiveOptions;
+        var primitiveOptions = this._classificationPrimitiveOptions;
 
-        if (!defined(this._primitive)) {
+        if (!defined(this._classificationPrimitive)) {
             var ellipsoid = frameState.mapProjection.ellipsoid;
 
             var instance;
@@ -756,9 +758,8 @@ define([
                 geometry = instance.geometry;
                 instanceType = geometry.constructor;
 
-                // TODO: what to do if not all the geometryInstances are polygonHierarchies? TODO: does this even happen here?
                 var attributes = {
-                    sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(geometry._rectangle)
+                    sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(getRectangle(frameState, geometry))
                 };
                 var instanceAttributes = instance.attributes;
                 for (var attributeKey in instanceAttributes) {
@@ -776,6 +777,7 @@ define([
             }
 
             primitiveOptions.geometryInstances = groundInstances;
+            primitiveOptions.appearance = this.appearance;
 
             primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
                 createBoundingVolume(that, frameState, geometry);
@@ -784,8 +786,8 @@ define([
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
 
-            this._primitive = new ClassificationPrimitive(primitiveOptions);
-            this._primitive.readyPromise.then(function(primitive) {
+            this._classificationPrimitive = new ClassificationPrimitive(primitiveOptions);
+            this._classificationPrimitive.readyPromise.then(function(primitive) {
                 that._ready = true;
 
                 if (that.releaseGeometryInstances) {
@@ -801,9 +803,10 @@ define([
             });
         }
 
-        this._primitive.debugShowShadowVolume = this.debugShowShadowVolume;
-        this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        this._primitive.update(frameState);
+        this._classificationPrimitive.appearance = this.appearance;
+        this._classificationPrimitive.debugShowShadowVolume = this.debugShowShadowVolume;
+        this._classificationPrimitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        this._classificationPrimitive.update(frameState);
     };
 
     /**
@@ -833,11 +836,11 @@ define([
      */
     GroundPrimitive.prototype.getGeometryInstanceAttributes = function(id) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._primitive)) {
+        if (!defined(this._classificationPrimitive)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
         //>>includeEnd('debug');
-        return this._primitive.getGeometryInstanceAttributes(id);
+        return this._classificationPrimitive.getGeometryInstanceAttributes(id);
     };
 
     /**
@@ -874,7 +877,7 @@ define([
      * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
-        this._primitive = this._primitive && this._primitive.destroy();
+        this._classificationPrimitive = this._classificationPrimitive && this._classificationPrimitive.destroy();
         return destroyObject(this);
     };
 

@@ -1,5 +1,6 @@
 define([
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -20,6 +21,8 @@ define([
         './BlendingState',
         './ClassificationType',
         './DepthFunction',
+        './Material',
+        './MaterialAppearance',
         './PerInstanceColorAppearance',
         './Primitive',
         './SceneMode',
@@ -28,6 +31,7 @@ define([
         '../Core/WebGLConstants'
     ], function(
         ColorGeometryInstanceAttribute,
+        combine,
         defaultValue,
         defined,
         defineProperties,
@@ -48,6 +52,8 @@ define([
         BlendingState,
         ClassificationType,
         DepthFunction,
+        Material,
+        MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
@@ -65,8 +71,7 @@ define([
      * A primitive combines the geometry instance with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
-     * and match most of them and add a new geometry or appearance independently of each other. Only the {@link PerInstanceColorAppearance}
-     * is supported at this time.
+     * and match most of them and add a new geometry or appearance independently of each other.
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
@@ -85,6 +90,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render. This can either be a single instance or an array of length one.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -104,6 +110,7 @@ define([
      */
     function ClassificationPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var geometryInstances = options.geometryInstances;
 
         /**
          * The geometry instance rendered with this primitive.  This may
@@ -123,7 +130,7 @@ define([
          *
          * @default undefined
          */
-        this.geometryInstances = options.geometryInstances;
+        this.geometryInstances = geometryInstances;
         /**
          * Determines if the primitive will be shown.  This affects all geometry
          * instances in the primitive.
@@ -187,12 +194,38 @@ define([
         this._primitive = undefined;
         this._pickPrimitive = options._pickPrimitive;
 
-        var appearance = new PerInstanceColorAppearance({
-            flat : true
-        });
+        var appearance = options.appearance;
+
+        // Require SphericalExtents attribute on all geometries if material isn't PerInstanceColor
+        if (defined(appearance) && defined(appearance.material) && defined(geometryInstances)) {
+            var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+            var geometryInstanceCount = geometryInstances.length;
+            for (var i = 0; i < geometryInstanceCount; i++) {
+                var attributes = geometryInstances[i].attributes;
+                if (!defined(attributes) || !defined(attributes.sphericalExtents)) {
+                    throw new DeveloperError('Materials on ClassificationPrimitives require sphericalExtents attribute');
+                }
+            }
+        }
+
+        // If attributes include color and appearance is undefined, then default to a color appearance
+        if (!defined(appearance)) {
+            var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+            var geometryInstanceCount = geometryInstances.length;
+            for (var i = 0; i < geometryInstanceCount; i++) {
+                var attributes = geometryInstances[i].attributes;
+                if (defined(attributes) && defined(attributes.color)) {
+                    appearance = new PerInstanceColorAppearance({
+                        flat : true
+                    });
+                    break;
+                }
+            }
+        }
+        this.appearance = appearance;
 
         var readOnlyAttributes;
-        if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
+        if (defined(geometryInstances) && isArray(geometryInstances) && geometryInstances.length > 1) {
             readOnlyAttributes = ClassificationPrimitiveReadOnlyInstanceAttributes;
         }
 
@@ -517,10 +550,6 @@ define([
     }
 
     function createShaderProgram(classificationPrimitive, frameState, appearance) {
-        if (defined(classificationPrimitive._sp)) {
-            return;
-        }
-
         var context = frameState.context;
         var primitive = classificationPrimitive._primitive;
         var vs = ShadowVolumeVS;
@@ -597,14 +626,33 @@ define([
             attributeLocations : attributeLocations
         });
 
+        var appearance = classificationPrimitive.appearance;
+        var isPerInstanceColor = appearance instanceof PerInstanceColorAppearance;
+
+        var vsColorSource = new ShaderSource({
+            defines : isPerInstanceColor ? ['PER_INSTANCE_COLOR'] : [],
+            sources : [vs]
+        });
+
+        var parts;
+        if (isPerInstanceColor) {
+            parts = [ShadowVolumeColorFS];
+        } else {
+            // Modify fsColorSource for material (yay!)
+            // Only have to modify the FS b/c all material hookups happen in there b/c lol VS
+            // TODO: scan shaderSource to determine what material inputs are needed for ShadowVolumeColorFS?
+            parts = [appearance.material.shaderSource, ShadowVolumeColorFS];
+        }
+
         var fsColorSource = new ShaderSource({
-            sources : [ShadowVolumeColorFS]
+            defines : isPerInstanceColor ? ['PER_INSTANCE_COLOR'] : [],
+            sources : [parts.join('\n')]
         });
 
         classificationPrimitive._spColor = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : classificationPrimitive._spColor,
-            vertexShaderSource : vsSource,
+            vertexShaderSource : vsColorSource,
             fragmentShaderSource : fsColorSource,
             attributeLocations : attributeLocations
         });
@@ -663,6 +711,13 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = classificationPrimitive._rsColorPass;
             command.shaderProgram = classificationPrimitive._spColor;
+
+            var appearance = classificationPrimitive.appearance;
+            var material = appearance.material;
+            if (defined(material)) {
+                uniformMap = combine(uniformMap, material._uniforms)
+            }
+
             command.uniformMap = uniformMap;
         }
 
@@ -857,6 +912,11 @@ define([
             return;
         }
 
+        var appearance = this.appearance;
+        if (defined(appearance) && defined(appearance.material)) {
+            appearance.material.update(frameState.context);
+        }
+
         var that = this;
         var primitiveOptions = this._primitiveOptions;
 
@@ -949,6 +1009,8 @@ define([
             this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(true));
             this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
         }
+        // Update primitive appearance
+        this._primitive.appearance = appearance;
 
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
