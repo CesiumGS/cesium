@@ -122,6 +122,17 @@ define([
 
         var pickFeatureResource = resource.clone();
 
+        resource.setQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
+        pickFeatureResource.setQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
+
+        if (defined(options.parameters)) {
+            resource.setQueryParameters(objectToLowercase(options.parameters));
+        }
+
+        if (defined(options.getFeatureInfoParameters)) {
+            pickFeatureResource.setQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
+        }
+
         var that = this;
         this._reload = undefined;
         if (defined(options.times)) {
@@ -137,23 +148,14 @@ define([
                     }
                 }
             });
-        }
 
-        if (defined(options.clock)) {
-            if (defined(options.parameters)) {
-                options.parameters['time'] = options.clock.currentTime.toString();
+            if (defined(options.clock)){
+                var dynamicIntervalData = options.times.findDataForIntervalContainingDate(options.clock.currentTime);
+                if (defined(dynamicIntervalData) && dynamicIntervalData instanceof Object)
+                {
+                    resource.setQueryParameters(dynamicIntervalData);
+                }
             }
-        }
-
-        resource.setQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
-        pickFeatureResource.setQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
-
-        if (defined(options.parameters)) {
-            resource.setQueryParameters(objectToLowercase(options.parameters));
-        }
-
-        if (defined(options.getFeatureInfoParameters)) {
-            pickFeatureResource.setQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
         }
 
         var parameters = {};
@@ -208,27 +210,12 @@ define([
 
     function requestImage(imageryProvider, col, row, level, request, interval) {
         var dynamicIntervalData = defined(interval) ? interval.data : undefined;
-        var resource = imageryProvider._tileProvider._resource; // We actually want to set the time parameter within the tile provider.
-        var parameters = {};
-        var keys = [];
+        var resource = imageryProvider._tileProvider._resource; // We actually want to set the query parameters within the tile provider.
         if (defined(dynamicIntervalData)) {
             if (dynamicIntervalData instanceof Object){
-                try {
-                    Object.keys(dynamicIntervalData).forEach(function (key, index) {
-                        parameters[key] = dynamicIntervalData[key];
-                        keys.push(key.toLowerCase());
-                    });
-                } catch (err){
-                    // Warn the user, this may not be a problem
-                    console.warn('Data from interval has problems.', err);
-                }
+                resource.setQueryParameters(dynamicIntervalData);
             }
         }
-        if (!('time' in keys)){
-            // Get the time from the clock if a value was not provided in the data from the interval.
-            parameters['time'] = imageryProvider.clock.currentTime;
-        }
-        resource.setQueryParameters(parameters);
 
         return imageryProvider._tileProvider.requestImage(col, row, level, request);
     }
