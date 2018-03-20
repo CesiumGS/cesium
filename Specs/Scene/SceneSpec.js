@@ -726,8 +726,6 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    var pickedPosition2D = new Cartesian3(-455861.7055871038, -5210523.137686572, 3637866.6638769475);
-
     it('pickPosition', function() {
         if (!scene.pickPositionSupported) {
             return;
