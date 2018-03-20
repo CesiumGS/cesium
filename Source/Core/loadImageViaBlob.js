@@ -1,27 +1,14 @@
 define([
-        '../ThirdParty/when',
+        './Check',
         './defined',
-        './isDataUri',
-        './loadBlob',
-        './loadImage'
+        './deprecationWarning',
+        './Resource'
     ], function(
-        when,
+        Check,
         defined,
-        isDataUri,
-        loadBlob,
-        loadImage) {
+        deprecationWarning,
+        Resource) {
     'use strict';
-
-    var xhrBlobSupported = (function() {
-        try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '#', true);
-            xhr.responseType = 'blob';
-            return xhr.responseType === 'blob';
-        } catch (e) {
-            return false;
-        }
-    })();
 
     /**
      * Asynchronously loads the given image URL by first downloading it as a blob using
@@ -37,7 +24,7 @@ define([
      *
      * @exports loadImageViaBlob
      *
-     * @param {String} url The source URL of the image.
+     * @param {Resource|String} urlOrResource The source URL of the image.
      * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
@@ -58,32 +45,21 @@ define([
      *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
+     * @deprecated
      */
-    function loadImageViaBlob(url, request) {
-        if (!xhrBlobSupported || isDataUri(url)) {
-            return loadImage(url, undefined, request);
-        }
+    function loadImageViaBlob(urlOrResource, request) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('urlOrResource', urlOrResource);
+        //>>includeEnd('debug');
 
-        var blobPromise = loadBlob(url, undefined, request);
-        if (!defined(blobPromise)) {
-            return undefined;
-        }
+        deprecationWarning('loadImageViaBlob', 'loadImageViaBlob is deprecated and will be removed in Cesium 1.44. Please use Resource.fetchImage instead.');
 
-        return blobPromise.then(function(blob) {
-            if (!defined(blob)) {
-                return;
-            }
-            var blobUrl = window.URL.createObjectURL(blob);
-
-            return loadImage(blobUrl, false).then(function(image) {
-                image.blob = blob;
-                window.URL.revokeObjectURL(blobUrl);
-                return image;
-            }, function(error) {
-                window.URL.revokeObjectURL(blobUrl);
-                return when.reject(error);
-            });
+        var resource = Resource.createIfNeeded(urlOrResource, {
+            request: request
         });
+
+        return resource.fetchImage(true);
     }
 
     return loadImageViaBlob;

@@ -8,6 +8,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/PrimitiveType',
+        'Core/Resource',
         'Core/Transforms',
         'Scene/Model',
         'Scene/ShadowMode',
@@ -24,6 +25,7 @@ defineSuite([
         JulianDate,
         Matrix4,
         PrimitiveType,
+        Resource,
         Transforms,
         Model,
         ShadowMode,
@@ -244,6 +246,19 @@ defineSuite([
     it('renders from url', function() {
         return loadCollection({
             url : boxUrl,
+            instances : createInstances(4)
+        }).then(function(collection) {
+            expectRender(collection);
+        });
+    });
+
+    it('renders from Resource', function() {
+        var resource = new Resource({
+            url : boxUrl
+        });
+
+        return loadCollection({
+            url : resource,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);
@@ -535,6 +550,9 @@ defineSuite([
             expect(drawCommand.receiveShadows).toBe(true);
             collection.shadows = ShadowMode.DISABLED;
             scene.renderForSpecs();
+
+            // Expect commands to have been recreated
+            drawCommand = collection._drawCommands[0];
             expect(drawCommand.castShadows).toBe(false);
             expect(drawCommand.receiveShadows).toBe(false);
         });

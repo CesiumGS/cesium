@@ -52,12 +52,15 @@ define([
         };
     };
 
-    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic) {
+    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId) {
         var techniques = gltf.techniques;
         var parameter;
         for (var techniqueName in techniques) {
             if (techniques.hasOwnProperty(techniqueName)) {
                 var technique = techniques[techniqueName];
+                if (defined(programId) && (technique.program !== programId)) {
+                    continue;
+                }
                 var parameters = technique.parameters;
                 var attributes = technique.attributes;
                 var uniforms = technique.uniforms;
@@ -80,6 +83,14 @@ define([
             }
         }
         return undefined;
+    };
+
+    ModelUtility.getDiffuseAttributeOrUniform = function(gltf, programId) {
+        var diffuseUniformName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'COLOR_0', programId);
+        if (!defined(diffuseUniformName)) {
+            diffuseUniformName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE', programId);
+        }
+        return diffuseUniformName;
     };
 
     var nodeTranslationScratch = new Cartesian3();
@@ -134,7 +145,8 @@ define([
                     extension !== 'KHR_technique_webgl' &&
                     extension !== 'KHR_binary_glTF' &&
                     extension !== 'KHR_materials_common' &&
-                    extension !== 'WEB3D_quantized_attributes') {
+                    extension !== 'WEB3D_quantized_attributes' &&
+                    extension !== 'KHR_draco_mesh_compression') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }

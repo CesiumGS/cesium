@@ -1,22 +1,24 @@
 defineSuite([
         'Core/Cartesian3',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
-        'Core/Plane',
         'Core/Transforms',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
+        'Scene/Model',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], 'Scene/Instanced3DModel3DTileContent', function(
         Cartesian3,
-        ClippingPlaneCollection,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
-        Plane,
         Transforms,
+        ClippingPlane,
+        ClippingPlaneCollection,
+        Model,
         TileBoundingSphere,
         Cesium3DTilesTester,
         createScene) {
@@ -305,7 +307,7 @@ defineSuite([
         });
     });
 
-    it('Updates model\'s clipping planes', function() {
+    it('Links model to tileset clipping planes based on bounding volume clipping', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var tile = tileset._root;
             var content = tile.content;
@@ -313,26 +315,43 @@ defineSuite([
 
             expect(model.clippingPlanes).toBeUndefined();
 
-            tileset.clippingPlanes = new ClippingPlaneCollection({
+            var clippingPlaneCollection = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
-            content.update(tileset, scene.frameState);
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeDefined();
-            expect(model.clippingPlanes.length).toBe(1);
-            expect(model.clippingPlanes.enabled).toBe(true);
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
             tile._isClipped = false;
-            content.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState);
 
-            expect(model.clippingPlanes.enabled).toBe(false);
+            expect(model.clippingPlanes).toBeUndefined();
+        });
+    });
 
-            tileset.clippingPlanes = undefined;
+    it('rebuilds Model shaders when clipping planes change', function() {
+        spyOn(Model, '_getClippingFunction').and.callThrough();
 
-            expect(model.clippingPlanes).toBeDefined();
-            expect(model.clippingPlanes.enabled).toBe(false);
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var content = tile.content;
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            content.clippingPlanesDirty = true;
+            tile.update(tileset, scene.frameState);
+
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
         });
     });
 

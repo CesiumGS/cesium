@@ -3,13 +3,15 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './Intersect'
+        './Intersect',
+        './Math'
     ], function(
         Cartesian3,
         Check,
         defaultValue,
         defined,
-        Intersect) {
+        Intersect,
+        CesiumMath) {
     'use strict';
 
     /**
@@ -17,8 +19,8 @@ define([
      * @alias AxisAlignedBoundingBox
      * @constructor
      *
-     * @param {Cartesian3} [minimum=Cartesian3.ZERO] The minimum point along the x, y, and z axes.
-     * @param {Cartesian3} [maximum=Cartesian3.ZERO] The maximum point along the x, y, and z axes.
+     * @param {Cartesian3} [minimum=Cartesian3.ZERO] The minimum point along the x, y, and z axes relative to {@link AxisAlignedBoundingBox#center}.
+     * @param {Cartesian3} [maximum=Cartesian3.ZERO] The maximum point along the x, y, and z axes relative to {@link AxisAlignedBoundingBox#center}.
      * @param {Cartesian3} [center] The center of the box; automatically computed if not supplied.
      *
      * @see BoundingSphere
@@ -130,7 +132,7 @@ define([
         }
 
         if (!defined(result)) {
-            return new AxisAlignedBoundingBox(box.minimum, box.maximum);
+            return new AxisAlignedBoundingBox(box.minimum, box.maximum, box.center);
         }
 
         result.minimum = Cartesian3.clone(box.minimum, result.minimum);
@@ -189,6 +191,28 @@ define([
         }
 
         return Intersect.INTERSECTING;
+    };
+
+    /**
+     * If the given position is not already within the box, projects the given position onto the box
+     * @param {Cartesian3} position The position being projected onto this AxisAlignedBoundingBox.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the AxisAlignedBoundingBox.
+     */
+    AxisAlignedBoundingBox.prototype.clampToBounds = function(position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('position', position);
+        //>>includeEnd('debug');
+
+        result = Cartesian3.clone(position, result);
+
+        result = Cartesian3.subtract(position, this.center, result);
+        result.x = CesiumMath.clamp(result.x, this.minimum.x, this.maximum.x);
+        result.y = CesiumMath.clamp(result.y, this.minimum.y, this.maximum.y);
+        result.z = CesiumMath.clamp(result.z, this.minimum.z, this.maximum.z);
+        result = Cartesian3.add(result, this.center, result);
+
+        return result;
     };
 
     /**

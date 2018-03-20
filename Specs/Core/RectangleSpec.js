@@ -201,7 +201,6 @@ defineSuite([
         expect(rectangle.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON15);
     });
 
-
     it('clone works without a result parameter.', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = rectangle.clone();

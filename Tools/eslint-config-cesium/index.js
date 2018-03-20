@@ -33,6 +33,7 @@ module.exports = {
         'no-irregular-whitespace': 'error',
         'no-lonely-if': 'error',
         'no-loop-func': 'error',
+        'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
         'no-new': 'error',
         'no-sequences': 'error',
         'no-trailing-spaces': 'error',

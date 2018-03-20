@@ -2,7 +2,6 @@ defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/Credit',
         'Core/defined',
@@ -10,17 +9,19 @@ defineSuite([
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
         'Core/Intersect',
-        'Core/Plane',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
         'Renderer/RenderState',
         'Scene/BlendingState',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
         'Scene/ImagerySplitDirection',
+        'Scene/Model',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
@@ -32,7 +33,6 @@ defineSuite([
         GlobeSurfaceTileProvider,
         Cartesian3,
         CesiumTerrainProvider,
-        ClippingPlaneCollection,
         Color,
         Credit,
         defined,
@@ -40,17 +40,19 @@ defineSuite([
         EllipsoidTerrainProvider,
         GeographicProjection,
         Intersect,
-        Plane,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
         RenderState,
         BlendingState,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         ImagerySplitDirection,
+        Model,
         QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
@@ -284,6 +286,47 @@ defineSuite([
                             }
                         }
                         expect(tilesFromLayer2).toBe(1);
+                    });
+                });
+            });
+        });
+
+        it('calling _reload adds a callback per layer per tile', function() {
+            var layer1 = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+
+            var layer2 = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Green4x4.png'
+            }));
+
+            return updateUntilDone(scene.globe).then(function() {
+                // Verify that each tile has 2 imagery objects and no loaded callbacks
+                forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                    expect(tile.data.imagery.length).toBe(2);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
+                });
+
+                // Reload each layer
+                layer1._imageryProvider._reload();
+                layer2._imageryProvider._reload();
+
+                // These should be ignored
+                layer1._imageryProvider._reload();
+                layer2._imageryProvider._reload();
+
+                // Verify that each tile has 4 imagery objects (the old imagery and the reloaded imagery for each layer)
+                //  and also has 2 callbacks so the old imagery will be removed once loaded.
+                forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                    expect(tile.data.imagery.length).toBe(4);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(3);
+                });
+
+                return updateUntilDone(scene.globe).then(function() {
+                    // Verify the old imagery was removed and the callbacks are no longer there
+                    forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                        expect(tile.data.imagery.length).toBe(2);
+                        expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
                     });
                 });
             });
@@ -612,7 +655,7 @@ defineSuite([
 
         var terrainCredit = new Credit({text: 'terrain credit'});
         scene.terrainProvider = new CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain',
             credit : terrainCredit
         });
 
@@ -633,6 +676,9 @@ defineSuite([
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+
+                scene.renderForSpecs();
+
                 expect(replacementQueue.count).toBe(0);
             });
         });
@@ -650,6 +696,7 @@ defineSuite([
 
             surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
 
+            scene.renderForSpecs();
             scene.renderForSpecs();
 
             levelZeroTiles = surface._levelZeroTiles;
@@ -714,7 +761,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10000.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10000.0);
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -745,7 +792,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -1000.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -1000.0);
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -780,8 +827,8 @@ defineSuite([
 
             scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -10000.0),
-                    new Plane(Cartesian3.UNIT_X, -1000.0)
+                    new ClippingPlane(Cartesian3.UNIT_Z, -10000.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, -1000.0)
                 ],
                 unionClippingRegions: true
             });
@@ -809,7 +856,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, -1000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, -1000000.0)
             ]
         });
 
@@ -827,7 +874,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 0.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 0.0)
             ]
         });
 
@@ -845,7 +892,7 @@ defineSuite([
         var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_Z, 10000000.0)
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
         });
 
@@ -857,6 +904,37 @@ defineSuite([
             expect(tile.isClipped).toBe(false);
             expect(scene.frameState.commandList.length).toBe(4);
         });
+    });
+
+    it('destroys attached ClippingPlaneCollections that have been detached', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var globe = scene.globe;
+        globe.clippingPlanes = clippingPlanes;
+        expect(clippingPlanes.isDestroyed()).toBe(false);
+
+        globe.clippingPlanes = undefined;
+        expect(clippingPlanes.isDestroyed()).toBe(true);
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to a Model', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var model = scene.primitives.add(Model.fromGltf({
+            url : './Data/Models/Box/CesiumBoxTest.gltf'
+        }));
+        model.clippingPlanes = clippingPlanes;
+        var globe = scene.globe;
+
+        expect(function() {
+            globe.clippingPlanes = clippingPlanes;
+        }).toThrowDeveloperError();
     });
 
 }, 'WebGL');

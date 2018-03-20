@@ -546,7 +546,6 @@ defineSuite([
         }
     });
 
-
     it('creates a polygon from hierarchy extruded', function() {
         var hierarchy = {
             positions : Cartesian3.fromDegreesArray([

@@ -1,4 +1,5 @@
 define([
+        '../Core/AxisAlignedBoundingBox',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -19,6 +20,7 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
         '../Core/OrthographicOffCenterFrustum',
         '../Core/PerspectiveFrustum',
@@ -30,6 +32,7 @@ define([
         './MapMode2D',
         './SceneMode'
     ], function(
+        AxisAlignedBoundingBox,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -50,6 +53,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrientedBoundingBox,
         OrthographicFrustum,
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
@@ -78,8 +82,8 @@ define([
      *
      * @param {Scene} scene The scene.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
      *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -233,6 +237,12 @@ define([
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
         Cartesian3.normalize(this.position, this.position);
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
+
+        /**
+         * If set, the camera's position is constrained to be within this bounding object.
+         * @type {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox} [options.boundingObject] The BoundingObject used to restrict positions of the {@link Camera}.
+         */
+        this.boundingObject = undefined;
     }
 
     /**
@@ -502,7 +512,6 @@ define([
     }
 
     var scratchCartesian = new Cartesian3();
-
     function updateMembers(camera) {
         var mode = camera._mode;
 
@@ -949,6 +958,7 @@ define([
             frustum.bottom = -frustum.top;
         }
 
+        this._limitPosition();
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
         }
@@ -983,7 +993,7 @@ define([
         updateMembers(this);
     };
 
-    var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
+    var scratchAdjustOrthographicFrustumMousePosition = new Cartesian2();
     var pickGlobeScratchRay = new Ray();
     var scratchRayIntersection = new Cartesian3();
     var scratchDepthIntersection = new Cartesian3();
@@ -1008,7 +1018,7 @@ define([
         var depthIntersection;
 
         if (defined(globe)) {
-            var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
+            var mousePosition = scratchAdjustOrthographicFrustumMousePosition;
             mousePosition.x = scene.drawingBufferWidth / 2.0;
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
@@ -1494,11 +1504,13 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
+
         this._adjustOrthographicFrustum(true);
     };
 
     /**
      * Translates the camera's position by <code>amount</code> along the camera's view vector.
+     * When in 2D mode, this will zoom in the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1506,12 +1518,20 @@ define([
      */
     Camera.prototype.moveForward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, amount);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            // 2D mode
+            zoom2D(this, amount);
+        } else {
+            // 3D or Columbus view mode
+            this.move(this.direction, amount);
+        }
     };
 
     /**
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's view vector.
+     * When in 2D mode, this will zoom out the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1519,7 +1539,14 @@ define([
      */
     Camera.prototype.moveBackward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, -amount);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            // 2D mode
+            zoom2D(this, -amount);
+        } else {
+            // 3D or Columbus view mode
+            this.move(this.direction, -amount);
+        }
     };
 
     /**
@@ -1574,7 +1601,7 @@ define([
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the opposite direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1582,12 +1609,16 @@ define([
      */
     Camera.prototype.lookLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.up, -amount);
+        }
     };
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1595,12 +1626,16 @@ define([
      */
     Camera.prototype.lookRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.up, amount);
+        }
     };
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1608,12 +1643,16 @@ define([
      */
     Camera.prototype.lookUp = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.right, -amount);
+        }
     };
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the opposite direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1621,7 +1660,11 @@ define([
      */
     Camera.prototype.lookDown = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.right, amount);
+        }
     };
 
     var lookScratchQuaternion = new Quaternion();
@@ -3198,7 +3241,37 @@ define([
         Matrix4.clone(camera._transform, result.transform);
         result._transformChanged = true;
 
+        if (defined(camera._boundingObject)) {
+            result.boundingObject = camera._boundingObject.clone(result.boundingObject);
+        }
+
         return result;
+    };
+
+    var scratchViewOptions = {
+        destination : new Cartesian3(),
+        orientation : new HeadingPitchRoll()
+    };
+    var scratchClampedValue = new Cartesian3();
+
+    /**
+     * @private
+     */
+    Camera.prototype._limitPosition = function() {
+        if (!defined(this.boundingObject)) {
+            return;
+        }
+
+        scratchViewOptions.orientation.heading = this.heading;
+        scratchViewOptions.orientation.pitch = this.pitch;
+        scratchViewOptions.orientation.roll = this.roll;
+
+        // solving for positionWC because there's a bug where WC is incorrect in 2D and CV mode
+        scratchViewOptions.destination = this.boundingObject.clampToBounds(Cartographic.toCartesian(this._positionCartographic), scratchClampedValue);
+
+        this.setView(scratchViewOptions);
+
+        return scratchViewOptions.destination;
     };
 
     /**

@@ -1,4 +1,4 @@
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to CesiumJS.  The following people have contributed to CesiumJS, under the following agreements:
 
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
 
@@ -43,6 +43,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Ottavio Hartman](https://github.com/omh1280)
    * [William Ho](https://github.com/williamkho)
    * [Srinivas Kaza](https://github.com/AnimatedRNG)
+   * [Hannah Bollar](https://github.com/hanbollar)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -169,3 +170,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Cody Guldner](https://github.com/burn123)
 * [Nacho Carnicero](https://github.com/nacho-carnicero)
 * [Y.Selim Abidin](https://github.com/SelimAbidin)
+* [Tamar Cohen](https://github.com/tamarmot)
+* [Stephen Wiseman](https://github.com/srwiseman)
+* [Gabriel Macario](https://github.com/gabriel-macario)

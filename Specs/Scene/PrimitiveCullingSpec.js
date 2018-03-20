@@ -4,11 +4,11 @@ defineSuite([
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/GeometryInstance',
-        'Core/loadImage',
         'Core/Math',
         'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/Resource',
         'Core/Transforms',
         'Scene/BillboardCollection',
         'Scene/Globe',
@@ -27,11 +27,11 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         defaultValue,
         GeometryInstance,
-        loadImage,
         CesiumMath,
         PerspectiveFrustum,
         Rectangle,
         RectangleGeometry,
+        Resource,
         Transforms,
         BillboardCollection,
         Globe,
@@ -55,7 +55,7 @@ defineSuite([
         scene = createScene();
         scene.primitives.destroyPrimitives = false;
 
-        return loadImage('./Data/Images/Green.png').then(function(image) {
+        return Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         });
     });

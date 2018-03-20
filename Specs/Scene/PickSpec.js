@@ -10,8 +10,8 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Primitive',
         'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/createCanvas'
+        'Specs/createCanvas',
+        'Specs/createScene'
     ], 'Scene/Pick', function(
         FeatureDetection,
         GeometryInstance,
@@ -24,8 +24,8 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         Primitive,
         SceneMode,
-        createScene,
-        createCanvas) {
+        createCanvas,
+        createScene) {
     'use strict';
 
     var scene;

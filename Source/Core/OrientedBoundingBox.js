@@ -42,8 +42,8 @@ define([
      *
      * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
      * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
-     *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
-     *                                          cube centered at the origin.
+     *                                          Equivalently, the transformation matrix, to rotate and scale a cube (by default 0x0x0)
+     *                                          centered at the origin.
      *
      *
      * @example
@@ -66,7 +66,7 @@ define([
         /**
          * The transformation matrix, to rotate the box to the right position.
          * @type {Matrix3}
-         * @default {@link Matrix3.IDENTITY}
+         * @default {@link Matrix3.ZERO}
          */
         this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
     }
@@ -415,6 +415,45 @@ define([
 
         Cartesian3.clone(box.center, result.center);
         Matrix3.clone(box.halfAxes, result.halfAxes);
+
+        return result;
+    };
+
+    var scratchMatrix = new Matrix3();
+    var scratchCartesian = new Cartesian3();
+
+    /**
+     * If the given position is not already within the box, projects the given position onto the box.
+     * @param {Cartesian3} position The position being projected onto this OrientedBoundingBox.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the OrientedBoundingBox.
+     */
+    OrientedBoundingBox.prototype.clampToBounds = function(position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('position', position);
+        //>>includeEnd('debug');
+        result = Cartesian3.clone(position, result);
+        // to avoid inverse of a zero matrix (since that doesn't exist).
+        if (this.halfAxes.equals(Matrix3.ZERO)) {
+            result.x = 0.0;
+            result.y = 0.0;
+            result.z = 0.0;
+            return result;
+        }
+
+        // convert world space position to orientedBoundingBox's object space.
+        var inverseTransformationMatrix = Matrix3.inverse(this.halfAxes, scratchMatrix);
+        result = Cartesian3.subtract(result, this.center, result); // remove translation
+        result = Matrix3.multiplyByVector(inverseTransformationMatrix, result, scratchCartesian); // remove rotation and scale
+
+        // once in object space just translate to center and check if converted location is within axis oriented 2x2x2 cube
+        result.x = CesiumMath.clamp(result.x, -1.0, 1.0);
+        result.y = CesiumMath.clamp(result.y, -1.0, 1.0);
+        result.z = CesiumMath.clamp(result.z, -1.0, 1.0);
+
+        // convert object space position back to world space
+        result = Matrix3.multiplyByVector(this.halfAxes, result, result); // redo proper rotation and scale
+        result = Cartesian3.add(result, this.center, result); // redo proper translation
 
         return result;
     };

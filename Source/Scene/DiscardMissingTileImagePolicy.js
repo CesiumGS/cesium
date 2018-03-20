@@ -3,14 +3,14 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/getImagePixels',
-        '../Core/loadImageViaBlob',
+        '../Core/Resource',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         getImagePixels,
-        loadImageViaBlob,
+        Resource,
         when) {
     'use strict';
 
@@ -22,7 +22,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.missingImageUrl The URL of the known missing image.
+     * @param {Resource|String} options.missingImageUrl The URL of the known missing image.
      * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.
      * @param {Boolean} [options.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
@@ -46,6 +46,8 @@ define([
         this._missingImagePixels = undefined;
         this._missingImageByteLength = undefined;
         this._isReady = false;
+
+        var resource = Resource.createIfNeeded(options.missingImageUrl);
 
         var that = this;
 
@@ -87,7 +89,7 @@ define([
             that._isReady = true;
         }
 
-        when(loadImageViaBlob(options.missingImageUrl), success, failure);
+        when(resource.fetchImage(true), success, failure);
     }
 
     /**

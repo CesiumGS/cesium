@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -19,6 +20,7 @@ define([
         './PolylineCollection',
         './VerticalOrigin'
     ], function(
+        arraySlice,
         Cartesian2,
         Cartesian3,
         Color,
@@ -158,8 +160,8 @@ define([
 
             if (!defined(packedBuffer)) {
                 // Copy because they may be the views on the same buffer.
-                positions = points._positions = positions.slice();
-                points._batchIds = points._batchIds.slice();
+                positions = points._positions = arraySlice(positions);
+                points._batchIds = arraySlice(points._batchIds);
 
                 packedBuffer = points._packedBuffer = packBuffer(points, ellipsoid);
             }
@@ -493,8 +495,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */

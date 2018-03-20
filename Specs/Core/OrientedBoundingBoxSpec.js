@@ -769,5 +769,38 @@ defineSuite([
         expect(box.equals(undefined)).toEqual(false);
     });
 
+    it('clampToBounds given input value outside of box', function() {
+        var box = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.IDENTITY);
+        var testLocation = new Cartesian3(5, 5, 100);
+        var result = box.clampToBounds(testLocation);
+
+        expect(result).not.toEqual(testLocation);
+
+        var result2 = box.clampToBounds(result);
+        expect(result2).toEqual(result);
+
+        var finalCheck = new Cartesian3(1, 1, 1);
+        expect(result).toEqual(finalCheck);
+    });
+
+    it('clampToBounds given input value inside of box', function() {
+        var box = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.IDENTITY);
+        var testLocation = new Cartesian3(0.5, 0.5, 0.5);
+        var result = box.clampToBounds(testLocation);
+
+        expect(result).toEqual(testLocation);
+    });
+
+    it('clampToBounds given box of size 0', function() {
+        var box = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.ZERO);
+        var testLocation = new Cartesian3(0.5, 0.5, 0.5);
+        var result = box.clampToBounds(testLocation);
+
+        expect(result).not.toEqual(testLocation);
+        expect(result.x).toEqual(0);
+        expect(result.y).toEqual(0);
+        expect(result.z).toEqual(0);
+    });
+
     createPackableSpecs(OrientedBoundingBox, new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY), [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
 });

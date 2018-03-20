@@ -79,6 +79,13 @@ defineSuite([
         expect(box).toEqual(result);
     });
 
+    it('clone without a result parameter with box of offset center', function() {
+        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X, Cartesian3.UNIT_Z);
+        var result = box.clone();
+        expect(box).not.toBe(result);
+        expect(box).toEqual(result);
+    });
+
     it('clone with a result parameter', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X);
         var result = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_Z);
@@ -153,5 +160,28 @@ defineSuite([
         expect(function() {
             AxisAlignedBoundingBox.intersectPlane(box, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('clampToBounds given input value outside of box', function() {
+        var upperBound = new Cartesian3(1, 1, 1);
+        var lowerBound = new Cartesian3(-1, -1, -1);
+        var box = new AxisAlignedBoundingBox(lowerBound, upperBound);
+
+        var testLocation = new Cartesian3(3, 3, 3);
+        var result = box.clampToBounds(testLocation);
+
+        expect(result).not.toEqual(testLocation);
+        expect(result).toEqual(upperBound);
+    });
+
+    it('clampToBounds given input value inside of box', function() {
+        var upperBound = new Cartesian3(1, 1, 1);
+        var lowerBound = new Cartesian3(-1, -1, -1);
+        var box = new AxisAlignedBoundingBox(lowerBound, upperBound);
+
+        var testLocation = new Cartesian3(0.5, 0.5, 0.5);
+        var result = box.clampToBounds(testLocation);
+
+        expect(result).toEqual(testLocation);
     });
 });

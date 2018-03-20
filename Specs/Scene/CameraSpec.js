@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/Camera',
+        'Core/AxisAlignedBoundingBox',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -9,9 +10,11 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
+        'Core/OrientedBoundingBox',
         'Core/OrthographicFrustum',
         'Core/OrthographicOffCenterFrustum',
         'Core/PerspectiveFrustum',
@@ -24,6 +27,7 @@ defineSuite([
         'Scene/TweenCollection'
     ], function(
         Camera,
+        AxisAlignedBoundingBox,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -33,9 +37,11 @@ defineSuite([
         Ellipsoid,
         GeographicProjection,
         HeadingPitchRange,
+        HeadingPitchRoll,
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrientedBoundingBox,
         OrthographicFrustum,
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
@@ -993,6 +999,53 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
+    it('moves forward in 2D mode zooms in camera instead of moving it', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.moveForward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
+    it('moves backward in 2D mode zooms out camera instead of moving it', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.moveBackward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
     it('move clamps position in 2D', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
@@ -1065,6 +1118,94 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON15);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(up, new Cartesian3()), CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(dir, CesiumMath.EPSILON15);
+    });
+
+    it('looks left in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookLeft(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks right in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookRight(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks up in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookUp(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks down in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookDown(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
     });
 
     it('twists left', function() {
@@ -1905,7 +2046,6 @@ defineSuite([
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
     });
-
 
     it('get rectangle coordinate returns camera position if scene mode is morphing', function() {
         var rectangle = new Rectangle(
@@ -2924,5 +3064,131 @@ defineSuite([
         expect(Cartesian3.magnitude(camera.directionWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
         expect(Cartesian3.magnitude(camera.rightWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
         expect(Cartesian3.magnitude(camera.upWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+    });
+
+    it('boundingObject limits camera position in by AxisAligned bounding object with value outside of bounding object', function() {
+        var lowerBound = new Cartesian3(1.0, 1.0, 1.0);
+        var upperBound = new Cartesian3(3.0, 3.0, 3.0);
+        camera.boundingObject = new AxisAlignedBoundingBox(lowerBound, upperBound, new Cartesian3(0.0, 0.0, 0.0));
+
+        var testLocation = new Cartesian3(4, 4, 4);
+        var cartographicTestLocation = Cartographic.fromCartesian(testLocation, Ellipsoid.WGS84);
+        camera._positionCartographic = Cartographic.clone(cartographicTestLocation);
+
+        var orient = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
+
+        spyOn(camera, 'setView');
+        var options = {
+            destination : camera._limitPosition(),
+            orientation : orient
+        };
+        expect(camera.setView).toHaveBeenCalledWith(options);
+    });
+
+    it('boundingObject limits camera position in by AxisAligned bounding object with value inside of bounding object', function() {
+        var lowerBound = new Cartesian3(-1.0, -1.0, -1.0);
+        var upperBound = new Cartesian3(3.0, 3.0, 3.0);
+        camera.boundingObject = new AxisAlignedBoundingBox(lowerBound, upperBound, new Cartesian3(0.0, 0.0, 0.0));
+
+        var orient = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
+
+        spyOn(camera, 'setView');
+        var options = {
+            destination : camera._limitPosition(),
+            orientation : orient
+        };
+        expect(camera.setView).toHaveBeenCalledWith(options);
+    });
+
+    it('boundingObject limits camera position in by BoundingSphere bounding object with value outside of bounding object', function() {
+        camera.boundingObject = new BoundingSphere(Cartesian3.ZERO, 3.0);
+        var testLocation = new Cartesian3(2.0, 2.0, 2.0);
+        var cartographicTestLocation = Cartographic.fromCartesian(testLocation, Ellipsoid.WGS84);
+        camera._positionCartographic = Cartographic.clone(cartographicTestLocation);
+
+        var orient = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
+
+        spyOn(camera, 'setView');
+        var options = {
+            destination : camera._limitPosition(),
+            orientation : orient
+        };
+        expect(camera.setView).toHaveBeenCalledWith(options);
+    });
+
+    it('boundingObject limits camera position in by BoundingSphere bounding object with value inside of bounding object', function() {
+        camera.boundingObject = new BoundingSphere(Cartesian3.ZERO, 3.0);
+        var testLocation = new Cartesian3(1.0, 1.0, 1.0);
+
+        var cartographicTestLocation = Cartographic.fromCartesian(testLocation, Ellipsoid.WGS84);
+        camera._positionCartographic = Cartographic.clone(cartographicTestLocation);
+
+        var orient = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
+
+        spyOn(camera, 'setView');
+        var options = {
+            destination : camera._limitPosition(),
+            orientation : orient
+        };
+        expect(camera.setView).toHaveBeenCalledWith(options);
+    });
+
+    it('boundingObject limits camera position in by OrientedBoundingBox bounding object with value outside of bounding object', function() {
+        camera.boundingObject = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.IDENTITY);
+
+        var testLocation = new Cartesian3(5, 5, 100);
+        var cartographicTestLocation = Cartographic.fromCartesian(testLocation, Ellipsoid.WGS84);
+        camera._positionCartographic = Cartographic.clone(cartographicTestLocation);
+
+        var orient = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
+
+        spyOn(camera, 'setView');
+        var options = {
+            destination : camera._limitPosition(),
+            orientation : orient
+        };
+        expect(camera.setView).toHaveBeenCalledWith(options);
+    });
+
+    it('boundingObject limits camera position in by OrientedBoundingBox bounding object with value inside of bounding object', function() {
+        camera.boundingObject = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.IDENTITY);
+
+        var testLocation = new Cartesian3(0.5, 0.5, 0.5);
+        var cartographicTestLocation = Cartographic.fromCartesian(testLocation, Ellipsoid.WGS84);
+        camera._positionCartographic = Cartographic.clone(cartographicTestLocation);
+
+        var orient = new HeadingPitchRoll(camera.heading, camera.pitch, camera.roll);
+
+        spyOn(camera, 'setView');
+        var options = {
+            destination : camera._limitPosition(),
+            orientation : orient
+        };
+        expect(camera.setView).toHaveBeenCalledWith(options);
+    });
+
+    it('clones when result is undefined and scene member is defined', function() {
+        var returnedResult = Camera.clone(camera);
+        expect(returnedResult).toBeDefined();
+        expect(returnedResult.scene).toEqual(camera.scene);
+        expect(returnedResult.position).toEqual(camera.position);
+        expect(returnedResult.direction).toEqual(camera.direction);
+        expect(returnedResult.up).toEqual(camera.up);
+        expect(returnedResult.right).toEqual(camera.right);
+        expect(returnedResult._transform).toEqual(camera._transform);
+        expect(returnedResult.boundingObject).toEqual(camera.boundingObject);
+    });
+
+    it('clones when result is defined and scene member is defined', function() {
+        var returnedResult = new Camera(scene = new FakeScene());
+        Camera.clone(camera, returnedResult);
+        expect(returnedResult).toBeDefined();
+        expect(returnedResult.scene).toEqual(camera.scene);
+        expect(returnedResult.position).toEqual(camera.position);
+        expect(returnedResult.direction).toEqual(camera.direction);
+        expect(returnedResult.up).toEqual(camera.up);
+        expect(returnedResult.right).toEqual(camera.right);
+        expect(returnedResult._transform).toEqual(camera._transform);
+        expect(returnedResult.boundingObject).toEqual(camera.boundingObject);
     });
 });

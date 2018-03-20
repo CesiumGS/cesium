@@ -906,5 +906,42 @@ defineSuite([
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
 
+    it('computes the volume of a BoundingSphere', function() {
+        var sphere = new BoundingSphere(new Cartesian3(), 1.0);
+        var computedVolume = sphere.volume();
+        var expectedVolume = (4.0 / 3.0) * CesiumMath.PI;
+        expect(computedVolume).toEqualEpsilon(expectedVolume, CesiumMath.EPSILON6);
+    });
+
+    it('clampToBounds given input value outside of sphere', function() {
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var testLocation = new Cartesian3(2, 2, 2);
+        var result = sphere.clampToBounds(testLocation);
+
+        expect(result).not.toEqual(testLocation);
+
+        var result2 = sphere.clampToBounds(result);
+        expect(result2).toEqual(result);
+
+        var finalCheck = new Cartesian3(2 / Math.sqrt(12), 2 / Math.sqrt(12), 2 / Math.sqrt(12));
+        expect(result).toEqual(finalCheck);
+    });
+
+    it('clampToBounds given input value is center of sphere', function() {
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 3.0);
+        var testLocation = new Cartesian3(0, 0, 0);
+        var result = sphere.clampToBounds(testLocation);
+
+        expect(result).toEqual(testLocation);
+    });
+
+    it('clampToBounds given input value inside of sphere but not center', function() {
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 3.0);
+        var testLocation = new Cartesian3(1, 1, 1);
+        var result = sphere.clampToBounds(testLocation);
+
+        expect(result).toEqual(testLocation);
+    });
+
     createPackableSpecs(BoundingSphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0), [1.0, 2.0, 3.0, 4.0]);
 });

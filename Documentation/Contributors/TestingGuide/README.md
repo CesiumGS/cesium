@@ -1,8 +1,8 @@
 # Testing Guide
 
-Our development culture is committed to testing.  Cesium is used in diverse use cases on a wide array of platforms so it is important for it to be well tested.
+Our development culture is committed to testing.  CesiumJS is used in diverse use cases on a wide array of platforms so it is important for it to be well tested.
 
-As of Cesium 1.35, Cesium has over 8,800 tests with 93% code coverage.  Cesium has as much test code (126K lines) as engine code (126K).  We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
+As of CesiumJS 1.35, CesiumJS has over 8,800 tests with 93% code coverage.  CesiumJS has as much test code (126K lines) as engine code (126K).  We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
 
 All new code should have 100% code coverage and should pass all tests.  Always run the tests before opening a pull request.
 
@@ -16,7 +16,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
    * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
    * [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
-* [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
+* [Testing Previous Versions of CesiumJS](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
 * [Writing Tests](#writing-tests)
    * [Directory Organization](#directory-organization)
@@ -42,13 +42,13 @@ All new code should have 100% code coverage and should pass all tests.  Always r
 
 ## Running the Tests
 
-The Cesium tests are written in JavaScript and use [Jasmine](http://jasmine.github.io/), a behavior-driven testing framework.  Jasmine calls an individual test, e.g., a function with one or more assertions, a **spec** (however, the Cesium team usually still say "test"), and a group of related tests, e.g., all the tests for `Cartesian3`, a **suite**.  Jasmine also calls an assertion, an **expectation**.
+The CesiumJS tests are written in JavaScript and use [Jasmine](http://jasmine.github.io/), a behavior-driven testing framework.  Jasmine calls an individual test, e.g., a function with one or more assertions, a **spec** (however, the Cesium team usually still say "test"), and a group of related tests, e.g., all the tests for `Cartesian3`, a **suite**.  Jasmine also calls an assertion, an **expectation**.
 
-When running Cesium locally, browse to [http://localhost:8080/](http://localhost:8080/) and there are several test options:
+When running CesiumJS locally, browse to [http://localhost:8080/](http://localhost:8080/) and there are several test options:
 
 ### Run All Tests
 
-Runs all the tests.  As of Cesium 1.15, on a decent laptop, they run in about a minute in Chrome.  It is important that the tests run quickly so we run them often.
+Runs all the tests.  As of CesiumJS 1.15, on a decent laptop, they run in about a minute in Chrome.  It is important that the tests run quickly so we run them often.
 
 When all the tests pass, the page looks like this:
 
@@ -66,11 +66,11 @@ Click on the failed test to rerun just that test.  This is useful for saving tim
 
 #### Run with WebGL validation
 
-The link to **Run with WebGL validation** passes a query parameter to the tests to enable extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call.  We use this when doing the monthly Cesium release and when making changes to Cesium's renderer.
+The link to **Run with WebGL validation** passes a query parameter to the tests to enable extra low-level WebGL validation such as calling `gl.getError()` after each WebGL call.  We use this when doing the monthly CesiumJS release and when making changes to CesiumJS's renderer.
 
 #### Run with WebGL stub
 
-The **Run with WebGL stub** link passes a query parameter to the tests to use Cesium's WebGL stub.  This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL.  This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
+The **Run with WebGL stub** link passes a query parameter to the tests to use CesiumJS's WebGL stub.  This makes all WebGL calls a noop and ignores test expectations that rely on reading back from WebGL.  This allows running the tests on CI where a reasonable WebGL implementation is not available and still getting full code coverage albeit not all verification.
 
 ### Select a Test to Run
 
@@ -94,25 +94,25 @@ Suites can have a category associated with them.  This option runs all tests in 
 
 Likewise, this option runs all tests not in the WebGL category.
 
-Perhaps surprisingly, this is the bulk of Cesium tests, which include math and geometry tests, imagery provider tests, data source tests, etc.
+Perhaps surprisingly, this is the bulk of CesiumJS tests, which include math and geometry tests, imagery provider tests, data source tests, etc.
 
 These tests run quickly (for example, 15 seconds compared to 60) and are very reliable across systems since they do not rely on the underlying WebGL implementation, which can vary based on the browser, OS, driver, and GPU.
 
 ### Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)
 
-Most test options load Cesium using the individual source files in the `Source` directory, which is great for debugging.
+Most test options load CesiumJS using the individual source files in the `Source` directory, which is great for debugging.
 
-However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run combine`).  This option runs the tests using this instead of individual Cesium source files.
+However, many users build apps using the built Cesium.js in `Build/Cesium` (which is created, for example, by running `npm run combine`).  This option runs the tests using this instead of individual CesiumJS source files.
 
 The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`).  The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
 
-See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for all the Cesium build options.
+See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for all the CesiumJS build options.
 
 ### Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)
 
 [JSCoverage](http://siliconforks.com/jscoverage/) is used for code coverage.  It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
 
-To run code coverage, first create a build of Cesium that is instrumented for coverage by running `npm run instrumentForCoverage`.  Currently, this is Windows only.
+To run code coverage, first create a build of CesiumJS that is instrumented for coverage by running `npm run instrumentForCoverage`.  Currently, this is Windows only.
 
 Then use this test option to run the tests with code coverage.  Click on the `Summary` tab to see the total code coverage and coverage for each individual source file.
 
@@ -125,7 +125,7 @@ Click on a file to see line-by-line coverage for just that file.  For example, h
 In the left margin, green indicates a line that was executed, and red indicates a line that was not.  Many lines, such as comments and semicolons, are not colored since they are not executable.
 
 For the `contains` function above
-   * `AssociativeArray.prototype.contains = function(key) {` is executed once when Cesium is loaded to assign the `contains` function to the `AssociativeArray`'s prototype.
+   * `AssociativeArray.prototype.contains = function(key) {` is executed once when CesiumJS is loaded to assign the `contains` function to the `AssociativeArray`'s prototype.
    * The `if` statement and return statement are executed 3,425 times.
    * The `throw` statement is not executed, which indicates that test coverage should be improved here.  We strive to test _all_ error conditions.
 
@@ -186,7 +186,7 @@ It is also possible for Karma to run all tests against each browser installed on
 
  `npm run test-non-webgl`
 
-#### Run All Tests Against the Minified Release Version of Cesium
+#### Run All Tests Against the Minified Release Version of CesiumJS
 
  `npm run test-release`
 
@@ -194,19 +194,19 @@ It is also possible for Karma to run all tests against each browser installed on
 
 Sometimes it is useful to run a single test or suite for easier debugging purposes.  To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak.  Likewise, to run an entire suite, use `fdefineSuite` instead of `defineSuite`.
 
-## Testing Previous Versions of Cesium
+## Testing Previous Versions of CesiumJS
 
-Sometimes it is useful to see if an issue exists in a previous version of Cesium.  The tests for all versions of Cesium back to b15 (April 2013) are hosted on the Cesium website via the [downloads page](http://cesiumjs.org/downloads.html).  Use the "Documentation, Sandcastle, tests, etc." links.
+Sometimes it is useful to see if an issue exists in a previous version of CesiumJS.  The tests for all versions of CesiumJS back to b15 (April 2013) are hosted on the CesiumJS website via the [downloads page](http://cesiumjs.org/downloads.html).  Use the "Documentation, Sandcastle, tests, etc." links.
 
 ## `testfailure` Label for Issues
 
-Despite our best efforts, sometimes tests fail.  This is often due to a new browser, OS, or driver bug that breaks a test that previously passed.  If this indicates a bug in Cesium, we strive to quickly fix it.  Likewise, if it indicates that Cesium needs to work around the issue (for example, as we [did for Safari 9](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)), we also strive to quickly fix it.
+Despite our best efforts, sometimes tests fail.  This is often due to a new browser, OS, or driver bug that breaks a test that previously passed.  If this indicates a bug in CesiumJS, we strive to quickly fix it.  Likewise, if it indicates that CesiumJS needs to work around the issue (for example, as we [did for Safari 9](https://github.com/AnalyticalGraphicsInc/cesium/issues/2989)), we also strive to quickly fix it.
 
-If a test failure is likely due to a browser, OS, or driver bug, or a poorly written test, and the failure does not impact actual Cesium apps, we sometimes submit an issue with the [testfailure](https://github.com/AnalyticalGraphicsInc/cesium/labels/test%20failure) label to fix it at a later time.  A great way to contribute to Cesium is to help fix these issues.
+If a test failure is likely due to a browser, OS, or driver bug, or a poorly written test, and the failure does not impact actual CesiumJS apps, we sometimes submit an issue with the [testfailure](https://github.com/AnalyticalGraphicsInc/cesium/labels/test%20failure) label to fix it at a later time.  A great way to contribute to CesiumJS is to help fix these issues.
 
 ## Writing Tests
 
-We _love_ to write tests.  We often write them as we write engine code (meaning Cesium itself). Or if the engine code is experimental, we make a second pass and write tests before opening a pull request.  Sometimes we do both: we write tests right away for the new code we expect to be stable, and we wait to write tests for the code in flux.
+We _love_ to write tests.  We often write them as we write engine code (meaning CesiumJS itself). Or if the engine code is experimental, we make a second pass and write tests before opening a pull request.  Sometimes we do both: we write tests right away for the new code we expect to be stable, and we wait to write tests for the code in flux.
 
 ### Directory Organization
 
@@ -214,17 +214,17 @@ Tests are located in the [Specs](https://github.com/AnalyticalGraphicsInc/cesium
 
 ### Bottom-Up Unit Testing
 
-The Cesium tests are largely **unit tests** because they test individual units, e.g., functions or classes.  The simplest units are tested individually, and then units built upon other units are also tested.  This allows us to build Cesium on well-tested foundations and to quickly narrow down issues.
+The CesiumJS tests are largely **unit tests** because they test individual units, e.g., functions or classes.  The simplest units are tested individually, and then units built upon other units are also tested.  This allows us to build CesiumJS on well-tested foundations and to quickly narrow down issues.
 
 For example, a [`BoundingSphere`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/BoundingSphere.js) is composed of a `Cartesian3` that defines its center and a number that defines its radius.  Even though tests for `BoundingSphere` implicitly test parts of `Cartesian3`, there are separate tests that explicitly test `Cartesian3` as a unit so anything that relies on `Cartesian3` knows it is already tested.
 
-Often, we also test private units individually for the same reason.  For example, [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js) is a private class in Cesium used by primitives, but it is still individually tested in [ShaderCacheSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Renderer/ShaderCacheSpec.js).
+Often, we also test private units individually for the same reason.  For example, [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js) is a private class in CesiumJS used by primitives, but it is still individually tested in [ShaderCacheSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Renderer/ShaderCacheSpec.js).
 
 Sometimes classes or functions are even designed with a separation specifically to enable more precise testing.  For example, see [`getStringFromTypedArray`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/getStringFromTypedArray.js) and [getStringFromTypedArraySpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Core/getStringFromTypedArraySpec.js).
 
 ### Test Code is Code
 
-Tests are written in JavaScript using Jasmine.  It is important to realize that the tests themselves are code, just like Cesium.  As such, the test code is held to the same standards as the engine code: it should be well organized, cohesive, loosely coupled, fast, and go through peer review.
+Tests are written in JavaScript using Jasmine.  It is important to realize that the tests themselves are code, just like CesiumJS.  As such, the test code is held to the same standards as the engine code: it should be well organized, cohesive, loosely coupled, fast, and go through peer review.
 
 ### Testing Basics
 
@@ -256,7 +256,7 @@ This test constructs a default `Cartesian3` object and then expects that the `x`
 
 Tests should have at least one `expect` call, but they may also have several as long as the test is cohesive.  A test should test one behavior; if a test grows too complicated, it is hard to debug when it fails.  To test one function may only require one test with one `expect`, or it may require multiple tests, each with multiple `expect` statements.  It depends on context.  Experience, peer review, and the existing tests will help guide you.
 
-The above test does not require creating a `Viewer` widget or even a WebGL context; the only part of Cesium it uses is `Cartesian3` and anything it depends on.
+The above test does not require creating a `Viewer` widget or even a WebGL context; the only part of CesiumJS it uses is `Cartesian3` and anything it depends on.
 
 > To learn the ins and outs of Jasmine, take 15 minutes to go through their [examples](http://jasmine.github.io/2.2/introduction.html).  We will not cover all the details in this guide.
 
@@ -273,7 +273,7 @@ it('angleBetween works for acute angles', function() {
 });
 ```
 
-`toEqualEpsilon` is a custom Jasmine matcher that the Cesium tests add. See [Specs/addDefaultMatchers.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/addDefaultMatchers.js) for all the custom matchers.  In general, all test utility functions are in files in the `Specs` root directory.
+`toEqualEpsilon` is a custom Jasmine matcher that the CesiumJS tests add. See [Specs/addDefaultMatchers.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/addDefaultMatchers.js) for all the custom matchers.  In general, all test utility functions are in files in the `Specs` root directory.
 
 For more on comparing floating-point numbers, see [Comparing Floating Point Numbers, 2012 Edition](https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/).
 
@@ -334,19 +334,19 @@ it('renders', function() {
 
 The test knows `scene` will be defined and does not need to worry about cleaning up the `scene` because `afterEach` and `afterAll` take care of it.
 
-We strive to write isolated isolated tests so that a test can be run individually and produce the same results as when running the suite containing the test or all Cesium tests.  Therefore, a test should not depend, for example, on a previous test setting global state.
+We strive to write isolated isolated tests so that a test can be run individually and produce the same results as when running the suite containing the test or all CesiumJS tests.  Therefore, a test should not depend, for example, on a previous test setting global state.
 
 The tests in the `'WebGL'` category do not strictly follow this pattern.  Creating a WebGL context (which is implicit, for example, in `createScene`) is slow. Because it creates a lot of contexts, e.g., one per test, it is not well supported in browsers.  So the tests use the pattern in the code example below where a `scene` (or `viewer` or `context`) has the lifetime of the suite using `beforeAll` and `afterAll`.
 
 ### Rendering Tests
 
-Unlike the `Cartesian3` tests we first saw, many tests need to construct the main Cesium `Viewer` widget or one of its major components.  Low-level renderer tests construct just `Context` (which, itself, has a canvas and WebGL context), and primitive tests construct a `Scene` (which contains a `Context`).
+Unlike the `Cartesian3` tests we first saw, many tests need to construct the main CesiumJS `Viewer` widget or one of its major components.  Low-level renderer tests construct just `Context` (which, itself, has a canvas and WebGL context), and primitive tests construct a `Scene` (which contains a `Context`).
 
-As shown above, these tests use Cesium test utility functions: `createViewer`, `createScene`, or `createContext`.  These functions honor query parameters passed to the tests (e.g., enabling WebGL validation or the WebGL stub) and add a few utility functions to the returned object.  For example, `createScene` creates a 1x1 pixel canvas with a Cesium Scene and adds `renderForSpecs` (to initialize and render a frame) and `destroyForSpecs` to the returned `Scene` object.
+As shown above, these tests use CesiumJS test utility functions: `createViewer`, `createScene`, or `createContext`.  These functions honor query parameters passed to the tests (e.g., enabling WebGL validation or the WebGL stub) and add a few utility functions to the returned object.  For example, `createScene` creates a 1x1 pixel canvas with a CesiumJS Scene and adds `renderForSpecs` (to initialize and render a frame) and `destroyForSpecs` to the returned `Scene` object.
 
-> Most Cesium apps do not render the scene directly; instead, the `Viewer` object's default render loop renders the scene implicit to the user.  The tests are an exception; most tests explicitly render the scene.
+> Most CesiumJS apps do not render the scene directly; instead, the `Viewer` object's default render loop renders the scene implicit to the user.  The tests are an exception; most tests explicitly render the scene.
 
-Cesium adds several custom Jasmine matchers to make the rendering tests more concise and to support running tests with the WebGL stub.  When using the WebGL stub, the WebGL implementation is a noop, and test expectations that rely on reading back from WebGL are ignored.  The rendering custom matchers are:
+CesiumJS adds several custom Jasmine matchers to make the rendering tests more concise and to support running tests with the WebGL stub.  When using the WebGL stub, the WebGL implementation is a noop, and test expectations that rely on reading back from WebGL are ignored.  The rendering custom matchers are:
 
 * `toRender`
 * `notToRender`
@@ -380,7 +380,7 @@ Like most rendering tests, the first example uses a coarse-grained expectation t
 
 The second test verifies that the pixel value is the same as the default background color since the primitive's `show` property is `false`.
 
-`toRender` and `notToRender` can also render the scene at a given Cesium simulation time, e.g.,:
+`toRender` and `notToRender` can also render the scene at a given CesiumJS simulation time, e.g.,:
 
 ```javascript
 expect({
@@ -430,7 +430,7 @@ expect({
 }).toReadPixels([0, 0, 0, 255]);
 ```
 
-Low-level Cesium renderer tests use just a `Context` without a Cesium `Scene`, and use the `contextToRender` and `notContextToRender` custom matchers to render a WebGL point primitive to the context's 1x1 viewport and verify the RGBA value, e.g.:
+Low-level CesiumJS renderer tests use just a `Context` without a CesiumJS `Scene`, and use the `contextToRender` and `notContextToRender` custom matchers to render a WebGL point primitive to the context's 1x1 viewport and verify the RGBA value, e.g.:
 
 ```javascript
 expect({
@@ -458,7 +458,7 @@ it('can declare automatic uniforms', function() {
 
 ### GLSL
 
-GLSL is the shading language used by WebGL to run small graphics programs in parallel on the GPU.  Under-the-hood, Cesium contains a library of GLSL identifiers and functions.  These are unit tested by writing a simple fragment shader that outputs white if the test passes.  For example, here is an excerpt from [BuiltinFunctionsSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Renderer/BuiltinFunctionsSpec.js);
+GLSL is the shading language used by WebGL to run small graphics programs in parallel on the GPU.  Under-the-hood, CesiumJS contains a library of GLSL identifiers and functions.  These are unit tested by writing a simple fragment shader that outputs white if the test passes.  For example, here is an excerpt from [BuiltinFunctionsSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Renderer/BuiltinFunctionsSpec.js);
 
 ```javascript
 var context;
@@ -574,7 +574,7 @@ Make external requests that assume the tests are being used with an Internet con
 
 (For an introduction to promises, see [JavaScript Promises - There and back again](http://www.html5rocks.com/en/tutorials/es6/promises/)).
 
-For asynchronous testing, Jasmine's `it` function uses a `done` callback.  For better integration with Cesium's asynchronous patterns, Cesium replaces `it` with a function that can return promises.
+For asynchronous testing, Jasmine's `it` function uses a `done` callback.  For better integration with CesiumJS's asynchronous patterns, CesiumJS replaces `it` with a function that can return promises.
 
 Here is an excerpt from [ModelSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/ModelSpec.js):
 
@@ -615,7 +615,7 @@ function loadModelJson(gltf) {
 }
 ```
 
-Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, Cesium's `pollToPromise` is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.ready` is `true` or the `timeout` is reached.
+Since loading a model requires asynchronous requests and creating WebGL resources that may be spread over several frames, CesiumJS's `pollToPromise` is used to return a promise that resolves when the model is ready, which occurs by rendering the scene in an implicit loop (hence the name "poll") until `model.ready` is `true` or the `timeout` is reached.
 
 `pollToPromise` is used in many places where a test needs to wait for an asynchronous event before testing its expectations.  Here is an excerpt from [BillboardCollectionSpec.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Specs/Scene/BillboardCollectionSpec.js):
 
@@ -718,11 +718,11 @@ defineSuite([
 }, 'WebGL');
 ```
 
-`defineSuite` is a custom Cesium function that wraps Jasmine define calls and provides the category capability.
+`defineSuite` is a custom CesiumJS function that wraps Jasmine define calls and provides the category capability.
 
 ## Manual Testing
 
-Sometimes running the unit tests is all that is needed to verify new code.  However, we often also manually run Cesium to see the effects of new code.  Sometimes it is as simple as running Cesium Viewer before opening a pull request, perhaps because we just added a new function to `Cartesian3`.  Other times, it is as involved as going through each example in Sandcastle and testing the different options because, for example, we refactored the renderer for WebGL 2.  Most often, there is a middle ground, for example, we added a new feature to `Model` so we ran the Sandcastle examples that create 3D Models.
+Sometimes running the unit tests is all that is needed to verify new code.  However, we often also manually run CesiumJS to see the effects of new code.  Sometimes it is as simple as running CesiumJS Viewer before opening a pull request, perhaps because we just added a new function to `Cartesian3`.  Other times, it is as involved as going through each example in Sandcastle and testing the different options because, for example, we refactored the renderer for WebGL 2.  Most often, there is a middle ground, for example, we added a new feature to `Model` so we ran the Sandcastle examples that create 3D Models.
 
 ## Pragmatic Advice
 
@@ -730,11 +730,11 @@ Advice from [@pjcozzi](https://github.com/pjcozzi):
 
 ### Start with a Similar (Small) Test
 
-> Since I wrote the very first Cesium test, I have not written a suite - or even individual test - from scratch.  I suspect no one does.
+> Since I wrote the very first CesiumJS test, I have not written a suite - or even individual test - from scratch.  I suspect no one does.
 
 ![](6.jpg)
 
-The first 73 Cesium tests from March 2011.
+The first 73 CesiumJS tests from March 2011.
 
 > Instead, start with a similar suite or test, copy it, strip it down to the minimum you need, and then start adding your specific code.  For example, if you are adding a new math type, start with Cartesian3Spec.js or Matrix4Spec.js.  If you are adding a new primitive, start with DebugModelMatrixPrimitiveSpec.js.
 
@@ -748,7 +748,7 @@ The first 73 Cesium tests from March 2011.
 
 ## Testing in WebStorm
 
-When you load the Cesium WebStorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
+When you load the CesiumJS WebStorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
 
 ![](webstorm-test-configuration.png)
 
@@ -764,4 +764,4 @@ To make jumping between the source and spec files easier download the  [Cesium W
 
 ## Resources
 
-See Section 4.4 of [Getting Serious with JavaScript](http://webglinsights.github.io/downloads/WebGL-Insights-Chapter-4.pdf) by Cesium contributors Matthew Amato and Kevin Ring in _WebGL Insights_ for a deeper but less broad presentation of Cesium testing.
+See Section 4.4 of [Getting Serious with JavaScript](http://webglinsights.github.io/downloads/WebGL-Insights-Chapter-4.pdf) by CesiumJS contributors Matthew Amato and Kevin Ring in _WebGL Insights_ for a deeper but less broad presentation of CesiumJS testing.

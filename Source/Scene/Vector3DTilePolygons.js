@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defaultValue',
@@ -16,6 +17,7 @@ define([
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
+        arraySlice,
         Cartesian3,
         Color,
         defaultValue,
@@ -251,10 +253,10 @@ define([
 
             if (!defined(batchTableColors)) {
                 // Copy because they may be the views on the same buffer.
-                positions = polygons._positions = polygons._positions.slice();
-                counts = polygons._counts = polygons._counts.slice();
-                indexCounts = polygons._indexCounts= polygons._indexCounts.slice();
-                indices = polygons._indices = polygons._indices.slice();
+                positions = polygons._positions = arraySlice(polygons._positions);
+                counts = polygons._counts = arraySlice(polygons._counts);
+                indexCounts = polygons._indexCounts= arraySlice(polygons._indexCounts);
+                indices = polygons._indices = arraySlice(polygons._indices);
 
                 polygons._center = polygons._ellipsoid.cartographicToCartesian(Rectangle.center(polygons._rectangle));
 
@@ -442,8 +444,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */

@@ -9,6 +9,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/Rectangle',
         'Scene/Cesium3DTileBatchTable',
+        'Scene/ColorBlendMode',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -22,6 +23,7 @@ defineSuite([
         Matrix4,
         Rectangle,
         Cesium3DTileBatchTable,
+        ColorBlendMode,
         createScene,
         pollToPromise) {
     'use strict';
@@ -47,7 +49,8 @@ defineSuite([
         _tileset : {
             _statistics : {
                 batchTableByteLength : 0
-            }
+            },
+            colorBlendMode : ColorBlendMode.HIGHLIGHT
         }
     };
 
