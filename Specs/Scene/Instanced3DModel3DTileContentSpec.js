@@ -1,27 +1,27 @@
 defineSuite([
         'Core/Cartesian3',
-        'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Transforms',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
+        'Scene/Model',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene',
-        'Scene/Model'
+        'Specs/createScene'
     ], 'Scene/Instanced3DModel3DTileContent', function(
         Cartesian3,
-        ClippingPlane,
-        ClippingPlaneCollection,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Transforms,
+        ClippingPlane,
+        ClippingPlaneCollection,
+        Model,
         TileBoundingSphere,
         Cesium3DTilesTester,
-        createScene,
-        Model) {
+        createScene) {
     'use strict';
 
     var scene;

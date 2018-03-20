@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/ClippingPlaneCollection',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -30,9 +29,9 @@ define([
         '../Core/PixelFormat',
         '../Core/Plane',
         '../Core/PrimitiveType',
-        '../Core/Resource',
         '../Core/Quaternion',
         '../Core/Queue',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
@@ -62,8 +61,10 @@ define([
         './AttributeType',
         './Axis',
         './BlendingState',
+        './ClippingPlaneCollection',
         './ColorBlendMode',
         './DracoLoader',
+        './getClipAndStyleCode',
         './getClippingFunction',
         './HeightReference',
         './JobType',
@@ -82,7 +83,6 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        ClippingPlaneCollection,
         clone,
         Color,
         combine,
@@ -108,9 +108,9 @@ define([
         PixelFormat,
         Plane,
         PrimitiveType,
-        Resource,
         Quaternion,
         Queue,
+        Resource,
         RuntimeError,
         Transforms,
         WebGLConstants,
@@ -140,8 +140,10 @@ define([
         AttributeType,
         Axis,
         BlendingState,
+        ClippingPlaneCollection,
         ColorBlendMode,
         DracoLoader,
+        getClipAndStyleCode,
         getClippingFunction,
         HeightReference,
         JobType,
@@ -239,7 +241,21 @@ define([
      * resources are created.
      * </p>
      * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * Cesium supports glTF assets with the following extensions:
+     * <ul>
+     * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li>
+     * </ul>
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
      * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
      * relative to a local origin.
      * </p>
@@ -516,7 +532,7 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-        this._colorShadingEnabled = isColorShadingEnabled(this);
+        this._colorShadingEnabled = false;
 
         this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
@@ -1027,7 +1043,7 @@ define([
                     return;
                 }
                 // Handle destroying, checking of unknown, checking for existing ownership
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         }
     });
@@ -1070,7 +1086,21 @@ define([
      * KHR_binary_glTF extension with a .glb extension.
      * </p>
      * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * Cesium supports glTF assets with the following extensions:
+     * <ul>
+     * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li>
+     * </ul>
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
      * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
      * relative to a local origin.
      * </p>
@@ -1713,6 +1743,11 @@ define([
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
 
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
+
         var vertexBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : loadResources.getBuffer(bufferView),
@@ -1749,6 +1784,11 @@ define([
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
 
         var indexBuffer = Buffer.createIndexBuffer({
             context : context,
@@ -3894,19 +3934,12 @@ define([
         shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
-            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +
+            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix);' +
-            '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-            '    clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
-            '    float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
-            '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-            '    { \n' +
-            '        gl_FragColor = clippingPlanesEdgeColor;\n' +
-            '    } \n' +
+            getClipAndStyleCode('gltf_clippingPlanes', 'gltf_clippingPlanesMatrix', 'gltf_clippingPlanesEdgeStyle') +
             '} \n';
         return shader;
     }
@@ -4245,6 +4278,18 @@ define([
                     processModelMaterialsCommon(this.gltf, options);
                     processPbrMetallicRoughness(this.gltf, options);
 
+                    // We do this after to make sure that the ids don't change
+                    addBuffersToLoadResources(this);
+                    if (!this._loadRendererResourcesFromCache) {
+                        parseBufferViews(this);
+                        parseShaders(this);
+                        parsePrograms(this);
+                        parseTextures(this, context);
+                    }
+                    parseMaterials(this);
+                    parseMeshes(this);
+                    parseNodes(this);
+
                     // Start draco decoding
                     DracoLoader.parse(this);
 
@@ -4257,19 +4302,6 @@ define([
                 }
 
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
-                    // We do this after to make sure that the ids don't change
-                    addBuffersToLoadResources(this);
-
-                    if (!this._loadRendererResourcesFromCache) {
-                        parseBufferViews(this);
-                        parseShaders(this);
-                        parsePrograms(this);
-                        parseTextures(this, context);
-                    }
-                    parseMaterials(this);
-                    parseMeshes(this);
-                    parseNodes(this);
-
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
 
@@ -4399,7 +4431,7 @@ define([
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
                 Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
-                currentClippingPlanesState = clippingPlanes.clippingPlanesState();
+                currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
             var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
@@ -4594,8 +4626,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

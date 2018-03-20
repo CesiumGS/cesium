@@ -4,6 +4,7 @@ Change Log
 ### 1.44 - 2018-04-02
 
 ##### Breaking Changes :mega:
+* `GeometryVisualizer` now requires `primitive` and `groundPrimitive` parameters. [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
 * `Camera.distanceToBoundingSphere` now returns the signed distance to the bounding sphere. Positive values indicate that the bounding sphere is in the positive half-plane of the camera position and view direction while a negative value indicates it is in the negative half-plane.
 
 ##### Deprecated :hourglass_flowing_sand:
@@ -16,14 +17,26 @@ Change Log
   * Removed the 6-clipping-plane limit.
   * Added support for Internet Explorer.
   * Added a `ClippingPlane` object to be used with `ClippingPlaneCollection`.
+  * Added 3D Tiles use-case to Terrain Clipping Planes Sandcastle
 * Updated `WebMapServiceImageryProvider` so it can take an srs or crs string to pass to the resource query parameters based on the WMS version. [#6223](https://github.com/AnalyticalGraphicsInc/cesium/issues/6223)
+* Sharing Sandcastle examples now works by storing the full example directly in the URL instead of creating GitHub gists, because anonymous gist creation was removed by GitHub. Loading existing gists will still work. [#6342](https://github.com/AnalyticalGraphicsInc/cesium/pull/6342)
+* Added additional query parameter options to the CesiumViewer demo application:
+  * sourceType specifies the type of data source if the URL doesn't have a known file extension.
+  * flyTo=false optionally disables the automatic flyTo after loading the data source.
 * Added a multi-part CZML example to Sandcastle. [#6320](https://github.com/AnalyticalGraphicsInc/cesium/pull/6320)
+* Added support for ordering in `DataSourceCollection` [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
+  * All ground geometry from one `DataSource` will render in front of all ground geometry from another `DataSource` in the same collection with a lower index.
+  * Use `DataSourceCollection.raise`, `DataSourceCollection.lower`, `DataSourceCollection.raiseToTop` and `DataSourceCollection.lowerToBottom` functions to change the ordering of a `DataSource` in the collection. 
 * Added option `logDepthBuffer` to `Viewer`. With this option there is typically a single frustum using logarithmic depth rendered. This increases performance by issuing less draw calls to the GPU and helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
 * Added `Math.log2` to compute the base 2 logarithm of a number.
 
 ##### Fixes :wrench:
 * Fixed support of glTF-supplied tangent vectors. [#6302](https://github.com/AnalyticalGraphicsInc/cesium/pull/6302)
 * Fixed improper zoom during model load failure. [#6305](https://github.com/AnalyticalGraphicsInc/cesium/pull/6305)
+* Fixed model loading failure when containing unused materials. [6315](https://github.com/AnalyticalGraphicsInc/cesium/pull/6315)
+* Fixed default value of `alphaCutoff` in glTF models. [#6346](https://github.com/AnalyticalGraphicsInc/cesium/pull/6346)
+* Fixed rendering vector tiles when using `invertClassification`. [#6349](https://github.com/AnalyticalGraphicsInc/cesium/pull/6349)
+* Fixed animation for glTF models with missing animation targets. [#6351](https://github.com/AnalyticalGraphicsInc/cesium/pull/6351)
 
 ### 1.43 - 2018-03-01
 

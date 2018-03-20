@@ -326,8 +326,6 @@ define([
      * not part of the public Cesium API.
      * </p>
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @example

@@ -1,4 +1,5 @@
 defineSuite([
+        'Scene/Scene',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -34,7 +35,6 @@ defineSuite([
         'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
-        'Scene/Scene',
         'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
@@ -42,7 +42,8 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise',
         'Specs/render'
-    ], 'Scene/Scene', function(
+    ], function(
+        Scene,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -78,7 +79,6 @@ defineSuite([
         Material,
         Primitive,
         PrimitiveCollection,
-        Scene,
         SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,

@@ -1,6 +1,6 @@
 define([
-        '../Core/Check',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -23,8 +23,8 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
-        Check,
         Cartesian3,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,

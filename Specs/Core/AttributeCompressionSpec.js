@@ -2,12 +2,14 @@ defineSuite([
         'Core/AttributeCompression',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Cartesian4',
         'Core/defined',
         'Core/Math'
     ], function(
         AttributeCompression,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         defined,
         CesiumMath) {
     'use strict';
@@ -29,6 +31,18 @@ defineSuite([
         var result = new Cartesian2();
         AttributeCompression.octEncode(Cartesian3.UNIT_Z, result);
         expect(result).toEqual(new Cartesian2(128, 128));
+    });
+
+    it('oct encode(0, 0, -1) to 4 components', function() {
+        var result = new Cartesian4();
+        AttributeCompression.octEncodeToCartesian4(negativeUnitZ, result);
+        expect(result).toEqual(new Cartesian4(255, 255, 255, 255));
+    });
+
+    it('oct encode(0, 0, 1) to 4 components', function() {
+        var result = new Cartesian4();
+        AttributeCompression.octEncodeToCartesian4(Cartesian3.UNIT_Z, result);
+        expect(result).toEqual(new Cartesian4(128, 0, 128, 0));
     });
 
     it('oct extents are equal', function() {
@@ -95,6 +109,25 @@ defineSuite([
         var result = new Cartesian3();
         expect(function() {
             AttributeCompression.octDecode(0, 256, result);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws 4-component oct decode out of bounds', function() {
+        var result = new Cartesian3();
+        expect(function() {
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(256, 0, 0, 0), result);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(0, 256, 0, 0), result);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(0, 0, 256, 0), result);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            AttributeCompression.octDecodeFromCartesian4(new Cartesian4(0, 0, 0, 256), result);
         }).toThrowDeveloperError();
     });
 
@@ -237,6 +270,76 @@ defineSuite([
         Cartesian3.normalize(normal, normal);
         AttributeCompression.octEncodeInRange(normal, rangeMax, encoded);
         expect(AttributeCompression.octDecodeInRange(encoded.x, encoded.y, rangeMax, result)).toEqualEpsilon(normal, epsilon);
+    });
+
+    it('oct encoding to 4 components', function() {
+        var epsilon = CesiumMath.EPSILON1;
+
+        var encoded = new Cartesian4();
+        var result = new Cartesian3();
+        var normal = new Cartesian3(0.0, 0.0, 1.0);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 0.0, -1.0);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 1.0, 0.0);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, -1.0, 0.0);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 0.0, 0.0);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 0.0, 0.0);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncodeToCartesian4(normal, encoded);
+        expect(AttributeCompression.octDecodeFromCartesian4(encoded, result)).toEqualEpsilon(normal, epsilon);
     });
 
     it('octFloat encoding', function() {

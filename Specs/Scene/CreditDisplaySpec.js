@@ -1,11 +1,11 @@
 defineSuite([
         'Scene/CreditDisplay',
-        'Core/defined',
-        'Core/Credit'
+        'Core/Credit',
+        'Core/defined'
     ], function(
         CreditDisplay,
-        defined,
-        Credit) {
+        Credit,
+        defined) {
     'use strict';
 
     var container;

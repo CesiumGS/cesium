@@ -34,8 +34,9 @@ define([
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
 
-        this.decoding = false;
+        this.createdBufferViews = {};
         this.primitivesToDecode = new Queue();
+        this.activeDecodingTasks = 0;
 
         this.skinnedNodesIds = [];
     }
@@ -89,7 +90,7 @@ define([
     };
 
     ModelLoadResources.prototype.finishedDecoding = function() {
-        return !this.decoding && this.primitivesToDecode.length === 0;
+        return this.primitivesToDecode.length === 0 && this.activeDecodingTasks === 0;
     };
 
     ModelLoadResources.prototype.finished = function() {

@@ -21,20 +21,25 @@ define([
         var numFaces = dracoGeometry.num_faces();
 
         var faceIndices = new draco.DracoInt32Array();
-        var indexArray = IndexDatatype.createTypedArray(numPoints, numFaces * 3);
+        var numIndices = numFaces * 3;
+        var indexArray = IndexDatatype.createTypedArray(numPoints, numIndices);
 
+        var offset = 0;
         for (var i = 0; i < numFaces; ++i) {
             dracoDecoder.GetFaceFromMesh(dracoGeometry, i, faceIndices);
 
-            var offset = i * 3;
             indexArray[offset + 0] = faceIndices.GetValue(0);
             indexArray[offset + 1] = faceIndices.GetValue(1);
             indexArray[offset + 2] = faceIndices.GetValue(2);
+            offset += 3;
         }
 
         draco.destroy(faceIndices);
 
-        return indexArray;
+        return {
+            typedArray : indexArray,
+            numberOfIndices : numIndices
+        };
     }
 
     function decodeAttributeData(dracoGeometry, compressedAttributes) {

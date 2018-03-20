@@ -94,9 +94,16 @@ define([
         var joints = (defined(skin)) ? skin.joints : [];
         var jointCount = joints.length;
         var primitiveInfo = material.extras._pipeline.primitive;
-        var skinningInfo = primitiveInfo.skinning;
-        var hasSkinning = skinningInfo.skinned;
-        var hasVertexColors = primitiveInfo.hasVertexColors;
+
+        var skinningInfo;
+        var hasSkinning = false;
+        var hasVertexColors = false;
+
+        if (defined(primitiveInfo)) {
+            skinningInfo = primitiveInfo.skinning;
+            hasSkinning = skinningInfo.skinned;
+            hasVertexColors = primitiveInfo.hasVertexColors;
+        }
 
         var hasNormals = true;
         var hasTangents = false;
@@ -596,12 +603,8 @@ define([
         var alphaMode = material.alphaMode;
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
-                var alphaCutoff = material.alphaCutoff;
-                if (defined(alphaCutoff)) {
-                    fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
-                } else {
-                    fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
-                }
+                var alphaCutoff = defaultValue(material.alphaCutoff, 0.5);
+                fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
             } else if (alphaMode === 'BLEND') {
                 fragmentShader += '    gl_FragColor = vec4(color, baseColorWithAlpha.a);\n';
             } else {

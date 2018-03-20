@@ -1042,9 +1042,8 @@ define([
         var commandList = frameState.commandList;
         var commandLength = commands.length;
         var i;
-        var command;
         for (i = 0; i < commandLength; ++i) {
-            command = commands[i];
+            var command = commands[i];
             command.pass = pass;
             commandList.push(command);
         }
@@ -1168,8 +1167,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
