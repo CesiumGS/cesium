@@ -197,11 +197,11 @@ define([
             margin : 'auto'
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > span a, .cesium-credit-lightbox > ul > li > span a:visited', {
+        style += addStyle('.cesium-credit-lightbox > ul > li a, .cesium-credit-lightbox > ul > li a:visited', {
             color: textColor
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > span a:hover', {
+        style += addStyle('.cesium-credit-lightbox > ul > li a:hover', {
             color: highlightColor
         });
 

@@ -21,7 +21,7 @@ define([
     'use strict';
 
     var trailingSlashRegex = /\/$/;
-    var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>');
+    var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>');
 
     /**
      * Provides tiled imagery hosted by Mapbox.

@@ -17,19 +17,6 @@ define([
     var nextCreditId = 0;
     var creditToId = {};
 
-    function createDomNode(html) {
-        var span = document.createElement('span');
-        span.innerHTML = html;
-
-        return span;
-    }
-
-    function getElement(credit) {
-        var html = credit.html;
-        html = xss(html);
-        return createDomNode(html);
-    }
-
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
      * @param {String} html An string representing an html code snippet (can be text only)
@@ -218,7 +205,19 @@ define([
         element: {
             get: function() {
                 if (!defined(this._element)) {
-                    this._element = getElement(this);
+                    var html = this.html;
+                    html = xss(html);
+
+                    var div = document.createElement('div');
+                    div.style.display = 'inline';
+                    div.innerHTML = html;
+
+                    var links = div.querySelectorAll('a');
+                    for (var i = 0; i < links.length; i++) {
+                        links[i].setAttribute('target', '_blank');
+                    }
+
+                    this._element = div;
                 }
                 return this._element;
             }

@@ -120,7 +120,7 @@ define([
         this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
-        this._credit = new Credit('<a href="http://www.bing.com" target="_blank"><img src="' + BingMapsImageryProvider._logoData + '" title="Bing Imagery"/></a>');
+        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider._logoData + '" title="Bing Imagery"/></a>');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
