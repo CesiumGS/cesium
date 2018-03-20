@@ -152,6 +152,7 @@ _This is an npm-only release to fix an issue with using Cesium in Node.js.__
 * Added `BoundingSphere.volume` for computing the volume of a `BoundingSphere`. [#6069](https://github.com/AnalyticalGraphicsInc/cesium/pull/6069)
 * Fixed `OrientedBoundingBox` documentation. [#6147](https://github.com/AnalyticalGraphicsInc/cesium/pull/6147)
 * Updated documentation links to reflect new locations on `https://cesiumjs.org` and `https://cesium.com`.
+
 ### 1.41 - 2018-01-02
 
 * Breaking changes
