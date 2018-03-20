@@ -285,7 +285,8 @@ define([
                 imageUrl: attribution.image
             }, showOnScreen);
         }
-        credit._isIon = true;
+
+        credit._isIon = credit.html.indexOf('ion-credit.png') !== -1;
         return credit;
     };
 
