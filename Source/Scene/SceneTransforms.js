@@ -312,7 +312,7 @@ define([
             // to perspective form
             // (far - far * near / z) / (far - near)
             depth = Math.pow(2.0, depth * CesiumMath.log2(far + 1.0)) - 1.0;
-            depth = far * (1.0 - 1.0 / depth) / (far - near);
+            depth = far * (1.0 - near / depth) / (far - near);
         }
 
         var viewport = scene._passState.viewport;

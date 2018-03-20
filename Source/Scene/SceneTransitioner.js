@@ -872,7 +872,7 @@ define([
 
             var frustum = camera.frustum;
             if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
-                frustum.near = 1.0;
+                frustum.near = 0.1;
                 frustum.far = 10000000000.0;
             }
 
@@ -929,7 +929,7 @@ define([
 
             var frustum = camera.frustum;
             if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
-                frustum.near = 1.0;
+                frustum.near = 0.1;
                 frustum.far = 10000000000.0;
             }
 

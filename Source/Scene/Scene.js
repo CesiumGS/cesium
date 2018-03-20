@@ -289,7 +289,7 @@ define([
 
         this._logDepthBuffer = undefined;
         this._logDepthBufferDirty = true;
-        this.logarithmicDepthBuffer = context.fragmentDepth;
+        this.logarithmicDepthBuffer = false;//context.fragmentDepth;
 
         this._tweens = new TweenCollection();
 
@@ -469,11 +469,11 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
-         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer. The default is 1e6.
+         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer. The default is 1e9.
          * @type {Number}
-         * @default 1000000.0
+         * @default 1e9
          */
-        this.logarithmicDepthFarToNearRatio = 1000000.0;
+        this.logarithmicDepthFarToNearRatio = 1e9;
 
         /**
          * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
@@ -705,7 +705,6 @@ define([
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
-        this.logarithmicDepthFarToNearRatio = 1000000000.0;
         if (this._logDepthBuffer) {
             this._camera.frustum.near = 0.1;
             this._camera.frustum.far = 10000000000.0;
