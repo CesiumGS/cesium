@@ -145,7 +145,7 @@ define([
             var tile = tiles.get(i);
             var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
             if (defined(loadedTile)) {
-                markForSelection(tileset, tile, frameState);
+                markForSelection(tileset, loadedTile, frameState);
             }
         }
     }
@@ -276,9 +276,23 @@ define([
                (tile.contentVisibility(frameState) !== Intersect.OUTSIDE);
     }
 
+    // function addDesiredTile(tileset, tile, frameState) {
+    //     if (tile._touchedFrame === frameState.frameNumber) {
+    //         return;
+    //     }
+    //
+    //     tileset._desiredTiles.push(tile);
+    // }
+
     function addDesiredTile(tileset, tile, frameState) {
-        if (tile._touchedFrame === frameState.frameNumber) {
-            return;
+        var desiredTiles = tileset._desiredTiles;
+        var length = desiredTiles.length;
+
+        for (var i = 0; i < length; ++i) {
+            var other = desiredTiles[i];
+            if (other === tile) {
+                return;
+            }
         }
 
         tileset._desiredTiles.push(tile);
@@ -503,8 +517,11 @@ define([
                 }
             }
 
-            if (replace && contentAvailable && !refines && parentRefines) {
+            // TODO : optimization of rendering visible children even if the parent hasn't refined
+
+            if (!defined(leaves) && replace && contentAvailable && !refines && parentRefines) {
                 // Replacement tiles that have loaded content but can't refine further are desired
+                // leaves is undefined if we are just running the base traversal
                 addDesiredTile(tileset, tile, frameState);
             }
 
@@ -513,11 +530,11 @@ define([
                 addDesiredTile(tileset, tile, frameState);
             }
 
-            if (defined(leaves) && !traverse && (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError)) {
-                // If the tile cannot traverse further in the base traversal but can traverse further in the skip traversal, add it to leaves
-                // leaves is undefined if we are just running the base traversal
-                leaves.push(tile);
-            }
+            // if (defined(leaves) && !traverse && (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError)) {
+            //     // If the tile cannot traverse further in the base traversal but can traverse further in the skip traversal, add it to leaves
+            //     // leaves is undefined if we are just running the base traversal
+            //     leaves.push(tile);
+            // }
 
             visitTile(tileset, tile, frameState);
             loadTile(tileset, tile, true, frameState);
@@ -578,6 +595,8 @@ define([
         var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
         var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
 
+        // TODO : why does ancestor need to be defined? When would the ancestor even equal the tile?
+        // TODO : should probably be using ancestorWithContent rather than contentAvailable?
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
                tile.contentUnloaded &&
                defined(ancestor) && (ancestor !== tile) &&
@@ -591,6 +610,10 @@ define([
 
         var stack = skipTraversal.stack;
 
+        // TODO : possibly remove this
+        stack.length = 0;
+        stack.push(tileset._root);
+
         while (stack.length > 0) {
             skipTraversal.stackMaximumLength = Math.max(skipTraversal.stackMaximumLength, stack.length);
 
@@ -603,6 +626,11 @@ define([
             var children = tile.children;
             var childrenLength = children.length;
             var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
+
+            // TODO : possibly remove this
+            if (traverse && replace && reachedSkippingThreshold(tileset, tile)) {
+                traverse = false;
+            }
 
             if (traverse) {
                 for (i = 0; i < childrenLength; ++i) {
@@ -636,6 +664,22 @@ define([
                     tile._touchedFrame = frameState.frameNumber;
                 }
             }
+
+            // if (replace) {
+            //     if (!traverse) {
+            //         addDesiredTile(tileset, tile, frameState);
+            //         loadTile(tileset, tile, false, frameState);
+            //         touch(tileset, tile, frameState);
+            //         tile._touchedFrame = frameState.frameNumber;
+            //     } else if (reachedSkippingThreshold(tileset, tile)) {
+            //         loadTile(tileset, tile, false, frameState);
+            //         touch(tileset, tile, frameState);
+            //         tile._touchedFrame = frameState.frameNumber;
+            //     } else {
+            //         touch(tileset, tile, frameState);
+            //         tile._touchedFrame = frameState.frameNumber;
+            //     }
+            // }
         }
         // TODO : ignoring loadSiblings right now
     }
