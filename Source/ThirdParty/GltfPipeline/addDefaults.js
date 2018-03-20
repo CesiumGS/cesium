@@ -219,11 +219,11 @@ define([
         ForEach.animation(gltf, function(animation) {
             ForEach.animationChannel(animation, function(channel) {
                 var target = channel.target;
-                var node = target.node;
+                var nodeId = target.node;
                 var path = target.path;
                 // Ignore animations that target 'weights'
                 if (path === 'translation' || path === 'rotation' || path === 'scale') {
-                    nodes[node] = true;
+                    nodes[nodeId] = true;
                 }
             });
         });
