@@ -288,6 +288,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {[String]} [options.dequantizeInShader] The list of {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} encoded attributes to dequantize in the shader.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -638,7 +639,7 @@ define([
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
         this._decodedData = {};
-        this._dequantizeInShader = true;
+        this._dequantizeInShader = options.dequantizeInShader;
 
         this._cachedGeometryByteLength = 0;
         this._cachedTexturesByteLength = 0;
@@ -1131,6 +1132,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {[String]} [options.dequantizeInShader] The list of {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} encoded attributes to dequantize in the shader.
      *
      * @returns {Model} The newly created model.
      *
@@ -1699,7 +1701,7 @@ define([
 
         ForEach.mesh(model.gltf, function(mesh, id) {
             runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-            if (defined(model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader)) {
+            if (defined(model.extensionsUsed.WEB3D_quantized_attributes) || defined(model._dequantizeInShader)) {
                 // Cache primitives according to their program
                 var primitives = mesh.primitives;
                 var primitivesLength = primitives.length;
@@ -1987,7 +1989,7 @@ define([
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || defined(model._dequantizeInShader)) {
             var quantizedVS = quantizedVertexShaders[id];
             if (!defined(quantizedVS)) {
                 quantizedVS = modifyShaderForQuantizedAttributes(vs, id, model);
@@ -2023,7 +2025,7 @@ define([
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || defined(model._dequantizeInShader)) {
             vs = quantizedVertexShaders[id];
         }
 
@@ -3124,7 +3126,7 @@ define([
             }
 
             // Add uniforms for decoding quantized attributes if used
-            if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
+            if (model.extensionsUsed.WEB3D_quantized_attributes || defined(model._dequantizeInShader)) {
                 var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
                 uniformMap = combine(uniformMap, quantizedUniformMap);
             }

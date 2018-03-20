@@ -2473,6 +2473,15 @@ defineSuite([
         });
     });
 
+    it('loads a draco compressed glTF and dequantizes in the shader', function() {
+        return loadModel(dracoCompressedModelUrl, {
+            dequantizeInShader : ['POSITION']
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('does not issue draw commands when ignoreCommands is true', function() {
         return loadModel(texturedBoxUrl, {
             ignoreCommands : true

@@ -110,9 +110,11 @@ define([
             dracoDecoder = new draco.Decoder();
         }
 
-        if (parameters.dequantizeInShader) {
-            dracoDecoder.SkipAttributeTransform(draco.POSITION);
-            dracoDecoder.SkipAttributeTransform(draco.TEX_COORD);
+        var attributesToSkip = parameters.dequantizeInShader;
+        if (defined(attributesToSkip)) {
+            for (var i = 0; i < attributesToSkip.length; ++i) {
+                dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
+            }
         }
 
         var bufferView = parameters.bufferView;
