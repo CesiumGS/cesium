@@ -355,7 +355,7 @@ defineSuite([
 
     it('works if Cesium credit replaced', function() {
         var ionCredit = Credit.getIonCredit({
-            html: 'Cesium ion',
+            html: '<img src="ion-credit.png"/>',
             collapsible: false
         });
         creditDisplay = new CreditDisplay(container);
