@@ -47,6 +47,7 @@ define([
         var decodedAttributeData = {};
         var attributeData;
         var vertexArray;
+        var transform;
         for (var attributeName in compressedAttributes) {
             if (compressedAttributes.hasOwnProperty(attributeName)) {
                 var compressedAttribute = compressedAttributes[attributeName];
@@ -66,7 +67,8 @@ define([
                 }
 
                 var vertexArrayLength = vertexArray.length;
-                for (var i = 0; i < vertexArrayLength; ++i) {
+                var i;
+                for (i = 0; i < vertexArrayLength; ++i) {
                     vertexArray[i] = attributeData.GetValue(i);
                 }
 
@@ -82,6 +84,21 @@ define([
                         componentDatatype : ComponentDatatype.fromTypedArray(vertexArray)
                     }
                 };
+
+                transform = new draco.AttributeQuantizationTransform();
+                if (transform.InitFromAttribute(attribute)) {
+                    var minValues = new Float32Array(numComponents);
+                    for (i = 0; i < numComponents; ++i) {
+                        minValues[i] = transform.min_value(i);
+                    }
+
+                    decodedAttributeData[attributeName].data.quantization = {
+                        quantizationBits : transform.quantization_bits(),
+                        minValues : minValues,
+                        range : transform.range()
+                    };
+                }
+                draco.destroy(transform);
             }
         }
 
@@ -91,6 +108,11 @@ define([
     function decodeDracoPrimitive(parameters) {
         if (!defined(dracoDecoder)) {
             dracoDecoder = new draco.Decoder();
+        }
+
+        if (parameters.dequantizeInShader) {
+            dracoDecoder.SkipAttributeTransform(draco.POSITION);
+            dracoDecoder.SkipAttributeTransform(draco.TEX_COORD);
         }
 
         var bufferView = parameters.bufferView;

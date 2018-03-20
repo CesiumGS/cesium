@@ -638,6 +638,7 @@ define([
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
         this._decodedData = {};
+        this._dequantizeInShader = true;
 
         this._cachedGeometryByteLength = 0;
         this._cachedTexturesByteLength = 0;
@@ -1698,7 +1699,7 @@ define([
 
         ForEach.mesh(model.gltf, function(mesh, id) {
             runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-            if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
+            if (defined(model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader)) {
                 // Cache primitives according to their program
                 var primitives = mesh.primitives;
                 var primitivesLength = primitives.length;
@@ -1710,6 +1711,7 @@ define([
                         programPrimitives = [];
                         model._programPrimitives[programId] = programPrimitives;
                     }
+                    primitive.id = id + '.primitive.' + i;
                     programPrimitives.push(primitive);
                 }
             }
@@ -1882,6 +1884,11 @@ define([
     function modifyShaderForQuantizedAttributes(shader, programName, model) {
         var primitive;
         var primitives = model._programPrimitives[programName];
+
+        if (!defined(primitives)) {
+            return shader;
+        }
+
         for (var i = 0; i < primitives.length; i++) {
             primitive = primitives[i];
             if (getProgramForPrimitive(model, primitive) === programName) {
@@ -1889,7 +1896,16 @@ define([
             }
         }
 
-        var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
+        var result;
+        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+            result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
+        } else {
+            var decodedData = model._decodedData[primitive.id];
+            if (!defined(decodedData)) {
+                return shader;
+            }
+            result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+        }
         model._quantizedUniforms[programName] = result.uniforms;
 
         // This is not needed after the program is processed, free the memory
@@ -1971,7 +1987,7 @@ define([
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
             var quantizedVS = quantizedVertexShaders[id];
             if (!defined(quantizedVS)) {
                 quantizedVS = modifyShaderForQuantizedAttributes(vs, id, model);
@@ -2007,7 +2023,7 @@ define([
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
             vs = quantizedVertexShaders[id];
         }
 
@@ -2604,7 +2620,7 @@ define([
                         var accessor = accessors[primitive.indices];
                         var bufferView = accessor.bufferView;
 
-                        // Used decoded draco buffer if available
+                        // Use buffer of previously decoded draco geometry
                         if (defined(decodedData)) {
                             bufferView = decodedData.bufferView;
                         }
@@ -2921,6 +2937,10 @@ define([
     function createUniformsForQuantizedAttributes(model, primitive) {
         var programId = getProgramForPrimitive(model, primitive);
         var quantizedUniforms = model._quantizedUniforms[programId];
+        var decodedData = model._decodedData[primitive.id];
+        if (defined(decodedData)) {
+            return ModelUtility.createUniformsForDracoQuantizedAttributes(model.gltf, primitive, decodedData.attributes);
+        }
         return ModelUtility.createUniformsForQuantizedAttributes(model.gltf, primitive, quantizedUniforms);
     }
 
@@ -3104,7 +3124,7 @@ define([
             }
 
             // Add uniforms for decoding quantized attributes if used
-            if (model.extensionsUsed.WEB3D_quantized_attributes) {
+            if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
                 var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
                 uniformMap = combine(uniformMap, quantizedUniformMap);
             }
@@ -4257,7 +4277,7 @@ define([
                     parseNodes(this);
 
                     // Start draco decoding
-                    DracoLoader.parse(this);
+                    DracoLoader.parse(this, this._dequantizeInShader);
 
                     loadResources.initialized = true;
                 }

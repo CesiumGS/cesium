@@ -130,7 +130,7 @@ define([
      *
      * @private
      */
-    DracoLoader.parse = function(model) {
+    DracoLoader.parse = function(model, dequantizeInShader) {
         if (!hasExtension(model)) {
             return;
         }
@@ -155,7 +155,8 @@ define([
                     primitive : primitiveId,
                     array : typedArray,
                     bufferView : bufferView,
-                    compressedAttributes : compressionData.attributes
+                    compressedAttributes : compressionData.attributes,
+                    dequantizeInShader : dequantizeInShader
                 });
             });
         });
