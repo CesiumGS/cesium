@@ -289,7 +289,7 @@ define([
 
         this._logDepthBuffer = undefined;
         this._logDepthBufferDirty = true;
-        this.logarithmicDepthBuffer = false;//context.fragmentDepth;
+        this.logarithmicDepthBuffer = context.fragmentDepth;
 
         this._tweens = new TweenCollection();
 
@@ -1400,7 +1400,8 @@ define([
                 return this._logDepthBuffer;
             },
             set : function(value) {
-                if (this._context.fragmentDepth && this._logDepthBuffer !== value) {
+                value = this._context.fragmentDepth && value;
+                if (this._logDepthBuffer !== value) {
                     this._logDepthBuffer = value;
                     this._logDepthBufferDirty = true;
 
