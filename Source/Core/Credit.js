@@ -1,17 +1,17 @@
 define([
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './deprecationWarning',
-    './DeveloperError',
-    '../ThirdParty/xss'
-], function(
-    defaultValue,
-    defined,
-    defineProperties,
-    deprecationWarning,
-    DeveloperError,
-    xss) {
+        '../ThirdParty/xss',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './deprecationWarning',
+        './DeveloperError'
+    ], function(
+        xss,
+        defaultValue,
+        defined,
+        defineProperties,
+        deprecationWarning,
+        DeveloperError) {
     'use strict';
 
     var nextCreditId = 0;
