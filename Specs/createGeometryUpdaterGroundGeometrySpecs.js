@@ -1,21 +1,21 @@
 define([
-    'Core/Color',
-    'Core/JulianDate',
-    'DataSources/ColorMaterialProperty',
-    'DataSources/ConstantProperty',
-    'DataSources/GridMaterialProperty',
-    'DataSources/SampledProperty',
-    'Scene/GroundPrimitive',
-    'Scene/PrimitiveCollection'
-], function(
-    Color,
-    JulianDate,
-    ColorMaterialProperty,
-    ConstantProperty,
-    GridMaterialProperty,
-    SampledProperty,
-    GroundPrimitive,
-    PrimitiveCollection) {
+        'Core/Color',
+        'Core/JulianDate',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/GridMaterialProperty',
+        'DataSources/SampledProperty',
+        'Scene/GroundPrimitive',
+        'Scene/PrimitiveCollection'
+    ], function(
+        Color,
+        JulianDate,
+        ColorMaterialProperty,
+        ConstantProperty,
+        GridMaterialProperty,
+        SampledProperty,
+        GroundPrimitive,
+        PrimitiveCollection) {
     'use strict';
 
     function createGeometryUpdaterGroundGeometrySpecs(Updater, geometryPropertyName, createEntity, createDynamicEntity, getScene) {

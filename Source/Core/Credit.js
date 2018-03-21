@@ -1,13 +1,13 @@
 define([
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError'
-], function(
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError) {
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError'
+    ], function(
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     var nextCreditId = 0;

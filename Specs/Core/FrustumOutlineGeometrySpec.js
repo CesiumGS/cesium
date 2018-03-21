@@ -7,7 +7,7 @@ defineSuite([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-    FrustumOutlineGeometry,
+        FrustumOutlineGeometry,
         Cartesian3,
         CesiumMath,
         PerspectiveFrustum,

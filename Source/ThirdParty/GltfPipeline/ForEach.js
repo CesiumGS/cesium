@@ -49,6 +49,11 @@ define([
         ForEach.topLevel(gltf, 'animations', handler);
     };
 
+    ForEach.animationChannel = function(animation, handler) {
+        var channels = animation.channels;
+        ForEach.object(channels, handler);
+    };
+
     ForEach.animationSampler = function(animation, handler) {
         var samplers = animation.samplers;
         if (defined(samplers)) {

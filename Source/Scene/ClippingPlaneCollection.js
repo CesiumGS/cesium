@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Math',
         '../Core/Check',
         '../Core/Color',
         '../Core/defaultValue',
@@ -14,6 +13,7 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/Intersect',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/PixelFormat',
         '../Core/Plane',
@@ -30,7 +30,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        CesiumMath,
         Check,
         Color,
         defaultValue,
@@ -41,6 +40,7 @@ define([
         DeveloperError,
         FeatureDetection,
         Intersect,
+        CesiumMath,
         Matrix4,
         PixelFormat,
         Plane,
@@ -711,8 +711,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
