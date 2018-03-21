@@ -1436,10 +1436,16 @@ define([
         });
     }
 
+    function sortRequestByPriority(a, b) {
+        return a._priority - b._priority;
+    }
+
     function requestTiles(tileset) {
-        // TODO : sort requested tiles by priority here so we can avoid requests from being cancelled excessively
+        // Sort requests by priority before making any requests.
+        // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
+        requestedTiles.sort(sortRequestByPriority);
         for (var i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
@@ -1821,6 +1827,7 @@ define([
         }
 
         if (outOfCore) {
+            this._requestedTiles.length = 0;
             Cesium3DTilesetTraversal.selectTiles(this, frameState);
             requestTiles(this);
             processTiles(this, frameState);

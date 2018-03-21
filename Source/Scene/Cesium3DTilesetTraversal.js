@@ -61,7 +61,6 @@ define([
 
         tileset._desiredTiles.length = 0;
         tileset._selectedTiles.length = 0;
-        tileset._requestedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
         tileset._hasMixedContent = false;
 
@@ -312,7 +311,11 @@ define([
 
         var parent = tile.parent;
         if (defined(parent)) {
-            tile._ancestorWithContent = !hasEmptyContent(parent) ? parent : parent._ancestorWithContent;
+            // ancestorWithContent is an ancestor that has content or has the potential to have
+            // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
+            // ancestorWithContentAvailable is an ancestor that we can render if a desired tile is not loaded.
+            var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
+            tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
             tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
         }
     }
@@ -348,7 +351,8 @@ define([
             return;
         }
 
-        if (tile.contentUnloaded || tile.contentExpired) {
+        if (hasUnloadedContent(tile) || tile.contentExpired) {
+            tile._requestedFrame = frameState.frameNumber;
             tile._priority = getPriority(tile, useParentPriority);
             tileset._requestedTiles.push(tile);
         }
@@ -426,7 +430,7 @@ define([
     function getVisibility(tileset, tile, maximumScreenSpaceError, frameState) {
         updateVisibility(tileset, tile, frameState);
 
-        // Not visible. Visibility is updated in its parent's call to updateChildren.
+        // Not visible
         if (tile._visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
             return false;
         }
@@ -469,6 +473,10 @@ define([
 
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
+    }
+
+    function hasUnloadedContent(tile) {
+        return !hasEmptyContent(tile) && tile.contentUnloaded;
     }
 
     function executeBaseTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, leaves, frameState) {
@@ -590,13 +598,11 @@ define([
     }
 
     function reachedSkippingThreshold(tileset, tile) {
-        // Look at the nearest ancestor that wasn't skipped. It doesn't need to be loaded yet.
         var ancestor = tile._ancestorWithContent;
         var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
         var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
 
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
-               tile.contentUnloaded &&
                defined(ancestor) &&
                (tile._screenSpaceError < (ancestor._screenSpaceError / skipScreenSpaceErrorFactor)) &&
                (tile._depth > (ancestor._depth + skipLevels));
@@ -630,7 +636,6 @@ define([
                     loadTile(tileset, tile, false, frameState);
                 } else if (reachedSkippingThreshold(tileset, tile)) {
                     loadTile(tileset, tile, false, frameState);
-                    traverse = false;
                 }
                 // Always touch tiles. Even tiles that are skipped should stay loaded.
                 touch(tileset, tile, frameState);

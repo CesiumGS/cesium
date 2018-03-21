@@ -325,6 +325,7 @@ define([
         this._updatedVisibilityFrame = 0;
         this._touchedFrame = 0;
         this._selectedFrame = 0;
+        this._requestedFrame = 0;
         this._ancestorWithContent = undefined;
         this._ancestorWithContentAvailable = undefined;
         this._refines = false;
