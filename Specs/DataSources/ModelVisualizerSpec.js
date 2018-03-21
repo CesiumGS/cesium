@@ -299,11 +299,10 @@ defineSuite([
         var time = JulianDate.now();
         var testObject = entityCollection.getOrCreateEntity('test');
         var model = new ModelGraphics();
-        console.log(model);
         testObject.model = model;
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
-        model.uri = new ConstantProperty("/path/to/incorrect/file");
+        model.uri = new ConstantProperty('/path/to/incorrect/file');
         visualizer.update(time);
 
         var result = new BoundingSphere();
