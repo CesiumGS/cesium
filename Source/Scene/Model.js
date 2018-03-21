@@ -2940,7 +2940,7 @@ define([
         var quantizedUniforms = model._quantizedUniforms[programId];
         var decodedData = model._decodedData[primitive.id];
         if (defined(decodedData)) {
-            return ModelUtility.createUniformsForDracoQuantizedAttributes(model.gltf, primitive, decodedData.attributes);
+            return ModelUtility.createUniformsForDracoQuantizedAttributes(decodedData.attributes);
         }
         return ModelUtility.createUniformsForQuantizedAttributes(model.gltf, primitive, quantizedUniforms);
     }

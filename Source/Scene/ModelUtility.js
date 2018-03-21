@@ -493,7 +493,7 @@ define([
         return [matrix[20], matrix[21], matrix[22], matrix[23]];
     }
 
-    ModelUtility.createUniformsForDracoQuantizedAttributes = function(gltf, primitive, decodedAttributes) {
+    ModelUtility.createUniformsForDracoQuantizedAttributes = function(decodedAttributes) {
         var uniformMap = {};
         for (var attribute in decodedAttributes) {
             if (decodedAttributes.hasOwnProperty(attribute)) {
