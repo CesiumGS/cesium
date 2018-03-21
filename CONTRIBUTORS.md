@@ -91,6 +91,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [William Wall](https://github.com/wallw-bits)
 * [virtualcitySYSTEMS GmbH](https://www.virtualcitysystems.de)
    * [Jannes Bolling](https://github.com/jbo023)
+   * [Arne Schilling](https://github.com/arneschilling)
 * [Logilab](https://www.logilab.fr/)
    * [Florent Cayré](https://github.com/fcayre/)
 * [webiks](https://www.webiks.com)
