@@ -50,14 +50,17 @@ float completelyFakeAsin(float x)
     return (x * x * x + x) * 0.78539816339;
 }
 
-vec3 getWorldPos(vec2 fragCoord) {
+vec4 getEyeCoord(vec2 fragCoord) {
     vec2 coords = fragCoord / czm_viewport.zw;
     float depth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));
     vec4 windowCoord = vec4(fragCoord, depth, 1.0);
     vec4 eyeCoord = czm_windowToEyeCoordinates(windowCoord);
-    vec4 worldCoord4 = czm_inverseView * eyeCoord;
-    vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;
-    return worldCoord;
+    return eyeCoord;
+}
+
+vec3 getEyeCoord3(vec2 fragCoord) {
+    vec4 eyeCoord = getEyeCoord(fragCoord);
+    return eyeCoord.xyz / eyeCoord.w;
 }
 
 void main(void)
@@ -68,7 +71,11 @@ void main(void)
     #ifdef PER_INSTANCE_COLOR
     gl_FragColor = v_color;
     #else
-    vec3 worldCoord = getWorldPos(gl_FragCoord.xy);
+
+    vec4 eyeCoord = getEyeCoord(gl_FragCoord.xy);
+    vec4 worldCoord4 = czm_inverseView * eyeCoord;
+    vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;
+
     vec3 sphereNormal = normalize(worldCoord);
 
     float latitude = completelyFakeAsin(sphereNormal.z); // find a dress for the ball Sinderella
@@ -88,30 +95,21 @@ void main(void)
     vec2 fragCoord = gl_FragCoord.xy;
     float d = 1.0;
 
-    // sample up, down, left, and right in screen space
-    vec3 downUp = getWorldPos(fragCoord + vec2(0.0, d)) - getWorldPos(fragCoord - vec2(0.0, d));
-    vec3 leftRight = getWorldPos(fragCoord - vec2(d, 0.0)) - getWorldPos(fragCoord + vec2(d, 0.0));
-    vec3 normal = normalize(cross(downUp, leftRight));
-
-    //vec3 normal = sphereNormal; // TODO: do better?
-
-    // TODO: might need optional rotations down here...
-    vec3 normalEC = czm_normal * normal;
-    vec3 tangent = cross(vec3(0, 0, 1), normal);
-    vec3 tangentEC = czm_normal * tangent;
-    vec3 bitangentEC = czm_normal * cross(normal, tangent);
+    // sample adjacent pixels in 2x2 block in screen space
+    vec3 eyeCoord3 = eyeCoord.xyz / eyeCoord.w;
+    vec3 downUp = eyeCoord3 - getEyeCoord3(fragCoord - vec2(0.0, d)).xyz;
+    vec3 leftRight = getEyeCoord3(fragCoord - vec2(d, 0.0)).xyz - eyeCoord3;
+    vec3 normalEC = normalize(cross(downUp, leftRight));
 
     czm_materialInput materialInput;
     materialInput.normalEC = normalEC;
-    materialInput.tangentToEyeMatrix = czm_tangentToEyeSpaceMatrix(normalEC, tangentEC, bitangentEC);
-    //materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoord, normalEC);
+    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoord, normalEC);
     materialInput.positionToEyeEC = positionToEyeEC;
     materialInput.st.x = v;
     materialInput.st.y = u;
     czm_material material = czm_getMaterial(materialInput);
 
     gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
-    //gl_FragColor = vec4(u, v, 0.0, 1.0);
     #endif
 
 #endif
