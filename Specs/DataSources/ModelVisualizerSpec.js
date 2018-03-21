@@ -301,13 +301,11 @@ defineSuite([
         var model = new ModelGraphics();
         console.log(model);
         testObject.model = model;
-        
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
         model.uri = new ConstantProperty("/path/to/incorrect/file");
         visualizer.update(time);
 
-        var modelPrimitive = scene.primitives.get(0);
         var result = new BoundingSphere();
         var state = visualizer.getBoundingSphere(testObject, result);
         expect(state).toBe(BoundingSphereState.PENDING);
