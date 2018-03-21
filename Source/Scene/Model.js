@@ -288,7 +288,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
-     * @param {[String]} [options.dequantizeInShader] The list of {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} encoded attributes to dequantize in the shader.
+     * @param {String[]} [options.dequantizeInShader] The list of {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} encoded attributes to dequantize in the shader.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -1132,7 +1132,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
-     * @param {[String]} [options.dequantizeInShader] The list of {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} encoded attributes to dequantize in the shader.
+     * @param {String[]} [options.dequantizeInShader] The list of {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} encoded attributes to dequantize in the shader.
      *
      * @returns {Model} The newly created model.
      *
@@ -1898,17 +1898,16 @@ define([
             }
         }
 
-        var result;
+        var result = shader;
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
             result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
+            model._quantizedUniforms[programName] = result.uniforms;
         } else {
             var decodedData = model._decodedData[primitive.id];
-            if (!defined(decodedData)) {
-                return shader;
+            if (defined(decodedData)) {
+                result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
             }
-            result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
         }
-        model._quantizedUniforms[programName] = result.uniforms;
 
         // This is not needed after the program is processed, free the memory
         model._programPrimitives[programName] = undefined;
