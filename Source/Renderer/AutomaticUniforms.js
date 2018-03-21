@@ -913,6 +913,20 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform that indicates if the current camera is orthographic in 3D.
+         *
+         * @alias czm_orthographicIn3D
+         * @see UniformState#orthographicIn3D
+         */
+        czm_orthographicIn3D : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.orthographicIn3D ? 1 : 0;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
          * transforms normal vectors in model coordinates to eye coordinates.
          * <br /><br />

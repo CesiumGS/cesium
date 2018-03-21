@@ -27,7 +27,6 @@ defineSuite([
         expect(result).toEqual('http://test.com/awesome.png');
     });
 
-
     it('throws with undefined parameter', function() {
         expect(function() {
             getAbsoluteUri(undefined);

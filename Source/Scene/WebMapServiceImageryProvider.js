@@ -63,6 +63,8 @@ define([
      *        likely to result in rendering problems.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
+     * @param {String} [options.crs] CRS specification, for use with WMS specification >= 1.3.0.
+     * @param {String} [options.srs] SRS specification, for use with WMS specification 1.1.0 or 1.1.1
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
@@ -111,15 +113,15 @@ define([
 
         var pickFeatureResource = resource.clone();
 
-        resource.addQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
-        pickFeatureResource.addQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
+        resource.setQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
+        pickFeatureResource.setQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
 
         if (defined(options.parameters)) {
-            resource.addQueryParameters(objectToLowercase(options.parameters));
+            resource.setQueryParameters(objectToLowercase(options.parameters));
         }
 
         if (defined(options.getFeatureInfoParameters)) {
-            pickFeatureResource.addQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
+            pickFeatureResource.setQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
         }
 
         var parameters = {};
@@ -133,14 +135,14 @@ define([
             // Use CRS with 1.3.0 and going forward.
             // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
             // bbox requests.
-            parameters.crs = options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84';
+            parameters.crs = defaultValue(options.crs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
         } else {
             // SRS for WMS 1.1.0 or 1.1.1.
-            parameters.srs = options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
+            parameters.srs = defaultValue(options.srs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
         }
 
-        resource.addQueryParameters(parameters, true);
-        pickFeatureResource.addQueryParameters(parameters, true);
+        resource.setQueryParameters(parameters, true);
+        pickFeatureResource.setQueryParameters(parameters, true);
 
         var pickFeatureParams = {
             query_layers: options.layers,
@@ -148,7 +150,7 @@ define([
             y: '{j}',
             info_format: '{format}'
         };
-        pickFeatureResource.addQueryParameters(pickFeatureParams, true);
+        pickFeatureResource.setQueryParameters(pickFeatureParams, true);
 
         this._resource = resource;
         this._pickFeaturesResource = pickFeatureResource;

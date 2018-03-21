@@ -1,4 +1,5 @@
 defineSuite([
+        'Scene/Scene',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -34,7 +35,6 @@ defineSuite([
         'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
-        'Scene/Scene',
         'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
@@ -42,7 +42,8 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise',
         'Specs/render'
-    ], 'Scene/Scene', function(
+    ], function(
+        Scene,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -78,7 +79,6 @@ defineSuite([
         Material,
         Primitive,
         PrimitiveCollection,
-        Scene,
         SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
@@ -1463,12 +1463,13 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
-        globe.tileLoadedEvent.raiseEvent();
 
+        scene.requestRender();
+        Object.defineProperty(globe, 'tilesLoaded', { value: false });
         scene.renderForSpecs();
+        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         expect(scene._renderRequested).toBe(true);
-
         scene.renderForSpecs();
         expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
 
@@ -1491,6 +1492,33 @@ defineSuite([
         var globe = new Globe(ellipsoid);
         scene.globe = globe;
         globe.imageryLayersUpdatedEvent.raiseEvent();
+
+        scene.renderForSpecs();
+
+        expect(scene._renderRequested).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('Globe changing terrain providers triggers a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._renderRequested).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+        globe.terrainProviderChanged.raiseEvent();
 
         scene.renderForSpecs();
 

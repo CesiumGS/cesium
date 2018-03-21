@@ -48,7 +48,6 @@ function startup(Cesium) {
 
 // Add a clipping plane, a plane geometry to show the representation of the
 // plane, and control the magnitude of the plane distance with the mouse.
-// Clipping planes are not currently supported in Internet Explorer.
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox: false,
@@ -103,7 +102,7 @@ moveHandler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
+var scratchPlane = new Cesium.ClippingPlane(Cesium.Cartesian3.UNIT_X, 0.0);
 function createPlaneUpdateFunction(plane, transform) {
     return function () {
         plane.distance = targetY;
@@ -114,7 +113,7 @@ function createPlaneUpdateFunction(plane, transform) {
 var tileset;
 function loadTileset(url) {
     var clippingPlanes = [
-        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -147,6 +146,7 @@ function loadTileset(url) {
 
             planeEntities.push(planeEntity);
         }
+        return tileset;
     }).otherwise(function(error) {
         console.log(error);
     });
@@ -155,7 +155,7 @@ function loadTileset(url) {
 var modelEntityClippingPlanes;
 function loadModel(url) {
     var clippingPlanes = [
-        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
 
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
@@ -205,14 +205,12 @@ function loadModel(url) {
 }
 
 // Power Plant design model provided by Bentley Systems
-var bimUrl = Cesium.CesiumIon.createResource(1459, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4' });
-var pointCloudUrl = Cesium.CesiumIon.createResource(1460, { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM' });
-var instancedUrl = '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedOrientation/';
+var bimUrl = Cesium.IonResource.fromAssetId(3837);
+var pointCloudUrl = Cesium.IonResource.fromAssetId(3838);
+var instancedUrl = Cesium.IonResource.fromAssetId(3876);
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
-bimUrl.then(function(resource) {
-    return loadTileset(resource);
-});
+loadTileset(bimUrl);
 
 // Track and create the bindings for the view model
 var toolbar = document.getElementById('toolbar');
@@ -223,17 +221,13 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     reset();
 
     if (newValue === clipObjects[0]) {
-        bimUrl.then(function(resource) {
-            return loadTileset(resource);
-        });
+        loadTileset(bimUrl);
     } else if (newValue === clipObjects[1]) {
-        pointCloudUrl.then(function(resource) {
-            return loadTileset(resource);
-        }).then(function() {
+        loadTileset(pointCloudUrl).then(function(tileset) {
             tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
     } else if (newValue === clipObjects[2]) {
-        loadTileset(instancedUrl).then(function() {
+        loadTileset(instancedUrl).then(function(tileset) {
             tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
     } else {
@@ -264,6 +258,7 @@ function reset() {
     viewer.scene.primitives.removeAll();
     planeEntities = [];
     targetY = 0.0;
+    tileset = undefined;
 }
 
 //Sandcastle_End

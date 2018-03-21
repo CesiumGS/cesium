@@ -30,19 +30,11 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-
 viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
-var scene = viewer.scene;
-var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/'
-}));
-
-tileset.readyPromise.then(function() {
-    viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));
-}).otherwise(function(error) {
-    throw(error);
-});
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3882) });
+viewer.scene.primitives.add(tileset);
+viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));
 
 var styles = [];
 function addStyle(name, style) {
@@ -211,9 +203,6 @@ for (var i = 0; i < styles.length; ++i) {
 }
 
 Sandcastle.addToolbarMenu(styleOptions);
-
-///////////////////////////////////////////////////////////////////////////////
-
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

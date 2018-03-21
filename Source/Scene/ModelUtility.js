@@ -145,7 +145,8 @@ define([
                     extension !== 'KHR_technique_webgl' &&
                     extension !== 'KHR_binary_glTF' &&
                     extension !== 'KHR_materials_common' &&
-                    extension !== 'WEB3D_quantized_attributes') {
+                    extension !== 'WEB3D_quantized_attributes' &&
+                    extension !== 'KHR_draco_mesh_compression') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }

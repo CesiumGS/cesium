@@ -1,13 +1,11 @@
 defineSuite([
         'Core/loadWithXhr',
-        'Core/loadImage',
         'Core/Request',
         'Core/RequestErrorEvent',
         'Core/RequestScheduler',
         'Core/Resource'
     ], function(
         loadWithXhr,
-        loadImage,
         Request,
         RequestErrorEvent,
         RequestScheduler,
@@ -157,7 +155,7 @@ defineSuite([
                 /*global URL*/
                 var blobUrl = URL.createObjectURL(result);
 
-                return loadImage(blobUrl).then(function(image) {
+                return Resource.fetchImage(blobUrl).then(function(image) {
                     expect(image.width).toEqual(24);
                     expect(image.height).toEqual(24);
                 });
