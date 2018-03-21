@@ -58,9 +58,26 @@ vec4 getEyeCoord(vec2 fragCoord) {
     return eyeCoord;
 }
 
-vec3 getEyeCoord3(vec2 fragCoord) {
-    vec4 eyeCoord = getEyeCoord(fragCoord);
+vec3 getEyeCoord3FromWindowCoord(vec2 fragCoord, float depth) {
+    vec4 windowCoord = vec4(fragCoord, depth, 1.0);
+    vec4 eyeCoord = czm_windowToEyeCoordinates(windowCoord);
     return eyeCoord.xyz / eyeCoord.w;
+}
+
+vec3 getVectorFromOffset(vec3 eyeCoord, vec2 fragCoord2, vec2 positiveOffset) {
+    // Sample depths at both offset and negative offset
+    float upOrRightDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (fragCoord2 + positiveOffset) / czm_viewport.zw));
+    float downOrLeftDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (fragCoord2 - positiveOffset) / czm_viewport.zw));
+
+    // Explicitly evaluate both paths
+    bvec2 upOrRightInBounds = lessThan(fragCoord2 + positiveOffset, czm_viewport.zw);
+    float useUpOrRight = float(upOrRightDepth > 0.0 && upOrRightInBounds.x && upOrRightInBounds.y);
+    float useDownOrLeft = float(useUpOrRight == 0.0);
+
+    vec3 upOrRightEC = getEyeCoord3FromWindowCoord(fragCoord2 + positiveOffset, upOrRightDepth);
+    vec3 downOrLeftEC = getEyeCoord3FromWindowCoord(fragCoord2 - positiveOffset, downOrLeftDepth);
+
+    return (upOrRightEC - eyeCoord) * useUpOrRight + (eyeCoord - downOrLeftEC) * useDownOrLeft;
 }
 
 void main(void)
@@ -72,7 +89,8 @@ void main(void)
     gl_FragColor = v_color;
     #else
 
-    vec4 eyeCoord = getEyeCoord(gl_FragCoord.xy);
+    vec2 fragCoord2 = gl_FragCoord.xy;
+    vec4 eyeCoord = getEyeCoord(fragCoord2);
     vec4 worldCoord4 = czm_inverseView * eyeCoord;
     vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;
 
@@ -86,19 +104,17 @@ void main(void)
 
     /*
     if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {
-        discard;
+        discard; // TODO: re-enable me when Ellipses aren't broken and when batching is necessary
     }*/
 
     vec3 positionToEyeEC = -(czm_modelView * vec4(worldCoord, 1.0)).xyz;
 
-    // compute normal
-    vec2 fragCoord = gl_FragCoord.xy;
+    // compute normal. sample adjacent pixels in 2x2 block in screen space
     float d = 1.0;
-
-    // sample adjacent pixels in 2x2 block in screen space
     vec3 eyeCoord3 = eyeCoord.xyz / eyeCoord.w;
-    vec3 downUp = eyeCoord3 - getEyeCoord3(fragCoord - vec2(0.0, d)).xyz;
-    vec3 leftRight = getEyeCoord3(fragCoord - vec2(d, 0.0)).xyz - eyeCoord3;
+    vec3 downUp = getVectorFromOffset(eyeCoord3, fragCoord2, vec2(0.0, d));
+    vec3 leftRight = getVectorFromOffset(eyeCoord3, fragCoord2, vec2(d, 0.0));
+
     vec3 normalEC = normalize(cross(downUp, leftRight));
 
     czm_materialInput materialInput;

@@ -30,5 +30,4 @@ void main()
 #else
     gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
 #endif
-    //gl_FragColor = vec4(positionToEyeEC, 1.0);
 }
