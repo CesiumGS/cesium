@@ -2444,13 +2444,6 @@ defineSuite([
         });
     });
 
-    it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
-        return loadModel(dracoCompressedModelWithAnimationUrl).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
-        });
-    });
-
     it('error decoding a draco compressed glTF causes model loading to fail', function() {
         var decoder = DracoLoader._getDecoderTaskProcessor();
         spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
@@ -2475,9 +2468,15 @@ defineSuite([
 
     it('loads a draco compressed glTF and dequantizes in the shader', function() {
         return loadModel(dracoCompressedModelUrl, {
-            dequantizeInShader : ['POSITION']
+            dequantizeInShader : ['POSITION', 'TEX_COORD']
         }).then(function(m) {
             verifyRender(m);
+
+            var atrributeData = m._decodedData['0.primitive.0'].attributes;
+            expect(atrributeData['POSITION'].quantization).toBeDefined();
+            expect(atrributeData['TEXCOORD_0'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization).toBeUndefined();
+
             primitives.remove(m);
         });
     });
