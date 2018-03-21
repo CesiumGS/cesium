@@ -5,6 +5,7 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
         'Core/HeightmapTerrainData',
+        'Core/IonResource',
         'Core/Math',
         'Core/QuantizedMeshTerrainData',
         'Core/Request',
@@ -20,6 +21,7 @@ defineSuite([
         GeographicTilingScheme,
         getAbsoluteUri,
         HeightmapTerrainData,
+        IonResource,
         CesiumMath,
         QuantizedMeshTerrainData,
         Request,
@@ -744,6 +746,23 @@ defineSuite([
 
             return waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+            });
+        });
+
+        it('Uses query parameter extensions for ion resource', function() {
+            var terrainProvider = new CesiumTerrainProvider({
+                url: IonResource.fromAssetId(1),
+                requestVertexNormals: true,
+                requestWaterMask: true
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                var getDerivedResource = spyOn(IonResource.prototype, 'getDerivedResource').and.callThrough();
+                terrainProvider.requestTileGeometry(0, 0, 0);
+                var options = getDerivedResource.calls.argsFor(0)[0];
+                expect(options.queryParameters.extensions).toEqual('octvertexnormals-watermask');
             });
         });
     });

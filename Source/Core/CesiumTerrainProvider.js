@@ -623,26 +623,40 @@ define([
             extensionList.push('watermask');
         }
 
-        var resource = layerToUse.resource.getDerivedResource({
-            url: urlTemplates[(x + tmsY + level) % urlTemplates.length],
+        var headers;
+        var query;
+        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length];
+        var resource = layerToUse.resource;
+        if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
+            // ion uses query paremeters to request extensions
+            if (extensionList.length !== 0) {
+                query = { extensions: extensionList.join('-') };
+            }
+            headers = getRequestHeader(undefined);
+        } else {
+            //All other terrain servers
+            headers = getRequestHeader(extensionList);
+        }
+
+        var promise = resource.getDerivedResource({
+            url: url,
             templateValues: {
                 version: layerToUse.version,
                 z: level,
                 x: x,
                 y: tmsY
             },
-            headers: getRequestHeader(extensionList),
+            queryParameters: query,
+            headers: headers,
             request: request
-        });
-
-        var promise = resource.fetchArrayBuffer();
+        }).fetchArrayBuffer();
 
         if (!defined(promise)) {
             return undefined;
         }
 
         var that = this;
-        return when(promise, function(buffer) {
+        return promise.then(function (buffer) {
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
             }

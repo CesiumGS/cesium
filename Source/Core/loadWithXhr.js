@@ -63,7 +63,7 @@ define([
         // Take advantage that most parameters are the same
         var resource = new Resource(options);
 
-        return Resource._makeRequest(resource, {
+        return resource._makeRequest({
             responseType: options.responseType,
             overrideMimeType: options.overrideMimeType,
             method: defaultValue(options.method, 'GET'),

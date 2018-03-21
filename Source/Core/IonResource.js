@@ -42,14 +42,14 @@ define([
         Check.defined('endpointResource', endpointResource);
         //>>includeEnd('debug');
 
-        var externalType = endpoint.externalType;
         var options;
+        var externalType = endpoint.externalType;
+        var isExternal = defined(externalType);
 
-        if (!defined(externalType)) {
+        if (!isExternal) {
             options = {
                 url: endpoint.url,
                 retryAttempts: 1,
-                queryParameters: { access_token: endpoint.accessToken },
                 retryCallback: retryCallback
             };
         } else if (externalType === '3DTILES' || externalType === 'STK_TERRAIN_SERVER') {
@@ -74,6 +74,7 @@ define([
         // Shared promise for endpooint requests amd credits (only ever set on the root request)
         this._pendingPromise = undefined;
         this._credits = undefined;
+        this._isExternal = isExternal;
     }
 
     if (defined(Object.create)) {
@@ -155,11 +156,37 @@ define([
 
         result = Resource.prototype.clone.call(this, result);
         result._ionRoot = ionRoot;
-        if (defined(ionRoot.queryParameters.access_token)) {
-            result.queryParameters.access_token = ionRoot.queryParameters.access_token;
-        }
+        result._isExternal = this._isExternal;
 
         return result;
+    };
+
+    IonResource.prototype.fetchImage = function (preferBlob, allowCrossOrigin) {
+        return Resource.prototype.fetchImage.call(this, this._isExternal ? preferBlob : true, allowCrossOrigin);
+    };
+
+    IonResource.prototype._makeRequest = function(options) {
+        if (this._isExternal) {
+            return Resource.prototype._makeRequest.call(this, options);
+        }
+
+        var acceptToken = '*/*;access_token=' + this._ionEndpoint.accessToken;
+        var existingAccept = acceptToken;
+
+        var oldHeaders = this.headers;
+        if (defined(oldHeaders) && defined(oldHeaders.Accept)) {
+            existingAccept = oldHeaders.Accept + ',' + acceptToken;
+        }
+
+        if (!defined(options.headers)) {
+            options.headers = { Accept: existingAccept };
+        } else if (!defined(options.headers.Accept)) {
+            options.headers.Accept = existingAccept;
+        } else {
+            options.headers.Accept = options.headers.Accept + ',' + acceptToken;
+        }
+
+        return Resource.prototype._makeRequest.call(this, options);
     };
 
     /**
@@ -204,7 +231,6 @@ define([
                 .then(function(newEndpoint) {
                     //Set the token for root resource so new derived resources automatically pick it up
                     ionRoot._ionEndpoint = newEndpoint;
-                    ionRoot.queryParameters.access_token = newEndpoint.accessToken;
                     return newEndpoint;
                 })
                 .always(function(newEndpoint) {
@@ -217,7 +243,6 @@ define([
         return ionRoot._pendingPromise.then(function(newEndpoint) {
             // Set the new token and endpoint for this resource
             that._ionEndpoint = newEndpoint;
-            that.queryParameters.access_token = newEndpoint.accessToken;
             return true;
         });
     }
