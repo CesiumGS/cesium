@@ -305,14 +305,15 @@ define([
 
         ++tileset._statistics.visited;
         tile._finalResolution = false;
+        tile._ancestorWithContent = undefined;
         tile._ancestorWithContentAvailable = undefined;
 
         tile.updateExpiration();
 
         var parent = tile.parent;
         if (defined(parent)) {
-            var replace = parent.refine === Cesium3DTileRefine.REPLACE;
-            tile._ancestorWithContentAvailable = (replace && parent.contentAvailable) ? parent : parent._ancestorWithContentAvailable;
+            tile._ancestorWithContent = !hasEmptyContent(parent) ? parent : parent._ancestorWithContent;
+            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
         }
     }
 
@@ -589,17 +590,14 @@ define([
     }
 
     function reachedSkippingThreshold(tileset, tile) {
-        // TODO : dont understand this comment. Why is defined(tile)?
-        // If we have reached the skipping threshold without any loaded ancestors, return empty so this tile is loaded
-        var ancestor = tile._ancestorWithContentAvailable;
+        // Look at the nearest ancestor that wasn't skipped. It doesn't need to be loaded yet.
+        var ancestor = tile._ancestorWithContent;
         var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
         var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
 
-        // TODO : why does ancestor need to be defined? When would the ancestor even equal the tile?
-        // TODO : should probably be using ancestorWithContent rather than contentAvailable?
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
                tile.contentUnloaded &&
-               defined(ancestor) && (ancestor !== tile) &&
+               defined(ancestor) &&
                (tile._screenSpaceError < (ancestor._screenSpaceError / skipScreenSpaceErrorFactor)) &&
                (tile._depth > (ancestor._depth + skipLevels));
     }
@@ -620,26 +618,23 @@ define([
             var tile = stack.pop();
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-
-            visitTile(tileset, tile, frameState);
-
             var children = tile.children;
             var childrenLength = children.length;
             var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
 
-            // TODO : possibly remove this
-            if (traverse && replace && reachedSkippingThreshold(tileset, tile)) {
-                traverse = false;
-            }
+            visitTile(tileset, tile, frameState);
 
-            if (traverse) {
-                for (i = 0; i < childrenLength; ++i) {
-                    var child = children[i];
-                    var visible = updateTile(tileset, child, maximumScreenSpaceError, frameState);
-                    if (visible) {
-                        stack.push(child);
-                    }
+            if (replace) {
+                if (!traverse) {
+                    addDesiredTile(tileset, tile, frameState);
+                    loadTile(tileset, tile, false, frameState);
+                } else if (reachedSkippingThreshold(tileset, tile)) {
+                    loadTile(tileset, tile, false, frameState);
+                    traverse = false;
                 }
+                // Always touch tiles. Even tiles that are skipped should stay loaded.
+                touch(tileset, tile, frameState);
+                tile._touchedFrame = frameState.frameNumber;
             }
 
             if (add) {
@@ -652,34 +647,15 @@ define([
                 tile._touchedFrame = frameState.frameNumber;
             }
 
-            if (replace) {
-                if (!traverse || reachedSkippingThreshold(tileset, tile)) {
-                    addDesiredTile(tileset, tile, frameState);
-                    loadTile(tileset, tile, false, frameState);
-                    touch(tileset, tile, frameState);
-                    tile._touchedFrame = frameState.frameNumber;
-                } else {
-                    // Skipped tiles may still have loaded content that we want to preserve
-                    touch(tileset, tile, frameState);
-                    tile._touchedFrame = frameState.frameNumber;
+            if (traverse) {
+                for (i = 0; i < childrenLength; ++i) {
+                    var child = children[i];
+                    var visible = updateTile(tileset, child, maximumScreenSpaceError, frameState);
+                    if (visible) {
+                        stack.push(child);
+                    }
                 }
             }
-
-            // if (replace) {
-            //     if (!traverse) {
-            //         addDesiredTile(tileset, tile, frameState);
-            //         loadTile(tileset, tile, false, frameState);
-            //         touch(tileset, tile, frameState);
-            //         tile._touchedFrame = frameState.frameNumber;
-            //     } else if (reachedSkippingThreshold(tileset, tile)) {
-            //         loadTile(tileset, tile, false, frameState);
-            //         touch(tileset, tile, frameState);
-            //         tile._touchedFrame = frameState.frameNumber;
-            //     } else {
-            //         touch(tileset, tile, frameState);
-            //         tile._touchedFrame = frameState.frameNumber;
-            //     }
-            // }
         }
         // TODO : ignoring loadSiblings right now
     }
