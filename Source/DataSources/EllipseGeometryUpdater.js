@@ -16,6 +16,7 @@ define([
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './GroundGeometryUpdater',
         './Property'
     ], function(
         Check,
@@ -35,6 +36,7 @@ define([
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        GroundGeometryUpdater,
         Property) {
     'use strict';
 
@@ -64,17 +66,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function EllipseGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, {
+        GroundGeometryUpdater.call(this, {
             entity : entity,
             scene : scene,
             geometryOptions : new EllipseGeometryOptions(entity),
             geometryPropertyName : 'ellipse',
             observedPropertyNames : ['availability', 'position', 'ellipse']
         });
+
+        this._onEntityPropertyChanged(entity, 'ellipse', entity.ellipse, undefined);
     }
 
     if (defined(Object.create)) {
-        EllipseGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        EllipseGeometryUpdater.prototype = Object.create(GroundGeometryUpdater.prototype);
         EllipseGeometryUpdater.prototype.constructor = EllipseGeometryUpdater;
     }
 

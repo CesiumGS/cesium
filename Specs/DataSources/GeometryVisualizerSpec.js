@@ -374,7 +374,7 @@ defineSuite([
             scene.render(time);
             return isUpdated;
         }).then(function() {
-            var primitive = scene.groundPrimitives.get(0);
+            var primitive = scene.groundPrimitives.get(0).get(0).get(0);
             expect(primitive.classificationType).toBe(type);
 
             objects.remove(entity);

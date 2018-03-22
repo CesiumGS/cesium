@@ -11,6 +11,7 @@ define([
         '../Scene/ClassificationType',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
+        '../Scene/PrimitiveCollection',
         '../Scene/ShadowMode',
         './BoundingSphereState',
         './BoxGeometryUpdater',
@@ -42,6 +43,7 @@ define([
         ClassificationType,
         MaterialAppearance,
         PerInstanceColorAppearance,
+        PrimitiveCollection,
         ShadowMode,
         BoundingSphereState,
         BoxGeometryUpdater,
@@ -112,6 +114,17 @@ define([
         destroyObject(this);
     };
 
+    function createGroundColorBatch(groundPrimitives) {
+        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+        var batches = new Array(numberOfClassificationTypes);
+
+        for (var i = 0; i < numberOfClassificationTypes; ++i) {
+            batches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+        }
+        batches._primitives = groundPrimitives;
+        return batches;
+    }
+
     /**
      * A general purpose visualizer for geometry represented by {@link Primitive} instances.
      * @alias GeometryVisualizer
@@ -134,6 +147,7 @@ define([
         this._scene = scene;
         this._primitives = primitives;
         this._groundPrimitives = groundPrimitives;
+        this._orderedGroundPrimitives = groundPrimitives.add(new PrimitiveCollection());
         this._entityCollection = undefined;
         this._addedObjects = new AssociativeArray();
         this._removedObjects = new AssociativeArray();
@@ -146,8 +160,7 @@ define([
         this._openColorBatches = new Array(numberOfShadowModes);
         this._openMaterialBatches = new Array(numberOfShadowModes);
 
-        var i;
-        for (i = 0; i < numberOfShadowModes; ++i) {
+        for (var i = 0; i < numberOfShadowModes; ++i) {
             this._outlineBatches[i] = new StaticOutlineGeometryBatch(primitives, scene, i);
 
             this._closedColorBatches[i] = new StaticGeometryColorBatch(primitives, PerInstanceColorAppearance, undefined, true, i);
@@ -156,16 +169,12 @@ define([
             this._openMaterialBatches[i] = new StaticGeometryPerMaterialBatch(primitives, MaterialAppearance, undefined, false, i);
         }
 
-        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
-        this._groundColorBatches = new Array(numberOfClassificationTypes);
-
-        for (i = 0; i < numberOfClassificationTypes; ++i) {
-            this._groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
-        }
+        this._groundColorBatches = {};
+        this._reorderGroundPrimitives = false;
 
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, this._dynamicBatch);
+        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaterSets = new AssociativeArray();
@@ -255,6 +264,25 @@ define([
             isUpdated = batches[i].update(time) && isUpdated;
         }
 
+        var orderedGroundPrimitives = this._orderedGroundPrimitives;
+        var groundBatches = this._groundColorBatches;
+        var groundBatchIndexes = Object.keys(groundBatches);
+        groundBatchIndexes = groundBatchIndexes.sort();
+
+        if (this._reorderGroundPrimitives) {
+            for (i = 0; i < groundBatchIndexes.length; i++) {
+                orderedGroundPrimitives.raiseToTop(groundBatches[groundBatchIndexes[i]]._primitives);
+            }
+            this._reorderGroundPrimitives = false;
+        }
+
+        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+        for (i = 0; i < groundBatchIndexes.length; i++) {
+            for (var j = 0; j < numberOfClassificationTypes; j++) {
+                isUpdated = groundBatches[groundBatchIndexes[i]][j].update(time) && isUpdated;
+            }
+        }
+
         return isUpdated;
     };
 
@@ -291,13 +319,29 @@ define([
 
         for (var j = 0; j < updaters.length; j++) {
             var updater = updaters[j];
-            for (var i = 0; i < batchesLength; i++) {
+            var i;
+            for (i = 0; i < batchesLength; i++) {
                 state = batches[i].getBoundingSphere(updater, tmp);
                 if (state === BoundingSphereState.PENDING) {
                     return BoundingSphereState.PENDING;
                 } else if (state === BoundingSphereState.DONE) {
                     boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
                     count++;
+                }
+            }
+
+            var groundBatches = this._groundColorBatches;
+            var groundBatchIndexes = Object.keys(groundBatches);
+            var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+            for (i = 0; i < groundBatchIndexes.length; i++) {
+                for (var k = 0; k < numberOfClassificationTypes; k++) {
+                    state = groundBatches[groundBatchIndexes[i]][k].getBoundingSphere(updater, tmp);
+                    if (state === BoundingSphereState.PENDING) {
+                        return BoundingSphereState.PENDING;
+                    } else if (state === BoundingSphereState.DONE) {
+                        boundingSpheres[count] = BoundingSphere.clone(tmp, boundingSpheres[count]);
+                        count++;
+                    }
                 }
             }
         }
@@ -335,12 +379,23 @@ define([
             batches[i].removeAllPrimitives();
         }
 
+        var groundBatches = this._groundColorBatches;
+        var groundBatchIndexes = Object.keys(groundBatches);
+        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+        for (i = 0; i < groundBatchIndexes.length; i++) {
+            for (var k = 0; k < numberOfClassificationTypes; k++) {
+                groundBatches[groundBatchIndexes[i]][k].removeAllPrimitives();
+            }
+        }
+
         var subscriptions = this._subscriptions.values;
         length = subscriptions.length;
         for (i = 0; i < length; i++) {
             subscriptions[i]();
         }
         this._subscriptions.removeAll();
+
+        this._groundPrimitives.remove(this._orderedGroundPrimitives);
         return destroyObject(this);
     };
 
@@ -351,8 +406,18 @@ define([
         //We don't keep track of which batch an updater is in, so just remove it from all of them.
         var batches = this._batches;
         var length = batches.length;
-        for (var i = 0; i < length; i++) {
+        var i;
+        for (i = 0; i < length; i++) {
             batches[i].remove(updater);
+        }
+
+        var groundBatches = this._groundColorBatches;
+        var groundBatchIndexes = Object.keys(groundBatches);
+        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+        for (i = 0; i < groundBatchIndexes.length; i++) {
+            for (var k = 0; k < numberOfClassificationTypes; k++) {
+                groundBatches[groundBatchIndexes[i]][k].remove(updater);
+            }
         }
     };
 
@@ -376,8 +441,17 @@ define([
 
         if (updater.fillEnabled) {
             if (updater.onTerrain) {
+                var zIndex = updater.zIndex;
+                var batchArray = this._groundColorBatches[zIndex];
+                if (!defined(batchArray)) {
+                    batchArray = createGroundColorBatch(this._orderedGroundPrimitives.add(new PrimitiveCollection()));
+                    this._groundColorBatches[zIndex] = batchArray;
+                    this._reorderGroundPrimitives = true;
+                }
+
                 var classificationType = updater.classificationTypeProperty.getValue(time);
-                this._groundColorBatches[classificationType].add(time, updater);
+                var batch = batchArray[classificationType];
+                batch.add(time, updater);
             } else if (updater.isClosed) {
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
                     this._closedColorBatches[shadows].add(time, updater);

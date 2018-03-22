@@ -16,6 +16,7 @@ define([
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './GroundGeometryUpdater',
         './Property'
     ], function(
         Check,
@@ -35,6 +36,7 @@ define([
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        GroundGeometryUpdater,
         Property) {
     'use strict';
 
@@ -61,17 +63,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function RectangleGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, {
+        GroundGeometryUpdater.call(this, {
             entity : entity,
             scene : scene,
             geometryOptions : new RectangleGeometryOptions(entity),
             geometryPropertyName : 'rectangle',
             observedPropertyNames : ['availability', 'rectangle']
         });
+
+        this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     }
 
     if (defined(Object.create)) {
-        RectangleGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        RectangleGeometryUpdater.prototype = Object.create(GroundGeometryUpdater.prototype);
         RectangleGeometryUpdater.prototype.constructor = RectangleGeometryUpdater;
     }
 
