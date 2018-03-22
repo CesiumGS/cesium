@@ -554,7 +554,119 @@ defineSuite([
         expect(visualizer.update(time)).toBe(true);
         scene.render(time);
         expect(scene.primitives.length).toBe(0);
+        expect(scene.groundPrimitives.length).toBe(1);
         visualizer.destroy();
+    });
+
+    it('Creates and removes static color geometry on terrain', function() {
+        scene.groundPrimitives.removeAll();
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, objects, scene.primitives, scene.groundPrimitives);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.groundPrimitives.get(0).get(0).get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.groundPrimitives.get(0).get(0).length === 0;
+            }).then(function(){
+                visualizer.destroy();
+                expect(scene.groundPrimitives.length).toBe(0);
+            });
+        });
+    });
+
+    it('Users zIndex to order static color geometry on terrain', function() {
+        scene.groundPrimitives.removeAll();
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, objects, scene.primitives, scene.groundPrimitives);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty(Color.GREEN);
+        ellipse.zIndex = 0;
+        var entity1 = new Entity();
+        entity1.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity1.ellipse = ellipse;
+        objects.add(entity1);
+
+        var entity2 = new Entity();
+        ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty(Color.RED);
+        ellipse.zIndex = 3;
+        entity2.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity2.ellipse = ellipse;
+        objects.add(entity2);
+
+        var entity3 = new Entity();
+        ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty(Color.BLUE);
+        ellipse.zIndex = 2;
+        entity3.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity3.ellipse = ellipse;
+        objects.add(entity3);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var layer = scene.groundPrimitives.get(0);
+            expect(layer.length).toBe(3);
+            var primitive = layer.get(0).get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity1);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.GREEN));
+
+            primitive = layer.get(1).get(0);
+            attributes = primitive.getGeometryInstanceAttributes(entity3);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.BLUE));
+
+            primitive = layer.get(2).get(0);
+            attributes = primitive.getGeometryInstanceAttributes(entity2);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.RED));
+
+            objects.remove(entity1);
+            objects.remove(entity2);
+            objects.remove(entity3);
+
+            visualizer.destroy();
+            expect(scene.groundPrimitives.length).toBe(0);
+        });
     });
 
     it('Constructor throws without scene', function() {

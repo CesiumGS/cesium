@@ -21,6 +21,21 @@ define([
     function createGeometryUpdaterGroundGeometrySpecs(Updater, geometryPropertyName, createEntity, createDynamicEntity, getScene) {
         var time = JulianDate.now();
 
+        it('has default zIndex of zero', function() {
+            var entity = createEntity();
+
+            var updater = new Updater(entity, getScene());
+            expect(updater.zIndex).toBe(0);
+        });
+
+        it('uses zIndex value', function() {
+            var entity = createEntity();
+            entity[geometryPropertyName].zIndex = 22;
+
+            var updater = new Updater(entity, getScene());
+            expect(updater.zIndex).toBe(22);
+        });
+
         it('A time-varying color causes ground geometry to be dynamic', function() {
             var entity = createEntity();
             var color = new SampledProperty(Color);

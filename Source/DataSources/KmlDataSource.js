@@ -1883,7 +1883,7 @@ define([
 
         var ellipsoid = dataSource._ellipsoid;
         var positions = readCoordinates(queryFirstNode(groundOverlay, 'LatLonQuad', namespaces.gx), ellipsoid);
-        var zIndex = queryFirstNode(groundOverlay, 'drawOrder', namespaces.kml);
+        var zIndex = queryNumericValue(groundOverlay, 'drawOrder', namespaces.kml);
         if (defined(positions)) {
             geometry = createDefaultPolygon();
             geometry.hierarchy = new PolygonHierarchy(positions);
