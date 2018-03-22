@@ -22,6 +22,7 @@ define([
         '../ThirdParty/when',
         './ClassificationPrimitive',
         './ClassificationType',
+        './PerInstanceColorAppearance',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -47,6 +48,7 @@ define([
         when,
         ClassificationPrimitive,
         ClassificationType,
+        PerInstanceColorAppearance,
         SceneMode) {
     'use strict';
 
@@ -72,7 +74,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
-     * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to PerInstanceColorAppearance when GeometryInstances have a color attribute.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -134,7 +136,24 @@ define([
     function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this.appearance = options.appearance;
+        var appearance = options.appearance;
+        var geometryInstances = options.geometryInstances;
+        if (!defined(appearance) && defined(geometryInstances)) {
+            var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+            var geometryInstanceCount = geometryInstancesArray.length;
+            for (var i = 0; i < geometryInstanceCount; i++) {
+                var attributes = geometryInstancesArray[i].attributes;
+                if (defined(attributes) && defined(attributes.color)) {
+                    appearance = new PerInstanceColorAppearance({
+                        flat : true
+                    });
+                    break;
+                }
+            }
+        }
+
+        this.appearance = appearance;
+
         /**
          * The geometry instance rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>

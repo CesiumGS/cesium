@@ -8,18 +8,19 @@ define([
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/Rectangle',
+        '../Core/WebGLConstants',
         '../Core/isArray',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
-        '../Shaders/ShadowVolumeColorFS',
         '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
         './BlendingState',
         './ClassificationType',
+        './createShadowVolumeAppearanceShader',
         './DepthFunction',
         './Material',
         './MaterialAppearance',
@@ -27,8 +28,7 @@ define([
         './Primitive',
         './SceneMode',
         './StencilFunction',
-        './StencilOperation',
-        '../Core/WebGLConstants'
+        './StencilOperation'
     ], function(
         ColorGeometryInstanceAttribute,
         combine,
@@ -39,18 +39,19 @@ define([
         DeveloperError,
         GeometryInstance,
         Rectangle,
+        WebGLConstants,
         isArray,
         DrawCommand,
         Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
-        ShadowVolumeColorFS,
         ShadowVolumeFS,
         ShadowVolumeVS,
         when,
         BlendingState,
         ClassificationType,
+        createShadowVolumeAppearanceShader,
         DepthFunction,
         Material,
         MaterialAppearance,
@@ -58,8 +59,7 @@ define([
         Primitive,
         SceneMode,
         StencilFunction,
-        StencilOperation,
-        WebGLConstants) {
+        StencilOperation) {
     'use strict';
 
     var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
@@ -90,7 +90,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render. This can either be a single instance or an array of length one.
-     * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to PerInstanceColorAppearance when GeometryInstances have a color attribute.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -196,32 +196,45 @@ define([
 
         var appearance = options.appearance;
 
-        // Require SphericalExtents attribute on all geometries if material isn't PerInstanceColor
-        if (defined(appearance) && defined(appearance.material) && defined(geometryInstances)) {
+        var hasPerColorAttribute = false;
+        var hasSphericalExtentsAttribute = false;
             var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
-            var geometryInstanceCount = geometryInstances.length;
+        var geometryInstanceCount = geometryInstancesArray.length;
             for (var i = 0; i < geometryInstanceCount; i++) {
-                var attributes = geometryInstances[i].attributes;
-                if (!defined(attributes) || !defined(attributes.sphericalExtents)) {
-                    throw new DeveloperError('Materials on ClassificationPrimitives require sphericalExtents attribute');
+            var attributes = geometryInstancesArray[i].attributes;
+            if (defined(attributes)) {
+                if (defined(attributes.color)) {
+                    hasPerColorAttribute = true;
+                } else if (hasPerColorAttribute) {
+                    throw new DeveloperError('All GeometryInstances must have the same attributes.');
                 }
+                if (defined(attributes.sphericalExtents)) {
+                    hasSphericalExtentsAttribute = true;
+                } else if (hasSphericalExtentsAttribute) {
+                    throw new DeveloperError('All GeometryInstances must have the same attributes.');
             }
+            } else if (hasPerColorAttribute || hasSphericalExtentsAttribute) {
+                throw new DeveloperError('All GeometryInstances must have the same attributes.');
+        }
         }
 
-        // If attributes include color and appearance is undefined, then default to a color appearance
-        if (!defined(appearance)) {
-            var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
-            var geometryInstanceCount = geometryInstances.length;
-            for (var i = 0; i < geometryInstanceCount; i++) {
-                var attributes = geometryInstances[i].attributes;
-                if (defined(attributes) && defined(attributes.color)) {
+        // If attributes include color and appearance is undefined, default to a color appearance
+        if (!defined(appearance) && hasPerColorAttribute) {
                     appearance = new PerInstanceColorAppearance({
                         flat : true
                     });
-                    break;
                 }
+        if (!hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
+            throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
             }
+
+        // TODO: SphericalExtents needed if PerInstanceColor isn't all the same
+        if (defined(appearance.material) && !hasSphericalExtentsAttribute) {
+            throw new DeveloperError('Materials on ClassificationPrimitives requires sphericalExtents GeometryInstanceAttribute');
         }
+
+        this._hasPerColorAttribute = hasPerColorAttribute;
+        this._hasSphericalExtentsAttribute = hasSphericalExtentsAttribute;
         this.appearance = appearance;
 
         var readOnlyAttributes;
@@ -549,7 +562,7 @@ define([
         }
     }
 
-    function createShaderProgram(classificationPrimitive, frameState, appearance) {
+    function createShaderProgram(classificationPrimitive, frameState) {
         var context = frameState.context;
         var primitive = classificationPrimitive._primitive;
         var vs = ShadowVolumeVS;
@@ -635,17 +648,16 @@ define([
         });
 
         var parts;
+
+        // Create a fragment shader that computes only required material hookups using screen space techniques
+        var shadowVolumeAppearanceFS = createShadowVolumeAppearanceShader(appearance);
         if (isPerInstanceColor) {
-            parts = [ShadowVolumeColorFS];
+            parts = [shadowVolumeAppearanceFS];
         } else {
-            // Modify fsColorSource for material (yay!)
-            // Only have to modify the FS b/c all material hookups happen in there b/c lol VS
-            // TODO: scan shaderSource to determine what material inputs are needed for ShadowVolumeColorFS?
-            parts = [appearance.material.shaderSource, ShadowVolumeColorFS];
+            parts = [appearance.material.shaderSource, shadowVolumeAppearanceFS];
         }
 
         var fsColorSource = new ShaderSource({
-            defines : isPerInstanceColor ? ['PER_INSTANCE_COLOR'] : [],
             sources : [parts.join('\n')]
         });
 
@@ -715,7 +727,7 @@ define([
             var appearance = classificationPrimitive.appearance;
             var material = appearance.material;
             if (defined(material)) {
-                uniformMap = combine(uniformMap, material._uniforms)
+                uniformMap = combine(uniformMap, material._uniforms);
             }
 
             command.uniformMap = uniformMap;
@@ -1010,7 +1022,16 @@ define([
             this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
         }
         // Update primitive appearance
+        if (this._primitive.appearance !== appearance) {
+            // Check if the appearance is supported by the geometry attributes
+            if (!this._hasSphericalExtentsAttribute && defined(appearance.material)) {
+                throw new DeveloperError('Materials on ClassificationPrimitives requires sphericalExtents GeometryInstanceAttribute');
+            }
+            if (!this._hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
+                throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
+            }
         this._primitive.appearance = appearance;
+        }
 
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);

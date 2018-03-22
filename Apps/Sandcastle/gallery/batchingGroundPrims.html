@@ -195,8 +195,8 @@ rightHandler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
-var rightHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-rightHandler.setInputAction(function(movement) {
+var leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+leftHandler.setInputAction(function(movement) {
     var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
     if (cartesian) {
         console.log('new Cesium.Cartesian3(' + cartesian.x + ', ' + cartesian.y + ', ' + cartesian.z + '),');
