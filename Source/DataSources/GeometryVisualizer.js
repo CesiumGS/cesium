@@ -125,6 +125,12 @@ define([
         return batches;
     }
 
+    function sortIndexes(a, b) {
+        a = Number(a);
+        b = Number(b);
+        return a - b;
+    }
+
     /**
      * A general purpose visualizer for geometry represented by {@link Primitive} instances.
      * @alias GeometryVisualizer
@@ -267,7 +273,7 @@ define([
         var orderedGroundPrimitives = this._orderedGroundPrimitives;
         var groundBatches = this._groundColorBatches;
         var groundBatchIndexes = Object.keys(groundBatches);
-        groundBatchIndexes = groundBatchIndexes.sort();
+        groundBatchIndexes = groundBatchIndexes.sort(sortIndexes);
 
         if (this._reorderGroundPrimitives) {
             for (i = 0; i < groundBatchIndexes.length; i++) {
