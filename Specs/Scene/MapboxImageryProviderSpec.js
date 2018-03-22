@@ -242,7 +242,7 @@ defineSuite([
             url : 'made/up/mapbox/server/',
             mapId: 'test-id'
         });
-        expect(provider.credit.text).toEqual('© Mapbox © OpenStreetMap');
+        expect(provider.credit).toBe(MapboxImageryProvider._defaultCredit);
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -252,7 +252,7 @@ defineSuite([
             mapId: 'test-id',
             credit: creditText
         });
-        expect(providerWithCredit.credit.text).toEqual(creditText);
+        expect(providerWithCredit.credit.html).toEqual(creditText);
     });
 
     it('raises error event when image cannot be loaded', function() {

@@ -21,14 +21,7 @@ define([
     'use strict';
 
     var trailingSlashRegex = /\/$/;
-    var defaultCredit1 = new Credit({
-        text:'© Mapbox © OpenStreetMap',
-        link: 'https://www.mapbox.com/about/maps/'
-    });
-    var defaultCredit2 = [new Credit({
-        text: 'Improve this map',
-        link: 'https://www.mapbox.com/map-feedback/'
-    })];
+    var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>');
 
     /**
      * Provides tiled imagery hosted by Mapbox.
@@ -104,19 +97,20 @@ define([
             access_token: accessToken
         });
 
+        var credit;
         if (defined(options.credit)) {
-            var credit = options.credit;
+            credit = options.credit;
             if (typeof credit === 'string') {
-                credit = new Credit({text: credit});
+                credit = new Credit(credit);
             }
-            defaultCredit1 = credit;
-            defaultCredit2.length = 0;
+        } else {
+            credit = defaultCredit;
         }
 
         this._resource = resource;
         this._imageryProvider = new UrlTemplateImageryProvider({
             url: resource,
-            credit: defaultCredit1,
+            credit: credit,
             ellipsoid: options.ellipsoid,
             minimumLevel: options.minimumLevel,
             maximumLevel: options.maximumLevel,
@@ -326,11 +320,9 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     MapboxImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        var credits = defaultCredit2.slice();
         if (defined(this._accessTokenErrorCredit)) {
-            credits.push(this._accessTokenErrorCredit);
+            return [this._accessTokenErrorCredit];
         }
-        return credits;
     };
 
     /**
@@ -373,6 +365,9 @@ define([
     MapboxImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
     };
+
+    // Exposed for tests
+    MapboxImageryProvider._defaultCredit = defaultCredit;
 
     return MapboxImageryProvider;
 });

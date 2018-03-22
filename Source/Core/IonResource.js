@@ -130,14 +130,7 @@ define([
                     return this._credits;
                 }
 
-                this._credits = this._ionEndpoint.attributions.map(function(attribution) {
-                    return new Credit({
-                        text: attribution.text,
-                        link: attribution.url,
-                        imageUrl: attribution.image,
-                        showOnScreen: defined(attribution.collapsible) && !attribution.collapsible
-                    });
-                });
+                this._credits = this._ionEndpoint.attributions.map(Credit.getIonCredit);
 
                 return this._credits;
             }

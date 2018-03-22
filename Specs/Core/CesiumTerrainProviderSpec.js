@@ -314,7 +314,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider._tileCredits[0].text).toBe('This is a child tileset! This amazing data is courtesy The Amazing Data Source!');
+            expect(provider._tileCredits[0].html).toBe('This is a child tileset! This amazing data is courtesy The Amazing Data Source!');
             expect(provider.requestVertexNormals).toBe(true);
             expect(provider.requestWaterMask).toBe(true);
             expect(provider.hasVertexNormals).toBe(false); // Neither tileset has them
@@ -455,7 +455,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider._tileCredits[0].text).toBe('This amazing data is courtesy The Amazing Data Source!');
+            expect(provider._tileCredits[0].html).toBe('This amazing data is courtesy The Amazing Data Source!');
         });
     });
 
