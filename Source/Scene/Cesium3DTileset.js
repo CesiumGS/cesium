@@ -183,7 +183,6 @@ define([
         this._processingQueue = [];
         this._selectedTiles = [];
         this._requestedTiles = [];
-        this._desiredTiles = new ManagedArray();
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
