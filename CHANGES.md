@@ -14,6 +14,7 @@ Change Log
 * `Credit.hasImage` and `Credit.hasLink` functions have been deprecated and will be removed in Cesium 1.46.
 
 ##### Additions :tada:
+* Fix Cesium ion browser caching [#6353](https://github.com/AnalyticalGraphicsInc/cesium/pull/6353).
 * Added support for glTF models with [Draco geometry compression](https://github.com/fanzhanggoogle/glTF/blob/KHR_mesh_compression/extensions/Khronos/KHR_draco_mesh_compression/README.md).
 * `ClippingPlaneCollection` updates [#6201](https://github.com/AnalyticalGraphicsInc/cesium/pull/6201)
   * Removed the 6-clipping-plane limit.
