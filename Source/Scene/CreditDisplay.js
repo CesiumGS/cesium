@@ -243,6 +243,11 @@ define([
             'padding-bottom' : '6px'
         });
 
+        style += addStyle('.cesium-credit-lightbox > ul > li *', {
+            padding : '0',
+            margin : '0'
+        });
+
         style += addStyle('.cesium-credit-expand-link', {
             'padding-left' : '5px',
             cursor : 'pointer',
@@ -255,6 +260,10 @@ define([
 
         style += addStyle('.cesium-credit-text', {
             color: textColor
+        });
+
+        style += addStyle('.cesium-credit-textContainer *, .cesium-credit-logoContainer *', {
+            display: 'inline'
         });
 
         css.innerHTML = style;
@@ -316,11 +325,14 @@ define([
         var creditList = document.createElement('ul');
         lightboxCredits.appendChild(creditList);
 
-        var cesiumCreditContainer = document.createElement('span');
+        var cesiumCreditContainer = document.createElement('div');
+        cesiumCreditContainer.className = 'cesium-credit-logoContainer';
+        cesiumCreditContainer.style.display = 'inline';
         container.appendChild(cesiumCreditContainer);
 
-        var screenContainer = document.createElement('span');
+        var screenContainer = document.createElement('div');
         screenContainer.className = 'cesium-credit-textContainer';
+        screenContainer.style.display = 'inline';
         container.appendChild(screenContainer);
 
         var expandLink = document.createElement('a');
