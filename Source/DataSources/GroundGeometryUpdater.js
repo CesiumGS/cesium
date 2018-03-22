@@ -1,4 +1,5 @@
 define([
+    '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
     '../Core/Iso8601',
@@ -6,6 +7,7 @@ define([
     './GeometryUpdater',
     './Property'
 ], function(
+    defaultValue,
     defined,
     defineProperties,
     Iso8601,
@@ -60,12 +62,12 @@ define([
         if (!defined(geometry)) {
             return;
         }
-        var zIndex = geometry.zIndex;
-        if (this._dynamic || !Property.isConstant(geometry.zIndex) || defined(this._options.height) || defined(this._options.extrudedHeight)) {
+        var zIndex = Property.getValueOrUndefined(geometry.zIndex, Iso8601.MINIMUM_VALUE);
+        if (defined(zIndex) && (this._dynamic || !Property.isConstant(geometry.zIndex) || defined(this._options.height) || defined(this._options.extrudedHeight))) {
             oneTimeWarning(oneTimeWarning.geometryZIndex);
         }
 
-        this._zIndex = Property.getValueOrDefault(zIndex, Iso8601.MINIMUM_VALUE, 0);
+        this._zIndex = defaultValue(zIndex, 0);
     };
 
     return GroundGeometryUpdater;
