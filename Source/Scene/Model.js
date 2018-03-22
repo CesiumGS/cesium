@@ -1967,6 +1967,7 @@ define([
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
@@ -1983,6 +1984,9 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
+        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+
         var pickFS, pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -1992,6 +1996,9 @@ define([
             if (!model._pickFragmentShaderLoaded) {
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
+
+            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
     }
@@ -2000,6 +2007,7 @@ define([
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var clippingPlaneCollection = model.clippingPlanes;
         var addClippingPlaneCode = isClippingEnabled(model);
@@ -2022,6 +2030,9 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
+        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+
         var pickFS, pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -2035,6 +2046,9 @@ define([
             if (addClippingPlaneCode) {
                 pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
             }
+
+            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
     }
@@ -3348,9 +3362,29 @@ define([
         var scene3DOnly = frameState.scene3DOnly;
 
         // Retain references to updated source shaders and programs for rebuilding as needed
-        model._sourcePrograms = model.gltf.programs;
-        model._sourceShaders = model.gltf.shaders;
+        var programs = model._sourcePrograms = model.gltf.programs;
+        var shaders = model._sourceShaders = model.gltf.shaders;
         model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
+
+        var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinates = model._toClipCoordinatesGLSL = {};
+        for (var id in programs) {
+            if (programs.hasOwnProperty(id)) {
+                var program = programs[id];
+                var shader = shaders[program.vertexShader].extras._pipeline.source;
+                if (model.extensionsUsed.WEB3D_quantized_attributes) {
+                    var quantizedVS = quantizedVertexShaders[id];
+                    if (!defined(quantizedVS)) {
+                        quantizedVS = modifyShaderForQuantizedAttributes(shader, id, model);
+                        quantizedVertexShaders[id] = quantizedVS;
+                    }
+                    shader = quantizedVS;
+                }
+
+                shader = modifyShader(shader, id, model._vertexShaderLoaded);
+                toClipCoordinates[id] = ModelUtility.toClipCoordinatesGLSL(model.gltf, shader);
+            }
+        }
 
         ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {

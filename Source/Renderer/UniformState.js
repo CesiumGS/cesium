@@ -61,6 +61,7 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
+        this._logFarDistance = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -642,6 +643,17 @@ define([
         },
 
         /**
+         * The log of the current frustum's far distance. Used to compute the log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        logFarDistance : {
+            get : function() {
+                return this._logFarDistance;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -986,6 +998,8 @@ define([
         }
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
+
+        this._logFarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;

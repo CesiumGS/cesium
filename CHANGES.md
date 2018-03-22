@@ -5,6 +5,7 @@ Change Log
 
 ##### Breaking Changes :mega:
 * `GeometryVisualizer` now requires `primitive` and `groundPrimitive` parameters. [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
+* `Camera.distanceToBoundingSphere` now returns the signed distance to the bounding sphere. Positive values indicate that the bounding sphere is in the positive half-plane of the camera position and view direction while a negative value indicates it is in the negative half-plane.
 
 ##### Deprecated :hourglass_flowing_sand:
 * `ClippingPlaneCollection` is now supported in Internet Explorer, so `ClippingPlaneCollection.isSupported` has been deprecated and will be removed in Cesium 1.45.
@@ -27,6 +28,8 @@ Change Log
 * Added support for ordering in `DataSourceCollection` [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
   * All ground geometry from one `DataSource` will render in front of all ground geometry from another `DataSource` in the same collection with a lower index.
   * Use `DataSourceCollection.raise`, `DataSourceCollection.lower`, `DataSourceCollection.raiseToTop` and `DataSourceCollection.lowerToBottom` functions to change the ordering of a `DataSource` in the collection. 
+* Added option `logDepthBuffer` to `Viewer`. With this option there is typically a single frustum using logarithmic depth rendered. This increases performance by issuing less draw calls to the GPU and helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
+* Added `Math.log2` to compute the base 2 logarithm of a number.
 * Added a post-processing framework. [#5615](https://github.com/AnalyticalGraphicsInc/cesium/pull/5615)
    * Added `Scene.postProcessStages` which is a collection of post-process stages to be run in order.
       * Has a built-in `ambientOcclusion` property which will apply screen space ambient occlusion to the scene and run before all stages.
