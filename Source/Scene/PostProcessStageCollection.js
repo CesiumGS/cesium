@@ -438,7 +438,7 @@ define([
      *
      * @private
      */
-    PostProcessStageCollection.prototype.update = function(context) {
+    PostProcessStageCollection.prototype.update = function(context, useLogDepth) {
         removeStages(this);
 
         var activeStages = this._activeStages;
@@ -504,13 +504,13 @@ define([
 
         this._textureCache.update(context);
 
-        fxaa.update(context);
-        ao.update(context);
-        bloom.update(context);
+        fxaa.update(context, useLogDepth);
+        ao.update(context, useLogDepth);
+        bloom.update(context, useLogDepth);
 
         length = stages.length;
         for (i = 0; i < length; ++i) {
-            stages[i].update(context);
+            stages[i].update(context, useLogDepth);
         }
     };
 

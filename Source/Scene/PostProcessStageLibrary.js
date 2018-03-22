@@ -239,7 +239,7 @@ define([
             name : 'czm_silhouette_edge_detection',
             fragmentShader : EdgeDetection,
             uniforms : {
-                length : 0.5,
+                length : 0.25,
                 color : Color.clone(Color.BLACK)
             }
         });

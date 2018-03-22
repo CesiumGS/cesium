@@ -16,6 +16,7 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
+        '../Renderer/ShaderSource',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
@@ -40,6 +41,7 @@ define([
         PixelDatatype,
         RenderState,
         Sampler,
+        ShaderSource,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -142,6 +144,9 @@ define([
             name = createGuid();
         }
         this._name = name;
+
+        this._logDepthChanged = undefined;
+        this._useLogDepth = undefined;
 
         // set by PostProcessStageCollection
         this._textureCache = undefined;
@@ -436,11 +441,16 @@ define([
     }
 
     function createDrawCommand(stage, context) {
-        if (defined(stage._command)) {
+        if (defined(stage._command) && !stage._logDepthChanged) {
             return;
         }
 
-        stage._command = context.createViewportQuadCommand(stage._fragmentShader, {
+        var fs = new ShaderSource({
+            defines : [stage._useLogDepth ? 'LOG_DEPTH' : ''],
+            sources : [stage._fragmentShader]
+        });
+
+        stage._command = context.createViewportQuadCommand(fs, {
             uniformMap : stage._uniformMap,
             owner : stage
         });
@@ -582,7 +592,7 @@ define([
      * @param {Context} context The context.
      * @private
      */
-    PostProcessStage.prototype.update = function(context) {
+    PostProcessStage.prototype.update = function(context, useLogDepth) {
         if (this.enabled !== this._enabled && !this.enabled) {
             releaseResources(this);
         }
@@ -591,6 +601,9 @@ define([
         if (!this._enabled) {
             return;
         }
+
+        this._logDepthChanged = useLogDepth !== this._useLogDepth;
+        this._useLogDepth = useLogDepth;
 
         createUniformMap(this);
         updateUniformTextures(this, context);

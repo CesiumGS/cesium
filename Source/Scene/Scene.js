@@ -2019,7 +2019,7 @@ define([
         if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
             command = command.derivedCommands.logDepth.logDepthCommand;
         }
-        
+
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
             return;
@@ -2912,7 +2912,10 @@ define([
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
 
-            postProcess.update(context);
+            var camera = scene.camera;
+            var useLogDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
+
+            postProcess.update(context, useLogDepth);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
