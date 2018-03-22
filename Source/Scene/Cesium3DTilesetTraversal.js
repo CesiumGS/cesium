@@ -158,7 +158,6 @@ define([
                     updateTile(tileset, child, frameState);
                     touchTile(tileset, child, frameState);
                     markForSelection(tileset, child, frameState);
-                    tile._touchedFrame = frameState.frameNumber;
                 } else if (child._depth - root._depth < 2) {
                     // Continue traversing, but not too far
                     stack.push(child);
@@ -296,27 +295,16 @@ define([
     }
 
     function addDesiredTile(tileset, tile, frameState) {
-        if (tile._touchedFrame === frameState.frameNumber) {
-            return;
-        }
-
         tileset._desiredTiles.push(tile);
     }
 
-    function visitTile(tileset, tile, frameState) {
-        if (tile._touchedFrame === frameState.frameNumber) {
-            return;
-        }
-
+    function visitTile(tileset) {
         ++tileset._statistics.visited;
     }
 
     function touchTile(tileset, tile, frameState) {
-        if (tile._touchedFrame === frameState.frameNumber) {
-            return;
-        }
-
         tileset._cache.touch(tile);
+        tile._touchedFrame = frameState.frameNumber;
     }
 
     function getPriority(tile, useParentPriority) {
@@ -329,19 +317,15 @@ define([
         var parent = tile.parent;
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
         var add = tile.refine === Cesium3DTileRefine.ADD;
-        //if (add) {
+        if (add) {
             return tile._distanceToCamera;
-        //} else if (replace) {
-        //    var priority = (defined(parent) && (useParentPriority || tile._screenSpaceError === 0.0)) ? parent._screenSpaceError : tile._screenSpaceError;
-        //    return 100000.0 - priority; // TODO : doing this just because RequestScheduler wants lower priority
-        //}
+        } else if (replace) {
+            var priority = (defined(parent) && (useParentPriority || tile._screenSpaceError === 0.0)) ? parent._screenSpaceError : tile._screenSpaceError;
+            return 100000.0 - priority; // TODO : doing this just because RequestScheduler wants lower priority
+        }
     }
 
     function loadTile(tileset, tile, useParentPriority, frameState) {
-        if (tile._touchedFrame === frameState.frameNumber) {
-            return;
-        }
-
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tile._priority = getPriority(tile, useParentPriority);
@@ -453,10 +437,6 @@ define([
     }
 
     function updateTile(tileset, tile, frameState) {
-        if (tile._touchedFrame === frameState.frameNumber) {
-            return tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
-        }
-
         var visible = getVisibility(tileset, tile, frameState);
         tile._visibilityPlaneMask = visible ? tile._visibilityPlaneMask : CullingVolume.MASK_OUTSIDE;
 
@@ -490,6 +470,8 @@ define([
     function inBaseTraversal(tile, baseScreenSpaceError, maximumScreenSpaceError) {
         // TODO : what sse would be passed if only base traversal is used?
         // TODO : what is maximumScreenSpaceError is 0. Que paso?
+        // TODO : problem with yellow boxes when we don't want them to be yellow
+        // TODO : if skip traversal always look root
         if (baseScreenSpaceError === maximumScreenSpaceError) {
             return true;
         }
@@ -528,7 +510,7 @@ define([
             var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
             var refines = traverse && parentRefines;
 
-            visitTile(tileset, tile, frameState);
+            visitTile(tileset);
 
             if (traverse) {
                 for (var i = 0; i < childrenLength; ++i) {
@@ -537,14 +519,13 @@ define([
                     if (visible) {
                         stack.push(child);
                     }
-                    if (replace && baseTraversalOnly && baseTraversal && !hasEmptyContent(tile)) {
+                    if (replace && baseTraversalOnly && !hasEmptyContent(tile)) {
                         // Check if the parent can refine to this child. If the child is empty we need to traverse further to
                         // load all descendants with content. Keep non-visible children loaded since they are still needed before the parent can refine.
                         // We don't do this for empty tiles because it looks better if children stream in as they are loaded to fill the empty space.
                         if (!visible) {
                             loadTile(tileset, child, true, frameState);
                             touchTile(tileset, child, frameState);
-                            child._touchedFrame = frameState.frameNumber;
                         }
                         // Always run the internal base traversal even if we already know we can't refine. This keeps the tiles loaded while we wait to refine.
                         var refinesToChild = hasEmptyContent(child) ? executeEmptyTraversal(tileset, child, baseScreenSpaceError, maximumScreenSpaceError, frameState) : child.contentAvailable;
@@ -582,7 +563,6 @@ define([
             }
 
             touchTile(tileset, tile, frameState);
-            tile._touchedFrame = frameState.frameNumber;
             tile._refines = refines;
         }
     }
@@ -617,7 +597,6 @@ define([
                 // Tiles that are visible will get loaded from within executeBaseTraversal
                 loadTile(tileset, tile, true, frameState);
                 touchTile(tileset, tile, frameState);
-                tile._touchedFrame = frameState.frameNumber;
             }
 
             if (traverse) {
