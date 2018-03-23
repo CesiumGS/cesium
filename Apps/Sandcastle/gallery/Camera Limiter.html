@@ -42,7 +42,7 @@ var boundingSphere = new Cesium.BoundingSphere(centerForSphere, radius);
 // View the Bounding Sphere
 var outlineSphere = viewer.entities.add({
     name : 'Bounding Sphere Outline',
-    position: new Cesium.Cartesian3(0.01, 0.01, 0.01), // errors if 0,0,0
+    position: new Cesium.Cartesian3(1.0, 1.0, 1.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(radius, radius, radius),
         fill : false,
@@ -54,20 +54,13 @@ var outlineSphere = viewer.entities.add({
 });
 
 // Used for AxisAlignedBoundingBox Example
-var centerForAxisAligned = Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 45.0);
+var centerForAxisAligned = Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 250000.0);
 
 var dimensionsForAxisAligned = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
 var halfDimensionsAxisAligned = Cesium.Cartesian3.multiplyByScalar(dimensionsForAxisAligned, 0.5, new Cesium.Cartesian3());
 
 var minForAxisAligned = new Cesium.Cartesian3(-halfDimensionsAxisAligned.x, -halfDimensionsAxisAligned.y, -halfDimensionsAxisAligned.z);
 var maxForAxisAligned = new Cesium.Cartesian3(halfDimensionsAxisAligned.x, halfDimensionsAxisAligned.y, halfDimensionsAxisAligned.z);
-
-// normalizing by dividing by magnitude and offsetting along direction vector so outside of earth surface
-var offsetForAxisAligned = 10000.0;
-var directionForAxisAligned = Cesium.Cartesian3.multiplyByScalar(centerForAxisAligned,
-    offsetForAxisAligned / Cesium.Cartesian3.magnitude(centerForAxisAligned),
-    new Cesium.Cartesian3());
-Cesium.Cartesian3.add(centerForAxisAligned, directionForAxisAligned, centerForAxisAligned);
 
 // The Axis Aligned Box
 var axisAligned = new Cesium.AxisAlignedBoundingBox(minForAxisAligned, maxForAxisAligned, centerForAxisAligned);
@@ -77,7 +70,7 @@ var outlineAxisBox = viewer.entities.add({
     name : 'Axis Aligned Box Outline',
     position: centerForAxisAligned,
     box : {
-        dimensions : new Cesium.Cartesian3(dimensionsForAxisAligned.x, dimensionsForAxisAligned.y, dimensionsForAxisAligned.z),
+        dimensions : new Cesium.Cartesian3.clone(dimensionsForAxisAligned),
         fill : false,
         outline : true,
         outlineColor : Cesium.Color.RED
@@ -85,17 +78,15 @@ var outlineAxisBox = viewer.entities.add({
 });
 
 // Used for OrientedBoundingBox Example
-var centerForOriented = Cesium.Cartesian3.fromDegrees(-90.0, 45.0, 45.0);
+var centerForOriented = Cesium.Cartesian3.fromDegrees(-90.0, 45.0, 250000.0);
 var dimensionsForOriented = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
 var halfDimensionsOriented = Cesium.Cartesian3.multiplyByScalar(dimensionsForOriented, 0.5, new Cesium.Cartesian3());
-var halfAxesOriented = Cesium.Matrix3.fromScale(halfDimensionsOriented, new Cesium.Matrix3());
 
-// normalizing by dividing by magnitude and offsetting along direction vector so outside of earth surface
-var offsetForOriented = 10000.0;
-var directionForOriented = Cesium.Cartesian3.multiplyByScalar( centerForOriented,
-    offsetForOriented / Cesium.Cartesian3.magnitude(centerForOriented),
-    new Cesium.Cartesian3());
-Cesium.Cartesian3.add(centerForOriented, directionForOriented, centerForOriented);
+var hprOriented = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(Math.random()*360 + 180),
+                                              Cesium.Math.toRadians(Math.random()*360 + 180),
+                                              Cesium.Math.toRadians(Math.random()*360 + 180));
+var rotationOriented = Cesium.Matrix3.fromHeadingPitchRoll(hprOriented);
+var halfAxesOriented = Cesium.Matrix3.multiply(rotationOriented, Cesium.Matrix3.fromScale(halfDimensionsOriented, new Cesium.Matrix3()), new Cesium.Matrix3());
 
 // The Oriented Box
 var oriented = new Cesium.OrientedBoundingBox(centerForOriented, halfAxesOriented);
@@ -104,8 +95,9 @@ var oriented = new Cesium.OrientedBoundingBox(centerForOriented, halfAxesOriente
 var outlineOrientedBox = viewer.entities.add({
     name : 'Axis Aligned Box Outline',
     position: centerForOriented,
+    orientation : new Cesium.ConstantProperty(Cesium.Transforms.headingPitchRollQuaternion(centerForOriented, hprOriented)),
     box : {
-        dimensions : new Cesium.Cartesian3(dimensionsForOriented.x, dimensionsForOriented.y, dimensionsForOriented.z),
+        dimensions : Cesium.Cartesian3.clone(dimensionsForOriented),
         fill : false,
         outline : true,
         outlineColor : Cesium.Color.BLUE
