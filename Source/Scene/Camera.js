@@ -219,7 +219,7 @@ define([
         this.percentageChanged = 0.5;
 
         /**
-         * If set, the camera's position is constrained to be within this bounding object.
+         * Gets and sets the bounding object used to constrain the camera's position.
          * @type {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox} The bounding object used to restrict positions of the {@link Camera}.
          */
         this.boundingObject = undefined;
