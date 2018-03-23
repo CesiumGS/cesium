@@ -2431,14 +2431,18 @@ defineSuite([
     });
 
     it('loads a glTF with KHR_draco_mesh_compression extension', function() {
-        return loadModel(dracoCompressedModelUrl).then(function(m) {
+        return loadModel(dracoCompressedModelUrl, {
+            dequantizeInShader : false
+        }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
     });
 
     it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
-        return loadModel(dracoCompressedModelWithAnimationUrl).then(function(m) {
+        return loadModel(dracoCompressedModelWithAnimationUrl, {
+            dequantizeInShader : false
+        }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
@@ -2449,7 +2453,8 @@ defineSuite([
         spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
 
         var model = primitives.add(Model.fromGltf({
-            url : dracoCompressedModelUrl
+            url : dracoCompressedModelUrl,
+            dequantizeInShader : false
         }));
 
         return pollToPromise(function() {
@@ -2468,14 +2473,31 @@ defineSuite([
 
     it('loads a draco compressed glTF and dequantizes in the shader', function() {
         return loadModel(dracoCompressedModelUrl, {
-            dequantizeInShader : ['POSITION', 'TEX_COORD']
+            dequantizeInShader : true
         }).then(function(m) {
             verifyRender(m);
 
             var atrributeData = m._decodedData['0.primitive.0'].attributes;
             expect(atrributeData['POSITION'].quantization).toBeDefined();
             expect(atrributeData['TEXCOORD_0'].quantization).toBeDefined();
-            expect(atrributeData['NORMAL'].quantization).toBeUndefined();
+            expect(atrributeData['NORMAL'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization.octEncoded).toBe(true);
+
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes', function() {
+        return loadModel(dracoCompressedModelWithAnimationUrl, {
+            dequantizeInShader : true
+        }).then(function(m) {
+            verifyRender(m);
+
+            var atrributeData = m._decodedData['0.primitive.0'].attributes;
+            expect(atrributeData['POSITION'].quantization).toBeDefined();
+            expect(atrributeData['TEXCOORD_0'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization).toBeDefined();
+            expect(atrributeData['JOINTS_0'].quantization).toBeUndefined();
 
             primitives.remove(m);
         });
