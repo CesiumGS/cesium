@@ -1,10 +1,12 @@
 define([
+        '../Core/buildModuleUrl',
         '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject'
     ], function(
+        buildModuleUrl,
         Check,
         Credit,
         defaultValue,
@@ -28,16 +30,36 @@ define([
         return false;
     }
 
-    function displayTextCredits(creditDisplay, textCredits) {
+    function swapCesiumCredit(creditDisplay) {
+        // We don't want to clutter the screen with the Cesium logo and the Cesium ion
+        // logo at the same time. Since the ion logo is required, we just replace the
+        // Cesium logo or add the logo if the Cesium one was removed.
+        var previousCredit = creditDisplay._previousCesiumCredit;
+        var currentCredit = creditDisplay._currentCesiumCredit;
+        if (Credit.equals(currentCredit, previousCredit)) {
+            return;
+        }
+
+        if (defined(previousCredit)) {
+            creditDisplay._cesiumCreditContainer.removeChild(previousCredit.element);
+        }
+        if (defined(currentCredit)) {
+            creditDisplay._cesiumCreditContainer.appendChild(currentCredit.element);
+        }
+
+        creditDisplay._previousCesiumCredit = currentCredit;
+    }
+
+    function displayCredits(creditDisplay, credits) {
         var i;
         var index;
         var credit;
-        var displayedTextCredits = creditDisplay._displayedCredits.textCredits;
-        var container = creditDisplay._textContainer;
-        for (i = 0; i < textCredits.length; i++) {
-            credit = textCredits[i];
+        var displayedCredits = creditDisplay._displayedCredits.screenCredits;
+        var container = creditDisplay._screenContainer;
+        for (i = 0; i < credits.length; i++) {
+            credit = credits[i];
             if (defined(credit)) {
-                index = displayedTextCredits.indexOf(credit);
+                index = displayedCredits.indexOf(credit);
                 if (index === -1) {
                     var element = credit.element;
                     if (container.hasChildNodes()) {
@@ -48,26 +70,7 @@ define([
                     }
                     container.appendChild(element);
                 } else {
-                    displayedTextCredits.splice(index, 1);
-                }
-            }
-        }
-    }
-
-    function displayImageCredits(creditDisplay, imageCredits) {
-        var i;
-        var index;
-        var credit;
-        var displayedImageCredits = creditDisplay._displayedCredits.imageCredits;
-        var container = creditDisplay._imageContainer;
-        for (i = 0; i < imageCredits.length; i++) {
-            credit = imageCredits[i];
-            if (defined(credit)) {
-                index = displayedImageCredits.indexOf(credit);
-                if (index === -1) {
-                    container.appendChild(credit.element);
-                } else {
-                    displayedImageCredits.splice(index, 1);
+                    displayedCredits.splice(index, 1);
                 }
             }
         }
@@ -100,12 +103,8 @@ define([
 
         var container = credit.showOnScreen ? element.parentNode : element.parentNode.parentNode;
 
-        if (credit.hasImage() || !credit.showOnScreen) {
-            if (credit.showOnScreen) {
-                container.removeChild(element);
-            } else {
-                container.removeChild(element.parentNode);
-            }
+        if (!credit.showOnScreen) {
+            container.removeChild(element.parentNode);
             return;
         }
 
@@ -122,16 +121,9 @@ define([
     function removeUnusedCredits(creditDisplay) {
         var i;
         var credit;
-        var displayedTextCredits = creditDisplay._displayedCredits.textCredits;
+        var displayedTextCredits = creditDisplay._displayedCredits.screenCredits;
         for (i = 0; i < displayedTextCredits.length; i++) {
             credit = displayedTextCredits[i];
-            if (defined(credit)) {
-                removeCreditDomElement(credit);
-            }
-        }
-        var displayedImageCredits = creditDisplay._displayedCredits.imageCredits;
-        for (i = 0; i < displayedImageCredits.length; i++) {
-            credit = displayedImageCredits[i];
             if (defined(credit)) {
                 removeCreditDomElement(credit);
             }
@@ -205,11 +197,11 @@ define([
             margin : 'auto'
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > span > a, .cesium-credit-lightbox > ul > li > span > a:visited', {
+        style += addStyle('.cesium-credit-lightbox > ul > li a, .cesium-credit-lightbox > ul > li a:visited', {
             color: textColor
         });
 
-        style += addStyle('.cesium-credit-lightbox > ul > li > span > a:hover', {
+        style += addStyle('.cesium-credit-lightbox > ul > li a:hover', {
             color: highlightColor
         });
 
@@ -251,6 +243,11 @@ define([
             'padding-bottom' : '6px'
         });
 
+        style += addStyle('.cesium-credit-lightbox > ul > li *', {
+            padding : '0',
+            margin : '0'
+        });
+
         style += addStyle('.cesium-credit-expand-link', {
             'padding-left' : '5px',
             cursor : 'pointer',
@@ -265,17 +262,17 @@ define([
             color: textColor
         });
 
+        style += addStyle('.cesium-credit-textContainer *, .cesium-credit-logoContainer *', {
+            display: 'inline'
+        });
+
         css.innerHTML = style;
 
         head.insertBefore(css, head.firstChild);
     }
 
-    var cesiumCredit = new Credit({
-        text: 'CesiumJS',
-        imageUrl: 'data:image/png;base64,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',
-        link: 'https://cesiumjs.org/',
-        showOnScreen: true
-    });
+    var cesiumLogo = buildModuleUrl('Assets/Images/cesium_credit.png');
+    var cesiumCredit = new Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="' + cesiumLogo + '" title="CesiumJS"/></a>', true);
 
     /**
      * The credit display is responsible for displaying credits on screen.
@@ -328,13 +325,15 @@ define([
         var creditList = document.createElement('ul');
         lightboxCredits.appendChild(creditList);
 
-        var imageContainer = document.createElement('span');
-        imageContainer.className = 'cesium-credit-imageContainer';
-        container.appendChild(imageContainer);
+        var cesiumCreditContainer = document.createElement('div');
+        cesiumCreditContainer.className = 'cesium-credit-logoContainer';
+        cesiumCreditContainer.style.display = 'inline';
+        container.appendChild(cesiumCreditContainer);
 
-        var textContainer = document.createElement('span');
-        textContainer.className = 'cesium-credit-textContainer';
-        container.appendChild(textContainer);
+        var screenContainer = document.createElement('div');
+        screenContainer.className = 'cesium-credit-textContainer';
+        screenContainer.style.display = 'inline';
+        container.appendChild(screenContainer);
 
         var expandLink = document.createElement('a');
         expandLink.className = 'cesium-credit-expand-link';
@@ -345,8 +344,8 @@ define([
         appendCss();
 
         this._delimiter = defaultValue(delimiter, ' • ');
-        this._textContainer = textContainer;
-        this._imageContainer = imageContainer;
+        this._screenContainer = screenContainer;
+        this._cesiumCreditContainer = cesiumCreditContainer;
         this._lastViewportHeight = undefined;
         this._lastViewportWidth = undefined;
         this._lightboxCredits = lightboxCredits;
@@ -355,17 +354,16 @@ define([
         this._hideLightbox = hideLightbox;
         this._expandLink = expandLink;
         this._expanded = false;
-        this._defaultImageCredits = [];
-        this._defaultTextCredits = [];
+        this._defaultCredits = [];
+        this._previousCesiumCredit = undefined;
+        this._currentCesiumCredit = CreditDisplay.cesiumCredit;
 
         this._displayedCredits = {
-            imageCredits : [],
-            textCredits : [],
+            screenCredits : [],
             lightboxCredits : []
         };
         this._currentFrameCredits = {
-            imageCredits : [],
-            textCredits : [],
+            screenCredits : [],
             lightboxCredits : []
         };
 
@@ -388,23 +386,14 @@ define([
         Check.defined('credit', credit);
         //>>includeEnd('debug');
 
-        var imageCredits = this._currentFrameCredits.imageCredits;
+        var screenCredits = this._currentFrameCredits.screenCredits;
 
-        if (credit.text === 'Cesium ion') {
-            // We don't want to clutter the screen with the Cesium logo and the Cesium ion
-            // logo at the same time. Since the ion logo is required, we just replace the
-            // Cesium logo or add the logo if the Cesium one was removed.
-            if (defined(imageCredits[cesiumCredit.id])) {
-                imageCredits[cesiumCredit.id] = credit;
-            } else {
-                imageCredits[credit.id] = credit;
-            }
+        if (credit._isIon) {
+            this._currentCesiumCredit = credit;
         } else if (!credit.showOnScreen) {
             this._currentFrameCredits.lightboxCredits[credit.id] = credit;
-        } else if (credit.hasImage()) {
-            imageCredits[credit.id] = credit;
         } else {
-            this._currentFrameCredits.textCredits[credit.id] = credit;
+            screenCredits[credit.id] = credit;
         }
     };
 
@@ -418,16 +407,9 @@ define([
         Check.defined('credit', credit);
         //>>includeEnd('debug');
 
-        if (credit.hasImage()) {
-            var imageCredits = this._defaultImageCredits;
-            if (!contains(imageCredits, credit)) {
-                imageCredits.push(credit);
-            }
-        } else {
-            var textCredits = this._defaultTextCredits;
-            if (!contains(textCredits, credit)) {
-                textCredits.push(credit);
-            }
+        var credits = this._defaultCredits;
+        if (!contains(credits, credit)) {
+            credits.push(credit);
         }
     };
 
@@ -441,17 +423,9 @@ define([
         Check.defined('credit', credit);
         //>>includeEnd('debug');
 
-        var index;
-        if (credit.hasImage()) {
-            index = this._defaultImageCredits.indexOf(credit);
-            if (index !== -1) {
-                this._defaultImageCredits.splice(index, 1);
-            }
-        } else {
-            index = this._defaultTextCredits.indexOf(credit);
-            if (index !== -1) {
-                this._defaultTextCredits.splice(index, 1);
-            }
+        var index = this._defaultCredits.indexOf(credit);
+        if (index !== -1) {
+            this._defaultCredits.splice(index, 1);
         }
     };
 
@@ -486,36 +460,27 @@ define([
      * Resets the credit display to a beginning of frame state, clearing out current credits.
      */
     CreditDisplay.prototype.beginFrame = function() {
-        this._currentFrameCredits.imageCredits.length = 0;
-        this._currentFrameCredits.textCredits.length = 0;
+        this._currentFrameCredits.screenCredits.length = 0;
         this._currentFrameCredits.lightboxCredits.length = 0;
-
-        var cesiumCredit = CreditDisplay.cesiumCredit;
-        if (defined(cesiumCredit)) {
-            this._currentFrameCredits.imageCredits[cesiumCredit.id] = cesiumCredit;
-        }
+        this._currentCesiumCredit = CreditDisplay.cesiumCredit;
     };
 
     /**
      * Sets the credit display to the end of frame state, displaying credits from the last frame in the credit container.
      */
     CreditDisplay.prototype.endFrame = function() {
-        displayImageCredits(this, this._defaultImageCredits);
-        displayTextCredits(this, this._defaultTextCredits);
+        displayCredits(this, this._defaultCredits);
+        displayCredits(this, this._currentFrameCredits.screenCredits);
 
-        displayImageCredits(this, this._currentFrameCredits.imageCredits);
-        displayTextCredits(this, this._currentFrameCredits.textCredits);
-
-        var displayedTextCredits = this._defaultTextCredits.concat(this._currentFrameCredits.textCredits);
-        var displayedImageCredits = this._defaultImageCredits.concat(this._currentFrameCredits.imageCredits);
+        var displayedScreenCredits = this._defaultCredits.concat(this._currentFrameCredits.screenCredits);
 
         var showLightboxLink = this._currentFrameCredits.lightboxCredits.length > 0;
         this._expandLink.style.display = showLightboxLink ? 'inline' : 'none';
 
         removeUnusedCredits(this);
+        swapCesiumCredit(this);
 
-        this._displayedCredits.textCredits = displayedTextCredits;
-        this._displayedCredits.imageCredits = displayedImageCredits;
+        this._displayedCredits.screenCredits = displayedScreenCredits;
 
         this._creditsToUpdate = this._currentFrameCredits.lightboxCredits.slice();
     };
@@ -533,8 +498,8 @@ define([
     CreditDisplay.prototype.destroy = function() {
         this._lightbox.removeEventListener('click', this._hideLightbox, false);
 
-        this.container.removeChild(this._textContainer);
-        this.container.removeChild(this._imageContainer);
+        this.container.removeChild(this._cesiumCreditContainer);
+        this.container.removeChild(this._screenContainer);
         this.container.removeChild(this._expandLink);
         this.viewport.removeChild(this._lightbox);
 
