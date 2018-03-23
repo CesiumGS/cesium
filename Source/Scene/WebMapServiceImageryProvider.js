@@ -148,14 +148,6 @@ define([
                     }
                 }
             });
-
-            if (defined(options.clock)){
-                var dynamicIntervalData = options.times.findDataForIntervalContainingDate(options.clock.currentTime);
-                if (defined(dynamicIntervalData) && dynamicIntervalData instanceof Object)
-                {
-                    resource.setQueryParameters(dynamicIntervalData);
-                }
-            }
         }
 
         var parameters = {};
@@ -210,13 +202,10 @@ define([
 
     function requestImage(imageryProvider, col, row, level, request, interval) {
         var dynamicIntervalData = defined(interval) ? interval.data : undefined;
-        var resource = imageryProvider._tileProvider._resource; // We actually want to set the query parameters within the tile provider.
         if (defined(dynamicIntervalData)) {
-            if (dynamicIntervalData instanceof Object){
-                resource.setQueryParameters(dynamicIntervalData);
-            }
+            var resource = imageryProvider._tileProvider._resource; // We actually want to set the query parameters within the tile provider.
+            resource.setQueryParameters(dynamicIntervalData);
         }
-
         return imageryProvider._tileProvider.requestImage(col, row, level, request);
     }
 
