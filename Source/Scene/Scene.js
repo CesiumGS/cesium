@@ -3598,7 +3598,7 @@ define([
         if (!defined(limit)) {
             limit = Number.MAX_VALUE;
         }
-        
+
         var drillRectangleWidth = defaultValue(width, 3.0);
         var drillRectangleHeight = defaultValue(height, drillRectangleWidth);
 
