@@ -1,62 +1,26 @@
 define([
+        '../ThirdParty/xss',
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError'
     ], function(
+        xss,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError) {
     'use strict';
 
     var nextCreditId = 0;
     var creditToId = {};
 
-    function getElement(credit) {
-        var element = document.createElement('span');
-        var text = credit.text;
-        var link = credit.link;
-        var a;
-        if (credit._hasImage) {
-            var content = document.createElement('img');
-            content.src = credit.imageUrl;
-            if (defined(text)) {
-                content.alt = text;
-                content.title = text;
-            }
-            if (credit._hasLink) {
-                a = document.createElement('a');
-                a.appendChild(content);
-                a.href = link;
-                a.target = '_blank';
-                element.appendChild(a);
-            } else {
-                element.appendChild(content);
-            }
-            element.className = 'cesium-credit-image';
-        } else {
-            if (credit._hasLink) {
-                a = document.createElement('a');
-                a.textContent = text;
-                a.href = link;
-                a.target = '_blank';
-                element.appendChild(a);
-            } else {
-                element.textContent = text;
-            }
-            element.className = 'cesium-credit-text';
-        }
-        return element;
-    }
-
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
-     * @param {Object} [options] An object with the following properties
-     * @param {String} [options.text] The text to be displayed on the screen if no imageUrl is specified.
-     * @param {String} [options.imageUrl] The source location for an image
-     * @param {String} [options.link] A URL location for which the credit will be hyperlinked
-     * @param {Boolean} [options.showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+     * @param {String} html An string representing an html code snippet (can be text only)
+     * @param {Boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
      *
      * @alias Credit
      * @constructor
@@ -71,38 +35,74 @@ define([
      *     link : 'https://cesiumjs.org/'
      * });
      */
-    function Credit(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var text = options.text;
-        var imageUrl = options.imageUrl;
-        var link = options.link;
-        var showOnScreen = defaultValue(options.showOnScreen, false);
-
-        var hasLink = (defined(link));
-        var hasImage = (defined(imageUrl));
-        var hasText = (defined(text));
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!hasText && !hasImage && !hasLink) {
-            throw new DeveloperError('options.text, options.imageUrl, or options.link is required.');
-        }
-        //>>includeEnd('debug');
-
-        if (!hasText && !hasImage) {
-            text = link;
-        }
-
-        this._text = text;
-        this._imageUrl = imageUrl;
-        this._link = link;
-        this._hasLink = hasLink;
-        this._hasImage = hasImage;
-        this._showOnScreen = showOnScreen;
-
-        // Credits are immutable so generate an id to use to optimize equal()
+    function Credit(html, showOnScreen) {
         var id;
-        var key = JSON.stringify([text, imageUrl, link]);
+        var key;
+        if (typeof html !== 'string') {
+            var options = defaultValue(html, defaultValue.EMPTY_OBJECT);
+            deprecationWarning('Credit options', 'The options parameter has been deprecated and will be removed in Cesium 1.46.  Instead, pass in an HTML string (or a string of text)');
+            showOnScreen = defaultValue(options.showOnScreen, showOnScreen);
+            var text = options.text;
+            var imageUrl = options.imageUrl;
+            var link = options.link;
+
+            var hasLink = (defined(link));
+            var hasImage = (defined(imageUrl));
+            var hasText = (defined(text));
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!hasText && !hasImage && !hasLink) {
+                throw new DeveloperError('options.text, options.imageUrl, or options.link is required.');
+            }
+            //>>includeEnd('debug');
+
+            if (!hasText && !hasImage) {
+                text = link;
+            }
+
+            this._text = text;
+            this._imageUrl = imageUrl;
+            this._link = link;
+            this._hasLink = hasLink;
+            this._hasImage = hasImage;
+
+            var element = document.createElement('span');
+            var a;
+            if (hasImage) {
+                var content = document.createElement('img');
+                content.src = imageUrl;
+                if (defined(text)) {
+                    content.alt = text;
+                    content.title = text;
+                }
+                if (hasLink) {
+                    a = document.createElement('a');
+                    a.appendChild(content);
+                    a.href = link;
+                    a.target = '_blank';
+                    element.appendChild(a);
+                } else {
+                    element.appendChild(content);
+                }
+                element.className = 'cesium-credit-image';
+            } else {
+                if (hasLink) {
+                    a = document.createElement('a');
+                    a.textContent = text;
+                    a.href = link;
+                    a.target = '_blank';
+                    element.appendChild(a);
+                } else {
+                    element.textContent = text;
+                }
+                element.className = 'cesium-credit-text';
+            }
+
+            html = '<span>' + element.innerHTML + '</span>';
+            key = JSON.stringify([text, imageUrl, link]);
+        } else {
+            key = html;
+        }
 
         if (defined(creditToId[key])) {
             id = creditToId[key];
@@ -111,12 +111,27 @@ define([
             creditToId[key] = id;
         }
 
-        this._id = id;
+        showOnScreen = defaultValue(showOnScreen, false);
 
+        // Credits are immutable so generate an id to use to optimize equal()
+        this._id = id;
+        this._html = html;
+        this._showOnScreen = showOnScreen;
         this._element = undefined;
     }
 
     defineProperties(Credit.prototype, {
+        /**
+         * The credit content
+         * @memberof Credit.prototype
+         * @type {String}
+         * @readonly
+         */
+        html : {
+            get : function() {
+                return this._html;
+            }
+        },
         /**
          * The credit text
          * @memberof Credit.prototype
@@ -125,6 +140,7 @@ define([
          */
         text : {
             get : function() {
+                deprecationWarning('Credit.text', 'Credit.text is deprecated and will be removed in Cesium 1.46.  Instead, use Credit.html to get the credit content.');
                 return this._text;
             }
         },
@@ -137,6 +153,7 @@ define([
          */
         imageUrl : {
             get : function() {
+                deprecationWarning('Credit.imageUrl', 'Credit.imageUrl is deprecated and will be removed in Cesium 1.46.  Instead, use Credit.html to get the credit content.');
                 return this._imageUrl;
             }
         },
@@ -149,6 +166,7 @@ define([
          */
         link : {
             get : function() {
+                deprecationWarning('Credit.link', 'Credit.link is deprecated and will be removed in Cesium 1.46.  Instead, use Credit.html to get the credit content.');
                 return this._link;
             }
         },
@@ -187,7 +205,19 @@ define([
         element: {
             get: function() {
                 if (!defined(this._element)) {
-                    this._element = getElement(this);
+                    var html = this.html;
+                    html = xss(html);
+
+                    var div = document.createElement('div');
+                    div.style.display = 'inline';
+                    div.innerHTML = html;
+
+                    var links = div.querySelectorAll('a');
+                    for (var i = 0; i < links.length; i++) {
+                        links[i].setAttribute('target', '_blank');
+                    }
+
+                    this._element = div;
                 }
                 return this._element;
             }
@@ -200,6 +230,7 @@ define([
      * @returns {Boolean}
      */
     Credit.prototype.hasImage = function() {
+        deprecationWarning('Credit.hasImage', 'Credit.hasImage is deprecated and will be removed in Cesium 1.46.');
         return this._hasImage;
     };
 
@@ -209,6 +240,7 @@ define([
      * @returns {Boolean}
      */
     Credit.prototype.hasLink = function() {
+        deprecationWarning('Credit.hasLink', 'Credit.hasLink is deprecated and will be removed in Cesium 1.46.');
         return this._hasLink;
     };
 
@@ -234,6 +266,28 @@ define([
      */
     Credit.prototype.equals = function(credit) {
         return Credit.equals(this, credit);
+    };
+
+    /**
+     * @private
+     * @param attribution
+     * @return {Credit}
+     */
+    Credit.getIonCredit = function(attribution) {
+        var credit;
+        var showOnScreen = defined(attribution.collapsible) && !attribution.collapsible;
+        if (defined(attribution.html)) {
+            credit = new Credit(attribution.html, showOnScreen);
+        } else {
+            credit = new Credit({
+                text: attribution.text,
+                link: attribution.url,
+                imageUrl: attribution.image
+            }, showOnScreen);
+        }
+
+        credit._isIon = credit.html.indexOf('ion-credit.png') !== -1;
+        return credit;
     };
 
     return Credit;
