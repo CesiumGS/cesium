@@ -772,11 +772,11 @@ defineSuite([
     it('clampToBounds given input value outside of box', function() {
         var box = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.IDENTITY);
         var testLocation = new Cartesian3(5, 5, 100);
-        var result = box.clampToBounds(testLocation);
+        var result = box.clampToBounds(testLocation, new Cartesian3());
 
         expect(result).not.toEqual(testLocation);
 
-        var result2 = box.clampToBounds(result);
+        var result2 = box.clampToBounds(result, new Cartesian3());
         expect(result2).toEqual(result);
 
         var finalCheck = new Cartesian3(1, 1, 1);
@@ -786,7 +786,7 @@ defineSuite([
     it('clampToBounds given input value inside of box', function() {
         var box = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.IDENTITY);
         var testLocation = new Cartesian3(0.5, 0.5, 0.5);
-        var result = box.clampToBounds(testLocation);
+        var result = box.clampToBounds(testLocation, new Cartesian3());
 
         expect(result).toEqual(testLocation);
     });
@@ -794,7 +794,7 @@ defineSuite([
     it('clampToBounds given box of size 0', function() {
         var box = new OrientedBoundingBox(Cartesian3.ZERO, Matrix3.ZERO);
         var testLocation = new Cartesian3(0.5, 0.5, 0.5);
-        var result = box.clampToBounds(testLocation);
+        var result = box.clampToBounds(testLocation, new Cartesian3());
 
         expect(result).not.toEqual(testLocation);
         expect(result.x).toEqual(0);

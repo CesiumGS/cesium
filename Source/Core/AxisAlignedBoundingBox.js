@@ -194,14 +194,15 @@ define([
     };
 
     /**
-     * If the given position is not already within the box, projects the given position onto the box
+     * If the given position is not already within the box, clamps the given position onto the surface of the box.
      * @param {Cartesian3} position The position being projected onto this AxisAlignedBoundingBox.
-     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @param {Cartesian3} result The object onto which to store the result.
      * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the AxisAlignedBoundingBox.
      */
     AxisAlignedBoundingBox.prototype.clampToBounds = function(position, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('position', position);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result = Cartesian3.clone(position, result);

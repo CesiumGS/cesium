@@ -218,6 +218,12 @@ define([
          */
         this.percentageChanged = 0.5;
 
+        /**
+         * If set, the camera's position is constrained to be within this bounding object.
+         * @type {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox} The bounding object used to restrict positions of the {@link Camera}.
+         */
+        this.boundingObject = undefined;
+
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
@@ -237,12 +243,6 @@ define([
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
         Cartesian3.normalize(this.position, this.position);
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
-
-        /**
-         * If set, the camera's position is constrained to be within this bounding object.
-         * @type {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox} [options.boundingObject] The BoundingObject used to restrict positions of the {@link Camera}.
-         */
-        this.boundingObject = undefined;
     }
 
     /**
@@ -3267,7 +3267,8 @@ define([
         scratchViewOptions.orientation.roll = this.roll;
 
         // solving for positionWC because there's a bug where WC is incorrect in 2D and CV mode
-        scratchViewOptions.destination = this.boundingObject.clampToBounds(Cartographic.toCartesian(this._positionCartographic), scratchClampedValue);
+        scratchClampedValue = this._projection.ellipsoid.cartographicToCartesian(this._positionCartographic);
+        scratchViewOptions.destination = this.boundingObject.clampToBounds(scratchClampedValue, scratchClampedValue);
 
         this.setView(scratchViewOptions);
 

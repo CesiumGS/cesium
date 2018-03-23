@@ -168,7 +168,7 @@ defineSuite([
         var box = new AxisAlignedBoundingBox(lowerBound, upperBound);
 
         var testLocation = new Cartesian3(3, 3, 3);
-        var result = box.clampToBounds(testLocation);
+        var result = box.clampToBounds(testLocation, new Cartesian3());
 
         expect(result).not.toEqual(testLocation);
         expect(result).toEqual(upperBound);
@@ -180,7 +180,7 @@ defineSuite([
         var box = new AxisAlignedBoundingBox(lowerBound, upperBound);
 
         var testLocation = new Cartesian3(0.5, 0.5, 0.5);
-        var result = box.clampToBounds(testLocation);
+        var result = box.clampToBounds(testLocation, new Cartesian3());
 
         expect(result).toEqual(testLocation);
     });

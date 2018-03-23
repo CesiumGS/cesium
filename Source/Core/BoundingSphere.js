@@ -1201,20 +1201,19 @@ define([
     /**
      * If the given position is not already within the sphere, projects the given position onto the sphere.
      * @param {Cartesian3} position The position being projected onto this BoundingSphere.
-     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @param {Cartesian3} result The object onto which to store the result.
      * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the BoundingSphere.
      */
     BoundingSphere.prototype.clampToBounds = function(position, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('position', position);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
         result = Cartesian3.clone(position, result);
 
-        // to avoid dividing by zero
         if (Cartesian3.equals(result, this.center)) {
             return result;
         }
-        // check if already within sphere
         if (Cartesian3.distance(result, this.center) <= this.radius) {
             return result;
         }
