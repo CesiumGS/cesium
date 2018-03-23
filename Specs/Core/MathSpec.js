@@ -442,4 +442,10 @@ defineSuite([
         expect(CesiumMath.cbrt(1.0)).toEqual(1.0);
         expect(CesiumMath.cbrt()).toEqual(NaN);
     });
+
+    it('fastApproximateAtan', function() {
+        expect(CesiumMath.fastApproximateAtan(0.0)).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+        expect(CesiumMath.fastApproximateAtan(1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON7);
+        expect(CesiumMath.fastApproximateAtan(-1.0)).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON7);
+    });
 });

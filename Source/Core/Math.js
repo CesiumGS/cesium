@@ -857,5 +857,21 @@ define([
         return 1.0 - Math.exp(-(scalar * scalar));
     };
 
+    /**
+     * Computes a fast approximation of Atan for input in the range [-1, 1].
+     *
+     * Based on Michal Drobot's approximation from ShaderFastLibs,
+     * which in turn is based on "Efficient approximations for the arctangent function,"
+     * Rajan, S. Sichun Wang Inkol, R. Joyal, A., May 2006.
+     * Adapted from ShaderFastLibs under MIT License.
+     *
+     * @param {Number} x An input number in the range [-1, 1]
+     * @returns {Number} An approximation of atan(x)
+     * @private
+     */
+    CesiumMath.fastApproximateAtan = function(x) {
+        return x * (-0.1784 * Math.abs(x) - 0.0663 * x * x + 1.0301);
+    }
+
     return CesiumMath;
 });

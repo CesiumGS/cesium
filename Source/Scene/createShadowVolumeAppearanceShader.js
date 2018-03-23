@@ -140,11 +140,9 @@ define([
             glsl +=
                 '    // compute sphere normal for spherical coordinates\n' +
                 '    vec3 sphereNormal = normalize(worldCoord);\n' +
-                '    // cubic asign approximation\n' +
-                '    float latitude = ' + approximateAsinForValue('sphereNormal.z') + ';\n' +
-                '    float longitude = czm_atan2cg(sphereNormal.y, sphereNormal.x);\n' +
-                '    float u = (latitude - v_sphericalExtents.y) * v_sphericalExtents.w;\n' +
-                '    float v = (longitude - v_sphericalExtents.x) * v_sphericalExtents.z;\n';
+                '    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(sphereNormal);\n' +
+                '    float u = (sphericalLatLong.x - v_sphericalExtents.y) * v_sphericalExtents.w;\n' +
+                '    float v = (sphericalLatLong.y - v_sphericalExtents.x) * v_sphericalExtents.z;\n';
         }
         if (sphericalExtentsCulling) {
             glsl +=
@@ -201,16 +199,6 @@ define([
                 '}\n';
         }
         return glsl;
-    }
-
-    // Inline-approximate asin(value) using a very rough cubic approximation, (x^3 + x) * PI/4.
-    // Native glsl asin can vary between vendors, sometimes we need a consistent approximation.
-    //
-    // This approximation is relatively inaccurate but does not have first-derivative discontinuity
-    // for input 0, which is a common problem with sqrt-based approximations that use range reduction to cover [-1, 1].
-    // When computing spherical coordinates, such discontinuities cause pinching problems at the equator.
-    function approximateAsinForValue(valueToken) {
-        return '(' + valueToken + ' * ' + valueToken + ' * ' + valueToken + ' + ' + valueToken + ') * czm_piOverFour';
     }
 
     /**

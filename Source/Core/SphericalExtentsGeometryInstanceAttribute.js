@@ -2,6 +2,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
+        './Math',
         './ComponentDatatype',
         './defineProperties',
         './Ellipsoid'
@@ -9,40 +10,35 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        CesiumMath,
         ComponentDatatype,
         defineProperties,
         Ellipsoid) {
     'use strict';
 
-    function completelyFakeAsin(x)
-    {
-        return (x * x * x + x) * 0.78539816339;
+    function approximateSphericalLatitude(normal) {
+        var normalZ = normal.z;
+        var magXY = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
+        var q = normalZ / magXY;
+        if (Math.abs(q) < 1.0) {
+            return CesiumMath.fastApproximateAtan(normalZ / magXY);
+        } else {
+            return CesiumMath.sign(normalZ) * CesiumMath.PI_OVER_TWO - CesiumMath.fastApproximateAtan(magXY / normalZ);
+        }
     }
 
-    function atan2Ref(y, x) {
-        var t0, t1, t3, t4;
-
-        t3 = Math.abs(x);
-        t1 = Math.abs(y);
-        t0 = Math.max(t3, t1);
-        t1 = Math.min(t3, t1);
-        t3 = 1.0 / t0;
-        t3 = t1 * t3;
-
-        t4 = t3 * t3;
-        t0 =         - 0.013480470;
-        t0 = t0 * t4 + 0.057477314;
-        t0 = t0 * t4 - 0.121239071;
-        t0 = t0 * t4 + 0.195635925;
-        t0 = t0 * t4 - 0.332994597;
-        t0 = t0 * t4 + 0.999995630;
-        t3 = t0 * t3;
-
-        t3 = (Math.abs(y) > Math.abs(x)) ? 1.570796327 - t3 : t3;
-        t3 = (x < 0) ?  3.141592654 - t3 : t3;
-        t3 = (y < 0) ? -t3 : t3;
-
-        return t3;
+    function approximateSphericalLongitude(normal) {
+        var magXY = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
+        var x = normal.x / magXY;
+        var y = normal.y / magXY;
+        if (Math.abs(y / x) < 1.0) {
+            if (x < 0.0) {
+                return CesiumMath.sign(y) * CesiumMath.PI - CesiumMath.fastApproximateAtan(y / Math.abs(x));
+            }
+            return CesiumMath.fastApproximateAtan(y / x);
+        } else {
+                return CesiumMath.sign(y) * CesiumMath.PI_OVER_TWO - CesiumMath.fastApproximateAtan(x / y);
+        }
     }
 
     var cartographicScratch = new Cartographic();
@@ -56,8 +52,8 @@ define([
         var cartesian = Cartographic.toCartesian(carto, Ellipsoid.WGS84, cartesian3Scratch);
         var sphereNormal = Cartesian3.normalize(cartesian, cartesian);
 
-        var sphereLatitude = completelyFakeAsin(sphereNormal.z); // find a dress for the ball Sinderella
-        var sphereLongitude = atan2Ref(sphereNormal.y, sphereNormal.x); // the kitTans weep
+        var sphereLatitude = approximateSphericalLatitude(sphereNormal);
+        var sphereLongitude = approximateSphericalLongitude(sphereNormal);
         result.x = sphereLatitude;
         result.y = sphereLongitude;
 
