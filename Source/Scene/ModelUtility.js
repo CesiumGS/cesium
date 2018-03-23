@@ -224,8 +224,6 @@ define([
                 }
                 var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
 
-                var decodeUniformVarNameNormConstant = decodeUniformVarName + '_normConstant';
-                var decodeUniformVarNameMin = decodeUniformVarName + '_min';
                 if (!defined(quantizedUniforms[decodeUniformVarName])) {
                     var newMain = 'gltf_decoded_' + attributeSemantic;
                     var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
@@ -233,23 +231,40 @@ define([
 
                     // replace usages of the original attribute with the decoded version, but not the declaration
                     shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+
                     // declare decoded attribute
                     var variableType;
-                    if (size > 1) {
+                    if (quantization.octEncoded) {
+                        variableType = 'vec3';
+                    } else if (size > 1) {
                         variableType = 'vec' + size;
                     } else {
                         variableType = 'float';
                     }
                     shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
+
                     // splice decode function into the shader
                     var decode = '';
-                    shader = 'uniform float ' + decodeUniformVarNameNormConstant + ';\n' +
-                        'uniform ' + variableType + ' ' + decodeUniformVarNameMin + ';\n' + shader;
-                    decode = '\n' +
+                    if (quantization.octEncoded) {
+                        var decodeUniformVarNameRangeConstant = decodeUniformVarName + '_rangeConstant';
+                        shader = 'uniform float ' + decodeUniformVarNameRangeConstant + ';\n' + shader;
+                        decode = '\n' +
+                                'void main() {\n' +
+                                // Draco oct-encoding decodes to zxy order
+                                '    ' + decodedAttributeVarName + ' = czm_octDecode(' + attributeVarName + '.xy, ' + decodeUniformVarNameRangeConstant + ').zxy;\n' +
+                                '    ' + newMain + '();\n' +
+                                '}\n';
+                    } else {
+                        var decodeUniformVarNameNormConstant = decodeUniformVarName + '_normConstant';
+                        var decodeUniformVarNameMin = decodeUniformVarName + '_min';
+                        shader = 'uniform float ' + decodeUniformVarNameNormConstant + ';\n' +
+                                'uniform ' + variableType + ' ' + decodeUniformVarNameMin + ';\n' + shader;
+                        decode = '\n' +
                                 'void main() {\n' +
                                 '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameMin + ' + ' + attributeVarName + ' * ' + decodeUniformVarNameNormConstant + ';\n' +
                                 '    ' + newMain + '();\n' +
                                 '}\n';
+                    }
 
                     shader = ShaderSource.replaceMain(shader, newMain);
                     shader += decode;
@@ -508,12 +523,19 @@ define([
                 }
 
                 var uniformVarName = 'gltf_u_dec_' + attribute.toLowerCase();
-                var uniformVarNameNormConstant = uniformVarName + '_normConstant';
-                var uniformVarNameMin = uniformVarName + '_min';
 
+                if (quantization.octEncoded) {
+                    var uniformVarNameRangeConstant = uniformVarName + '_rangeConstant';
+                    var rangeConstant = (1 << quantization.quantizationBits) - 1.0;
+                    uniformMap[uniformVarNameRangeConstant] = getScalarUniformFunction(rangeConstant).func;
+                    continue;
+                }
+
+                var uniformVarNameNormConstant = uniformVarName + '_normConstant';
                 var normConstant = quantization.range / (1 << quantization.quantizationBits);
                 uniformMap[uniformVarNameNormConstant] = getScalarUniformFunction(normConstant).func;
 
+                var uniformVarNameMin = uniformVarName + '_min';
                 switch (decodedAttributes[attribute].componentsPerAttribute) {
                     case 1:
                         uniformMap[uniformVarNameMin] = getScalarUniformFunction(quantization.minValues).func;

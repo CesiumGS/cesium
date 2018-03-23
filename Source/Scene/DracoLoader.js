@@ -38,10 +38,15 @@ define([
         return DracoLoader._decoderTaskProcessor;
     };
 
-    function hasExtension(model) {
+    /**
+     * Returns true if the model uses or requires KHR_draco_mesh_compression.
+     *
+     * @private
+     */
+    DracoLoader.hasExtension = function(model) {
         return (defined(model.extensionsRequired.KHR_draco_mesh_compression)
             || defined(model.extensionsUsed.KHR_draco_mesh_compression));
-    }
+    };
 
     function addBufferToLoadResources(loadResources, typedArray) {
         // Create a new id to differentiate from original glTF bufferViews
@@ -130,12 +135,13 @@ define([
      *
      * @private
      */
-    DracoLoader.parse = function(model, dequantizeInShader) {
-        if (!hasExtension(model)) {
+    DracoLoader.parse = function(model) {
+        if (!this.hasExtension(model)) {
             return;
         }
 
         var loadResources = model._loadResources;
+        var dequantizeInShader = model._dequantizeInShader;
         var gltf = model.gltf;
         ForEach.mesh(gltf, function(mesh, meshId) {
             ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
@@ -167,7 +173,7 @@ define([
      * @private
      */
     DracoLoader.decode = function(model, context) {
-        if (!hasExtension(model)) {
+        if (!this.hasExtension(model)) {
             return when.resolve();
         }
 

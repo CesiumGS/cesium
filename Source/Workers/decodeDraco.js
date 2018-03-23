@@ -47,7 +47,6 @@ define([
         var decodedAttributeData = {};
         var attributeData;
         var vertexArray;
-        var transform;
         for (var attributeName in compressedAttributes) {
             if (compressedAttributes.hasOwnProperty(attributeName)) {
                 var compressedAttribute = compressedAttributes[attributeName];
@@ -56,7 +55,7 @@ define([
 
                 if (attribute.data_type() === 4) {
                     attributeData = new draco.DracoInt32Array();
-                    // Uint16Array is used becasue there is not currently a way to retreive the maximum
+                    // Uint16Array is used because there is not currently a way to retrieve the maximum
                     // value up front via the draco decoder API.  Max values over 65535 require a Uint32Array.
                     vertexArray = new Uint16Array(numPoints * numComponents);
                     dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
@@ -85,9 +84,9 @@ define([
                     }
                 };
 
-                transform = new draco.AttributeQuantizationTransform();
+                var transform = new draco.AttributeQuantizationTransform();
                 if (transform.InitFromAttribute(attribute)) {
-                    var minValues = new Float32Array(numComponents);
+                    var minValues = new Array(numComponents);
                     for (i = 0; i < numComponents; ++i) {
                         minValues[i] = transform.min_value(i);
                     }
@@ -95,7 +94,17 @@ define([
                     decodedAttributeData[attributeName].data.quantization = {
                         quantizationBits : transform.quantization_bits(),
                         minValues : minValues,
-                        range : transform.range()
+                        range : transform.range(),
+                        octEncoded : false
+                    };
+                }
+                draco.destroy(transform);
+
+                transform = new draco.AttributeOctahedronTransform();
+                if (transform.InitFromAttribute(attribute)) {
+                    decodedAttributeData[attributeName].data.quantization = {
+                        quantizationBits : transform.quantization_bits(),
+                        octEncoded : true
                     };
                 }
                 draco.destroy(transform);
@@ -110,8 +119,9 @@ define([
             dracoDecoder = new draco.Decoder();
         }
 
-        var attributesToSkip = parameters.dequantizeInShader;
-        if (defined(attributesToSkip)) {
+        // Skip all paramter types except generic
+        var attributesToSkip = ['POSITION', 'NORMAL', 'COLOR', 'TEX_COORD'];
+        if (parameters.dequantizeInShader) {
             for (var i = 0; i < attributesToSkip.length; ++i) {
                 dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
             }
