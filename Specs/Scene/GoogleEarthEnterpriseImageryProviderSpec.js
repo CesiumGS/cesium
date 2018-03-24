@@ -229,31 +229,6 @@ defineSuite([
         });
     });
 
-    it('routes requests through a proxy if one is specified', function() {
-        installMockGetQuadTreePacket();
-        var url = 'http://foo.bar.invalid/';
-
-        var proxy = new DefaultProxy('/proxy/');
-
-        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-            url : url,
-            proxy : proxy
-        });
-
-        expect(imageryProvider._metadata._resource._url).toEqual(url);
-        expect(imageryProvider.proxy).toEqual(proxy);
-
-        return pollToPromise(function() {
-            return imageryProvider.ready;
-        }).then(function() {
-            installFakeImageRequest('http://foo.bar.invalid/flatfile?f1-03-i.1', true);
-
-            return imageryProvider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
     it('raises error on invalid url', function() {
         var url = 'http://host.invalid';
         imageryProvider = new GoogleEarthEnterpriseImageryProvider({

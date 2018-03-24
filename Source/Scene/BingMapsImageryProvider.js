@@ -6,7 +6,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Math',
@@ -27,7 +26,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         CesiumMath,
@@ -104,17 +102,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('BingMapsImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         this._key = BingMapsApi.getKey(options.key);
         this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
-
-        this._resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
-
+        this._resource = Resource.createIfNeeded(options.url);
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
         this._culture = defaultValue(options.culture, '');

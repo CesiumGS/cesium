@@ -2,7 +2,6 @@ define([
         '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/loadCRN',
         '../Core/loadKTX',
@@ -11,7 +10,6 @@ define([
         Check,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         loadCRN,
         loadKTX,
@@ -334,18 +332,12 @@ define([
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(imageryProvider, url, request) {
+    ImageryProvider.loadImage = function(imageryProvider, url) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('url', url);
         //>>includeEnd('debug');
 
-        if (defined(request)) {
-            deprecationWarning('ImageryProvider.loadImage.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
-        }
-
-        var resource = Resource.createIfNeeded(url, {
-            request: request
-        });
+        var resource = Resource.createIfNeeded(url);
 
         if (ktxRegex.test(resource)) {
             return loadKTX(resource);
