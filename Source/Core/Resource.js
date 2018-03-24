@@ -1138,7 +1138,7 @@ define([
      *
      * @example
      * // load a data asynchronously
-     * resource.loadJsonp().then(function(data) {
+     * resource.fetchJsonp().then(function(data) {
      *     // use the loaded data
      * }).otherwise(function(error) {
      *     // an error occurred
