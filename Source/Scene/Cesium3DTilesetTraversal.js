@@ -194,6 +194,7 @@ define([
      * selected tiles must be no deeper than 15. This is still very unlikely.
      */
     function traverseAndSelect(tileset, root, frameState) {
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
         var stack = selectionTraversal.stack;
         var ancestorStack = selectionTraversal.ancestorStack;
         var lastAncestor;
@@ -226,6 +227,7 @@ define([
             var markedForSelection = replace && tile.contentAvailable && (tile._selectedFrame === frameState.frameNumber);
             var children = tile.children;
             var childrenLength = children.length;
+            var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
 
             if (markedForSelection) {
                 tile._selectionDepth = ancestorStack.length;
@@ -242,9 +244,13 @@ define([
                 tile._stackLength = stack.length;
             }
 
-            for (var i = 0; i < childrenLength; ++i) {
-                var child = children[i];
-                stack.push(child);
+            if (traverse) {
+                for (var i = 0; i < childrenLength; ++i) {
+                    var child = children[i];
+                    if (isVisible(child)) {
+                        stack.push(child);
+                    }
+                }
             }
         }
     }
@@ -428,6 +434,10 @@ define([
         }
 
         return visible;
+    }
+
+    function isVisible(tile) {
+        return tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
 
     function hasEmptyContent(tile) {
