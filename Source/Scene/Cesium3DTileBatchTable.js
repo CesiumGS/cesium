@@ -1093,6 +1093,7 @@ define([
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
+                    '    tile_main(); \n' +
                     '    gl_FragColor = tile_featureColor; \n' +
                     '}';
             } else {
@@ -1101,6 +1102,7 @@ define([
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
+                    '    tile_main(); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
                     '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
                     '        discard; \n' +
@@ -1329,10 +1331,12 @@ define([
         for (var i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             var derivedCommands = command.derivedCommands.tileset;
-            if (!defined(derivedCommands)) {
+            // Command may be marked dirty from Model shader recompilation for clipping planes
+            if (!defined(derivedCommands) || command.dirty) {
                 derivedCommands = {};
                 command.derivedCommands.tileset = derivedCommands;
                 derivedCommands.originalCommand = deriveCommand(command);
+                command.dirty = false;
             }
 
             updateDerivedCommand(derivedCommands.originalCommand, command);

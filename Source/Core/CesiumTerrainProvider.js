@@ -131,7 +131,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit({text: credit});
+            credit = new Credit(credit);
         }
         this._credit = credit;
 
@@ -163,12 +163,11 @@ define([
 
                 var uri = new Uri(metadataResource.url);
                 if (uri.authority === 'assets.agi.com') {
-                    var deprecationText = 'The STK World Terrain tileset is deprecated and will be available until September 1, 2018';
+                    var deprecationText = 'The STK World Terrain tileset is deprecated and will be available until September 1, 2018.';
                     var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain';
                     var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
                     that._tileCredits = [
-                        new Credit({ text: deprecationText, showOnScreen: true }),
-                        new Credit({ text: deprecationLinkText, link: deprecationLink, showOnScreen: true })
+                        new Credit('<span>' + deprecationText + '</span> <a href="' + deprecationLink + '>' + deprecationLinkText + '</a>', true)
                     ];
                     deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
                 } else {
@@ -327,7 +326,7 @@ define([
                         }
                     }
 
-                    var layerJsonCredit = new Credit({ text: attribution });
+                    var layerJsonCredit = new Credit(attribution);
 
                     if (defined(that._tileCredits)) {
                         that._tileCredits.push(layerJsonCredit);
@@ -623,26 +622,40 @@ define([
             extensionList.push('watermask');
         }
 
-        var resource = layerToUse.resource.getDerivedResource({
-            url: urlTemplates[(x + tmsY + level) % urlTemplates.length],
+        var headers;
+        var query;
+        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length];
+        var resource = layerToUse.resource;
+        if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
+            // ion uses query paremeters to request extensions
+            if (extensionList.length !== 0) {
+                query = { extensions: extensionList.join('-') };
+            }
+            headers = getRequestHeader(undefined);
+        } else {
+            //All other terrain servers
+            headers = getRequestHeader(extensionList);
+        }
+
+        var promise = resource.getDerivedResource({
+            url: url,
             templateValues: {
                 version: layerToUse.version,
                 z: level,
                 x: x,
                 y: tmsY
             },
-            headers: getRequestHeader(extensionList),
+            queryParameters: query,
+            headers: headers,
             request: request
-        });
-
-        var promise = resource.fetchArrayBuffer();
+        }).fetchArrayBuffer();
 
         if (!defined(promise)) {
             return undefined;
         }
 
         var that = this;
-        return when(promise, function(buffer) {
+        return promise.then(function (buffer) {
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
             }

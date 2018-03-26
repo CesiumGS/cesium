@@ -247,11 +247,17 @@ define([
             parameterValues.doubleSided = khrMaterialsCommon.doubleSided;
         }
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
-
-        var hasSkinning = jointCount > 0;
         var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
-        var skinningInfo = primitiveInfo.skinning;
-        var hasVertexColors = primitiveInfo.hasVertexColors;
+
+        var skinningInfo;
+        var hasSkinning = false;
+        var hasVertexColors = false;
+
+        if (defined(primitiveInfo)) {
+            skinningInfo = primitiveInfo.skinning;
+            hasSkinning = skinningInfo.skinned;
+            hasVertexColors = primitiveInfo.hasVertexColors;
+        }
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -788,11 +794,13 @@ define([
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         techniqueKey += jointCount.toString() + ';';
         var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
-        var skinningInfo = primitiveInfo.skinning;
-        if (jointCount > 0) {
-            techniqueKey += skinningInfo.type + ';';
+        if (defined(primitiveInfo)) {
+            var skinningInfo = primitiveInfo.skinning;
+            if (jointCount > 0) {
+                techniqueKey += skinningInfo.type + ';';
+            }
+            techniqueKey += primitiveInfo.hasVertexColors;
         }
-        techniqueKey += primitiveInfo.hasVertexColors;
 
         return techniqueKey;
     }

@@ -86,7 +86,6 @@ defineSuite([
         expect(loadedImage).toBe(fakeImage);
     });
 
-
     it('rejects the promise when the image errors', function() {
         var fakeImage = {};
         spyOn(window, 'Image').and.returnValue(fakeImage);

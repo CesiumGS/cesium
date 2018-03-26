@@ -4,7 +4,7 @@ define([
         './defined',
         './DeveloperError',
         './Math'
-], function(
+    ], function(
         Check,
         defaultValue,
         defined,

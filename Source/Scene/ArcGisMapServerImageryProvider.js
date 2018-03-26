@@ -216,7 +216,7 @@ define([
             }
 
             if (defined(data.copyrightText) && data.copyrightText.length > 0) {
-                that._credit = new Credit({text: data.copyrightText});
+                that._credit = new Credit(data.copyrightText);
             }
 
             that._ready = true;
@@ -558,7 +558,6 @@ define([
             }
         }
     });
-
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.

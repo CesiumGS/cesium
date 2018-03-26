@@ -7,6 +7,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/IonResource',
         '../Core/loadJson',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -14,7 +15,6 @@ define([
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
         './Cesium3DTileset',
-        '../Core/IonResource',
         './createTileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
@@ -31,6 +31,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        IonResource,
         loadJson,
         Resource,
         RuntimeError,
@@ -38,7 +39,6 @@ define([
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         Cesium3DTileset,
-        IonResource,
         createTileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
@@ -185,14 +185,7 @@ define([
                     imageryProvider = factory(endpoint.options);
                 }
 
-                that._tileCredits = endpoint.attributions.map(function(attribution) {
-                    return new Credit({
-                        text: attribution.text,
-                        link: attribution.url,
-                        imageUrl: attribution.image,
-                        showOnScreen: defined(attribution.collapsible) && !attribution.collapsible
-                    });
-                });
+                that._tileCredits = endpoint.attributions.map(Credit.getIonCredit);
 
                 return imageryProvider;
             })

@@ -1,56 +1,57 @@
 define([
-    './appendForwardSlash',
-    './Check',
-    './clone',
-    './combine',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './deprecationWarning',
-    './DeveloperError',
-    './freezeObject',
-    './getAbsoluteUri',
-    './getBaseUri',
-    './getExtensionFromUri',
-    './isBlobUri',
-    './isCrossOriginUrl',
-    './isDataUri',
-    './objectToQuery',
-    './queryToObject',
-    './Request',
-    './RequestErrorEvent',
-    './RequestScheduler',
-    './RequestState',
-    './RuntimeError',
-    './TrustedServers',
-    '../ThirdParty/Uri',
-    '../ThirdParty/when'
-], function(appendForwardSlash,
-            Check,
-            clone,
-            combine,
-            defaultValue,
-            defined,
-            defineProperties,
-            deprecationWarning,
-            DeveloperError,
-            freezeObject,
-            getAbsoluteUri,
-            getBaseUri,
-            getExtensionFromUri,
-            isBlobUri,
-            isCrossOriginUrl,
-            isDataUri,
-            objectToQuery,
-            queryToObject,
-            Request,
-            RequestErrorEvent,
-            RequestScheduler,
-            RequestState,
-            RuntimeError,
-            TrustedServers,
-            Uri,
-            when) {
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
+        './appendForwardSlash',
+        './Check',
+        './clone',
+        './combine',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './deprecationWarning',
+        './DeveloperError',
+        './freezeObject',
+        './getAbsoluteUri',
+        './getBaseUri',
+        './getExtensionFromUri',
+        './isBlobUri',
+        './isCrossOriginUrl',
+        './isDataUri',
+        './objectToQuery',
+        './queryToObject',
+        './Request',
+        './RequestErrorEvent',
+        './RequestScheduler',
+        './RequestState',
+        './RuntimeError',
+        './TrustedServers'
+    ], function(
+        Uri,
+        when,
+        appendForwardSlash,
+        Check,
+        clone,
+        combine,
+        defaultValue,
+        defined,
+        defineProperties,
+        deprecationWarning,
+        DeveloperError,
+        freezeObject,
+        getAbsoluteUri,
+        getBaseUri,
+        getExtensionFromUri,
+        isBlobUri,
+        isCrossOriginUrl,
+        isDataUri,
+        objectToQuery,
+        queryToObject,
+        Request,
+        RequestErrorEvent,
+        RequestScheduler,
+        RequestState,
+        RuntimeError,
+        TrustedServers) {
     'use strict';
 
     var xhrBlobSupported = (function() {
@@ -332,7 +333,6 @@ define([
          */
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
-
 
         var uri = new Uri(options.url);
         parseQuery(uri, this, true, true);
@@ -1240,7 +1240,8 @@ define([
     /**
      * @private
      */
-    Resource._makeRequest = function(resource, options) {
+    Resource.prototype._makeRequest = function(options) {
+        var resource = this;
         checkAndResetRequest(resource.request);
 
         var request = resource.request;
@@ -1248,7 +1249,7 @@ define([
 
         request.requestFunction = function() {
             var responseType = options.responseType;
-            var headers = combine(resource.headers, options.headers);
+            var headers = combine(options.headers, resource.headers);
             var overrideMimeType = options.overrideMimeType;
             var method = options.method;
             var data = options.data;
@@ -1369,7 +1370,7 @@ define([
         options = defaultClone(options, {});
         options.method = 'GET';
 
-        return Resource._makeRequest(this, options);
+        return this._makeRequest(options);
     };
 
     /**
@@ -1425,7 +1426,7 @@ define([
         options = defaultClone(options, {});
         options.method = 'DELETE';
 
-        return Resource._makeRequest(this, options);
+        return this._makeRequest(options);
     };
 
     /**
@@ -1481,7 +1482,7 @@ define([
         options = defaultClone(options, {});
         options.method = 'HEAD';
 
-        return Resource._makeRequest(this, options);
+        return this._makeRequest(options);
     };
 
     /**
@@ -1537,7 +1538,7 @@ define([
         options = defaultClone(options, {});
         options.method = 'OPTIONS';
 
-        return Resource._makeRequest(this, options);
+        return this._makeRequest(options);
     };
 
     /**
@@ -1597,7 +1598,7 @@ define([
         options.method = 'POST';
         options.data = data;
 
-        return Resource._makeRequest(this, options);
+        return this._makeRequest(options);
     };
 
     /**
@@ -1658,7 +1659,7 @@ define([
         options.method = 'PUT';
         options.data = data;
 
-        return Resource._makeRequest(this, options);
+        return this._makeRequest(options);
     };
 
     /**
@@ -1719,7 +1720,7 @@ define([
         options.method = 'PATCH';
         options.data = data;
 
-        return Resource._makeRequest(this, options);
+        return this._makeRequest(options);
     };
 
     /**

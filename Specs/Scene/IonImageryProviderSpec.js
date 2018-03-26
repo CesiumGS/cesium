@@ -1,39 +1,39 @@
 defineSuite([
-    'Scene/IonImageryProvider',
-    'Core/IonResource',
-    'Core/Credit',
-    'Core/defaultValue',
-    'Core/RequestScheduler',
-    'Core/Resource',
-    'Core/RuntimeError',
-    'Scene/ArcGisMapServerImageryProvider',
-    'Scene/BingMapsImageryProvider',
-    'Scene/GoogleEarthEnterpriseMapsProvider',
-    'Scene/ImageryProvider',
-    'Scene/MapboxImageryProvider',
-    'Scene/SingleTileImageryProvider',
-    'Scene/UrlTemplateImageryProvider',
-    'Scene/WebMapServiceImageryProvider',
-    'Scene/WebMapTileServiceImageryProvider',
-    'ThirdParty/when'
-], function(
-    IonImageryProvider,
-    IonResource,
-    Credit,
-    defaultValue,
-    RequestScheduler,
-    Resource,
-    RuntimeError,
-    ArcGisMapServerImageryProvider,
-    BingMapsImageryProvider,
-    GoogleEarthEnterpriseMapsProvider,
-    ImageryProvider,
-    MapboxImageryProvider,
-    SingleTileImageryProvider,
-    UrlTemplateImageryProvider,
-    WebMapServiceImageryProvider,
-    WebMapTileServiceImageryProvider,
-    when) {
+        'Scene/IonImageryProvider',
+        'Core/Credit',
+        'Core/defaultValue',
+        'Core/IonResource',
+        'Core/RequestScheduler',
+        'Core/Resource',
+        'Core/RuntimeError',
+        'Scene/ArcGisMapServerImageryProvider',
+        'Scene/BingMapsImageryProvider',
+        'Scene/GoogleEarthEnterpriseMapsProvider',
+        'Scene/ImageryProvider',
+        'Scene/MapboxImageryProvider',
+        'Scene/SingleTileImageryProvider',
+        'Scene/UrlTemplateImageryProvider',
+        'Scene/WebMapServiceImageryProvider',
+        'Scene/WebMapTileServiceImageryProvider',
+        'ThirdParty/when'
+    ], function(
+        IonImageryProvider,
+        Credit,
+        defaultValue,
+        IonResource,
+        RequestScheduler,
+        Resource,
+        RuntimeError,
+        ArcGisMapServerImageryProvider,
+        BingMapsImageryProvider,
+        GoogleEarthEnterpriseMapsProvider,
+        ImageryProvider,
+        MapboxImageryProvider,
+        SingleTileImageryProvider,
+        UrlTemplateImageryProvider,
+        WebMapServiceImageryProvider,
+        WebMapTileServiceImageryProvider,
+        when) {
     'use strict';
 
     function createTestProvider(endpointData) {
@@ -151,7 +151,7 @@ defineSuite([
                 });
             })
             .then(function() {
-                var innerCredit = new Credit({ text: 'Data provided' });
+                var innerCredit = new Credit('Data provided');
                 spyOn(internalProvider, 'getTileCredits').and.returnValue([innerCredit]);
                 var credits = provider.getTileCredits(1, 2, 3);
                 expect(internalProvider.getTileCredits).toHaveBeenCalledWith(1, 2, 3);

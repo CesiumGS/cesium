@@ -11,8 +11,8 @@ defineSuite([
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
         'Specs/createGeometryUpdaterGroundGeometrySpecs',
+        'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
         RectangleGeometryUpdater,
@@ -27,8 +27,8 @@ defineSuite([
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
-        createGeometryUpdaterSpecs,
         createGeometryUpdaterGroundGeometrySpecs,
+        createGeometryUpdaterSpecs,
         createScene) {
     'use strict';
 
