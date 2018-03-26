@@ -406,6 +406,25 @@ defineSuite([
         }).contextToRender(Color.NAVY.toBytes());
     });
 
+    it('can copy from a DOM element', function() {
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGB,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            width : blueImage.width,
+            height : blueImage.height
+        });
+
+        texture.copyFrom(blueImage);
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap,
+            epsilon : 1
+        }).contextToRender([0, 0, 255, 255]);
+    });
+
     it('can replace a subset of a texture', function() {
         texture = new Texture({
             context : context,
