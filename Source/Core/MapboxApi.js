@@ -23,7 +23,7 @@ define([
 
     var printedMapboxWarning = false;
     var errorCredit;
-    var errorString = 'This application is using Cesium\'s default Mapbox access token.  Please create a new access token for the application as soon as possible and prior to deployment by visiting https://www.mapbox.com/account/apps/, and provide your token to Cesium by setting the Cesium.MapboxApi.defaultAccessToken property before constructing the CesiumWidget or any other object that uses the Mapbox API.';
+    var errorString = '<b>This application is using Cesium\'s default Mapbox access token.  Please create a new access token for the application as soon as possible and prior to deployment by visiting <a href=https://www.mapbox.com/account/apps/>https://www.mapbox.com/account/apps/</a>, and provide your token to Cesium by setting the Cesium.MapboxApi.defaultAccessToken property before constructing the CesiumWidget or any other object that uses the Mapbox API.</b>';
 
     MapboxApi.getAccessToken = function(providedToken) {
         if (defined(providedToken)) {
@@ -47,10 +47,7 @@ define([
         }
 
         if (!defined(errorCredit)) {
-            errorCredit = new Credit({
-                text : errorString,
-                showOnScreen : true
-            });
+            errorCredit = new Credit(errorString, true);
         }
 
         return errorCredit;
