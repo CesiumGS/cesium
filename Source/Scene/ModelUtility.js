@@ -512,7 +512,8 @@ define([
         var uniformMap = {};
         for (var attribute in decodedAttributes) {
             if (decodedAttributes.hasOwnProperty(attribute)) {
-                var quantization = decodedAttributes[attribute].quantization;
+                var decodedData = decodedAttributes[attribute];
+                var quantization = decodedData.quantization;
 
                 if (!defined(quantization)) {
                     continue;
@@ -536,7 +537,7 @@ define([
                 uniformMap[uniformVarNameNormConstant] = getScalarUniformFunction(normConstant).func;
 
                 var uniformVarNameMin = uniformVarName + '_min';
-                switch (decodedAttributes[attribute].componentsPerAttribute) {
+                switch (decodedData.componentsPerAttribute) {
                     case 1:
                         uniformMap[uniformVarNameMin] = getScalarUniformFunction(quantization.minValues).func;
                         break;

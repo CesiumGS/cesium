@@ -25,7 +25,7 @@ define([
      */
     function DracoLoader() {}
 
-    // Maximum concurrency to use when deocding draco models
+    // Maximum concurrency to use when decoding draco models
     DracoLoader._maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
 
     // Exposed for testing purposes

@@ -1433,7 +1433,7 @@ define([
 
         // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
         ForEach.bufferView(model.gltf, function(bufferView, id) {
-            if (bufferView.target === WebGLConstants.ARRAY_BUFFER) {
+            if (bufferView.target === WebGLConstants.ARRAY_BUFFER && !DracoLoader.hasExtension(model)) {
                 vertexBuffersToCreate.enqueue(id);
             }
         });

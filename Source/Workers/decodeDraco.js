@@ -4,6 +4,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../ThirdParty/draco-decoder-gltf',
+        '../ThirdParty/GltfPipeline/byteLengthForComponentType',
         './createTaskProcessorWorker'
     ], function(
         ComponentDatatype,
@@ -11,6 +12,7 @@ define([
         IndexDatatype,
         RuntimeError,
         draco,
+        byteLengthForComponentType,
         createTaskProcessorWorker) {
     'use strict';
 
@@ -53,37 +55,8 @@ define([
                 var attribute = dracoDecoder.GetAttributeByUniqueId(dracoGeometry, compressedAttribute);
                 var numComponents = attribute.num_components();
 
-                if (attribute.data_type() === 4) {
-                    attributeData = new draco.DracoInt32Array();
-                    // Uint16Array is used because there is not currently a way to retrieve the maximum
-                    // value up front via the draco decoder API.  Max values over 65535 require a Uint32Array.
-                    vertexArray = new Uint16Array(numPoints * numComponents);
-                    dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
-                } else {
-                    attributeData = new draco.DracoFloat32Array();
-                    vertexArray = new Float32Array(numPoints * numComponents);
-                    dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
-                }
-
-                var vertexArrayLength = vertexArray.length;
                 var i;
-                for (i = 0; i < vertexArrayLength; ++i) {
-                    vertexArray[i] = attributeData.GetValue(i);
-                }
-
-                draco.destroy(attributeData);
-
-                decodedAttributeData[attributeName] = {
-                    array : vertexArray,
-                    data : {
-                        componentsPerAttribute : numComponents,
-                        byteOffset : attribute.byte_offset(),
-                        byteStride : attribute.byte_stride(),
-                        normalized : attribute.normalized(),
-                        componentDatatype : ComponentDatatype.fromTypedArray(vertexArray)
-                    }
-                };
-
+                var quantization;
                 var transform = new draco.AttributeQuantizationTransform();
                 if (transform.InitFromAttribute(attribute)) {
                     var minValues = new Array(numComponents);
@@ -91,7 +64,7 @@ define([
                         minValues[i] = transform.min_value(i);
                     }
 
-                    decodedAttributeData[attributeName].data.quantization = {
+                    quantization = {
                         quantizationBits : transform.quantization_bits(),
                         minValues : minValues,
                         range : transform.range(),
@@ -102,12 +75,46 @@ define([
 
                 transform = new draco.AttributeOctahedronTransform();
                 if (transform.InitFromAttribute(attribute)) {
-                    decodedAttributeData[attributeName].data.quantization = {
+                    quantization = {
                         quantizationBits : transform.quantization_bits(),
                         octEncoded : true
                     };
                 }
                 draco.destroy(transform);
+
+                var vertexArrayLength = numPoints * numComponents;
+                if (defined(quantization)) {
+                    attributeData = new draco.DracoInt32Array();
+                    vertexArray = new Int16Array(vertexArrayLength);
+                    dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+                } else if (attribute.data_type() === 4) {
+                    attributeData = new draco.DracoInt32Array();
+                    // Uint16Array is used because there is not currently a way to retrieve the maximum
+                    // value up front via the draco decoder API.  Max values over 65535 require a Uint32Array.
+                    vertexArray = new Uint16Array(vertexArrayLength);
+                    dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+                } else {
+                    attributeData = new draco.DracoFloat32Array();
+                    vertexArray = new Float32Array(vertexArrayLength);
+                    dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
+                }
+
+                for (i = 0; i < vertexArrayLength; ++i) {
+                    vertexArray[i] = attributeData.GetValue(i);
+                }
+
+                var componentDatatype = ComponentDatatype.fromTypedArray(vertexArray);
+                decodedAttributeData[attributeName] = {
+                    array : vertexArray,
+                    data : {
+                        componentsPerAttribute : numComponents,
+                        componentDatatype : componentDatatype,
+                        byteOffset : attribute.byte_offset(),
+                        byteStride : byteLengthForComponentType(componentDatatype) * numComponents,
+                        normalized : attribute.normalized(),
+                        quantization : quantization
+                    }
+                };
             }
         }
 
