@@ -235,7 +235,7 @@ define([
                     tileset._hasMixedContent = true;
                 }
                 lastAncestor = tile;
-                if (childrenLength === 0) {
+                if (!traverse) {
                     tile._finalResolution = true;
                     selectTile(tileset, tile, frameState);
                     continue;

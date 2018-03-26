@@ -2,6 +2,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
@@ -36,6 +37,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Color,
+        ColorGeometryInstanceAttribute,
         CullingVolume,
         defaultValue,
         defined,
@@ -983,11 +985,13 @@ define([
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
+            var color = tile._finalResolution ? ((hasContentBoundingVolume || empty) ? Color.WHITE : Color.RED) : Color.YELLOW;
             if (!defined(tile._debugBoundingVolume)) {
-                var color = tile._finalResolution ? ((hasContentBoundingVolume || empty) ? Color.WHITE : Color.RED) : Color.YELLOW;
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);
+            var attributes = tile._debugBoundingVolume.getGeometryInstanceAttributes('outline');
+            attributes.color = ColorGeometryInstanceAttribute.toValue(color, attributes.color);
         } else if (!showVolume && defined(tile._debugBoundingVolume)) {
             tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }
