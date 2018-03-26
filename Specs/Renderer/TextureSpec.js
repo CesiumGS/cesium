@@ -118,7 +118,7 @@ defineSuite([
         var expectedHeight = context.canvas.clientHeight;
         expect(texture.width).toEqual(expectedWidth);
         expect(texture.height).toEqual(expectedHeight);
-        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * PixelFormat.componentsLength(texture.pixelFormat));
 
         command.color = Color.WHITE;
         command.execute(context);
@@ -158,7 +158,7 @@ defineSuite([
         var expectedHeight = context.canvas.clientHeight;
         expect(texture.width).toEqual(expectedWidth);
         expect(texture.height).toEqual(expectedHeight);
-        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * PixelFormat.componentsLength(texture.pixelFormat));
 
         // Clear to white
         command.color = Color.WHITE;
@@ -583,7 +583,7 @@ defineSuite([
 
         // Uncompressed formats
         expectTextureByteSize(16, 16, PixelFormat.ALPHA, PixelDatatype.UNSIGNED_BYTE, 256);
-        expectTextureByteSize(16, 16, PixelFormat.RGB, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
+        expectTextureByteSize(16, 16, PixelFormat.RGB, PixelDatatype.UNSIGNED_BYTE, 256 * 3);
         expectTextureByteSize(16, 16, PixelFormat.RGBA, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
         expectTextureByteSize(16, 16, PixelFormat.LUMINANCE, PixelDatatype.UNSIGNED_BYTE, 256);
         expectTextureByteSize(16, 16, PixelFormat.LUMINANCE_ALPHA, PixelDatatype.UNSIGNED_BYTE, 256 * 2);

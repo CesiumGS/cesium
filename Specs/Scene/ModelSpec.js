@@ -2735,10 +2735,10 @@ defineSuite([
             model.zoomTo();
 
             var gl = scene.frameState.context._gl;
-            spyOn(gl, 'texSubImage2D').and.callThrough();
+            spyOn(gl, 'texImage2D').and.callThrough();
 
             scene.renderForSpecs();
-            var callsBeforeClipping = gl.texSubImage2D.calls.count();
+            var callsBeforeClipping = gl.texImage2D.calls.count();
 
             expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
 
@@ -2750,7 +2750,7 @@ defineSuite([
 
             model.update(scene.frameState);
             scene.renderForSpecs();
-            expect(gl.texSubImage2D.calls.count() - callsBeforeClipping * 2).toEqual(1);
+            expect(gl.texImage2D.calls.count() - callsBeforeClipping * 2).toEqual(2);
 
             primitives.remove(model);
         });
