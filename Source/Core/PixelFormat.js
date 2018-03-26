@@ -147,8 +147,6 @@ define([
          */
         componentsLength : function(pixelFormat) {
             switch (pixelFormat) {
-                // Many GPUs store RGB as RGBA internally
-                // https://devtalk.nvidia.com/default/topic/699479/general-graphics-programming/rgb-auto-converted-to-rgba/post/4142379/#4142379
                 case PixelFormat.RGB:
                     return 3;
                 case PixelFormat.RGBA:
@@ -312,8 +310,10 @@ define([
             var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
             var textureWidth = width * numberOfComponents;
             for (var i = 0; i < height; ++i) {
+                var row = i * height;
+                var flippedRow = (height - i - 1) * height;
                 for (var j = 0; j < textureWidth; ++j) {
-                    flipped[(height - i - 1) * height + j] = bufferView[i * height + j];
+                    flipped[flippedRow + j] = bufferView[row + j];
                 }
             }
             return flipped;
