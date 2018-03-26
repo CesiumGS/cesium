@@ -114,7 +114,7 @@ define([
     }
 
     function selectTile(tileset, tile, frameState) {
-        if (tile.contentAvailable && contentVisible(tile, frameState)) {
+        if (contentVisible(tile, frameState)) {
             var tileContent = tile.content;
             if (tileContent.featurePropertiesDirty) {
                 // A feature's property in this tile changed, the tile needs to be re-styled.
