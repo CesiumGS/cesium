@@ -3483,7 +3483,8 @@ define([
         return result;
     }
 
-    var logDepthRegex = /\s+czm_writeLogDepth\(/;
+    var writeLogDepthRegex = /\s+czm_writeLogDepth\(/;
+    var vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
     var extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
 
     function getLogDepthShaderProgram(context, shaderProgram) {
@@ -3498,13 +3499,39 @@ define([
             fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
             fs.defines.push('LOG_DEPTH');
 
-            var addExtension = true;
-            var writesLogDepth = false;
-            var sources = fs.sources;
-            var length = sources.length;
             var i;
+            var logMain;
+            var writesLogDepth = false;
+            var sources = vs.sources;
+            var length = sources.length;
             for (i = 0; i < length; ++i) {
-                if (logDepthRegex.test(sources[i])) {
+                if (vertexlogDepthRegex.test(sources[i])) {
+                    writesLogDepth = true;
+                    break;
+                }
+            }
+
+            if (!writesLogDepth) {
+                for (i = 0; i < length; ++i) {
+                    sources[i] = ShaderSource.replaceMain(sources[i], 'czm_log_depth_main');
+                }
+
+                logMain =
+                    '\n\n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_log_depth_main(); \n' +
+                    '    czm_vertexLogDepth(); \n' +
+                    '} \n';
+                sources.push(logMain);
+            }
+
+            var addExtension = true;
+            writesLogDepth = false;
+            sources = fs.sources;
+            length = sources.length;
+            for (i = 0; i < length; ++i) {
+                if (writeLogDepthRegex.test(sources[i])) {
                     writesLogDepth = true;
                 }
                 if (extensionRegex.test(sources[i])) {
@@ -3532,21 +3559,6 @@ define([
                     '    czm_log_depth_main(); \n' +
                     '    czm_writeLogDepth(); \n' +
                     '} \n';
-
-                var vertexSources = vs.sources;
-                length = vertexSources.length;
-                for (i = 0; i < length; ++i) {
-                    vertexSources[i] = ShaderSource.replaceMain(vertexSources[i], 'czm_log_depth_main');
-                }
-
-                var logMain =
-                    '\n\n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    czm_log_depth_main(); \n' +
-                    '    czm_vertexLogDepth(); \n' +
-                    '} \n';
-                vertexSources.push(logMain);
             }
 
             sources.push(logSource);
