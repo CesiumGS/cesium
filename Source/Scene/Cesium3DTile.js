@@ -331,6 +331,7 @@ define([
         this._ancestorWithContent = undefined;
         this._ancestorWithContentAvailable = undefined;
         this._refines = false;
+        this._selected = false;
         this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function

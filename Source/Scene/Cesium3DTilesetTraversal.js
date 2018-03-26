@@ -78,7 +78,7 @@ define([
             return;
         }
 
-        if (!tileset._skipLevelOfDetail) {//} || tileset._allTilesAdditive) { TODO
+        if (!tileset._skipLevelOfDetail || tileset._allTilesAdditive) {
             executeBaseTraversal(tileset, root, frameState);
         } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
             executeSkipTraversal(tileset, root, frameState);
@@ -96,21 +96,53 @@ define([
     function executeBaseTraversal(tileset, root, frameState) {
         var baseScreenSpaceError = tileset._maximumScreenSpaceError;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-        executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, true, frameState);
+        executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState);
     }
 
     function executeSkipTraversal(tileset, root, frameState) {
         var baseScreenSpaceError = Number.MAX_VALUE;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-        executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, false, frameState);
+        executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState);
         traverseAndSelect(tileset, root, frameState);
     }
 
     function executeBaseAndSkipTraversal(tileset, root, frameState) {
         var baseScreenSpaceError = Math.max(tileset.baseScreenSpaceError, tileset.maximumScreenSpaceError);
         var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
-        executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, false, frameState);
+        executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState);
         traverseAndSelect(tileset, root, frameState);
+    }
+
+    function selectTile(tileset, tile, frameState) {
+        if (tile.contentAvailable && contentVisible(tile, frameState)) {
+            var tileContent = tile.content;
+            if (tileContent.featurePropertiesDirty) {
+                // A feature's property in this tile changed, the tile needs to be re-styled.
+                tileContent.featurePropertiesDirty = false;
+                tile.lastStyleTime = 0; // Force applying the style to this tile
+                tileset._selectedTilesToStyle.push(tile);
+            } else if ((tile._selectedFrame !== frameState.frameNumber - 1)) {
+                // Tile is newly selected; it is selected this frame, but was not selected last frame.
+                tile.lastStyleTime = 0; // Force applying the style to this tile
+                tileset._selectedTilesToStyle.push(tile);
+            }
+            tile._selectedFrame = frameState.frameNumber;
+            tileset._selectedTiles.push(tile);
+        }
+    }
+
+    function sortChildrenByDistanceToCamera(a, b) {
+        // Sort by farthest child first since this is going on a stack
+        if (b._distanceToCamera === 0 && a._distanceToCamera === 0) {
+            return b._centerZDepth - a._centerZDepth;
+        }
+
+        return b._distanceToCamera - a._distanceToCamera;
+    }
+
+    function contentVisible(tile, frameState) {
+        return (tile._visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
+               (tile.contentVisibility(frameState) !== Intersect.OUTSIDE);
     }
 
     function selectDescendants(tileset, root, frameState) {
@@ -135,139 +167,16 @@ define([
         }
     }
 
-    function markForSelection(tileset, tile, frameState) {
-        if (tile._selectedFrame === frameState.frameNumber) {
-            return;
-        }
-
-        // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
-        // zoomed into a neighborhood and can cull the skyscrapers in the root tile.
-        if (tile.contentAvailable && contentVisible(tile, frameState)) {
-            tile._selectedFrame = frameState.frameNumber;
-        }
-    }
-
-    function selectTile(tileset, tile, frameState) {
-        var tileContent = tile.content;
-        if (tileContent.featurePropertiesDirty) {
-            // A feature's property in this tile changed, the tile needs to be re-styled.
-            tileContent.featurePropertiesDirty = false;
-            tile.lastStyleTime = 0; // Force applying the style to this tile
-            tileset._selectedTilesToStyle.push(tile);
-        } else if ((tile._selectedFrame !== frameState.frameNumber - 1)) {
-            // Tile is newly selected; it is selected this frame, but was not selected last frame.
-            tile.lastStyleTime = 0; // Force applying the style to this tile
-            tileset._selectedTilesToStyle.push(tile);
-        }
-        tile._selectedFrame = frameState.frameNumber;
-        tileset._selectedTiles.push(tile);
-    }
-
-    function sortChildrenByDistanceToCamera(a, b) {
-        // Sort by farthest child first since this is going on a stack
-        if (b._distanceToCamera === 0 && a._distanceToCamera === 0) {
-            return b._centerZDepth - a._centerZDepth;
-        }
-
-        return b._distanceToCamera - a._distanceToCamera;
-    }
-
-    /**
-     * Traverse the tree and check if their selected frame is the current frame. If so, add it to a selection queue.
-     * Tiles are sorted near to far so we can take advantage of early Z.
-     * Furthermore, this is a preorder traversal so children tiles are selected before ancestor tiles.
-     *
-     * The reason for the preorder traversal is so that tiles can easily be marked with their
-     * selection depth. A tile's _selectionDepth is its depth in the tree where all non-selected tiles are removed.
-     * This property is important for use in the stencil test because we want to render deeper tiles on top of their
-     * ancestors. If a tileset is very deep, the depth is unlikely to fit into the stencil buffer.
-     *
-     * We want to select children before their ancestors because there is no guarantee on the relationship between
-     * the children's z-depth and the ancestor's z-depth. We cannot rely on Z because we want the child to appear on top
-     * of ancestor regardless of true depth. The stencil tests used require children to be drawn first.
-     *
-     * NOTE: this will no longer work when there is a chain of selected tiles that is longer than the size of the
-     * stencil buffer (usually 8 bits). In other words, the subset of the tree containing only selected tiles must be
-     * no deeper than 255. It is very, very unlikely this will cause a problem.
-     *
-     * NOTE: when the scene has inverted classification enabled, the stencil buffer will be masked to 4 bits. So, the
-     * selected tiles must be no deeper than 15. This is still very unlikely.
-     */
-    function traverseAndSelect(tileset, root, frameState) {
-        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-        var stack = selectionTraversal.stack;
-        var ancestorStack = selectionTraversal.ancestorStack;
-        var lastAncestor;
-
-        stack.push(root);
-
-        while (stack.length > 0 || ancestorStack.length > 0) {
-            selectionTraversal.stackMaximumLength = Math.max(selectionTraversal.stackMaximumLength, stack.length);
-            selectionTraversal.ancestorStackMaximumLength = Math.max(selectionTraversal.ancestorStackMaximumLength, ancestorStack.length);
-
-            if (ancestorStack.length > 0) {
-                var waitingTile = ancestorStack.get(ancestorStack.length - 1);
-                if (waitingTile._stackLength === stack.length) {
-                    ancestorStack.pop();
-                    if (waitingTile === lastAncestor) {
-                        waitingTile._finalResolution = true;
-                    }
-                    selectTile(tileset, waitingTile, frameState);
-                    continue;
-                }
-            }
-
-            var tile = stack.pop();
-            if (!defined(tile)) {
-                // stack is empty but ancestorStack isn't
-                continue;
-            }
-
-            var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-            var markedForSelection = replace && tile.contentAvailable && (tile._selectedFrame === frameState.frameNumber);
-            var children = tile.children;
-            var childrenLength = children.length;
-            var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
-
-            if (markedForSelection) {
-                tile._selectionDepth = ancestorStack.length;
-                if (tile._selectionDepth > 0) {
-                    tileset._hasMixedContent = true;
-                }
-                lastAncestor = tile;
-                if (!traverse) {
-                    tile._finalResolution = true;
-                    selectTile(tileset, tile, frameState);
-                    continue;
-                }
-                ancestorStack.push(tile);
-                tile._stackLength = stack.length;
-            }
-
-            if (traverse) {
-                for (var i = 0; i < childrenLength; ++i) {
-                    var child = children[i];
-                    if (isVisible(child)) {
-                        stack.push(child);
-                    }
-                }
-            }
-        }
-    }
-
-    function contentVisible(tile, frameState) {
-        return (tile._visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
-               (tile.contentVisibility(frameState) !== Intersect.OUTSIDE);
-    }
-
-    function addDesiredTile(tileset, tile, final, frameState) {
+    function selectDesiredTile(tileset, tile, final, frameState) {
         if (final) {
+            // The tile can be selected right away and does not require traverseAndSelect. E.g. additive or empty tiles
             selectTile(tileset, tile, frameState);
             tile._finalResolution = true;
         } else {
             var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
             if (defined(loadedTile)) {
-                markForSelection(tileset, loadedTile, frameState);
+                // Tiles marked for selection will be selected in traverseAndSelect
+                loadedTile._selected = true;
             } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
                 // If no ancestors are ready traverse down and select tiles to minimize empty regions.
                 // This happens often in cases where the camera zooms out and we're waiting for parent tiles to load.
@@ -417,6 +326,7 @@ define([
         var visible = getVisibility(tileset, tile, frameState);
         tile._visibilityPlaneMask = visible ? tile._visibilityPlaneMask : CullingVolume.MASK_OUTSIDE;
 
+        tile._selected = false;
         tile._finalResolution = false;
         tile._ancestorWithContent = undefined;
         tile._ancestorWithContentAvailable = undefined;
@@ -448,32 +358,34 @@ define([
         return !hasEmptyContent(tile) && tile.contentUnloaded;
     }
 
-    function inBaseTraversal(tile, baseScreenSpaceError, maximumScreenSpaceError) {
-        // TODO : what sse would be passed if only base traversal is used?
-        // TODO : what is maximumScreenSpaceError is 0. Que paso?
-        // TODO : problem with yellow boxes when we don't want them to be yellow
-        // TODO : if skip traversal always look root
-        if (baseScreenSpaceError === maximumScreenSpaceError) {
-            return true;
-        }
+    function reachedSkippingThreshold(tileset, tile) {
+        var ancestor = tile._ancestorWithContent;
+        var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
+        var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
 
+        return !tileset.immediatelyLoadDesiredLevelOfDetail &&
+               defined(ancestor) &&
+               (tile._screenSpaceError < (ancestor._screenSpaceError / skipScreenSpaceErrorFactor)) &&
+               (tile._depth > (ancestor._depth + skipLevels));
+    }
+
+    function inBaseTraversal(tile, baseScreenSpaceError) {
         if (tile._screenSpaceError === 0) {
             var parent = tile.parent;
             if (defined(parent)) {
-                return inBaseTraversal(parent, baseScreenSpaceError, maximumScreenSpaceError);
+                return parent._screenSpaceError > baseScreenSpaceError;
             }
             return true;
         }
-
         return tile._screenSpaceError > baseScreenSpaceError;
     }
 
-    function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, baseTraversalOnly, frameState) {
-        // TODO wording
-        // Depth-first traversal that loads all tiles that are visible and don't meet the screen space error.
-        // For replacement refinement: selects tiles to render that can't refine further - either because
-        // their children aren't loaded yet or they meet the screen space error.
-        // For additive refinement: select all tiles to render
+    function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
+        // Depth-first traversal that traverses all visible tiles and marks tiles for selection.
+        // If the traversal is base traversal ONLY then a tile does not refine until all children are loaded. This is the
+        // traditional replacement refinement approach.
+        // Otherwise we allow for skipping levels of the tree and rendering children and parent tiles simultaneously.
+        var baseTraversalOnly = baseScreenSpaceError === maximumScreenSpaceError;
         var stack = traversal.stack;
         stack.push(root);
 
@@ -481,7 +393,7 @@ define([
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
-            var baseTraversal = inBaseTraversal(tile, baseScreenSpaceError, maximumScreenSpaceError);
+            var baseTraversal = baseTraversalOnly || inBaseTraversal(tile, baseScreenSpaceError);
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
             var children = tile.children;
@@ -501,7 +413,7 @@ define([
                     if (visible) {
                         stack.push(child);
                     }
-                    if (replace && baseTraversalOnly && !hasEmptyContent(tile)) {
+                    if (baseTraversalOnly && replace && !hasEmptyContent(tile)) {
                         // Check if the parent can refine to this child. If the child is empty we need to traverse further to
                         // load all descendants with content. Keep non-visible children loaded since they are still needed before the parent can refine.
                         // We don't do this for empty tiles because it looks better if children stream in as they are loaded to fill the empty space.
@@ -522,13 +434,13 @@ define([
                     // Select tiles that can't refine further
                     loadTile(tileset, tile, true, frameState);
                     if (!refines && parentRefines && tile.contentAvailable) {
-                        addDesiredTile(tileset, tile, baseTraversalOnly, frameState);
+                        selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
                     }
                 } else {
                     // Load tiles that are not skipped or can't refine further. In practice roughly half the tiles stay unloaded.
                     // Select tiles that can't refine further. If the tile doesn't have loaded content it will try to select an ancestor with loaded content instead.
-                    if (!refines) {
-                        addDesiredTile(tileset, tile, false, frameState);
+                    if (!refines) { // eslint-disable-line
+                        selectDesiredTile(tileset, tile, false, frameState);
                         loadTile(tileset, tile, false, frameState);
                     } else if (reachedSkippingThreshold(tileset, tile)) {
                         loadTile(tileset, tile, false, frameState);
@@ -539,14 +451,14 @@ define([
             if (add) {
                 // Additive tiles are always loaded and selected
                 if (tile.contentAvailable) {
-                    addDesiredTile(tileset, tile, true, frameState);
+                    selectDesiredTile(tileset, tile, true, frameState);
                 }
                 loadTile(tileset, tile, false, frameState);
             }
 
             if (hasEmptyContent(tile)) {
                 // Select empty tiles so that we can see their debug bounding volumes
-                addDesiredTile(tileset, tile, true, frameState);
+                selectDesiredTile(tileset, tile, true, frameState);
             }
 
             touchTile(tileset, tile, frameState);
@@ -597,15 +509,86 @@ define([
         return allDescendantsLoaded;
     }
 
-    function reachedSkippingThreshold(tileset, tile) {
-        var ancestor = tile._ancestorWithContent;
-        var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
+    /**
+     * Traverse the tree and check if their selected frame is the current frame. If so, add it to a selection queue.
+     * Tiles are sorted near to far so we can take advantage of early Z.
+     * Furthermore, this is a preorder traversal so children tiles are selected before ancestor tiles.
+     *
+     * The reason for the preorder traversal is so that tiles can easily be marked with their
+     * selection depth. A tile's _selectionDepth is its depth in the tree where all non-selected tiles are removed.
+     * This property is important for use in the stencil test because we want to render deeper tiles on top of their
+     * ancestors. If a tileset is very deep, the depth is unlikely to fit into the stencil buffer.
+     *
+     * We want to select children before their ancestors because there is no guarantee on the relationship between
+     * the children's z-depth and the ancestor's z-depth. We cannot rely on Z because we want the child to appear on top
+     * of ancestor regardless of true depth. The stencil tests used require children to be drawn first.
+     *
+     * NOTE: this will no longer work when there is a chain of selected tiles that is longer than the size of the
+     * stencil buffer (usually 8 bits). In other words, the subset of the tree containing only selected tiles must be
+     * no deeper than 255. It is very, very unlikely this will cause a problem.
+     *
+     * NOTE: when the scene has inverted classification enabled, the stencil buffer will be masked to 4 bits. So, the
+     * selected tiles must be no deeper than 15. This is still very unlikely.
+     */
+    function traverseAndSelect(tileset, root, frameState) {
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        var stack = selectionTraversal.stack;
+        var ancestorStack = selectionTraversal.ancestorStack;
+        var lastAncestor;
 
-        return !tileset.immediatelyLoadDesiredLevelOfDetail &&
-               defined(ancestor) &&
-               (tile._screenSpaceError < (ancestor._screenSpaceError / skipScreenSpaceErrorFactor)) &&
-               (tile._depth > (ancestor._depth + skipLevels));
+        stack.push(root);
+
+        while (stack.length > 0 || ancestorStack.length > 0) {
+            selectionTraversal.stackMaximumLength = Math.max(selectionTraversal.stackMaximumLength, stack.length);
+            selectionTraversal.ancestorStackMaximumLength = Math.max(selectionTraversal.ancestorStackMaximumLength, ancestorStack.length);
+
+            if (ancestorStack.length > 0) {
+                var waitingTile = ancestorStack.get(ancestorStack.length - 1);
+                if (waitingTile._stackLength === stack.length) {
+                    ancestorStack.pop();
+                    if (waitingTile === lastAncestor) {
+                        waitingTile._finalResolution = true;
+                    }
+                    selectTile(tileset, waitingTile, frameState);
+                    continue;
+                }
+            }
+
+            var tile = stack.pop();
+            if (!defined(tile)) {
+                // stack is empty but ancestorStack isn't
+                continue;
+            }
+
+            var markedForSelection = tile._selected;
+            var children = tile.children;
+            var childrenLength = children.length;
+            var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
+
+            if (markedForSelection) {
+                tile._selectionDepth = ancestorStack.length;
+                if (tile._selectionDepth > 0) {
+                    tileset._hasMixedContent = true;
+                }
+                lastAncestor = tile;
+                if (!traverse) {
+                    tile._finalResolution = true;
+                    selectTile(tileset, tile, frameState);
+                    continue;
+                }
+                ancestorStack.push(tile);
+                tile._stackLength = stack.length;
+            }
+
+            if (traverse) {
+                for (var i = 0; i < childrenLength; ++i) {
+                    var child = children[i];
+                    if (isVisible(child)) {
+                        stack.push(child);
+                    }
+                }
+            }
+        }
     }
 
     return Cesium3DTilesetTraversal;
