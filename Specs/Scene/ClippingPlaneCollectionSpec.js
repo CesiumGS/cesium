@@ -186,7 +186,7 @@ defineSuite([
 
             var rgba;
             var gl = scene.frameState.context._gl;
-            spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
+            spyOn(gl, 'texImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
                 rgba = arrayBufferView;
             });
 
@@ -317,7 +317,7 @@ defineSuite([
 
             var rgba;
             var gl = scene.frameState.context._gl;
-            spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
+            spyOn(gl, 'texImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
                 rgba = arrayBufferView;
             });
 
@@ -399,7 +399,7 @@ defineSuite([
         var scene = createScene();
 
         var gl = scene.frameState.context._gl;
-        spyOn(gl, 'texSubImage2D').and.callThrough();
+        spyOn(gl, 'texImage2D').and.callThrough();
 
         clippingPlanes = new ClippingPlaneCollection({
             planes : planes,
@@ -407,13 +407,13 @@ defineSuite([
             edgeColor : Color.RED,
             modelMatrix : transform
         });
-        expect(gl.texSubImage2D.calls.count()).toEqual(0);
+        expect(gl.texImage2D.calls.count()).toEqual(0);
 
         clippingPlanes.update(scene.frameState);
-        expect(gl.texSubImage2D.calls.count()).toEqual(1);
+        expect(gl.texImage2D.calls.count()).toEqual(2);
 
         clippingPlanes.update(scene.frameState);
-        expect(gl.texSubImage2D.calls.count()).toEqual(1);
+        expect(gl.texImage2D.calls.count()).toEqual(2);
 
         clippingPlanes.destroy();
         scene.destroyForSpecs();
@@ -423,6 +423,7 @@ defineSuite([
         var scene = createScene();
 
         var gl = scene.frameState.context._gl;
+        spyOn(gl, 'texImage2D').and.callThrough();
         spyOn(gl, 'texSubImage2D').and.callThrough();
 
         clippingPlanes = new ClippingPlaneCollection({
@@ -431,13 +432,13 @@ defineSuite([
             edgeColor : Color.RED,
             modelMatrix : transform
         });
-        expect(gl.texSubImage2D.calls.count()).toEqual(0);
+        expect(gl.texImage2D.calls.count()).toEqual(0);
+
+        clippingPlanes.update(scene.frameState);
+        expect(gl.texImage2D.calls.count()).toEqual(2);
 
         clippingPlanes.update(scene.frameState);
         expect(gl.texSubImage2D.calls.count()).toEqual(1);
-
-        clippingPlanes.update(scene.frameState);
-        expect(gl.texSubImage2D.calls.count()).toEqual(2);
 
         clippingPlanes.destroy();
         scene.destroyForSpecs();
