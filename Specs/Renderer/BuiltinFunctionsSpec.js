@@ -366,4 +366,15 @@ defineSuite([
             fragmentShader : fs
         }).contextToRender();
     });
+
+    it('has czm_approximateSphericalCoordinates', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(equal(czm_approximateSphericalCoordinates(vec3(1.0, 0.0, 0.0)), vec2(0.0, 0.0))));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
 }, 'WebGL');

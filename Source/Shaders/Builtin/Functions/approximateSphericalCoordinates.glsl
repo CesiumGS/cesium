@@ -2,60 +2,40 @@
 // "Efficient approximations for the arctangent function," Rajan, S. Sichun Wang Inkol, R. Joyal, A., May 2006.
 // Adapted from ShaderFastLibs under MIT License.
 //
-// Chosen for the following characteristics over range [-1, 1]:
-// - basically no error at -1 and 1, important for getting around range limit (atan2 via atan requires infinite range atan)
-// - no need for function mirroring due to range reduction (neede when only approximating [0, 1])
+// Chosen for the following characteristics over range [0, 1]:
+// - basically no error at 0 and 1, important for getting around range limit (naive atan2 via atan requires infinite range atan)
 // - no visible artifacts from first-derivative discontinuities, unlike latitude via range-reduced sqrt asin approximations (at equator)
-float fastApproximateAtan(float x) {
-    return x * (-0.1784 * abs(x) - 0.0663 * x * x + 1.0301);
+//
+// The original code is x * (-0.1784 * abs(x) - 0.0663 * x * x + 1.0301);
+// Removed the abs() in here because it isn't needed, the input range is guaranteed as [0, 1] by how we're approximating atan2.
+float fastApproximateAtan01(float x) {
+    return x * (-0.1784 * x - 0.0663 * x * x + 1.0301);
 }
 
-// Compute longitude using an approximate Atan function
-// Because our Atan approximation doesn't have infinite range,
-// need to "flip and offset" the result periodically.
-float longitudeApproximateAtan(vec2 xy) {
-    float inAtanBounds = float(abs(xy.y / xy.x) < 1.0);
-    float outAtanBounds = float(inAtanBounds == 0.0);
-    float q = inAtanBounds * (xy.y / (sign(xy.x) * xy.x)) + outAtanBounds * (xy.x / xy.y);
-
-    return inAtanBounds * (abs(min(sign(xy.x), 0.0)) * (sign(xy.y) * czm_pi)) + outAtanBounds * (sign(xy.y) * czm_piOverTwo) +
-        (inAtanBounds * sign(xy.x) - outAtanBounds) * fastApproximateAtan(q);
-
-    /* branch equivalent: */
-    //if (abs(xy.y / xy.x) < 1.0) {
-    //    float signX = sign(xy.x);
-    //    return abs(min(signX, 0.0)) * (sign(xy.y) * czm_pi) + signX * fastApproximateAtan(xy.y / (signX * xy.x));
-    //    /* branch equivalent: */
-    //    //if (xy.x < 0.0) {
-    //    //    return sign(xy.y) * czm_pi - fastApproximateAtan(xy.y / abs(xy.x));
-    //    //}
-    //    return fastApproximateAtan(xy.y / xy.x);
-    //} else {
-    //    return sign(xy.y) * czm_piOverTwo - fastApproximateAtan(xy.x / xy.y);
-    //}
+// Used in place of ternaries to trade some math for branching
+float branchFree(bool comparison, float a, float b) {
+    float useA = float(comparison);
+    return a * useA + b * (1.0 - useA);
 }
 
-// Compute latitude using an approximate Atan function.
-// Because our Atan approximation doesn't have infinite range,
-// need to "flip and offset" the result when the vector passes 45 degrees offset from equator.
-// Consider:
-// atan(2 / 1) == pi/2 - atan(1 / 2)
-// atan(2 / -1) == -pi/2 - atan(1 / -2)
-// Using atan instead of asin because most asin approximations (and even some vendor implementations!)
-// are based on range reduction and sqrt, which causes first-derivative discontuinity and pinching at the equator.
-float latitudeApproximateAtan(float magXY, float normalZ) {
-    float inAtanBounds = float(abs(normalZ / magXY) < 1.0);
-    float outAtanBounds = float(inAtanBounds == 0.0);
-    float q = inAtanBounds * (normalZ / magXY) + outAtanBounds * (magXY / normalZ);
-    return outAtanBounds * sign(normalZ) * czm_piOverTwo + (inAtanBounds - outAtanBounds) * fastApproximateAtan(q);
+// Range reduction math based on nvidia's cg reference implementation for atan2: http://developer.download.nvidia.com/cg/atan2.html
+// However, we replaced their atan curve with Michael Drobot's.
+float fastApproximateAtan2(float x, float y) {
+    // atan approximations are usually only reliable over [-1, 1], or, in our case, [0, 1] due to modifications.
+    // So range-reduce using abs and by flipping whether x or y is on top.
+    float opposite, adjacent, t; // t used as swap and atan result.
+    t = abs(x);
+    opposite = abs(y);
+    adjacent = max(t, opposite);
+    opposite = min(t, opposite);
 
-    /* branch equivalent: */
-    //float q = normalZ / magXY;
-    //if (abs(q) < 1.0) {
-    //    return fastApproximateAtan(normalZ / magXY);
-    //} else {
-    //    return sign(normalZ) * czm_piOverTwo - fastApproximateAtan(magXY / normalZ);
-    //}
+    t = fastApproximateAtan01(opposite / adjacent);
+
+    // Undo range reduction
+    t = branchFree(abs(y) > abs(x), czm_piOverTwo - t, t);
+    t = branchFree(x < 0.0, czm_pi - t, t);
+    t = branchFree(y < 0.0, -t, t);
+    return t;
 }
 
 /**
@@ -72,10 +52,7 @@ float latitudeApproximateAtan(float magXY, float normalZ) {
  */
 vec2 czm_approximateSphericalCoordinates(vec3 normal) {
     // Project into plane with vertical for latitude
-    float magXY = sqrt(normal.x * normal.x + normal.y * normal.y);
-
-    // Project into equatorial plane for longitude
-    vec2 xy = normal.xy / magXY;
-
-    return vec2(latitudeApproximateAtan(magXY, normal.z), longitudeApproximateAtan(xy));
+    float latitudeApproximation = fastApproximateAtan2(sqrt(normal.x * normal.x + normal.y * normal.y), normal.z);
+    float longitudeApproximation = fastApproximateAtan2(normal.x, normal.y);
+    return vec2(latitudeApproximation, longitudeApproximation);
 }

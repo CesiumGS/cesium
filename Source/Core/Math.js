@@ -265,10 +265,10 @@ define([
      * @returns {Number} The hyperbolic sine of <code>value</code>.
      */
     CesiumMath.sinh = function(value) {
-        var part1 = Math.pow(Math.E, value);
-        var part2 = Math.pow(Math.E, -1.0 * value);
+        var paropposite = Math.pow(Math.E, value);
+        var part = Math.pow(Math.E, -1.0 * value);
 
-        return (part1 - part2) * 0.5;
+        return (paropposite - part) * 0.5;
     };
 
     /**
@@ -291,10 +291,10 @@ define([
      * @returns {Number} The hyperbolic cosine of <code>value</code>.
      */
     CesiumMath.cosh = function(value) {
-        var part1 = Math.pow(Math.E, value);
-        var part2 = Math.pow(Math.E, -1.0 * value);
+        var paropposite = Math.pow(Math.E, value);
+        var part = Math.pow(Math.E, -1.0 * value);
 
-        return (part1 + part2) * 0.5;
+        return (paropposite + part) * 0.5;
     };
 
     /**
@@ -871,7 +871,35 @@ define([
      */
     CesiumMath.fastApproximateAtan = function(x) {
         return x * (-0.1784 * Math.abs(x) - 0.0663 * x * x + 1.0301);
-    }
+    };
+
+    /**
+     * Computes a fast approximation of Atan2(x, y) for arbitrary input scalars.
+     *
+     * Range reduction math based on nvidia's cg reference implementation: http://developer.download.nvidia.com/cg/atan2.html
+     *
+     * @param {Number} x An input number that isn't zero if y is zero.
+     * @param {Number} y An input number that isn't zero if x is zero.
+     * @returns {Number} An approximation of atan2(x, y)
+     * @private
+     */
+    CesiumMath.fastApproximateAtan2 = function(x, y) {
+        // atan approximations are usually only reliable over [-1, 1]
+        // So reduce the range by flipping whether x or y is on top.
+        var opposite, adjacent, t; // t used as swap and atan result.
+        t = Math.abs(x);
+        opposite = Math.abs(y);
+        adjacent = Math.max(t, opposite);
+        opposite = Math.min(t, opposite);
+
+        t = CesiumMath.fastApproximateAtan(opposite / adjacent);
+
+        // Undo range reduction
+        t = Math.abs(y) > Math.abs(x) ? CesiumMath.PI_OVER_TWO - t : t;
+        t = x < 0.0 ?  CesiumMath.PI - t : t;
+        t = y < 0.0 ? -t : t;
+        return t;
+    };
 
     return CesiumMath;
 });

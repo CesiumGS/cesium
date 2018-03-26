@@ -16,29 +16,14 @@ define([
         Ellipsoid) {
     'use strict';
 
-    function approximateSphericalLatitude(normal) {
-        var normalZ = normal.z;
-        var magXY = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
-        var q = normalZ / magXY;
-        if (Math.abs(q) < 1.0) {
-            return CesiumMath.fastApproximateAtan(normalZ / magXY);
-        } else {
-            return CesiumMath.sign(normalZ) * CesiumMath.PI_OVER_TWO - CesiumMath.fastApproximateAtan(magXY / normalZ);
-        }
+    function approximateSphericalLatitude(spherePoint) {
+        // Project into plane with vertical for latitude
+        var magXY = Math.sqrt(spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y);
+        return CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
     }
 
-    function approximateSphericalLongitude(normal) {
-        var magXY = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
-        var x = normal.x / magXY;
-        var y = normal.y / magXY;
-        if (Math.abs(y / x) < 1.0) {
-            if (x < 0.0) {
-                return CesiumMath.sign(y) * CesiumMath.PI - CesiumMath.fastApproximateAtan(y / Math.abs(x));
-            }
-            return CesiumMath.fastApproximateAtan(y / x);
-        } else {
-                return CesiumMath.sign(y) * CesiumMath.PI_OVER_TWO - CesiumMath.fastApproximateAtan(x / y);
-        }
+    function approximateSphericalLongitude(spherePoint) {
+        return CesiumMath.fastApproximateAtan2(spherePoint.x, spherePoint.y);
     }
 
     var cartographicScratch = new Cartographic();
@@ -50,10 +35,8 @@ define([
         carto.height = 0.0;
 
         var cartesian = Cartographic.toCartesian(carto, Ellipsoid.WGS84, cartesian3Scratch);
-        var sphereNormal = Cartesian3.normalize(cartesian, cartesian);
-
-        var sphereLatitude = approximateSphericalLatitude(sphereNormal);
-        var sphereLongitude = approximateSphericalLongitude(sphereNormal);
+        var sphereLatitude = approximateSphericalLatitude(cartesian);
+        var sphereLongitude = approximateSphericalLongitude(cartesian);
         result.x = sphereLatitude;
         result.y = sphereLongitude;
 

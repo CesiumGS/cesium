@@ -138,9 +138,8 @@ define([
         }
         if (shaderDependencies.requiresTexcoords) {
             glsl +=
-                '    // compute sphere normal for spherical coordinates\n' +
-                '    vec3 sphereNormal = normalize(worldCoord);\n' +
-                '    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(sphereNormal);\n' +
+                '    // Treat world coords as a sphere normal for spherical coordinates\n' +
+                '    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoord);\n' +
                 '    float u = (sphericalLatLong.x - v_sphericalExtents.y) * v_sphericalExtents.w;\n' +
                 '    float v = (sphericalLatLong.y - v_sphericalExtents.x) * v_sphericalExtents.z;\n';
         }
