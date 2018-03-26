@@ -979,11 +979,12 @@ define([
 
     function applyDebugSettings(tile, tileset, frameState) {
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
+        var empty = tile.hasEmptyContent || tile.hasTilesetContent;
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
             if (!defined(tile._debugBoundingVolume)) {
-                var color = tile._finalResolution ? (hasContentBoundingVolume ? Color.WHITE : Color.RED) : Color.YELLOW;
+                var color = tile._finalResolution ? ((hasContentBoundingVolume || empty) ? Color.WHITE : Color.RED) : Color.YELLOW;
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);

@@ -113,7 +113,7 @@ define([
         traverseAndSelect(tileset, root, frameState);
     }
 
-    function markDescendantsForSelection(tileset, root, frameState) {
+    function selectDescendants(tileset, root, frameState) {
         var stack = descendantTraversal.stack;
         stack.push(root);
         while (stack.length > 0) {
@@ -126,7 +126,7 @@ define([
                 if (child.contentAvailable) {
                     updateTile(tileset, child, frameState);
                     touchTile(tileset, child, frameState);
-                    markForSelection(tileset, child, frameState);
+                    selectTile(tileset, child, frameState);
                 } else if (child._depth - root._depth < 2) {
                     // Continue traversing, but not too far
                     stack.push(child);
@@ -143,22 +143,23 @@ define([
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root tile.
         if (tile.contentAvailable && contentVisible(tile, frameState)) {
-            var tileContent = tile.content;
-            if (tileContent.featurePropertiesDirty) {
-                // A feature's property in this tile changed, the tile needs to be re-styled.
-                tileContent.featurePropertiesDirty = false;
-                tile.lastStyleTime = 0; // Force applying the style to this tile
-                tileset._selectedTilesToStyle.push(tile);
-            } else if ((tile._selectedFrame !== frameState.frameNumber - 1)) {
-                // Tile is newly selected; it is selected this frame, but was not selected last frame.
-                tile.lastStyleTime = 0; // Force applying the style to this tile
-                tileset._selectedTilesToStyle.push(tile);
-            }
             tile._selectedFrame = frameState.frameNumber;
         }
     }
 
-    function selectTile(tileset, tile) {
+    function selectTile(tileset, tile, frameState) {
+        var tileContent = tile.content;
+        if (tileContent.featurePropertiesDirty) {
+            // A feature's property in this tile changed, the tile needs to be re-styled.
+            tileContent.featurePropertiesDirty = false;
+            tile.lastStyleTime = 0; // Force applying the style to this tile
+            tileset._selectedTilesToStyle.push(tile);
+        } else if ((tile._selectedFrame !== frameState.frameNumber - 1)) {
+            // Tile is newly selected; it is selected this frame, but was not selected last frame.
+            tile.lastStyleTime = 0; // Force applying the style to this tile
+            tileset._selectedTilesToStyle.push(tile);
+        }
+        tile._selectedFrame = frameState.frameNumber;
         tileset._selectedTiles.push(tile);
     }
 
@@ -210,7 +211,7 @@ define([
                     if (waitingTile === lastAncestor) {
                         waitingTile._finalResolution = true;
                     }
-                    selectTile(tileset, waitingTile);
+                    selectTile(tileset, waitingTile, frameState);
                     continue;
                 }
             }
@@ -221,29 +222,24 @@ define([
                 continue;
             }
 
-            var add = tile.refine === Cesium3DTileRefine.ADD;
-            var markedForSelection = tile._selectedFrame === frameState.frameNumber;
+            var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+            var markedForSelection = replace && tile.contentAvailable && (tile._selectedFrame === frameState.frameNumber);
             var children = tile.children;
             var childrenLength = children.length;
 
             if (markedForSelection) {
-                if (add) {
-                    tile._finalResolution = true;
-                    selectTile(tileset, tile);
-                } else {
-                    tile._selectionDepth = ancestorStack.length;
-                    if (tile._selectionDepth > 0) {
-                        tileset._hasMixedContent = true;
-                    }
-                    lastAncestor = tile;
-                    if (childrenLength === 0) {
-                        tile._finalResolution = true;
-                        selectTile(tileset, tile);
-                        continue;
-                    }
-                    ancestorStack.push(tile);
-                    tile._stackLength = stack.length;
+                tile._selectionDepth = ancestorStack.length;
+                if (tile._selectionDepth > 0) {
+                    tileset._hasMixedContent = true;
                 }
+                lastAncestor = tile;
+                if (childrenLength === 0) {
+                    tile._finalResolution = true;
+                    selectTile(tileset, tile, frameState);
+                    continue;
+                }
+                ancestorStack.push(tile);
+                tile._stackLength = stack.length;
             }
 
             for (var i = 0; i < childrenLength; ++i) {
@@ -258,12 +254,10 @@ define([
                (tile.contentVisibility(frameState) !== Intersect.OUTSIDE);
     }
 
-    function addDesiredTile(tileset, tile, baseTraversalOnly, frameState) {
-        if (baseTraversalOnly) {
-            markForSelection(tileset, tile, frameState);
-            selectTile(tileset, tile);
+    function addDesiredTile(tileset, tile, final, frameState) {
+        if (final) {
+            selectTile(tileset, tile, frameState);
             tile._finalResolution = true;
-            console.log(tile._priority);
         } else {
             var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
             if (defined(loadedTile)) {
@@ -271,7 +265,7 @@ define([
             } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
                 // If no ancestors are ready traverse down and select tiles to minimize empty regions.
                 // This happens often in cases where the camera zooms out and we're waiting for parent tiles to load.
-                markDescendantsForSelection(tileset, tile, frameState);
+                selectDescendants(tileset, tile, frameState);
             }
         }
     }
@@ -524,7 +518,7 @@ define([
                     // Load tiles that are not skipped or can't refine further. In practice roughly half the tiles stay unloaded.
                     // Select tiles that can't refine further. If the tile doesn't have loaded content it will try to select an ancestor with loaded content instead.
                     if (!refines) {
-                        addDesiredTile(tileset, tile, baseTraversalOnly, frameState);
+                        addDesiredTile(tileset, tile, false, frameState);
                         loadTile(tileset, tile, false, frameState);
                     } else if (reachedSkippingThreshold(tileset, tile)) {
                         loadTile(tileset, tile, false, frameState);
@@ -535,9 +529,14 @@ define([
             if (add) {
                 // Additive tiles are always loaded and selected
                 if (tile.contentAvailable) {
-                    addDesiredTile(tileset, tile, baseTraversalOnly, frameState);
+                    addDesiredTile(tileset, tile, true, frameState);
                 }
                 loadTile(tileset, tile, false, frameState);
+            }
+
+            if (hasEmptyContent(tile)) {
+                // Select empty tiles so that we can see their debug bounding volumes
+                addDesiredTile(tileset, tile, true, frameState);
             }
 
             touchTile(tileset, tile, frameState);

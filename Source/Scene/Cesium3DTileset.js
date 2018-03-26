@@ -587,7 +587,7 @@ define([
          * This property is for debugging only; it is not optimized for production use.
          * <p>
          * When true, renders the bounding volume for each visible tile.  The bounding volume is
-         * white if the tile has a content bounding volume; otherwise, it is red.  Tiles that don't meet the
+         * white if the tile has a content bounding volume or is empty; otherwise, it is red.  Tiles that don't meet the
          * screen space error and are still refining to their descendants are yellow.
          * </p>
          *
