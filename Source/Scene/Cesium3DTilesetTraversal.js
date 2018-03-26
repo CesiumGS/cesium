@@ -163,7 +163,6 @@ define([
     }
 
     function sortChildrenByDistanceToCamera(a, b) {
-        // TODO : sort during normal traversal
         // Sort by farthest child first since this is going on a stack
         if (b._distanceToCamera === 0 && a._distanceToCamera === 0) {
             return b._centerZDepth - a._centerZDepth;
@@ -226,7 +225,6 @@ define([
             var markedForSelection = tile._selectedFrame === frameState.frameNumber;
             var children = tile.children;
             var childrenLength = children.length;
-            children.sort(sortChildrenByDistanceToCamera);
 
             if (markedForSelection) {
                 if (add) {
@@ -264,6 +262,8 @@ define([
         if (baseTraversalOnly) {
             markForSelection(tileset, tile, frameState);
             selectTile(tileset, tile);
+            tile._finalResolution = true;
+            console.log(tile._priority);
         } else {
             var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
             if (defined(loadedTile)) {
@@ -490,6 +490,7 @@ define([
             visitTile(tileset);
 
             if (traverse) {
+                children.sort(sortChildrenByDistanceToCamera);
                 for (var i = 0; i < childrenLength; ++i) {
                     var child = children[i];
                     var visible = updateTile(tileset, child, frameState);
