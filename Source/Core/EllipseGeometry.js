@@ -653,62 +653,116 @@ define([
         };
     }
 
-    /*
-    var scratchEnuToFixedMatrix = new Matrix4();
-    var scratchFixedToEnuMatrix = new Matrix4();
-    var scratchRotationMatrix = new Matrix3();
-    var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
-    var scratchCartographicPoints = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
-
-    function computeRectangle(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
-        Transforms.eastNorthUpToFixedFrame(center, ellipsoid, scratchEnuToFixedMatrix);
-        Matrix4.inverseTransformation(scratchEnuToFixedMatrix, scratchFixedToEnuMatrix);
-
-        // Find the 4 extreme points of the ellipse in ENU
+    var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(),
+                                  new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    var semiMajorVectorScratch = new Cartesian2();
+    var semiMinorVectorScratch = new Cartesian2();
+    var rotation1Scratch = new Quaternion();
+    var rotation2Scratch = new Quaternion();
+    var centerVectorScratch = new Cartesian3();
+    var cartographicScratch = new Cartographic();
+    function computeRectangleLargePolar(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
+        // Find the extreme points of the ellipse in ENU
         var i;
-        for (i = 0; i < 4; ++i) {
+        for (i = 0; i < 8; ++i) {
             Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
         }
 
-        // get the AABB of the entire OBB. This is a very conservative bound.
-        scratchRectanglePoints[0].x += semiMajorAxis;
-        scratchRectanglePoints[0].y += semiMinorAxis;
+        var semiMajorVector = semiMajorVectorScratch;
+        semiMajorVector.x = semiMajorAxis * Math.sin(rotation + CesiumMath.PI_OVER_TWO);
+        semiMajorVector.y = semiMajorAxis * Math.cos(rotation + CesiumMath.PI_OVER_TWO);
 
-        scratchRectanglePoints[1].x += semiMajorAxis;
-        scratchRectanglePoints[1].y -= semiMinorAxis;
+        var semiMinorVector = semiMinorVectorScratch;
+        semiMinorVector.x = semiMinorAxis * Math.sin(rotation);
+        semiMinorVector.y = semiMinorAxis * Math.cos(rotation);
 
-        scratchRectanglePoints[2].x -= semiMajorAxis;
-        scratchRectanglePoints[2].y += semiMinorAxis;
+        // Rectangle around the ellipse in ENU
+        // See http://www.iquilezles.org/www/articles/ellipses/ellipses.htm
+        var halfWidth = Math.sqrt(semiMinorVector.x * semiMinorVector.x + semiMajorVector.x * semiMajorVector.x);
+        var halfHeight = Math.sqrt(semiMinorVector.y * semiMinorVector.y + semiMajorVector.y * semiMajorVector.y);
 
-        scratchRectanglePoints[3].x -= semiMajorAxis;
-        scratchRectanglePoints[3].y -= semiMinorAxis;
+        // Algorithm for generating points targets arc length close to the major/minor axis dimensions.
+        // Approximate arc angle for halfWidth and halfHeight by treating ellipsoid as a sphere, then offset from center
+        var radii = ellipsoid.radii;
+        var shortestRadius = Math.min(radii.x, Math.min(radii.y, radii.z));
+        var verticleHalfAngle = halfHeight / shortestRadius;
+        var horizontalHalfAngle = halfWidth / shortestRadius;
 
-        Matrix3.fromRotationZ(rotation, scratchRotationMatrix);
-        for (i = 0; i < 4; ++i) {
-            // Apply the rotation
-            Matrix3.multiplyByVector(scratchRotationMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
+        // compute latitude/longitude in a local coordinate system where the prime meridian and equator line up with the
+        // ellipse's major and minor axes
+        var latMin = -verticleHalfAngle;
+        var latMax = verticleHalfAngle;
+        var longMin = -horizontalHalfAngle;
+        var longMax = horizontalHalfAngle;
 
-            // Convert back to fixed and then to cartographic
-            Matrix4.multiplyByPoint(scratchEnuToFixedMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
-            ellipsoid.cartesianToCartographic(scratchRectanglePoints[i], scratchCartographicPoints[i]);
+        // Compute positions of the box's corners and edge centers in local space
+        var rectanglePositions = scratchRectanglePoints;
+        var corner = cartographicScratch;
+        corner.latitude = latMax;
+        corner.longitude = longMax;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[0]);
+        corner.latitude = latMax;
+        corner.longitude = longMin;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[1]);
+        corner.latitude = latMin;
+        corner.longitude = longMax;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[2]);
+        corner.latitude = latMin;
+        corner.longitude = longMin;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[3]);
+        corner.latitude = latMax;
+        corner.longitude = 0;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[4]);
+        corner.latitude = 0;
+        corner.longitude = longMin;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[5]);
+        corner.latitude = 0;
+        corner.longitude = longMax;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[6]);
+        corner.latitude = latMin;
+        corner.longitude = 0;
+        Cartographic.toCartesian(corner, ellipsoid, rectanglePositions[7]);
+
+        // Sequence of transformations to get from local to world coordinates: world Z, world Y
+        var centerVector = Cartesian3.normalize(center, centerVectorScratch);
+
+        // Rotation around world Z: get angle by projecting center vector into world X-Y plane
+        var magXY = Math.sqrt(centerVector.y * centerVector.y + centerVector.x * centerVector.x);
+        var angle = magXY !== 0.0 ? Math.atan2(centerVector.y / magXY, centerVector.x / magXY) : 0.0;
+        var worldZ = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, angle, rotation1Scratch);
+
+        // Rotation around world Y: get angle by projecting center vector into world X-Z plane
+        angle = Math.asin(centerVector.z);
+        var worldY = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -angle, rotation2Scratch);
+        var rotations = Quaternion.multiply(worldZ, worldY, rotation2Scratch);
+
+        var transform = Matrix3.fromQuaternion(rotations);
+
+        for (i = 0; i < 8; i++) {
+            Matrix3.multiplyByVector(transform, rectanglePositions[i], rectanglePositions[i]);
         }
 
-        return Rectangle.fromCartographicArray(scratchCartographicPoints);
-    }*/
-
+        // Create rectangle
+        var rectangle = Rectangle.fromCartesianArray(rectanglePositions, ellipsoid);
+        // Rectangle width goes beyond 180 degrees when the ellipse crosses a pole.
+        // When this happens, make the rectangle into a "circle" around the pole
+        if (rectangle.width > CesiumMath.PI) {
+            rectangle.north = rectangle.north > 0.0 ? CesiumMath.PI_OVER_TWO - CesiumMath.EPSILON7 : rectangle.north;
+            rectangle.south = rectangle.south < 0.0 ? CesiumMath.EPSILON7 - CesiumMath.PI_OVER_TWO : rectangle.south;
+            rectangle.east = CesiumMath.PI;
+            rectangle.west = -CesiumMath.PI;
+        }
+        return rectangle;
+    }
 
     var scratchEnuToFixedMatrix = new Matrix4();
-    var scratchRotationMatrix = new Matrix3();
-    var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
     var scratchCartographicPoints = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
-    var semiMajorVectorScratch = new Cartesian2();
-    var semiMinorVectorScratch = new Cartesian2();
-    function computeRectangle(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
+    function computeRectangleSmall(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
         Transforms.eastNorthUpToFixedFrame(center, ellipsoid, scratchEnuToFixedMatrix);
 
-        // Find the 4 extreme points of the ellipse in ENU
+        // Find the 4 corner points and 4 edge centers of the rectangle around the ellipse in ENU
         var i;
-        for (i = 0; i < 4; ++i) {
+        for (i = 0; i < 8; ++i) {
             Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
         }
 
@@ -728,6 +782,18 @@ define([
         scratchRectanglePoints[2].y += verticalHalfWidth;
         scratchRectanglePoints[3].y -= verticalHalfWidth;
 
+        scratchRectanglePoints[4].x += horizontalHalfWidth;
+        scratchRectanglePoints[4].y += horizontalHalfWidth;
+
+        scratchRectanglePoints[5].x -= horizontalHalfWidth;
+        scratchRectanglePoints[5].y -= horizontalHalfWidth;
+
+        scratchRectanglePoints[6].x -= verticalHalfWidth;
+        scratchRectanglePoints[6].y += verticalHalfWidth;
+
+        scratchRectanglePoints[7].x += verticalHalfWidth;
+        scratchRectanglePoints[7].y -= verticalHalfWidth;
+
         for (i = 0; i < 4; ++i) {
             // Convert back to fixed and then to cartographic
             Matrix4.multiplyByPoint(scratchEnuToFixedMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
@@ -737,6 +803,7 @@ define([
         return Rectangle.fromCartographicArray(scratchCartographicPoints);
     }
 
+    var centerCartographicScratch = new Cartographic();
     /**
      * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -744,7 +811,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
+     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame. This must be non-zero and is usually on the ellipsoid surface.
      * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
@@ -755,10 +822,11 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
+     * @exception {DeveloperError} center must be nonzero
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
      * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
-     *
+     * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @example
      * // Create an ellipse.
@@ -789,6 +857,9 @@ define([
         if (!defined(center)) {
             throw new DeveloperError('center is required.');
         }
+        if (Cartesian3.equals(center, Cartesian3.ZERO)) {
+            throw new DeveloperError('center must be nonzero');
+        }
         if (!defined(semiMajorAxis)) {
             throw new DeveloperError('semiMajorAxis is required.');
         }
@@ -817,7 +888,11 @@ define([
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createEllipseGeometry';
 
-        this._rectangle = computeRectangle(this._center, this._ellipsoid, semiMajorAxis, semiMinorAxis, this._rotation);
+        // Use different rectangle computation methods if the ellipse is very large or close to the poles
+        var centerCartographic = Cartographic.fromCartesian(center, ellipsoid, centerCartographicScratch);
+        this._rectangle = semiMajorAxis > 10000 || CesiumMath.PI_OVER_TWO - Math.abs(centerCartographic.latitude) < 0.01 ?
+        computeRectangleLargePolar(this._center, this._ellipsoid, semiMajorAxis, semiMinorAxis, this._rotation) :
+            computeRectangleSmall(this._center, this._ellipsoid, semiMajorAxis, semiMinorAxis, this._rotation);
     }
 
     /**
