@@ -27,6 +27,7 @@ define([
     'use strict';
 
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     function Batch(primitives, appearanceType, materialProperty, depthFailAppearanceType, depthFailMaterialProperty, closed, shadows) {
         this.primitives = primitives;
@@ -213,12 +214,12 @@ define([
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                if (defined(this.depthFailAppearanceType) && this.depthFailAppearanceType instanceof ColorMaterialProperty && !updater.depthFailMaterialProperty.isConstant) {
+                if (defined(this.depthFailAppearanceType) && this.depthFailMaterialProperty instanceof ColorMaterialProperty && !updater.depthFailMaterialProperty.isConstant) {
                     var depthFailColorProperty = updater.depthFailMaterialProperty.color;
-                    depthFailColorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastDepthFailColor, colorScratch)) {
-                        attributes._lastDepthFailColor = Color.clone(colorScratch, attributes._lastDepthFailColor);
-                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.depthFailColor);
+                    var depthFailColor = Property.getValueOrDefault(depthFailColorProperty, time, Color.WHITE, colorScratch);
+                    if (!Color.equals(attributes._lastDepthFailColor, depthFailColor)) {
+                        attributes._lastDepthFailColor = Color.clone(depthFailColor, attributes._lastDepthFailColor);
+                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(depthFailColor, attributes.depthFailColor);
                     }
                 }
 
@@ -230,7 +231,7 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
