@@ -55,20 +55,6 @@ defineSuite([
         expect(fakeXHR.send).toHaveBeenCalled();
     });
 
-    it('creates and sends request with custom headers', function() {
-        var testUrl = 'http://example.invalid/testuri';
-        loadCRN(testUrl, {
-            'Accept' : 'application/json',
-            'Cache-Control' : 'no-cache'
-        });
-
-        expect(fakeXHR.open).toHaveBeenCalledWith('GET', testUrl, true);
-        expect(fakeXHR.setRequestHeader.calls.count()).toEqual(2);
-        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json');
-        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
-        expect(fakeXHR.send).toHaveBeenCalled();
-    });
-
     it('creates and sends request with custom headers with Resource', function() {
         var testUrl = 'http://example.invalid/testuri';
         var resource = new Resource({
@@ -226,12 +212,12 @@ defineSuite([
         var oldMaximumRequests = RequestScheduler.maximumRequests;
         RequestScheduler.maximumRequests = 0;
 
-        var request = new Request({
-            throttle : true
-        });
-
-        var testUrl = 'http://example.invalid/testuri';
-        var promise = loadCRN(testUrl, undefined, request);
+        var promise = loadCRN(new Resource({
+            url: 'http://example.invalid/testuri',
+            request: new Request({
+                throttle: true
+            })
+        }));
         expect(promise).toBeUndefined();
 
         RequestScheduler.maximumRequests = oldMaximumRequests;

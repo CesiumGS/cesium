@@ -94,10 +94,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('CesiumTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1,
@@ -152,9 +148,7 @@ define([
         var overallAvailability = [];
         when(options.url)
             .then(function(url) {
-                var resource = Resource.createIfNeeded(url, {
-                    proxy: options.proxy
-                });
+                var resource = Resource.createIfNeeded(url);
                 resource.appendForwardSlash();
                 lastResource = resource;
                 metadataResource = lastResource.getDerivedResource({

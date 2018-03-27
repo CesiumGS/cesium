@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
@@ -24,7 +23,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         freezeObject,
@@ -157,13 +155,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('WebMapTileServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(options.url);
 
         var style = options.style;
         var tileMatrixSetID = options.tileMatrixSetID;

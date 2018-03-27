@@ -3,7 +3,6 @@ define([
         './Check',
         './CompressedTextureBuffer',
         './defined',
-        './deprecationWarning',
         './PixelFormat',
         './Resource',
         './RuntimeError'
@@ -12,7 +11,6 @@ define([
         Check,
         CompressedTextureBuffer,
         defined,
-        deprecationWarning,
         PixelFormat,
         Resource,
         RuntimeError) {
@@ -69,27 +67,16 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadKTX(resourceOrUrlOrBuffer, headers, request) {
+    function loadKTX(resourceOrUrlOrBuffer) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('resourceOrUrlOrBuffer', resourceOrUrlOrBuffer);
         //>>includeEnd('debug');
-
-        if (defined(headers)) {
-            deprecationWarning('loadCRN.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
-        }
-
-        if (defined(request)) {
-            deprecationWarning('loadCRN.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
-        }
 
         var loadPromise;
         if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
             loadPromise = when.resolve(resourceOrUrlOrBuffer);
         } else {
-            var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer, {
-                headers: headers,
-                request: request
-            });
+            var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
             loadPromise = resource.fetchArrayBuffer();
         }
 

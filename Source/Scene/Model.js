@@ -10,7 +10,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -89,7 +88,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -1171,23 +1169,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.headers)) {
-            deprecationWarning('Model.fromGltf.headers', 'The options.headers parameter has been deprecated. Specify options.url as a Resource instance and set the headers property there.');
-        }
-
         var url = options.url;
         options = clone(options);
 
         // Create resource for the model file
-        var modelResource = Resource.createIfNeeded(url, {
-            headers : options.headers
-        });
+        var modelResource = Resource.createIfNeeded(url);
 
         // Setup basePath to get dependent files
         var basePath = defaultValue(options.basePath, modelResource.clone());
-        var resource = Resource.createIfNeeded(basePath, {
-            headers : options.headers
-        });
+        var resource = Resource.createIfNeeded(basePath);
 
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.

@@ -5,6 +5,8 @@ Change Log
 
 ##### Breaking Changes :mega:
 * `GeometryVisualizer` now requires `primitive` and `groundPrimitive` parameters. [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
+* For all classes/functions that take a `Resource` instance, all additional parameters that are part of the `Resource` class have been removed. This generally includes `proxy`, `headers` and `query` parameters.
+* All low level load functions including `loadArrayBuffer`, `loadBlob`, `loadImage`, `loadJson`, `loadJsonp`, `loadText`, `loadXML` and `loadWithXhr` have been removed. Please use the equivalent `fetch` functions on the `Resource` class.
 
 ##### Deprecated :hourglass_flowing_sand:
 * `ClippingPlaneCollection` is now supported in Internet Explorer, so `ClippingPlaneCollection.isSupported` has been deprecated and will be removed in Cesium 1.45.
@@ -30,7 +32,7 @@ Change Log
 * `Credit` has been modified to take an HTML string as the credit content [#6331](https://github.com/AnalyticalGraphicsInc/cesium/pull/6331)
 * Added support for ordering in `DataSourceCollection` [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
   * All ground geometry from one `DataSource` will render in front of all ground geometry from another `DataSource` in the same collection with a lower index.
-  * Use `DataSourceCollection.raise`, `DataSourceCollection.lower`, `DataSourceCollection.raiseToTop` and `DataSourceCollection.lowerToBottom` functions to change the ordering of a `DataSource` in the collection. 
+  * Use `DataSourceCollection.raise`, `DataSourceCollection.lower`, `DataSourceCollection.raiseToTop` and `DataSourceCollection.lowerToBottom` functions to change the ordering of a `DataSource` in the collection.
 
 ##### Fixes :wrench:
 * Fixed support of glTF-supplied tangent vectors. [#6302](https://github.com/AnalyticalGraphicsInc/cesium/pull/6302)
@@ -41,6 +43,7 @@ Change Log
 * Fixed rendering vector tiles when using `invertClassification`. [#6349](https://github.com/AnalyticalGraphicsInc/cesium/pull/6349)
 * Fixed animation for glTF models with missing animation targets. [#6351](https://github.com/AnalyticalGraphicsInc/cesium/pull/6351)
 * Fixed occlusion when `globe.show` is `false`.
+* Fixed double-sided flag for glTF materials with `BLEND` enabled. [#6371](https://github.com/AnalyticalGraphicsInc/cesium/pull/6371)
 
 ### 1.43 - 2018-03-01
 
