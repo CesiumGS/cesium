@@ -2,7 +2,7 @@
   "asset": {
     "version": "1.0"
   },
-  "geometricError": 0,
+  "geometricError": 70,
   "root": {
     "boundingVolume": {
       "region": [

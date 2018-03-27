@@ -261,10 +261,10 @@ define([
         }
 
         var parent = tile.parent;
-        var parentTransorm = defined(parent) ? parent.computedTransform : tileset._modelMatrix;
+        var parentTransform = defined(parent) ? parent.computedTransform : tileset._modelMatrix;
         var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
 
-        tile.updateTransform(parentTransorm);
+        tile.updateTransform(parentTransform);
         tile._distanceToCamera = tile.distanceToTile(frameState);
         tile._centerZDepth = tile.distanceToTileCenter(frameState);
         tile._screenSpaceError = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
@@ -346,6 +346,15 @@ define([
         return visible;
     }
 
+    function updateChildren(tileset, tile, frameState) {
+        var children = tile.children;
+        var length = children.length;
+        for (var i = 0; i < length; ++i) {
+            updateTile(tileset, children[i], frameState);
+        }
+        children.sort(sortChildrenByDistanceToCamera);
+    }
+
     function isVisible(tile) {
         return tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
@@ -406,10 +415,10 @@ define([
             visitTile(tileset);
 
             if (traverse) {
-                children.sort(sortChildrenByDistanceToCamera);
+                updateChildren(tileset, tile, frameState);
                 for (var i = 0; i < childrenLength; ++i) {
                     var child = children[i];
-                    var visible = updateTile(tileset, child, frameState);
+                    var visible = isVisible(child);
                     if (visible) {
                         stack.push(child);
                     }

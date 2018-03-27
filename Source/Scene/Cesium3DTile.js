@@ -838,7 +838,7 @@ define([
      * Computes the distance from the center of the tile's bounding volume to the camera.
      *
      * @param {FrameState} frameState The frame state.
-     * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+     * @returns {Number} The distance, in meters.
      *
      * @private
      */

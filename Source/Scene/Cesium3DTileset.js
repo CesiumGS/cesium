@@ -1502,6 +1502,7 @@ define([
     }
 
     function processTiles(tileset, frameState) {
+        filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
 
@@ -1509,8 +1510,6 @@ define([
         for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
         }
-
-        filterProcessingQueue(tileset);
     }
 
     ///////////////////////////////////////////////////////////////////////////
