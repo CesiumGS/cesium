@@ -4,7 +4,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../ThirdParty/draco-decoder-gltf',
-        '../ThirdParty/GltfPipeline/byteLengthForComponentType',
         './createTaskProcessorWorker'
     ], function(
         ComponentDatatype,
@@ -12,7 +11,6 @@ define([
         IndexDatatype,
         RuntimeError,
         draco,
-        byteLengthForComponentType,
         createTaskProcessorWorker) {
     'use strict';
 
@@ -85,7 +83,11 @@ define([
                 var vertexArrayLength = numPoints * numComponents;
                 if (defined(quantization)) {
                     attributeData = new draco.DracoInt32Array();
-                    vertexArray = new Int16Array(vertexArrayLength);
+                    if (quantization.octEncoded) {
+                        vertexArray = new Int16Array(vertexArrayLength);
+                    } else {
+                        vertexArray = new Uint16Array(vertexArrayLength);
+                    }
                     dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
                 } else if (attribute.data_type() === 4) {
                     attributeData = new draco.DracoInt32Array();
@@ -110,7 +112,7 @@ define([
                         componentsPerAttribute : numComponents,
                         componentDatatype : componentDatatype,
                         byteOffset : attribute.byte_offset(),
-                        byteStride : byteLengthForComponentType(componentDatatype) * numComponents,
+                        byteStride : ComponentDatatype.getSizeInBytes(componentDatatype) * numComponents,
                         normalized : attribute.normalized(),
                         quantization : quantization
                     }

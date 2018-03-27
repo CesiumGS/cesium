@@ -136,7 +136,7 @@ define([
      * @private
      */
     DracoLoader.parse = function(model) {
-        if (!this.hasExtension(model)) {
+        if (!DracoLoader.hasExtension(model)) {
             return;
         }
 
@@ -173,7 +173,7 @@ define([
      * @private
      */
     DracoLoader.decode = function(model, context) {
-        if (!this.hasExtension(model)) {
+        if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
         }
 
