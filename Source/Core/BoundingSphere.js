@@ -1211,9 +1211,6 @@ define([
         //>>includeEnd('debug');
         result = Cartesian3.clone(position, result);
 
-        if (Cartesian3.equals(result, this.center)) {
-            return result;
-        }
         if (Cartesian3.distance(result, this.center) <= this.radius) {
             return result;
         }

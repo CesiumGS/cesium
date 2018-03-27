@@ -55,7 +55,6 @@ var outlineSphere = viewer.entities.add({
 
 // Used for AxisAlignedBoundingBox Example
 var centerForAxisAligned = Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 300000.0);
-
 var dimensionsForAxisAligned = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
 var halfDimensionsAxisAligned = Cesium.Cartesian3.multiplyByScalar(dimensionsForAxisAligned, 0.5, new Cesium.Cartesian3());
 
@@ -82,7 +81,6 @@ var outlineAxisBox = viewer.entities.add({
 var centerForOriented = Cesium.Cartesian3.fromDegrees(-90.0, 45.0, 250000.0);
 var dimensionsForOriented = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
 var halfDimensionsOriented = Cesium.Cartesian3.multiplyByScalar(dimensionsForOriented, 0.5, new Cesium.Cartesian3());
-
 var halfAxesOriented = Cesium.Matrix3.fromScale(halfDimensionsOriented, new Cesium.Matrix3());
 
 // The Oriented Box
