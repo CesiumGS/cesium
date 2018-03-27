@@ -54,8 +54,7 @@ var outlineSphere = viewer.entities.add({
 });
 
 // Used for AxisAlignedBoundingBox Example
-var centerForAxisAligned = Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 250000.0);
-
+var centerForAxisAligned = Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 300000.0);
 var dimensionsForAxisAligned = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
 var halfDimensionsAxisAligned = Cesium.Cartesian3.multiplyByScalar(dimensionsForAxisAligned, 0.5, new Cesium.Cartesian3());
 
@@ -69,6 +68,7 @@ var axisAligned = new Cesium.AxisAlignedBoundingBox(minForAxisAligned, maxForAxi
 var outlineAxisBox = viewer.entities.add({
     name : 'Axis Aligned Box Outline',
     position: centerForAxisAligned,
+    orientation : new Cesium.ConstantProperty(Cesium.Quaternion.IDENTITY),
     box : {
         dimensions : new Cesium.Cartesian3.clone(dimensionsForAxisAligned),
         fill : false,
@@ -81,21 +81,15 @@ var outlineAxisBox = viewer.entities.add({
 var centerForOriented = Cesium.Cartesian3.fromDegrees(-90.0, 45.0, 250000.0);
 var dimensionsForOriented = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
 var halfDimensionsOriented = Cesium.Cartesian3.multiplyByScalar(dimensionsForOriented, 0.5, new Cesium.Cartesian3());
-
-var hprOriented = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(Math.random()*360 + 180),
-                                              Cesium.Math.toRadians(Math.random()*360 + 180),
-                                              Cesium.Math.toRadians(Math.random()*360 + 180));
-var rotationOriented = Cesium.Matrix3.fromHeadingPitchRoll(hprOriented);
-var halfAxesOriented = Cesium.Matrix3.multiply(rotationOriented, Cesium.Matrix3.fromScale(halfDimensionsOriented, new Cesium.Matrix3()), new Cesium.Matrix3());
+var halfAxesOriented = Cesium.Matrix3.fromScale(halfDimensionsOriented, new Cesium.Matrix3());
 
 // The Oriented Box
 var oriented = new Cesium.OrientedBoundingBox(centerForOriented, halfAxesOriented);
 
 // View the Oriented Bounding Box
 var outlineOrientedBox = viewer.entities.add({
-    name : 'Axis Aligned Box Outline',
+    name : 'Oriented Box Outline',
     position: centerForOriented,
-    orientation : new Cesium.ConstantProperty(Cesium.Transforms.headingPitchRollQuaternion(centerForOriented, hprOriented)),
     box : {
         dimensions : Cesium.Cartesian3.clone(dimensionsForOriented),
         fill : false,
