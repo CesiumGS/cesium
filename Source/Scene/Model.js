@@ -63,7 +63,6 @@ define([
         './BlendingState',
         './ClippingPlaneCollection',
         './ColorBlendMode',
-        './DepthFunction',
         './DracoLoader',
         './getClipAndStyleCode',
         './getClippingFunction',
@@ -143,7 +142,6 @@ define([
         BlendingState,
         ClippingPlaneCollection,
         ColorBlendMode,
-        DepthFunction,
         DracoLoader,
         getClipAndStyleCode,
         getClippingFunction,
@@ -3142,13 +3140,6 @@ define([
             var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
             var idProgram = rendererPickPrograms[technique.program];
-
-            var idRenderState = RenderState.getState(rs);
-            //idRenderState.depthTest.enabled = true;
-            idRenderState.depthTest.enabled = false;
-            idRenderState.depthTest.func = DepthFunction.EQUAL;
-            idRenderState = RenderState.fromCache(idRenderState);
-
             var idUniformMap;
 
             // Callback to override default model picking
@@ -3186,8 +3177,7 @@ define([
                 owner : owner,
                 pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass,
                 idShaderProgram : idProgram,
-                idUniformMap : idUniformMap,
-                idRenderState : idRenderState
+                idUniformMap : idUniformMap
             });
 
             var pickCommand;

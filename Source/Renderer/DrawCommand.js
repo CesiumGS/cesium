@@ -40,7 +40,6 @@ define([
         this._receiveShadows = defaultValue(options.receiveShadows, false);
 
         this._idShaderProgram = options.idShaderProgram;
-        this._idRenderState = options.idRenderState;
         this._idUniformMap = options.idUniformMap;
 
         this.dirty = true;
@@ -491,7 +490,6 @@ define([
         result._receiveShadows = command._receiveShadows;
 
         result._idShaderProgram = command._idShaderProgram;
-        result._idRenderState = command._idRenderState;
         result._idUniformMap = command._idUniformMap;
 
         result.dirty = true;
@@ -514,7 +512,7 @@ define([
         if (!defined(this._idShaderProgram)) {
             return;
         }
-        context.draw(this, passState, this._idShaderProgram, this._idRenderState, this._idUniformMap);
+        context.draw(this, passState, this._idShaderProgram, this._idUniformMap);
     };
 
     return DrawCommand;

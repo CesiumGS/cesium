@@ -982,7 +982,7 @@ define([
         va._unBind();
     }
 
-    Context.prototype.draw = function(drawCommand, passState, shaderProgram, renderState, uniformMap) {
+    Context.prototype.draw = function(drawCommand, passState, shaderProgram, uniformMap) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('drawCommand', drawCommand);
         Check.defined('drawCommand.shaderProgram', drawCommand._shaderProgram);
@@ -991,9 +991,8 @@ define([
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
+        var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
         shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
-        renderState = defaultValue(renderState, drawCommand._renderState);
-        renderState = defaultValue(renderState, this._defaultRenderState);
         uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
 
         beginDraw(this, framebuffer, passState, shaderProgram, renderState);
