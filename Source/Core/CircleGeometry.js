@@ -95,7 +95,7 @@ define([
     };
 
     var scratchEllipseGeometry = new EllipseGeometry({
-        center : new Cartesian3(),
+        center : new Cartesian3(1.0, 1.0, 1.0),
         semiMajorAxis : 1.0,
         semiMinorAxis : 1.0
     });
