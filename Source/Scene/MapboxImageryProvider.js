@@ -3,7 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/MapboxApi',
         '../Core/Resource',
@@ -13,7 +12,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         MapboxApi,
         Resource,
@@ -62,19 +60,13 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('MapboxImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         var url = options.url;
         if (!defined(url)) {
             url = 'https://api.mapbox.com/v4/';
         }
         this._url = url;
 
-        var resource = Resource.createIfNeeded(url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(url);
 
         var accessToken = MapboxApi.getAccessToken(options.accessToken);
         this._mapId = mapId;

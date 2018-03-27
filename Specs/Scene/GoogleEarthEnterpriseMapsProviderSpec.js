@@ -244,53 +244,6 @@ defineSuite([
         });
     });
 
-    it('routes requests through a proxy if one is specified', function() {
-        var path = '/default_map';
-        var url = 'http://example.invalid';
-        var proxy = new DefaultProxy('/proxy/');
-
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterpriseMapsProvider/good.json', responseType, method, data, headers, deferred);
-        };
-
-        var provider = new GoogleEarthEnterpriseMapsProvider({
-            url : url,
-            channel : 1234,
-            proxy : proxy
-        });
-
-        expect(provider.url).toEqual(url);
-        expect(provider.path).toEqual(path);
-        expect(provider.proxy).toEqual(proxy);
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
-                } else {
-                    expect(url).toEqual(proxy.getURL('http://example.invalid/default_map/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
-
-                    // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-                }
-            };
-
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(proxy.getURL('http://example.invalid/default_map/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
-
-                // Just return any old image.
-                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
-            };
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
     it('raises error on invalid url', function() {
         var url = 'http://invalid.localhost';
         var provider = new GoogleEarthEnterpriseMapsProvider({
