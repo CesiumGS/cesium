@@ -359,38 +359,6 @@ defineSuite([
         });
     });
 
-    it('routes requests through a proxy if one is specified', function() {
-        var url = 'http://foo.bar.invalid';
-        var mapStyle = BingMapsStyle.ROAD;
-
-        var proxy = new DefaultProxy('/proxy/');
-
-        installFakeMetadataRequest(url, mapStyle, true);
-        installFakeImageRequest();
-
-        var provider = new BingMapsImageryProvider({
-            url : url,
-            mapStyle : mapStyle,
-            proxy : proxy
-        });
-
-        expect(provider._resource._url).toEqual(url);
-        expect(provider.proxy).toEqual(proxy);
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg', {
-                g: '3031',
-                mkt: ''
-            }, true);
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
     it('raises error on invalid url', function() {
         var url = 'http://host.invalid';
         var provider = new BingMapsImageryProvider({

@@ -347,13 +347,12 @@ define([
      * A helper function to create a resource depending on whether we have a String or a Resource
      *
      * @param {Resource|String} resource A Resource or a String to use when creating a new Resource.
-     * @param {Object} options If resource is a String, these are the options passed to the Resource constructor. It is ignored otherwise.
      *
      * @returns {Resource} If resource is a String, a Resource constructed with the url and options. Otherwise the resource parameter is returned.
      *
      * @private
      */
-    Resource.createIfNeeded = function(resource, options) {
+    Resource.createIfNeeded = function(resource) {
         if (resource instanceof Resource) {
             // Keep existing request object. This function is used internally to duplicate a Resource, so that it can't
             //  be modified outside of a class that holds it (eg. an imagery or terrain provider). Since the Request objects
@@ -368,9 +367,9 @@ define([
             return resource;
         }
 
-        var args = defaultClone(options, {});
-        args.url = resource;
-        return new Resource(args);
+        return new Resource({
+            url: resource
+        });
     };
 
     defineProperties(Resource, {
@@ -848,13 +847,8 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    Resource.prototype.fetchImage = function (preferBlob, allowCrossOrigin) {
-        if (defined(allowCrossOrigin)) {
-            deprecationWarning('Resource.fetchImage.allowCrossOrigin', 'The allowCrossOrigin parameter has been deprecated and will be removed in Cesium 1.44. It no longer needs to be specified.');
-        }
-
+    Resource.prototype.fetchImage = function (preferBlob) {
         preferBlob = defaultValue(preferBlob, false);
-        allowCrossOrigin = defaultValue(allowCrossOrigin, true);
 
         checkAndResetRequest(this.request);
 
@@ -864,7 +858,7 @@ define([
         // 3. It's a blob URI
         // 4. It doesn't have request headers and we preferBlob is false
         if (!xhrBlobSupported || this.isDataUri || this.isBlobUri || (!this.hasHeaders && !preferBlob)) {
-            return fetchImage(this, allowCrossOrigin);
+            return fetchImage(this, true);
         }
 
         var blobPromise = this.fetchBlob();
@@ -907,21 +901,21 @@ define([
             });
     };
 
-    function fetchImage(resource, allowCrossOrigin) {
+    function fetchImage(resource) {
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
             var url = resource.url;
             var crossOrigin = false;
 
-            // data URIs can't have allowCrossOrigin set.
+            // data URIs can't have crossorigin set.
             if (!resource.isDataUri && !resource.isBlobUri) {
                 crossOrigin = resource.isCrossOriginUrl;
             }
 
             var deferred = when.defer();
 
-            Resource._Implementations.createImage(url, crossOrigin && allowCrossOrigin, deferred);
+            Resource._Implementations.createImage(url, crossOrigin, deferred);
 
             return deferred.promise;
         };
@@ -945,7 +939,7 @@ define([
                             request.state = RequestState.UNISSUED;
                             request.deferred = undefined;
 
-                            return fetchImage(resource, allowCrossOrigin);
+                            return fetchImage(resource);
                         }
 
                         return when.reject(e);
@@ -970,7 +964,7 @@ define([
      */
     Resource.fetchImage = function (options) {
         var resource = new Resource(options);
-        return resource.fetchImage(options.preferBlob, options.allowCrossOrigin);
+        return resource.fetchImage(options.preferBlob);
     };
 
     /**
@@ -1144,7 +1138,7 @@ define([
      *
      * @example
      * // load a data asynchronously
-     * resource.loadJsonp().then(function(data) {
+     * resource.fetchJsonp().then(function(data) {
      *     // use the loaded data
      * }).otherwise(function(error) {
      *     // an error occurred
