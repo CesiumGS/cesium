@@ -45,6 +45,7 @@ Change Log
 * Fixed animation for glTF models with missing animation targets. [#6351](https://github.com/AnalyticalGraphicsInc/cesium/pull/6351)
 * Fixed occlusion when `globe.show` is `false`. [#6374](https://github.com/AnalyticalGraphicsInc/cesium/pull/6374)
 * Fixed double-sided flag for glTF materials with `BLEND` enabled. [#6371](https://github.com/AnalyticalGraphicsInc/cesium/pull/6371)
+* Fixed crash for entities with static geometry and time-dynamic attributes [#6377](https://github.com/AnalyticalGraphicsInc/cesium/pull/6377)
 
 ### 1.43 - 2018-03-01
 
