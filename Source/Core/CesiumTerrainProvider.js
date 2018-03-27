@@ -161,7 +161,7 @@ define([
                     var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain';
                     var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
                     that._tileCredits = [
-                        new Credit('<span>' + deprecationText + '</span> <a href="' + deprecationLink + '>' + deprecationLinkText + '</a>', true)
+                        new Credit('<span>' + deprecationText + '</span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
                     ];
                     deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
                 } else {
