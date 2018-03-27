@@ -260,28 +260,6 @@ defineSuite([
     });
 
     describe('requestTileGeometry', function() {
-        it('uses the proxy if one is supplied', function() {
-            installMockGetQuadTreePacket();
-            var baseUrl = 'made/up/url';
-
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url.indexOf('/proxy/?')).toBe(0);
-
-                Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
-            };
-
-            terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-                url : baseUrl,
-                proxy : new DefaultProxy('/proxy/')
-            });
-
-            return pollToPromise(function() {
-                return terrainProvider.ready;
-            }).then(function() {
-                return terrainProvider.requestTileGeometry(0, 0, 0);
-            });
-        });
-
         it('provides GoogleEarthEnterpriseTerrainData', function() {
             installMockGetQuadTreePacket();
             Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {

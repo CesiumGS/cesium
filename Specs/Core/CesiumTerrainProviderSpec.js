@@ -509,30 +509,6 @@ defineSuite([
             });
         });
 
-        it('uses the proxy if one is supplied', function() {
-            var baseUrl = 'made/up/url';
-
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url.indexOf('/proxy/?')).toBe(0);
-
-                // Just return any old file, as long as its big enough
-                Resource._DefaultImplementations.loadWithXhr('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
-            };
-
-            returnHeightmapTileJson();
-
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl,
-                proxy : new DefaultProxy('/proxy/')
-            });
-
-            return pollToPromise(function() {
-                return terrainProvider.ready;
-            }).then(function() {
-                return terrainProvider.requestTileGeometry(0, 0, 0);
-            });
-        });
-
         it('provides HeightmapTerrainData', function() {
             Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 // Just return any old file, as long as its big enough
