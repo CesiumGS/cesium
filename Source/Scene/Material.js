@@ -539,8 +539,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -791,10 +789,8 @@ define([
             }
 
             if (uniformValue !== material._texturePaths[uniformId]) {
-                if (typeof uniformValue === 'string') {
-                    var resource = new Resource({
-                        url: uniformValue
-                    });
+                if (typeof uniformValue === 'string' || uniformValue instanceof Resource) {
+                    var resource = Resource.createIfNeeded(uniformValue);
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
                         promise = loadKTX(resource);
@@ -967,7 +963,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
+            } else if (type === 'string' || uniformValue instanceof Resource ||uniformValue instanceof HTMLCanvasElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {

@@ -1,7 +1,7 @@
 defineSuite([
         'Renderer/freezeRenderState'
-      ], function(
-          freezeRenderState) {
+    ], function(
+        freezeRenderState) {
     'use strict';
 
     it('works as expected', function() {

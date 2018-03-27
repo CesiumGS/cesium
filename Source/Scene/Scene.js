@@ -291,6 +291,10 @@ define([
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
+        this._logDepthBuffer = undefined;
+        this._logDepthBufferDirty = true;
+        this.logarithmicDepthBuffer = context.fragmentDepth;
+
         this._tweens = new TweenCollection();
 
         this._shaderFrameCount = 0;
@@ -459,6 +463,7 @@ define([
          * @default 1.0
          */
         this.morphTime = 1.0;
+
         /**
          * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
          *
@@ -466,6 +471,13 @@ define([
          * @default 1000.0
          */
         this.farToNearRatio = 1000.0;
+
+        /**
+         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer. The default is 1e9.
+         * @type {Number}
+         * @default 1e9
+         */
+        this.logarithmicDepthFarToNearRatio = 1e9;
 
         /**
          * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
@@ -691,9 +703,16 @@ define([
 
         var camera = new Camera(this);
         this._camera = camera;
-        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
+
+        if (this._logDepthBuffer) {
+            this._camera.frustum.near = 0.1;
+            this._camera.frustum.far = 10000000000.0;
+        }
+
+        this._cameraClone = Camera.clone(camera);
+        this._frustumChanged = true;
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -765,15 +784,17 @@ define([
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
-        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList, false, undefined);
+        var farToNearRatio = this._logDepthBuffer ? this.logarithmicDepthFarToNearRatio : this.farToNearRatio;
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        updateFrustums(near, far, farToNearRatio, numFrustums, this._logDepthBuffer, this._frustumCommandsList, false, undefined);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
     }
 
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
+    var OPAQUE_FRUSTUM_NEAR_OFFSET;
 
     function updateGlobeListeners(scene, globe) {
         for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
@@ -783,8 +804,8 @@ define([
 
         var removeGlobeCallbacks = [];
         if (defined(globe)) {
-            removeGlobeCallbacks.push(globe.tileLoadedEvent.addEventListener(requestRenderAfterFrame(scene)));
             removeGlobeCallbacks.push(globe.imageryLayersUpdatedEvent.addEventListener(requestRenderAfterFrame(scene)));
+            removeGlobeCallbacks.push(globe.terrainProviderChanged.addEventListener(requestRenderAfterFrame(scene)));
         }
         scene._removeGlobeCallbacks = removeGlobeCallbacks;
     }
@@ -1372,6 +1393,25 @@ define([
         },
 
         /**
+         * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
+         * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
+         */
+        logarithmicDepthBuffer : {
+            get : function() {
+                return this._logDepthBuffer;
+            },
+            set : function(value) {
+                value = this._context.fragmentDepth && value;
+                if (this._logDepthBuffer !== value) {
+                    this._logDepthBuffer = value;
+                    this._logDepthBufferDirty = true;
+
+                    OPAQUE_FRUSTUM_NEAR_OFFSET = this._logDepthBuffer ? 0.9 : 0.9999;
+                }
+            }
+        },
+
+        /**
          * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
          * is unsupported.
          * @memberof Scene.prototype
@@ -1441,18 +1481,42 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if (command.dirty && defined(derivedCommands)) {
+        if ((scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
+
+            var frustum = scene.camera.frustum;
+            var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+            var logDepthCommand;
+            var logDepthDerivedCommands;
+            if (useLogDepth) {
+                derivedCommands.logDepth = createLogDepthCommand(command, context, derivedCommands.logDepth);
+                logDepthCommand = derivedCommands.logDepth.logDepthCommand;
+                logDepthDerivedCommands = logDepthCommand.derivedCommands;
+            } else {
+                derivedCommands.logDepth = undefined;
+            }
+
+            if (scene.frameState.passes.pick) {
+                return;
+            }
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+                if (useLogDepth) {
+                    logDepthDerivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, logDepthCommand, shadowsDirty, context, logDepthDerivedCommands.shadows);
+                }
+            }
+
+            if (useLogDepth) {
+                command = logDepthCommand;
+                derivedCommands = logDepthDerivedCommands;
             }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
                 if (lightShadowsEnabled && command.receiveShadows) {
                     derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
-                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
@@ -1521,7 +1585,7 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, nearToFarDistance2D) {
+    function updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, nearToFarDistance2D) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
             var curNear;
@@ -1529,7 +1593,10 @@ define([
 
             if (!is2D) {
                 curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-                curFar = Math.min(far, farToNearRatio * curNear);
+                curFar = farToNearRatio * curNear;
+                if (!logDepth) {
+                    curFar = Math.min(far, curFar);
+                }
             } else {
                 curNear = Math.min(far - nearToFarDistance2D, near + m * nearToFarDistance2D);
                 curFar = Math.min(far, curNear + nearToFarDistance2D);
@@ -1550,9 +1617,7 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        if (!scene.frameState.passes.pick) {
-            updateDerivedCommands(scene, command);
-        }
+        updateDerivedCommands(scene, command);
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
@@ -1724,15 +1789,16 @@ define([
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var is2D = scene.mode === SceneMode.SCENE2D;
-        var farToNearRatio = scene.farToNearRatio;
-
+        var logDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
+        var farToNearRatio = logDepth ? scene.logarithmicDepthFarToNearRatio : scene.farToNearRatio;
         var numFrustums;
+
         if (!is2D) {
             // The multifrustum for 3D/CV is non-uniformly distributed.
             numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         } else {
             // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
-            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // the camera is moved to just before the frustum and the frustum depth is scaled
             // to be in [1.0, nearToFarDistance2D].
             far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
             near = Math.min(near, far);
@@ -1740,8 +1806,8 @@ define([
         }
 
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-                (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))) {
-            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
+               (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8))))))) {
+            updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
 
@@ -1950,6 +2016,10 @@ define([
             debugShowBoundingVolume(command, scene, passState, debugFramebuffer);
         }
 
+        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+            command = command.derivedCommands.logDepth.logDepthCommand;
+        }
+
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
             return;
@@ -2129,6 +2199,8 @@ define([
 
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                globeDepth.update(context, passState);
+                globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -2729,10 +2801,11 @@ define([
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
+            var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
-            scene._depthPlane.update(frameState);
+            scene._depthPlane.update(frameState, useLogDepth);
         }
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
@@ -2880,7 +2953,10 @@ define([
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
 
-            postProcess.update(context);
+            var camera = scene.camera;
+            var useLogDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
+
+            postProcess.update(context, useLogDepth);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
@@ -3101,6 +3177,10 @@ define([
 
         if (defined(scene.globe)) {
             scene.globe.endFrame(frameState);
+
+            if (!scene.globe.tilesLoaded) {
+                scene._renderRequested = true;
+            }
         }
 
         frameState.creditDisplay.endFrame();
@@ -3137,8 +3217,10 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
+        this._frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
+
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
@@ -3147,17 +3229,21 @@ define([
         if (shouldRender) {
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
+            this._logDepthBufferDirty = false;
 
             // Render
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, time, render);
-            this._postRender.raiseEvent(this, time);
 
             RequestScheduler.update();
         }
 
         updateDebugShowFramesPerSecond(this, shouldRender);
         callAfterRenderFunctions(this);
+
+        if (shouldRender) {
+            this._postRender.raiseEvent(this, time);
+        }
     };
 
     /**
@@ -3435,6 +3521,118 @@ define([
         } else {
             result.depthOnlyCommand.shaderProgram = shader;
             result.depthOnlyCommand.renderState = renderState;
+        }
+
+        return result;
+    }
+
+    var writeLogDepthRegex = /\s+czm_writeLogDepth\(/;
+    var vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
+    var extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
+
+    function getLogDepthShaderProgram(context, shaderProgram) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'logDepth');
+        if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var vs = shaderProgram.vertexShaderSource.clone();
+            var fs = shaderProgram.fragmentShaderSource.clone();
+
+            vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
+            vs.defines.push('LOG_DEPTH');
+            fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
+            fs.defines.push('LOG_DEPTH');
+
+            var i;
+            var logMain;
+            var writesLogDepth = false;
+            var sources = vs.sources;
+            var length = sources.length;
+            for (i = 0; i < length; ++i) {
+                if (vertexlogDepthRegex.test(sources[i])) {
+                    writesLogDepth = true;
+                    break;
+                }
+            }
+
+            if (!writesLogDepth) {
+                for (i = 0; i < length; ++i) {
+                    sources[i] = ShaderSource.replaceMain(sources[i], 'czm_log_depth_main');
+                }
+
+                logMain =
+                    '\n\n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_log_depth_main(); \n' +
+                    '    czm_vertexLogDepth(); \n' +
+                    '} \n';
+                sources.push(logMain);
+            }
+
+            var addExtension = true;
+            writesLogDepth = false;
+            sources = fs.sources;
+            length = sources.length;
+            for (i = 0; i < length; ++i) {
+                if (writeLogDepthRegex.test(sources[i])) {
+                    writesLogDepth = true;
+                }
+                if (extensionRegex.test(sources[i])) {
+                    addExtension = false;
+                }
+            }
+
+            var logSource = '';
+            if (addExtension) {
+                logSource +=
+                    '#ifdef GL_EXT_frag_depth \n' +
+                    '#extension GL_EXT_frag_depth : enable \n' +
+                    '#endif \n\n';
+            }
+
+            if (!writesLogDepth) {
+                for (i = 0; i < length; i++) {
+                    sources[i] = ShaderSource.replaceMain(sources[i], 'czm_log_depth_main');
+                }
+
+                logSource +=
+                    '\n' +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_log_depth_main(); \n' +
+                    '    czm_writeLogDepth(); \n' +
+                    '} \n';
+            }
+
+            sources.push(logSource);
+
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'logDepth', {
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        return shader;
+    }
+
+    function createLogDepthCommand(command, context, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shader;
+        if (defined(result.logDepthCommand)) {
+            shader = result.logDepthCommand.shaderProgram;
+        }
+
+        result.logDepthCommand = DrawCommand.shallowClone(command, result.logDepthCommand);
+
+        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+            result.logDepthCommand.shaderProgram = getLogDepthShaderProgram(context, command.shaderProgram);
+            result.shaderProgramId = command.shaderProgram.id;
+        } else {
+            result.logDepthCommand.shaderProgram = shader;
         }
 
         return result;
@@ -3823,8 +4021,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -7,12 +7,12 @@ defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/DistanceDisplayCondition',
-        'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/OrthographicOffCenterFrustum',
         'Core/PerspectiveFrustum',
         'Core/Rectangle',
+        'Core/Resource',
         'Scene/Billboard',
         'Scene/BlendOption',
         'Scene/HeightReference',
@@ -32,12 +32,12 @@ defineSuite([
         CesiumTerrainProvider,
         Color,
         DistanceDisplayCondition,
-        loadImage,
         CesiumMath,
         NearFarScalar,
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
         Rectangle,
+        Resource,
         Billboard,
         BlendOption,
         HeightReference,
@@ -66,16 +66,16 @@ defineSuite([
         camera = scene.camera;
 
         return when.join(
-            loadImage('./Data/Images/Green2x2.png').then(function(result) {
+            Resource.fetchImage('./Data/Images/Green2x2.png').then(function(result) {
                 greenImage = result;
             }),
-            loadImage('./Data/Images/Blue2x2.png').then(function(result) {
+            Resource.fetchImage('./Data/Images/Blue2x2.png').then(function(result) {
                 blueImage = result;
             }),
-            loadImage('./Data/Images/White2x2.png').then(function(result) {
+            Resource.fetchImage('./Data/Images/White2x2.png').then(function(result) {
                 whiteImage = result;
             }),
-            loadImage('./Data/Images/Blue10x10.png').then(function(result) {
+            Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
                 largeBlueImage = result;
             }));
     });
@@ -1401,7 +1401,7 @@ defineSuite([
         var expected = BoundingSphere.fromPoints(projectedPositions);
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
-        expect(actual.radius).toBeGreaterThan(expected.radius);
+        expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
     });
 
     it('computes bounding sphere in 2D', function() {

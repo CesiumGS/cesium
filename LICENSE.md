@@ -1,4 +1,4 @@
-Copyright 2011-2017 Cesium Contributors
+Copyright 2011-2018 CesiumJS Contributors
 
                                  Apache License
                            Version 2.0, January 2004
@@ -188,7 +188,7 @@ Copyright 2011-2017 Cesium Contributors
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2011-2017 Cesium Contributors
+   Copyright 2011-2018 CesiumJS Contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -207,7 +207,7 @@ Patents 9153063 and 9865085
 Third-Party Code
 ================
 
-Cesium includes the following third-party code.
+CesiumJS includes the following third-party code.
 
 ### Sean O'Neil
 
@@ -670,10 +670,54 @@ https://github.com/KhronosGroup/glTF-WebGL-PBR
 >CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 >OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+### Draco
+
+https://github.com/google/draco
+
+>Licensed under the Apache License, Version 2.0 (the "License"); you may not
+>use this file except in compliance with the License. You may obtain a copy of
+>the License at
+>
+><http://www.apache.org/licenses/LICENSE-2.0>
+>
+>Unless required by applicable law or agreed to in writing, software
+>distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+>WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+>License for the specific language governing permissions and limitations under
+>the License.
+
+### JSXSS
+
+https://github.com/leizongmin/js-xss
+
+> Copyright (c) 2012-2017 Zongmin Lei(雷宗民) <leizongmin@gmail.com>
+> http://ucdok.com
+> 
+> The MIT License
+> 
+> Permission is hereby granted, free of charge, to any person obtaining
+> a copy of this software and associated documentation files (the
+> "Software"), to deal in the Software without restriction, including
+> without limitation the rights to use, copy, modify, merge, publish,
+> distribute, sublicense, and/or sell copies of the Software, and to
+> permit persons to whom the Software is furnished to do so, subject to
+> the following conditions:
+> 
+> The above copyright notice and this permission notice shall be
+> included in all copies or substantial portions of the Software.
+> 
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+> EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+> MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+> NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+> LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+> OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+> WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 Tests
 =====
 
-The Cesium tests use the following third-party libraries and data.
+The CesiumJS tests use the following third-party libraries and data.
 
 ### Jasmine
 
@@ -688,10 +732,10 @@ Copyright (c) 2008-2014 Pivotal Labs
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-Cesium Documentation
+CesiumJS Documentation
 ====================
 
-The Cesium documentation files include the following third-party content.
+The CesiumJS documentation files include the following third-party content.
 
 ### Source Sans Pro (Font)
 
@@ -703,7 +747,7 @@ Source® Sans Pro, Adobe's first open source typeface family, was designed by Pa
 Example Applications
 ====================
 
-The Cesium example applications include the following third-party libraries and data.
+The CesiumJS example applications include the following third-party libraries and data.
 
 ### Dojo Toolkit
 
@@ -734,6 +778,19 @@ http://codemirror.net/
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 >
 > Please note that some subdirectories of the CodeMirror distribution include their own LICENSE files, and are released under different licences.
+
+### clipboard.js
+
+https://clipboardjs.com/
+
+> The MIT License (MIT)
+> Copyright © 2018 Zeno Rocha <hi@zenorocha.com>
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### JSHint
 

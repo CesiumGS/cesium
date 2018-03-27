@@ -7,11 +7,11 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/loadImage',
         '../Core/Math',
         '../Core/PixelFormat',
-        '../Core/destroyObject',
+        '../Core/Resource',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
@@ -32,11 +32,11 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
-        loadImage,
         CesiumMath,
         PixelFormat,
-        destroyObject,
+        Resource,
         PassState,
         PixelDatatype,
         RenderState,
@@ -145,6 +145,9 @@ define([
             name = createGuid();
         }
         this._name = name;
+
+        this._logDepthChanged = undefined;
+        this._useLogDepth = undefined;
 
         this._selectedIdTexture = undefined;
         this._selectedFeatures = undefined;
@@ -350,9 +353,8 @@ define([
 
     function getUniformValueGetterAndSetter(stage, uniforms, name) {
         var currentValue = uniforms[name];
-        var newType = typeof currentValue;
-        if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
-            newType === HTMLVideoElement || newType === ImageData) {
+        if (typeof currentValue === 'string' || currentValue instanceof HTMLCanvasElement || currentValue instanceof HTMLImageElement ||
+            currentValue instanceof HTMLVideoElement || currentValue instanceof ImageData) {
             stage._dirtyUniforms.push(name);
         }
 
@@ -372,13 +374,12 @@ define([
                     delete actualUniforms[name + 'Dimensions'];
                 }
 
-                if (typeof currentValue === Texture) {
+                if (currentValue instanceof Texture) {
                     stage._texturesToRelease.push(currentValue);
                 }
 
-                var newType = typeof value;
-                if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
-                    newType === HTMLVideoElement || newType === ImageData) {
+                if (typeof value === 'string' || value instanceof HTMLCanvasElement || value instanceof HTMLImageElement ||
+                    value instanceof HTMLVideoElement || value instanceof ImageData) {
                     stage._dirtyUniforms.push(name);
                 } else {
                     actualUniforms[name] = value;
@@ -464,7 +465,7 @@ define([
     }
 
     function createDrawCommand(stage, context) {
-        if (defined(stage._command) && !stage._selectedFeaturesDirty) {
+        if (defined(stage._command) && !stage._logDepthChanged && !stage._selectedFeaturesDirty) {
             return;
         }
 
@@ -500,7 +501,11 @@ define([
                 fs;
         }
 
-        stage._command = context.createViewportQuadCommand(fs, {
+        var fragmentShader = new ShaderSource({
+            defines : [stage._useLogDepth ? 'LOG_DEPTH' : ''],
+            sources : [fs]
+        });
+        stage._command = context.createViewportQuadCommand(fragmentShader, {
             uniformMap : stage._uniformMap,
             owner : stage
         });
@@ -592,7 +597,10 @@ define([
             if (defined(stageWithName)) {
                 stage._actualUniforms[name] = createStageOutputTextureFunction(stage, stageNameOrUrl);
             } else {
-                promises.push(loadImage(stageNameOrUrl).then(createLoadImageFunction(stage, name)));
+                var resource = new Resource({
+                    url : stageNameOrUrl
+                });
+                promises.push(resource.fetchImage().then(createLoadImageFunction(stage, name)));
             }
         }
 
@@ -760,7 +768,7 @@ define([
      * @param {Context} context The context.
      * @private
      */
-    PostProcessStage.prototype.update = function(context) {
+    PostProcessStage.prototype.update = function(context, useLogDepth) {
         if (this.enabled !== this._enabled && !this.enabled) {
             releaseResources(this);
         }
@@ -769,6 +777,9 @@ define([
         if (!this._enabled) {
             return;
         }
+
+        this._logDepthChanged = useLogDepth !== this._useLogDepth;
+        this._useLogDepth = useLogDepth;
 
         this._selectedFeaturesDirty = isSelectedTextureDirty(this);
         this._selectedFeaturesShadow = this._selectedFeatures;

@@ -238,6 +238,21 @@ define([
             }
         },
         /**
+         * Returns <code>true</code> when the tile load queue is empty, <code>false</code> otherwise.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.
+         * @memberof Globe.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        tilesLoaded: {
+            get: function() {
+                if (!defined(this._surface)) {
+                    return true;
+                }
+                return (this._surface.tileProvider.ready && this._surface._tileLoadQueueHigh.length === 0 && this._surface._tileLoadQueueMedium.length === 0 && this._surface._tileLoadQueueLow.length === 0);
+            }
+        },
+        /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof Globe.prototype
          * @type {Color}
@@ -251,7 +266,7 @@ define([
             }
         },
         /**
-         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane. Clipping planes are not currently supported in Internet Explorer.
+         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
          *
          * @memberof Globe.prototype
          * @type {ClippingPlaneCollection}
@@ -678,8 +693,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

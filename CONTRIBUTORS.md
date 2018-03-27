@@ -1,4 +1,4 @@
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to CesiumJS.  The following people have contributed to CesiumJS, under the following agreements:
 
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
 
@@ -73,6 +73,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Dave Whipps](https://github.com/dwhipps)
 * [Geoscan](https://www.geoscan.aero)
    * [Andrey Orlov](https://github.com/AndreyOrlov)
+   * [George Vinokhodov](https://github.com/Vineg)
 * [The Imagineers](https://www.theimagineers.com/)
    * [Heerco Grond](https://github.com/HeercoGrond)
 * [Camptocamp SA](https://www.camptocamp.com/)
@@ -91,6 +92,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [William Wall](https://github.com/wallw-bits)
 * [virtualcitySYSTEMS GmbH](https://www.virtualcitysystems.de)
    * [Jannes Bolling](https://github.com/jbo023)
+   * [Arne Schilling](https://github.com/arneschilling)
 * [Logilab](https://www.logilab.fr/)
    * [Florent Cayré](https://github.com/fcayre/)
 * [webiks](https://www.webiks.com)
@@ -170,3 +172,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Cody Guldner](https://github.com/burn123)
 * [Nacho Carnicero](https://github.com/nacho-carnicero)
 * [Y.Selim Abidin](https://github.com/SelimAbidin)
+* [Tamar Cohen](https://github.com/tamarmot)
+* [Stephen Wiseman](https://github.com/srwiseman)
+* [Gabriel Macario](https://github.com/gabriel-macario)

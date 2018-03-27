@@ -2574,10 +2574,13 @@ define([
     var scratchProj = new Cartesian3();
 
     /**
-     * Return the distance from the camera to the front of the bounding sphere.
+     * Return the signed distance from the camera to the front of the bounding sphere.
+     * <p>
+     * Positive values indicate that the bounding sphere is in the positive half-plane of the camera position and view direction while a negative value indicates it is in the negative half-plane.
+     * </p>
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
-     * @returns {Number} The distance to the bounding sphere.
+     * @returns {Number} The signed distance to the bounding sphere.
      */
     Camera.prototype.distanceToBoundingSphere = function(boundingSphere) {
         //>>includeStart('debug', pragmas.debug);
@@ -2587,8 +2590,10 @@ define([
         //>>includeEnd('debug');
 
         var toCenter = Cartesian3.subtract(this.positionWC, boundingSphere.center, scratchToCenter);
-        var proj = Cartesian3.multiplyByScalar(this.directionWC, Cartesian3.dot(toCenter, this.directionWC), scratchProj);
-        return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+        var distance = -Cartesian3.dot(toCenter, this.directionWC);
+        var proj = Cartesian3.multiplyByScalar(this.directionWC, distance, scratchProj);
+        var unsignedDistance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+        return distance < 0.0 ? -unsignedDistance : unsignedDistance;
     };
 
     var scratchPixelSize = new Cartesian2();
@@ -2615,6 +2620,9 @@ define([
         //>>includeEnd('debug');
 
         var distance = this.distanceToBoundingSphere(boundingSphere);
+        if (distance < 0.0) {
+            return 0.0;
+        }
         var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
         return Math.max(pixelSize.x, pixelSize.y);
     };
@@ -3229,6 +3237,7 @@ define([
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
         result._transformChanged = true;
+        result.frustum = camera.frustum.clone();
 
         return result;
     };

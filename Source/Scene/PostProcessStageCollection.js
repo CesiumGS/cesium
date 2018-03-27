@@ -161,13 +161,18 @@ define([
          * </p>
          * <p>
          * <code>intensity</code> is a scalar value used to lighten or darken the shadows exponentially. Higher values make the shadows darker. The default value is <code>3.0</code>.
+         *
          * <code>bias</code> is a scalar value representing an angle in radians. If the dot product between the normal of the sample and the vector to the camera is less than this value,
          * sampling stops in the current direction. This is used to remove shadows from near planar edges. The default value is <code>0.1</code>.
+         *
          * <code>lengthCap</code> is a scalar value representing a length in meters. If the distance from the current sample to first sample is greater than this value,
          * sampling stops in the current direction. The default value is <code>0.26</code>.
+         *
          * <code>stepSize</code> is a scalar value indicating the distance to the next texel sample in the current direction. The default value is <code>1.95</code>.
+         *
          * <code>frustumLength</code> is a scalar value in meters. If the current fragment has a distance from the camera greater than this value, ambient occlusion is not computed for the fragment.
          * The default value is <code>1000.0</code>.
+         *
          * <code>ambientOcclusionOnly</code> is a boolean value. When <code>true</code>, only the shadows generated are written to the output. When <code>false</code>, the input texture is modulated
          * with the ambient occlusion. This is a useful debug option for seeing the effects of changing the uniform values. The default value is <code>false</code>.
          * </p>
@@ -199,8 +204,10 @@ define([
          * </p>
          * <p>
          * <code>contrast</code> is a scalar value in the range [-255.0, 255.0] and affects the contract of the effect. The default value is <code>128.0</code>.
+         *
          * <code>brightness</code> is a scalar value. The input texture RGB value is converted to hue, saturation, and brightness (HSB) then this value is
          * added to the brightness. The default value is <code>-0.3</code>.
+         *
          * <code>glowOnly</code> is a boolean value. When <code>true</code>, only the glow effect will be shown. When <code>false</code>, the glow will be added to the input texture.
          * The default value is <code>false</code>. This is a debug option for viewing the effects when changing the other uniform values.
          * </p>
@@ -431,7 +438,7 @@ define([
      *
      * @private
      */
-    PostProcessStageCollection.prototype.update = function(context) {
+    PostProcessStageCollection.prototype.update = function(context, useLogDepth) {
         removeStages(this);
 
         var activeStages = this._activeStages;
@@ -497,13 +504,13 @@ define([
 
         this._textureCache.update(context);
 
-        fxaa.update(context);
-        ao.update(context);
-        bloom.update(context);
+        fxaa.update(context, useLogDepth);
+        ao.update(context, useLogDepth);
+        bloom.update(context, useLogDepth);
 
         length = stages.length;
         for (i = 0; i < length; ++i) {
-            stages[i].update(context);
+            stages[i].update(context, useLogDepth);
         }
     };
 

@@ -30,21 +30,14 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProviderViewModels : [], //Disable terrain changing
-    infoBox : false, //Disable InfoBox widget
-    selectionIndicator : false, //Disable selection indicator
-    shouldAnimate : true // Enable animations
+    infoBox: false, //Disable InfoBox widget
+    selectionIndicator: false, //Disable selection indicator
+    shouldAnimate: true, // Enable animations
+    terrainProvider: Cesium.createWorldTerrain()
 });
 
 //Enable lighting based on sun/moon positions
 viewer.scene.globe.enableLighting = true;
-
-//Use STK World Terrain
-viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask : true,
-    requestVertexNormals : true
-});
 
 //Enable depth testing so things behind the terrain disappear.
 viewer.scene.globe.depthTestAgainstTerrain = true;

@@ -14,7 +14,7 @@
    * Recommended Git settings:
       * `git config --global pull.rebase preserve` - when pulling remote changes, rebase your local changes on top of the remote changes, to avoid unnecessary merge commits.
       * `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
-* Have [commit access](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/CommittersGuide/README.md) to cesium?
+* Have [commit access](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
    * No
       * Fork [cesium](https://github.com/AnalyticalGraphicsInc/cesium).
       * Use the [GitHub website](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) to delete all branches in your fork except `master`.
@@ -118,7 +118,7 @@ Here's the full set of scripts and what they do.
       * `test-webgl-validation` - Runs all tests with Karma and enables low-level WebGL validation.
       * `test-release` - Runs all tests on the minified release version of built Cesium.
    * **Deployment scripts**
-      * `deploy-s3` - Deploys the built cesium files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying.
+      * `deploy-s3` - Deploys the built CesiumJS files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying.
       * `deploy-status` - Set the deployment statuses in GitHub, for use with Travis.
       * `deploy-set-version` - Sets the version of `package.json`, for use with Travis.
 
@@ -130,7 +130,7 @@ Travis triggers a build whenever someone opens a pull request or pushes code to 
 
 ![Checks](checks_failed.jpg)
 
-You can also access the build of any branch of cesium by going to the [Cesium Branches](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) page, and clicking the icon next to the branch name.
+You can also access the build of any branch of CesiumJS by going to the [Cesium Branches](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) page, and clicking the icon next to the branch name.
 
 ![Branches](branches.png)
 

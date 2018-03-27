@@ -37,19 +37,20 @@ vec3 getNormalXEdge(vec3 posInCamera, float depthU, float depthD, float depthL, 
 
 void main(void)
 {
-    float depth = texture2D(depthTexture, v_textureCoordinates).r;
+    float depth = czm_readDepth(depthTexture, v_textureCoordinates);
     vec4 posInCamera = clipToEye(v_textureCoordinates, depth);
 
-    if (posInCamera.z > frustumLength) {
+    if (posInCamera.z > frustumLength)
+    {
         gl_FragColor = vec4(1.0);
         return;
     }
 
     vec2 pixelSize = 1.0 / czm_viewport.zw;
-    float depthU = texture2D(depthTexture, v_textureCoordinates- vec2(0.0, pixelSize.y)).r;
-    float depthD = texture2D(depthTexture, v_textureCoordinates+ vec2(0.0, pixelSize.y)).r;
-    float depthL = texture2D(depthTexture, v_textureCoordinates- vec2(pixelSize.x, 0.0)).r;
-    float depthR = texture2D(depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0)).r;
+    float depthU = czm_readDepth(depthTexture, v_textureCoordinates- vec2(0.0, pixelSize.y));
+    float depthD = czm_readDepth(depthTexture, v_textureCoordinates+ vec2(0.0, pixelSize.y));
+    float depthL = czm_readDepth(depthTexture, v_textureCoordinates- vec2(pixelSize.x, 0.0));
+    float depthR = czm_readDepth(depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0));
     vec3 normalInCamera = getNormalXEdge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize);
 
     float ao = 0.0;
@@ -88,7 +89,7 @@ void main(void)
                 break;
             }
 
-            float stepDepthInfo = texture2D(depthTexture, newCoords).r;
+            float stepDepthInfo = czm_readDepth(depthTexture, newCoords);
             vec4 stepPosInCamera = clipToEye(newCoords, stepDepthInfo);
             vec3 diffVec = stepPosInCamera.xyz - posInCamera.xyz;
             float len = length(diffVec);

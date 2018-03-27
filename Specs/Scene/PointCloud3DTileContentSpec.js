@@ -1,6 +1,5 @@
 defineSuite([
         'Core/Cartesian3',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/defined',
@@ -9,10 +8,11 @@ defineSuite([
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
-        'Core/Plane',
         'Core/Transforms',
         'Renderer/Pass',
         'Scene/Cesium3DTileStyle',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
@@ -20,7 +20,6 @@ defineSuite([
         'ThirdParty/when'
     ], 'Scene/PointCloud3DTileContent', function(
         Cartesian3,
-        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defined,
@@ -29,10 +28,11 @@ defineSuite([
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
-        Plane,
         Transforms,
         Pass,
         Cesium3DTileStyle,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Expression,
         Cesium3DTilesTester,
         createCanvas,
@@ -441,11 +441,12 @@ defineSuite([
         });
     });
 
-    var noAttenuationPixelCount = 16;
+    var noAttenuationPixelCount;
     function attenuationTest(postLoadCallback) {
         var scene = createScene({
             canvas : createCanvas(10, 10)
         });
+        noAttenuationPixelCount = scene.logarithmicDepthBuffer ? 20 : 16;
         var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
         scene.fxaa = false;
@@ -490,19 +491,6 @@ defineSuite([
             tileset.pointCloudShading.geometricErrorScale = 1.0;
             tileset.pointCloudShading.maximumAttenuation = 1;
             tileset.pointCloudShading.baseResolution = undefined;
-            tileset.maximumScreenSpaceError = 16;
-            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
-                expect(pixelCount).toEqual(noAttenuationPixelCount);
-            });
-        });
-    });
-
-    it('modulates attenuation using the baseResolution parameter', function() {
-        return attenuationTest(function(scene, tileset) {
-            tileset.pointCloudShading.attenuation = true;
-            tileset.pointCloudShading.geometricErrorScale = 1.0;
-            tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = CesiumMath.EPSILON20;
             tileset.maximumScreenSpaceError = 16;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toEqual(noAttenuationPixelCount);
@@ -827,47 +815,47 @@ defineSuite([
         });
     });
 
-    it('Updates clipping planes when clipping planes are enabled', function () {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var content = tileset._root.content;
-
-            expect(content._packedClippingPlanes).toBeDefined();
-            expect(content._packedClippingPlanes.length).toBe(0);
-            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
-
-            tileset.clippingPlanes = new ClippingPlaneCollection({
-                planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
-                ]
-            });
-
-            content.update(tileset, scene.frameState);
-
-            expect(content._packedClippingPlanes.length).toBe(1);
-            expect(content._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
-        });
-    });
-
-    it('Does not update clipping planes when tile is not clipped', function () {
+    it('Rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var tile = tileset._root;
-            tile._isClipped = false;
+            tile._isClipped = true;
             var content = tile.content;
 
-            expect(content._packedClippingPlanes).toBeDefined();
-            expect(content._packedClippingPlanes.length).toBe(0);
-            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+            var noClipFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(noClipFS.includes('clip')).toBe(false);
 
-            tileset.clippingPlanes = new ClippingPlaneCollection({
+            var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
-                    new Plane(Cartesian3.UNIT_X, 0.0)
-                ]
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                unionClippingRegions : false
             });
+            tileset.clippingPlanes = clippingPlanes;
 
-            content.update(tileset, scene.frameState);
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipOneIntersectFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipOneIntersectFS.includes('= clip(')).toBe(true);
+            expect(clipOneIntersectFS.includes('float clip')).toBe(true);
 
-            expect(content._packedClippingPlanes.length).toBe(0);
-            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+            clippingPlanes.unionClippingRegions = true;
+
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipOneUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipOneUnionFS.includes('= clip(')).toBe(true);
+            expect(clipOneUnionFS.includes('float clip')).toBe(true);
+            expect(clipOneUnionFS).not.toEqual(clipOneIntersectFS);
+
+            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 1.0));
+
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipTwoUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipTwoUnionFS.includes('= clip(')).toBe(true);
+            expect(clipTwoUnionFS.includes('float clip')).toBe(true);
+            expect(clipTwoUnionFS).not.toEqual(clipOneIntersectFS);
+            expect(clipTwoUnionFS).not.toEqual(clipOneUnionFS);
         });
     });
 
@@ -878,7 +866,7 @@ defineSuite([
                 color = rgba;
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
@@ -901,7 +889,7 @@ defineSuite([
                 color = rgba;
             });
 
-            var clipPlane = new Plane(Cartesian3.UNIT_Z, -10.0);
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10.0);
             tileset.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
@@ -915,7 +903,10 @@ defineSuite([
         });
     });
 
-    it('clipping planes union regions', function() {
+    it('clipping planes union regions (Uint8)', function() {
+        // Force uint8 mode - there's a slight rendering difference between
+        // float and packed uint8 clipping planes for this test due to the small context
+        spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -924,8 +915,36 @@ defineSuite([
 
             tileset.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
-                    new Plane(Cartesian3.UNIT_Z, -10.0),
-                    new Plane(Cartesian3.UNIT_X, 0.0)
+                    new ClippingPlane(Cartesian3.UNIT_Z, 0.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
+                unionClippingRegions: true
+            });
+
+            expect(scene).notToRender(color);
+
+            tileset.clippingPlanes.unionClippingRegions = false;
+
+            expect(scene).toRender(color);
+        });
+    });
+
+    it('clipping planes union regions (Float)', function() {
+        if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            // This configuration for the test fails in uint8 mode due to the small context
+            return;
+        }
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_Z, -10.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ],
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
                 unionClippingRegions: true

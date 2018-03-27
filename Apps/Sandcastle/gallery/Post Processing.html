@@ -52,7 +52,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
 
 var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
 var url = '../../SampleData/models/CesiumMan/Cesium_Man.glb';
@@ -71,7 +73,7 @@ var viewModel = {
     brightnessValue: 0.5,
     eightBitShow: false,
     nightVisionShow: false,
-    silhouette : false
+    silhouette : true
 };
 
 Cesium.knockout.track(viewModel);

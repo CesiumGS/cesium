@@ -92,7 +92,7 @@ define([
         }
 
         // Stages not in a series depend on every stage executed before it since it could reference it as a uniform.
-        // This prevents looking at the dependencies of each stage in the composite, but might create mode framebuffers than necessary.
+        // This prevents looking at the dependencies of each stage in the composite, but might create more framebuffers than necessary.
         // In practice, there are only 2-3 stages in these composites.
         if (!inSeries) {
             for (var j = 1; j < length; ++j) {

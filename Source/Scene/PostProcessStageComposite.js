@@ -160,7 +160,7 @@ define([
             }
         },
         /**
-         * An alias to the uniform values of the post-process stages. May be <code>undefined</code>; in which case, get each stages to set uniform values.
+         * An alias to the uniform values of the post-process stages. May be <code>undefined</code>; in which case, get each stage to set uniform values.
          * @memberof PostProcessStageComposite.prototype
          * @type {Object}
          */
@@ -220,14 +220,14 @@ define([
      * @param {Context} context The context.
      * @private
      */
-    PostProcessStageComposite.prototype.update = function(context) {
+    PostProcessStageComposite.prototype.update = function(context, useLogDepth) {
         var selectedFeatures = this.selectedFeatures;
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
             var stage = stages[i];
             stage.selectedFeatures = selectedFeatures;
-            stage.update(context);
+            stage.update(context, useLogDepth);
         }
     };
 

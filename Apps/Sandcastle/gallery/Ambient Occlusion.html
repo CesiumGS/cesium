@@ -60,9 +60,13 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4'
-}));
+// Power Plant design model provided by Bentley Systems
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3837) });
+tileset.readyPromise.then(function(tileset) {
+    viewer.scene.primitives.add(tileset);
+}).otherwise(function(error) {
+    console.log(error);
+});
 
 var viewModel = {
     show : true,

@@ -21,7 +21,6 @@ define([
         '../Shaders/PostProcessStages/LinearDepth',
         '../Shaders/PostProcessStages/NightVision',
         '../Shaders/PostProcessStages/Silhouette',
-        '../Shaders/PostProcessStages/TextureOverlay',
         '../ThirdParty/Shaders/FXAA3_11',
         './PostProcessStage',
         './PostProcessStageComposite',
@@ -49,7 +48,6 @@ define([
         LinearDepth,
         NightVision,
         Silhouette,
-        TextureOverlay,
         FXAA3_11,
         PostProcessStage,
         PostProcessStageComposite,
@@ -244,7 +242,7 @@ define([
             name : 'czm_silhouette_edge_detection_' + name,
             fragmentShader : EdgeDetection,
             uniforms : {
-                length : 0.5,
+                length : 0.25,
                 color : Color.clone(Color.BLACK)
             }
         });

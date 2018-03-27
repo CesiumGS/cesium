@@ -4,8 +4,6 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
-        'Core/loadImage',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/queryToObject',
         'Core/Rectangle',
@@ -26,8 +24,6 @@ defineSuite([
         DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
-        loadImage,
-        loadWithXhr,
         CesiumMath,
         queryToObject,
         Rectangle,
@@ -49,8 +45,8 @@ defineSuite([
     });
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -145,7 +141,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
                 expect(params.something).toEqual('foo');
@@ -157,7 +153,97 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+            });
+
+        });
+    });
+
+    it('includes crs parameters in URL for WMS version 1.3.0', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            crs : 'CRS:27',
+            parameters : {
+                version: '1.3.0'
+            }
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.crs).toEqual('CRS:27');
+                expect(params.version).toEqual('1.3.0');
+
+                // Don't need to actually load image, but satisfy the request.
+                deferred.resolve(true);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+            });
+
+        });
+    });
+
+    it('disregard crs parameters in URL for WMS version 1.1.0', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            crs : 'CRS:27',
+            parameters : {
+                version: '1.1.0'
+            }
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.srs).toEqual('EPSG:4326');
+                expect(params.version).toEqual('1.1.0');
+
+                // Don't need to actually load image, but satisfy the request.
+                deferred.resolve(true);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+            });
+
+        });
+    });
+
+    it('includes srs parameters in URL for WMS version 1.1.0', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            srs : 'IAU2000:30118',
+            parameters : {
+                version: '1.1.0'
+            }
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.srs).toEqual('IAU2000:30118');
+                expect(params.version).toEqual('1.1.0');
+
+                // Don't need to actually load image, but satisfy the request.
+                deferred.resolve(true);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
             });
 
         });
@@ -198,7 +284,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
 
@@ -207,7 +293,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
             });
         });
     });
@@ -221,7 +307,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
                 expect(url).not.toContain('&&');
@@ -231,7 +317,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
             });
         });
     });
@@ -245,7 +331,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
 
@@ -259,7 +345,7 @@ defineSuite([
 
             provider.requestImage(0, 0, 0);
 
-            expect(loadImage.createImage).toHaveBeenCalled();
+            expect(Resource._Implementations.createImage).toHaveBeenCalled();
         });
     });
 
@@ -273,7 +359,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
 
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
@@ -285,7 +371,7 @@ defineSuite([
 
             provider.requestImage(0, 0, 0);
 
-            expect(loadImage.createImage).toHaveBeenCalled();
+            expect(Resource._Implementations.createImage).toHaveBeenCalled();
         });
     });
 
@@ -307,13 +393,13 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -339,7 +425,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -349,11 +435,11 @@ defineSuite([
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -382,7 +468,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -392,11 +478,11 @@ defineSuite([
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -422,7 +508,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -432,11 +518,11 @@ defineSuite([
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -465,7 +551,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -475,11 +561,11 @@ defineSuite([
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -508,7 +594,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -518,11 +604,11 @@ defineSuite([
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -551,7 +637,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -561,11 +647,11 @@ defineSuite([
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -583,7 +669,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
@@ -591,11 +677,11 @@ defineSuite([
                 expect(params.format).not.toEqual('image/jpeg');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
             });
         });
     });
@@ -628,15 +714,15 @@ defineSuite([
         }).then(function() {
             expect(provider.proxy).toEqual(proxy);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -731,10 +817,10 @@ defineSuite([
                 }, 1);
             });
 
-            loadImage.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
                 if (tries === 2) {
                     // Succeed after 2 tries
-                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
                 } else {
                     // fail
                     setTimeout(function() {
@@ -765,9 +851,9 @@ defineSuite([
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-GeoJSON.json', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-GeoJSON.json', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -791,9 +877,9 @@ defineSuite([
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -816,9 +902,9 @@ defineSuite([
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Esri.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-Esri.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -841,9 +927,9 @@ defineSuite([
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-THREDDS.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-THREDDS.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -866,9 +952,9 @@ defineSuite([
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-msGMLOutput.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-msGMLOutput.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -885,16 +971,15 @@ defineSuite([
             });
         });
 
-
         it('works with unknown XML responses', function() {
             var provider = new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server',
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Unknown.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-Unknown.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -917,9 +1002,9 @@ defineSuite([
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-ServiceException.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-ServiceException.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -1004,10 +1089,10 @@ defineSuite([
                 ]
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 expect(url).not.toContain('json');
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -1036,14 +1121,14 @@ defineSuite([
             return pollToPromise(function() {
                 return provider.ready;
             }).then(function() {
-                loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                     expect(url).toContain('GetFeatureInfo');
 
                     if (url.indexOf('json') >= 0) {
                         deferred.reject();
                     } else {
                         // this should not happen
-                        loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
+                        Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-MapInfoMXP.xml', responseType, method, data, headers, deferred, overrideMimeType);
                     }
                 };
 
@@ -1074,14 +1159,14 @@ defineSuite([
             return pollToPromise(function() {
                 return provider.ready;
             }).then(function() {
-                loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                     expect(url).toContain('GetFeatureInfo');
 
                     if (url.indexOf(encodeURIComponent('application/foo')) < 0) {
                         deferred.reject();
                     }
 
-                    return loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo-Custom.json', responseType, method, data, headers, deferred, overrideMimeType);
+                    return Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo-Custom.json', responseType, method, data, headers, deferred, overrideMimeType);
                 };
 
                 return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(features) {
@@ -1097,12 +1182,12 @@ defineSuite([
                 layers : 'someLayer'
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('GetFeatureInfo');
                 if (url.indexOf(encodeURIComponent('text/html')) < 0) {
                     deferred.reject();
                 }
-                loadWithXhr.defaultLoad('Data/WMS/GetFeatureInfo.html', responseType, method, data, headers, deferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr('Data/WMS/GetFeatureInfo.html', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
