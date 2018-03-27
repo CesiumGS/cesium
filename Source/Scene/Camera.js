@@ -3253,6 +3253,7 @@ define([
         orientation : new HeadingPitchRoll()
     };
     var scratchClampedValue = new Cartesian3();
+    var scratchDirectionAndNearFrustum = new Cartesian3();
 
     /**
      * @private
@@ -3268,11 +3269,19 @@ define([
 
         // solving for positionWC because there's a bug where WC is incorrect in 2D and CV mode
         scratchClampedValue = this._projection.ellipsoid.cartographicToCartesian(this._positionCartographic);
-        scratchViewOptions.destination = this.boundingObject.clampToBounds(scratchClampedValue, scratchClampedValue);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            scratchViewOptions.destination = this.boundingObject.clampToBounds(scratchClampedValue, scratchClampedValue);
+        } else {
+            // if orthographic view center of screen = camera.position + camera.direction * camera.frustum.near
+            scratchDirectionAndNearFrustum = Cartesian3.multiplyByScalar(this.direction, this.frustum.near, scratchDirectionAndNearFrustum);
+            scratchClampedValue = Cartesian3.add(scratchClampedValue, scratchDirectionAndNearFrustum, scratchClampedValue);
+            scratchClampedValue = this.boundingObject.clampToBounds(scratchClampedValue, scratchClampedValue);
+            scratchClampedValue = Cartesian3.subtract(scratchClampedValue, scratchDirectionAndNearFrustum, scratchClampedValue);
+            scratchViewOptions.destination = Cartesian3.clone(scratchClampedValue, scratchViewOptions.destination);
+        }
 
         this.setView(scratchViewOptions);
-
-        return scratchViewOptions.destination;
     };
 
     /**
