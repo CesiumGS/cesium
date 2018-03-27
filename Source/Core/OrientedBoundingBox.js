@@ -42,8 +42,8 @@ define([
      *
      * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
      * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
-     *                                          Equivalently, the transformation matrix, to rotate and scale a 0x0x0
-     *                                          cube centered at the origin.
+     *                                          Equivalently, the transformation matrix, to rotate and scale a cube (by default 0x0x0)
+     *                                          centered at the origin.
      *
      *
      * @example
@@ -415,6 +415,41 @@ define([
 
         Cartesian3.clone(box.center, result.center);
         Matrix3.clone(box.halfAxes, result.halfAxes);
+
+        return result;
+    };
+
+    var scratchMatrix = new Matrix3();
+    var scratchCartesian = new Cartesian3();
+
+    /**
+     * If the given position is not already within the box, clamps the given position onto the surface of the box.
+     * @param {Cartesian3} position The position being projected onto this OrientedBoundingBox.
+     * @param {Cartesian3} result The object onto which to store the result.
+     * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the OrientedBoundingBox.
+     */
+    OrientedBoundingBox.prototype.clampToBounds = function(position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('position', position);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+        result = Cartesian3.clone(position, result);
+
+        if (this.halfAxes.equals(Matrix3.ZERO)) {
+            result = Cartesian3.clone(this.center, result);
+            return result;
+        }
+
+        var inverseTransformationMatrix = Matrix3.inverse(this.halfAxes, scratchMatrix);
+        result = Cartesian3.subtract(result, this.center, result); // remove translation
+        result = Matrix3.multiplyByVector(inverseTransformationMatrix, result, scratchCartesian); // remove rotation and scale
+
+        result.x = CesiumMath.clamp(result.x, -1.0, 1.0);
+        result.y = CesiumMath.clamp(result.y, -1.0, 1.0);
+        result.z = CesiumMath.clamp(result.z, -1.0, 1.0);
+
+        result = Matrix3.multiplyByVector(this.halfAxes, result, result); // redo proper rotation and scale
+        result = Cartesian3.add(result, this.center, result); // redo proper translation
 
         return result;
     };
