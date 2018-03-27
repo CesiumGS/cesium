@@ -160,15 +160,15 @@ defineSuite([
         });
 
         var r = ellipse.rectangle;
-        expect(r.north).toEqual(0.6989665987920752);
-        expect(r.south).toEqual(0.6986522252554146);
-        expect(r.east).toEqual(-1.3192254919769824);
-        expect(r.west).toEqual(-1.319634495353805);
+        expect(r.north).toEqual(0.698966597893341);
+        expect(r.south).toEqual(0.698652226072367);
+        expect(r.east).toEqual(-1.3192254919753026);
+        expect(r.west).toEqual(-1.3196344953554853);
     });
 
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
-    var rectangle = new Rectangle(-1.5678559428873852e-7, -1.578422502906833e-7, 1.5678559428873852e-7, 1.578422502906833e-7);
+    var rectangle = new Rectangle(-1.567855942887398e-7, -1.5784225029068463e-7, 1.567855942887398e-7, 1.5784225029068463e-7);
     var packableInstance = new CircleGeometry({
         vertexFormat : VertexFormat.POSITION_AND_ST,
         ellipsoid : ellipsoid,

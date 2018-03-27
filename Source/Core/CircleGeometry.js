@@ -6,6 +6,7 @@ define([
         './defineProperties',
         './EllipseGeometry',
         './Ellipsoid',
+        './Rectangle',
         './VertexFormat'
     ], function(
         Cartesian3,
@@ -15,6 +16,7 @@ define([
         defineProperties,
         EllipseGeometry,
         Ellipsoid,
+        Rectangle,
         VertexFormat) {
     'use strict';
 
@@ -134,12 +136,15 @@ define([
 
         if (!defined(result)) {
             scratchOptions.radius = ellipseGeometry._semiMajorAxis;
-            return new CircleGeometry(scratchOptions);
+            var circleGeometry = new CircleGeometry(scratchOptions);
+            circleGeometry._ellipseGeometry._rectangle = ellipseGeometry.rectangle;
+            return circleGeometry;
         }
 
         scratchOptions.semiMajorAxis = ellipseGeometry._semiMajorAxis;
         scratchOptions.semiMinorAxis = ellipseGeometry._semiMinorAxis;
         result._ellipseGeometry = new EllipseGeometry(scratchOptions);
+        result._ellipseGeometry._rectangle = ellipseGeometry.rectangle;
         return result;
     };
 

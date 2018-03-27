@@ -250,6 +250,20 @@ defineSuite([
         expect(r.south).toEqualEpsilon(0.6986522252554146, CesiumMath.EPSILON7);
         expect(r.east).toEqualEpsilon(-1.3190209903056758, CesiumMath.EPSILON7);
         expect(r.west).toEqualEpsilon(-1.3198389970251112, CesiumMath.EPSILON7);
+
+        // Polar ellipse
+        center = Cartesian3.fromDegrees(0.0, 90);
+        ellipse = new EllipseGeometry({
+            center : center,
+            semiMajorAxis : 2000.0,
+            semiMinorAxis : 1000.0
+        });
+
+        r = ellipse.rectangle;
+        expect(r.north).toEqualEpsilon(CesiumMath.PI_OVER_TWO - CesiumMath.EPSILON7, CesiumMath.EPSILON7);
+        expect(r.south).toEqualEpsilon(1.570483806950967, CesiumMath.EPSILON7);
+        expect(r.east).toEqualEpsilon(CesiumMath.PI, CesiumMath.EPSILON7);
+        expect(r.west).toEqualEpsilon(-CesiumMath.PI, CesiumMath.EPSILON7);
     });
 
     var center = Cartesian3.fromDegrees(0,0);
