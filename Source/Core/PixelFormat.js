@@ -306,12 +306,15 @@ define([
          * @private
          */
         flipY : function(bufferView, pixelFormat, pixelDatatype, width, height) {
+            if (height === 1) {
+                return bufferView;
+            }
             var flipped = PixelFormat.createTypedArray(pixelFormat, pixelDatatype, width, height);
             var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
             var textureWidth = width * numberOfComponents;
             for (var i = 0; i < height; ++i) {
-                var row = i * height;
-                var flippedRow = (height - i - 1) * height;
+                var row = i * height * numberOfComponents;
+                var flippedRow = (height - i - 1) * height * numberOfComponents;
                 for (var j = 0; j < textureWidth; ++j) {
                     flipped[flippedRow + j] = bufferView[row + j];
                 }
