@@ -207,6 +207,75 @@ define([
         return undefined;
     }
 
+    ModelUtility.modifyShaderForDracoQuantizedAttributes = function(gltf, primitive, shader, decodedAttributes) {
+        var quantizedUniforms = {};
+        for (var attributeSemantic in decodedAttributes) {
+            if (decodedAttributes.hasOwnProperty(attributeSemantic)) {
+                var attribute = decodedAttributes[attributeSemantic];
+                var quantization = attribute.quantization;
+                if (!defined(quantization)) {
+                    continue;
+                }
+
+                var attributeVarName = getAttributeVariableName(gltf, primitive, attributeSemantic);
+
+                if (attributeSemantic.charAt(0) === '_') {
+                    attributeSemantic = attributeSemantic.substring(1);
+                }
+                var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
+
+                if (!defined(quantizedUniforms[decodeUniformVarName])) {
+                    var newMain = 'gltf_decoded_' + attributeSemantic;
+                    var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
+                    var size = attribute.componentsPerAttribute;
+
+                    // replace usages of the original attribute with the decoded version, but not the declaration
+                    shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+
+                    // declare decoded attribute
+                    var variableType;
+                    if (quantization.octEncoded) {
+                        variableType = 'vec3';
+                    } else if (size > 1) {
+                        variableType = 'vec' + size;
+                    } else {
+                        variableType = 'float';
+                    }
+                    shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
+
+                    // splice decode function into the shader
+                    var decode = '';
+                    if (quantization.octEncoded) {
+                        var decodeUniformVarNameRangeConstant = decodeUniformVarName + '_rangeConstant';
+                        shader = 'uniform float ' + decodeUniformVarNameRangeConstant + ';\n' + shader;
+                        decode = '\n' +
+                                'void main() {\n' +
+                                // Draco oct-encoding decodes to zxy order
+                                '    ' + decodedAttributeVarName + ' = czm_octDecode(' + attributeVarName + '.xy, ' + decodeUniformVarNameRangeConstant + ').zxy;\n' +
+                                '    ' + newMain + '();\n' +
+                                '}\n';
+                    } else {
+                        var decodeUniformVarNameNormConstant = decodeUniformVarName + '_normConstant';
+                        var decodeUniformVarNameMin = decodeUniformVarName + '_min';
+                        shader = 'uniform float ' + decodeUniformVarNameNormConstant + ';\n' +
+                                'uniform ' + variableType + ' ' + decodeUniformVarNameMin + ';\n' + shader;
+                        decode = '\n' +
+                                'void main() {\n' +
+                                '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameMin + ' + ' + attributeVarName + ' * ' + decodeUniformVarNameNormConstant + ';\n' +
+                                '    ' + newMain + '();\n' +
+                                '}\n';
+                    }
+
+                    shader = ShaderSource.replaceMain(shader, newMain);
+                    shader += decode;
+                }
+            }
+        }
+        return {
+            shader : shader
+        };
+    };
+
     ModelUtility.modifyShaderForQuantizedAttributes = function(gltf, primitive, shader) {
         var quantizedUniforms = {};
         var attributes = primitive.attributes;
@@ -438,6 +507,55 @@ define([
     function translateFromMatrix5Array(matrix) {
         return [matrix[20], matrix[21], matrix[22], matrix[23]];
     }
+
+    ModelUtility.createUniformsForDracoQuantizedAttributes = function(decodedAttributes) {
+        var uniformMap = {};
+        for (var attribute in decodedAttributes) {
+            if (decodedAttributes.hasOwnProperty(attribute)) {
+                var decodedData = decodedAttributes[attribute];
+                var quantization = decodedData.quantization;
+
+                if (!defined(quantization)) {
+                    continue;
+                }
+
+                if (attribute.charAt(0) === '_'){
+                    attribute = attribute.substring(1);
+                }
+
+                var uniformVarName = 'gltf_u_dec_' + attribute.toLowerCase();
+
+                if (quantization.octEncoded) {
+                    var uniformVarNameRangeConstant = uniformVarName + '_rangeConstant';
+                    var rangeConstant = (1 << quantization.quantizationBits) - 1.0;
+                    uniformMap[uniformVarNameRangeConstant] = getScalarUniformFunction(rangeConstant).func;
+                    continue;
+                }
+
+                var uniformVarNameNormConstant = uniformVarName + '_normConstant';
+                var normConstant = quantization.range / (1 << quantization.quantizationBits);
+                uniformMap[uniformVarNameNormConstant] = getScalarUniformFunction(normConstant).func;
+
+                var uniformVarNameMin = uniformVarName + '_min';
+                switch (decodedData.componentsPerAttribute) {
+                    case 1:
+                        uniformMap[uniformVarNameMin] = getScalarUniformFunction(quantization.minValues).func;
+                        break;
+                    case 2:
+                        uniformMap[uniformVarNameMin] = getVec2UniformFunction(quantization.minValues).func;
+                        break;
+                    case 3:
+                        uniformMap[uniformVarNameMin] = getVec3UniformFunction(quantization.minValues).func;
+                        break;
+                    case 4:
+                        uniformMap[uniformVarNameMin] = getVec4UniformFunction(quantization.minValues).func;
+                        break;
+                }
+            }
+        }
+
+        return uniformMap;
+    };
 
     ModelUtility.createUniformsForQuantizedAttributes = function(gltf, primitive, quantizedUniforms) {
         var accessors = gltf.accessors;
