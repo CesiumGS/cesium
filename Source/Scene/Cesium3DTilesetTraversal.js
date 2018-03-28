@@ -195,19 +195,22 @@ define([
 
     function selectDesiredTile(tileset, tile, final, frameState) {
         if (final) {
-            // The tile can be selected right away and does not require traverseAndSelect. E.g. additive or empty tiles
-            selectTile(tileset, tile, frameState);
-            tile._finalResolution = true;
-        } else {
-            var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
-            if (defined(loadedTile)) {
-                // Tiles marked for selection will be selected in traverseAndSelect
-                loadedTile._selected = true;
-            } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
-                // If no ancestors are ready traverse down and select tiles to minimize empty regions.
-                // This happens often in cases where the camera zooms out and we're waiting for parent tiles to load.
-                selectDescendants(tileset, tile, frameState);
+            if (tile.contentAvailable) {
+                // The tile can be selected right away and does not require traverseAndSelect
+                tile._finalResolution = true;
+                selectTile(tileset, tile, frameState);
             }
+            return;
+        }
+
+        var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
+        if (defined(loadedTile)) {
+            // Tiles will be selected in traverseAndSelect
+            loadedTile._shouldSelect = true;
+        } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
+            // If no ancestors are ready traverse down and select tiles to minimize empty regions.
+            // This happens often in cases where the camera zooms out and we're waiting for parent tiles to load.
+            selectDescendants(tileset, tile, frameState);
         }
     }
 
@@ -357,7 +360,7 @@ define([
     function updateTile(tileset, tile, frameState) {
         updateTileVisibility(tileset, tile, frameState);
 
-        tile._selected = false;
+        tile._shouldSelect = false;
         tile._finalResolution = false;
         tile._ancestorWithContent = undefined;
         tile._ancestorWithContentAvailable = undefined;
@@ -452,7 +455,7 @@ define([
                         // load all descendants with content. Keep non-visible children loaded since they are still needed before the parent can refine.
                         // We don't do this for empty tiles because it looks better if children stream in as they are loaded to fill the empty space.
                         if (!visible) {
-                            loadTile(tileset, child, true, frameState);
+                            loadTile(tileset, child, baseTraversalOnly, frameState);
                             touchTile(tileset, child, frameState);
                         }
 
@@ -471,37 +474,31 @@ define([
                 }
             }
 
-            if (replace) {
+            if (hasEmptyContent(tile)) {
+                // Select empty tiles so that we can see their debug bounding volumes
+                selectTile(tileset, tile, frameState);
+            } else if (add) {
+                // Additive tiles are always loaded and selected
+                selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
+                loadTile(tileset, tile, baseTraversalOnly, frameState);
+            } else if (replace) {
                 if (baseTraversal) {
                     // Always load tiles in the base traversal
                     // Select tiles that can't refine further
-                    loadTile(tileset, tile, true, frameState);
-                    if (!refines && parentRefines && tile.contentAvailable) {
+                    loadTile(tileset, tile, baseTraversalOnly, frameState);
+                    if (!refines && parentRefines) {
                         selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
                     }
                 } else {
                     // Load tiles that are not skipped or can't refine further. In practice roughly half the tiles stay unloaded.
                     // Select tiles that can't refine further. If the tile doesn't have loaded content it will try to select an ancestor with loaded content instead.
                     if (!refines) { // eslint-disable-line
-                        selectDesiredTile(tileset, tile, false, frameState);
-                        loadTile(tileset, tile, false, frameState);
+                        selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
+                        loadTile(tileset, tile, baseTraversalOnly, frameState);
                     } else if (reachedSkippingThreshold(tileset, tile)) {
-                        loadTile(tileset, tile, false, frameState);
+                        loadTile(tileset, tile, baseTraversalOnly, frameState);
                     }
                 }
-            }
-
-            if (add) {
-                // Additive tiles are always loaded and selected
-                if (tile.contentAvailable) {
-                    selectDesiredTile(tileset, tile, true, frameState);
-                }
-                loadTile(tileset, tile, false, frameState);
-            }
-
-            if (hasEmptyContent(tile)) {
-                // Select empty tiles so that we can see their debug bounding volumes
-                selectDesiredTile(tileset, tile, true, frameState);
             }
 
             touchTile(tileset, tile, frameState);
@@ -603,24 +600,30 @@ define([
                 continue;
             }
 
-            var markedForSelection = tile._selected;
+            var add = tile.refine === Cesium3DTileRefine.ADD;
+            var shouldSelect = tile._shouldSelect;
             var children = tile.children;
             var childrenLength = children.length;
             var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
 
-            if (markedForSelection) {
-                tile._selectionDepth = ancestorStack.length;
-                if (tile._selectionDepth > 0) {
-                    tileset._hasMixedContent = true;
-                }
-                lastAncestor = tile;
-                if (!traverse) {
+            if (shouldSelect) {
+                if (add) {
                     tile._finalResolution = true;
                     selectTile(tileset, tile, frameState);
-                    continue;
+                } else {
+                    tile._selectionDepth = ancestorStack.length;
+                    if (tile._selectionDepth > 0) {
+                        tileset._hasMixedContent = true;
+                    }
+                    lastAncestor = tile;
+                    if (!traverse) {
+                        tile._finalResolution = true;
+                        selectTile(tileset, tile, frameState);
+                        continue;
+                    }
+                    ancestorStack.push(tile);
+                    tile._stackLength = stack.length;
                 }
-                ancestorStack.push(tile);
-                tile._stackLength = stack.length;
             }
 
             if (traverse) {

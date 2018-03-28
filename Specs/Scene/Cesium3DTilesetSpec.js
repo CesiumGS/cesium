@@ -987,9 +987,7 @@ defineSuite([
     });
 
     it('replacement refinement - selects root when sse is not met and children are not ready', function() {
-        // Set view so that only root tile is loaded initially
         viewRootOnly();
-
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var root = tileset._root;
             root.refine = Cesium3DTileRefine.REPLACE;
@@ -1042,7 +1040,6 @@ defineSuite([
         //      E       E
         //    C   C   C   C
         //
-
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement1Url).then(function(tileset) {
             viewAllTiles();
@@ -1051,15 +1048,14 @@ defineSuite([
             var statistics = tileset._statistics;
             var root = tileset._root;
 
-            return when.join(root.children[0].contentReadyPromise, root.children[1].contentReadyPromise).then(function() {
-                // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
-                expect(numberOfChildrenWithoutContent(root)).toEqual(0); // Children are loaded
-                expect(statistics.numberOfCommands).toEqual(1); // No stencil or backface commands; no mixed content
-                expect(statistics.numberOfPendingRequests).toEqual(4); // Loading grandchildren
+            // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
+            expect(numberOfChildrenWithoutContent(root)).toEqual(0); // Children are loaded
+            expect(statistics.numberOfCommands).toEqual(1); // No stencil or backface commands; no mixed content
+            expect(statistics.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
-                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                    expect(statistics.numberOfCommands).toEqual(4); // Render children
-                });
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                scene.renderForSpecs();
+                expect(statistics.numberOfCommands).toEqual(4); // Render children
             });
         });
     });
