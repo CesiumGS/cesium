@@ -184,6 +184,7 @@ define([
         this._cache = new Cesium3DTilesetCache();
         this._processingQueue = [];
         this._selectedTiles = [];
+        this._emptyTiles = [];
         this._requestedTiles = [];
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
@@ -1599,8 +1600,12 @@ define([
     }
 
     function updateTileDebugLabels(tileset, frameState) {
+        var i;
+        var tile;
         var selectedTiles = tileset._selectedTiles;
-        var length = selectedTiles.length;
+        var selectedLength = selectedTiles.length;
+        var emptyTiles = tileset._emptyTiles;
+        var emptyLength = emptyTiles.length;
         tileset._tileDebugLabels.removeAll();
 
         if (tileset.debugPickedTileLabelOnly) {
@@ -1610,9 +1615,15 @@ define([
                 label.pixelOffset = new Cartesian2(15, -15); // Offset to avoid picking the label.
             }
         } else {
-            for (var i = 0; i < length; ++i) {
-                var tile = selectedTiles[i];
+            for (i = 0; i < selectedLength; ++i) {
+                tile = selectedTiles[i];
                 addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
+            }
+            for (i = 0; i < emptyLength; ++i) {
+                tile = emptyTiles[i];
+                if (tile.hasTilesetContent) {
+                    addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
+                }
             }
         }
         tileset._tileDebugLabels.update(frameState);
@@ -1630,9 +1641,12 @@ define([
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
-        var length = selectedTiles.length;
+        var selectedLength = selectedTiles.length;
+        var emptyTiles = tileset._emptyTiles;
+        var emptyLength = emptyTiles.length;
         var tileVisible = tileset.tileVisible;
         var i;
+        var tile;
 
         var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
 
@@ -1643,8 +1657,8 @@ define([
         }
 
         var lengthBeforeUpdate = commandList.length;
-        for (i = 0; i < length; ++i) {
-            var tile = selectedTiles[i];
+        for (i = 0; i < selectedLength; ++i) {
+            tile = selectedTiles[i];
             // Raise the tileVisible event before update in case the tileVisible event
             // handler makes changes that update needs to apply to WebGL resources
             tileVisible.raiseEvent(tile);
@@ -1652,6 +1666,11 @@ define([
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
         }
+        for (i = 0; i < emptyLength; ++i) {
+            tile = emptyTiles[i];
+            tile.update(tileset, frameState);
+        }
+
         var lengthAfterUpdate = commandList.length;
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 

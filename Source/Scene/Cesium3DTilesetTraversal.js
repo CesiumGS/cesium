@@ -87,6 +87,7 @@ define([
 
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
+        tileset._emptyTiles.length = 0;
         tileset._hasMixedContent = false;
 
         tileset._cache.reset();
@@ -137,6 +138,10 @@ define([
         var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
         executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState);
         traverseAndSelect(tileset, root, frameState);
+    }
+
+    function addEmptyTile(tileset, tile) {
+        tileset._emptyTiles.push(tile);
     }
 
     function selectTile(tileset, tile, frameState) {
@@ -475,8 +480,8 @@ define([
             }
 
             if (hasEmptyContent(tile)) {
-                // Select empty tiles so that we can see their debug bounding volumes
-                selectTile(tileset, tile, frameState);
+                // Add empty tiles so that we can see its debug bounding volumes
+                addEmptyTile(tileset, tile, frameState);
             } else if (add) {
                 // Additive tiles are always loaded and selected
                 selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
