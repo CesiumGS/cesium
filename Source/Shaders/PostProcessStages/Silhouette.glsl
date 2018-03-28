@@ -6,5 +6,6 @@ varying vec2 v_textureCoordinates;
 void main(void)
 {
     vec4 silhouetteColor = texture2D(silhouetteTexture, v_textureCoordinates);
-    gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), silhouetteColor, silhouetteColor.a);
+    vec4 color = texture2D(colorTexture, v_textureCoordinates);
+    gl_FragColor = mix(color, silhouetteColor, silhouetteColor.a);
 }

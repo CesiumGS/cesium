@@ -96,8 +96,8 @@ define([
         // In practice, there are only 2-3 stages in these composites.
         if (!inSeries) {
             for (var j = 1; j < length; ++j) {
-                var current = composite.get(j);
-                var currentDependencies = dependencies[current.name];
+                var name = getLastStageName(composite.get(j));
+                var currentDependencies = dependencies[name];
                 for (var k = 0; k < j; ++k) {
                     currentDependencies[getLastStageName(composite.get(k))] = true;
                 }

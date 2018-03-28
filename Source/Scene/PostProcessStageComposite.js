@@ -106,7 +106,17 @@ define([
         this._textureCache = undefined;
         this._index = undefined;
 
-        this.selectedFeatures = undefined;
+        this._selectedFeatures = undefined;
+        this._selectedFeaturesShadow = undefined;
+        this._parentSelectedFeatures = undefined;
+        this._parentSelectedFeaturesShadow = undefined;
+        this._combinedSelectedFeatures = undefined;
+        this._combinedSelectedFeaturesShadow = undefined;
+        this._selectedFeaturesLength = 0;
+        this._parentSelectedFeaturesLength = 0;
+        this._selectedFeaturesDirty = true;
+
+        this._parentSelectedFeatures = [];
     }
 
     defineProperties(PostProcessStageComposite.prototype, {
@@ -195,6 +205,31 @@ define([
             get : function() {
                 return this._stages.length;
             }
+        },
+        /**
+         * The features selected for applying the post-process.
+         *
+         * @memberof PostProcessStageComposite.prototype
+         * @type {Array}
+         */
+        selectedFeatures : {
+            get : function() {
+                return this._selectedFeatures;
+            },
+            set : function(value) {
+                this._selectedFeatures = value;
+            }
+        },
+        /**
+         * @private
+         */
+        parentSelectedFeatures : {
+            get : function() {
+                return this._parentSelectedFeatures;
+            },
+            set : function(value) {
+                this._parentSelectedFeatures = value;
+            }
         }
     });
 
@@ -215,18 +250,56 @@ define([
         return this._stages[index];
     };
 
+    function isSelectedTextureDirty(stage) {
+        var length = defined(stage._selectedFeatures) ? stage._selectedFeatures.length : 0;
+        var parentLength = defined(stage._parentSelectedFeatures) ? stage._parentSelectedFeatures : 0;
+        var dirty = stage._selectedFeatures !== stage._selectedFeaturesShadow || length !== stage._selectedFeaturesLength;
+        dirty = dirty || stage._parentSelectedFeatures !== stage._parentSelectedFeaturesShadow || parentLength !== stage._parentSelectedFeaturesLength;
+
+        if (defined(stage._selectedFeatures) && defined(stage._parentSelectedFeatures)) {
+            stage._combinedSelectedFeatures = stage._selectedFeatures.concat(stage._parentSelectedFeatures);
+        } else if (defined(stage._parentSelectedFeatures)) {
+            stage._combinedSelectedFeatures = stage._parentSelectedFeatures;
+        } else {
+            stage._combinedSelectedFeatures = stage._selectedFeatures;
+        }
+
+        if (!dirty && defined(stage._combinedSelectedFeatures)) {
+            if (!defined(stage._combinedSelectedFeaturesShadow)) {
+                return true;
+            }
+
+            length = stage._combinedSelectedFeatures.length;
+            for (var i = 0; i < length; ++i) {
+                if (stage._combinedSelectedFeatures[i] !== stage._combinedSelectedFeaturesShadow[i]) {
+                    return true;
+                }
+            }
+        }
+        return dirty;
+    }
+
     /**
      * A function that will be called before execute. Updates each post-process stage in the composite.
      * @param {Context} context The context.
      * @private
      */
     PostProcessStageComposite.prototype.update = function(context, useLogDepth) {
-        var selectedFeatures = this.selectedFeatures;
+        this._selectedFeaturesDirty = isSelectedTextureDirty(this);
+
+        this._selectedFeaturesShadow = this._selectedFeatures;
+        this._parentSelectedFeaturesShadow = this._parentSelectedFeatures;
+        this._combinedSelectedFeaturesShadow = this._combinedSelectedFeatures;
+        this._selectedFeaturesLength = defined(this._selectedFeatures) ? this._selectedFeatures.length : 0;
+        this._parentSelectedFeaturesLength = defined(this._parentSelectedFeatures) ? this._parentSelectedFeatures.length : 0;
+
         var stages = this._stages;
         var length = stages.length;
         for (var i = 0; i < length; ++i) {
             var stage = stages[i];
-            stage.selectedFeatures = selectedFeatures;
+            if (this._selectedFeaturesDirty) {
+                stage.parentSelectedFeatures = this._combinedSelectedFeatures;
+            }
             stage.update(context, useLogDepth);
         }
     };

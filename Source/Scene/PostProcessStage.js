@@ -152,7 +152,12 @@ define([
         this._selectedIdTexture = undefined;
         this._selectedFeatures = undefined;
         this._selectedFeaturesShadow = undefined;
+        this._parentSelectedFeatures = undefined;
+        this._parentSelectedFeaturesShadow = undefined;
+        this._combinedSelectedFeatures = undefined;
+        this._combinedSelectedFeaturesShadow = undefined;
         this._selectedFeaturesLength = 0;
+        this._parentSelectedFeaturesLength = 0;
         this._selectedFeaturesDirty = true;
 
         // set by PostProcessStageCollection
@@ -341,12 +346,29 @@ define([
                 return undefined;
             }
         },
+        /**
+         * The features selected for applying the post-process.
+         *
+         * @memberof PostProcessStageComposite.prototype
+         * @type {Array}
+         */
         selectedFeatures : {
             get : function() {
                 return this._selectedFeatures;
             },
             set : function(value) {
                 this._selectedFeatures = value;
+            }
+        },
+        /**
+         * @private
+         */
+        parentSelectedFeatures : {
+            get : function() {
+                return this._parentSelectedFeatures;
+            },
+            set : function(value) {
+                this._parentSelectedFeatures = value;
             }
         }
     });
@@ -646,15 +668,26 @@ define([
 
     function isSelectedTextureDirty(stage) {
         var length = defined(stage._selectedFeatures) ? stage._selectedFeatures.length : 0;
+        var parentLength = defined(stage._parentSelectedFeatures) ? stage._parentSelectedFeatures : 0;
         var dirty = stage._selectedFeatures !== stage._selectedFeaturesShadow || length !== stage._selectedFeaturesLength;
-        if (!dirty && defined(stage._selectedFeatures)) {
-            if (!defined(stage._selectedFeaturesShadow)) {
+        dirty = dirty || stage._parentSelectedFeatures !== stage._parentSelectedFeaturesShadow || parentLength !== stage._parentSelectedFeaturesLength;
+
+        if (defined(stage._selectedFeatures) && defined(stage._parentSelectedFeatures)) {
+            stage._combinedSelectedFeatures = stage._selectedFeatures.concat(stage._parentSelectedFeatures);
+        } else if (defined(stage._parentSelectedFeatures)) {
+            stage._combinedSelectedFeatures = stage._parentSelectedFeatures;
+        } else {
+            stage._combinedSelectedFeatures = stage._selectedFeatures;
+        }
+
+        if (!dirty && defined(stage._combinedSelectedFeatures)) {
+            if (!defined(stage._combinedSelectedFeaturesShadow)) {
                 return true;
             }
 
-            length = stage._selectedFeatures.length;
+            length = stage._combinedSelectedFeatures.length;
             for (var i = 0; i < length; ++i) {
-                if (stage._selectedFeatures[i] !== stage._selectedFeaturesShadow[i]) {
+                if (stage._combinedSelectedFeatures[i] !== stage._combinedSelectedFeaturesShadow[i]) {
                     return true;
                 }
             }
@@ -670,7 +703,7 @@ define([
         stage._selectedIdTexture = stage._selectedIdTexture && stage._selectedIdTexture.destroy();
         stage._selectedIdTexture = undefined;
 
-        var features = stage._selectedFeatures;
+        var features = stage._combinedSelectedFeatures;
         if (!defined(features)) {
             return;
         }
@@ -782,8 +815,12 @@ define([
         this._useLogDepth = useLogDepth;
 
         this._selectedFeaturesDirty = isSelectedTextureDirty(this);
+
         this._selectedFeaturesShadow = this._selectedFeatures;
+        this._parentSelectedFeaturesShadow = this._parentSelectedFeatures;
+        this._combinedSelectedFeaturesShadow = this._combinedSelectedFeatures;
         this._selectedFeaturesLength = defined(this._selectedFeatures) ? this._selectedFeatures.length : 0;
+        this._parentSelectedFeaturesLength = defined(this._parentSelectedFeatures) ? this._parentSelectedFeatures.length : 0;
 
         createSelectedTexture(this, context);
         createUniformMap(this);

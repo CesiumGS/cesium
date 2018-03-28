@@ -34,7 +34,8 @@ void main(void)
             break;
         }
     }
-    if (!selected) {
+    if (!selected)
+    {
         gl_FragColor = vec4(color.rgb, 0.0);
         return;
     }
@@ -56,6 +57,12 @@ void main(void)
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);
-    float alpha = len > length ? 1.0 : 0.0;
-    gl_FragColor = vec4(color.rgb, alpha);
+    if (len > length)
+    {
+        gl_FragColor = vec4(color.rgb, 1.0);
+    }
+    else
+    {
+        discard;
+    }
 }

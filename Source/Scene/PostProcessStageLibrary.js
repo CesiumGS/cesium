@@ -2,6 +2,7 @@ define([
         '../Core/buildModuleUrl',
         '../Core/createGuid',
         '../Core/Color',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
@@ -29,6 +30,7 @@ define([
         buildModuleUrl,
         createGuid,
         Color,
+        defined,
         defineProperties,
         destroyObject,
         Ellipsoid,
@@ -218,43 +220,19 @@ define([
         });
     };
 
-    /**
-     * Creates a post-process stage that applies a silhouette effect.
-     * <p>
-     * A silhouette effect highlights the edges of an object.
-     * </p>
-     * <p>
-     * This stage has the following uniforms: <code>color</code> and <code>length</code>
-     * </p>
-     * <p>
-     * <code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.
-     * <code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.
-     * </p>
-     * @return {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
-     */
-    PostProcessStageLibrary.createSilhouetteStage = function() {
+    PostProcessStageLibrary.createEdgeDetectionStage = function() {
+        // unique name generated on call so more than one effect can be added
         var name = createGuid();
-        var silhouetteDepth = new PostProcessStage({
-            name : 'czm_silhouette_depth_' + name,
+        var depth = new PostProcessStage({
+            name : 'czm_edge_detection_depth_' + name,
             fragmentShader : LinearDepth
         });
         var edgeDetection = new PostProcessStage({
-            name : 'czm_silhouette_edge_detection_' + name,
+            name : 'czm_edge_detection_' + name,
             fragmentShader : EdgeDetection,
             uniforms : {
                 length : 0.25,
                 color : Color.clone(Color.BLACK)
-            }
-        });
-        var silhouetteGenerateProcess = new PostProcessStageComposite({
-            name : 'czm_silhouette_generate_' + name,
-            stages : [silhouetteDepth, edgeDetection]
-        });
-        var silhouetteProcess = new PostProcessStage({
-            name : 'czm_silhouette_color_edges_' + name,
-            fragmentShader : Silhouette,
-            uniforms : {
-                silhouetteTexture : silhouetteGenerateProcess.name
             }
         });
 
@@ -277,10 +255,87 @@ define([
                 }
             }
         });
+
         return new PostProcessStageComposite({
-            // unique name generated on call so more than one effect can be added
-            name : name,
-            stages : [silhouetteGenerateProcess, silhouetteProcess],
+            name : 'czm_edge_detection_generate_' + name,
+            stages : [depth, edgeDetection],
+            uniforms : uniforms
+        });
+    };
+
+    /**
+     * Creates a post-process stage that applies a silhouette effect.
+     * <p>
+     * A silhouette effect highlights the edges of an object.
+     * </p>
+     * <p>
+     * This stage has the following uniforms: <code>color</code> and <code>length</code>
+     * </p>
+     * <p>
+     * <code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.
+     * <code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.
+     * </p>
+     * @return {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
+     */
+    PostProcessStageLibrary.createSilhouetteStage = function(edgeDetectionStages) {
+        var uniforms;
+        if (!defined(edgeDetectionStages)) {
+            edgeDetectionStages = [PostProcessStageLibrary.createEdgeDetectionStage()];
+            uniforms = edgeDetectionStages[0].uniforms;
+        }
+
+        var edgeDetection = new PostProcessStageComposite({
+            name : 'czm_edge_detection_multiple',
+            stages : edgeDetectionStages,
+            inputPreviousStageTexture : false
+        });
+
+        var compositeUniforms = {};
+        var fsDecl = '';
+        var fsLoop = '';
+        for (var i = 0; i < edgeDetectionStages.length; ++i) {
+            fsDecl += 'uniform sampler2D edgeTexture' + i + '; \n';
+            fsLoop +=
+                '        vec4 edge' + i + ' = texture2D(edgeTexture' + i + ', v_textureCoordinates); \n' +
+                '        if (edge' + i + '.a == 1.0) { \n' +
+                '            color = edge' + i + '; \n' +
+                '            break; \n' +
+                '        } \n';
+            compositeUniforms['edgeTexture' + i] = edgeDetectionStages[i].name;
+        }
+
+        var fs =
+            fsDecl +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() { \n' +
+            '    vec4 color = vec4(0.0); \n' +
+            '    for (int i = 0; i < ' + edgeDetectionStages.length + '; i++) { \n' +
+            fsLoop +
+            '    } \n' +
+            '    gl_FragColor = color; \n' +
+            '} \n';
+
+        var edgeComposite = new PostProcessStage({
+            name : 'czm_edge_detection_combine',
+            fragmentShader : fs,
+            uniforms : compositeUniforms
+        });
+        var composite = new PostProcessStageComposite({
+            name : 'czm_edge_detection_composite',
+            stages : [edgeDetection, edgeComposite]
+        });
+
+        var silhouetteProcess = new PostProcessStage({
+            name : 'czm_silhouette_color_edges',
+            fragmentShader : Silhouette,
+            uniforms : {
+                silhouetteTexture : edgeComposite.name
+            }
+        });
+
+        return new PostProcessStageComposite({
+            name : 'czm_silhouette',
+            stages : [composite, silhouetteProcess],
             inputPreviousStageTexture : false,
             uniforms : uniforms
         });
