@@ -766,7 +766,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -798,9 +798,6 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        Rectangle.pack(value.rectangle, array, startingIndex);
-        startingIndex += Rectangle.packedLength;
-
         array[startingIndex++] = value._semiMajorAxis;
         array[startingIndex++] = value._semiMinorAxis;
         array[startingIndex++] = value._rotation;
@@ -817,7 +814,6 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchVertexFormat = new VertexFormat();
-    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         center : scratchCenter,
         ellipsoid : scratchEllipsoid,
@@ -858,9 +854,6 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
-        startingIndex += Rectangle.packedLength;
-
         var semiMajorAxis = array[startingIndex++];
         var semiMinorAxis = array[startingIndex++];
         var rotation = array[startingIndex++];
@@ -880,9 +873,7 @@ define([
             scratchOptions.semiMajorAxis = semiMajorAxis;
             scratchOptions.semiMinorAxis = semiMinorAxis;
             scratchOptions.shadowVolume = shadowVolume;
-            var ellipseGeometry = new EllipseGeometry(scratchOptions);
-            ellipseGeometry._rectangle = computeRectangle(ellipseGeometry);
-            return ellipseGeometry;
+            return new EllipseGeometry(scratchOptions);
         }
 
         result._center = Cartesian3.clone(center, result._center);
@@ -897,7 +888,6 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._extrude = extrude;
         result._shadowVolume = shadowVolume;
-        result._rectangle = Rectangle.clone(rectangle);
 
         return result;
     };

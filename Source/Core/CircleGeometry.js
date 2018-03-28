@@ -136,15 +136,12 @@ define([
 
         if (!defined(result)) {
             scratchOptions.radius = ellipseGeometry._semiMajorAxis;
-            var circleGeometry = new CircleGeometry(scratchOptions);
-            circleGeometry._ellipseGeometry._rectangle = ellipseGeometry.rectangle;
-            return circleGeometry;
+            return new CircleGeometry(scratchOptions);
         }
 
         scratchOptions.semiMajorAxis = ellipseGeometry._semiMajorAxis;
         scratchOptions.semiMinorAxis = ellipseGeometry._semiMinorAxis;
         result._ellipseGeometry = new EllipseGeometry(scratchOptions);
-        result._ellipseGeometry._rectangle = ellipseGeometry.rectangle;
         return result;
     };
 
