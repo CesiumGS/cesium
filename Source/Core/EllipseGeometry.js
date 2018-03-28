@@ -653,37 +653,30 @@ define([
         };
     }
 
-    var scratchEnuToFixedMatrix = new Matrix4();
-    var scratchFixedToEnuMatrix = new Matrix4();
-    var scratchRotationMatrix = new Matrix3();
-    var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
-    var scratchCartographicPoints = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
-
-    function computeRectangle(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
-        Transforms.eastNorthUpToFixedFrame(center, ellipsoid, scratchEnuToFixedMatrix);
-        Matrix4.inverseTransformation(scratchEnuToFixedMatrix, scratchFixedToEnuMatrix);
-
-        // Find the 4 extreme points of the ellipse in ENU
-        var i;
-        for (i = 0; i < 4; ++i) {
-            Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
+    function computeRectangle(ellipseGeometry) {
+        var cep = EllipseGeometryLibrary.computeEllipsePositions({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            rotation : ellipseGeometry._rotation,
+            granularity : ellipseGeometry._granularity
+        }, false, true);
+        var positionsFlat = cep.outerPositions;
+        var positionsCount = positionsFlat.length / 3;
+        var positions = new Array(positionsCount);
+        for (var i = 0; i < positionsCount; ++i) {
+            positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
         }
-        scratchRectanglePoints[0].x += semiMajorAxis;
-        scratchRectanglePoints[1].x -= semiMajorAxis;
-        scratchRectanglePoints[2].y += semiMinorAxis;
-        scratchRectanglePoints[3].y -= semiMinorAxis;
-
-        Matrix3.fromRotationZ(rotation, scratchRotationMatrix);
-        for (i = 0; i < 4; ++i) {
-            // Apply the rotation
-            Matrix3.multiplyByVector(scratchRotationMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
-
-            // Convert back to fixed and then to cartographic
-            Matrix4.multiplyByPoint(scratchEnuToFixedMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
-            ellipsoid.cartesianToCartographic(scratchRectanglePoints[i], scratchCartographicPoints[i]);
+        var rectangle = Rectangle.fromCartesianArray(positions);
+        // Rectangle width goes beyond 180 degrees when the ellipse crosses a pole.
+        // When this happens, make the rectangle into a "circle" around the pole
+        if (rectangle.width > CesiumMath.PI) {
+            rectangle.north = rectangle.north > 0.0 ? CesiumMath.PI_OVER_TWO - CesiumMath.EPSILON7 : rectangle.north;
+            rectangle.south = rectangle.south < 0.0 ? CesiumMath.EPSILON7 - CesiumMath.PI_OVER_TWO : rectangle.south;
+            rectangle.east = CesiumMath.PI;
+            rectangle.west = -CesiumMath.PI;
         }
-
-        return Rectangle.fromCartographicArray(scratchCartographicPoints);
+        return rectangle;
     }
 
     /**
@@ -766,14 +759,14 @@ define([
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createEllipseGeometry';
 
-        this._rectangle = computeRectangle(this._center, this._ellipsoid, semiMajorAxis, semiMinorAxis, this._rotation);
+        this._rectangle = undefined;
     }
 
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -805,9 +798,6 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        Rectangle.pack(value._rectangle, array, startingIndex);
-        startingIndex += Rectangle.packedLength;
-
         array[startingIndex++] = value._semiMajorAxis;
         array[startingIndex++] = value._semiMinorAxis;
         array[startingIndex++] = value._rotation;
@@ -824,7 +814,6 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchVertexFormat = new VertexFormat();
-    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         center : scratchCenter,
         ellipsoid : scratchEllipsoid,
@@ -865,9 +854,6 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
-        startingIndex += Rectangle.packedLength;
-
         var semiMajorAxis = array[startingIndex++];
         var semiMinorAxis = array[startingIndex++];
         var rotation = array[startingIndex++];
@@ -902,7 +888,6 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._extrude = extrude;
         result._shadowVolume = shadowVolume;
-        result._rectangle = Rectangle.clone(rectangle);
 
         return result;
     };
@@ -980,6 +965,9 @@ define([
          */
         rectangle : {
             get : function() {
+                if (!defined(this._rectangle)) {
+                    this._rectangle = computeRectangle(this);
+                }
                 return this._rectangle;
             }
         }
