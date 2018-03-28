@@ -105,7 +105,7 @@ define([
             return;
         }
 
-        if (!tileset._skipLevelOfDetail || tileset._allTilesAdditive) {
+        if (!skipLevelOfDetail(tileset)) {
             executeBaseTraversal(tileset, root, frameState);
         } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
             executeSkipTraversal(tileset, root, frameState);
@@ -140,8 +140,19 @@ define([
         traverseAndSelect(tileset, root, frameState);
     }
 
+    function skipLevelOfDetail(tileset) {
+        // Optimization: if all tiles are additive we can turn skipLevelOfDetail off and save some processing
+        return tileset._skipLevelOfDetail && !tileset._allTilesAdditive;
+    }
+
     function addEmptyTile(tileset, tile) {
+        tile._finalResolution = true;
         tileset._emptyTiles.push(tile);
+    }
+
+    function contentVisible(tile, frameState) {
+        return (tile._visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
+               (tile.contentVisibility(frameState) !== Intersect.OUTSIDE);
     }
 
     function selectTile(tileset, tile, frameState) {
@@ -160,20 +171,6 @@ define([
             tile._selectedFrame = frameState.frameNumber;
             tileset._selectedTiles.push(tile);
         }
-    }
-
-    function sortChildrenByDistanceToCamera(a, b) {
-        // Sort by farthest child first since this is going on a stack
-        if (b._distanceToCamera === 0 && a._distanceToCamera === 0) {
-            return b._centerZDepth - a._centerZDepth;
-        }
-
-        return b._distanceToCamera - a._distanceToCamera;
-    }
-
-    function contentVisible(tile, frameState) {
-        return (tile._visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
-               (tile.contentVisibility(frameState) !== Intersect.OUTSIDE);
     }
 
     function selectDescendants(tileset, root, frameState) {
@@ -198,8 +195,8 @@ define([
         }
     }
 
-    function selectDesiredTile(tileset, tile, final, frameState) {
-        if (final) {
+    function selectDesiredTile(tileset, tile, frameState) {
+        if (!skipLevelOfDetail(tileset)) {
             if (tile.contentAvailable) {
                 // The tile can be selected right away and does not require traverseAndSelect
                 tile._finalResolution = true;
@@ -208,9 +205,10 @@ define([
             return;
         }
 
+        // If this tile is not loaded attempt to select its ancestor instead
         var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
         if (defined(loadedTile)) {
-            // Tiles will be selected in traverseAndSelect
+            // Tiles will actually be selected in traverseAndSelect
             loadedTile._shouldSelect = true;
         } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
             // If no ancestors are ready traverse down and select tiles to minimize empty regions.
@@ -228,10 +226,10 @@ define([
         tile._touchedFrame = frameState.frameNumber;
     }
 
-    function getPriority(tileset, tile, useParentPriority) {
-        // The base traversal sets useParentPriority to true so that child tiles can load as soon as possible so that their parent can refine sooner.
+    function getPriority(tileset, tile) {
+        // If skipLevelOfDetail is off we try to load child tiles as soon as possible so that their parent can refine sooner.
         // Additive tiles always load based on distance because it subjectively looks better.
-        // There may be issues with mixing additive and replacement tileset since SSE and distance are not using the same overall scale.
+        // There may be issues with mixing additive and replacement tiles since SSE and distance are different types of values.
         // Maybe all priorities need to be normalized to 0-1 range.
         var parent = tile.parent;
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
@@ -239,16 +237,17 @@ define([
         if (add) {
             return tile._distanceToCamera;
         } else if (replace) {
-            var screenSpaceError = (defined(parent) && (useParentPriority || (tile._screenSpaceError === 0.0))) ? parent._screenSpaceError : tile._screenSpaceError;
+            var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
+            var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
             var rootScreenSpaceError = tileset._root._screenSpaceError;
             return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower priority values (higher priority)
         }
     }
 
-    function loadTile(tileset, tile, useParentPriority, frameState) {
+    function loadTile(tileset, tile, frameState) {
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
-            tile._priority = getPriority(tileset, tile, useParentPriority);
+            tile._priority = getPriority(tileset, tile);
             tileset._requestedTiles.push(tile);
         }
     }
@@ -383,15 +382,6 @@ define([
         }
     }
 
-    function updateChildren(tileset, tile, frameState) {
-        var children = tile.children;
-        var length = children.length;
-        for (var i = 0; i < length; ++i) {
-            updateTile(tileset, children[i], frameState);
-        }
-        children.sort(sortChildrenByDistanceToCamera);
-    }
-
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
     }
@@ -402,16 +392,77 @@ define([
 
     function reachedSkippingThreshold(tileset, tile) {
         var ancestor = tile._ancestorWithContent;
-        var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
-
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
                defined(ancestor) &&
-               (tile._screenSpaceError < (ancestor._screenSpaceError / skipScreenSpaceErrorFactor)) &&
-               (tile._depth > (ancestor._depth + skipLevels));
+               (tile._screenSpaceError < (ancestor._screenSpaceError / tileset.skipScreenSpaceErrorFactor)) &&
+               (tile._depth > (ancestor._depth + tileset.skipLevels));
     }
 
-    function inBaseTraversal(tile, baseScreenSpaceError) {
+    function sortChildrenByDistanceToCamera(a, b) {
+        // Sort by farthest child first since this is going on a stack
+        if (b._distanceToCamera === 0 && a._distanceToCamera === 0) {
+            return b._centerZDepth - a._centerZDepth;
+        }
+
+        return b._distanceToCamera - a._distanceToCamera;
+    }
+
+    function updateAndPushChildren(tileset, tile, stack, frameState) {
+        var i;
+        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+        var children = tile.children;
+        var length = children.length;
+
+        for (i = 0; i < length; ++i) {
+            updateTile(tileset, children[i], frameState);
+        }
+
+        // Sort by distance to take advantage of early Z and reduce artifacts for skipLevelOfDetail
+        children.sort(sortChildrenByDistanceToCamera);
+
+        // For traditional replacement refinement we need to check if all children are loaded before we can refine
+        // The reason we always refine empty tiles is it looks better if children stream in as they are loaded to fill the empty space
+        var checkRefines = !skipLevelOfDetail(tileset) && replace && !hasEmptyContent(parent);
+        var refines = true;
+
+        var anyChildrenVisible = false;
+        for (i = 0; i < length; ++i) {
+            var child = children[i];
+            var visible = isVisible(child);
+            if (visible) {
+                stack.push(child);
+                anyChildrenVisible = true;
+            }
+            if (checkRefines) {
+                if (!visible) {
+                    // Keep non-visible children loaded since they are still needed before the parent can refine.
+                    loadTile(tileset, child, frameState);
+                    touchTile(tileset, child, frameState);
+                }
+                var childRefines;
+                if (isVisibleButNotInRequestVolume(child)) {
+                    childRefines = false;
+                } else if (hasEmptyContent(child)) {
+                    // We need to traverse past any empty tiles to know if we can refine
+                    childRefines = executeEmptyTraversal(tileset, child, frameState);
+                } else {
+                    childRefines = child.contentAvailable;
+                }
+                refines = refines && childRefines;
+            }
+        }
+
+        if (!anyChildrenVisible) {
+            refines = false;
+        }
+
+        return refines;
+    }
+
+    function inBaseTraversal(tileset, tile, baseScreenSpaceError) {
+        if (!skipLevelOfDetail(tileset)) {
+            return true;
+        }
         if (tile._screenSpaceError === 0) {
             var parent = tile.parent;
             if (defined(parent)) {
@@ -424,10 +475,9 @@ define([
 
     function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
         // Depth-first traversal that traverses all visible tiles and marks tiles for selection.
-        // If the traversal is base traversal ONLY then a tile does not refine until all children are loaded. This is the
+        // If skipLevelOfDetail is off then a tile does not refine until all children are loaded. This is the
         // traditional replacement refinement approach.
         // Otherwise we allow for skipping levels of the tree and rendering children and parent tiles simultaneously.
-        var baseTraversalOnly = baseScreenSpaceError === maximumScreenSpaceError;
         var stack = traversal.stack;
         stack.push(root);
 
@@ -435,87 +485,58 @@ define([
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
-            var baseTraversal = baseTraversalOnly || inBaseTraversal(tile, baseScreenSpaceError);
+            var baseTraversal = inBaseTraversal(tile, baseScreenSpaceError);
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
             var children = tile.children;
             var childrenLength = children.length;
             var parent = tile.parent;
-            var parentRefines = !baseTraversalOnly || !defined(parent) || parent._refines;
+            var parentRefines = !defined(parent) || parent._refines;
             var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
-            var refines = traverse && parentRefines;
-
-            visitTile(tileset);
+            var refines = false;
 
             if (traverse) {
-                updateChildren(tileset, tile, frameState);
-                for (var i = 0; i < childrenLength; ++i) {
-                    var child = children[i];
-                    var visible = isVisible(child);
-                    if (visible) {
-                        stack.push(child);
-                    }
-                    if (baseTraversalOnly && replace && !hasEmptyContent(tile)) {
-                        // Check if the parent can refine to this child. If the child is empty we need to traverse further to
-                        // load all descendants with content. Keep non-visible children loaded since they are still needed before the parent can refine.
-                        // We don't do this for empty tiles because it looks better if children stream in as they are loaded to fill the empty space.
-                        if (!visible) {
-                            loadTile(tileset, child, baseTraversalOnly, frameState);
-                            touchTile(tileset, child, frameState);
-                        }
-
-                        var refinesToChild;
-                        if (isVisibleButNotInRequestVolume(child)) {
-                            refinesToChild = false;
-                        } else if (hasEmptyContent(child)) {
-                            // Always run the internal base traversal even if we already know we can't refine. This keeps the tiles loaded while we wait to refine.
-                            refinesToChild = executeEmptyTraversal(tileset, child, baseScreenSpaceError, maximumScreenSpaceError, frameState);
-                        } else {
-                            refinesToChild = child.contentAvailable;
-                        }
-
-                        refines = refines && refinesToChild;
-                    }
-                }
+                refines = updateAndPushChildren(tileset, tile, stack, frameState);
             }
 
             if (hasEmptyContent(tile)) {
-                // Add empty tiles so that we can see its debug bounding volumes
+                // Add empty tile so we can see its debug bounding volumes
                 addEmptyTile(tileset, tile, frameState);
             } else if (add) {
                 // Additive tiles are always loaded and selected
-                selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
-                loadTile(tileset, tile, baseTraversalOnly, frameState);
+                selectDesiredTile(tileset, tile, frameState);
+                loadTile(tileset, tile, frameState);
             } else if (replace) {
                 if (baseTraversal) {
                     // Always load tiles in the base traversal
                     // Select tiles that can't refine further
-                    loadTile(tileset, tile, baseTraversalOnly, frameState);
+                    loadTile(tileset, tile, frameState);
                     if (!refines && parentRefines) {
-                        selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
+                        selectDesiredTile(tileset, tile, frameState);
                     }
                 } else {
                     // Load tiles that are not skipped or can't refine further. In practice roughly half the tiles stay unloaded.
                     // Select tiles that can't refine further. If the tile doesn't have loaded content it will try to select an ancestor with loaded content instead.
                     if (!refines) { // eslint-disable-line
-                        selectDesiredTile(tileset, tile, baseTraversalOnly, frameState);
-                        loadTile(tileset, tile, baseTraversalOnly, frameState);
+                        selectDesiredTile(tileset, tile, frameState);
+                        loadTile(tileset, tile, frameState);
                     } else if (reachedSkippingThreshold(tileset, tile)) {
-                        loadTile(tileset, tile, baseTraversalOnly, frameState);
+                        loadTile(tileset, tile, frameState);
                     }
                 }
             }
 
+            visitTile(tileset);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
         }
     }
 
-    function executeEmptyTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
+    function executeEmptyTraversal(tileset, root, frameState) {
         // Depth-first traversal that checks if all nearest descendants with content are loaded. Ignores visibility.
         // The reason we need to implement a full traversal is to handle chains of empty tiles.
         var allDescendantsLoaded = true;
-
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
         var stack = emptyTraversal.stack;
         stack.push(root);
 
@@ -527,7 +548,7 @@ define([
             var childrenLength = children.length;
 
             // Only traverse if the tile is empty - we are trying to find descendants with content
-            var traverse = hasEmptyContent(tile) && (childrenLength > 0) && (tile._screenSpaceError > baseScreenSpaceError);
+            var traverse = hasEmptyContent(tile) && (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
 
             // When we reach a "leaf" that does not have content available we know that not all descendants are loaded
             // i.e. there will be holes if the parent tries to refine to its children, so don't refine
@@ -538,8 +559,7 @@ define([
             updateTile(tileset, tile, frameState);
             if (!isVisible(tile)) {
                 // Load tiles that aren't visible since they are still needed for the parent to refine
-                // Tiles that are visible will get loaded from within executeBaseTraversal
-                loadTile(tileset, tile, true, frameState);
+                loadTile(tileset, tile, frameState);
                 touchTile(tileset, tile, frameState);
             }
 

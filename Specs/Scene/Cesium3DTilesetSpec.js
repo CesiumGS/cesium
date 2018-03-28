@@ -1191,9 +1191,10 @@ defineSuite([
             });
         });
 
-        it('does select visibile tiles with visible children failing request volumes', function() {
+        it('does select visible tiles with visible children failing request volumes', function() {
             viewRootOnly();
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+                scene.renderForSpecs();
                 var root = tileset._root;
                 var childRoot = root.children[0];
 
@@ -1209,7 +1210,7 @@ defineSuite([
             });
         });
 
-        it('does select visibile tiles with visible children passing request volumes', function() {
+        it('does select visible tiles with visible children passing request volumes', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var root = tileset._root;
                 var childRoot = root.children[0];
