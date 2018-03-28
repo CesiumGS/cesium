@@ -183,12 +183,6 @@ defineSuite([
         scene.camera.moveDown(200.0);
     }
 
-    function viewBottomRight() {
-        viewAllTiles();
-        scene.camera.moveRight(200.0);
-        scene.camera.moveDown(200.0);
-    }
-
     function viewInstances() {
         setZoom(30.0);
     }
@@ -1257,7 +1251,6 @@ defineSuite([
 
                 // Check that headers are equal
                 var subtreeRoot = root.children[0];
-                expect(root.geometricError).toEqual(subtreeRoot.geometricError);
                 expect(root.refine).toEqual(subtreeRoot.refine);
                 expect(root.contentBoundingVolume.boundingVolume).toEqual(subtreeRoot.contentBoundingVolume.boundingVolume);
 
@@ -2556,7 +2549,6 @@ defineSuite([
 
     it('adds stencil clear command first when unresolved', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
-
             tileset._root.children[0].children[0].children[0].unloadContent();
             tileset._root.children[0].children[0].children[1].unloadContent();
             tileset._root.children[0].children[0].children[2].unloadContent();
@@ -2570,7 +2562,6 @@ defineSuite([
 
     it('creates duplicate backface commands', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
-
             var statistics = tileset._statistics;
             var root = tileset._root;
 
@@ -2663,8 +2654,8 @@ defineSuite([
         });
     });
 
-    xit('immediatelyLoadDesiredLevelOfDetail', function() {
-        viewBottomRight();
+    it('immediatelyLoadDesiredLevelOfDetail', function() {
+        viewBottomLeft();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetOfTilesetsUrl,
             immediatelyLoadDesiredLevelOfDetail : true
@@ -2674,6 +2665,7 @@ defineSuite([
             return tileset._root.contentReadyPromise.then(function() {
                 tileset._root.refine = Cesium3DTileRefine.REPLACE;
                 tileset._root.children[0].refine = Cesium3DTileRefine.REPLACE;
+                tileset._allTilesAdditive = false;
                 return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function(tileset) {
                     var statistics = tileset._statistics;
                     expect(statistics.numberOfTilesWithContentReady).toBe(1);

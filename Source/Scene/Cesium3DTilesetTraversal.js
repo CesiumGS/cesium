@@ -422,23 +422,22 @@ define([
 
         // For traditional replacement refinement we need to check if all children are loaded before we can refine
         // The reason we always refine empty tiles is it looks better if children stream in as they are loaded to fill the empty space
-        var checkRefines = !skipLevelOfDetail(tileset) && replace && !hasEmptyContent(parent);
+        var checkRefines = !skipLevelOfDetail(tileset) && replace && !hasEmptyContent(tile);
         var refines = true;
 
         var anyChildrenVisible = false;
         for (i = 0; i < length; ++i) {
             var child = children[i];
-            var visible = isVisible(child);
-            if (visible) {
+            if (isVisible(child)) {
                 stack.push(child);
                 anyChildrenVisible = true;
+            } else if (checkRefines || tileset.loadSiblings) {
+                // Keep non-visible children loaded since they are still needed before the parent can refine.
+                // Or loadSiblings is true so we should always load tiles regardless of visibility.
+                loadTile(tileset, child, frameState);
+                touchTile(tileset, child, frameState);
             }
             if (checkRefines) {
-                if (!visible) {
-                    // Keep non-visible children loaded since they are still needed before the parent can refine.
-                    loadTile(tileset, child, frameState);
-                    touchTile(tileset, child, frameState);
-                }
                 var childRefines;
                 if (isVisibleButNotInRequestVolume(child)) {
                     childRefines = false;
@@ -485,7 +484,7 @@ define([
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
-            var baseTraversal = inBaseTraversal(tile, baseScreenSpaceError);
+            var baseTraversal = inBaseTraversal(tileset, tile, baseScreenSpaceError);
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
             var children = tile.children;
