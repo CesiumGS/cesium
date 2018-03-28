@@ -273,7 +273,6 @@ define([
         var visible = visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         visible = visible && tile.insideViewerRequestVolume(frameState);
         tile._visibilityPlaneMask = visible ? visibilityPlaneMask : CullingVolume.MASK_OUTSIDE;
-        tile._updatedFrame = frameState.frameNumber;
         return visible;
     }
 

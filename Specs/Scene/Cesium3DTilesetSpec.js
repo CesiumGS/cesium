@@ -1011,12 +1011,13 @@ defineSuite([
     it('replacement refinement - selects tile when inside viewer request volume', function() {
         var options = {
             skipLevelOfDetail : false
-        }
+        };
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl, options).then(function(tileset) {
             var statistics = tileset._statistics;
 
             var root = tileset._root;
             root.refine = Cesium3DTileRefine.REPLACE;
+            root.hasEmptyContent = false;
             root.hasRenderableContent = true; // mock content
             tileset.maximumScreenSpaceError = 0.0; // Force root tile to always not meet SSE since this is just checking the request volume
 
