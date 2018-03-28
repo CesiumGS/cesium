@@ -22,13 +22,13 @@ define([
      * @example
      * // Create Cesium World Terrain with default settings
      * var viewer = new Cesium.Viewer('cesiumContainer', {
-     *     terrainProvider : terrainProvider : Cesium.createWorldTerrain();
+     *     terrainProvider : Cesium.createWorldTerrain();
      * });
      *
      * @example
      * // Create Cesium World Terrain with water and normals.
      * var viewer = new Cesium.Viewer('cesiumContainer', {
-     *     terrainProvider : terrainProvider : Cesium.createWorldTerrain({
+     *     terrainProvider : Cesium.createWorldTerrain({
      *         requestWaterMask : true,
      *         requestVertexNormals : true
      *     });
