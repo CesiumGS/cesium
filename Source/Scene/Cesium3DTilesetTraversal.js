@@ -7,7 +7,6 @@ define([
         '../Core/ManagedArray',
         '../Core/Math',
         '../Core/OrthographicFrustum',
-        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './SceneMode'
@@ -20,7 +19,6 @@ define([
         ManagedArray,
         CesiumMath,
         OrthographicFrustum,
-        Cesium3DTileChildrenVisibility,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         SceneMode) {
@@ -30,6 +28,34 @@ define([
      * @private
      */
     function Cesium3DTilesetTraversal() {
+    }
+
+    var VisibilityFlag = {
+        NONE : 0,
+        VISIBLE : 1,
+        IN_REQUEST_VOLUME : 2
+    };
+
+    function isVisibleBit(flag) {
+        return (flag & VisibilityFlag.VISIBLE) > 0;
+    }
+
+    function inRequestVolumeBit(flag) {
+        return (flag & VisibilityFlag.IN_REQUEST_VOLUME) > 0;
+    }
+
+    function clearVisibility(tile) {
+        tile._visibilityFlag = tile._visibilityFlag & ~VisibilityFlag.VISIBLE;
+    }
+
+    function isVisible(tile) {
+        var flag = tile._visibilityFlag;
+        return isVisibleBit(flag) && inRequestVolumeBit(flag);
+    }
+
+    function isVisibleButNotInRequestVolume(tile) {
+        var flag = tile._visibilityFlag;
+        return isVisibleBit(flag) && !inRequestVolumeBit(flag);
     }
 
     var traversal = {
@@ -68,8 +94,8 @@ define([
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
         var root = tileset._root;
-        var rootVisible = updateTile(tileset, root, frameState);
-        if (!rootVisible) {
+        updateTile(tileset, root, frameState);
+        if (!isVisible(root)) {
             return;
         }
 
@@ -257,8 +283,10 @@ define([
 
     function updateVisibility(tileset, tile, frameState) {
         if (tile._updatedVisibilityFrame === frameState.frameNumber) {
-            return tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+            return;
         }
+
+        var visibilityFlag = VisibilityFlag.NONE;
 
         var parent = tile.parent;
         var parentTransform = defined(parent) ? parent.computedTransform : tileset._modelMatrix;
@@ -268,42 +296,49 @@ define([
         tile._distanceToCamera = tile.distanceToTile(frameState);
         tile._centerZDepth = tile.distanceToTileCenter(frameState);
         tile._screenSpaceError = getScreenSpaceError(tileset, tile.geometricError, tile, frameState);
+        tile._visibilityPlaneMask = tile.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
 
-        var visibilityPlaneMask = tile.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
-        var visible = visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
-        visible = visible && tile.insideViewerRequestVolume(frameState);
-        tile._visibilityPlaneMask = visible ? visibilityPlaneMask : CullingVolume.MASK_OUTSIDE;
-        return visible;
+        if (tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE) {
+            visibilityFlag |= VisibilityFlag.VISIBLE;
+        }
+
+        if (tile.insideViewerRequestVolume(frameState)) {
+            visibilityFlag |= VisibilityFlag.IN_REQUEST_VOLUME;
+        }
+
+        tile._visibilityFlag = visibilityFlag;
     }
 
-    function updateChildrenVisibility(tileset, tile, frameState) {
+    function anyChildrenVisible(tileset, tile, frameState) {
         var anyVisible = false;
         var children = tile.children;
         var length = children.length;
         for (var i = 0; i < length; ++i) {
-            var childVisible = updateVisibility(tileset, children[i], frameState);
-            anyVisible = anyVisible || childVisible;
+            var child = children[i];
+            updateVisibility(tileset, child, frameState);
+            anyVisible = anyVisible || isVisible(child);
         }
         return anyVisible;
     }
 
-    function getVisibility(tileset, tile, frameState) {
+    function updateTileVisibility(tileset, tile, frameState) {
         updateVisibility(tileset, tile, frameState);
 
-        // Not visible
-        if (tile._visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
-            return false;
+        if (!isVisible(tile)) {
+            return;
         }
 
         // Don't visit an expired subtree because it will be destroyed
         if (tile.hasTilesetContent && tile.contentExpired) {
-            return false;
+            clearVisibility(tile);
+            return;
         }
 
         // Use parent's geometric error with child's box to see if we already meet the SSE
         var parent = tile.parent;
         if (defined(parent) && (parent.refine === Cesium3DTileRefine.ADD) && getScreenSpaceError(tileset, parent.geometricError, tile, frameState) <= tileset._maximumScreenSpaceError) {
-            return false;
+            clearVisibility(tile);
+            return;
         }
 
         // Optimization - if none of the tile's children are visible then this tile isn't visible
@@ -311,19 +346,16 @@ define([
         var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
         var hasChildren = tile.children.length > 0;
         if (replace && useOptimization && hasChildren) {
-            var anyChildrenVisible = updateChildrenVisibility(tileset, tile, frameState);
-            if (!anyChildrenVisible) {
+            if (!anyChildrenVisible(tileset, tile, frameState)) {
                 ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-                return false;
+                clearVisibility(tile);
+                return;
             }
         }
-
-        return true;
     }
 
     function updateTile(tileset, tile, frameState) {
-        var visible = getVisibility(tileset, tile, frameState);
-        tile._visibilityPlaneMask = visible ? tile._visibilityPlaneMask : CullingVolume.MASK_OUTSIDE;
+        updateTileVisibility(tileset, tile, frameState);
 
         tile._selected = false;
         tile._finalResolution = false;
@@ -341,8 +373,6 @@ define([
             tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
             tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
         }
-
-        return visible;
     }
 
     function updateChildren(tileset, tile, frameState) {
@@ -352,10 +382,6 @@ define([
             updateTile(tileset, children[i], frameState);
         }
         children.sort(sortChildrenByDistanceToCamera);
-    }
-
-    function isVisible(tile) {
-        return tile._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
 
     function hasEmptyContent(tile) {
@@ -429,8 +455,17 @@ define([
                             loadTile(tileset, child, true, frameState);
                             touchTile(tileset, child, frameState);
                         }
-                        // Always run the internal base traversal even if we already know we can't refine. This keeps the tiles loaded while we wait to refine.
-                        var refinesToChild = hasEmptyContent(child) ? executeEmptyTraversal(tileset, child, baseScreenSpaceError, maximumScreenSpaceError, frameState) : child.contentAvailable;
+
+                        var refinesToChild;
+                        if (isVisibleButNotInRequestVolume(child)) {
+                            refinesToChild = false;
+                        } else if (hasEmptyContent(child)) {
+                            // Always run the internal base traversal even if we already know we can't refine. This keeps the tiles loaded while we wait to refine.
+                            refinesToChild = executeEmptyTraversal(tileset, child, baseScreenSpaceError, maximumScreenSpaceError, frameState);
+                        } else {
+                            refinesToChild = child.contentAvailable;
+                        }
+
                         refines = refines && refinesToChild;
                     }
                 }
@@ -498,8 +533,8 @@ define([
                 allDescendantsLoaded = false;
             }
 
-            var visible = updateTile(tileset, tile, frameState);
-            if (!visible) {
+            updateTile(tileset, tile, frameState);
+            if (!isVisible(tile)) {
                 // Load tiles that aren't visible since they are still needed for the parent to refine
                 // Tiles that are visible will get loaded from within executeBaseTraversal
                 loadTile(tileset, tile, true, frameState);

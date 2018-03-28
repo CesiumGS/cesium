@@ -23,7 +23,6 @@ define([
         '../Core/Resource',
         '../Core/RuntimeError',
         '../ThirdParty/when',
-        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizationHint',
@@ -58,7 +57,6 @@ define([
         Resource,
         RuntimeError,
         when,
-        Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileOptimizationHint,
@@ -318,6 +316,7 @@ define([
         this._centerZDepth = 0; // TODO : remove?
         this._screenSpaceError = 0;
         this._visibilityPlaneMask = 0;
+        this._visibilityFlag = 0;
 
         this._finalResolution = true;
         this._depth = 0;
