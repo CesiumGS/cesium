@@ -15,6 +15,7 @@ define([
         '../Core/isArray',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
+        '../Core/PlanarExtentsGeometryInstanceAttribute',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/SphericalExtentsGeometryInstanceAttribute',
@@ -41,6 +42,7 @@ define([
         isArray,
         CesiumMath,
         OrientedBoundingBox,
+        PlanarExtentsGeometryInstanceAttribute,
         Rectangle,
         Resource,
         SphericalExtentsGeometryInstanceAttribute,
@@ -767,7 +769,7 @@ define([
             }
 
             // Now compute the min/max heights for the primitive
-            setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
+            setMinMaxTerrainHeights(this, rectangle, ellipsoid);
             var exaggeration = frameState.terrainExaggeration;
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
@@ -777,9 +779,13 @@ define([
                 geometry = instance.geometry;
                 instanceType = geometry.constructor;
 
+                var rectangle = getRectangle(frameState, geometry);
                 var attributes = {
-                    sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(getRectangle(frameState, geometry))
+                    sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(rectangle),
+                    longitudePlaneExtents : PlanarExtentsGeometryInstanceAttribute.getLongitudeExtents(rectangle, ellipsoid),
+                    latitudePlaneExtents : PlanarExtentsGeometryInstanceAttribute.getLatitudeExtents(rectangle, ellipsoid)
                 };
+                // TODO: pick and choose?
                 var instanceAttributes = instance.attributes;
                 for (var attributeKey in instanceAttributes) {
                     if (instanceAttributes.hasOwnProperty(attributeKey)) {

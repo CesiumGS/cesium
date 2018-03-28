@@ -168,9 +168,11 @@ viewer.entities.add({
     }
 });
 */
+
 var rightHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 rightHandler.setInputAction(function(movement) {
-    var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
+    var cartesian = viewer.scene.pickPosition(movement.position);
+    //var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
     if (cartesian) {
         var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
         var lat = Cesium.Math.toDegrees(cartographic.latitude);
@@ -183,7 +185,7 @@ rightHandler.setInputAction(function(movement) {
         viewer.entities.add({
             name : lat + ' ' + long,
             rectangle : {
-                coordinates : Cesium.Rectangle.fromDegrees(long - 0.2, lat - 0.1, long + 0.2, lat + 0.1),
+                coordinates : Cesium.Rectangle.fromDegrees(long - 0.0002, lat - 0.0001, long + 0.0002, lat + 0.0001),
                 material :
                 new Cesium.CheckerboardMaterialProperty({
                     evenColor : Cesium.Color.ORANGE,
@@ -197,7 +199,7 @@ rightHandler.setInputAction(function(movement) {
 
 var leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 leftHandler.setInputAction(function(movement) {
-    var cartesian = viewer.camera.pickEllipsoid(movement.position, scene.globe.ellipsoid);
+    var cartesian = viewer.scene.pickPosition(movement.position);
     if (cartesian) {
         console.log('new Cesium.Cartesian3(' + cartesian.x + ', ' + cartesian.y + ', ' + cartesian.z + '),');
     }

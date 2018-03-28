@@ -46,7 +46,7 @@ float fastApproximateAtan2(float x, float y) {
  * @name czm_approximateSphericalCoordinates
  * @glslFunction
  *
- * @param {vec3} normal Unit-length normal.
+ * @param {vec3} normal arbitrary-length normal.
  *
  * @returns {vec2} Approximate latitude and longitude spherical coordinates.
  */

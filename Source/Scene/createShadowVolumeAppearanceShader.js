@@ -17,19 +17,20 @@ define([
      * Creates the shadow volume fragment shader for a ClassificationPrimitive to use a given appearance.
      *
      * @param {Appearance} appearance An Appearance to be used with a ClassificationPrimitive.
-     * @param {Boolean} [sphericalExtentsCulling=false] Discard fragments outside the instance's spherical extents.
+     * @param {Boolean} [extentsCulling=false] Discard fragments outside the instance's spherical extents.
      * @returns {String} Shader source for a fragment shader using the input appearance.
      * @private
      */
-    function createShadowVolumeAppearanceShader(appearance, sphericalExtentsCulling) {
+    function createShadowVolumeAppearanceShader(appearance, extentsCulling, small) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('appearance', appearance);
         //>>includeEnd('debug');
 
-        var extentsCull = defaultValue(sphericalExtentsCulling, false);
+        var extentsCull = defaultValue(extentsCulling, true);
+        var smallExtents = defaultValue(small, true);
 
         if (appearance instanceof PerInstanceColorAppearance) {
-            return getPerInstanceColorShader(extentsCull, appearance.flat);
+            return getPerInstanceColorShader(extentsCull, appearance.flat, smallExtents);
         }
 
         var shaderDependencies = shaderDependenciesScratch.reset();
@@ -50,16 +51,18 @@ define([
             '#endif\n';
         if (extentsCull || usesSt) {
             glsl +=
-                'varying vec4 v_sphericalExtents;\n';
+                'varying vec4 v_sphericalExtents;\n' +
+                'varying vec4 v_planarExtentsLatitude;\n' +
+                'varying vec4 v_planarExtentsLongitude;\n';
         }
 
-        glsl += getLocalFunctions(shaderDependencies);
+        glsl += getLocalFunctions(shaderDependencies, smallExtents);
 
         glsl +=
             'void main(void)\n' +
             '{\n';
 
-        glsl += getDependenciesAndCulling(shaderDependencies, extentsCull);
+        glsl += getDependenciesAndCulling(shaderDependencies, extentsCull, smallExtents);
 
         glsl += '    czm_materialInput materialInput;\n';
         if (usesNormalEC) {
@@ -86,26 +89,26 @@ define([
         return glsl;
     }
 
-    function getPerInstanceColorShader(sphericalExtentsCulling, flatShading) {
+    function getPerInstanceColorShader(extentsCulling, flatShading, smallExtents) {
         var glsl =
             '#ifdef GL_EXT_frag_depth\n' +
             '#extension GL_EXT_frag_depth : enable\n' +
             '#endif\n' +
             'varying vec4 v_color;\n';
-        if (sphericalExtentsCulling) {
+        if (extentsCulling) {
             glsl +=
                 'varying vec4 v_sphericalExtents;\n';
         }
         var shaderDependencies = shaderDependenciesScratch.reset();
-        shaderDependencies.requiresTexcoords = sphericalExtentsCulling;
+        shaderDependencies.requiresTexcoords = extentsCulling;
         shaderDependencies.requiresNormalEC = !flatShading;
 
-        glsl += getLocalFunctions(shaderDependencies);
+        glsl += getLocalFunctions(shaderDependencies, smallExtents);
 
         glsl += 'void main(void)\n' +
                 '{\n';
 
-        glsl += getDependenciesAndCulling(shaderDependencies, sphericalExtentsCulling);
+        glsl += getDependenciesAndCulling(shaderDependencies, extentsCulling, smallExtents);
 
         if (flatShading) {
             glsl +=
@@ -125,7 +128,7 @@ define([
         return glsl;
     }
 
-    function getDependenciesAndCulling(shaderDependencies, sphericalExtentsCulling) {
+    function getDependenciesAndCulling(shaderDependencies, extentsCulling, smallExtents) {
         var glsl = '';
         if (shaderDependencies.requiresEyeCoord) {
             glsl +=
@@ -137,13 +140,20 @@ define([
                 '    vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;\n';
         }
         if (shaderDependencies.requiresTexcoords) {
-            glsl +=
+            if (smallExtents) {  // TODO: add ability to do long-and-narrows?
+                glsl +=
+                '    // Unpack planes and transform to eye space\n' +
+                '    float u = computePlanarTexcoord(v_planarExtentsLatitude, worldCoord);\n' +
+                '    float v = computePlanarTexcoord(v_planarExtentsLongitude, worldCoord);\n';
+            } else {
+                glsl +=
                 '    // Treat world coords as a sphere normal for spherical coordinates\n' +
                 '    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoord);\n' +
                 '    float u = (sphericalLatLong.x - v_sphericalExtents.y) * v_sphericalExtents.w;\n' +
-                '    float v = (sphericalLatLong.y - v_sphericalExtents.x) * v_sphericalExtents.z;\n';
+                '    float v = (sphericalLatLong.y - v_sphericalExtents.x) * v_sphericalExtents.z;\n'; // TODO: clean up...
+            }
         }
-        if (sphericalExtentsCulling) {
+        if (extentsCulling) {
             glsl +=
                 '    if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {\n' + // TODO: there's floating point problems at the edges of rectangles. Use remapping.
                 '       discard;\n' +
@@ -161,7 +171,7 @@ define([
         return glsl;
     }
 
-    function getLocalFunctions(shaderDependencies) {
+    function getLocalFunctions(shaderDependencies, smallExtents) {
         var glsl = '';
         if (shaderDependencies.requiresEyeCoord) {
             glsl +=
@@ -195,6 +205,13 @@ define([
                 '    vec3 downOrLeftEC = getEyeCoord3FromWindowCoord(fragCoord2 - positiveOffset, downOrLeftDepth);\n' +
 
                 '    return (upOrRightEC - (eyeCoord.xyz / eyeCoord.w)) * useUpOrRight + ((eyeCoord.xyz / eyeCoord.w) - downOrLeftEC) * useDownOrLeft;\n' +
+                '}\n';
+        }
+        if (shaderDependencies.requiresTexcoords && smallExtents) {
+            glsl +=
+                'float computePlanarTexcoord(vec4 packedPlanarExtent, vec3 worldCoords) {\n' +
+                '    // planar extent is a plane at the origin (so just a direction) and an extent distance.\n' +
+                '    return (dot(packedPlanarExtent.xyz, worldCoords)) * packedPlanarExtent.w;\n' +
                 '}\n';
         }
         return glsl;

@@ -18,6 +18,8 @@ uniform float u_globeMinimumAltitude;
 
 #ifndef VECTOR_TILE
 varying vec4 v_sphericalExtents;
+varying vec4 v_planarExtentsLatitude;
+varying vec4 v_planarExtentsLongitude;
 #endif
 
 #ifdef PER_INSTANCE_COLOR
@@ -35,6 +37,8 @@ void main()
 #endif
 
     v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);
+    v_planarExtentsLatitude = czm_batchTable_latitudePlaneExtents(batchId);
+    v_planarExtentsLongitude = czm_batchTable_longitudePlaneExtents(batchId);
 
     vec4 position = czm_computePosition();
 
