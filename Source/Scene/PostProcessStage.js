@@ -518,7 +518,7 @@ define([
                 '} \n\n' +
                 'bool czm_selected() \n' +
                 '{ \n' +
-                '    return czm_selected(v_textureCoordinates); \n' +
+                '    return czm_selected(vec2(0.0)); \n' +
                 '} \n\n' +
                 fs;
         }
