@@ -6,7 +6,6 @@ define([
         './defineProperties',
         './EllipseGeometry',
         './Ellipsoid',
-        './Rectangle',
         './VertexFormat'
     ], function(
         Cartesian3,
@@ -16,7 +15,6 @@ define([
         defineProperties,
         EllipseGeometry,
         Ellipsoid,
-        Rectangle,
         VertexFormat) {
     'use strict';
 
