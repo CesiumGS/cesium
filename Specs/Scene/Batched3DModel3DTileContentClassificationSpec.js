@@ -1,5 +1,4 @@
 defineSuite([
-        'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -14,13 +13,13 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/Transforms',
         'Renderer/Pass',
+        'Scene/Batched3DModel3DTileContent',
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], 'Scene/Batched3DModel3DTileContentClassification', function(
-        Batched3DModel3DTileContent,
         Cartesian3,
         Cartographic,
         Color,
@@ -35,6 +34,7 @@ defineSuite([
         RectangleGeometry,
         Transforms,
         Pass,
+        Batched3DModel3DTileContent,
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,

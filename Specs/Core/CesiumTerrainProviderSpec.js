@@ -5,6 +5,7 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
         'Core/HeightmapTerrainData',
+        'Core/IonResource',
         'Core/Math',
         'Core/QuantizedMeshTerrainData',
         'Core/Request',
@@ -20,6 +21,7 @@ defineSuite([
         GeographicTilingScheme,
         getAbsoluteUri,
         HeightmapTerrainData,
+        IonResource,
         CesiumMath,
         QuantizedMeshTerrainData,
         Request,
@@ -314,7 +316,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider._tileCredits[0].text).toBe('This is a child tileset! This amazing data is courtesy The Amazing Data Source!');
+            expect(provider._tileCredits[0].html).toBe('This is a child tileset! This amazing data is courtesy The Amazing Data Source!');
             expect(provider.requestVertexNormals).toBe(true);
             expect(provider.requestWaterMask).toBe(true);
             expect(provider.hasVertexNormals).toBe(false); // Neither tileset has them
@@ -455,7 +457,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider._tileCredits[0].text).toBe('This amazing data is courtesy The Amazing Data Source!');
+            expect(provider._tileCredits[0].html).toBe('This amazing data is courtesy The Amazing Data Source!');
         });
     });
 
@@ -504,30 +506,6 @@ defineSuite([
                 expect(Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]).toContain('foo2.com');
                 provider.requestTileGeometry(1, 0, 1);
                 expect(Resource._Implementations.loadWithXhr.calls.mostRecent().args[0]).toContain('foo3.com');
-            });
-        });
-
-        it('uses the proxy if one is supplied', function() {
-            var baseUrl = 'made/up/url';
-
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url.indexOf('/proxy/?')).toBe(0);
-
-                // Just return any old file, as long as its big enough
-                Resource._DefaultImplementations.loadWithXhr('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
-            };
-
-            returnHeightmapTileJson();
-
-            var terrainProvider = new CesiumTerrainProvider({
-                url : baseUrl,
-                proxy : new DefaultProxy('/proxy/')
-            });
-
-            return pollToPromise(function() {
-                return terrainProvider.ready;
-            }).then(function() {
-                return terrainProvider.requestTileGeometry(0, 0, 0);
             });
         });
 
@@ -744,6 +722,23 @@ defineSuite([
 
             return waitForTile(0, 0, 0, false, false, function(loadedData) {
                 expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+            });
+        });
+
+        it('Uses query parameter extensions for ion resource', function() {
+            var terrainProvider = new CesiumTerrainProvider({
+                url: IonResource.fromAssetId(1),
+                requestVertexNormals: true,
+                requestWaterMask: true
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                var getDerivedResource = spyOn(IonResource.prototype, 'getDerivedResource').and.callThrough();
+                terrainProvider.requestTileGeometry(0, 0, 0);
+                var options = getDerivedResource.calls.argsFor(0)[0];
+                expect(options.queryParameters.extensions).toEqual('octvertexnormals-watermask');
             });
         });
     });

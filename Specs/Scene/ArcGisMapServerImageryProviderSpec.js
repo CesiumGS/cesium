@@ -480,57 +480,6 @@ defineSuite([
         });
     });
 
-    it('routes requests through a proxy if one is specified', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
-        var proxy = new DefaultProxy('/proxy/');
-
-        stubJSONPCall(baseUrl, geographicResult, true);
-
-        var provider = new ArcGisMapServerImageryProvider({
-            url : baseUrl,
-            proxy : proxy
-        });
-
-        expect(provider.url).toEqual(baseUrl);
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.tileWidth).toEqual(128);
-            expect(provider.tileHeight).toEqual(256);
-            expect(provider.maximumLevel).toEqual(2);
-            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.credit).toBeDefined();
-            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
-            expect(provider.proxy).toEqual(proxy);
-            expect(provider.usingPrecachedTiles).toEqual(true);
-
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
-                } else {
-                    expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
-
-                    // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-                }
-            };
-
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(proxy.getURL(getAbsoluteUri(baseUrl + 'tile/0/0/0')));
-
-                // Just return any old image.
-                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
-            };
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
     it('raises error on unsupported WKID', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid/';
 
@@ -1026,35 +975,6 @@ defineSuite([
                 return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
                 });
-            });
-        });
-
-        it('picks using proxy if one is specified', function() {
-            var baseUrl = 'http://made/up/map/server/';
-            var proxy = new DefaultProxy('/proxy/');
-            var layers = '0,1';
-
-            var provider = new ArcGisMapServerImageryProvider({
-                url : baseUrl,
-                usePreCachedTilesIfAvailable : false,
-                layers : layers,
-                proxy : proxy
-            });
-
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                var proxiedUri = new Uri(url);
-                var originalUriQuery = new Uri(decodeURIComponent(proxiedUri.query)).query;
-
-                // DefaultProxy simply puts the original request as the query string; duplicate it here expect match
-                expect(proxiedUri.toString()).toEqual(proxy.getURL(baseUrl + 'identify?' + originalUriQuery));
-
-                Resource._DefaultImplementations.loadWithXhr('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
-            };
-
-            return pollToPromise(function() {
-                return provider.ready;
-            }).then(function() {
-                return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
             });
         });
     });

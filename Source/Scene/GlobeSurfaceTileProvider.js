@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
@@ -40,6 +39,7 @@ define([
         '../Scene/DepthFunction',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        './ClippingPlaneCollection',
         './GlobeSurfaceTile',
         './ImageryLayer',
         './QuadtreeTileLoadState',
@@ -51,7 +51,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        ClippingPlaneCollection,
         Color,
         ColorGeometryInstanceAttribute,
         combine,
@@ -87,6 +86,7 @@ define([
         DepthFunction,
         PerInstanceColorAppearance,
         Primitive,
+        ClippingPlaneCollection,
         GlobeSurfaceTile,
         ImageryLayer,
         QuadtreeTileLoadState,
@@ -172,7 +172,7 @@ define([
          * @type {ClippingPlaneCollection}
          * @private
          */
-        this.clippingPlanes = undefined;
+        this._clippingPlanes = undefined;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -302,6 +302,21 @@ define([
                     this._quadtree.invalidateAllTiles();
                 }
             }
+        },
+        /**
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+         *
+         * @type {ClippingPlaneCollection}
+         *
+         * @private
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._clippingPlanes;
+            },
+            set : function(value) {
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
+            }
         }
     });
 
@@ -396,7 +411,11 @@ define([
                 tiles.length = 0;
             }
         }
-
+        // update clipping planes
+        var clippingPlanes = this._clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
         this._usedDrawCommands = 0;
     };
 
@@ -548,7 +567,7 @@ define([
             }
         }
 
-        var clippingPlanes = this.clippingPlanes;
+        var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
             tile.isClipped = (planeIntersection !== Intersect.INSIDE);
@@ -654,8 +673,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -666,6 +683,8 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
+        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+
         return destroyObject(this);
     };
 
@@ -826,7 +845,8 @@ define([
         }
     };
 
-    function createTileUniformMap(frameState) {
+    var scratchClippingPlaneMatrix = new Matrix4();
+    function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         var uniformMap = {
             u_initialColor : function() {
                 return this.properties.initialColor;
@@ -914,11 +934,17 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
-            u_clippingPlanesLength : function() {
-                return this.properties.clippingPlanes.length;
-            },
             u_clippingPlanes : function() {
-                return this.properties.clippingPlanes;
+                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
+                if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
+                    // Check in case clippingPlanes hasn't been updated yet.
+                    return clippingPlanes.texture;
+                }
+                return frameState.context.defaultTexture;
+            },
+            u_clippingPlanesMatrix : function() {
+                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
+                return defined(clippingPlanes) ? Matrix4.multiply(frameState.context.uniformState.view, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix) : Matrix4.IDENTITY;
             },
             u_clippingPlanesEdgeStyle : function() {
                 var style = this.properties.clippingPlanesEdgeColor;
@@ -963,7 +989,6 @@ define([
 
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
-                clippingPlanes : [],
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
                 clippingPlanesEdgeWidth : 0.0
             }
@@ -1211,7 +1236,7 @@ define([
                 command.boundingVolume = new BoundingSphere();
                 command.orientedBoundingBox = undefined;
 
-                uniformMap = createTileUniformMap(frameState);
+                uniformMap = createTileUniformMap(frameState, tileProvider);
 
                 tileProvider._drawCommands.push(command);
                 tileProvider._uniformMaps.push(uniformMap);
@@ -1342,37 +1367,18 @@ define([
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             // update clipping planes
-            var clippingPlanes = tileProvider.clippingPlanes;
-            var length = 0;
-
-            if (defined(clippingPlanes) && tile.isClipped) {
-                length = clippingPlanes.length;
-            }
-
-            var packedPlanes = uniformMapProperties.clippingPlanes;
-            var packedLength = packedPlanes.length;
-            if (packedLength !== length) {
-                packedPlanes.length = length;
-
-                for (var i = packedLength; i < length; ++i) {
-                    packedPlanes[i] = new Cartesian4();
-                }
-            }
-
-            if (defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped) {
-                clippingPlanes.transformAndPackPlanes(context.uniformState.view, packedPlanes);
+            var clippingPlanes = tileProvider._clippingPlanes;
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped;
+            if (clippingPlanesEnabled) {
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
-
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0) && ClippingPlaneCollection.isSupported();
-            var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : false;
 
             if (defined(tileProvider.uniformMap)) {
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, unionClippingRegions);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

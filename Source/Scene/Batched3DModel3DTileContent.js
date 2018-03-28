@@ -1,5 +1,4 @@
 define([
-        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -20,7 +19,6 @@ define([
         './Model',
         './ModelUtility'
     ], function(
-        ClippingPlaneCollection,
         Color,
         defaultValue,
         defined,
@@ -68,6 +66,10 @@ define([
         this._model = undefined;
         this._batchTable = undefined;
         this._features = undefined;
+
+        // Populate from gltf when available
+        this._batchIdAttributeName = undefined;
+        this._diffuseAttributeOrUniformName = {};
 
         /**
          * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
@@ -206,11 +208,15 @@ define([
     function getVertexShaderCallback(content) {
         return function(vs, programId) {
             var batchTable = content._batchTable;
-            var gltf = content._model.gltf;
             var handleTranslucent = !defined(content._tileset.classificationType);
-            var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
-            var callback = batchTable.getVertexShaderCallback(handleTranslucent, batchIdAttributeName, diffuseAttributeOrUniformName);
+
+            var gltf = content._model.gltf;
+            if (defined(gltf)) {
+                content._batchIdAttributeName = getBatchIdAttributeName(gltf);
+                content._diffuseAttributeOrUniformName[programId] = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+            }
+
+            var callback = batchTable.getVertexShaderCallback(handleTranslucent, content._batchIdAttributeName, content._diffuseAttributeOrUniformName[programId]);
             return defined(callback) ? callback(vs) : vs;
         };
     }
@@ -218,9 +224,13 @@ define([
     function getPickVertexShaderCallback(content) {
         return function(vs) {
             var batchTable = content._batchTable;
+
             var gltf = content._model.gltf;
-            var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var callback = batchTable.getPickVertexShaderCallback(batchIdAttributeName);
+            if (defined(gltf)) {
+                content._batchIdAttributeName = getBatchIdAttributeName(gltf);
+            }
+
+            var callback = batchTable.getPickVertexShaderCallback(content._batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };
     }
@@ -228,10 +238,13 @@ define([
     function getFragmentShaderCallback(content) {
         return function(fs, programId) {
             var batchTable = content._batchTable;
-            var gltf = content._model.gltf;
             var handleTranslucent = !defined(content._tileset.classificationType);
-            var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
-            var callback = batchTable.getFragmentShaderCallback(handleTranslucent, diffuseAttributeOrUniformName);
+
+            var gltf = content._model.gltf;
+            if (defined(gltf)) {
+                content._diffuseAttributeOrUniformName[programId] = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+            }
+            var callback = batchTable.getFragmentShaderCallback(handleTranslucent, content._diffuseAttributeOrUniformName[programId]);
             return defined(callback) ? callback(fs) : fs;
         };
     }
@@ -379,15 +392,6 @@ define([
         };
 
         if (!defined(tileset.classificationType)) {
-            var clippingPlanes;
-            if (defined(tileset.clippingPlanes)) {
-                clippingPlanes = tileset.clippingPlanes.clone();
-            } else {
-                clippingPlanes = new ClippingPlaneCollection({
-                    enabled : false
-                });
-            }
-
             // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
             // The pick shader still needs to be patched.
             content._model = new Model({
@@ -409,8 +413,7 @@ define([
                 pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
                 pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-                pickObject : pickObject,
-                clippingPlanes : clippingPlanes
+                pickObject : pickObject
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -503,12 +506,11 @@ define([
 
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        var modelClippingPlanes = this._model.clippingPlanes;
-        if (defined(tilesetClippingPlanes)) {
-            tilesetClippingPlanes.clone(modelClippingPlanes);
-            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
-        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
-            modelClippingPlanes.enabled = false;
+        if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+            // Dereference the clipping planes from the model if they are irrelevant.
+            // Link/Dereference directly to avoid ownership checks.
+            // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
+            this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
         }
 
         this._model.update(frameState);

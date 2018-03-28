@@ -1,5 +1,4 @@
 define([
-        './Sampler',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -16,9 +15,9 @@ define([
         '../Core/OrthographicFrustum',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './Sampler'
     ], function(
-        Sampler,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -35,7 +34,8 @@ define([
         OrthographicFrustum,
         Simon1994PlanetaryPositions,
         Transforms,
-        SceneMode) {
+        SceneMode,
+        Sampler) {
     'use strict';
 
     /**
@@ -860,6 +860,18 @@ define([
         invertClassificationColor : {
             get : function() {
                 return this._invertClassificationColor;
+            }
+        },
+
+        /**
+         * Whether or not the current projection is orthographic in 3D.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Boolean}
+         */
+        orthographicIn3D : {
+            get : function() {
+                return this._orthographicIn3D;
             }
         }
     });

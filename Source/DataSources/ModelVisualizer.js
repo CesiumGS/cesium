@@ -126,9 +126,6 @@ define([
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
                     scene : this._scene
                 });
-
-                model.readyPromise.otherwise(onModelError);
-
                 model.id = entity;
                 primitives.add(model);
 
@@ -137,9 +134,12 @@ define([
                     url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {}
+                    originalNodeMatrixHash : {},
+                    loadFail : false
                 };
                 modelHash[entity.id] = modelData;
+
+                checkModelLoad(model, entity, modelHash);
             }
 
             model.show = true;
@@ -250,7 +250,7 @@ define([
         //>>includeEnd('debug');
 
         var modelData = this._modelHash[entity.id];
-        if (!defined(modelData)) {
+        if (!defined(modelData) || modelData.loadFail) {
             return BoundingSphereState.FAILED;
         }
 
@@ -324,8 +324,11 @@ define([
         }
     }
 
-    function onModelError(error) {
-        console.error(error);
+    function checkModelLoad(model, entity, modelHash){
+        model.readyPromise.otherwise(function(error){
+            console.error(error);
+            modelHash[entity.id].loadFail = true;
+        });
     }
 
     return ModelVisualizer;

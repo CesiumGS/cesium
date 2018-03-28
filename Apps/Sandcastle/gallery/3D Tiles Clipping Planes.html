@@ -48,7 +48,6 @@ function startup(Cesium) {
 
 // Add a clipping plane, a plane geometry to show the representation of the
 // plane, and control the magnitude of the plane distance with the mouse.
-// Clipping planes are not currently supported in Internet Explorer.
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox: false,
@@ -103,7 +102,7 @@ moveHandler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
+var scratchPlane = new Cesium.ClippingPlane(Cesium.Cartesian3.UNIT_X, 0.0);
 function createPlaneUpdateFunction(plane, transform) {
     return function () {
         plane.distance = targetY;
@@ -114,7 +113,7 @@ function createPlaneUpdateFunction(plane, transform) {
 var tileset;
 function loadTileset(url) {
     var clippingPlanes = [
-        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -156,7 +155,7 @@ function loadTileset(url) {
 var modelEntityClippingPlanes;
 function loadModel(url) {
     var clippingPlanes = [
-        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+        new Cesium.ClippingPlane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
 
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
@@ -259,6 +258,7 @@ function reset() {
     viewer.scene.primitives.removeAll();
     planeEntities = [];
     targetY = 0.0;
+    tileset = undefined;
 }
 
 //Sandcastle_End

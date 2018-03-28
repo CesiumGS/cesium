@@ -3,7 +3,6 @@ define([
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -14,7 +13,6 @@ define([
         Credit,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Rectangle,
         Resource,
@@ -22,7 +20,7 @@ define([
         UrlTemplateImageryProvider) {
     'use strict';
 
-    var defaultCredit = new Credit({text: 'MapQuest, Open Street Map and contributors, CC-BY-SA'});
+    var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
     /**
      * Creates a {@link UrlTemplateImageryProvider} instance that provides tiled imagery hosted by OpenStreetMap
@@ -68,14 +66,7 @@ define([
         var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
         url = appendForwardSlash(url);
         url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
-
-        if (defined(options.proxy)) {
-            deprecationWarning('createOpenStreetMapImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(url);
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
@@ -101,7 +92,7 @@ define([
 
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
-            credit = new Credit({text: credit});
+            credit = new Credit(credit);
         }
 
         return new UrlTemplateImageryProvider({

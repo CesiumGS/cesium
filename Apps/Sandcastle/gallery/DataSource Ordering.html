@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Change the order in which DataSources draw ground primitives">
+    <meta name="cesium-sandcastle-labels" content="DataSources">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var czml1 = [{
+    "id" : "document",
+    "name" : "CZML Geometries: Rectangle",
+    "version" : "1.0"
+}, {
+    "rectangle" : {
+        "coordinates" : {
+            "wsenDegrees" : [-120, 40, -110, 50]
+        },
+        "fill" : true,
+        "material" : {
+            "solidColor" : {
+                "color": {
+                    "rgba" : [255, 0, 0, 255]
+                }
+            }
+        }
+    }
+}, {
+    "rectangle" : {
+        "coordinates" : {
+            "wsenDegrees" : [-110, 40, -100, 50]
+        },
+        "fill" : true,
+        "material" : {
+            "solidColor" : {
+                "color": {
+                    "rgba" : [0, 0, 255, 255]
+                }
+            }
+        }
+    }
+}];
+
+var czml2 = [{
+    "id" : "document",
+    "name" : "CZML Geometries: Rectangle",
+    "version" : "1.0"
+}, {
+    "rectangle" : {
+        "coordinates" : {
+            "wsenDegrees" : [-120, 45, -110, 55]
+        },
+        "fill" : true,
+        "material" : {
+            "solidColor" : {
+                "color": {
+                    "rgba" : [255, 255, 0, 255]
+                }
+            }
+        }
+    }
+}, {
+    "rectangle" : {
+        "coordinates" : {
+            "wsenDegrees" : [-110, 45, -100, 55]
+        },
+        "fill" : true,
+        "material" : {
+            "solidColor" : {
+                "color": {
+                    "rgba" : [0, 255, 255, 255]
+                }
+            }
+        }
+    }
+}];
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+var promise1 = Cesium.CzmlDataSource.load(czml1);
+viewer.dataSources.add(promise1);
+var promise2 = Cesium.CzmlDataSource.load(czml2);
+viewer.dataSources.add(promise2);
+
+Sandcastle.addToolbarButton('Swap', function() {
+    Cesium.when.all([promise1, promise2])
+    .then(function(results) {
+        var ds1 = results[0];
+        var ds2 = results[1];
+        if (viewer.dataSources.indexOf(ds1) === 0) {
+            viewer.dataSources.raise(ds1);
+        } else {
+            viewer.dataSources.lower(ds1);
+        }
+    });
+});//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

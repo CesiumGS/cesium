@@ -232,29 +232,6 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('uses the proxy if one is supplied', function() {
-            var baseUrl = 'made/up/url';
-
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                expect(url.indexOf('/proxy/?')).toBe(0);
-                expect(url.indexOf(encodeURIComponent('.tif?cesium=true'))).toBeGreaterThanOrEqualTo(0);
-
-                // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            };
-
-            var terrainProvider = new VRTheWorldTerrainProvider({
-                url : baseUrl,
-                proxy : new DefaultProxy('/proxy/')
-            });
-
-            return pollToPromise(function() {
-                return terrainProvider.ready;
-            }).then(function() {
-                return terrainProvider.requestTileGeometry(0, 0, 0);
-            });
-        });
-
         it('provides HeightmapTerrainData', function() {
             var baseUrl = 'made/up/url';
 

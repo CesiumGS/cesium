@@ -1,6 +1,6 @@
 define([
-        '../Core/defined',
-        '../Core/defineProperties'
+        './defined',
+        './defineProperties'
     ], function(
         defined,
         defineProperties) {
@@ -29,6 +29,11 @@ define([
         this.next = next;
     }
 
+    /**
+     * Adds the item to the end of the list
+     * @param {Object} [item]
+     * @return {DoublyLinkedListNode}
+     */
     DoublyLinkedList.prototype.add = function(item) {
         var node = new DoublyLinkedListNode(item, this.tail, undefined);
 
@@ -36,7 +41,6 @@ define([
             this.tail.next = node;
             this.tail = node;
         } else {
-            // Insert into empty linked list
             this.head = node;
             this.tail = node;
         }
@@ -44,6 +48,43 @@ define([
         ++this._length;
 
         return node;
+    };
+
+    /**
+     * Adds the item to the front of the list
+     * @param {Object} [item]
+     * @return {DoublyLinkedListNode}
+     */
+    DoublyLinkedList.prototype.addFront = function(item) {
+        var node = new DoublyLinkedListNode(item, undefined, this.head);
+
+        if (defined(this.head)) {
+            this.head.previous = node;
+            this.head = node;
+        } else {
+            this.head = node;
+            this.tail = node;
+        }
+
+        ++this._length;
+
+        return node;
+    };
+
+    /**
+     * Moves the given node to the front of the list
+     * @param {DoublyLinkedListNode} node
+     */
+    DoublyLinkedList.prototype.moveToFront = function(node) {
+        if (!defined(node) || this.head === node) {
+            return;
+        }
+
+        remove(this, node);
+        node.next = this.head;
+        node.previous = undefined;
+        this.head.previous = node;
+        this.head = node;
     };
 
     function remove(list, node) {
@@ -68,6 +109,10 @@ define([
         node.previous = undefined;
     }
 
+    /**
+     * Removes the given node from the list
+     * @param {DoublyLinkedListNode} node
+     */
     DoublyLinkedList.prototype.remove = function(node) {
         if (!defined(node)) {
             return;
@@ -78,6 +123,43 @@ define([
         --this._length;
     };
 
+    /**
+     * Removes all nodes after the start index (inclusive)
+     * @param {Number} startIndex The index of the first node to remove
+     */
+    DoublyLinkedList.prototype.removeAfter = function(startIndex) {
+        var currentLength = this._length;
+        if (!defined(startIndex) || startIndex >= currentLength) {
+            return;
+        }
+
+        if (startIndex === 0) {
+            this.head = undefined;
+            this.tail = undefined;
+            this._length = 0;
+            return;
+        }
+
+        if (startIndex === currentLength - 1) {
+            this.remove(this.tail);
+            return;
+        }
+
+        var node = this.head;
+        for (var i = 0; i < startIndex; ++i) {
+            node = node.next;
+        }
+
+        node.previous.next = undefined;
+        this.tail = node.previous;
+        this._length = startIndex;
+    };
+
+    /**
+     * Moves nextNode after node
+     * @param {DoublyLinkedListNode} node
+     * @param {DoublyLinkedListNode} nextNode
+     */
     DoublyLinkedList.prototype.splice = function(node, nextNode) {
         if (node === nextNode) {
             return;

@@ -415,7 +415,15 @@ defineSuite([
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
         expect(scene).toRender(color);
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toRender(color);
+        expect(scene).toRenderAndCall(function(rgba) {
+            for (var i = 0; i < color.length; ++i) {
+                if (color[i] === 0) {
+                    expect(rgba[i]).toEqual(0);
+                } else {
+                    expect(rgba[i]).toBeGreaterThan(0);
+                }
+            }
+        });
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)), new Cartesian3(0.0, 0.0, 5.0));
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);

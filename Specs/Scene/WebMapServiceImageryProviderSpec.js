@@ -159,6 +159,96 @@ defineSuite([
         });
     });
 
+    it('includes crs parameters in URL for WMS version 1.3.0', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            crs : 'CRS:27',
+            parameters : {
+                version: '1.3.0'
+            }
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.crs).toEqual('CRS:27');
+                expect(params.version).toEqual('1.3.0');
+
+                // Don't need to actually load image, but satisfy the request.
+                deferred.resolve(true);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+            });
+
+        });
+    });
+
+    it('disregard crs parameters in URL for WMS version 1.1.0', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            crs : 'CRS:27',
+            parameters : {
+                version: '1.1.0'
+            }
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.srs).toEqual('EPSG:4326');
+                expect(params.version).toEqual('1.1.0');
+
+                // Don't need to actually load image, but satisfy the request.
+                deferred.resolve(true);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+            });
+
+        });
+    });
+
+    it('includes srs parameters in URL for WMS version 1.1.0', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer',
+            srs : 'IAU2000:30118',
+            parameters : {
+                version: '1.1.0'
+            }
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                var uri = new Uri(url);
+                var params = queryToObject(uri.query);
+                expect(params.srs).toEqual('IAU2000:30118');
+                expect(params.version).toEqual('1.1.0');
+
+                // Don't need to actually load image, but satisfy the request.
+                deferred.resolve(true);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+            });
+
+        });
+    });
+
     it('supports subdomains string in URL', function() {
         var provider = new WebMapServiceImageryProvider({
             url : '{s}',
@@ -609,33 +699,6 @@ defineSuite([
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
         expect(providerWithCredit.credit).toBeDefined();
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var provider = new WebMapServiceImageryProvider({
-            url : 'made/up/wms/server',
-            layers : 'someLayer',
-            proxy : proxy
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.proxy).toEqual(proxy);
-
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
-
-                // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
     });
 
     it('uses rectangle passed to constructor', function() {
