@@ -260,8 +260,7 @@ gulp.task('makeZipFile', ['release'], function() {
         'README.md',
         'web.config'
     ], {
-        base : '.',
-        nodir : true
+        base : '.'
     });
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
@@ -377,8 +376,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 '*.zip',
                 '*.tgz'
             ], {
-                dot : true, // include hidden files
-                nodir : true // only directory files
+                dot : true // include hidden files
             });
         })
         .then(function(files) {
@@ -916,7 +914,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse, {nodir : true}).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1246,8 +1244,7 @@ function buildCesiumViewer() {
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {
-                    base : 'Build/Cesium',
-                    nodir : true
+                    base : 'Build/Cesium'
                 }),
 
             gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {
