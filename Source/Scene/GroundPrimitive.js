@@ -15,7 +15,8 @@ define([
         '../Core/isArray',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
-        '../Core/PlanarExtentsGeometryInstanceAttribute',
+        '../Core/InversePlaneExtentsGeometryAttribute',
+        '../Core/MatrixColumnGeometryInstanceAttribute',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/SphericalExtentsGeometryInstanceAttribute',
@@ -42,7 +43,8 @@ define([
         isArray,
         CesiumMath,
         OrientedBoundingBox,
-        PlanarExtentsGeometryInstanceAttribute,
+        InversePlaneExtentsGeometryAttribute,
+        MatrixColumnGeometryInstanceAttribute,
         Rectangle,
         Resource,
         SphericalExtentsGeometryInstanceAttribute,
@@ -782,9 +784,12 @@ define([
                 var rectangle = getRectangle(frameState, geometry);
                 var attributes = {
                     sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(rectangle),
-                    longitudePlaneExtents : PlanarExtentsGeometryInstanceAttribute.getLongitudeExtents(rectangle, ellipsoid),
-                    latitudePlaneExtents : PlanarExtentsGeometryInstanceAttribute.getLatitudeExtents(rectangle, ellipsoid)
+                    inversePlaneExtents : new InversePlaneExtentsGeometryAttribute(rectangle, ellipsoid)
                 };
+
+                var rectangleCenter = Rectangle.center(rectangle, new Cartographic());
+                MatrixColumnGeometryInstanceAttribute.addAttributes(Cartographic.toCartesian(rectangleCenter, ellipsoid, new Cartesian3()), ellipsoid, attributes);
+
                 // TODO: pick and choose?
                 var instanceAttributes = instance.attributes;
                 for (var attributeKey in instanceAttributes) {

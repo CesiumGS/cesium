@@ -26,7 +26,7 @@ define([
         Check.typeOf.object('appearance', appearance);
         //>>includeEnd('debug');
 
-        var extentsCull = defaultValue(extentsCulling, true);
+        var extentsCull = defaultValue(extentsCulling, false);
         var smallExtents = defaultValue(small, true);
 
         if (appearance instanceof PerInstanceColorAppearance) {
@@ -52,8 +52,9 @@ define([
         if (extentsCull || usesSt) {
             glsl +=
                 'varying vec4 v_sphericalExtents;\n' +
-                'varying vec4 v_planarExtentsLatitude;\n' +
-                'varying vec4 v_planarExtentsLongitude;\n';
+                'varying vec2 v_inversePlaneExtents;\n' +
+                'varying vec4 v_westPlane;\n' +
+                'varying vec4 v_southPlane;\n';
         }
 
         glsl += getLocalFunctions(shaderDependencies, smallExtents);
@@ -143,8 +144,8 @@ define([
             if (smallExtents) {  // TODO: add ability to do long-and-narrows?
                 glsl +=
                 '    // Unpack planes and transform to eye space\n' +
-                '    float u = computePlanarTexcoord(v_planarExtentsLatitude, worldCoord);\n' +
-                '    float v = computePlanarTexcoord(v_planarExtentsLongitude, worldCoord);\n';
+                '    float u = computePlanarTexcoord(v_southPlane, eyeCoord.xyz / eyeCoord.w, v_inversePlaneExtents.y);\n' +
+                '    float v = computePlanarTexcoord(v_westPlane, eyeCoord.xyz / eyeCoord.w, v_inversePlaneExtents.x);\n';
             } else {
                 glsl +=
                 '    // Treat world coords as a sphere normal for spherical coordinates\n' +
@@ -209,9 +210,9 @@ define([
         }
         if (shaderDependencies.requiresTexcoords && smallExtents) {
             glsl +=
-                'float computePlanarTexcoord(vec4 packedPlanarExtent, vec3 worldCoords) {\n' +
+                'float computePlanarTexcoord(vec4 plane, vec3 eyeCoords, float inverseExtent) {\n' +
                 '    // planar extent is a plane at the origin (so just a direction) and an extent distance.\n' +
-                '    return (dot(packedPlanarExtent.xyz, worldCoords)) * packedPlanarExtent.w;\n' +
+                '    return (dot(plane.xyz, eyeCoords) + plane.w) * inverseExtent;\n' +
                 '}\n';
         }
         return glsl;
