@@ -85,12 +85,14 @@ define([
             return;
         }
 
+        if (frameState.passes.pick) {
+            console.log('pick');
+        }
+
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
         tileset._emptyTiles.length = 0;
         tileset._hasMixedContent = false;
-
-        tileset._cache.reset();
 
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
@@ -291,6 +293,7 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
+        // TODO : pick pass might be different
         if (tile._updatedVisibilityFrame === frameState.frameNumber) {
             return;
         }
@@ -316,6 +319,7 @@ define([
         }
 
         tile._visibilityFlag = visibilityFlag;
+        tile._updatedVisibilityFrame = frameState.frameNumber;
     }
 
     function anyChildrenVisible(tileset, tile, frameState) {

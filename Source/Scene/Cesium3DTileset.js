@@ -1862,8 +1862,13 @@ define([
         }
 
         if (outOfCore) {
-            this._requestedTiles.length = 0;
-            Cesium3DTilesetTraversal.selectTiles(this, frameState);
+            this._cache.reset();
+        }
+
+        this._requestedTiles.length = 0;
+        Cesium3DTilesetTraversal.selectTiles(this, frameState);
+
+        if (outOfCore) {
             requestTiles(this);
             processTiles(this, frameState);
         }
