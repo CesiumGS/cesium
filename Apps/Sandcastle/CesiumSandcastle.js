@@ -1079,7 +1079,7 @@ require({
         });
     }
 
-    var newInLabel = 'New in ' + Cesium.VERSION;
+    var newInLabel = 'New in ' + window.Cesium.VERSION;
     function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
@@ -1254,7 +1254,7 @@ require({
         registerScroll(dom.byId('showcasesContainer'));
 
         if (has_new_gallery_demos) {
-            var name = 'New in ' + Cesium.VERSION;
+            var name = 'New in ' + window.Cesium.VERSION;
             subtabs[name] = new ContentPane({
                 content: '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
                 title: name,
