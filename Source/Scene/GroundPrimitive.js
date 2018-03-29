@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -32,6 +33,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -922,6 +924,21 @@ define([
     GroundPrimitive.prototype.destroy = function() {
         this._classificationPrimitive = this._classificationPrimitive && this._classificationPrimitive.destroy();
         return destroyObject(this);
+    };
+
+    /**
+     * Computes whether the given rectangle is wide enough that texture coordinates
+     * over its area should be computed using spherical extents instead of distance to planes.
+     *
+     * @param {Rectangle} rectangle A rectangle
+     * @private
+     */
+    GroundPrimitive.shouldUseSphericalCoordinates = function(rectangle) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('rectangle', rectangle);
+        //>>includeEnd('debug');
+
+        return shouldUseSpherical(rectangle);
     };
 
     /**

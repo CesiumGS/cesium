@@ -26,7 +26,6 @@ define([
         './RectangleGeometryUpdater',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
-        './StaticGroundGeometryColorBatch',
         './StaticGroundGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch',
         './WallGeometryUpdater'
@@ -58,7 +57,6 @@ define([
         RectangleGeometryUpdater,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
-        StaticGroundGeometryColorBatch,
         StaticGroundGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch,
         WallGeometryUpdater) {
@@ -163,7 +161,7 @@ define([
         this._groundMaterialBatches = new Array(numberOfClassificationTypes); // TODO: why is this?
 
         for (i = 0; i < numberOfClassificationTypes; ++i) {
-            this._groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, PerInstanceColorAppearance, i);
+            this._groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance, i);
             this._groundMaterialBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance, i);
         }
 

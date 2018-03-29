@@ -78,7 +78,7 @@ var concavePositions = [
     new Cesium.Cartesian3(-2352875.095159641, -3742564.819171856, 4582173.540953957),
     new Cesium.Cartesian3(-2350669.646050987, -3743751.6823160048, 4582334.8406995395)
 ];
-
+/*
 // concave polygon
 var redPolygon1 = viewer.entities.add({
     name : 'concave polygon on surface',
@@ -87,7 +87,7 @@ var redPolygon1 = viewer.entities.add({
         material : '../images/Cesium_Logo_Color.jpg'
     }
 });
-
+*/
 // polygons with non-overlapping extents seem to be batchable without problems
 /*
 var redPolygon1 = viewer.entities.add({
@@ -136,7 +136,7 @@ var redPolygon5 = viewer.entities.add({
 });*/
 
 // nearly overlapping rectangles over mt. st. helens
-/*
+
 var latitude = 46.1922;
 var longitude = -122.1934;
 
@@ -167,7 +167,12 @@ viewer.entities.add({
         material : Cesium.Color.YELLOW.withAlpha(0.5)
     }
 });
-*/
+
+var checkerboard = new Cesium.CheckerboardMaterialProperty({
+    evenColor : Cesium.Color.ORANGE,
+    oddColor : Cesium.Color.YELLOW,
+    repeat : new Cesium.Cartesian2(14, 14)
+});
 
 var rightHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 rightHandler.setInputAction(function(movement) {
@@ -181,17 +186,12 @@ rightHandler.setInputAction(function(movement) {
         var normalized = Cesium.Cartesian3.normalize(cartesian, cartesian);
         console.log(normalized);
 
-        viewer.entities.removeAll();
+        //viewer.entities.removeAll();
         viewer.entities.add({
             name : lat + ' ' + long,
             rectangle : {
                 coordinates : Cesium.Rectangle.fromDegrees(long - 0.0002, lat - 0.0001, long + 0.0002, lat + 0.0001),
-                material :
-                new Cesium.CheckerboardMaterialProperty({
-                    evenColor : Cesium.Color.ORANGE,
-                    oddColor : Cesium.Color.YELLOW,
-                    repeat : new Cesium.Cartesian2(14, 14)
-                })
+                material : checkerboard
             }
         });
     }

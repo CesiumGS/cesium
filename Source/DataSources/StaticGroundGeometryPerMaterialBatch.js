@@ -6,6 +6,7 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Core/RectangleRbush',
         '../Scene/GroundPrimitive',
         './BoundingSphereState',
         './ColorMaterialProperty',
@@ -19,6 +20,7 @@ define([
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
+        RectangleRbush,
         GroundPrimitive,
         BoundingSphereState,
         ColorMaterialProperty,
@@ -29,13 +31,13 @@ define([
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, materialProperty, shadows) {
+    function Batch(primitives, appearanceType, materialProperty, shadows, usingSphericalCoordinates) {
         this.primitives = primitives; // scene level primitive collection
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
         this.createPrimitive = true;
-        this.primitive = undefined;
+        this.primitive = undefined; // a GroundPrimitive encapsulating all the entities
         this.oldPrimitive = undefined;
         this.geometry = new AssociativeArray();
         this.material = undefined;
@@ -46,30 +48,34 @@ define([
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
         this.shadows = shadows;
+        this.usingSphericalCoordinates = usingSphericalCoordinates;
+        this.rbush = new RectangleRbush();
     }
 
     Batch.prototype.onMaterialChanged = function() {
         this.invalidated = true;
     };
 
-    Batch.prototype.nonOverlapping = function(updater) {
-        return false;
+    Batch.prototype.nonOverlapping = function(rectangle) {
+        return !this.rbush.collides(rectangle);
     };
 
     Batch.prototype.isMaterial = function(updater) {
         var material = this.materialProperty;
         var updaterMaterial = updater.fillMaterialProperty;
 
-        if (updaterMaterial === material) {
+        if (updaterMaterial === material ||
+            (updaterMaterial instanceof ColorMaterialProperty && material instanceof ColorMaterialProperty)) {
             return true;
         }
         return defined(material) && material.equals(updaterMaterial);
     };
 
-    Batch.prototype.add = function(time, updater) {
+    Batch.prototype.add = function(time, updater, geometryInstance) {
         var id = updater.id;
         this.updaters.set(id, updater);
-        this.geometry.set(id, updater.createFillGeometryInstance(time));
+        this.geometry.set(id, geometryInstance);
+        this.rbush.insert(id, geometryInstance.geometry.rectangle);
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
@@ -85,8 +91,10 @@ define([
 
     Batch.prototype.remove = function(updater) {
         var id = updater.id;
+        var geometryInstance = this.geometry.get(id);
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
+            this.rbush.remove(id, geometryInstance.geometry.rectangle);
             this.updatersWithAttributes.remove(id);
             var unsubscribe = this.subscriptions.get(id);
             if (defined(unsubscribe)) {
@@ -309,15 +317,19 @@ define([
     StaticGroundGeometryPerMaterialBatch.prototype.add = function(time, updater) {
         var items = this._items;
         var length = items.length;
-        for (var i = 0; i < length; i++) {
+        var geometryInstance = updater.createFillGeometryInstance(time);
+        var usingSphericalCoordinates = GroundPrimitive.shouldUseSphericalCoordinates(geometryInstance.geometry.rectangle);
+        for (var i = 0; i < length; ++i) {
             var item = items[i];
-            if (item.isMaterial(updater) && item.nonOverlapping(updater)) {
-                item.add(time, updater);
+            if (item.isMaterial(updater) &&
+                item.nonOverlapping(geometryInstance.geometry.rectangle) &&
+                item.usingSphericalCoordinates === usingSphericalCoordinates) {
+                item.add(time, updater, geometryInstance);
                 return;
             }
         }
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._shadows);
-        batch.add(time, updater);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._shadows, usingSphericalCoordinates);
+        batch.add(time, updater, geometryInstance);
         items.push(batch);
     };
 
