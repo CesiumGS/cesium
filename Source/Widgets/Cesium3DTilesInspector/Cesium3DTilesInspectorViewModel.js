@@ -71,7 +71,7 @@ define([
             return '';
         }
 
-        var statistics = tileset.statistics;
+        var statistics = isPick ? tileset._statisticsLastPick : tileset._statisticsLastColor;
 
         // Since the pick pass uses a smaller frustum around the pixel of interest,
         // the statistics will be different than the normal render pass.
@@ -81,7 +81,7 @@ define([
             '<li><strong>Visited: </strong>' + statistics.visited.toLocaleString() + '</li>' +
             // Number of commands returned is likely to be higher than the number of tiles selected
             // because of tiles that create multiple commands.
-            '<li><strong>Selected: </strong>' + tileset._selectedTiles.length.toLocaleString() + '</li>' +
+            '<li><strong>Selected: </strong>' + statistics.selected.toLocaleString() + '</li>' +
             // Number of commands executed is likely to be higher because of commands overlapping
             // multiple frustums.
             '<li><strong>Commands: </strong>' + statistics.numberOfCommands.toLocaleString() + '</li>';

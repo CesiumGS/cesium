@@ -85,10 +85,6 @@ define([
             return;
         }
 
-        if (frameState.passes.pick) {
-            console.log('pick');
-        }
-
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
         tileset._emptyTiles.length = 0;
@@ -224,6 +220,9 @@ define([
     }
 
     function touchTile(tileset, tile, frameState) {
+        if (frameState.passes.pick) {
+            return;
+        }
         tileset._cache.touch(tile);
         tile._touchedFrame = frameState.frameNumber;
     }
@@ -293,8 +292,7 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        // TODO : pick pass might be different
-        if (tile._updatedVisibilityFrame === frameState.frameNumber) {
+        if (tile._updatedVisibilityFrame === frameState.frameNumber && !frameState.passes.pick) {
             return;
         }
 
