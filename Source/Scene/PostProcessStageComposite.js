@@ -115,8 +115,6 @@ define([
         this._selectedFeaturesLength = 0;
         this._parentSelectedFeaturesLength = 0;
         this._selectedFeaturesDirty = true;
-
-        this._parentSelectedFeatures = [];
     }
 
     defineProperties(PostProcessStageComposite.prototype, {

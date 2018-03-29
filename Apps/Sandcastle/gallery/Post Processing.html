@@ -86,31 +86,13 @@ for (var name in viewModel) {
 }
 
 var collection = viewer.scene.postProcessStages;
-var silhouette = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
+var silhouette = collection.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
 var blackAndWhite = collection.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
 var brightness = collection.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
 var eightBit = collection.add(Cesium.PostProcessStageLibrary.createEightBitStage());
 var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
 
 var handler;
-
-function addMouseOverSilhouette() {
-    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    handler.setInputAction(function(movement) {
-        var pickedObject = viewer.scene.pick(movement.endPosition);
-        if (Cesium.defined(pickedObject)) {
-            silhouette.selectedFeatures = [pickedObject.primitive];
-        } else {
-            silhouette.selectedFeatures = [];
-        }
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-}
-
-function removeMouseOverSilhouette() {
-    handler = handler && handler.destroy();
-    silhouette.selectedFeatures = [];
-}
-
 function addMouseOverBlackAndWhite() {
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(function(movement) {
@@ -138,11 +120,6 @@ function updatePostProcess() {
     eightBit.enabled = Boolean(viewModel.eightBitShow);
     nightVision.enabled = Boolean(viewModel.nightVisionShow);
 
-    if (silhouette.enabled) {
-        addMouseOverSilhouette();
-    } else {
-        removeMouseOverSilhouette();
-    }
     if (blackAndWhite.enabled) {
         addMouseOverBlackAndWhite();
     } else {
