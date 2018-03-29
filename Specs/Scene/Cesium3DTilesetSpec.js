@@ -1191,7 +1191,6 @@ defineSuite([
             };
             viewRootOnly();
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl, options).then(function(tileset) {
-                scene.renderForSpecs();
                 var root = tileset._root;
                 var childRoot = root.children[0];
 
