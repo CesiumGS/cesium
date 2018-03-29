@@ -1186,8 +1186,11 @@ defineSuite([
         });
 
         it('does select visible tiles with visible children failing request volumes', function() {
+            var options = {
+                cullWithChildrenBounds : false
+            };
             viewRootOnly();
-            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl, options).then(function(tileset) {
                 scene.renderForSpecs();
                 var root = tileset._root;
                 var childRoot = root.children[0];
@@ -2641,8 +2644,7 @@ defineSuite([
     it('loadSiblings', function() {
         viewBottomLeft();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, {
-            loadSiblings : false,
-            baseScreenSpaceError: 1000000000
+            loadSiblings : false
         }).then(function(tileset) {
             var statistics = tileset._statistics;
             expect(statistics.numberOfTilesWithContentReady).toBe(2);
