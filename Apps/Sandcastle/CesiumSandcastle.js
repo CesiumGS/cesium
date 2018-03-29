@@ -1,6 +1,5 @@
 /*global require,Blob,JSHINT*/
-/*global gallery_demos*/// defined by gallery/gallery-index.js, created by build
-/*global hello_world_index*/// defined in gallery/gallery-index.js, created by build
+/*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
     baseUrl: '../../Source',
@@ -1080,6 +1079,7 @@ require({
         });
     }
 
+    var newInLabel = 'New in ' + window.Cesium.VERSION;
     function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
@@ -1097,7 +1097,11 @@ require({
 
             var labelsMeta = doc.querySelector('meta[name="cesium-sandcastle-labels"]');
             var labels = labelsMeta && labelsMeta.getAttribute('content');
-            demo.label = labels ? labels : '';
+            if (demo.isNew) {
+                demo.label = labels ? labels + ',' + newInLabel : newInLabel;
+            } else {
+                demo.label = labels ? labels : '';
+            }
 
             // Select the demo to load upon opening based on the query parameter.
             if (defined(queryObject.src)) {
@@ -1248,6 +1252,18 @@ require({
         }).placeAt('innerPanel');
         subtabs[label] = cp;
         registerScroll(dom.byId('showcasesContainer'));
+
+        if (has_new_gallery_demos) {
+            var name = 'New in ' + window.Cesium.VERSION;
+            subtabs[name] = new ContentPane({
+                content: '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
+                title: name,
+                onShow: function() {
+                    setSubtab(this.title);
+                }
+            }).placeAt('innerPanel');
+            registerScroll(dom.byId(name + 'Container'));
+        }
 
         var i;
         var len = gallery_demos.length;
