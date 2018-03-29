@@ -497,7 +497,7 @@ define([
             }
 
             if (traverse) {
-                refines = updateAndPushChildren(tileset, tile, stack, frameState);
+                refines = updateAndPushChildren(tileset, tile, stack, frameState) && parentRefines;
             }
 
             if (hasEmptyContent(tile)) {
