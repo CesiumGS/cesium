@@ -57,12 +57,5 @@ void main(void)
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);
-    if (len > length)
-    {
-        gl_FragColor = vec4(color.rgb, 1.0);
-    }
-    else
-    {
-        discard;
-    }
+    gl_FragColor = vec4(color.rgb, len > length ? 1.0 : 0.0);
 }

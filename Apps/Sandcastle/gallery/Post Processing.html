@@ -93,6 +93,7 @@ var eightBit = collection.add(Cesium.PostProcessStageLibrary.createEightBitStage
 var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
 
 var handler;
+
 function addMouseOverSilhouette() {
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(function(movement) {
@@ -104,10 +105,29 @@ function addMouseOverSilhouette() {
         }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 }
+
 function removeMouseOverSilhouette() {
     handler = handler && handler.destroy();
     silhouette.selectedFeatures = [];
 }
+
+function addMouseOverBlackAndWhite() {
+    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedObject = viewer.scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject)) {
+            blackAndWhite.selectedFeatures = [pickedObject.primitive];
+        } else {
+            blackAndWhite.selectedFeatures = [];
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+}
+
+function removeMouseOverBlackAndWhite() {
+    handler = handler && handler.destroy();
+    blackAndWhite.selectedFeatures = [];
+}
+
 function updatePostProcess() {
     silhouette.enabled = Boolean(viewModel.silhouette);
     silhouette.uniforms.color = Cesium.Color.YELLOW;
@@ -122,6 +142,11 @@ function updatePostProcess() {
         addMouseOverSilhouette();
     } else {
         removeMouseOverSilhouette();
+    }
+    if (blackAndWhite.enabled) {
+        addMouseOverBlackAndWhite();
+    } else {
+        removeMouseOverBlackAndWhite();
     }
 }
 updatePostProcess();
