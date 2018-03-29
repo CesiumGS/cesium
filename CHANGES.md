@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.45 - 2018-05-01
+##### Additions :tada:
+* 3D Tiles changes - TODO
+
 ### 1.44 - 2018-04-02
 
 ##### Breaking Changes :mega:
