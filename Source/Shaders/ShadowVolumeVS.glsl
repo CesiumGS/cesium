@@ -17,10 +17,17 @@ uniform float u_globeMinimumAltitude;
 #endif
 
 #ifndef VECTOR_TILE
+
+#ifdef SPHERICAL_EXTENTS
 varying vec4 v_sphericalExtents;
+#endif
+
+#ifdef PLANAR_EXTENTS
 varying vec2 v_inversePlaneExtents;
 varying vec4 v_westPlane;
 varying vec4 v_southPlane;
+#endif
+
 #endif
 
 #ifdef PER_INSTANCE_COLOR
@@ -37,24 +44,27 @@ void main()
     v_color = czm_batchTable_color(batchId);
 #endif
 
+#ifdef SPHERICAL_EXTENTS
     v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);
-    vec2 inversePlaneExtents = czm_batchTable_inversePlaneExtents(batchId);
+#endif
 
-    mat4 planesModel;
-    planesMatrix[0] = czm_batchTable_column0(batchId);
-    planesMatrix[1] = czm_batchTable_column1(batchId);
-    planesMatrix[2] = czm_batchTable_column2(batchId);
-    planesMatrix[3] = czm_batchTable_column3(batchId);
+#ifdef PLANAR_EXTENTS
+    vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest_HIGH(batchId), czm_batchTable_southWest_LOW(batchId))).xyz;
+    vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_northWest_HIGH(batchId), czm_batchTable_northWest_LOW(batchId))).xyz;
+    vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southEast_HIGH(batchId), czm_batchTable_southEast_LOW(batchId))).xyz;
 
-    // Planes in local ENU coordinate system
-    vec4 westPlane = vec4(1.0, 0.0, 0.0, -0.5 / inversePlaneExtents.x);
-    vec4 southPlane = vec4(0.0, 1.0, 0.0, -0.5 / inversePlaneExtents.y);
+    vec3 eastWard = southEastCorner - southWestCorner;
+    float eastExtent = length(eastWard);
+    eastWard /= eastExtent;
 
-    mat4 planesModelView = czm_view * planesModel;
+    vec3 northWard = northWestCorner - southWestCorner;
+    float northExtent = length(northWard);
+    northWard /= northExtent;
 
-    v_inversePlaneExtents = inversePlaneExtents;
-    v_westPlane = czm_transformPlane(westPlane, planesModelView);
-    v_southPlane = czm_transformPlane(southPlane, planesModelView);
+    v_westPlane = vec4(eastWard, -dot(eastWard, southWestCorner));
+    v_southPlane = vec4(northWard, -dot(northWard, southWestCorner));
+    v_inversePlaneExtents = vec2(1.0 / eastExtent, 1.0 / northExtent);
+#endif
 
     vec4 position = czm_computePosition();
 

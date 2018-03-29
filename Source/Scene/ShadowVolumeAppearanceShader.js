@@ -21,19 +21,61 @@ define([
      * @returns {String} Shader source for a fragment shader using the input appearance.
      * @private
      */
-    function createShadowVolumeAppearanceShader(appearance, extentsCulling, small) {
+    function ShadowVolumeAppearanceShader(appearance, extentsCulling, planarExtents) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('appearance', appearance);
         //>>includeEnd('debug');
 
-        var extentsCull = defaultValue(extentsCulling, false);
-        var smallExtents = defaultValue(small, true);
+        this._extentsCulling = defaultValue(extentsCulling, false);
+        this._planarExtents = defaultValue(planarExtents, false);
+        this._shaderSource = createShadowVolumeAppearanceShader(appearance, this._extentsCulling, this._planarExtents);
+        this._usesTexcoords = shaderDependenciesScratch._requiresTexcoords;
+    }
 
+    defineProperties(ShadowVolumeAppearanceShader.prototype, {
+        /**
+         * Whether or not the resulting shader uses texture coordinates.
+         *
+         * @memberof ShadowVolumeAppearanceShader.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        usesTexcoords : {
+            get : function() {
+                return this._usesTexcoords;
+            }
+        },
+        /**
+         * Whether or not the resulting shader's texture coordinates are computed from planar extents.
+         *
+         * @memberof ShadowVolumeAppearanceShader.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        planarExtents : {
+            get : function() {
+                return this._planarExtents;
+            }
+        },
+        /**
+         * The fragment shader source.
+         * @memberof ShadowVolumeAppearanceShader.prototype
+         * @type {String}
+         * @readonly
+         */
+        fragmentShaderSource : {
+            get : function() {
+                return this._shaderSource;
+            }
+        }
+    });
+
+    function createShadowVolumeAppearanceShader(appearance, extentsCull, planarExtents) {
+        var shaderDependencies = shaderDependenciesScratch.reset();
         if (appearance instanceof PerInstanceColorAppearance) {
-            return getPerInstanceColorShader(extentsCull, appearance.flat, smallExtents);
+            return getPerInstanceColorShader(extentsCull, appearance.flat, planarExtents);
         }
 
-        var shaderDependencies = shaderDependenciesScratch.reset();
         shaderDependencies.requiresTexcoords = extentsCull;
         shaderDependencies.requiresEyeCoord = !appearance.flat;
 
@@ -50,20 +92,21 @@ define([
             '#extension GL_EXT_frag_depth : enable\n' +
             '#endif\n';
         if (extentsCull || usesSt) {
-            glsl +=
-                'varying vec4 v_sphericalExtents;\n' +
+            glsl += planarExtents ?
                 'varying vec2 v_inversePlaneExtents;\n' +
                 'varying vec4 v_westPlane;\n' +
-                'varying vec4 v_southPlane;\n';
+                'varying vec4 v_southPlane;\n' :
+
+                'varying vec4 v_sphericalExtents;\n';
         }
 
-        glsl += getLocalFunctions(shaderDependencies, smallExtents);
+        glsl += getLocalFunctions(shaderDependencies, planarExtents);
 
         glsl +=
             'void main(void)\n' +
             '{\n';
 
-        glsl += getDependenciesAndCulling(shaderDependencies, extentsCull, smallExtents);
+        glsl += getDependenciesAndCulling(shaderDependencies, extentsCull, planarExtents);
 
         glsl += '    czm_materialInput materialInput;\n';
         if (usesNormalEC) {
@@ -90,26 +133,30 @@ define([
         return glsl;
     }
 
-    function getPerInstanceColorShader(extentsCulling, flatShading, smallExtents) {
+    function getPerInstanceColorShader(extentsCulling, flatShading, planarExtents) {
         var glsl =
             '#ifdef GL_EXT_frag_depth\n' +
             '#extension GL_EXT_frag_depth : enable\n' +
             '#endif\n' +
             'varying vec4 v_color;\n';
         if (extentsCulling) {
-            glsl +=
+            glsl += planarExtents ?
+                'varying vec2 v_inversePlaneExtents;\n' +
+                'varying vec4 v_westPlane;\n' +
+                'varying vec4 v_southPlane;\n' :
+
                 'varying vec4 v_sphericalExtents;\n';
         }
-        var shaderDependencies = shaderDependenciesScratch.reset();
+        var shaderDependencies = shaderDependenciesScratch;
         shaderDependencies.requiresTexcoords = extentsCulling;
         shaderDependencies.requiresNormalEC = !flatShading;
 
-        glsl += getLocalFunctions(shaderDependencies, smallExtents);
+        glsl += getLocalFunctions(shaderDependencies, planarExtents);
 
         glsl += 'void main(void)\n' +
                 '{\n';
 
-        glsl += getDependenciesAndCulling(shaderDependencies, extentsCulling, smallExtents);
+        glsl += getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents);
 
         if (flatShading) {
             glsl +=
@@ -129,7 +176,7 @@ define([
         return glsl;
     }
 
-    function getDependenciesAndCulling(shaderDependencies, extentsCulling, smallExtents) {
+    function getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents) {
         var glsl = '';
         if (shaderDependencies.requiresEyeCoord) {
             glsl +=
@@ -141,7 +188,7 @@ define([
                 '    vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;\n';
         }
         if (shaderDependencies.requiresTexcoords) {
-            if (smallExtents) {  // TODO: add ability to do long-and-narrows?
+            if (planarExtents) {  // TODO: add ability to do long-and-narrows?
                 glsl +=
                 '    // Unpack planes and transform to eye space\n' +
                 '    float u = computePlanarTexcoord(v_southPlane, eyeCoord.xyz / eyeCoord.w, v_inversePlaneExtents.y);\n' +
@@ -172,7 +219,7 @@ define([
         return glsl;
     }
 
-    function getLocalFunctions(shaderDependencies, smallExtents) {
+    function getLocalFunctions(shaderDependencies, planarExtents) {
         var glsl = '';
         if (shaderDependencies.requiresEyeCoord) {
             glsl +=
@@ -196,7 +243,6 @@ define([
                 '    // Sample depths at both offset and negative offset\n' +
                 '    float upOrRightDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (fragCoord2 + positiveOffset) / czm_viewport.zw));\n' +
                 '    float downOrLeftDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (fragCoord2 - positiveOffset) / czm_viewport.zw));\n' +
-                // TODO: could re-ordering here help performance? do texture fetches, then logic, then unpack?
                 '    // Explicitly evaluate both paths\n' +
                 '    bvec2 upOrRightInBounds = lessThan(fragCoord2 + positiveOffset, czm_viewport.zw);\n' +
                 '    float useUpOrRight = float(upOrRightDepth > 0.0 && upOrRightInBounds.x && upOrRightInBounds.y);\n' +
@@ -208,10 +254,9 @@ define([
                 '    return (upOrRightEC - (eyeCoord.xyz / eyeCoord.w)) * useUpOrRight + ((eyeCoord.xyz / eyeCoord.w) - downOrLeftEC) * useDownOrLeft;\n' +
                 '}\n';
         }
-        if (shaderDependencies.requiresTexcoords && smallExtents) {
+        if (shaderDependencies.requiresTexcoords && planarExtents) {
             glsl +=
                 'float computePlanarTexcoord(vec4 plane, vec3 eyeCoords, float inverseExtent) {\n' +
-                '    // planar extent is a plane at the origin (so just a direction) and an extent distance.\n' +
                 '    return (dot(plane.xyz, eyeCoords) + plane.w) * inverseExtent;\n' +
                 '}\n';
         }
@@ -298,5 +343,5 @@ define([
         }
     });
 
-    return createShadowVolumeAppearanceShader;
+    return ShadowVolumeAppearanceShader;
 });

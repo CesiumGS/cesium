@@ -15,9 +15,8 @@ define([
         '../Core/isArray',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
-        '../Core/InversePlaneExtentsGeometryAttribute',
-        '../Core/MatrixColumnGeometryInstanceAttribute',
         '../Core/Rectangle',
+        '../Core/ReferencePointGeometryInstanceAttribute',
         '../Core/Resource',
         '../Core/SphericalExtentsGeometryInstanceAttribute',
         '../Renderer/Pass',
@@ -43,9 +42,8 @@ define([
         isArray,
         CesiumMath,
         OrientedBoundingBox,
-        InversePlaneExtentsGeometryAttribute,
-        MatrixColumnGeometryInstanceAttribute,
         Rectangle,
+        ReferencePointGeometryInstanceAttribute,
         Resource,
         SphericalExtentsGeometryInstanceAttribute,
         Pass,
@@ -776,21 +774,34 @@ define([
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
 
+            // Determine whether to add spherical or planar extent attributes
+            var usePlanarExtents = true;
+            for (i = 0; i < length; ++i) {
+                instance = instances[i];
+                geometry = instance.geometry;
+                rectangle = getRectangle(frameState, geometry);
+                if (shouldUseSpherical(rectangle)) {
+                    usePlanarExtents = false;
+                    break;
+                }
+            }
+
             for (i = 0; i < length; ++i) {
                 instance = instances[i];
                 geometry = instance.geometry;
                 instanceType = geometry.constructor;
 
-                var rectangle = getRectangle(frameState, geometry);
-                var attributes = {
-                    sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(rectangle),
-                    inversePlaneExtents : new InversePlaneExtentsGeometryAttribute(rectangle, ellipsoid)
-                };
+                rectangle = getRectangle(frameState, geometry);
+                var attributes;
 
-                var rectangleCenter = Rectangle.center(rectangle, new Cartographic());
-                MatrixColumnGeometryInstanceAttribute.addAttributes(Cartographic.toCartesian(rectangleCenter, ellipsoid, new Cartesian3()), ellipsoid, attributes);
+                if (usePlanarExtents) {
+                    attributes = ReferencePointGeometryInstanceAttribute.getAttributesForPlanes(rectangle, ellipsoid, attributes);
+                } else {
+                    attributes = {
+                        sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(rectangle)
+                    };
+                }
 
-                // TODO: pick and choose?
                 var instanceAttributes = instance.attributes;
                 for (var attributeKey in instanceAttributes) {
                     if (instanceAttributes.hasOwnProperty(attributeKey)) {
@@ -838,6 +849,10 @@ define([
         this._classificationPrimitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._classificationPrimitive.update(frameState);
     };
+
+    function shouldUseSpherical(rectangle) {
+        return Math.max(rectangle.width, rectangle.height) > GroundPrimitive.MAX_WIDTH_FOR_PLANAR_EXTENTS;
+    }
 
     /**
      * @private
@@ -908,6 +923,16 @@ define([
         this._classificationPrimitive = this._classificationPrimitive && this._classificationPrimitive.destroy();
         return destroyObject(this);
     };
+
+    /**
+     * Texture coordinates for ground primitives are computed either using spherical coordinates for large areas or
+     * using distance from planes for small areas.
+     *
+     * @type {Number}
+     * @constant
+     * @private
+     */
+    GroundPrimitive.MAX_WIDTH_FOR_PLANAR_EXTENTS = CesiumMath.toRadians(1.0);
 
     return GroundPrimitive;
 });
