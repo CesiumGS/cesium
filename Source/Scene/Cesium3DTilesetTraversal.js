@@ -28,7 +28,6 @@ define([
     function Cesium3DTilesetTraversal() {
     }
 
-
     function selectTiles(tileset, frameState, outOfCore) {
         if (tileset.debugFreezeFrame) {
             return;
