@@ -185,6 +185,7 @@ define([
                     updateTile(tileset, child, frameState);
                     touchTile(tileset, child, frameState);
                     selectTile(tileset, child, frameState);
+                    tile._finalResolution = true;
                 } else if (child._depth - root._depth < 2) {
                     // Continue traversing, but not too far
                     stack.push(child);
@@ -197,8 +198,8 @@ define([
         if (!skipLevelOfDetail(tileset)) {
             if (tile.contentAvailable) {
                 // The tile can be selected right away and does not require traverseAndSelect
-                tile._finalResolution = true;
                 selectTile(tileset, tile, frameState);
+                tile._finalResolution = true;
             }
             return;
         }
@@ -208,9 +209,9 @@ define([
         if (defined(loadedTile)) {
             // Tiles will actually be selected in traverseAndSelect
             loadedTile._shouldSelect = true;
-        } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
+        } else {
             // If no ancestors are ready traverse down and select tiles to minimize empty regions.
-            // This happens often in cases where the camera zooms out and we're waiting for parent tiles to load.
+            // This happens often for immediatelyLoadDesiredLevelOfDetail where parent tiles are not necessarily loaded before zooming out.
             selectDescendants(tileset, tile, frameState);
         }
     }
@@ -459,12 +460,16 @@ define([
         if (!skipLevelOfDetail(tileset)) {
             return true;
         }
-        if (tile._screenSpaceError === 0) {
-            var parent = tile.parent;
-            if (defined(parent)) {
-                return parent._screenSpaceError > baseScreenSpaceError;
-            }
+        if (tileset.immediatelyLoadDesiredLevelOfDetail) {
+            return false;
+        }
+        var parent = tile.parent;
+        if (!defined(tile._ancestorWithContent)) {
+            // Include root tiles in the base traversal always so we will have something to select up to
             return true;
+        }
+        if (tile._screenSpaceError === 0) {
+            return parent._screenSpaceError > baseScreenSpaceError;
         }
         return tile._screenSpaceError > baseScreenSpaceError;
     }
@@ -635,8 +640,8 @@ define([
 
             if (shouldSelect) {
                 if (add) {
-                    tile._finalResolution = true;
                     selectTile(tileset, tile, frameState);
+                    tile._finalResolution = true;
                 } else {
                     tile._selectionDepth = ancestorStack.length;
                     if (tile._selectionDepth > 0) {
@@ -644,8 +649,8 @@ define([
                     }
                     lastAncestor = tile;
                     if (!traverse) {
-                        tile._finalResolution = true;
                         selectTile(tileset, tile, frameState);
+                        tile._finalResolution = true;
                         continue;
                     }
                     ancestorStack.push(tile);
