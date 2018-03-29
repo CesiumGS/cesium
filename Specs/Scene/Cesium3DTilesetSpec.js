@@ -2877,7 +2877,11 @@ defineSuite([
             tile.expireDate = JulianDate.addSeconds(JulianDate.now(), -1.0, new JulianDate());
 
             // Stays in the expired state until the request goes through
+            var originalMaxmimumRequests = RequestScheduler.maximumRequests;
+            RequestScheduler.maximumRequests = 0; // Artificially limit Request Scheduler so the request won't go through
             scene.renderForSpecs();
+            RequestScheduler.maximumRequests = originalMaxmimumRequests;
+
             expect(tile.contentExpired).toBe(true);
 
             return pollToPromise(function() {

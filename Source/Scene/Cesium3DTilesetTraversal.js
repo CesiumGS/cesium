@@ -234,7 +234,9 @@ define([
         var parent = tile.parent;
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
         var add = tile.refine === Cesium3DTileRefine.ADD;
-        if (add) {
+        if (tile.hasTilesetContent) {
+            return 0.0; // Load external tileset as soon as possible
+        } else if (add) {
             return tile._distanceToCamera;
         } else if (replace) {
             var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
@@ -335,12 +337,6 @@ define([
             return;
         }
 
-        // Don't visit an expired subtree because it will be destroyed
-        if (tile.hasTilesetContent && tile.contentExpired) {
-            clearVisibility(tile);
-            return;
-        }
-
         // Use parent's geometric error with child's box to see if we already meet the SSE
         var parent = tile.parent;
         if (defined(parent) && (parent.refine === Cesium3DTileRefine.ADD) && getScreenSpaceError(tileset, parent.geometricError, tile, frameState) <= tileset._maximumScreenSpaceError) {
@@ -363,13 +359,12 @@ define([
 
     function updateTile(tileset, tile, frameState) {
         updateTileVisibility(tileset, tile, frameState);
+        tile.updateExpiration();
 
         tile._shouldSelect = false;
         tile._finalResolution = false;
         tile._ancestorWithContent = undefined;
         tile._ancestorWithContentAvailable = undefined;
-
-        tile.updateExpiration();
 
         var parent = tile.parent;
         if (defined(parent)) {
@@ -494,6 +489,11 @@ define([
             var traverse = (childrenLength > 0) && (tile._screenSpaceError > maximumScreenSpaceError);
             var refines = false;
 
+            if (tile.hasTilesetContent && tile.contentExpired) {
+                // Don't traverse expired subtree because it will be destroyed
+                traverse = false;
+            }
+
             if (traverse) {
                 refines = updateAndPushChildren(tileset, tile, stack, frameState);
             }
@@ -501,6 +501,7 @@ define([
             if (hasEmptyContent(tile)) {
                 // Add empty tile so we can see its debug bounding volumes
                 addEmptyTile(tileset, tile, frameState);
+                loadTile(tileset, tile, frameState);
             } else if (add) {
                 // Additive tiles are always loaded and selected
                 selectDesiredTile(tileset, tile, frameState);

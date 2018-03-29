@@ -692,7 +692,7 @@ define([
                 updateExpireDate(that);
 
                 // Refresh style for expired content
-                that.lastStyleTime = 0;
+                that._selectedFrame = 0;
 
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
