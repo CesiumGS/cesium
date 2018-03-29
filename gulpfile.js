@@ -1106,7 +1106,12 @@ function createGalleryList() {
 
     // Get an array of demos that were added since the last release.
     // This includes newly staged local demos as well.
-    var newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+    var newDemos = [];
+    try {
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+    } catch (e) {
+        console.log('Failed to retrieve list of new Sandcastle demos from Git.');
+    }
 
     var helloWorld;
     globby.sync(fileList).forEach(function(file) {
