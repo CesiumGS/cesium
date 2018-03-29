@@ -1097,9 +1097,16 @@ function createGalleryList() {
         fileList.push('!Apps/Sandcastle/gallery/development/**/*.html');
     }
 
+    // On travis, the version is set to something like '1.43.0-branch-name-travisBuildNumber'
+    // We need to extract just the Major.Minor version
+    var majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
+    var major = majorMinor[1];
+    var minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
+    var tagVersion = major + '.' + minor;
+
     // Get an array of demos that were added since the last release.
     // This includes newly staged local demos as well.
-    var newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + version + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+    var newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
 
     var helloWorld;
     globby.sync(fileList).forEach(function(file) {
