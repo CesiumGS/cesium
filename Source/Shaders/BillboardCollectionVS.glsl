@@ -16,11 +16,8 @@ attribute float a_batchId;
 
 varying vec2 v_textureCoordinates;
 
-#ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
-#else
 varying vec4 v_color;
-#endif
 
 const float UPPER_BOUND = 32768.0;
 
@@ -172,13 +169,17 @@ void main()
     bool validAlignedAxis = false;
 #endif
 
-#ifdef RENDER_FOR_PICK
-    temp = compressedAttribute2.y;
-#else
-    temp = compressedAttribute2.x;
-#endif
-
+    vec4 pickColor;
     vec4 color;
+
+    temp = compressedAttribute2.y;
+    temp = temp * SHIFT_RIGHT8;
+    pickColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    pickColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
+    pickColor.r = floor(temp);
+
+    temp = compressedAttribute2.x;
     temp = temp * SHIFT_RIGHT8;
     color.b = (temp - floor(temp)) * SHIFT_LEFT8;
     temp = floor(temp) * SHIFT_RIGHT8;
@@ -189,13 +190,11 @@ void main()
     bool sizeInMeters = floor((temp - floor(temp)) * SHIFT_LEFT7) > 0.0;
     temp = floor(temp) * SHIFT_RIGHT8;
 
-#ifdef RENDER_FOR_PICK
-    color.a = (temp - floor(temp)) * SHIFT_LEFT8;
-    vec4 pickColor = color / 255.0;
-#else
+    pickColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
+    pickColor /= 255.0;
+
     color.a = floor(temp);
     color /= 255.0;
-#endif
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -286,10 +285,8 @@ void main()
     }
 #endif
 
-#ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;
-#else
+
     v_color = color;
     v_color.a *= translucency;
-#endif
 }

@@ -1513,6 +1513,8 @@ define([
                 derivedCommands = logDepthDerivedCommands;
             }
 
+            derivedCommands.picking = createPickDerivedCommand(command, context, derivedCommands.picking);
+
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
                 if (lightShadowsEnabled && command.receiveShadows) {
@@ -2019,6 +2021,10 @@ define([
 
         if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
             command = command.derivedCommands.logDepth.logDepthCommand;
+        }
+
+        if (frameState.passes.pick && defined(command.derivedCommands.picking)) {
+            command = command.derivedCommands.picking.pickCommand;
         }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
@@ -3432,6 +3438,83 @@ define([
 
     var fragDepthRegex = /\bgl_FragDepthEXT\b/;
     var discardRegex = /\bdiscard\b/;
+
+    function getPickShaderProgram(context, shaderProgram, pickId, pickIdDeclarations) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'pick');
+        if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var fs = shaderProgram.fragmentShaderSource;
+
+            var writesDepthOrDiscards = false;
+            var sources = fs.sources;
+            var length = sources.length;
+            var i;
+            for (i = 0; i < length; ++i) {
+                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
+                    writesDepthOrDiscards = true;
+                    break;
+                }
+            }
+
+            var newMain;
+            if (!writesDepthOrDiscards) {
+                newMain =
+                    defaultValue(pickIdDeclarations, '') +
+                    'void main() \n' +
+                    '{ \n' +
+                    '    gl_FragColor = ' + pickId + '; \n' +
+                    '} \n';
+                fs = new ShaderSource({
+                    sources : [newMain]
+                });
+            } else {
+                newMain =
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_non_pick_main(); \n' +
+                    '    gl_FragColor = ' + pickId + '; \n' +
+                    '} \n';
+                var newSources = new Array(length + 1);
+                for (i = 0; i < length; ++i) {
+                    newSources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_pick_main');
+                }
+                newSources[length] = newMain;
+                fs = new ShaderSource({
+                    sources : newSources
+                });
+            }
+
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'pick', {
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        return shader;
+    }
+
+    function createPickDerivedCommand(command, context, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shader;
+        if (defined(result.pickCommand)) {
+            shader = result.pickCommand.shaderProgram;
+        }
+
+        result.pickCommand = DrawCommand.shallowClone(command, result.pickCommand);
+
+        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+            result.pickCommand.shaderProgram = getPickShaderProgram(context, command.shaderProgram, command.pickId, command.pickIdDeclarations);
+            result.shaderProgramId = command.shaderProgram.id;
+        } else {
+            result.pickCommand.shaderProgram = shader;
+        }
+
+        return result;
+    }
 
     function getDepthOnlyShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'depthOnly');

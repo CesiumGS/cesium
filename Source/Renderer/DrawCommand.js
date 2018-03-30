@@ -38,6 +38,8 @@ define([
         this._debugOverlappingFrustums = 0;
         this._castShadows = defaultValue(options.castShadows, false);
         this._receiveShadows = defaultValue(options.receiveShadows, false);
+        this._pickIdDeclarations = options.pickIdDeclarations;
+        this._pickId = options.pickId;
 
         this._idShaderProgram = options.idShaderProgram;
         this._idUniformMap = options.idUniformMap;
@@ -454,6 +456,43 @@ define([
                     this.dirty = true;
                 }
             }
+        },
+        /**
+         * A GLSL string that will declare any global variables used in the GLSL code for pickId.
+         *
+         * @memberof DrawCommand.prototype
+         * @type {String}
+         * @default undefined
+         */
+        pickIdDeclarations : {
+            get : function() {
+                return this._pickIdDeclarations;
+            },
+            set : function(value) {
+                if (this._pickIdDeclarations !== value) {
+                    this._pickIdDeclarations = value;
+                    this.dirty = true;
+                }
+            }
+        },
+        /**
+         * A GLSL string that will evaluate to a pick id. When <code>undefined</code>, the command will only draw depth
+         * during the pick pass.
+         *
+         * @memberof DrawCommand.prototype
+         * @type {String}
+         * @default undefined
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
+            },
+            set : function(value) {
+                if (this._pickId !== value) {
+                    this._pickId = value;
+                    this.dirty = true;
+                }
+            }
         }
     });
 
@@ -488,6 +527,8 @@ define([
         result._debugOverlappingFrustums = command._debugOverlappingFrustums;
         result._castShadows = command._castShadows;
         result._receiveShadows = command._receiveShadows;
+        result._pickIdDeclarations = command._pickIdDeclarations;
+        result._pickId = command._pickId;
 
         result._idShaderProgram = command._idShaderProgram;
         result._idUniformMap = command._idUniformMap;
