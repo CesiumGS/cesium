@@ -29,7 +29,7 @@ define([
         Uri,
         GetFeatureInfoFormat,
         TimeDynamicImagery,
-        UrlTemplateImageryProvider        ) {
+        UrlTemplateImageryProvider) {
     'use strict';
 
     /**
@@ -72,7 +72,6 @@ define([
      * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
      * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
      *
-     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -108,10 +107,6 @@ define([
 
         if (defined(options.times) && !defined(options.clock)) {
             throw new DeveloperError('options.times was specified, so options.clock is required.');
-        }
-
-        if (defined(options.proxy)) {
-            deprecationWarning('WebMapServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
         }
 
         var resource = Resource.createIfNeeded(options.url);
@@ -198,11 +193,13 @@ define([
 
     function requestImage(imageryProvider, col, row, level, request, interval) {
         var dynamicIntervalData = defined(interval) ? interval.data : undefined;
+        var tileProvider = imageryProvider._tileProvider;
+
         if (defined(dynamicIntervalData)) {
-            var resource = imageryProvider._tileProvider._resource; // We actually want to set the query parameters within the tile provider.
-            resource.setQueryParameters(dynamicIntervalData);
+            // We set the query parameters within the tile provider, because it is managing the query.
+            tileProvider._resource.setQueryParameters(dynamicIntervalData);
         }
-        return imageryProvider._tileProvider.requestImage(col, row, level, request);
+        return tileProvider.requestImage(col, row, level, request);
     }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
