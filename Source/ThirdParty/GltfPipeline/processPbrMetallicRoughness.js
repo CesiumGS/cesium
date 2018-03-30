@@ -618,7 +618,11 @@ define([
         var techniqueStates;
         if (defined(alphaMode) && alphaMode !== 'OPAQUE') {
             techniqueStates = {
-                enable: [
+                enable: parameterValues.doubleSided ? [
+                    WebGLConstants.DEPTH_TEST,
+                    WebGLConstants.BLEND
+                ]: [
+                    WebGLConstants.CULL_FACE,
                     WebGLConstants.DEPTH_TEST,
                     WebGLConstants.BLEND
                 ],

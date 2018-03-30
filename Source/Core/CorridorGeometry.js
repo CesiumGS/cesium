@@ -823,13 +823,13 @@ define([
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createCorridorGeometry';
-        this._rectangle = computeRectangle(positions, this._ellipsoid, width, this._cornerType);
+        this._rectangle = undefined;
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 6;
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 6;
     }
 
     /**
@@ -867,9 +867,6 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        Rectangle.pack(value._rectangle, array, startingIndex);
-        startingIndex += Rectangle.packedLength;
-
         array[startingIndex++] = value._width;
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
@@ -882,7 +879,6 @@ define([
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
-    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         positions : undefined,
         ellipsoid : scratchEllipsoid,
@@ -925,9 +921,6 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
-        startingIndex += Rectangle.packedLength;
-
         var width = array[startingIndex++];
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
@@ -954,7 +947,6 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._cornerType = cornerType;
         result._granularity = granularity;
-        result._rectangle = Rectangle.clone(rectangle);
         result._shadowVolume = shadowVolume;
 
         return result;
@@ -1047,6 +1039,9 @@ define([
          */
         rectangle : {
             get : function() {
+                if (!defined(this._rectangle)) {
+                    this._rectangle = computeRectangle(this._positions, this._ellipsoid, this._width, this._cornerType);
+                }
                 return this._rectangle;
             }
         }

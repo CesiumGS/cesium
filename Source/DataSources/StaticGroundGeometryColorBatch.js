@@ -22,6 +22,7 @@ define([
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     function Batch(primitives, classificationType, color, key) {
         this.primitives = primitives;
@@ -152,12 +153,12 @@ define([
 
                 if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
                     var colorProperty = updater.fillMaterialProperty.color;
-                    colorProperty.getValue(time, colorScratch);
+                    var fillColor = Property.getValueOrDefault(colorProperty, time, Color.WHITE, colorScratch);
 
-                    if (!Color.equals(attributes._lastColor, colorScratch)) {
-                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
+                    if (!Color.equals(attributes._lastColor, fillColor)) {
+                        attributes._lastColor = Color.clone(fillColor, attributes._lastColor);
                         var color = this.color;
-                        var newColor = colorScratch.toBytes(scratchArray);
+                        var newColor = fillColor.toBytes(scratchArray);
                         if (color[0] !== newColor[0] || color[1] !== newColor[1] ||
                             color[2] !== newColor[2] || color[3] !== newColor[3]) {
                            this.itemsToRemove[removedCount++] = updater;
@@ -173,7 +174,7 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);

@@ -3,7 +3,6 @@ define([
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -14,7 +13,6 @@ define([
         Credit,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Rectangle,
         Resource,
@@ -68,14 +66,7 @@ define([
         var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
         url = appendForwardSlash(url);
         url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
-
-        if (defined(options.proxy)) {
-            deprecationWarning('createOpenStreetMapImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(url);
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
