@@ -625,55 +625,6 @@ defineSuite([
         });
     });
 
-    it('appends query to all uri', function() {
-        var source = 'http://some.url.invalid/';
-        var packet = {
-            billboard : {
-                image : [{
-                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                    uri : 'image.png'
-                }, {
-                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                    uri : 'image2.png'
-                }]
-            }
-        };
-
-        var dataSource = new CzmlDataSource();
-        return dataSource.load(makePacket(packet), {
-            sourceUri: source,
-            query: {
-                token: 34570,
-                password: "Passw0rd"
-            }
-        }).then(function(dataSource) {
-            var entity = dataSource.entities.values[0];
-            var imageProperty = entity.billboard.image;
-            expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z')).url).toEqual(source + 'image.png' + '?token=34570&password=Passw0rd');
-            expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z')).url).toEqual(source + 'image2.png' + '?token=34570&password=Passw0rd');
-        });
-    });
-
-    it('appends query tokens to source URL', function() {
-        var dataSource = new CzmlDataSource();
-        var requestNetworkLink = when.defer();
-
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        dataSource.process(simpleUrl, {
-            query: {
-                "token": 30203,
-                "pass": "passw0rd"
-            }
-        });
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual(simpleUrl + '?token=30203&pass=passw0rd');
-        });
-    });
-
     it('CZML adds data for constrained billboard.', function() {
         var billboardPacket = {
             billboard : {

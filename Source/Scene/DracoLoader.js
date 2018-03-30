@@ -25,7 +25,7 @@ define([
      */
     function DracoLoader() {}
 
-    // Maximum concurrency to use when deocding draco models
+    // Maximum concurrency to use when decoding draco models
     DracoLoader._maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
 
     // Exposed for testing purposes
@@ -38,10 +38,15 @@ define([
         return DracoLoader._decoderTaskProcessor;
     };
 
-    function hasExtension(model) {
+    /**
+     * Returns true if the model uses or requires KHR_draco_mesh_compression.
+     *
+     * @private
+     */
+    DracoLoader.hasExtension = function(model) {
         return (defined(model.extensionsRequired.KHR_draco_mesh_compression)
             || defined(model.extensionsUsed.KHR_draco_mesh_compression));
-    }
+    };
 
     function addBufferToLoadResources(loadResources, typedArray) {
         // Create a new id to differentiate from original glTF bufferViews
@@ -131,11 +136,12 @@ define([
      * @private
      */
     DracoLoader.parse = function(model) {
-        if (!hasExtension(model)) {
+        if (!DracoLoader.hasExtension(model)) {
             return;
         }
 
         var loadResources = model._loadResources;
+        var dequantizeInShader = model._dequantizeInShader;
         var gltf = model.gltf;
         ForEach.mesh(gltf, function(mesh, meshId) {
             ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
@@ -155,7 +161,8 @@ define([
                     primitive : primitiveId,
                     array : typedArray,
                     bufferView : bufferView,
-                    compressedAttributes : compressionData.attributes
+                    compressedAttributes : compressionData.attributes,
+                    dequantizeInShader : dequantizeInShader
                 });
             });
         });
@@ -166,7 +173,7 @@ define([
      * @private
      */
     DracoLoader.decode = function(model, context) {
-        if (!hasExtension(model)) {
+        if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
         }
 

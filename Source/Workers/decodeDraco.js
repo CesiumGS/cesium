@@ -53,33 +53,68 @@ define([
                 var attribute = dracoDecoder.GetAttributeByUniqueId(dracoGeometry, compressedAttribute);
                 var numComponents = attribute.num_components();
 
-                if (attribute.data_type() === 4) {
+                var i;
+                var quantization;
+                var transform = new draco.AttributeQuantizationTransform();
+                if (transform.InitFromAttribute(attribute)) {
+                    var minValues = new Array(numComponents);
+                    for (i = 0; i < numComponents; ++i) {
+                        minValues[i] = transform.min_value(i);
+                    }
+
+                    quantization = {
+                        quantizationBits : transform.quantization_bits(),
+                        minValues : minValues,
+                        range : transform.range(),
+                        octEncoded : false
+                    };
+                }
+                draco.destroy(transform);
+
+                transform = new draco.AttributeOctahedronTransform();
+                if (transform.InitFromAttribute(attribute)) {
+                    quantization = {
+                        quantizationBits : transform.quantization_bits(),
+                        octEncoded : true
+                    };
+                }
+                draco.destroy(transform);
+
+                var vertexArrayLength = numPoints * numComponents;
+                if (defined(quantization)) {
                     attributeData = new draco.DracoInt32Array();
-                    // Uint16Array is used becasue there is not currently a way to retreive the maximum
+                    if (quantization.octEncoded) {
+                        vertexArray = new Int16Array(vertexArrayLength);
+                    } else {
+                        vertexArray = new Uint16Array(vertexArrayLength);
+                    }
+                    dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+                } else if (attribute.data_type() === 4) {
+                    attributeData = new draco.DracoInt32Array();
+                    // Uint16Array is used because there is not currently a way to retrieve the maximum
                     // value up front via the draco decoder API.  Max values over 65535 require a Uint32Array.
-                    vertexArray = new Uint16Array(numPoints * numComponents);
+                    vertexArray = new Uint16Array(vertexArrayLength);
                     dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
                 } else {
                     attributeData = new draco.DracoFloat32Array();
-                    vertexArray = new Float32Array(numPoints * numComponents);
+                    vertexArray = new Float32Array(vertexArrayLength);
                     dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
                 }
 
-                var vertexArrayLength = vertexArray.length;
-                for (var i = 0; i < vertexArrayLength; ++i) {
+                for (i = 0; i < vertexArrayLength; ++i) {
                     vertexArray[i] = attributeData.GetValue(i);
                 }
 
-                draco.destroy(attributeData);
-
+                var componentDatatype = ComponentDatatype.fromTypedArray(vertexArray);
                 decodedAttributeData[attributeName] = {
                     array : vertexArray,
                     data : {
                         componentsPerAttribute : numComponents,
+                        componentDatatype : componentDatatype,
                         byteOffset : attribute.byte_offset(),
-                        byteStride : attribute.byte_stride(),
+                        byteStride : ComponentDatatype.getSizeInBytes(componentDatatype) * numComponents,
                         normalized : attribute.normalized(),
-                        componentDatatype : ComponentDatatype.fromTypedArray(vertexArray)
+                        quantization : quantization
                     }
                 };
             }
@@ -91,6 +126,14 @@ define([
     function decodeDracoPrimitive(parameters) {
         if (!defined(dracoDecoder)) {
             dracoDecoder = new draco.Decoder();
+        }
+
+        // Skip all paramter types except generic
+        var attributesToSkip = ['POSITION', 'NORMAL', 'COLOR', 'TEX_COORD'];
+        if (parameters.dequantizeInShader) {
+            for (var i = 0; i < attributesToSkip.length; ++i) {
+                dracoDecoder.SkipAttributeTransform(draco[attributesToSkip[i]]);
+            }
         }
 
         var bufferView = parameters.bufferView;

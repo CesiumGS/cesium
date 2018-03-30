@@ -663,14 +663,14 @@ define([
         this._extrude = defined(options.extrudedHeight);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createRectangleGeometry';
-        this._rotatedRectangle = computeRectangle(this._rectangle, this._ellipsoid, rotation);
+        this._rotatedRectangle = undefined;
     }
 
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 7;
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
 
     /**
      * Stores the provided instance into the provided array.
@@ -698,9 +698,6 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        Rectangle.pack(value._rotatedRectangle, array, startingIndex);
-        startingIndex += Rectangle.packedLength;
-
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._surfaceHeight;
         array[startingIndex++] = value._rotation;
@@ -713,7 +710,6 @@ define([
     };
 
     var scratchRectangle = new Rectangle();
-    var scratchRotatedRectangle = new Rectangle();
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchOptions = {
         rectangle : scratchRectangle,
@@ -751,9 +747,6 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var rotatedRectangle = Rectangle.unpack(array, startingIndex, scratchRotatedRectangle);
-        startingIndex += Rectangle.packedLength;
-
         var granularity = array[startingIndex++];
         var surfaceHeight = array[startingIndex++];
         var rotation = array[startingIndex++];
@@ -781,7 +774,6 @@ define([
         result._stRotation = stRotation;
         result._extrudedHeight = extrude ? extrudedHeight : undefined;
         result._extrude = extrude;
-        result._rotatedRectangle = rotatedRectangle;
         result._shadowVolume = shadowVolume;
 
         return result;
@@ -892,6 +884,9 @@ define([
          */
         rectangle : {
             get : function() {
+                if (!defined(this._rotatedRectangle)) {
+                    this._rotatedRectangle = computeRectangle(this._rectangle, this._ellipsoid, this._rotation);
+                }
                 return this._rotatedRectangle;
             }
         }
