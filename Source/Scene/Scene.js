@@ -1449,7 +1449,7 @@ define([
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene._mode === SceneMode.SCENE3D && defined(globe)) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
             var ellipsoid = globe.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
