@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
@@ -16,6 +17,7 @@ define([
         './PostProcessStageLibrary',
         './PostProcessStageTextureCache'
     ], function(
+        arraySlice,
         Check,
         defaultValue,
         defined,
@@ -276,6 +278,32 @@ define([
                 }
 
                 return undefined;
+            }
+        },
+        /**
+         * Whether the collection has a stage that has selected features.
+         *
+         * @memberof PostProcessStageCollection.prototype
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        hasSelectedFeatures : {
+            get : function() {
+                var stages = arraySlice(this._stages);
+                while (stages.length > 0) {
+                    var stage = stages.pop();
+                    if (defined(stage.selectedFeatures)) {
+                        return true;
+                    }
+                    var length = stage.length;
+                    if (defined(length)) {
+                        for (var i = 0; i < length; ++i) {
+                            stages.push(stage.get(i));
+                        }
+                    }
+                }
+                return false;
             }
         }
     });

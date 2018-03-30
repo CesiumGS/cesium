@@ -737,7 +737,8 @@ define([
             useGlobeDepthFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
-            usePostProcess : false
+            usePostProcess : false,
+            usePostProcessSelectedFeatures : false
         };
 
         this._useWebVR = false;
@@ -2168,6 +2169,7 @@ define([
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
+        var usePostProcessSelectedFeatures = environmentState.usePostProcessSelectedFeatures;
 
         var height2D = camera.position.z;
 
@@ -2396,43 +2398,29 @@ define([
                 pickDepth.executeCopyDepth(context, passState);
             }
 
-            if (picking) {
+            if (picking || !usePostProcessSelectedFeatures) {
                 continue;
             }
 
             var originalFramebuffer = passState.framebuffer;
             passState.framebuffer = scene._sceneFramebuffer.getIdFramebuffer();
 
-            // PER_ENTITY TODO
+            // reset frustum
             frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
             frustum.far = frustumCommands.far;
             us.updateFrustum(frustum);
 
-            us.updatePass(Pass.CESIUM_3D_TILE);
-            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-            for (j = 0; j < length; ++j) {
-                commands[j].executeId(context, passState);
-            }
-
-            us.updatePass(Pass.OPAQUE);
-            commands = frustumCommands.commands[Pass.OPAQUE];
-            length = frustumCommands.indices[Pass.OPAQUE];
-            for (j = 0; j < length; ++j) {
-                commands[j].executeId(context, passState);
-            }
-
-            // PER_ENTITY TODO
-            if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
-                frustum.near = frustumCommands.near;
-                us.updateFrustum(frustum);
-            }
-
-            us.updatePass(Pass.TRANSLUCENT);
-            commands = frustumCommands.commands[Pass.TRANSLUCENT];
-            length = frustumCommands.indices[Pass.TRANSLUCENT];
-            for (j = 0; j < length; ++j) {
-                commands[j].executeId(context, passState);
+            for (j = Pass.GLOBE; j < Pass.TRANSLUCENT; ++j) {
+                us.updatePass(j);
+                commands = frustumCommands.commands[j];
+                length = frustumCommands.indices[j];
+                for (var k = 0; k < length; ++k) {
+                    // PER ENTITY TODO
+                    var command = commands[k];
+                    if (defined(command.executeId)) {
+                        command.executeId(context, passState);
+                    }
+                }
             }
 
             passState.framebuffer = originalFramebuffer;
@@ -2949,6 +2937,7 @@ define([
 
         var postProcess = scene.postProcessStages;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
+        environmentState.usePostProcessSelectedFeatures = false;
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
@@ -2960,6 +2949,7 @@ define([
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
+            environmentState.usePostProcessSelectedFeatures = usePostProcess && postProcess.hasSelectedFeatures;
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {

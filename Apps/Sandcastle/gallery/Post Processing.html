@@ -92,24 +92,6 @@ var brightness = collection.add(Cesium.PostProcessStageLibrary.createBrightnessS
 var eightBit = collection.add(Cesium.PostProcessStageLibrary.createEightBitStage());
 var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
 
-var handler;
-function addMouseOverBlackAndWhite() {
-    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    handler.setInputAction(function(movement) {
-        var pickedObject = viewer.scene.pick(movement.endPosition);
-        if (Cesium.defined(pickedObject)) {
-            blackAndWhite.selectedFeatures = [pickedObject.primitive];
-        } else {
-            blackAndWhite.selectedFeatures = [];
-        }
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-}
-
-function removeMouseOverBlackAndWhite() {
-    handler = handler && handler.destroy();
-    blackAndWhite.selectedFeatures = [];
-}
-
 function updatePostProcess() {
     silhouette.enabled = Boolean(viewModel.silhouette);
     silhouette.uniforms.color = Cesium.Color.YELLOW;
@@ -119,12 +101,6 @@ function updatePostProcess() {
     brightness.uniforms.brightness = Number(viewModel.brightnessValue);
     eightBit.enabled = Boolean(viewModel.eightBitShow);
     nightVision.enabled = Boolean(viewModel.nightVisionShow);
-
-    if (blackAndWhite.enabled) {
-        addMouseOverBlackAndWhite();
-    } else {
-        removeMouseOverBlackAndWhite();
-    }
 }
 updatePostProcess();
 //Sandcastle_End
