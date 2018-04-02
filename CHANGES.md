@@ -48,6 +48,7 @@ Change Log
 * Fixed occlusion when `globe.show` is `false`. [#6374](https://github.com/AnalyticalGraphicsInc/cesium/pull/6374)
 * Fixed double-sided flag for glTF materials with `BLEND` enabled. [#6371](https://github.com/AnalyticalGraphicsInc/cesium/pull/6371)
 * Fixed crash for entities with static geometry and time-dynamic attributes [#6377](https://github.com/AnalyticalGraphicsInc/cesium/pull/6377)
+* Fix geometry tile rendering in IE. [#6406](https://github.com/AnalyticalGraphicsInc/cesium/pull/6406)
 
 ### 1.43 - 2018-03-01
 
