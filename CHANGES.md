@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.45 - 2018-05-01
+
+##### Fixes :wrench:
+* Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
+
 ### 1.44 - 2018-04-02
 
 ##### Breaking Changes :mega:
