@@ -177,6 +177,12 @@ define([
             return when.resolve();
         }
 
+        if (FeatureDetection.isInternetExplorer()) {
+            return when.reject({
+                message : 'Draco decoding is not supported in legacy environments.'
+            });
+        }
+
         var loadResources = model._loadResources;
         if (loadResources.primitivesToDecode.length === 0) {
             // No more tasks to schedule
