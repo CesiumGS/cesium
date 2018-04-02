@@ -603,12 +603,8 @@ define([
         var alphaMode = material.alphaMode;
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
-                var alphaCutoff = material.alphaCutoff;
-                if (defined(alphaCutoff)) {
-                    fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
-                } else {
-                    fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
-                }
+                var alphaCutoff = defaultValue(material.alphaCutoff, 0.5);
+                fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
             } else if (alphaMode === 'BLEND') {
                 fragmentShader += '    gl_FragColor = vec4(color, baseColorWithAlpha.a);\n';
             } else {
@@ -622,7 +618,11 @@ define([
         var techniqueStates;
         if (defined(alphaMode) && alphaMode !== 'OPAQUE') {
             techniqueStates = {
-                enable: [
+                enable: parameterValues.doubleSided ? [
+                    WebGLConstants.DEPTH_TEST,
+                    WebGLConstants.BLEND
+                ]: [
+                    WebGLConstants.CULL_FACE,
                     WebGLConstants.DEPTH_TEST,
                     WebGLConstants.BLEND
                 ],

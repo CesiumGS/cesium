@@ -1655,57 +1655,6 @@ defineSuite([
         });
     });
 
-    it('IconStyle: Sets billboard image with proxy', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <Placemark>\
-              <Style>\
-                  <IconStyle>\
-                      <Icon>\
-                          <href>image.png</href>\
-                      </Icon>\
-                  </IconStyle>\
-              </Style>\
-          </Placemark>';
-
-        var proxy = new DefaultProxy('/proxy/');
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            sourceUri : 'http://test.invalid',
-            proxy : proxy
-        }).then(function(dataSource) {
-            var entities = dataSource.entities.values;
-            var billboard = entities[0].billboard;
-            expect(billboard.image.getValue().url).toEqual(proxy.getURL('http://test.invalid/image.png'));
-        });
-    });
-
-    it('IconStyle: Sets billboard image with query', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <Placemark>\
-              <Style>\
-                  <IconStyle>\
-                      <Icon>\
-                          <href>image.png</href>\
-                      </Icon>\
-                  </IconStyle>\
-              </Style>\
-          </Placemark>';
-
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            sourceUri : 'http://test.invalid',
-            query : {
-                "test": true
-            }
-        }).then(function(dataSource) {
-            var entities = dataSource.entities.values;
-            var billboard = entities[0].billboard;
-            expect(billboard.image.getValue().url).toEqual('http://test.invalid/image.png?test=true');
-        });
-    });
-
     it('IconStyle: Sets billboard image with subregion', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark xmlns="http://www.opengis.net/kml/2.2"\
@@ -3444,56 +3393,6 @@ defineSuite([
         });
     });
 
-    it('NetworkLink: Appends query tokens to source URL', function() {
-        var requestNetworkLink = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        KmlDataSource.load('Data/KML/networkLink.kml', {
-            camera : options.camera,
-            canvas : options.canvas,
-            query : {
-                password: "PassW0rd",
-                token: 229432
-            }
-        });
-
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual('Data/KML/networkLink.kml?password=PassW0rd&token=229432');
-        });
-    });
-
-    it('NetworkLink: Appends query tokens to all URI', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <NetworkLink id="link">\
-            <Link>\
-              <href>./Data/KML/refresh.kml</href>\
-              <viewRefreshMode>onStop</viewRefreshMode>\
-            </Link>\
-          </NetworkLink>';
-
-        var requestNetworkLink = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera: options.camera,
-            canvas: options.canvas,
-            query: {
-                password: "Passw0rd",
-                token: 32940
-            }
-        });
-
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&password=Passw0rd&token=32940');
-        });
-    });
-
     it('NetworkLink: onInterval', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
@@ -3734,65 +3633,6 @@ defineSuite([
         });
     });
 
-    it('NetworkLink: Url is correct on initial load with httpQuery without a ? and options.query', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <NetworkLink id="link">\
-            <Link>\
-              <href>./Data/KML/refresh.kml</href>\
-              <viewRefreshMode>onInterval</viewRefreshMode>\
-              <httpQuery>client=[clientName]-v[clientVersion]&amp;v=[kmlVersion]&amp;lang=[language]</httpQuery>\
-            </Link>\
-          </NetworkLink>';
-
-        var requestNetworkLink = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera: options.camera,
-            canvas: options.canvas,
-            query: {
-                "test": false,
-                "token": 39
-            }
-        });
-
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English&test=false&token=39');
-        });
-    });
-
-    it('NetworkLink: Url is correct on initial load with httpQuery with a ? and options.query', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <NetworkLink id="link">\
-            <Link>\
-              <href>./Data/KML/refresh.kml</href>\
-              <viewRefreshMode>onInterval</viewRefreshMode>\
-              <httpQuery>?client=[clientName]-v[clientVersion]&amp;v=[kmlVersion]&amp;lang=[language]</httpQuery>\
-            </Link>\
-          </NetworkLink>';
-
-        var requestNetworkLink = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera: options.camera,
-            canvas: options.canvas,
-            query: {
-                "test": true
-            }
-        });
-
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual(expectedRefreshLinkHref + '?client=Cesium-v1&v=2.2&lang=English&test=true');
-        });
-    });
-
     it('NetworkLink: Url is correct on initial load with viewFormat without a ?', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
@@ -3843,68 +3683,6 @@ defineSuite([
         });
     });
 
-    it('NetworkLink: Url is correct on initial load with viewFormat without a ? and options.query', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <NetworkLink id="link">\
-            <Link>\
-              <href>./Data/KML/refresh.kml</href>\
-              <viewRefreshMode>onInterval</viewRefreshMode>\
-              <viewFormat>BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth];CAMERA=\
-[lookatLon],[lookatLat],[lookatRange],[lookatTilt],[lookatHeading];VIEW=\
-[horizFov],[vertFov],[horizPixels],[vertPixels],[terrainEnabled]</viewFormat>\
-            </Link>\
-          </NetworkLink>';
-
-        var requestNetworkLink = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera: options.camera,
-            canvas: options.canvas,
-            query: {
-                "test": true
-            }
-        });
-
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1&test=true');
-        });
-    });
-
-    it('NetworkLink: Url is correct on initial load with viewFormat with a ? and options.query', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <NetworkLink id="link">\
-            <Link>\
-              <href>./Data/KML/refresh.kml</href>\
-              <viewRefreshMode>onInterval</viewRefreshMode>\
-              <viewFormat>?BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth];CAMERA=\
-[lookatLon],[lookatLat],[lookatRange],[lookatTilt],[lookatHeading];VIEW=\
-[horizFov],[vertFov],[horizPixels],[vertPixels],[terrainEnabled]</viewFormat>\
-            </Link>\
-          </NetworkLink>';
-
-        var requestNetworkLink = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera: options.camera,
-            canvas: options.canvas,
-            query: {
-                "test": true
-            }
-        });
-
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual(expectedRefreshLinkHref + '?BBOX=-180%2C-90%2C180%2C90&CAMERA=0%2C0%2C6378137%2C0%2C0&VIEW=45%2C45%2C512%2C512%2C1&test=true');
-        });
-    });
-
     it('NetworkLink: Url is correct on initial load with viewFormat and httpQuery', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
@@ -3926,36 +3704,6 @@ defineSuite([
 
         return requestNetworkLink.promise.then(function(url) {
             expect(url).toEqual(expectedRefreshLinkHref + '?hq=1&vf=1');
-        });
-    });
-
-    it('NetworkLink: Url is correct on initial load with viewFormat and httpQuery and options.query', function() {
-        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
-          <NetworkLink id="link">\
-            <Link>\
-              <href>./Data/KML/refresh.kml</href>\
-              <viewRefreshMode>onInterval</viewRefreshMode>\
-              <viewFormat>vf=1</viewFormat>\
-              <httpQuery>hq=1</httpQuery>\
-            </Link>\
-          </NetworkLink>';
-
-        var requestNetworkLink = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestNetworkLink.resolve(url);
-            deferred.reject();
-        });
-
-        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera: options.camera,
-            canvas: options.canvas,
-            query: {
-                "test": true
-            }
-        });
-
-        return requestNetworkLink.promise.then(function(url) {
-            expect(url).toEqual(expectedRefreshLinkHref + '?hq=1&vf=1&test=true');
         });
     });
 

@@ -160,33 +160,6 @@ defineSuite([
         });
     });
 
-    it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var provider = new MapboxImageryProvider({
-            url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
-            proxy : proxy
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.proxy).toEqual(proxy);
-
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/mapbox/server'))).toEqual(0);
-
-                // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
     it('rectangle passed to constructor does not affect tile numbering', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new MapboxImageryProvider({
@@ -242,7 +215,7 @@ defineSuite([
             url : 'made/up/mapbox/server/',
             mapId: 'test-id'
         });
-        expect(provider.credit.text).toEqual('© Mapbox © OpenStreetMap');
+        expect(provider.credit).toBe(MapboxImageryProvider._defaultCredit);
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -252,7 +225,7 @@ defineSuite([
             mapId: 'test-id',
             credit: creditText
         });
-        expect(providerWithCredit.credit.text).toEqual(creditText);
+        expect(providerWithCredit.credit.html).toEqual(creditText);
     });
 
     it('raises error event when image cannot be loaded', function() {

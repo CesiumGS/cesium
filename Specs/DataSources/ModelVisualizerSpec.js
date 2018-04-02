@@ -292,6 +292,31 @@ defineSuite([
         expect(state).toBe(BoundingSphereState.FAILED);
     });
 
+    it('Fails bounding sphere when model fails to load.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new ModelVisualizer(scene, entityCollection);
+
+        var time = JulianDate.now();
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var model = new ModelGraphics();
+        testObject.model = model;
+
+        testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
+        model.uri = new ConstantProperty('/path/to/incorrect/file');
+        visualizer.update(time);
+
+        var result = new BoundingSphere();
+        var state = visualizer.getBoundingSphere(testObject, result);
+        expect(state).toBe(BoundingSphereState.PENDING);
+        return pollToPromise(function() {
+            scene.render();
+            state = visualizer.getBoundingSphere(testObject, result);
+            return state !== BoundingSphereState.PENDING;
+        }).then(function() {
+            expect(state).toBe(BoundingSphereState.FAILED);
+        });
+    });
+
     it('Compute bounding sphere throws without entity.', function() {
         var entityCollection = new EntityCollection();
         visualizer = new ModelVisualizer(scene, entityCollection);

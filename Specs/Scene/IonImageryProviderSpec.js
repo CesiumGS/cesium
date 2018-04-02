@@ -151,7 +151,7 @@ defineSuite([
                 });
             })
             .then(function() {
-                var innerCredit = new Credit({ text: 'Data provided' });
+                var innerCredit = new Credit('Data provided');
                 spyOn(internalProvider, 'getTileCredits').and.returnValue([innerCredit]);
                 var credits = provider.getTileCredits(1, 2, 3);
                 expect(internalProvider.getTileCredits).toHaveBeenCalledWith(1, 2, 3);

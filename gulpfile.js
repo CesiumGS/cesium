@@ -260,8 +260,7 @@ gulp.task('makeZipFile', ['release'], function() {
         'README.md',
         'web.config'
     ], {
-        base : '.',
-        nodir : true
+        base : '.'
     });
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
@@ -377,8 +376,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 '*.zip',
                 '*.tgz'
             ], {
-                dot : true, // include hidden files
-                nodir : true // only directory files
+                dot : true // include hidden files
             });
         })
         .then(function(files) {
@@ -916,7 +914,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse, {nodir : true}).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1099,13 +1097,29 @@ function createGalleryList() {
         fileList.push('!Apps/Sandcastle/gallery/development/**/*.html');
     }
 
+    // On travis, the version is set to something like '1.43.0-branch-name-travisBuildNumber'
+    // We need to extract just the Major.Minor version
+    var majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
+    var major = majorMinor[1];
+    var minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
+    var tagVersion = major + '.' + minor;
+
+    // Get an array of demos that were added since the last release.
+    // This includes newly staged local demos as well.
+    var newDemos = [];
+    try {
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+    } catch (e) {
+        console.log('Failed to retrieve list of new Sandcastle demos from Git.');
+    }
+
     var helloWorld;
     globby.sync(fileList).forEach(function(file) {
         var demo = filePathToModuleId(path.relative('Apps/Sandcastle/gallery', file));
 
         var demoObject = {
             name : demo,
-            date : fs.statSync(file).mtime.getTime()
+            isNew: newDemos.includes(file)
         };
 
         if (fs.existsSync(file.replace('.html', '') + '.jpg')) {
@@ -1138,7 +1152,8 @@ function createGalleryList() {
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var hello_world_index = ' + helloWorldIndex + ';\n\
-var gallery_demos = [' + demoJSONs.join(', ') + '];';
+var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
+var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;');
 
     fs.writeFileSync(output, contents);
 }
@@ -1246,8 +1261,7 @@ function buildCesiumViewer() {
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {
-                    base : 'Build/Cesium',
-                    nodir : true
+                    base : 'Build/Cesium'
                 }),
 
             gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {

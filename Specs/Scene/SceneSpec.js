@@ -9,6 +9,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
+        'Core/HeadingPitchRoll',
         'Core/JulianDate',
         'Core/Math',
         'Core/PerspectiveFrustum',
@@ -53,6 +54,7 @@ defineSuite([
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
+        HeadingPitchRoll,
         JulianDate,
         CesiumMath,
         PerspectiveFrustum,
@@ -487,7 +489,7 @@ defineSuite([
         scene.globe = globe;
         expect(globe.isDestroyed()).toEqual(false);
 
-        scene.globe = null;
+        scene.globe = undefined;
         expect(globe.isDestroyed()).toEqual(true);
 
         scene.destroyForSpecs();
@@ -1643,4 +1645,48 @@ defineSuite([
 
         scene.destroyForSpecs();
     });
+
+    function getFrustumCommandsLength(scene) {
+        var commandsLength = 0;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumsLength = frustumCommandsList.length;
+        for (var i = 0; i < frustumsLength; ++i) {
+            var frustumCommands = frustumCommandsList[i];
+            for (var j = 0; j < Pass.NUMBER_OF_PASSES; ++j) {
+                commandsLength += frustumCommands.indices[j];
+            }
+        }
+        return commandsLength;
+    }
+
+    it('occludes primitive', function() {
+        var scene = createScene();
+        scene.globe = new Globe(Ellipsoid.WGS84);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectanglePrimitive = createRectangle(rectangle, 10);
+        scene.primitives.add(rectanglePrimitive);
+
+        scene.camera.setView({
+            destination: new Cartesian3(-588536.1057451078, -10512475.371849751, 6737159.100747835),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5688261558859757, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.camera.setView({
+            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(0);
+
+        // Still on opposite side of globe but now show is false, the command should not be occluded anymore
+        scene.globe.show = false;
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.destroyForSpecs();
+    });
+
 }, 'WebGL');

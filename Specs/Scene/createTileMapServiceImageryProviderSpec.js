@@ -315,26 +315,6 @@ defineSuite([
         });
     });
 
-    it('routes resource request through a proxy if one is specified', function() {
-        /*eslint-disable no-unused-vars*/
-        var proxy = new DefaultProxy('/proxy/');
-        var requestMetadata = when.defer();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            requestMetadata.resolve(url);
-            deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
-        });
-
-        var provider = createTileMapServiceImageryProvider({
-            url : 'server.invalid',
-            proxy : proxy
-        });
-
-        return requestMetadata.promise.then(function(url) {
-            expect(url.indexOf(proxy.getURL(getAbsoluteUri('server.invalid')))).toEqual(0);
-        });
-        /*eslint-enable no-unused-vars*/
-    });
-
     it('resource request takes a query string', function() {
         /*eslint-disable no-unused-vars*/
         var requestMetadata = when.defer();
@@ -351,32 +331,6 @@ defineSuite([
             expect(/\?query=1$/.test(url)).toEqual(true);
         });
         /*eslint-enable no-unused-vars*/
-    });
-
-    it('routes tile requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server',
-            proxy : proxy
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.proxy).toEqual(proxy);
-
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL(getAbsoluteUri('made/up/tms/server')))).toEqual(0);
-
-                // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
     });
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
