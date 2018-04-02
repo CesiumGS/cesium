@@ -601,18 +601,13 @@ define([
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createPolygonGeometry';
 
-        var positions = polygonHierarchy.positions;
-        if (!defined(positions) || positions.length < 3) {
-            this._rectangle = new Rectangle();
-        } else {
-            this._rectangle = Rectangle.fromCartesianArray(positions, ellipsoid);
-        }
+        this._rectangle = undefined;
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 10;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 10;
     }
 
     /**
@@ -696,9 +691,6 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        Rectangle.pack(value._rectangle, array, startingIndex);
-        startingIndex += Rectangle.packedLength;
-
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._granularity;
@@ -715,7 +707,6 @@ define([
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
-    var scratchRectangle = new Rectangle();
 
     //Only used to avoid inaability to default construct.
     var dummyOptions = {
@@ -746,9 +737,6 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
-        startingIndex += Rectangle.packedLength;
-
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
@@ -775,7 +763,6 @@ define([
         result._perPositionHeight = perPositionHeight;
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
-        result._rectangle = Rectangle.clone(rectangle);
         result._shadowVolume = shadowVolume;
         result.packedLength = packedLength;
         return result;
@@ -931,6 +918,15 @@ define([
          */
         rectangle : {
             get : function() {
+                if (!defined(this._rectangle)) {
+                    var positions = this._polygonHierarchy.positions;
+                    if (!defined(positions) || positions.length < 3) {
+                        this._rectangle = new Rectangle();
+                    } else {
+                        this._rectangle = Rectangle.fromCartesianArray(positions, this._ellipsoid);
+                    }
+                }
+
                 return this._rectangle;
             }
         }

@@ -2,7 +2,6 @@ define([
         '../ThirdParty/when',
         './CompressedTextureBuffer',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './Resource',
         './TaskProcessor'
@@ -10,7 +9,6 @@ define([
         when,
         CompressedTextureBuffer,
         defined,
-        deprecationWarning,
         DeveloperError,
         Resource,
         TaskProcessor) {
@@ -48,30 +46,18 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadCRN(resourceOrUrlOrBuffer, headers, request) {
+    function loadCRN(resourceOrUrlOrBuffer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(resourceOrUrlOrBuffer)) {
             throw new DeveloperError('resourceOrUrlOrBuffer is required.');
         }
         //>>includeEnd('debug');
 
-        if (defined(headers)) {
-            deprecationWarning('loadCRN.headers', 'The headers parameter has been deprecated. Set the headers property on the Resource parameter.');
-        }
-
-        if (defined(request)) {
-            deprecationWarning('loadCRN.request', 'The request parameter has been deprecated. Set the request property on the Resource parameter.');
-        }
-
         var loadPromise;
         if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
             loadPromise = when.resolve(resourceOrUrlOrBuffer);
         } else {
-            var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer, {
-                headers: headers,
-                request: request
-            });
-
+            var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
             loadPromise = resource.fetchArrayBuffer();
         }
 

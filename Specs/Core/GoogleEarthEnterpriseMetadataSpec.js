@@ -244,43 +244,4 @@ defineSuite([
             expect(e.message).toContain(url);
         });
     });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var baseurl = 'http://fake.fake.invalid/';
-
-        var req = 0;
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            expect(responseType).toEqual('arraybuffer');
-            if (req === 0) {
-                expect(url).toEqual(proxy.getURL(baseurl + 'dbRoot.v5?output=proto'));
-                deferred.reject(); // Reject dbRoot request and use defaults
-            } else {
-                expect(url).toEqual(proxy.getURL(baseurl + 'flatfile?q2-0-q.1'));
-                Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
-            }
-            ++req;
-        });
-
-        var provider = new GoogleEarthEnterpriseMetadata({
-            url : baseurl,
-            proxy : proxy
-        });
-
-        expect(provider._resource._url).toEqual(baseurl);
-        expect(provider.proxy).toEqual(proxy);
-
-        return provider.readyPromise.then(function(result) {
-            expect(result).toBe(true);
-
-            var tileInfo = provider._tileInfo['0'];
-            expect(tileInfo).toBeDefined();
-            expect(tileInfo._bits).toEqual(0x40);
-            expect(tileInfo.cnodeVersion).toEqual(2);
-            expect(tileInfo.imageryVersion).toEqual(1);
-            expect(tileInfo.terrainVersion).toEqual(1);
-            expect(tileInfo.ancestorHasTerrain).toEqual(false);
-            expect(tileInfo.terrainState).toBeUndefined();
-        });
-    });
 });
