@@ -643,6 +643,294 @@ defineSuite([
         expect(intervals.get(1).isStopIncluded).toEqual(true);
     });
 
+    it('removeInterval removes the first interval correctly', function() {
+        var intervals = new TimeIntervalCollection();
+        var from1To3 = new TimeInterval({
+            start: new JulianDate(1),
+            stop: new JulianDate(3),
+            isStopIncluded: true,
+            isStartIncluded: true,
+            data: '1-to-3'
+        });
+        var from3To6 = new TimeInterval({
+            start: new JulianDate(3),
+            stop: new JulianDate(6),
+            isStopIncluded: true,
+            isStartIncluded: true,
+            data: '3-to-6'
+        });
+
+        intervals.addInterval(from1To3);
+        intervals.addInterval(from3To6);
+
+        expect(intervals.length).toEqual(2);
+        expect(intervals.get(0).isStartIncluded).toBeTruthy();
+        expect(intervals.get(0).isStopIncluded).toBeFalsy(); // changed to false because 3-6 overlaps it
+        expect(intervals.get(0).start.dayNumber).toEqual(1);
+        expect(intervals.get(0).stop.dayNumber).toEqual(3);
+        expect(intervals.get(0).data).toEqual('1-to-3');
+        expect(intervals.get(1).isStartIncluded).toBeTruthy();
+        expect(intervals.get(1).isStopIncluded).toBeTruthy();
+        expect(intervals.get(1).start.dayNumber).toEqual(3);
+        expect(intervals.get(1).stop.dayNumber).toEqual(6);
+        expect(intervals.get(1).data).toEqual('3-to-6');
+
+        var toRemove = new TimeInterval({
+            start: new JulianDate(1),
+            stop: new JulianDate(3),
+            isStopIncluded: true,
+            isStartIncluded: true,
+            data: undefined
+        });
+        var wasRemoved = intervals.removeInterval(toRemove);
+
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start.dayNumber).toEqual(3);
+        expect(intervals.stop.dayNumber).toEqual(6);
+        expect(intervals.get(0).data).toEqual('3-to-6');
+        expect(wasRemoved).toBeTruthy();
+    });
+
+    it('should add and remove intervals correctly (some kind of integration test)', function () {
+        // about the year 3000
+        var CONST_DAY_NUM = 3000000;
+
+        function intervalFromSeconds(seconds, data) {
+            // make all intervals a few seconds in length
+            return new TimeInterval({
+                start: new JulianDate(CONST_DAY_NUM, seconds),
+                stop: new JulianDate(CONST_DAY_NUM, seconds + 4),
+                isStartIncluded: true,
+                isStopIncluded: true,
+                data: data
+            });
+        }
+
+        function addIntervals(collection, specs) {
+            specs.forEach(function(spec) {
+                collection.addInterval(intervalFromSeconds(spec.sec, spec.data));
+            });
+        }
+
+        function removeInterval(collection, fromSecond, toSecond) {
+            collection.removeInterval(new TimeInterval({
+                start: new JulianDate(CONST_DAY_NUM, fromSecond),
+                stop: new JulianDate(CONST_DAY_NUM, toSecond),
+                isStartIncluded: true,
+                isStopIncluded: true,
+                data: undefined
+            }));
+        }
+
+        function expectCollection(collection, count, expectation) {
+            // log the collection for debugging
+            for (var i = 0; i < collection.length; i++) {
+                var interval = collection.get(i);
+                console.log(interval.data, interval.start.toString(), interval.stop.toString());
+            }
+
+            expectation.forEach(function(item) {
+                var i = collection.findIntervalContainingDate(new JulianDate(CONST_DAY_NUM, item.t));
+                if (item.data === null) {
+                    // expect the interval at this time not to exist
+                    if (i !== undefined) {
+                        throw new Error('expected undefined at ' + item.sec + ' seconds but it was id ' + i.data);
+                    }
+                    expect(i).toBeUndefined();
+                } else if (i === undefined || i.data !== item.data) {
+                    throw new Error('expected ' + item.data + ' at ' + item.sec + ' seconds, but it was ' + i.data);
+                }
+            });
+
+            if (collection.length !== count) {
+                throw new Error('Expected interval to have ' + count + ' elements but it had ' + collection.length);
+            }
+        }
+
+        var collection = new TimeIntervalCollection();
+
+        addIntervals(
+            collection,
+            [
+                { sec: 0, data: 0 },
+                { sec: 2, data: 2 },
+                { sec: 4, data: 4 },
+                { sec: 6, data: 6 }
+            ]
+        );
+        expectCollection(
+            collection,
+            4,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 0 },
+                { sec: 2, data: 2 },
+                { sec: 3, data: 2 },
+                { sec: 4, data: 4 },
+                { sec: 5, data: 4 },
+                { sec: 6, data: 6 },
+                { sec: 7, data: 6 },
+                { sec: 8, data: 6 },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        addIntervals(
+            collection,
+            [
+                { sec: 1, data: 1 },
+                { sec: 3, data: 3 }
+            ]
+        );
+        expectCollection(
+            collection,
+            4,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: 3 },
+                { sec: 4, data: 3 },
+                { sec: 5, data: 3 },
+                { sec: 6, data: 3 },
+                { sec: 7, data: 3 },
+                { sec: 8, data: 6 },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        addIntervals(
+            collection,
+            [
+                { sec: 3, data: 31 }
+            ]
+        );
+        expectCollection(
+            collection,
+            4,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: 31 },
+                { sec: 4, data: 31 },
+                { sec: 5, data: 31 },
+                { sec: 6, data: 31 },
+                { sec: 7, data: 31 },
+                { sec: 8, data: 6 },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        removeInterval(collection, 3, 8);
+        expectCollection(
+            collection,
+            3,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: null },
+                { sec: 4, data: null },
+                { sec: 5, data: null },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        removeInterval(collection, 0, 1);
+        expectCollection(
+            collection,
+            2,
+            [
+                { sec: 0, data: null },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: null },
+                { sec: 4, data: null },
+                { sec: 5, data: null },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        removeInterval(collection, 0, 11);
+        expectCollection(
+            collection,
+            0,
+            [
+                { sec: 0, data: null },
+                { sec: 11, data: null }
+            ]
+        );
+
+        addIntervals(
+            collection,
+            [
+                { sec: 1, data: 1 },
+                { sec: 12, data: 12 }
+            ]
+        );
+        expectCollection(
+            collection,
+            2,
+            [
+                { sec: 0, data: null },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: 1 },
+                { sec: 4, data: 1 },
+                { sec: 5, data: 1 },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 9, data: null },
+                { sec: 10, data: null },
+                { sec: 11, data: null },
+                { sec: 12, data: 12 },
+                { sec: 13, data: 12 },
+                { sec: 14, data: 12 },
+                { sec: 15, data: 12 },
+                { sec: 16, data: 12 },
+                { sec: 17, data: null }
+            ]
+        );
+
+        removeInterval(collection, 0, 3);
+        expectCollection(
+            collection,
+            2,
+            [
+                { sec: 0, data: null },
+                { sec: 1, data: null },
+                { sec: 2, data: null },
+                { sec: 3, data: null },
+                { sec: 4, data: 1 },
+                { sec: 5, data: 1 },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 12, data: 12 },
+                { sec: 16, data: 12 },
+                { sec: 17, data: null }
+            ]
+        );
+    });
+
     it('removeInterval with an interval of the exact same size works..', function() {
         var intervals = new TimeIntervalCollection();
         var interval = new TimeInterval({
