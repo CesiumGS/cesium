@@ -13,6 +13,12 @@ module.exports = function(config) {
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks : ['jasmine', 'requirejs', 'detectBrowsers'],
 
+        client: {
+            jasmine: {
+                random: false
+            }
+        },
+
         detectBrowsers : {
             enabled : false,
             usePhantomJS : false
