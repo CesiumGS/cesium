@@ -20,6 +20,7 @@ Change Log
 * Fix Cesium ion browser caching [#6353](https://github.com/AnalyticalGraphicsInc/cesium/pull/6353).
 * Added support for glTF models with [Draco geometry compression](https://github.com/fanzhanggoogle/glTF/blob/KHR_mesh_compression/extensions/Khronos/KHR_draco_mesh_compression/README.md).
   * Added `dequantizeInShader` option parameter to `Model` and `Model.fromGltf` to specify if Draco compressed glTF assets should be dequantized on the GPU.
+  * Decoding is currently not supported in Internet Explorer, adding support is planned [#6404](https://github.com/AnalyticalGraphicsInc/cesium/issues/6404).
 * `ClippingPlaneCollection` updates [#6201](https://github.com/AnalyticalGraphicsInc/cesium/pull/6201)
   * Removed the 6-clipping-plane limit.
   * Added support for Internet Explorer.
