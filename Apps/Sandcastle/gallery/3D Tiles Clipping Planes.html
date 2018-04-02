@@ -255,7 +255,7 @@ Cesium.knockout.getObservable(viewModel, 'edgeStylingEnabled').subscribe(functio
 
 function reset() {
     viewer.entities.removeAll();
-    viewer.scene.primitives.removeAll();
+    viewer.scene.primitives.remove(tileset);
     planeEntities = [];
     targetY = 0.0;
     tileset = undefined;
