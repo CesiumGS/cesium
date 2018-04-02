@@ -29,7 +29,7 @@ define([
      *
      * @example
      * //Create a credit with a tooltip, image and link
-     * var credit = new Cesium.Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="/images/cesium_logo.png" text="Cesium"/></a>');
+     * var credit = new Cesium.Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
      */
     function Credit(html, showOnScreen) {
         var id;
