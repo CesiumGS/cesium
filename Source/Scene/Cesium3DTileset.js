@@ -28,6 +28,7 @@ define([
         './Axis',
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
+        './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
         './Cesium3DTilesetCache',
         './Cesium3DTilesetStatistics',
@@ -73,6 +74,7 @@ define([
         Axis,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
+        Cesium3DTileContentState,
         Cesium3DTileOptimizations,
         Cesium3DTilesetCache,
         Cesium3DTilesetStatistics,
@@ -1479,16 +1481,13 @@ define([
 
     function removeFromProcessingQueue(tileset, tile) {
         return function() {
-            var index = tileset._processingQueue.indexOf(tile);
-            if (index === -1) {
+            if (tile._contentState === Cesium3DTileContentState.FAILED) {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
                 --tileset._statistics.numberOfPendingRequests;
                 return;
             }
 
-            // Remove from processing queue
-            tileset._processingQueue.splice(index, 1);
             --tileset._statistics.numberOfTilesProcessing;
 
             if (tile.hasRenderableContent) {
@@ -1502,13 +1501,31 @@ define([
         };
     }
 
+    function filterProcessingQueue(tileset) {
+        var tiles = tileset._processingQueue;
+        var length = tiles.length;
+
+        var removeCount = 0;
+        for (var i = 0; i < length; ++i) {
+            var tile = tiles[i];
+            if (tile._contentState !== Cesium3DTileContentState.PROCESSING) {
+                ++removeCount;
+                continue;
+            }
+            if (removeCount > 0) {
+                tiles[i - removeCount] = tile;
+            }
+        }
+        tiles.length -= removeCount;
+    }
+
     function processTiles(tileset, frameState) {
+        filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
 
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
-        // Traverse backwards in case a tile is removed as a result of calling process()
-        for (var i = length - 1; i >= 0; --i) {
+        for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
         }
     }
