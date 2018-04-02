@@ -723,14 +723,8 @@ defineSuite([
         }
 
         function expectCollection(collection, count, expectation) {
-            // log the collection for debugging
-            for (var i = 0; i < collection.length; i++) {
-                var interval = collection.get(i);
-                console.log(interval.data, interval.start.toString(), interval.stop.toString());
-            }
-
             expectation.forEach(function(item) {
-                var i = collection.findIntervalContainingDate(new JulianDate(CONST_DAY_NUM, item.t));
+                var i = collection.findIntervalContainingDate(new JulianDate(CONST_DAY_NUM, item.sec));
                 if (item.data === null) {
                     // expect the interval at this time not to exist
                     if (i !== undefined) {
