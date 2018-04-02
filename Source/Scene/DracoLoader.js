@@ -179,7 +179,7 @@ define([
 
         if (FeatureDetection.isInternetExplorer()) {
             return when.reject({
-                message : 'Draco decoding is not supported in legacy environments.'
+                message : 'Draco decoding is not supported in Internet Explorer.'
             });
         }
 
