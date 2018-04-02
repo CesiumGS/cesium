@@ -1,12 +1,22 @@
 defineSuite([
         'Core/Resource',
+        'Core/defaultValue',
         'Core/DefaultProxy',
+        'Core/queryToObject',
         'Core/Request',
+        'Core/RequestErrorEvent',
+        'Core/RequestScheduler',
+        'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
         Resource,
+        defaultValue,
         DefaultProxy,
+        queryToObject,
         Request,
+        RequestErrorEvent,
+        RequestScheduler,
+        Uri,
         when) {
     'use strict';
 
@@ -69,6 +79,22 @@ defineSuite([
         expect(resource.retryCallback).toBeUndefined();
         expect(resource.retryAttempts).toEqual(0);
         expect(resource.request).toBeDefined();
+    });
+
+    it('_makeRequest returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var resource = new Resource({
+            url: 'http://example.invalid/testuri',
+            request: new Request({
+                throttle: true
+            })
+        });
+        var promise = resource._makeRequest({ method: 'GET' });
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 
     it('appendForwardSlash appends a /', function() {
@@ -773,10 +799,25 @@ defineSuite([
 
     it('static fetchArrayBuffer calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetchArrayBuffer').and.returnValue(when.resolve());
+        var expectedResult = when.resolve();
+        spyOn(Resource.prototype, 'fetchArrayBuffer').and.returnValue(expectedResult);
+        var result = Resource.fetchArrayBuffer(url);
+        expect(result).toBe(expectedResult);
         return Resource.fetchArrayBuffer(url)
             .then(function() {
                 expect(Resource.prototype.fetchArrayBuffer).toHaveBeenCalled();
+            });
+    });
+
+    it('fetchArrayBuffer calls fetch with expected parameters', function() {
+        var url = 'http://test.com/data';
+        var expectedResult = when.resolve();
+        spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
+        var result = Resource.fetchArrayBuffer(url);
+        expect(result).toBe(expectedResult);
+        return result
+            .then(function() {
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'arraybuffer' });
             });
     });
 
@@ -786,6 +827,30 @@ defineSuite([
         return Resource.fetchBlob(url)
             .then(function() {
                 expect(Resource.prototype.fetchBlob).toHaveBeenCalled();
+            });
+    });
+
+    it('fetchBlob calls fetch with expected parameters', function() {
+        var url = 'http://test.com/data';
+        var expectedResult = when.resolve();
+        spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
+        var result = Resource.fetchBlob(url);
+        expect(result).toBe(expectedResult);
+        return result
+            .then(function() {
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'blob' });
+            });
+    });
+
+    it('fetchArrayBuffer calls fetch with expected parameters', function() {
+        var url = 'http://test.com/data';
+        var expectedResult = when.resolve();
+        spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
+        var result = Resource.fetchArrayBuffer(url);
+        expect(result).toBe(expectedResult);
+        return result
+            .then(function() {
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'arraybuffer' });
             });
     });
 
@@ -807,6 +872,18 @@ defineSuite([
             });
     });
 
+    it('fetchText calls fetch with expected parameters', function() {
+        var url = 'http://test.com/data';
+        var expectedResult = when.resolve();
+        spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
+        var result = Resource.fetchText(url);
+        expect(result).toBe(expectedResult);
+        return result
+            .then(function() {
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'text' });
+            });
+    });
+
     it('static fetchJson calls correct method', function() {
         var url = 'http://test.com/data';
         spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve());
@@ -816,12 +893,42 @@ defineSuite([
             });
     });
 
+    it('fetchJson calls fetch with expected parameters and parses result', function() {
+        var expectedResult = { x: 123 };
+        spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(JSON.stringify(expectedResult)));
+        return Resource.fetchJson('url')
+            .then(function(result) {
+                expect(result).toEqual(expectedResult);
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({
+                    responseType: 'text',
+                    headers: {
+                        Accept: 'application/json,*/*;q=0.01'
+                    }
+                });
+            });
+    });
+
     it('static fetchXML calls correct method', function() {
         var url = 'http://test.com/data';
         spyOn(Resource.prototype, 'fetchXML').and.returnValue(when.resolve());
         return Resource.fetchXML(url)
             .then(function() {
                 expect(Resource.prototype.fetchXML).toHaveBeenCalled();
+            });
+    });
+
+    it('fetchXML calls fetch with expected parameters', function() {
+        var url = 'http://test.com/data';
+        var expectedResult = when.resolve();
+        spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
+        var result = Resource.fetchXML(url);
+        expect(result).toBe(expectedResult);
+        return result
+            .then(function() {
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({
+                    responseType: 'document',
+                    overrideMimeType: 'text/xml'
+                });
             });
     });
 
@@ -1014,4 +1121,991 @@ defineSuite([
                 expect(result['content-length']).toEqual(expectedResult['content-length']);
             });
     });
+
+    describe('fetchImage', function() {
+
+        var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
+
+        it('can load an image', function() {
+            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
+                expect(loadedImage.width).toEqual(1);
+                expect(loadedImage.height).toEqual(1);
+            });
+        });
+
+        it('can load an image preferring blob', function() {
+            return Resource.fetchImage('./Data/Images/Green.png', true).then(function(loadedImage) {
+                expect(loadedImage.width).toEqual(1);
+                expect(loadedImage.height).toEqual(1);
+            });
+        });
+
+        it('can load an image from a data URI', function() {
+            return Resource.fetchImage(dataUri).then(function(loadedImage) {
+                expect(loadedImage.width).toEqual(1);
+                expect(loadedImage.height).toEqual(1);
+            });
+        });
+
+        it('sets the crossOrigin property for cross-origin images', function() {
+            var fakeImage = {};
+            var imageConstructorSpy = spyOn(window, 'Image').and.returnValue(fakeImage);
+
+            Resource.fetchImage('http://example.invalid/someImage.png');
+            expect(imageConstructorSpy).toHaveBeenCalled();
+            expect(fakeImage.crossOrigin).toEqual('');
+        });
+
+        it('does not set the crossOrigin property for non-cross-origin images', function() {
+            var fakeImage = {};
+            var imageConstructorSpy = spyOn(window, 'Image').and.returnValue(fakeImage);
+
+            Resource.fetchImage('./someImage.png');
+            expect(imageConstructorSpy).toHaveBeenCalled();
+            expect(fakeImage.crossOrigin).toBeUndefined();
+        });
+
+        it('does not set the crossOrigin property for data URIs', function() {
+            var fakeImage = {};
+            var imageConstructorSpy = spyOn(window, 'Image').and.returnValue(fakeImage);
+
+            Resource.fetchImage(dataUri);
+            expect(imageConstructorSpy).toHaveBeenCalled();
+            expect(fakeImage.crossOrigin).toBeUndefined();
+        });
+
+        it('resolves the promise when the image loads', function() {
+            var fakeImage = {};
+            spyOn(window, 'Image').and.returnValue(fakeImage);
+
+            var success = false;
+            var failure = false;
+            var loadedImage;
+
+            when(Resource.fetchImage(dataUri), function(image) {
+                success = true;
+                loadedImage = image;
+            }, function() {
+                failure = true;
+            });
+
+            // neither callback has fired yet
+            expect(success).toEqual(false);
+            expect(failure).toEqual(false);
+
+            fakeImage.onload();
+            expect(success).toEqual(true);
+            expect(failure).toEqual(false);
+            expect(loadedImage).toBe(fakeImage);
+        });
+
+        it('rejects the promise when the image errors', function() {
+            var fakeImage = {};
+            spyOn(window, 'Image').and.returnValue(fakeImage);
+
+            var success = false;
+            var failure = false;
+            var loadedImage;
+
+            when(Resource.fetchImage(dataUri), function(image) {
+                success = true;
+                loadedImage = image;
+            }, function() {
+                failure = true;
+            });
+
+            // neither callback has fired yet
+            expect(success).toEqual(false);
+            expect(failure).toEqual(false);
+
+            fakeImage.onerror();
+            expect(success).toEqual(false);
+            expect(failure).toEqual(true);
+            expect(loadedImage).toBeUndefined();
+        });
+
+        it('Calls loadWithXhr with blob response type if headers is set', function() {
+            var expectedUrl = 'http://example.invalid/testuri.png';
+            var expectedHeaders = {
+                'X-my-header': 'my-value'
+            };
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toEqual(expectedUrl);
+                expect(headers).toEqual(expectedHeaders);
+                expect(responseType).toEqual('blob');
+
+                var binary = atob(dataUri.split(',')[1]);
+                var array = [];
+                for (var i = 0; i < binary.length; i++) {
+                    array.push(binary.charCodeAt(i));
+                }
+
+                deferred.resolve(new Blob([new Uint8Array(array)], { type: 'image/png' }));
+            });
+
+            var testResource = new Resource({
+                url: expectedUrl,
+                headers: expectedHeaders
+            });
+            var promise = testResource.fetchImage();
+            expect(promise).toBeDefined();
+
+            return promise
+                .then(function(image) {
+                    expect(image).toBeDefined();
+                });
+        });
+
+        it('Doesn\'t call loadWithXhr with blob response type if headers is set but is a data URI', function() {
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                deferred.reject('this shouldn\'t happen');
+            });
+
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).toEqual(dataUri);
+            }).and.callThrough();
+
+            var testResource = new Resource({
+                url: dataUri,
+                headers: {
+                    'X-my-header': 'my-value'
+                }
+            });
+            var promise = testResource.fetchImage();
+            expect(promise).toBeDefined();
+
+            return promise
+                .then(function(image) {
+                    expect(image).toBeDefined();
+                });
+        });
+
+        describe('retries when Resource has the callback set', function() {
+            it('rejects after too many retries', function() {
+                var fakeImage = {};
+                spyOn(window, 'Image').and.returnValue(fakeImage);
+
+                var cb = jasmine.createSpy('retry').and.returnValue(true);
+
+                var resource = new Resource({
+                    url: 'http://example.invalid/image.png',
+                    retryCallback: cb,
+                    retryAttempts: 1
+                });
+
+                var promise = resource.fetchImage();
+
+                expect(promise).toBeDefined();
+
+                var success = false;
+                var failure = false;
+                promise.then(function() {
+                    success = true;
+                }).otherwise(function() {
+                    failure = true;
+                });
+
+                expect(success).toBe(false);
+                expect(failure).toBe(false);
+
+                fakeImage.onerror('some error'); // This should retry
+                expect(success).toBe(false);
+                expect(failure).toBe(false);
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1]).toEqual('some error');
+
+                fakeImage.onerror(); // This fails because we only retry once
+                expect(success).toBe(false);
+                expect(failure).toBe(true);
+            });
+
+            it('rejects after callback returns false', function() {
+                var fakeImage = {};
+                spyOn(window, 'Image').and.returnValue(fakeImage);
+
+                var cb = jasmine.createSpy('retry').and.returnValue(false);
+
+                var resource = new Resource({
+                    url: 'http://example.invalid/image.png',
+                    retryCallback: cb,
+                    retryAttempts: 2
+                });
+
+                var promise = resource.fetchImage();
+
+                expect(promise).toBeDefined();
+
+                var success = false;
+                var failure = false;
+                promise.then(function(value) {
+                    success = true;
+                }).otherwise(function(error) {
+                    failure = true;
+                });
+
+                expect(success).toBe(false);
+                expect(failure).toBe(false);
+
+                fakeImage.onerror('some error'); // This fails because the callback returns false
+                expect(success).toBe(false);
+                expect(failure).toBe(true);
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1]).toEqual('some error');
+            });
+
+            it('resolves after retry', function() {
+                var fakeImage = {};
+                spyOn(window, 'Image').and.returnValue(fakeImage);
+
+                var cb = jasmine.createSpy('retry').and.returnValue(true);
+
+                var resource = new Resource({
+                    url: 'http://example.invalid/image.png',
+                    retryCallback: cb,
+                    retryAttempts: 1
+                });
+
+                var promise = resource.fetchImage();
+
+                expect(promise).toBeDefined();
+
+                var success = false;
+                var failure = false;
+                promise.then(function(value) {
+                    success = true;
+                }).otherwise(function(error) {
+                    failure = true;
+                });
+
+                expect(success).toBe(false);
+                expect(failure).toBe(false);
+
+                fakeImage.onerror('some error'); // This should retry
+                expect(success).toBe(false);
+                expect(failure).toBe(false);
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1]).toEqual('some error');
+
+                fakeImage.onload();
+                expect(success).toBe(true);
+                expect(failure).toBe(false);
+            });
+        });
+    });
+
+    describe('loadWithXhr', function(){
+        var loadWithXhr = function(options) {
+            var resource = new Resource(options);
+            return resource._makeRequest({
+                responseType: options.responseType,
+                overrideMimeType: options.overrideMimeType,
+                method: defaultValue(options.method, 'GET'),
+                data: options.data
+            });
+        };
+
+        describe('data URI loading', function() {
+            it('can load URI escaped text with default response type', function() {
+                return loadWithXhr({
+                    url : 'data:,Hello%2C%20World!'
+                }).then(function(result) {
+                    expect(result).toEqual('Hello, World!');
+                });
+            });
+
+            it('can load URI escaped text with responseType=text', function() {
+                return loadWithXhr({
+                    url : 'data:,Hello%2C%20World!',
+                    responseType : 'text'
+                }).then(function(result) {
+                    expect(result).toEqual('Hello, World!');
+                });
+            });
+
+            it('can load Base64 encoded text with default response type', function() {
+                return loadWithXhr({
+                    url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ=='
+                }).then(function(result) {
+                    expect(result).toEqual('Hello, World!');
+                });
+            });
+
+            it('can load Base64 encoded text with responseType=text', function() {
+                return loadWithXhr({
+                    url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==',
+                    responseType : 'text'
+                }).then(function(result) {
+                    expect(result).toEqual('Hello, World!');
+                });
+            });
+
+            it('can load Base64 & URI encoded text with default responseType', function() {
+                return loadWithXhr({
+                    url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D'
+                }).then(function(result) {
+                    expect(result).toEqual('Hello, World!');
+                });
+            });
+
+            it('can load Base64 & URI encoded text with responseType=text', function() {
+                return loadWithXhr({
+                    url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D',
+                    responseType : 'text'
+                }).then(function(result) {
+                    expect(result).toEqual('Hello, World!');
+                });
+            });
+
+            it('can load URI escaped HTML as text with default responseType', function() {
+                return loadWithXhr({
+                    url : 'data:text/html,%3Ch1%3EHello%2C%20World!%3C%2Fh1%3E'
+                }).then(function(result) {
+                    expect(result).toEqual('<h1>Hello, World!</h1>');
+                });
+            });
+
+            it('can load URI escaped HTML as text with responseType=text', function() {
+                return loadWithXhr({
+                    url : 'data:text/html,%3Ch1%3EHello%2C%20World!%3C%2Fh1%3E',
+                    responseType : 'text'
+                }).then(function(result) {
+                    expect(result).toEqual('<h1>Hello, World!</h1>');
+                });
+            });
+
+            it('can load URI escaped text as JSON', function() {
+                return loadWithXhr({
+                    url : 'data:application/json,%7B%22key%22%3A%22value%22%7D',
+                    responseType : 'json'
+                }).then(function(result) {
+                    expect(result.key).toEqual('value');
+                });
+            });
+
+            it('can load Base64 encoded text as JSON', function() {
+                return loadWithXhr({
+                    url : 'data:application/json;base64,eyJrZXkiOiJ2YWx1ZSJ9',
+                    responseType : 'json'
+                }).then(function(result) {
+                    expect(result.key).toEqual('value');
+                });
+            });
+
+            it('can load URI escaped HTML as document', function() {
+                return loadWithXhr({
+                    url : 'data:text/html,%3Ch1%3EHello%2C%20World!%3C%2Fh1%3E',
+                    responseType : 'document'
+                }).then(function(result) {
+                    expect(result.querySelector('h1')).not.toBeNull();
+                });
+            });
+
+            var tile = 'data:;base64,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DwABABIAAgAAAAIAEwACAAEABgADAAIAEwAAABMAFAACAAEAAgAAAAAAAgAEAAYAAwAEAAEACAACAAYACAAHAAAACQAAAAQAAgABAAoAAAAKAAAACwAOAAAABQAMAAMAAgAMAAEADwAQAAAAAgAQAAEAAAACABIAEgAUAAEAAAADAAIAAAAEAAIABAABAAUABQABAAYAAAAIAAcABwACAAEACAAAAAAAAwACAAoAAQAMAAoAAAAMAA0AAQANAAIAAAANAAAAAAASAA8AAwABAA8ADwAEAAIAEQASAAEAAAASAAAAEwACABUAAwABABMAAAAEAAYAAQACAAQAAAAAAAgACAABAAMABwACAAgAAgAHAAAAAQAIAAoACgAAAAIADAABAAsADQABAAwADQAOAAAAAgAOAAAAAQAPAAAAAwABABAAEgAAABIABAASAAEAEwAAAAIAFQABABQAAQAAAAMAAwAAAAcABAACAAEAAQAFAAcABQAAAAAABwAAAAkAAQAIAAIAAwAIAAAAAQAJAAUAAgAAAAsACwABAAAADAABAA4ADwAOAAEAAAASABAAAgABABAAAQARABIAAAASAAIAEgABAAAAFQATAAEAAAAEAAAABgAHAAUAAQAFAAcABQACAAQABwAAAAIACAAKAAEACgAAAAIAAQALAAAAAQAMAA0ADgABAA0AAAACAA8AAQAPAAAADQABABAAEQASAA0AEgABAA0AAQASAAAAAgABAAAAAQAEAAMAAAAFAAAAAAAHAAMAAQAIAAcAAgAHAAQACAAAAAoAAQAJAAAACgADAAEACwAAAA0ADAADAAAAAQACAA0ADwAOAAIAAgAQAA8AAgAAABEAEwARAAAAAQASAAIAAQAAABUAFAAVAAEAAQAAABUAFQABACkAAgAAAAAAAgAEAAUAAwAEAAAAAQAFAAIABwAAAAcABwABAAQAAAAAAAoAAwAKAAEACgAMAAIAAAANAAwADQABAAMAAAACAA0ADQAQAAEAAAAAAAQABgAEAAEAAwACAAQAAQAFAAYABQAAAAAABwADAAIABwAAAAoAAQAIAAIAAAAOAAsACwACAAEADQAOAAEAAAAAAA8ADwABAA4AAgAPAAAAAQAQAAQAAAATABAAEAADAAEAPAA7ABMAAQA8ABMAPAABAAAAAQACAAAAAwAFAAEABQAGAAAAAAAHAAIAAwAHAAEACAAAAAAACAACAAoAAQAEAAoACAAMAAAAAQADAAkADAANAAkADgABAA0ADwAAAA8AAgAPAAAAAQAQAAIAAAASAAAAEwAUAAEABAATAAIAFAAVAAEAAQAVAAAAAwACAAEAAQAAAAQAAQAGAAQAAAAHAAAACAACAAcAAQAIAAMAAAAKAAgACAADAAEADAAKAAEADAAAAAwAAgAAAA4AAgAOAAEAAAARAA4ADgADAAEAAAAAABMAAwACABMAEwABABIAAAAVABMAAQATAAIAAgAAAAAABAABAAMABQACAAQABgAIAAUAAAADAAYABgAJAAEAAAACAAoACQABAAoAAAAKAAAAAwALAAAAAQAMAAMAAgAMAA4ADgAQAAIAAAADABEAEQAQAAEAAAAAABIAFAACABIAAwASAAEAFAAVAAIAAgAAAAIAAwAWAAAAAAADAAUAAgABAAUAAAAFAAQABQABAAcAAAAKAAgACAACAAEACgABAAsACwABAAAACgAMAAEACgAAAAAAAQAPAAwAAwACAAwAAAAQAAIAEAABABEAAQATABEAAQAAAAAAAAAEAAIAAAAXAAUABQACAAEABAAFAAYABgAHAAQAAAAIAAkACQAAAAIACwABAAoACwAMAAEAAQAMAAAAEAABAA0AEAAOAAAAAgARAAEAAAAQABEAAQARAAAAAgABAAAAAgATAAAAAwAAAAMABAAAAAAABgAEAAIAAQADAAYABABCAAAAQwAFAAAABAAGAAIAAQAGABkABAAAAAQAVQAFAAMABQBVAAEAAAAHAAUABQACAAEABwABAAAAAgADAFoAAgAAAAIAAQADAFsAWwAEAFkAWQAEAFcABABYAFcAWAAGAEkABgBIAEkAMwBIAAUAHQAzAAUAWwBaAAEAAQBaAAAAAABcAF4AXAABAAIAAAACAGAAXwBgAAIAAAAAAAMAAgADAGIAYgB0AAIAAAACAAMAdQABAAMAAgABAAAAAgAAAAIAAwB3AHgAAQADAAAAAQAEAHkAAAADAAIAAwABAAAAewCPAAMAAwCPAAIAAAADAAAAkQCSAAQABAACAAMAAQAEAJIAAQAAAAMAkwCmAAIApgABAAIApgClAAEAIQAAACEAIQABAAAAAQA4ACIAAAACAAMAOQACADgAOAACAAAAAAACAAQABAADAAEAAwAAAAIAAAAEAAMAAwACAAEABAABAAAAPQAFAD8AAQAAAAYAQAAGAAEAAAAEAAAABAAFAAAABgAHAAIAAQAGAAMABwAAAAMAAQAEAAMAvQC+AAQABAABAL0ABAC+AAIAvgAGAAIAAAAGAAcAAQAHALsAuwAHAL8ABgABAAAABwBaAEYAWgAHAAEAAQACAAAAvgADAL0AAQADAL4AAgBcAFsAAQCZAAIAAgCZAFwArACZAAEAvgCsAAEAXACZAJgAwAAAAMMAwQAFAAAAAgDCAAEA2AACANYAxAACANgAEQAAAAEAnwCoANUA2QAFANoAzgDLAMkApwCmAKMAqgCsAK0AqwACAAAAAQAEABEAAAAEAK4ADAAkAMYAxQDIAMIAwQC/ALsAugC5ALIAsAC8AL0AAgAAAJ8ArgA=';
+
+            it('can load Base64 encoded data as arraybuffer', function() {
+                return loadWithXhr({
+                    url : tile,
+                    responseType : 'arraybuffer'
+                }).then(function(result) {
+                    expect(result.byteLength).toEqual(3914);
+                });
+            });
+
+            var image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEISURBVEhLvVXBDYQwDOuojHKj8LhBbpTbpBCEkZsmIVTXq1RVQGrHiWlLmTTqPiZBlyLgy/KSZQ5JSHDQ/mCYCsC8106kDU0AdwRnvYZArWRcAl0dcYJq1hWCb3hBrumbDAVMwAC82WoRvgMnVMDBnB0nYZFTbE6BBvdUGqVqCbjBIk3PyFFR/NU7EKzru+qZsau3ryPwwCRLKYOzutZuCL6fUmWeJGzNzL/RxAMrUmASSCkkAayk2IxPlwhAAYGpsiHQjbLccfdOY5gKkCXAMi7SscAwbQpAnKyctWyUZ6z8ja3OGMepwD8asz+9FnSvbhU8uVOHFIwQsI3/p0CfhuqCSQuxLqsN6mu8SS+N42MAAAAASUVORK5CYII=';
+
+            it('can load Base64 encoded data as blob', function() {
+                return loadWithXhr({
+                    url : image,
+                    responseType : 'blob'
+                }).then(function(result) {
+                    expect(result.type).toEqual('image/png');
+
+                    /*global URL*/
+                    var blobUrl = URL.createObjectURL(result);
+
+                    return Resource.fetchImage(blobUrl).then(function(image) {
+                        expect(image.width).toEqual(24);
+                        expect(image.height).toEqual(24);
+                    });
+                });
+            });
+
+            xit('can support 2xx HTTP status (other than 200)', function() {
+                return loadWithXhr({
+                    method : 'POST',
+                    url : 'http://jsonplaceholder.typicode.com/posts',
+                    data : {
+                        title : 'foo',
+                        body : 'bar',
+                        userId : 1
+                    }
+                }).then(function(result) {
+                    expect(JSON.parse(result).id).toEqual(101);
+                });
+            });
+        });
+
+        describe('URL loading using XHR', function() {
+            describe('returns a promise that rejects when the request', function() {
+                it('results in an HTTP status code greater than or equal to 300', function() {
+                    return loadWithXhr({
+                        url : 'http://example.invalid'
+                    }).then(function() {
+                        fail('expected promise to reject');
+                    }).otherwise(function(err) {
+                        expect(err instanceof RequestErrorEvent).toBe(true);
+                    });
+                });
+
+                it('loads an invalid JSON string response with a json responseType', function() {
+                    return loadWithXhr({
+                        url : 'Data/htmlString.txt',
+                        responseType : 'json'
+                    }).then(function() {
+                        fail('expected promise to reject');
+                    }).otherwise(function(err) {
+                        expect(err).toBeDefined();
+                        expect(err instanceof Error).toBe(true);
+                    });
+                });
+            });
+
+            describe('returns a promise that resolves when the request loads', function() {
+                it('a non-null response with default responseType', function() {
+                    return loadWithXhr({
+                        url : 'Data/Models/Box/ReadMe.txt'
+                    }).then(function(result) {
+                        expect(result).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
+                    });
+                });
+
+                it('a non-null response with a browser-supported responseType', function() {
+                    return loadWithXhr({
+                        url : 'Data/Models/Box/ReadMe.txt',
+                        responseType : 'text'
+                    }).then(function(result) {
+                        expect(result).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
+                    });
+                });
+
+                it('a valid JSON string response as JSON with a json responseType', function() {
+                    return loadWithXhr({
+                        url : 'Data/jsonString.txt',
+                        responseType : 'json'
+                    }).then(function(result) {
+                        expect(result).toEqual(jasmine.objectContaining({hello : 'world'}));
+                    });
+                });
+            });
+        });
+
+        describe('URL loading using mocked XHR', function() {
+            var fakeXHR;
+
+            beforeEach(function() {
+                fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'getAllResponseHeaders']);
+                fakeXHR.simulateError = function() {
+                    fakeXHR.response = '';
+                    if (typeof fakeXHR.onerror === 'function') {
+                        fakeXHR.onerror();
+                    }
+                };
+                fakeXHR.simulateHttpResponse = function(statusCode, response) {
+                    fakeXHR.status = statusCode;
+                    fakeXHR.response = response;
+                    if (typeof fakeXHR.onload === 'function') {
+                        fakeXHR.onload();
+                    }
+                };
+                fakeXHR.simulateResponseXMLLoad = function(responseXML) {
+                    fakeXHR.status = 200;
+                    fakeXHR.responseXML = responseXML;
+                    if (typeof fakeXHR.onload === 'function') {
+                        fakeXHR.onload();
+                    }
+                };
+                fakeXHR.simulateResponseTextLoad = function(responseText) {
+                    fakeXHR.simulateHttpResponse(200, responseText);
+                };
+
+                spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
+            });
+
+            describe('returns a promise that rejects when the request', function() {
+                it('errors', function() {
+                    var promise = loadWithXhr({
+                        url : 'http://example.invalid'
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateError();
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                });
+
+                it('results in an HTTP status code less than 200', function() {
+                    var promise = loadWithXhr({
+                        url : 'http://example.invalid'
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateHttpResponse(199);
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                });
+
+                it('resolves undefined for status code 204', function() {
+                    var promise = loadWithXhr({
+                        url : 'http://example.invalid'
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolved = false;
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolved = true;
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateHttpResponse(204);
+                    expect(resolved).toBe(true);
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+                });
+            });
+
+            describe('returns a promise that resolves when the request loads', function() {
+                it('a null response with a \'\' responseType and non-null responseXML with child nodes', function() {
+                    var promise = loadWithXhr({
+                        url : 'http://example.invalid',
+                        responseType : ''
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    var responseXML = {
+                        hasChildNodes : jasmine.createSpy('hasChildNodes').and.returnValue(true)
+                    };
+                    fakeXHR.simulateResponseXMLLoad(responseXML);
+                    expect(resolvedValue).toEqual(responseXML);
+                    expect(rejectedError).toBeUndefined();
+                });
+
+                it('a null response with a document responseType and non-null responseXML with child nodes', function() {
+                    var promise = loadWithXhr({
+                        url : 'http://example.invalid',
+                        responseType : 'document'
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    var responseXML = {
+                        hasChildNodes : jasmine.createSpy('hasChildNodes').and.returnValue(true)
+                    };
+                    fakeXHR.simulateResponseXMLLoad(responseXML);
+                    expect(resolvedValue).toEqual(responseXML);
+                    expect(rejectedError).toBeUndefined();
+                });
+
+                it('a null response with a \'\' responseType and non-null responseText', function() {
+                    var promise = loadWithXhr({
+                        url : 'http://example.invalid',
+                        responseType : ''
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    var responseText = 'hello world';
+                    fakeXHR.simulateResponseTextLoad(responseText);
+                    expect(resolvedValue).toEqual(responseText);
+                    expect(rejectedError).toBeUndefined();
+                });
+
+                it('a null response with a text responseType and non-null responseText', function() {
+                    var promise = loadWithXhr({
+                        url : 'http://example.invalid',
+                        responseType : 'text'
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    var responseText = 'hello world';
+                    fakeXHR.simulateResponseTextLoad(responseText);
+                    expect(resolvedValue).toEqual(responseText);
+                    expect(rejectedError).toBeUndefined();
+                });
+            });
+
+            describe('retries when Resource has the callback set', function() {
+                it('rejects after too many retries', function() {
+                    var cb = jasmine.createSpy('retry').and.returnValue(true);
+
+                    var resource = new Resource({
+                        url : 'http://example.invalid',
+                        retryCallback: cb,
+                        retryAttempts: 1
+                    });
+
+                    var promise = loadWithXhr(resource);
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateError(); // This should retry
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    expect(cb.calls.count()).toEqual(1);
+                    var receivedResource = cb.calls.argsFor(0)[0];
+                    expect(receivedResource.url).toEqual(resource.url);
+                    expect(receivedResource._retryCount).toEqual(1);
+                    expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(true);
+
+                    fakeXHR.simulateError(); // This fails because we only retry once
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                });
+
+                it('rejects after callback returns false', function() {
+                    var cb = jasmine.createSpy('retry').and.returnValue(false);
+
+                    var resource = new Resource({
+                        url : 'http://example.invalid',
+                        retryCallback: cb,
+                        retryAttempts: 2
+                    });
+
+                    var promise = loadWithXhr(resource);
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateError(); // This fails because the callback returns false
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+
+                    expect(cb.calls.count()).toEqual(1);
+                    var receivedResource = cb.calls.argsFor(0)[0];
+                    expect(receivedResource.url).toEqual(resource.url);
+                    expect(receivedResource._retryCount).toEqual(1);
+                    expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(true);
+                });
+
+                it('resolves after retry', function() {
+                    var cb = jasmine.createSpy('retry').and.returnValue(true);
+
+                    var resource = new Resource({
+                        url : 'http://example.invalid',
+                        retryCallback: cb,
+                        retryAttempts: 1
+                    });
+
+                    var promise = loadWithXhr(resource);
+
+                    expect(promise).toBeDefined();
+
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateError(); // This should retry
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    expect(cb.calls.count()).toEqual(1);
+                    var receivedResource = cb.calls.argsFor(0)[0];
+                    expect(receivedResource.url).toEqual(resource.url);
+                    expect(receivedResource._retryCount).toEqual(1);
+                    expect(cb.calls.argsFor(0)[1] instanceof RequestErrorEvent).toBe(true);
+
+                    fakeXHR.simulateHttpResponse(200, 'OK');
+                    expect(resolvedValue).toBeDefined();
+                    expect(rejectedError).toBeUndefined();
+                });
+            });
+        });
+    });
+
+    describe('fetchJsonp', function() {
+
+        it('returns a promise that resolves when the request loads', function() {
+            var testUrl = 'http://example.invalid/testuri';
+            spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, name, deffered) {
+                expect(url).toContain(testUrl);
+                expect(name).toContain('loadJsonp');
+                expect(deffered).toBeDefined();
+            });
+            Resource.fetchJsonp(testUrl);
+        });
+
+        it('returns a promise that rejects when the request errors', function() {
+            var testUrl = 'http://example.invalid/testuri';
+            return Resource.fetchJsonp(testUrl).otherwise(function(error) {
+                expect(error).toBeDefined();
+            });
+        });
+
+        it('Uses callback name specified in options', function() {
+            var testUrl = 'test';
+            var options = {
+                callbackParameterName: 'testCallback'
+            };
+            spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
+                expect(url).toContain('callback=loadJsonp');
+            });
+            Resource.fetchJsonp(testUrl, options);
+        });
+
+        describe('retries when Resource has the callback set', function() {
+            it('rejects after too many retries', function() {
+                //var cb = jasmine.createSpy('retry').and.returnValue(true);
+                var cb = jasmine.createSpy('retry').and.callFake(function(resource, error) {
+                    return true;
+                });
+
+                var lastDeferred;
+                spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
+                    lastDeferred = deferred;
+                });
+
+                var resource = new Resource({
+                    url: 'http://example.invalid',
+                    retryCallback: cb,
+                    retryAttempts: 1
+                });
+
+                var promise = resource.fetchJsonp();
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }).otherwise(function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                lastDeferred.reject('some error'); // This should retry
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1]).toEqual('some error');
+
+                lastDeferred.reject('another error'); // This fails because we only retry once
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toEqual('another error');
+            });
+
+            it('rejects after callback returns false', function() {
+                var cb = jasmine.createSpy('retry').and.returnValue(false);
+
+                var lastDeferred;
+                spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
+                    lastDeferred = deferred;
+                });
+
+                var resource = new Resource({
+                    url: 'http://example.invalid',
+                    retryCallback: cb,
+                    retryAttempts: 2
+                });
+
+                var promise = resource.fetchJsonp();
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }).otherwise(function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                lastDeferred.reject('some error'); // This fails because the callback returns false
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toEqual('some error');
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1]).toEqual('some error');
+            });
+
+            it('resolves after retry', function() {
+                var cb = jasmine.createSpy('retry').and.returnValue(true);
+
+                var lastDeferred;
+                var lastUrl;
+                spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
+                    lastUrl = url;
+                    lastDeferred = deferred;
+                });
+
+                var resource = new Resource({
+                    url: 'http://example.invalid',
+                    retryCallback: cb,
+                    retryAttempts: 1
+                });
+
+                var promise = resource.fetchJsonp();
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }).otherwise(function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                lastDeferred.reject('some error'); // This should retry
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                expect(cb.calls.count()).toEqual(1);
+                var receivedResource = cb.calls.argsFor(0)[0];
+                expect(receivedResource.url).toEqual(resource.url);
+                expect(receivedResource._retryCount).toEqual(1);
+                expect(cb.calls.argsFor(0)[1]).toEqual('some error');
+
+                var uri = new Uri(lastUrl);
+                var query = queryToObject(uri.query);
+                window[query.callback]('something good');
+                expect(resolvedValue).toEqual('something good');
+                expect(rejectedError).toBeUndefined();
+            });
+        });
+    });
+
 });

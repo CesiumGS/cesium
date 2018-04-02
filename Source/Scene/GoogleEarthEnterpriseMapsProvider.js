@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -21,7 +20,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -114,16 +112,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('GoogleEarthEnterpriseMapsProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         var url = options.url;
         var path = defaultValue(options.path, '/default_map');
 
-        var resource = Resource.createIfNeeded(url, {
-            proxy : options.proxy
-        }).getDerivedResource({
+        var resource = Resource.createIfNeeded(url).getDerivedResource({
             // We used to just append path to url, so now that we do proper URI resolution, removed the /
             url : (path[0] === '/') ? path.substring(1) : path
         });
