@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.45 - 2018-05-01
+
+##### Additions :tada:
+* Added `webAssemblyOptions` parameter to `TaskProcessor` to specify options for loading a Web Assembly module in a web worker.
+
+##### Fixes :wrench:
+* Faster loading of Draco compressed glTF assets.
+
 ### 1.44 - 2018-04-02
 
 ##### Breaking Changes :mega:

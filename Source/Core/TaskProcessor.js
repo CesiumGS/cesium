@@ -243,8 +243,8 @@ define([
      * @param {Number} [maximumActiveTasks=5] The maximum number of active tasks.  Once exceeded,
      *                                        scheduleTask will not queue any more tasks, allowing
      *                                        work to be rescheduled in future frames.
-     * @param {Object} [webAssemblyOptions] If specified, the worker will load and compile a web worker module before scheduling tasks.
-     * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly wrapper module.
+     * @param {Object} [webAssemblyOptions] If specified, the worker will load and compile a Web Assembly module before scheduling tasks. An object with the following properties:
+     * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
      * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
      * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
      */

@@ -163,7 +163,6 @@ define([
 
         draco.destroy(dracoGeometry);
 
-        console.log(result);
         return result;
     }
 
