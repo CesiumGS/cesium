@@ -566,14 +566,12 @@ define([
                 // Interval is completely overlapped
                 intervals.splice(index, 1);
             }
-        }
-
-        // Truncate any partially-overlapped intervals.
-        if (index < intervals.length &&
+        } else if (index < intervals.length &&
             (JulianDate.greaterThan(intervalStop, indexInterval.start) ||
              (intervalStop.equals(indexInterval.start) &&
               intervalIsStopIncluded &&
               indexInterval.isStartIncluded))) {
+            // Truncate any partially-overlapped intervals.
             result = true;
             intervals[index] = new TimeInterval({
                 start : intervalStop,
