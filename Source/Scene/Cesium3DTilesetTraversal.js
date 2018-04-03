@@ -236,9 +236,7 @@ define([
         var parent = tile.parent;
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
         var add = tile.refine === Cesium3DTileRefine.ADD;
-        if (tile.hasTilesetContent) {
-            return 0.0; // Load external tileset as soon as possible
-        } else if (add) {
+        if (add) {
             return tile._distanceToCamera;
         } else if (replace) {
             var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0));
