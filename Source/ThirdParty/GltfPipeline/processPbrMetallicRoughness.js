@@ -49,10 +49,10 @@ define([
             // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
             splitIncompatibleMaterials(gltf);
 
-            ForEach.material(gltf, function(material) {
+            ForEach.material(gltf, function(material, materialIndex) {
                 var pbrMetallicRoughness = material.pbrMetallicRoughness;
                 if (defined(pbrMetallicRoughness)) {
-                    var technique = generateTechnique(gltf, material, options);
+                    var technique = generateTechnique(gltf, material, materialIndex, options);
 
                     material.values = pbrMetallicRoughness;
                     material.technique = technique;
@@ -68,7 +68,7 @@ define([
         return gltf;
     }
 
-    function generateTechnique(gltf, material, options) {
+    function generateTechnique(gltf, material, materialIndex, options) {
         var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
         var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
@@ -107,23 +107,32 @@ define([
 
         var hasNormals = true;
         var hasTangents = false;
+        var anyPrimitiveLacksTangents = false;
         var hasMorphTargets = false;
         var morphTargets;
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
-                var targets = primitive.targets;
-                if (!hasMorphTargets && defined(targets)) {
-                    hasMorphTargets = true;
-                    morphTargets = targets;
-                }
-                var attributes = primitive.attributes;
-                for (var attribute in attributes) {
-                    if (attribute.indexOf('TANGENT') >= 0) {
-                        hasTangents = true;
+                if (primitive.material === materialIndex) {
+                    var targets = primitive.targets;
+                    if (!hasMorphTargets && defined(targets)) {
+                        hasMorphTargets = true;
+                        morphTargets = targets;
+                    }
+                    var attributes = primitive.attributes;
+                    let thisPrimitiveHasTangents = false;
+                    for (var attribute in attributes) {
+                        if (attribute.indexOf('TANGENT') >= 0) {
+                            hasTangents = true;
+                            thisPrimitiveHasTangents = true;
+                        }
+                    }
+                    if (!thisPrimitiveHasTangents) {
+                        anyPrimitiveLacksTangents = true;
                     }
                 }
             });
         });
+        hasTangents = hasTangents && !anyPrimitiveLacksTangents;
 
         // Add techniques
         var techniqueParameters = {
@@ -264,7 +273,7 @@ define([
                             vertexShaderMain += '    weightedPosition += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         } else if (targetAttribute === 'NORMAL') {
                             vertexShaderMain += '    weightedNormal += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
-                        } else if (targetAttribute === 'TANGENT') {
+                        } else if (hasTangents && targetAttribute === 'TANGENT') {
                             vertexShaderMain += '    weightedTangent.xyz += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         }
                     }
