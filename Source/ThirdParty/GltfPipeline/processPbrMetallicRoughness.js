@@ -107,7 +107,6 @@ define([
 
         var hasNormals = true;
         var hasTangents = false;
-        var anyPrimitiveLacksTangents = false;
         var hasMorphTargets = false;
         var morphTargets;
         ForEach.mesh(gltf, function(mesh) {
@@ -119,20 +118,14 @@ define([
                         morphTargets = targets;
                     }
                     var attributes = primitive.attributes;
-                    let thisPrimitiveHasTangents = false;
                     for (var attribute in attributes) {
                         if (attribute.indexOf('TANGENT') >= 0) {
                             hasTangents = true;
-                            thisPrimitiveHasTangents = true;
                         }
-                    }
-                    if (!thisPrimitiveHasTangents) {
-                        anyPrimitiveLacksTangents = true;
                     }
                 }
             });
         });
-        hasTangents = hasTangents && !anyPrimitiveLacksTangents;
 
         // Add techniques
         var techniqueParameters = {
@@ -811,6 +804,15 @@ define([
                 }
                 var isSkinned = defined(jointAccessorId);
                 var hasVertexColors = defined(primitive.attributes.COLOR_0);
+                var hasMorphTargets = defined(primitive.targets);
+
+                var hasTangents = false;
+                var attributes = primitive.attributes;
+                for (var attribute in attributes) {
+                    if (attribute.indexOf('TANGENT') >= 0) {
+                        hasTangents = true;
+                    }
+                }
 
                 var primitiveInfo = material.extras._pipeline.primitive;
                 if (!defined(primitiveInfo)) {
@@ -820,13 +822,19 @@ define([
                             componentType : componentType,
                             type : type
                         },
-                        hasVertexColors : hasVertexColors
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasTangents : hasTangents
                     };
-                } else if ((primitiveInfo.skinning.skinned !== isSkinned) || (primitiveInfo.skinning.type !== type) || (primitiveInfo.hasVertexColors !== hasVertexColors)) {
+                } else if ((primitiveInfo.skinning.skinned !== isSkinned) ||
+                        (primitiveInfo.skinning.type !== type) ||
+                        (primitiveInfo.hasVertexColors !== hasVertexColors) ||
+                        (primitiveInfo.hasMorphTargets !== hasMorphTargets) ||
+                        (primitiveInfo.hasTangents !== hasTangents)) {
                     // This primitive uses the same material as another one that either:
                     // * Isn't skinned
                     // * Uses a different type to store joints and weights
-                    // * Doesn't have vertex colors
+                    // * Doesn't have vertex colors, tangents, or morph targets
                     var clonedMaterial = clone(material, true);
                     clonedMaterial.extras._pipeline.skinning = {
                         skinning : {
@@ -834,7 +842,9 @@ define([
                             componentType : componentType,
                             type : type
                         },
-                        hasVertexColors : hasVertexColors
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasTangents : hasTangents
                     };
                     // Split this off as a separate material
                     materialId = addToArray(materials, clonedMaterial);
