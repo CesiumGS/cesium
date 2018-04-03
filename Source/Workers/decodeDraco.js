@@ -3,17 +3,17 @@ define([
         '../Core/defined',
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
-        '../ThirdParty/draco-decoder-gltf',
         './createTaskProcessorWorker'
     ], function(
         ComponentDatatype,
         defined,
         IndexDatatype,
         RuntimeError,
-        draco,
-        createTaskProcessorWorker) {
+        createTaskProcessorWorker
+    ) {
     'use strict';
 
+    var draco;
     var dracoDecoder;
 
     function decodeIndexArray(dracoGeometry) {
@@ -47,6 +47,7 @@ define([
         var decodedAttributeData = {};
         var attributeData;
         var vertexArray;
+        var quantization;
         for (var attributeName in compressedAttributes) {
             if (compressedAttributes.hasOwnProperty(attributeName)) {
                 var compressedAttribute = compressedAttributes[attributeName];
@@ -54,7 +55,6 @@ define([
                 var numComponents = attribute.num_components();
 
                 var i;
-                var quantization;
                 var transform = new draco.AttributeQuantizationTransform();
                 if (transform.InitFromAttribute(attribute)) {
                     var minValues = new Array(numComponents);
@@ -117,6 +117,8 @@ define([
                         quantization : quantization
                     }
                 };
+
+                quantization = undefined;
             }
         }
 
@@ -125,6 +127,7 @@ define([
 
     function decodeDracoPrimitive(parameters) {
         if (!defined(dracoDecoder)) {
+            draco = self.wasmModule;
             dracoDecoder = new draco.Decoder();
         }
 
@@ -160,6 +163,7 @@ define([
 
         draco.destroy(dracoGeometry);
 
+        console.log(result);
         return result;
     }
 

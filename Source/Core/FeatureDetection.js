@@ -174,6 +174,14 @@ define([
         return hasPointerEvents;
     }
 
+    var hasWebAssembly;
+    function supportsWebAssembly() {
+        if (!defined(hasWebAssembly)) {
+            hasWebAssembly = typeof WebAssembly === 'object';
+        }
+        return hasWebAssembly;
+    }
+
     var imageRenderingValueResult;
     var supportsImageRenderingPixelatedResult;
     function supportsImageRenderingPixelated() {
@@ -218,6 +226,7 @@ define([
         isWindows : isWindows,
         hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents,
+        supportsWebAssembly : supportsWebAssembly,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
         imageRenderingValue: imageRenderingValue
     };

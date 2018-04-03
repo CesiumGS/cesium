@@ -32,7 +32,11 @@ define([
     DracoLoader._decoderTaskProcessor = undefined;
     DracoLoader._getDecoderTaskProcessor = function () {
         if (!defined(DracoLoader._decoderTaskProcessor)) {
-            DracoLoader._decoderTaskProcessor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            DracoLoader._decoderTaskProcessor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency, {
+                modulePath : 'ThirdParty/draco_wasm_wrapper_gltf.js',
+                wasmBinaryFile : 'ThirdParty/draco_decoder_gltf.wasm',
+                fallbackModulePath : 'ThirdParty/draco_decoder_gltf.js'
+            });
         }
 
         return DracoLoader._decoderTaskProcessor;

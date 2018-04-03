@@ -5,6 +5,24 @@ if (typeof self === 'undefined') {
 self.onmessage = function(event) {
     var data = event.data;
 
+    var wasmConfig = data.webAssemblyConfig;
+    if (wasmConfig !== undefined) {
+        // Require and compile WebAssembly module, or use fallback if not supported
+        return require(data.loaderConfig, [data.workerModule, wasmConfig.modulePath], function(workerModule, wasmModule) {
+            if (wasmConfig.wasmBinaryFile !== undefined) {
+                wasmModule(wasmConfig).then(function (wasmModule) {
+                    self.wasmModule = wasmModule;
+                    self.onmessage = workerModule;
+                    self.postMessage(true);
+                });
+            } else {
+                self.wasmModule = wasmModule;
+                self.onmessage = workerModule;
+                self.postMessage(true);
+            }
+        });
+    }
+
     require(data.loaderConfig, [data.workerModule], function(workerModule) {
         //replace onmessage with the required-in workerModule
         self.onmessage = workerModule;

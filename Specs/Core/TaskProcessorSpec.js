@@ -1,10 +1,14 @@
 defineSuite([
         'Core/TaskProcessor',
         'require',
+        'Core/FeatureDetection',
+        'Core/Resource',
         'ThirdParty/when'
     ], function(
         TaskProcessor,
         require,
+        FeatureDetection,
+        Resource,
         when) {
     'use strict';
 
@@ -167,6 +171,42 @@ defineSuite([
 
         }).always(function () {
             removeListenerCallback();
+        });
+    });
+
+    it('can load and compile web assembly module', function() {
+        var wasmOptions = {
+            modulePath : '../Specs/TestWorkers/TestWasm/testWasmWrapper.js',
+            wasmBinaryFile : '../Specs/TestWorkers/TestWasm/testWasm.wasm'
+        };
+        taskProcessor = new TaskProcessor('runWasm', 5, wasmOptions);
+        var promise = taskProcessor.scheduleTask({
+            message : 'foo'
+        });
+
+        return promise.then(function(result) {
+            expect(taskProcessor._webAssemblyConfig.wasmBinary).toBeDefined();
+            expect(result).toEqual(42);
+        });
+    });
+
+    it('uses a backup module if web assembly is not supported', function() {
+        var wasmOptions = {
+            modulePath : '../Specs/TestWorkers/TestWasm/testWasmWrapper.js',
+            wasmBinaryFile : '../Specs/TestWorkers/TestWasm/testWasm.wasm',
+            fallbackModulePath : '../Specs/TestWorkers/TestWasm/testWasmFallback.js'
+        };
+        taskProcessor = new TaskProcessor('runWasm', 5, wasmOptions);
+
+        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
+
+        var promise = taskProcessor.scheduleTask({
+            message : 'foo'
+        });
+
+        return promise.then(function(result) {
+            expect(taskProcessor._webAssemblyConfig.wasmBinary).not.toBeDefined();
+            expect(result).toEqual(42);
         });
     });
 });
