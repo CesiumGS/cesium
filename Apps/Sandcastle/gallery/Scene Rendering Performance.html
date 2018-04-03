@@ -111,6 +111,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
 
+var tileset;
+
 var viewModel = {
     requestRenderMode : true,
     showTimeOptions : false,
@@ -128,7 +130,7 @@ function resetScene() {
     viewer.trackedEntity = undefined;
     viewer.dataSources.removeAll();
     viewer.entities.removeAll();
-    viewer.scene.primitives.removeAll();
+    viewer.scene.primitives.remove(tileset);
     viewer.clock.shouldAnimate = false;
     handler = handler && handler.destroy();
     scene.skyBox.show = true;
@@ -144,7 +146,7 @@ function resetScene() {
 function loadTilesetScenario() {
     resetScene();
 
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3836) });
+    tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3836) });
     viewer.scene.primitives.add(tileset);
     viewer.zoomTo(tileset);
 }
