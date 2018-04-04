@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.45 - 2018-05-01
+
+##### Fixes :wrench:
+* Fixed bugs in `TimeIntervalCollection.removeInterval`. [#6418](https://github.com/AnalyticalGraphicsInc/cesium/pull/6418).
+
 ### 1.44 - 2018-04-02
 
 ##### Highlights :sparkler:
