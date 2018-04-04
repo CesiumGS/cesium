@@ -96,8 +96,7 @@ var scene = viewer.scene;
 var viewModelTileset;
 
 function reset() {
-    viewer.entities.removeAll();
-    viewer.scene.primitives.removeAll();
+    viewer.scene.primitives.remove(viewModelTileset);
     viewModelTileset = undefined;
 }
 
