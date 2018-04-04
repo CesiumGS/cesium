@@ -22,7 +22,7 @@ define([
      */
     function RequestQueue(maximumLength) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('maximumLength', maximumLength);
+        Check.typeOf.number.greaterThan('maximumLength', maximumLength, 0);
         //>>includeEnd('debug');
 
         this._array = new Array(maximumLength);
@@ -76,10 +76,9 @@ define([
 
         var array = this._array;
         var previousLength = this._length;
-        var length = this._length;
         var maximumLength = this._maximumLength;
 
-        if (length < maximumLength)
+        if (previousLength < maximumLength)
         {
             ++this._length;
         }

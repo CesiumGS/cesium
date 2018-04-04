@@ -186,4 +186,10 @@ defineSuite([
             queue.remove(-1);
         }).toThrowDeveloperError();
     });
+
+    it('throws if request queue is create with zero length', function() {
+        expect(function() {
+            return new RequestQueue(0);
+        }).toThrowDeveloperError();
+    });
 });
