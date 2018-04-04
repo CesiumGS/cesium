@@ -101,7 +101,7 @@ define([
 
         if (defined(primitiveInfo)) {
             skinningInfo = primitiveInfo.skinning;
-            hasSkinning = skinningInfo.skinned;
+            hasSkinning = skinningInfo.skinned && (joints.length > 0);
             hasVertexColors = primitiveInfo.hasVertexColors;
         }
 
