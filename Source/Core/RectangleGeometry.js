@@ -582,7 +582,7 @@ define([
         RectangleGeometryLibrary.computePosition(options, height - 1, 0, positions[2], stScratch);
         RectangleGeometryLibrary.computePosition(options, height - 1, width - 1, positions[3], stScratch);
 
-        return Rectangle.fromCartesianArray(positions);
+        return Rectangle.fromCartesianArray(positions, rectangleGeometry._ellipsoid);
     }
 
     /**

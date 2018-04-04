@@ -667,7 +667,7 @@ define([
         for (var i = 0; i < positionsCount; ++i) {
             positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
         }
-        var rectangle = Rectangle.fromCartesianArray(positions);
+        var rectangle = Rectangle.fromCartesianArray(positions, ellipseGeometry._ellipsoid);
         // Rectangle width goes beyond 180 degrees when the ellipse crosses a pole.
         // When this happens, make the rectangle into a "circle" around the pole
         if (rectangle.width > CesiumMath.PI) {
