@@ -49,10 +49,10 @@ define([
             // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
             splitIncompatibleMaterials(gltf);
 
-            ForEach.material(gltf, function(material) {
+            ForEach.material(gltf, function(material, materialIndex) {
                 var pbrMetallicRoughness = material.pbrMetallicRoughness;
                 if (defined(pbrMetallicRoughness)) {
-                    var technique = generateTechnique(gltf, material, options);
+                    var technique = generateTechnique(gltf, material, materialIndex, options);
 
                     material.values = pbrMetallicRoughness;
                     material.technique = technique;
@@ -68,7 +68,7 @@ define([
         return gltf;
     }
 
-    function generateTechnique(gltf, material, options) {
+    function generateTechnique(gltf, material, materialIndex, options) {
         var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
         var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
@@ -101,7 +101,7 @@ define([
 
         if (defined(primitiveInfo)) {
             skinningInfo = primitiveInfo.skinning;
-            hasSkinning = skinningInfo.skinned;
+            hasSkinning = skinningInfo.skinned && (joints.length > 0);
             hasVertexColors = primitiveInfo.hasVertexColors;
         }
 
@@ -111,15 +111,17 @@ define([
         var morphTargets;
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
-                var targets = primitive.targets;
-                if (!hasMorphTargets && defined(targets)) {
-                    hasMorphTargets = true;
-                    morphTargets = targets;
-                }
-                var attributes = primitive.attributes;
-                for (var attribute in attributes) {
-                    if (attribute.indexOf('TANGENT') >= 0) {
-                        hasTangents = true;
+                if (primitive.material === materialIndex) {
+                    var targets = primitive.targets;
+                    if (!hasMorphTargets && defined(targets)) {
+                        hasMorphTargets = true;
+                        morphTargets = targets;
+                    }
+                    var attributes = primitive.attributes;
+                    for (var attribute in attributes) {
+                        if (attribute.indexOf('TANGENT') >= 0) {
+                            hasTangents = true;
+                        }
                     }
                 }
             });
@@ -264,7 +266,7 @@ define([
                             vertexShaderMain += '    weightedPosition += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         } else if (targetAttribute === 'NORMAL') {
                             vertexShaderMain += '    weightedNormal += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
-                        } else if (targetAttribute === 'TANGENT') {
+                        } else if (hasTangents && targetAttribute === 'TANGENT') {
                             vertexShaderMain += '    weightedTangent.xyz += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         }
                     }
@@ -802,6 +804,15 @@ define([
                 }
                 var isSkinned = defined(jointAccessorId);
                 var hasVertexColors = defined(primitive.attributes.COLOR_0);
+                var hasMorphTargets = defined(primitive.targets);
+
+                var hasTangents = false;
+                var attributes = primitive.attributes;
+                for (var attribute in attributes) {
+                    if (attribute.indexOf('TANGENT') >= 0) {
+                        hasTangents = true;
+                    }
+                }
 
                 var primitiveInfo = material.extras._pipeline.primitive;
                 if (!defined(primitiveInfo)) {
@@ -811,13 +822,19 @@ define([
                             componentType : componentType,
                             type : type
                         },
-                        hasVertexColors : hasVertexColors
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasTangents : hasTangents
                     };
-                } else if ((primitiveInfo.skinning.skinned !== isSkinned) || (primitiveInfo.skinning.type !== type) || (primitiveInfo.hasVertexColors !== hasVertexColors)) {
+                } else if ((primitiveInfo.skinning.skinned !== isSkinned) ||
+                        (primitiveInfo.skinning.type !== type) ||
+                        (primitiveInfo.hasVertexColors !== hasVertexColors) ||
+                        (primitiveInfo.hasMorphTargets !== hasMorphTargets) ||
+                        (primitiveInfo.hasTangents !== hasTangents)) {
                     // This primitive uses the same material as another one that either:
                     // * Isn't skinned
                     // * Uses a different type to store joints and weights
-                    // * Doesn't have vertex colors
+                    // * Doesn't have vertex colors, tangents, or morph targets
                     var clonedMaterial = clone(material, true);
                     clonedMaterial.extras._pipeline.skinning = {
                         skinning : {
@@ -825,7 +842,9 @@ define([
                             componentType : componentType,
                             type : type
                         },
-                        hasVertexColors : hasVertexColors
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasTangents : hasTangents
                     };
                     // Split this off as a separate material
                     materialId = addToArray(materials, clonedMaterial);
