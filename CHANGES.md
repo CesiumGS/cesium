@@ -10,6 +10,22 @@ Change Log
 * Allow loadWithXhr to work with string URLs in a web worker.
 * Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
 
+##### Deprecated :hourglass_flowing_sand:
+* `Particle.size` has been renamed to `Particle.imageSize`. Use of the `size` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.rate` has been renamed to `ParticleSystem.emissionRate`. Use of the `rate` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.forces` array has been switched out for singular function `ParticleSystems.updateParticle`. Use of the `forces` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.lifeTime` has been renamed to `ParticleSystem.lifetime`. Use of the `lifeTime` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.minimumWidth` will no longer be an individual component. Instead of width and height components for pixel dimensions we switched to the Cartesian2, minimumImageSize, instead. Use of the `minimumWidth` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.minimumHeight` will no longer be an individual component. Instead of width and height components for pixel dimensions we switched to the Cartesian2, minimumImageSize, instead. Use of the `minimumHeight` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.maximumWidth` will no longer be an individual component. Instead of width and height components for pixel dimensions we switched to the Cartesian2, maximumImageSize, instead. Use of the `maximumWidth` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.maximumHeight` will no longer be an individual component. Instead of width and height components for pixel dimensions we switched to the Cartesian2, maximumImageSize, instead. Use of the `maximumHeight` parameter is deprecated and will be removed in Cesium 1.46.
+
+##### Additions :tada:
+* Added color attribute to the `Particle` class constructor that when defined sets both start and endColor. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
+* Added scale attribute to the `Particle` class constructor that when defined sets both start and endColor. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
+* Added color attribute to the `ParticleSystem` class constructor that when defined sets both start and endColor. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
+* Added scale attribute to the `ParticleSystem` class constructor that when defined sets both start and endScale. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
+
 ### 1.44 - 2018-04-02
 
 ##### Highlights :sparkler:
