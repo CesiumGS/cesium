@@ -56,6 +56,7 @@ define([
         './CreditDisplay',
         './DebugCameraPrimitive',
         './DepthPlane',
+        './DerivedCommand',
         './DeviceOrientationCameraController',
         './Fog',
         './FrameState',
@@ -137,6 +138,7 @@ define([
         CreditDisplay,
         DebugCameraPrimitive,
         DepthPlane,
+        DerivedCommand,
         DeviceOrientationCameraController,
         Fog,
         FrameState,
@@ -291,9 +293,8 @@ define([
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
-        this._logDepthBuffer = undefined;
+        this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
-        this.logarithmicDepthBuffer = context.fragmentDepth;
 
         this._tweens = new TweenCollection();
 
@@ -465,7 +466,12 @@ define([
         this.morphTime = 1.0;
 
         /**
-         * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
+         * The far-to-near ratio of the multi-frustum when using a normal depth buffer.
+         * <p>
+         * This value is used to create the near and far values for each frustum of the multi-frustum. It is only used
+         * when {@link Scene#logarithmicDepthBuffer} is <code>false</code>. When <code>logarithmicDepthBuffer</code> is
+         * <code>true</code>, use {@link Scene#logarithmicDepthFarToNearRatio}.
+         * </p>
          *
          * @type {Number}
          * @default 1000.0
@@ -473,7 +479,13 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
-         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer. The default is 1e9.
+         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer.
+         * <p>
+         * This value is used to create the near and far values for each frustum of the multi-frustum. It is only used
+         * when {@link Scene#logarithmicDepthBuffer} is <code>true</code>. When <code>logarithmicDepthBuffer</code> is
+         * <code>false</code>, use {@link Scene#farToNearRatio}.
+         * </p>
+         *
          * @type {Number}
          * @default 1e9
          */
@@ -482,7 +494,8 @@ define([
         /**
          * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
          * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
-         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to the surface.
+         *
          * @type {Number}
          * @default 1.75e6
          */
@@ -793,8 +806,6 @@ define([
         updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
     }
-
-    var OPAQUE_FRUSTUM_NEAR_OFFSET;
 
     function updateGlobeListeners(scene, globe) {
         for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
@@ -1405,8 +1416,6 @@ define([
                 if (this._logDepthBuffer !== value) {
                     this._logDepthBuffer = value;
                     this._logDepthBufferDirty = true;
-
-                    OPAQUE_FRUSTUM_NEAR_OFFSET = this._logDepthBuffer ? 0.9 : 0.9999;
                 }
             }
         },
@@ -1427,6 +1436,15 @@ define([
             set : function(value) {
                 deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
                 this.postProcessStages.fxaa.enabled = value;
+            }
+        },
+
+        /**
+         * @private
+         */
+        opaqueFrustumNearOffset : {
+            get : function() {
+                return this._logDepthBuffer ? 0.9 : 0.9999;
             }
         }
     });
@@ -1489,8 +1507,8 @@ define([
             var logDepthCommand;
             var logDepthDerivedCommands;
             if (useLogDepth) {
-                derivedCommands.logDepth = createLogDepthCommand(command, context, derivedCommands.logDepth);
-                logDepthCommand = derivedCommands.logDepth.logDepthCommand;
+                derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(command, context, derivedCommands.logDepth);
+                logDepthCommand = derivedCommands.logDepth.command;
                 logDepthDerivedCommands = logDepthCommand.derivedCommands;
             } else {
                 derivedCommands.logDepth = undefined;
@@ -1522,7 +1540,7 @@ define([
                 }
             }
 
-            derivedCommands.depth = createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
+            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
         }
     }
 
@@ -2017,7 +2035,7 @@ define([
         }
 
         if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
-            command = command.derivedCommands.logDepth.logDepthCommand;
+            command = command.derivedCommands.logDepth.command;
         }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
@@ -2190,7 +2208,7 @@ define([
                 us.updateFrustum(frustum);
             } else {
                 // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+                frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
                 frustum.far = frustumCommands.far;
                 us.updateFrustum(frustum);
             }
@@ -3397,204 +3415,6 @@ define([
         return object;
     };
 
-    var fragDepthRegex = /\bgl_FragDepthEXT\b/;
-    var discardRegex = /\bdiscard\b/;
-
-    function getDepthOnlyShaderProgram(context, shaderProgram) {
-        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'depthOnly');
-        if (!defined(shader)) {
-            var attributeLocations = shaderProgram._attributeLocations;
-            var fs = shaderProgram.fragmentShaderSource;
-
-            var writesDepthOrDiscards = false;
-            var sources = fs.sources;
-            var length = sources.length;
-            for (var i = 0; i < length; ++i) {
-                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
-                    writesDepthOrDiscards = true;
-                    break;
-                }
-            }
-
-            if (!writesDepthOrDiscards) {
-                fs = new ShaderSource({
-                    sources : ['void main() { gl_FragColor = vec4(1.0); }']
-                });
-            }
-
-            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'depthOnly', {
-                vertexShaderSource : shaderProgram.vertexShaderSource,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-        }
-
-        return shader;
-    }
-
-    function getDepthOnlyRenderState(scene, renderState) {
-        var cache = scene._depthOnlyRenderStateCache;
-        var depthOnlyState = cache[renderState.id];
-        if (!defined(depthOnlyState)) {
-            var rs = RenderState.getState(renderState);
-            rs.depthMask = true;
-            rs.colorMask = {
-                red : false,
-                green : false,
-                blue : false,
-                alpha : false
-            };
-
-            depthOnlyState = RenderState.fromCache(rs);
-            cache[renderState.id] = depthOnlyState;
-        }
-
-        return depthOnlyState;
-    }
-
-    function createDepthOnlyDerivedCommand(scene, command, context, result) {
-        // For a depth only pass, we bind a framebuffer with only a depth attachment (no color attachments),
-        // do not write color, and write depth. If the fragment shader doesn't modify the fragment depth
-        // or discard, the driver can replace the fragment shader with a pass-through shader. We're unsure if this
-        // actually happens so we modify the shader to use a pass-through fragment shader.
-
-        if (!defined(result)) {
-            result = {};
-        }
-
-        var shader;
-        var renderState;
-        if (defined(result.depthOnlyCommand)) {
-            shader = result.depthOnlyCommand.shaderProgram;
-            renderState = result.depthOnlyCommand.renderState;
-        }
-
-        result.depthOnlyCommand = DrawCommand.shallowClone(command, result.depthOnlyCommand);
-
-        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(context, command.shaderProgram);
-            result.depthOnlyCommand.renderState = getDepthOnlyRenderState(scene, command.renderState);
-            result.shaderProgramId = command.shaderProgram.id;
-        } else {
-            result.depthOnlyCommand.shaderProgram = shader;
-            result.depthOnlyCommand.renderState = renderState;
-        }
-
-        return result;
-    }
-
-    var writeLogDepthRegex = /\s+czm_writeLogDepth\(/;
-    var vertexlogDepthRegex = /\s+czm_vertexLogDepth\(/;
-    var extensionRegex = /\s*#extension\s+GL_EXT_frag_depth\s*:\s*enable/;
-
-    function getLogDepthShaderProgram(context, shaderProgram) {
-        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'logDepth');
-        if (!defined(shader)) {
-            var attributeLocations = shaderProgram._attributeLocations;
-            var vs = shaderProgram.vertexShaderSource.clone();
-            var fs = shaderProgram.fragmentShaderSource.clone();
-
-            vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
-            vs.defines.push('LOG_DEPTH');
-            fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
-            fs.defines.push('LOG_DEPTH');
-
-            var i;
-            var logMain;
-            var writesLogDepth = false;
-            var sources = vs.sources;
-            var length = sources.length;
-            for (i = 0; i < length; ++i) {
-                if (vertexlogDepthRegex.test(sources[i])) {
-                    writesLogDepth = true;
-                    break;
-                }
-            }
-
-            if (!writesLogDepth) {
-                for (i = 0; i < length; ++i) {
-                    sources[i] = ShaderSource.replaceMain(sources[i], 'czm_log_depth_main');
-                }
-
-                logMain =
-                    '\n\n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    czm_log_depth_main(); \n' +
-                    '    czm_vertexLogDepth(); \n' +
-                    '} \n';
-                sources.push(logMain);
-            }
-
-            var addExtension = true;
-            writesLogDepth = false;
-            sources = fs.sources;
-            length = sources.length;
-            for (i = 0; i < length; ++i) {
-                if (writeLogDepthRegex.test(sources[i])) {
-                    writesLogDepth = true;
-                }
-                if (extensionRegex.test(sources[i])) {
-                    addExtension = false;
-                }
-            }
-
-            var logSource = '';
-            if (addExtension) {
-                logSource +=
-                    '#ifdef GL_EXT_frag_depth \n' +
-                    '#extension GL_EXT_frag_depth : enable \n' +
-                    '#endif \n\n';
-            }
-
-            if (!writesLogDepth) {
-                for (i = 0; i < length; i++) {
-                    sources[i] = ShaderSource.replaceMain(sources[i], 'czm_log_depth_main');
-                }
-
-                logSource +=
-                    '\n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    czm_log_depth_main(); \n' +
-                    '    czm_writeLogDepth(); \n' +
-                    '} \n';
-            }
-
-            sources.push(logSource);
-
-            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'logDepth', {
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-        }
-
-        return shader;
-    }
-
-    function createLogDepthCommand(command, context, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-
-        var shader;
-        if (defined(result.logDepthCommand)) {
-            shader = result.logDepthCommand.shaderProgram;
-        }
-
-        result.logDepthCommand = DrawCommand.shallowClone(command, result.logDepthCommand);
-
-        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.logDepthCommand.shaderProgram = getLogDepthShaderProgram(context, command.shaderProgram);
-            result.shaderProgramId = command.shaderProgram.id;
-        } else {
-            result.logDepthCommand.shaderProgram = shader;
-        }
-
-        return result;
-    }
-
     function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene._context;
@@ -3745,7 +3565,7 @@ define([
                     uniformState.update(this.frameState);
                     uniformState.updateFrustum(frustum);
                 } else {
-                    frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
+                    frustum.near = renderedFrustum.near * (i !== 0 ? this.opaqueFrustumNearOffset : 1.0);
                     frustum.far = renderedFrustum.far;
                     uniformState.updateFrustum(frustum);
                 }
