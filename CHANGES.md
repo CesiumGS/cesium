@@ -10,7 +10,7 @@ Change Log
 * Allow loadWithXhr to work with string URLs in a web worker.
 
 ##### Aditions :tada:
-* Added a unit vector to the cartesian3 class. [#6427](https://github.com/AnalyticalGraphicsInc/cesium/pull/6427)
+* Added the constant ONE vector to the cartesian3 class. [#6427](https://github.com/AnalyticalGraphicsInc/cesium/pull/6427)
 
 ### 1.44 - 2018-04-02
 

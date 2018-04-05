@@ -1029,7 +1029,7 @@ define([
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.UNIT = freezeObject(new Cartesian3(1.0, 1.0, 1.0));
+    Cartesian3.ONE = freezeObject(new Cartesian3(1.0, 1.0, 1.0));
 
     /**
      * Duplicates this Cartesian3 instance.
