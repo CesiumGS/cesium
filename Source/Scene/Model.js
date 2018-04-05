@@ -574,9 +574,8 @@ define([
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
-        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
-        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
+        this._pickIdDeclarationsLoaded = options.pickIdDeclarationsLoaded;
+        this._pickIdLoaded = options.pickIdLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
@@ -628,7 +627,6 @@ define([
             buffers : {},
             vertexArrays : {},
             programs : {},
-            pickPrograms : {},
             silhouettePrograms : {},
             textures : {},
             samplers : {},
@@ -1987,20 +1985,7 @@ define([
         drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
         drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
-        var pickFS, pickVS;
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
-
-            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
-        }
-        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+        createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
 
     function recreateProgram(id, model, context) {
@@ -2033,27 +2018,10 @@ define([
         drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
         drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
-        var pickFS, pickVS;
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
-
-            if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
-            }
-
-            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
-        }
-        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+        createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
 
-    function createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context) {
+    function createAttributesAndProgram(id, drawFS, drawVS, model, context) {
         var program = model._sourcePrograms[id];
         var attributeLocations = createAttributeLocations(model, program.attributes);
 
@@ -2072,13 +2040,6 @@ define([
             context : context,
             vertexShaderSource : drawVS,
             fragmentShaderSource : drawFS,
-            attributeLocations : attributeLocations
-        });
-
-        model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : pickVS,
-            fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         });
     }
@@ -3030,7 +2991,6 @@ define([
         var resources = model._rendererResources;
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
-        var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
         var uniformMaps = model._uniformMaps;
 
@@ -3139,28 +3099,26 @@ define([
             var castShadows = ShadowMode.castShadows(model._shadows);
             var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
-            var idProgram = rendererPickPrograms[technique.program];
-            var idUniformMap;
-
-            // Callback to override default model picking
-            if (defined(model._pickFragmentShaderLoaded)) {
-                if (defined(model._pickUniformMapLoaded)) {
-                    idUniformMap = model._pickUniformMapLoaded(uniformMap);
-                } else {
-                    // This is unlikely, but could happen if the override shader does not
-                    // need new uniforms since, for example, its pick ids are coming from
-                    // a vertex attribute or are baked into the shader source.
-                    idUniformMap = combine(uniformMap);
-                }
-            } else {
-                var pickId = context.createPickId(owner);
+            var pickId;
+            if(!defined(model._uniformMapLoaded)) {
+                pickId = context.createPickId(owner);
                 pickIds.push(pickId);
                 var pickUniforms = {
                     czm_pickColor : createPickColorFunction(pickId.color)
                 };
-                idUniformMap = combine(uniformMap, pickUniforms);
+                uniformMap = combine(uniformMap, pickUniforms);
             }
 
+            var pickIdDeclarations;
+            if (allowPicking) {
+                if (defined(model._pickIdLoaded)) {
+                    pickIdDeclarations = model._pickIdDeclarationsLoaded();
+                    pickId = model._pickIdLoaded();
+                } else {
+                    pickIdDeclarations = 'uniform vec4 czm_pickColor;';
+                    pickId = 'czm_pickColor';
+                }
+            }
             var command = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
@@ -3176,50 +3134,22 @@ define([
                 renderState : rs,
                 owner : owner,
                 pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass,
-                idShaderProgram : idProgram,
-                idUniformMap : idUniformMap
+                pickIdDeclarations : pickIdDeclarations,
+                pickId : pickId
             });
 
-            var pickCommand;
-
-            if (allowPicking) {
-                pickCommand = new DrawCommand({
-                    boundingVolume : new BoundingSphere(), // updated in update()
-                    cull : model.cull,
-                    modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.mode,
-                    vertexArray : vertexArray,
-                    count : count,
-                    offset : offset,
-                    shaderProgram : rendererPickPrograms[programId],
-                    uniformMap : idUniformMap,
-                    renderState : rs,
-                    owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
-                });
-            }
-
             var command2D;
-            var pickCommand2D;
             if (!scene3DOnly) {
                 command2D = DrawCommand.shallowClone(command);
                 command2D.boundingVolume = new BoundingSphere(); // updated in update()
                 command2D.modelMatrix = new Matrix4();           // updated in update()
-
-                if (allowPicking) {
-                    pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                    pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
-                    pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
-                }
             }
 
             var nodeCommand = {
                 show : true,
                 boundingSphere : boundingSphere,
                 command : command,
-                pickCommand : pickCommand,
                 command2D : command2D,
-                pickCommand2D : pickCommand2D,
                 // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
                 silhouetteModelCommand : undefined,
                 silhouetteModelCommand2D : undefined,
@@ -3395,7 +3325,6 @@ define([
             resources.buffers = cachedResources.buffers;
             resources.vertexArrays = cachedResources.vertexArrays;
             resources.programs = cachedResources.programs;
-            resources.pickPrograms = cachedResources.pickPrograms;
             resources.silhouettePrograms = cachedResources.silhouettePrograms;
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
@@ -3455,7 +3384,6 @@ define([
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
-        var allowPicking = model.allowPicking;
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;
@@ -3508,12 +3436,6 @@ define([
                                 Cartesian3.add(model._rtcCenter, command.boundingVolume.center, command.boundingVolume.center);
                             }
 
-                            if (allowPicking) {
-                                var pickCommand = primitiveCommand.pickCommand;
-                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
-                                BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
-                            }
-
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
                             // will be clipped by the viewport. We create a second command that translates the model
                             // model matrix to the opposite side of the map so the part that was clipped in one viewport
@@ -3523,12 +3445,6 @@ define([
                                 Matrix4.clone(nodeMatrix, command.modelMatrix);
                                 command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
                                 BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-
-                                if (allowPicking) {
-                                    var pickCommand2D = primitiveCommand.pickCommand2D;
-                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
-                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
-                                }
                             }
                         }
                     }
@@ -4039,7 +3955,6 @@ define([
         this.buffers = undefined;
         this.vertexArrays = undefined;
         this.programs = undefined;
-        this.pickPrograms = undefined;
         this.silhouettePrograms = undefined;
         this.textures = undefined;
         this.samplers = undefined;
@@ -4063,7 +3978,6 @@ define([
         destroy(resources.buffers);
         destroy(resources.vertexArrays);
         destroy(resources.programs);
-        destroy(resources.pickPrograms);
         destroy(resources.silhouettePrograms);
         destroy(resources.textures);
     }
@@ -4337,7 +4251,6 @@ define([
                 cachedResources.buffers = resources.buffers;
                 cachedResources.vertexArrays = resources.vertexArrays;
                 cachedResources.programs = resources.programs;
-                cachedResources.pickPrograms = resources.pickPrograms;
                 cachedResources.silhouettePrograms = resources.silhouettePrograms;
                 cachedResources.textures = resources.textures;
                 cachedResources.samplers = resources.samplers;
@@ -4478,7 +4391,7 @@ define([
             var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
             var boundingVolume;
 
-            if (passes.render) {
+            if (passes.render || (passes.pick && this.allowPicking)) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
@@ -4495,7 +4408,7 @@ define([
                     }
                 }
 
-                if (silhouette) {
+                if (silhouette && !passes.pick) {
                     // Render second silhouette pass
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
@@ -4510,31 +4423,12 @@ define([
                     }
                 }
             }
-
-            if (passes.pick && this.allowPicking) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        var pickCommand = nc.pickCommand;
-                        commandList.push(pickCommand);
-
-                        boundingVolume = pickCommand.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.pickCommand2D);
-                        }
-                    }
-                }
-            }
         }
     };
 
     function destroyIfNotCached(rendererResources, cachedRendererResources) {
         if (rendererResources.programs !== cachedRendererResources.programs) {
             destroy(rendererResources.programs);
-        }
-        if (rendererResources.pickPrograms !== cachedRendererResources.pickPrograms) {
-            destroy(rendererResources.pickPrograms);
         }
         if (rendererResources.silhouettePrograms !== cachedRendererResources.silhouettePrograms) {
             destroy(rendererResources.silhouettePrograms);
@@ -4564,7 +4458,6 @@ define([
 
         if (isClippingEnabled(model) || isColorShadingEnabled(model)) {
             rendererResources.programs = {};
-            rendererResources.pickPrograms = {};
             rendererResources.silhouettePrograms = {};
 
             var sourcePrograms = model._sourcePrograms;
@@ -4574,13 +4467,11 @@ define([
             });
         } else {
             rendererResources.programs = cachedRendererResources.programs;
-            rendererResources.pickPrograms = cachedRendererResources.pickPrograms;
             rendererResources.silhouettePrograms = cachedRendererResources.silhouettePrograms;
         }
 
         // Fix all the commands, marking them as dirty so everything that derives will re-derive
         var rendererPrograms = rendererResources.programs;
-        var rendererPickPrograms = rendererResources.pickPrograms;
 
         var nodeCommands = model._nodeCommands;
         var commandCount = nodeCommands.length;
@@ -4589,15 +4480,9 @@ define([
             var programId = nodeCommand.programId;
 
             var renderProgram = rendererPrograms[programId];
-            var pickProgram = rendererPickPrograms[programId];
-
             nodeCommand.command.shaderProgram = renderProgram;
-            nodeCommand.pickCommand.shaderProgram = pickProgram;
             if (defined(nodeCommand.command2D)) {
                 nodeCommand.command2D.shaderProgram = renderProgram;
-            }
-            if (defined(nodeCommand.pickCommand2D)) {
-                nodeCommand.pickCommand2D.shaderProgram = pickProgram;
             }
         }
 

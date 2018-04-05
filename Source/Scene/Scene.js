@@ -2423,8 +2423,8 @@ define([
                 for (var k = 0; k < length; ++k) {
                     // PER ENTITY TODO
                     var command = commands[k];
-                    if (defined(command.executeId)) {
-                        command.executeId(context, passState);
+                    if (defined(command.derivedCommands.pickCommand)) {
+                        command.derivedCommands.pickCommand.execute(context, passState);
                     }
                 }
             }
@@ -3459,7 +3459,7 @@ define([
             var newMain;
             if (!writesDepthOrDiscards) {
                 newMain =
-                    defaultValue(pickIdDeclarations, '') +
+                    defaultValue(pickIdDeclarations, '') + '\n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gl_FragColor = ' + pickId + '; \n' +
@@ -3472,6 +3472,9 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    czm_non_pick_main(); \n' +
+                    '    if (gl_FragColor.a == 0.0) { \n' +
+                    '        discard; \n' +
+                    '    } \n' +
                     '    gl_FragColor = ' + pickId + '; \n' +
                     '} \n';
                 var newSources = new Array(length + 1);

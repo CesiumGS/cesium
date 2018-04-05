@@ -41,9 +41,6 @@ define([
         this._pickIdDeclarations = options.pickIdDeclarations;
         this._pickId = options.pickId;
 
-        this._idShaderProgram = options.idShaderProgram;
-        this._idUniformMap = options.idUniformMap;
-
         this.dirty = true;
         this.lastDirtyTime = 0;
 
@@ -530,9 +527,6 @@ define([
         result._pickIdDeclarations = command._pickIdDeclarations;
         result._pickId = command._pickId;
 
-        result._idShaderProgram = command._idShaderProgram;
-        result._idUniformMap = command._idUniformMap;
-
         result.dirty = true;
         result.lastDirtyTime = 0;
 
@@ -547,13 +541,6 @@ define([
      */
     DrawCommand.prototype.execute = function(context, passState) {
         context.draw(this, passState);
-    };
-
-    DrawCommand.prototype.executeId = function(context, passState) {
-        if (!defined(this._idShaderProgram)) {
-            return;
-        }
-        context.draw(this, passState, this._idShaderProgram, this._idUniformMap);
     };
 
     return DrawCommand;

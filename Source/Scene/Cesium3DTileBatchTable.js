@@ -873,6 +873,7 @@ define([
                 newMain +=
                     'uniform sampler2D tile_batchTexture; \n' +
                     'varying vec4 tile_featureColor; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
@@ -900,6 +901,7 @@ define([
                 }
                 newMain +=
                     '    tile_featureColor = featureProperties; \n' +
+                    '    tile_featureSt = st; \n' +
                     '}';
             } else {
                 // When VTF is not supported, color blend mode MIX will look incorrect due to the feature's color not being available in the vertex shader
@@ -1036,6 +1038,7 @@ define([
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
                     'uniform sampler2D tile_pickTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
