@@ -44,7 +44,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Whether to display the particle system.
-     * @param {ParticleSystem~updateParticle} [options.updateParticle] The callback to an update function used for every particle in this system.
+     * @param {ParticleSystem~updateCallback} [options.updateCallback] The callback to an update function used for every particle in this system.
      * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
      * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
@@ -86,13 +86,13 @@ define([
 
         /**
          * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
-         * @type {ParticleSystem~updateParticle}
+         * @type {ParticleSystem~updateCallback}
          * @default undefined
          */
-        this.updateParticle = options.updateParticle;
+        this.updateCallback = options.updateCallback;
         if (defined(options.forces)) {
-            deprecationWarning('forces', 'forces was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use updateParticle instead.');
-            this.updateParticle = options.forces[0];
+            deprecationWarning('forces', 'forces was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use updateCallback instead.');
+            this.updateCallback = options.forces[0];
         }
         /**
          * Whether the particle system should loop it's bursts when it is complete.
@@ -828,7 +828,7 @@ define([
 
         var particles = this._particles;
         var emitter = this._emitter;
-        var updateParticle = this.updateParticle;
+        var updateCallback = this.updateCallback;
 
         var i;
         var particle;
@@ -837,7 +837,7 @@ define([
         var length = particles.length;
         for (i = 0; i < length; ++i) {
             particle = particles[i];
-            if (!particle.update(dt, updateParticle)) {
+            if (!particle.update(dt, updateCallback)) {
                 removeBillboard(particle);
                 // Add the particle back to the pool so it can be reused.
                 addParticleToPool(this, particle);
@@ -945,7 +945,7 @@ define([
     /**
      * A function used to modify attributes of the particle at each time step. This can include force modifications,
      * color, sizing, etc.
-     * @callback ParticleSystem~updateParticle
+     * @callback ParticleSystem~updateCallback
      *
      * @param {Particle} particle The particle being updated.
      * @param {Number} dt The time since the last update.

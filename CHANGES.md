@@ -13,7 +13,7 @@ Change Log
 ##### Deprecated :hourglass_flowing_sand:
 * `Particle.size` has been renamed to `Particle.imageSize`. Use of the `size` parameter is deprecated and will be removed in Cesium 1.46.
 * `ParticleSystem.rate` has been renamed to `ParticleSystem.emissionRate`. Use of the `rate` parameter is deprecated and will be removed in Cesium 1.46.
-* `ParticleSystem.forces` array has been switched out for singular function `ParticleSystems.updateParticle`. Use of the `forces` parameter is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.forces` array has been switched out for singular function `ParticleSystems.updateCallback`. Use of the `forces` parameter is deprecated and will be removed in Cesium 1.46.
 * `ParticleSystem.lifeTime` has been renamed to `ParticleSystem.lifetime`. Use of the `lifeTime` parameter is deprecated and will be removed in Cesium 1.46.
 * `ParticleSystem.minimumWidth` will no longer be an individual component. Instead of width and height components for pixel dimensions we switched to the Cartesian2, minimumImageSize, instead. Use of the `minimumWidth` parameter is deprecated and will be removed in Cesium 1.46.
 * `ParticleSystem.minimumHeight` will no longer be an individual component. Instead of width and height components for pixel dimensions we switched to the Cartesian2, minimumImageSize, instead. Use of the `minimumHeight` parameter is deprecated and will be removed in Cesium 1.46.
