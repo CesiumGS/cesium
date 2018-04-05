@@ -143,7 +143,7 @@ define([
         this._maximumMass = defaultValue(options.mass, defaultValue(options.maximumMass, 1.0));
 
         this._minimumImageSize = defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize));
-        this._maximumImageSize = defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize));
+        this._maximumImageSize = defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize));
         if (defined(options.width) || defined(options.minimumWidth) || defined(options.maximumWidth)
             || defined(options.height) || defined(options.minimumHeight) || defined(options.maximumHeight)) {
 
@@ -483,7 +483,7 @@ define([
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this.this._minimumImageSize.x = value;
+                this._minimumImageSize.x = value;
             }
         },
         /**

@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/ParticleSystem',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Matrix4',
@@ -9,6 +10,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         ParticleSystem,
+        Cartesian2,
         Cartesian3,
         Color,
         Matrix4,
@@ -43,7 +45,7 @@ defineSuite([
         expect(p.endColor).toEqual(Color.WHITE);
         expect(p.startScale).toEqual(1.0);
         expect(p.endScale).toEqual(1.0);
-        expect(p.rate).toEqual(5.0);
+        expect(p.emissionRate).toEqual(5.0);
         expect(p.bursts).toBeUndefined();
         expect(p.loop).toEqual(true);
         expect(p.minimumSpeed).toEqual(1.0);
@@ -53,11 +55,11 @@ defineSuite([
         expect(p.minimumMass).toEqual(1.0);
         expect(p.maximumMass).toEqual(1.0);
         expect(p.image).toBeUndefined();
-        expect(p.minimumWidth).toEqual(1.0);
-        expect(p.maximumWidth).toEqual(1.0);
-        expect(p.minimumHeight).toEqual(1.0);
-        expect(p.maximumHeight).toEqual(1.0);
-        expect(p.lifeTime).toEqual(Number.MAX_VALUE);
+        expect(p.minimumImageSize.x).toEqual(1.0);
+        expect(p.minimumImageSize.y).toEqual(1.0);
+        expect(p.maximumImageSize.x).toEqual(1.0);
+        expect(p.maximumImageSize.y).toEqual(1.0);
+        expect(p.lifetime).toEqual(Number.MAX_VALUE);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
     });
@@ -65,7 +67,7 @@ defineSuite([
     it('constructor', function() {
         var options = {
             show : false,
-            forces : [function(p) { p.mass++; }],
+            updateParticle : (function(p) { p.mass++; }),
             emitter : new CircleEmitter(10.0),
             modelMatrix : new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0),
             emitterModelMatrix : new Matrix4(10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0),
@@ -73,7 +75,7 @@ defineSuite([
             endColor : Color.LAVENDAR_BLUSH,
             startScale : 19.0,
             endScale : 20.0,
-            rate : 21.0,
+            emissionRate : 21.0,
             bursts : [new ParticleBurst()],
             loop : false,
             minimumSpeed : 22.0,
@@ -83,15 +85,13 @@ defineSuite([
             minimumMass : 26.0,
             maximumMass : 27.0,
             image : 'url/to/image',
-            minimumWidth : 28.0,
-            maximumWidth : 29.0,
-            minimumHeight : 30.0,
-            maximumHeight : 31.0,
-            lifeTime : 32.0
+            minimumImageSize : new Cartesian2(28.0, 30.0),
+            maximumImageSize : new Cartesian2(29.0, 31.0),
+            lifetime : 32.0
         };
         var p = new ParticleSystem(options);
         expect(p.show).toEqual(options.show);
-        expect(p.forces).toEqual(options.forces);
+        expect(p.updateParticle).toEqual(options.updateParticle);
         expect(p.emitter).toEqual(options.emitter);
         expect(p.modelMatrix).toEqual(options.modelMatrix);
         expect(p.emitterModelMatrix).toEqual(options.emitterModelMatrix);
@@ -99,7 +99,7 @@ defineSuite([
         expect(p.endColor).toEqual(options.endColor);
         expect(p.startScale).toEqual(options.startScale);
         expect(p.endScale).toEqual(options.endScale);
-        expect(p.rate).toEqual(options.rate);
+        expect(p.emissionRate).toEqual(options.emissionRate);
         expect(p.bursts).toEqual(options.bursts);
         expect(p.loop).toEqual(options.loop);
         expect(p.minimumSpeed).toEqual(options.minimumSpeed);
@@ -109,11 +109,9 @@ defineSuite([
         expect(p.minimumMass).toEqual(options.minimumMass);
         expect(p.maximumMass).toEqual(options.maximumMass);
         expect(p.image).toEqual(options.image);
-        expect(p.minimumWidth).toEqual(options.minimumWidth);
-        expect(p.maximumWidth).toEqual(options.maximumWidth);
-        expect(p.minimumHeight).toEqual(options.minimumHeight);
-        expect(p.maximumHeight).toEqual(options.maximumHeight);
-        expect(p.lifeTime).toEqual(options.lifeTime);
+        expect(p.minimumImageSize).toEqual(options.minimumImageSize);
+        expect(p.maximumImageSize).toEqual(options.maximumImageSize);
+        expect(p.lifetime).toEqual(options.lifetime);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
     });
@@ -128,7 +126,7 @@ defineSuite([
         var endColor = Color.LAVENDAR_BLUSH;
         var startScale = 19.0;
         var endScale = 20.0;
-        var rate = 21.0;
+        var emissionRate = 21.0;
         var bursts = [new ParticleBurst()];
         var loop = false;
         var minimumSpeed = 22.0;
@@ -138,11 +136,9 @@ defineSuite([
         var minimumMass = 26.0;
         var maximumMass = 27.0;
         var image = 'url/to/image';
-        var minimumWidth = 28.0;
-        var maximumWidth = 29.0;
-        var minimumHeight = 30.0;
-        var maximumHeight = 31.0;
-        var lifeTime = 32.0;
+        var minimumImageSize = new Cartesian2(28.0, 30.0);
+        var maximumImageSize = new Cartesian2(29.0, 31.0);
+        var lifetime = 32.0;
 
         var p = new ParticleSystem();
         p.show = show;
@@ -154,7 +150,7 @@ defineSuite([
         p.endColor = endColor;
         p.startScale = startScale;
         p.endScale = endScale;
-        p.rate = rate;
+        p.emissionRate = emissionRate;
         p.bursts = bursts;
         p.loop = loop;
         p.minimumSpeed = minimumSpeed;
@@ -164,11 +160,9 @@ defineSuite([
         p.minimumMass = minimumMass;
         p.maximumMass = maximumMass;
         p.image = image;
-        p.minimumWidth = minimumWidth;
-        p.maximumWidth = maximumWidth;
-        p.minimumHeight = minimumHeight;
-        p.maximumHeight = maximumHeight;
-        p.lifeTime = lifeTime;
+        p.minimumImageSize = Cartesian2.clone(minimumImageSize, new Cartesian2());
+        p.maximumImageSize = Cartesian2.clone(maximumImageSize, new Cartesian2());
+        p.lifetime = lifetime;
 
         expect(p.show).toEqual(show);
         expect(p.forces).toEqual(forces);
@@ -179,7 +173,7 @@ defineSuite([
         expect(p.endColor).toEqual(endColor);
         expect(p.startScale).toEqual(startScale);
         expect(p.endScale).toEqual(endScale);
-        expect(p.rate).toEqual(rate);
+        expect(p.emissionRate).toEqual(emissionRate);
         expect(p.bursts).toEqual(bursts);
         expect(p.loop).toEqual(loop);
         expect(p.minimumSpeed).toEqual(minimumSpeed);
@@ -189,11 +183,9 @@ defineSuite([
         expect(p.minimumMass).toEqual(minimumMass);
         expect(p.maximumMass).toEqual(maximumMass);
         expect(p.image).toEqual(image);
-        expect(p.minimumWidth).toEqual(minimumWidth);
-        expect(p.maximumWidth).toEqual(maximumWidth);
-        expect(p.minimumHeight).toEqual(minimumHeight);
-        expect(p.maximumHeight).toEqual(maximumHeight);
-        expect(p.lifeTime).toEqual(lifeTime);
+        expect(p.minimumImageSize).toEqual(minimumImageSize);
+        expect(p.maximumImageSize).toEqual(maximumImageSize);
+        expect(p.lifetime).toEqual(lifetime);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
     });
