@@ -44,8 +44,10 @@ define([
      * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
      * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
+     * @param {Color} [options.color] Sets the start and end colors.
      * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
      * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
+     * @param {Number} [options.scale] Sets the start and end scales.
      * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
      * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
      * @param {Number} [options.rate=5] The number of particles to emit per second.
@@ -115,11 +117,11 @@ define([
         this._matrixDirty = true;
         this._combinedMatrix = new Matrix4();
 
-        this._startColor = Color.clone(defaultValue(options.startColor, Color.WHITE));
-        this._endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
+        this._startColor = Color.clone(defaultValue(options.color, defaultValue(options.startColor, Color.WHITE)));
+        this._endColor = Color.clone(defaultValue(options.color, defaultValue(options.endColor, Color.WHITE)));
 
-        this._startScale = defaultValue(options.startScale, 1.0);
-        this._endScale = defaultValue(options.endScale, 1.0);
+        this._startScale = defaultValue(options.scale, defaultValue(options.startScale, 1.0));
+        this._endScale = defaultValue(options.scale, defaultValue(options.endScale, 1.0));
 
         this._rate = defaultValue(options.rate, 5);
 
@@ -162,7 +164,7 @@ define([
          * The particle emitter for this
          * @memberof ParticleSystem.prototype
          * @type {ParticleEmitter}
-         * @default CricleEmitter
+         * @default CircleEmitter
          */
         emitter : {
             get : function() {
