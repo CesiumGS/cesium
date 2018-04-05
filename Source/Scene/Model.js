@@ -3390,7 +3390,7 @@ define([
             if (programs.hasOwnProperty(id)) {
                 var program = programs[id];
                 var shader = shaders[program.vertexShader].extras._pipeline.source;
-                if (model.extensionsUsed.WEB3D_quantized_attributes) {
+                if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
                     var quantizedVS = quantizedVertexShaders[id];
                     if (!defined(quantizedVS)) {
                         quantizedVS = modifyShaderForQuantizedAttributes(shader, id, model);
