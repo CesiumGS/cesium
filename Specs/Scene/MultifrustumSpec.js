@@ -63,7 +63,13 @@ defineSuite([
     var blueImage;
     var whiteImage;
 
+    var logDepth;
+
     beforeAll(function() {
+        scene = createScene();
+        logDepth = scene.logarithmicDepthBuffer;
+        scene.destroyForSpecs();
+
         return when.join(
             Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
                 greenImage = image;
@@ -80,6 +86,8 @@ defineSuite([
         scene = createScene();
         context = scene.context;
         primitives = scene.primitives;
+
+        scene.logarithmicDepthBuffer = false;
 
         var camera = scene.camera;
         camera.position = new Cartesian3();
@@ -349,5 +357,20 @@ defineSuite([
 
         createBillboards();
         scene.renderForSpecs();
+    });
+
+    it('log depth uses less frustums', function() {
+        if (!logDepth) {
+            return;
+        }
+
+        createBillboards();
+
+        scene.render();
+        expect(scene._frustumCommandsList.length).toEqual(3);
+
+        scene.logarithmicDepthBuffer = true;
+        scene.render();
+        expect(scene._frustumCommandsList.length).toEqual(1);
     });
 }, 'WebGL');
