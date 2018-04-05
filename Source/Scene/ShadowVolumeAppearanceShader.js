@@ -29,7 +29,7 @@ define([
         this._extentsCulling = defaultValue(extentsCulling, false);
         this._planarExtents = defaultValue(planarExtents, false);
         this._shaderSource = createShadowVolumeAppearanceShader(appearance, this._extentsCulling, this._planarExtents);
-        this._usesTexcoords = shaderDependenciesScratch._requiresTexcoords;
+        this._usesTextureCoordinates = shaderDependenciesScratch._requiresTextureCoordinates;
     }
 
     defineProperties(ShadowVolumeAppearanceShader.prototype, {
@@ -40,9 +40,9 @@ define([
          * @type {Boolean}
          * @readonly
          */
-        usesTexcoords : {
+        usesTextureCoordinates : {
             get : function() {
-                return this._usesTexcoords;
+                return this._usesTextureCoordinates;
             }
         },
         /**
@@ -76,8 +76,8 @@ define([
             return getPerInstanceColorShader(extentsCull, appearance.flat, planarExtents);
         }
 
-        shaderDependencies.requiresTexcoords = extentsCull;
-        shaderDependencies.requiresEyeCoord = !appearance.flat;
+        shaderDependencies.requiresTextureCoordinates = extentsCull;
+        shaderDependencies.requiresEC = !appearance.flat;
 
         // Scan material source for what hookups are needed. Assume czm_materialInput materialInput.
         var materialShaderSource = appearance.material.shaderSource;
@@ -113,10 +113,10 @@ define([
             glsl += '    materialInput.normalEC = normalEC;\n';
         }
         if (usesPositionToEyeEC) {
-            glsl += '    materialInput.positionToEyeEC = -eyeCoord.xyz;\n';
+            glsl += '    materialInput.positionToEyeEC = -eyeCoordinate.xyz;\n';
         }
         if (usesTangentToEyeMat) {
-            glsl += '    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoord, normalEC);\n';
+            glsl += '    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoordinate, normalEC);\n';
         }
         if (usesSt) {
             glsl += '    materialInput.st = vec2(v, u);\n';
@@ -126,7 +126,7 @@ define([
         if (appearance.flat) {
             glsl += '    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);\n';
         } else {
-            glsl += '    gl_FragColor = czm_phong(normalize(-eyeCoord.xyz), material);\n';
+            glsl += '    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material);\n';
         }
 
         glsl += '}\n';
@@ -148,7 +148,7 @@ define([
                 'varying vec4 v_sphericalExtents;\n';
         }
         var shaderDependencies = shaderDependenciesScratch;
-        shaderDependencies.requiresTexcoords = extentsCulling;
+        shaderDependencies.requiresTextureCoordinates = extentsCulling;
         shaderDependencies.requiresNormalEC = !flatShading;
 
         glsl += getLocalFunctions(shaderDependencies, planarExtents);
@@ -165,12 +165,12 @@ define([
             glsl +=
                 '    czm_materialInput materialInput;\n' +
                 '    materialInput.normalEC = normalEC;\n' +
-                '    materialInput.positionToEyeEC = -eyeCoord.xyz;\n' +
+                '    materialInput.positionToEyeEC = -eyeCoordinate.xyz;\n' +
                 '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
                 '    material.diffuse = v_color.rgb;\n' +
                 '    material.alpha = v_color.a;\n' +
 
-                '    gl_FragColor = czm_phong(normalize(-eyeCoord.xyz), material);\n';
+                '    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material);\n';
         }
         glsl += '}\n';
         return glsl;
@@ -178,32 +178,32 @@ define([
 
     function getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents) {
         var glsl = '';
-        if (shaderDependencies.requiresEyeCoord) {
+        if (shaderDependencies.requiresEC) {
             glsl +=
-                '    vec4 eyeCoord = getEyeCoord(gl_FragCoord.xy);\n';
+                '    vec4 eyeCoordinate = getEyeCoordinate(gl_FragCoord.xy);\n';
         }
-        if (shaderDependencies.requiresWorldCoord) {
+        if (shaderDependencies.requiresWC) {
             glsl +=
-                '    vec4 worldCoord4 = czm_inverseView * eyeCoord;\n' +
-                '    vec3 worldCoord = worldCoord4.xyz / worldCoord4.w;\n';
+                '    vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate;\n' +
+                '    vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;\n';
         }
-        if (shaderDependencies.requiresTexcoords) {
-            if (planarExtents) {  // TODO: add ability to do long-and-narrows?
+        if (shaderDependencies.requiresTextureCoordinates) {
+            if (planarExtents) {
                 glsl +=
                 '    // Unpack planes and transform to eye space\n' +
-                '    float u = computePlanarTexcoord(v_southPlane, eyeCoord.xyz / eyeCoord.w, v_inversePlaneExtents.y);\n' +
-                '    float v = computePlanarTexcoord(v_westPlane, eyeCoord.xyz / eyeCoord.w, v_inversePlaneExtents.x);\n';
+                '    float u = computePlanarTextureCoordinates(v_southPlane, eyeCoordinate.xyz / eyeCoordinate.w, v_inversePlaneExtents.y);\n' +
+                '    float v = computePlanarTextureCoordinates(v_westPlane, eyeCoordinate.xyz / eyeCoordinate.w, v_inversePlaneExtents.x);\n';
             } else {
                 glsl +=
                 '    // Treat world coords as a sphere normal for spherical coordinates\n' +
-                '    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoord);\n' +
-                '    float u = (sphericalLatLong.x - v_sphericalExtents.y) * v_sphericalExtents.w;\n' +
-                '    float v = (sphericalLatLong.y - v_sphericalExtents.x) * v_sphericalExtents.z;\n'; // TODO: clean up...
+                '    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoordinate);\n' +
+                '    float u = (sphericalLatLong.x - v_sphericalExtents.x) * v_sphericalExtents.z;\n' +
+                '    float v = (sphericalLatLong.y - v_sphericalExtents.y) * v_sphericalExtents.w;\n';
             }
         }
         if (extentsCulling) {
             glsl +=
-                '    if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {\n' + // TODO: there's floating point problems at the edges of rectangles. Use remapping.
+                '    if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {\n' +
                 '       discard;\n' +
                 '    }\n';
         }
@@ -211,8 +211,8 @@ define([
         if (shaderDependencies.requiresNormalEC) {
             glsl +=
                 '    // compute normal. sample adjacent pixels in 2x2 block in screen space\n' +
-                '    vec3 downUp = getVectorFromOffset(eyeCoord, gl_FragCoord.xy, vec2(0.0, 1.0));\n' +
-                '    vec3 leftRight = getVectorFromOffset(eyeCoord, gl_FragCoord.xy, vec2(1.0, 0.0));\n' +
+                '    vec3 downUp = getVectorFromOffset(eyeCoordinate, gl_FragCoord.xy, vec2(0.0, 1.0));\n' +
+                '    vec3 leftRight = getVectorFromOffset(eyeCoordinate, gl_FragCoord.xy, vec2(1.0, 0.0));\n' +
                 '    vec3 normalEC = normalize(cross(leftRight, downUp));\n' +
                 '\n';
         }
@@ -221,43 +221,43 @@ define([
 
     function getLocalFunctions(shaderDependencies, planarExtents) {
         var glsl = '';
-        if (shaderDependencies.requiresEyeCoord) {
+        if (shaderDependencies.requiresEC) {
             glsl +=
-                'vec4 getEyeCoord(vec2 fragCoord) {\n' +
+                'vec4 getEyeCoordinate(vec2 fragCoord) {\n' +
                 '    vec2 coords = fragCoord / czm_viewport.zw;\n' +
                 '    float depth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));\n' +
                 '    vec4 windowCoord = vec4(fragCoord, depth, 1.0);\n' +
-                '    vec4 eyeCoord = czm_windowToEyeCoordinates(windowCoord);\n' +
-                '    return eyeCoord;\n' +
+                '    vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);\n' +
+                '    return eyeCoordinate;\n' +
                 '}\n';
         }
         if (shaderDependencies.requiresNormalEC) {
             glsl +=
-                'vec3 getEyeCoord3FromWindowCoord(vec2 fragCoord, float depth) {\n' +
+                'vec3 getEyeCoordinate3FromWindowCoordordinate(vec2 fragCoord, float depth) {\n' +
                 '    vec4 windowCoord = vec4(fragCoord, depth, 1.0);\n' +
-                '    vec4 eyeCoord = czm_windowToEyeCoordinates(windowCoord);\n' +
-                '    return eyeCoord.xyz / eyeCoord.w;\n' +
+                '    vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);\n' +
+                '    return eyeCoordinate.xyz / eyeCoordinate.w;\n' +
                 '}\n' +
 
-                'vec3 getVectorFromOffset(vec4 eyeCoord, vec2 fragCoord2, vec2 positiveOffset) {\n' +
+                'vec3 getVectorFromOffset(vec4 eyeCoordinate, vec2 glFragCoordXY, vec2 positiveOffset) {\n' +
                 '    // Sample depths at both offset and negative offset\n' +
-                '    float upOrRightDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (fragCoord2 + positiveOffset) / czm_viewport.zw));\n' +
-                '    float downOrLeftDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (fragCoord2 - positiveOffset) / czm_viewport.zw));\n' +
+                '    float upOrRightDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw));\n' +
+                '    float downOrLeftDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw));\n' +
                 '    // Explicitly evaluate both paths\n' +
-                '    bvec2 upOrRightInBounds = lessThan(fragCoord2 + positiveOffset, czm_viewport.zw);\n' +
+                '    bvec2 upOrRightInBounds = lessThan(glFragCoordXY + positiveOffset, czm_viewport.zw);\n' +
                 '    float useUpOrRight = float(upOrRightDepth > 0.0 && upOrRightInBounds.x && upOrRightInBounds.y);\n' +
                 '    float useDownOrLeft = float(useUpOrRight == 0.0);\n' +
 
-                '    vec3 upOrRightEC = getEyeCoord3FromWindowCoord(fragCoord2 + positiveOffset, upOrRightDepth);\n' +
-                '    vec3 downOrLeftEC = getEyeCoord3FromWindowCoord(fragCoord2 - positiveOffset, downOrLeftDepth);\n' +
+                '    vec3 upOrRightEC = getEyeCoordinate3FromWindowCoordordinate(glFragCoordXY + positiveOffset, upOrRightDepth);\n' +
+                '    vec3 downOrLeftEC = getEyeCoordinate3FromWindowCoordordinate(glFragCoordXY - positiveOffset, downOrLeftDepth);\n' +
 
-                '    return (upOrRightEC - (eyeCoord.xyz / eyeCoord.w)) * useUpOrRight + ((eyeCoord.xyz / eyeCoord.w) - downOrLeftEC) * useDownOrLeft;\n' +
+                '    return (upOrRightEC - (eyeCoordinate.xyz / eyeCoordinate.w)) * useUpOrRight + ((eyeCoordinate.xyz / eyeCoordinate.w) - downOrLeftEC) * useDownOrLeft;\n' +
                 '}\n';
         }
-        if (shaderDependencies.requiresTexcoords && planarExtents) {
+        if (shaderDependencies.requiresTextureCoordinates && planarExtents) {
             glsl +=
-                'float computePlanarTexcoord(vec4 plane, vec3 eyeCoords, float inverseExtent) {\n' +
-                '    return (dot(plane.xyz, eyeCoords) + plane.w) * inverseExtent;\n' +
+                'float computePlanarTextureCoordinates(vec4 plane, vec3 eyeCoordinates, float inverseExtent) {\n' +
+                '    return (dot(plane.xyz, eyeCoordinates) + plane.w) * inverseExtent;\n' +
                 '}\n';
         }
         return glsl;
@@ -268,37 +268,37 @@ define([
      * @private
      */
     function ShaderDependencies() {
-        this._requiresEyeCoord = false;
-        this._requiresWorldCoord = false; // depends on eyeCoord, needed for material and for phong
-        this._requiresNormalEC = false; // depends on eyeCoord, needed for material
-        this._requiresTexcoords = false; // depends on worldCoord, needed for material and for culling
+        this._requiresEC = false;
+        this._requiresWC = false; // depends on eye coordinates, needed for material and for phong
+        this._requiresNormalEC = false; // depends on eye coordinates, needed for material
+        this._requiresTextureCoordinates = false; // depends on world coordinates, needed for material and for culling
     }
 
     ShaderDependencies.prototype.reset = function() {
-        this._requiresEyeCoord = false;
-        this._requiresWorldCoord = false;
+        this._requiresEC = false;
+        this._requiresWC = false;
         this._requiresNormalEC = false;
-        this._requiresTexcoords = false;
+        this._requiresTextureCoordinates = false;
         return this;
     };
 
     defineProperties(ShaderDependencies.prototype, {
-        // Set when assessing final shading (flat vs. phong) and spherical extent culling
-        requiresEyeCoord : {
+        // Set when assessing final shading (flat vs. phong) and culling using computed texture coordinates
+        requiresEC : {
             get : function() {
-                return this._requiresEyeCoord;
+                return this._requiresEC;
             },
             set : function(value) {
-                this._requiresEyeCoord = value || this._requiresEyeCoord;
+                this._requiresEC = value || this._requiresEC;
             }
         },
-        requiresWorldCoord : {
+        requiresWC : {
             get : function() {
-                return this._requiresWorldCoord;
+                return this._requiresWC;
             },
             set : function(value) {
-                this._requiresWorldCoord = value || this._requiresWorldCoord;
-                this.requiresEyeCoord = this._requiresWorldCoord;
+                this._requiresWC = value || this._requiresWC;
+                this.requiresEC = this._requiresWC;
             }
         },
         requiresNormalEC : {
@@ -307,16 +307,16 @@ define([
             },
             set : function(value) {
                 this._requiresNormalEC = value || this._requiresNormalEC;
-                this.requiresEyeCoord = this._requiresNormalEC;
+                this.requiresEC = this._requiresNormalEC;
             }
         },
-        requiresTexcoords : {
+        requiresTextureCoordinates : {
             get : function() {
-                return this._requiresTexcoords;
+                return this._requiresTextureCoordinates;
             },
             set : function(value) {
-                this._requiresTexcoords = value || this._requiresTexcoords;
-                this.requiresWorldCoord = this._requiresTexcoords;
+                this._requiresTextureCoordinates = value || this._requiresTextureCoordinates;
+                this.requiresWC = this._requiresTextureCoordinates;
             }
         },
         // Set when assessing material hookups
@@ -327,18 +327,18 @@ define([
         },
         tangentToEyeMatrix : {
             set : function(value) {
-                this.requiresWorldCoord = value;
+                this.requiresWC = value;
                 this.requiresNormalEC = value;
             }
         },
         positionToEyeEC : {
             set : function(value) {
-                this.requiresEyeCoord = value;
+                this.requiresEC = value;
             }
         },
         st : {
             set : function(value) {
-                this.requiresTexcoords = value;
+                this.requiresTextureCoordinates = value;
             }
         }
     });

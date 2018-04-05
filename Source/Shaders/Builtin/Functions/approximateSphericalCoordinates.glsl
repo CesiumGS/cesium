@@ -12,29 +12,22 @@ float fastApproximateAtan01(float x) {
     return x * (-0.1784 * x - 0.0663 * x * x + 1.0301);
 }
 
-// Used in place of ternaries to trade some math for branching
-float branchFree(bool comparison, float a, float b) {
-    float useA = float(comparison);
-    return a * useA + b * (1.0 - useA);
-}
-
 // Range reduction math based on nvidia's cg reference implementation for atan2: http://developer.download.nvidia.com/cg/atan2.html
 // However, we replaced their atan curve with Michael Drobot's.
 float fastApproximateAtan2(float x, float y) {
     // atan approximations are usually only reliable over [-1, 1], or, in our case, [0, 1] due to modifications.
     // So range-reduce using abs and by flipping whether x or y is on top.
-    float opposite, adjacent, t; // t used as swap and atan result.
-    t = abs(x);
-    opposite = abs(y);
-    adjacent = max(t, opposite);
+    float t = abs(x); // t used as swap and atan result.
+    float opposite = abs(y);
+    float adjacent = max(t, opposite);
     opposite = min(t, opposite);
 
     t = fastApproximateAtan01(opposite / adjacent);
 
     // Undo range reduction
-    t = branchFree(abs(y) > abs(x), czm_piOverTwo - t, t);
-    t = branchFree(x < 0.0, czm_pi - t, t);
-    t = branchFree(y < 0.0, -t, t);
+    t = czm_branchFreeTernaryFloat(abs(y) > abs(x), czm_piOverTwo - t, t);
+    t = czm_branchFreeTernaryFloat(x < 0.0, czm_pi - t, t);
+    t = czm_branchFreeTernaryFloat(y < 0.0, -t, t);
     return t;
 }
 

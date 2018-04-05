@@ -167,9 +167,7 @@ define([
     };
 
     RectangleGeometryUpdater.prototype._isOnTerrain = function(entity, rectangle) {
-        //var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-
-        return this._fillEnabled && !defined(rectangle.height) && !defined(rectangle.extrudedHeight) && GroundPrimitive.isSupported(this._scene); // && isColorMaterial;
+        return this._fillEnabled && !defined(rectangle.height) && !defined(rectangle.extrudedHeight) && GroundPrimitive.isSupported(this._scene);
     };
 
     RectangleGeometryUpdater.prototype._isDynamic = function(entity, rectangle) {

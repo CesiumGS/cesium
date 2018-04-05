@@ -6,7 +6,7 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Core/RectangleRbush',
+        '../Core/RectangleCollisionChecker',
         '../Scene/GroundPrimitive',
         './BoundingSphereState',
         './ColorMaterialProperty',
@@ -20,7 +20,7 @@ define([
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
-        RectangleRbush,
+        RectangleCollisionChecker,
         GroundPrimitive,
         BoundingSphereState,
         ColorMaterialProperty,
@@ -49,7 +49,7 @@ define([
         this.showsUpdated = new AssociativeArray();
         this.shadows = shadows;
         this.usingSphericalCoordinates = usingSphericalCoordinates;
-        this.rbush = new RectangleRbush();
+        this.rectangleCollisionCheck = new RectangleCollisionChecker();
     }
 
     Batch.prototype.onMaterialChanged = function() {
@@ -57,7 +57,7 @@ define([
     };
 
     Batch.prototype.nonOverlapping = function(rectangle) {
-        return !this.rbush.collides(rectangle);
+        return !this.rectangleCollisionCheck.collides(rectangle);
     };
 
     Batch.prototype.isMaterial = function(updater) {
@@ -75,7 +75,7 @@ define([
         var id = updater.id;
         this.updaters.set(id, updater);
         this.geometry.set(id, geometryInstance);
-        this.rbush.insert(id, geometryInstance.geometry.rectangle);
+        this.rectangleCollisionCheck.insert(id, geometryInstance.geometry.rectangle);
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
@@ -94,7 +94,7 @@ define([
         var geometryInstance = this.geometry.get(id);
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
-            this.rbush.remove(id, geometryInstance.geometry.rectangle);
+            this.rectangleCollisionCheck.remove(id, geometryInstance.geometry.rectangle);
             this.updatersWithAttributes.remove(id);
             var unsubscribe = this.subscriptions.get(id);
             if (defined(unsubscribe)) {

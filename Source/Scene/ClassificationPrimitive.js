@@ -1,14 +1,21 @@
 define([
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/Math',
+        '../Core/Check',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/EncodedCartesian3',
         '../Core/GeometryInstance',
+        '../Core/GeometryInstanceAttribute',
         '../Core/Rectangle',
-        '../Core/ReferencePointGeometryInstanceAttribute',
         '../Core/WebGLConstants',
         '../Core/isArray',
         '../Renderer/DrawCommand',
@@ -31,16 +38,23 @@ define([
         './StencilFunction',
         './StencilOperation'
     ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        CesiumMath,
+        Check,
         ColorGeometryInstanceAttribute,
         combine,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        EncodedCartesian3,
         GeometryInstance,
+        GeometryInstanceAttribute,
         Rectangle,
-        ReferencePointGeometryInstanceAttribute,
         WebGLConstants,
         isArray,
         DrawCommand,
@@ -67,10 +81,9 @@ define([
     var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
 
     /**
-     * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.  The geometry must be from a single {@link GeometryInstance}.
-     * Batching multiple geometries is not yet supported.
+     * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.
      * <p>
-     * A primitive combines the geometry instance with an {@link Appearance} that describes the full shading, including
+     * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other.
@@ -217,26 +230,25 @@ define([
                 } else if (hasSphericalExtentsAttribute) {
                     throw new DeveloperError('All GeometryInstances must have the same attributes.');
                 }
-                if (ReferencePointGeometryInstanceAttribute.hasAttributesForPlanes(attributes)) {
+                if (hasAttributesForTextureCoordinatePlanes(attributes)) {
                     hasPlanarExtentsAttributes = true;
                 } else if (hasPlanarExtentsAttributes) {
                     throw new DeveloperError('All GeometryInstances must have the same attributes.');
                 }
-
             } else if (hasPerColorAttribute || hasSphericalExtentsAttribute) {
                 throw new DeveloperError('All GeometryInstances must have the same attributes.');
-        }
+            }
         }
 
         // If attributes include color and appearance is undefined, default to a color appearance
         if (!defined(appearance) && hasPerColorAttribute) {
-                    appearance = new PerInstanceColorAppearance({
-                        flat : true
-                    });
-                }
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
         if (!hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
             throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
-            }
+        }
 
         // TODO: SphericalExtents or PlanarExtents needed if PerInstanceColor isn't all the same
         if (defined(appearance.material) && !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes) {
@@ -667,7 +679,7 @@ define([
         }
 
         var colorVSDefines = isPerInstanceColor ? ['PER_INSTANCE_COLOR'] : [];
-        if (shadowVolumeAppearanceShader.usesTexcoords) {
+        if (shadowVolumeAppearanceShader.usesTextureCoordinates) {
             if (shadowVolumeAppearanceShader.planarExtents) {
                 colorVSDefines.push('PLANAR_EXTENTS');
             } else {
@@ -1118,6 +1130,135 @@ define([
         this._spPick = this._spPick && this._spPick.destroy();
         this._spColor = this._spColor && this._spColor.destroy();
         return destroyObject(this);
+    };
+
+    function hasAttributesForTextureCoordinatePlanes(attributes) {
+        return defined(attributes.southWest_HIGH) && defined(attributes.southWest_LOW) &&
+            defined(attributes.northWest_HIGH) && defined(attributes.northWest_LOW) &&
+            defined(attributes.southEast_HIGH) && defined(attributes.southEast_LOW);
+    }
+
+    var encodeScratch = new EncodedCartesian3();
+    function addAttributesForPoint(point, name, attributes) {
+        var encoded = EncodedCartesian3.fromCartesian(point, encodeScratch);
+
+        attributes[name + '_HIGH'] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            normalize: false,
+            value : Cartesian3.pack(encoded.high, [0, 0, 0])
+        });
+
+        attributes[name + '_LOW'] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            normalize: false,
+            value : Cartesian3.pack(encoded.low, [0, 0, 0])
+        });
+    }
+
+    var cartographicScratch = new Cartographic();
+    var cornerScratch = new Cartesian3();
+    var northWestScratch = new Cartesian3();
+    var southEastScratch = new Cartesian3();
+    /**
+     * Gets an attributes object containing 3 high-precision points as 6 GeometryInstanceAttributes.
+     * These points are used to compute eye-space planes, which are then used to compute texture
+     * coordinates for small-area ClassificationPrimitives with materials or multiple non-overlapping instances.
+     * @see ShadowVolumeAppearanceShader
+     * @private
+     *
+     * @param {Rectangle} rectangle Rectangle object that the points will approximately bound
+     * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
+     */
+    ClassificationPrimitive.getAttributesForTextureCoordinatePlanes = function(rectangle, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('ellipsoid', ellipsoid);
+        //>>includeEnd('debug');
+
+        // Compute corner positions in double precision
+        var carto = cartographicScratch;
+        carto.longitude = rectangle.west;
+        carto.latitude = rectangle.south;
+
+        var corner = Cartographic.toCartesian(carto, ellipsoid, cornerScratch);
+
+        carto.latitude = rectangle.north;
+        var northWest = Cartographic.toCartesian(carto, ellipsoid, northWestScratch);
+
+        carto.longitude = rectangle.east;
+        carto.latitude = rectangle.south;
+        var southEast = Cartographic.toCartesian(carto, ellipsoid, southEastScratch);
+
+        var attributes = {};
+        addAttributesForPoint(corner, 'southWest', attributes);
+        addAttributesForPoint(northWest, 'northWest', attributes);
+        addAttributesForPoint(southEast, 'southEast', attributes);
+        return attributes;
+    };
+
+    var spherePointScratch = new Cartesian3();
+    function latLongToSpherical(latitude, longitude, ellipsoid, result) {
+        var cartographic = cartographicScratch;
+        cartographic.latitude = latitude;
+        cartographic.longitude = longitude;
+        cartographic.height = 0.0;
+
+        var spherePoint = Cartographic.toCartesian(cartographic, ellipsoid, spherePointScratch);
+
+        // Project into plane with vertical for latitude
+        var magXY = Math.sqrt(spherePoint.x * spherePoint.x + spherePoint.y * spherePoint.y);
+
+        // Use fastApproximateAtan2 for alignment with shader
+        var sphereLatitude = CesiumMath.fastApproximateAtan2(magXY, spherePoint.z);
+        var sphereLongitude = CesiumMath.fastApproximateAtan2(spherePoint.x, spherePoint.y);
+
+        result.x = sphereLatitude;
+        result.y = sphereLongitude;
+
+        return result;
+    }
+
+    var sphericalScratch = new Cartesian2();
+    /**
+     * Gets an attributes object containing the southwest corner of a rectangular area in spherical coordinates,
+     * as well as the inverse of the latitude/longitude range.
+     * These are computed using the same atan2 approximation used in the shader.
+     * Used when computing texture coordinates for large-area ClassificationPrimitives with materials or
+     * multiple non-overlapping instances.
+     * @see ShadowVolumeAppearanceShader
+     * @private
+     *
+     * @param {Rectangle} rectangle Rectangle object that the spherical extents will approximately bound
+     * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
+     */
+    ClassificationPrimitive.getSphericalExtentsGeometryInstanceAttribute = function(rectangle, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('ellipsoid', ellipsoid);
+        //>>includeEnd('debug');
+
+        // rectangle cartographic coords !== spherical because it's on an ellipsoid
+        var southWestExtents = latLongToSpherical(rectangle.south, rectangle.west, ellipsoid, sphericalScratch);
+
+        // Slightly pad extents to avoid floating point error when fragment culling at edges.
+        var south = southWestExtents.x - CesiumMath.EPSILON5;
+        var west = southWestExtents.y - CesiumMath.EPSILON5;
+
+        var northEastExtents = latLongToSpherical(rectangle.north, rectangle.east, ellipsoid, sphericalScratch);
+        var north = northEastExtents.x + CesiumMath.EPSILON5;
+        var east = northEastExtents.y + CesiumMath.EPSILON5;
+
+        var longitudeRangeInverse = 1.0 / (east - west);
+        var latitudeRangeInverse = 1.0 / (north - south);
+
+        return new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [south, west, latitudeRangeInverse, longitudeRangeInverse]
+        });
     };
 
     return ClassificationPrimitive;

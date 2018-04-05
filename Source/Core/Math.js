@@ -1,10 +1,12 @@
 define([
         '../ThirdParty/mersenne-twister',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
         MersenneTwister,
+        Check,
         defaultValue,
         defined,
         DeveloperError) {
@@ -867,9 +869,12 @@ define([
      *
      * @param {Number} x An input number in the range [-1, 1]
      * @returns {Number} An approximation of atan(x)
-     * @private
      */
     CesiumMath.fastApproximateAtan = function(x) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('x', x);
+        //>>includeEnd('debug');
+
         return x * (-0.1784 * Math.abs(x) - 0.0663 * x * x + 1.0301);
     };
 
@@ -881,9 +886,13 @@ define([
      * @param {Number} x An input number that isn't zero if y is zero.
      * @param {Number} y An input number that isn't zero if x is zero.
      * @returns {Number} An approximation of atan2(x, y)
-     * @private
      */
     CesiumMath.fastApproximateAtan2 = function(x, y) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('x', x);
+        Check.typeOf.number('y', y);
+        //>>includeEnd('debug');
+
         // atan approximations are usually only reliable over [-1, 1]
         // So reduce the range by flipping whether x or y is on top.
         var opposite, adjacent, t; // t used as swap and atan result.

@@ -165,10 +165,8 @@ define([
     };
 
     CorridorGeometryUpdater.prototype._isOnTerrain = function(entity, corridor) {
-        //var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-
         return this._fillEnabled && !defined(corridor.height) && !defined(corridor.extrudedHeight) &&
-               GroundPrimitive.isSupported(this._scene);// && isColorMaterial;
+               GroundPrimitive.isSupported(this._scene);
     };
 
     CorridorGeometryUpdater.prototype._getIsClosed = function(options) {

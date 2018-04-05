@@ -17,9 +17,7 @@ define([
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
-        '../Core/ReferencePointGeometryInstanceAttribute',
         '../Core/Resource',
-        '../Core/SphericalExtentsGeometryInstanceAttribute',
         '../Renderer/Pass',
         '../ThirdParty/when',
         './ClassificationPrimitive',
@@ -45,9 +43,7 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
-        ReferencePointGeometryInstanceAttribute,
         Resource,
-        SphericalExtentsGeometryInstanceAttribute,
         Pass,
         when,
         ClassificationPrimitive,
@@ -57,13 +53,13 @@ define([
     'use strict';
 
     /**
-     * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
-     * Batching multiple geometries is not yet supported.
+     * A ground primitive represents geometry draped over the terrain in the {@link Scene}.
      * <p>
-     * A primitive combines the geometry instance with an {@link Appearance} that describes the full shading, including
+     * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other.
+     * // TODO add note that textures on ground should use single imagery provider for high precision
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
@@ -797,10 +793,10 @@ define([
                 var attributes;
 
                 if (usePlanarExtents) {
-                    attributes = ReferencePointGeometryInstanceAttribute.getAttributesForPlanes(rectangle, ellipsoid, attributes);
+                    attributes = ClassificationPrimitive.getAttributesForTextureCoordinatePlanes(rectangle, ellipsoid, attributes);
                 } else {
                     attributes = {
-                        sphericalExtents : new SphericalExtentsGeometryInstanceAttribute(rectangle)
+                        sphericalExtents : ClassificationPrimitive.getSphericalExtentsGeometryInstanceAttribute(rectangle, ellipsoid)
                     };
                 }
 

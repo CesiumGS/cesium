@@ -408,4 +408,14 @@ defineSuite([
         }).contextToRender();
     });
 
+    it('has czm_branchFreeTernaryFloat', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_branchFreeTernaryFloat(true, 1.0, 0.0));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
 }, 'WebGL');
