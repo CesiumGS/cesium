@@ -554,14 +554,14 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.logDepthCommand : command;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.logDepthCommand : command;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -570,14 +570,14 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.logDepthCommand : command;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.logDepthCommand : command;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -603,14 +603,14 @@ define([
 
         for (var j = 0; j < length; ++j) {
             command = commands[j];
-            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.logDepthCommand : command;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.logDepthCommand : command;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
