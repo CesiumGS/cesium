@@ -389,9 +389,9 @@ define([
         // Fragment shader lighting
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
-        fragmentShader += 'vec3 lambertianDiffuse(vec3 baseColor) \n' +
+        fragmentShader += 'vec3 lambertianDiffuse(vec3 diffuseColor) \n' +
             '{\n' +
-            '    return baseColor / M_PI;\n' +
+            '    return diffuseColor / M_PI;\n' +
             '}\n\n';
 
         fragmentShader += 'vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH) \n' +
@@ -420,6 +420,17 @@ define([
             '    float roughnessSquared = roughness * roughness;\n' +
             '    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;\n' +
             '    return roughnessSquared / (M_PI * f * f);\n' +
+            '}\n\n';
+
+        fragmentShader += 'vec4 SRGBtoLINEAR(vec4 srgbIn) \n' +
+            '{\n' +
+            '    vec3 linearOut = pow(srgbIn.rgb, vec3(2.2));\n' +
+            '    return vec4(linearOut, srgbIn.a);\n' +
+            '}\n\n';
+
+        fragmentShader += 'vec3 LINEARtoSRGB(vec3 linearIn) \n' +
+            '{\n' +
+            '    return pow(linearIn, vec3(1.0/2.2));\n' +
             '}\n\n';
 
         fragmentShader += 'void main(void) \n{\n';
@@ -470,7 +481,7 @@ define([
 
         // Add base color to fragment shader
         if (defined(parameterValues.baseColorTexture)) {
-            fragmentShader += '    vec4 baseColorWithAlpha = texture2D(u_baseColorTexture, ' + v_texcoord + ');\n';
+            fragmentShader += '    vec4 baseColorWithAlpha = SRGBtoLINEAR(texture2D(u_baseColorTexture, ' + v_texcoord + '));\n';
             if (defined(parameterValues.baseColorFactor)) {
                 fragmentShader += '    baseColorWithAlpha *= u_baseColorFactor;\n';
             }
@@ -552,7 +563,7 @@ define([
         fragmentShader += '    float G = smithVisibilityGGX(alpha, NdotL, NdotV);\n';
         fragmentShader += '    float D = GGX(alpha, NdotH);\n';
 
-        fragmentShader += '    vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(baseColor);\n';
+        fragmentShader += '    vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);\n';
         fragmentShader += '    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
         fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
@@ -589,7 +600,7 @@ define([
             fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
         }
         if (defined(parameterValues.emissiveTexture)) {
-            fragmentShader += '    vec3 emissive = texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb;\n';
+            fragmentShader += '    vec3 emissive = SRGBtoLINEAR(texture2D(u_emissiveTexture, ' + v_texcoord + ')).rgb;\n';
             if (defined(parameterValues.emissiveFactor)) {
                 fragmentShader += '    emissive *= u_emissiveFactor;\n';
             }
@@ -602,6 +613,7 @@ define([
         }
 
         // Final color
+        fragmentShader += '    color = LINEARtoSRGB(color);\n';
         var alphaMode = material.alphaMode;
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
