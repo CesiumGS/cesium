@@ -2,27 +2,25 @@ defineSuite([
         'Core/TaskProcessor',
         'require',
         'Core/FeatureDetection',
-        'Core/Resource',
         'ThirdParty/when'
     ], function(
         TaskProcessor,
         require,
         FeatureDetection,
-        Resource,
         when) {
     'use strict';
 
     var taskProcessor;
 
+    function absolutize(url) {
+        var a = document.createElement('a');
+        a.href = url;
+        a.href = a.href; // IE only absolutizes href on get, not set
+        return a.href;
+    }
+
     beforeEach(function() {
         TaskProcessor._workerModulePrefix = '../Specs/TestWorkers/';
-
-        function absolutize(url) {
-            var a = document.createElement('a');
-            a.href = url;
-            a.href = a.href; // IE only absolutizes href on get, not set
-            return a.href;
-        }
 
         TaskProcessor._loaderConfig = {
             baseUrl : absolutize(require.toUrl('Source'))
@@ -175,9 +173,10 @@ defineSuite([
     });
 
     it('can load and compile web assembly module', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
         var wasmOptions = {
-            modulePath : '../Specs/TestWorkers/TestWasm/testWasmWrapper.js',
-            wasmBinaryFile : '../Specs/TestWorkers/TestWasm/testWasm.wasm'
+            modulePath : 'TestWasm/testWasmWrapper',
+            wasmBinaryFile : binaryUrl
         };
         taskProcessor = new TaskProcessor('runWasm', 5, wasmOptions);
         var promise = taskProcessor.scheduleTask({
@@ -191,14 +190,14 @@ defineSuite([
     });
 
     it('uses a backup module if web assembly is not supported', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
         var wasmOptions = {
-            modulePath : '../Specs/TestWorkers/TestWasm/testWasmWrapper.js',
-            wasmBinaryFile : '../Specs/TestWorkers/TestWasm/testWasm.wasm',
-            fallbackModulePath : '../Specs/TestWorkers/TestWasm/testWasmFallback.js'
+            modulePath : 'TestWasm/testWasmWrapper',
+            wasmBinaryFile : binaryUrl,
+            fallbackModulePath : 'TestWasm/testWasmFallback'
         };
         taskProcessor = new TaskProcessor('runWasm', 5, wasmOptions);
-
-        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
+        taskProcessor._supportsWasm = false;
 
         var promise = taskProcessor.scheduleTask({
             message : 'foo'

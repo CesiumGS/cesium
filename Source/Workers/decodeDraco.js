@@ -9,8 +9,7 @@ define([
         defined,
         IndexDatatype,
         RuntimeError,
-        createTaskProcessorWorker
-    ) {
+        createTaskProcessorWorker) {
     'use strict';
 
     var draco;

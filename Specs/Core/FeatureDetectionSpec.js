@@ -20,7 +20,7 @@ defineSuite([
         expect(typeof supportsTypedArrays).toEqual('boolean');
     });
 
-    it('detects typed array support', function() {
+    it('detects web assembly support', function() {
         var supportsWebAssembly = FeatureDetection.supportsWebAssembly();
         expect(typeof supportsWebAssembly).toEqual('boolean');
     });

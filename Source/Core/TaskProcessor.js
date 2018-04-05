@@ -153,14 +153,14 @@ define([
         }
 
         // Web assembly not supported, use fallback js module if provided
-        if (!FeatureDetection.supportsWebAssembly()) {
+        if (!processor._supportsWasm) {
             if (defined(wasmOptions.fallbackModulePath)) {
-                config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
+                config.modulePath = TaskProcessor._workerModulePrefix + wasmOptions.fallbackModulePath;
             }
             return when.resolve(config);
         }
 
-        config.modulePath = buildModuleUrl(wasmOptions.modulePath);
+        config.modulePath = TaskProcessor._workerModulePrefix + wasmOptions.modulePath;
         config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
 
         return Resource.fetchArrayBuffer({
@@ -186,8 +186,12 @@ define([
         } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
             bootstrapMessage.loaderConfig.baseUrl =
                 getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
+            bootstrapMessage.loaderConfig.paths = {
+                'Workers/ThirdParty' : buildModuleUrl('ThirdParty')
+            };
         } else {
             bootstrapMessage.loaderConfig.paths = {
+                'Workers/ThirdParty' : buildModuleUrl('ThirdParty'),
                 'Workers' : buildModuleUrl('Workers')
             };
         }
@@ -256,6 +260,7 @@ define([
         this._deferreds = {};
         this._nextID = 0;
         this._workerReadyPromise = when.defer();
+        this._supportsWasm = FeatureDetection.supportsWebAssembly(); // exposed for testing purposes
 
         this._webAssemblyConfig = undefined;
     }
