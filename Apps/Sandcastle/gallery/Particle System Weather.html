@@ -50,6 +50,8 @@ recenterFunction();
 var snowParticleSize = scene.drawingBufferWidth / 100.0;
 var snowRadius = 100000.0;
 
+var snowSystem;
+
 var snowGravityScratch = new Cesium.Cartesian3();
 var snowUpdate = function(particle, dt) {
     snowGravityScratch = Cesium.Cartesian3.normalize(particle.position, snowGravityScratch);
@@ -64,7 +66,7 @@ var snowUpdate = function(particle, dt) {
     }
 };
 
-var snowSystem = new Cesium.ParticleSystem({
+snowSystem = new Cesium.ParticleSystem({
     modelMatrix : new Cesium.Matrix4.fromTranslation(scene.camera.position),
     minimumSpeed : -1.0,
     maximumSpeed : 0.0,
@@ -88,6 +90,8 @@ scene.primitives.add(snowSystem);
 var rainParticleSize = scene.drawingBufferWidth / 80.0;
 var rainRadius = 100000.0;
 
+var rainSystem;
+
 var rainGravityScratch = new Cesium.Cartesian3();
 var rainUpdate = function(particle, dt) {
     rainGravityScratch = Cesium.Cartesian3.normalize(particle.position, rainGravityScratch);
@@ -103,7 +107,7 @@ var rainUpdate = function(particle, dt) {
     }
 };
 
-var rainSystem = new Cesium.ParticleSystem({
+rainSystem = new Cesium.ParticleSystem({
     modelMatrix : new Cesium.Matrix4.fromTranslation(scene.camera.position),
     speed : -1.0,
     lifeTime : 15.0,
