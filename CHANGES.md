@@ -9,6 +9,10 @@ Change Log
 * Fixed glTF support to handle skinned meshes when no skin is supplied. [#6061](https://github.com/AnalyticalGraphicsInc/cesium/issues/6061)
 * Allow loadWithXhr to work with string URLs in a web worker.
 
+##### Additions :tada:
+* Added more ParticleSystem Sandcastle examples for rocket and comet tails and weather. [#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
+* Added ParticleSystem parameter to allow for default of one color or scale instead of always requiring start and end versions.[#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
+
 ### 1.44 - 2018-04-02
 
 ##### Highlights :sparkler:
@@ -52,8 +56,6 @@ Change Log
   * All ground geometry from one `DataSource` will render in front of all ground geometry from another `DataSource` in the same collection with a lower index.
   * Use `DataSourceCollection.raise`, `DataSourceCollection.lower`, `DataSourceCollection.raiseToTop` and `DataSourceCollection.lowerToBottom` functions to change the ordering of a `DataSource` in the collection.
 * Improved processing order of 3D tiles. [#6364](https://github.com/AnalyticalGraphicsInc/cesium/pull/6364)
-* Added more ParticleSystem Sandcastle examples for rocket and comet tails and weather. [#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
-* Added ParticleSystem parameter to allow for default of one color or scale instead of always requiring start and end versions.[#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
 
 ##### Fixes :wrench:
 * Fixed Cesium ion browser caching. [#6353](https://github.com/AnalyticalGraphicsInc/cesium/pull/6353).
