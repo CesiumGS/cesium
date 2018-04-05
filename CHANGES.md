@@ -9,6 +9,9 @@ Change Log
 * Fixed glTF support to handle skinned meshes when no skin is supplied. [#6061](https://github.com/AnalyticalGraphicsInc/cesium/issues/6061)
 * Allow loadWithXhr to work with string URLs in a web worker.
 
+##### Aditions :tada:
+* Added the constant ONE vector to the cartesian3 class. [#6427](https://github.com/AnalyticalGraphicsInc/cesium/pull/6427)
+
 ### 1.44 - 2018-04-02
 
 ##### Highlights :sparkler:

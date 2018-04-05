@@ -1024,6 +1024,14 @@ define([
     Cartesian3.UNIT_Z = freezeObject(new Cartesian3(0.0, 0.0, 1.0));
 
     /**
+     * An immutable Cartesian3 instance initialized to (1.0, 1.0, 1.0).
+     *
+     * @type {Cartesian3}
+     * @constant
+     */
+    Cartesian3.ONE = freezeObject(new Cartesian3(1.0, 1.0, 1.0));
+
+    /**
      * Duplicates this Cartesian3 instance.
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
