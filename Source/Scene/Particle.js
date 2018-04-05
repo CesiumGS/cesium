@@ -4,14 +4,16 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties'
+        '../Core/defineProperties',
+        '../Core/deprecationWarning'
     ], function(
         Cartesian2,
         Cartesian3,
         Color,
         defaultValue,
         defined,
-        defineProperties) {
+        defineProperties,
+        deprecationWarning) {
     'use strict';
 
     var defaultSize = new Cartesian2(1.0, 1.0);
@@ -26,13 +28,15 @@ define([
      * @param {Number} [options.mass=1.0] The mass of particles in kilograms.
      * @param {Cartesian3} [options.position=Cartesian3.ZERO] The initial position of the particle in world coordinates.
      * @param {Cartesian3} [options.velocity=Cartesian3.ZERO] The velocity vector of the particle in world coordinates.
-     * @param {Number} [options.life=Number.MAX_VALUE] The life of particles in seconds.
+     * @param {Number} [options.life=Number.MAX_VALUE] The life of the particle in seconds.
      * @param {Object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
+     * @param {Object} [options.color] Sets the start and end colors.
      * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
      * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
+     * @param {Object} [options.scale] Sets the start and end scales.
      * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
      * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
-     * @param {Cartesian2} [options.size=new Cartesian2(1.0, 1.0)] The dimensions of particles in pixels.
+     * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions of the image representing the particle in pixels. Width by Height.
      */
     function Particle(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -72,31 +76,35 @@ define([
          * @type {Color}
          * @default Color.WHITE
          */
-        this.startColor = Color.clone(defaultValue(options.startColor, Color.WHITE));
+        this.startColor = Color.clone(defaultValue(options.color, defaultValue(options.startColor, Color.WHITE)));
         /**
          * The color of the particle when it dies.
          * @type {Color}
          * @default Color.WHITE
          */
-        this.endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
+        this.endColor = Color.clone(defaultValue(options.color, defaultValue(options.endColor, Color.WHITE)));
         /**
          * the scale of the particle when it is born.
          * @type {Number}
          * @default 1.0
          */
-        this.startScale = defaultValue(options.startScale, 1.0);
+        this.startScale = defaultValue(options.scale, defaultValue(options.startScale, 1.0));
         /**
          * The scale of the particle when it dies.
          * @type {Number}
          * @default 1.0
          */
-        this.endScale = defaultValue(options.endScale, 1.0);
+        this.endScale = defaultValue(options.scale, defaultValue(options.endScale, 1.0));
         /**
-         * The dimensions of the particle in pixels.
+         * The dimensions of the image representing the particle in pixels. Width by Height.
          * @type {Cartesian2}
          * @default new Cartesian(1.0, 1.0)
          */
-        this.size = Cartesian2.clone(defaultValue(options.size, defaultSize));
+        this.imageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultSize));
+        if (defined(options.size)) {
+            deprecationWarning('size', 'size was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use imageSize instead.');
+            this.imageSize = Cartesian2.clone(defaultValue(options.size, defaultSize));
+        }
 
         this._age = 0.0;
         this._normalizedAge = 0.0;
@@ -133,21 +141,14 @@ define([
     /**
      * @private
      */
-    Particle.prototype.update = function(dt, forces) {
+    Particle.prototype.update = function(dt, particleUpdateFunction) {
         // Apply the velocity
         Cartesian3.multiplyByScalar(this.velocity, dt, deltaScratch);
         Cartesian3.add(this.position, deltaScratch, this.position);
 
         // Update any forces.
-        if (defined(forces)) {
-            var length = forces.length;
-            for (var i = 0; i < length; ++i) {
-                var force = forces[i];
-                if (typeof force === 'function') {
-                    // Force is just a simple callback function.
-                    force(this, dt);
-                }
-            }
+        if (defined(particleUpdateFunction) && typeof particleUpdateFunction === 'function') {
+            particleUpdateFunction(this, dt);
         }
 
         // Age the particle

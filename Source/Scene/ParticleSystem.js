@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Event',
         '../Core/JulianDate',
@@ -22,6 +23,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         Event,
         JulianDate,
@@ -32,6 +34,8 @@ define([
         Particle) {
     'use strict';
 
+    var defaultImageSize = new Cartesian2(1.0, 1.0);
+
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.
      *
@@ -40,36 +44,35 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Whether to display the particle system.
-     * @param {ParticleSystem~applyForce[]} [options.forces] An array of force callbacks.
+     * @param {ParticleSystem~updateParticle} [options.updateParticle] The callback to an update function used for every particle in this system.
      * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
      * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
-     * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
-     * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
-     * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
-     * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
-     * @param {Number} [options.rate=5] The number of particles to emit per second.
+     * @param {Number} [options.emissionRate=5] The number of particles to emit per second.
      * @param {ParticleBurst[]} [options.bursts] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
      * @param {Boolean} [options.loop=true] Whether the particle system should loop it's bursts when it is complete.
-     * @param {Number} [options.speed] Sets the minimum and maximum speed in meters per second
+     * @param {Number} [options.scale] Sets the start and end scales.
+     * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
+     * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
+     * @param {Color} [options.color] Sets the start and end colors.
+     * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
+     * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
+     * @param {Object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
+     * @param {Cartesian2} [options.imageSize] Sets the maximum and minimum dimensions of the image representing the particle in pixels. Width by Height.
+     * @param {Cartesian2} [options.minimumImageSize=new Cartesian2(1.0, 1.0)] Sets the minimum dimensions of the image representing the particle in pixels. Width by Height.
+     * @param {Cartesian2} [options.maximumImageSize=new Cartesian2(1.0, 1.0)] Sets the maximum dimensions of the image representing the particle in pixels. Width by Height.
+     * @param {Number} [options.speed] Sets the minimum and maximum speed in meters per second.
      * @param {Number} [options.minimumSpeed=1.0] Sets the minimum speed in meters per second.
      * @param {Number} [options.maximumSpeed=1.0] Sets the maximum speed in meters per second.
+     * @param {Number} [options.lifetime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
      * @param {Number} [options.life] Sets the minimum and maximum life of particles in seconds.
      * @param {Number} [options.minimumLife=5.0] Sets the minimum life of particles in seconds.
      * @param {Number} [options.maximumLife=5.0] Sets the maximum life of particles in seconds.
      * @param {Number} [options.mass] Sets the minimum and maximum mass of particles in kilograms.
      * @param {Number} [options.minimumMass=1.0] Sets the minimum mass of particles in kilograms.
      * @param {Number} [options.maximumMass=1.0] Sets the maximum mass of particles in kilograms.
-     * @param {Object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
-     * @param {Number} [options.width] Sets the minimum and maximum width of particles in pixels.
-     * @param {Number} [options.minimumWidth=1.0] Sets the minimum width of particles in pixels.
-     * @param {Number} [options.maximumWidth=1.0] Sets the maximum width of particles in pixels.
-     * @param {Number} [options.height] Sets the minimum and maximum height of particles in pixels.
-     * @param {Number} [options.minimumHeight=1.0] Sets the minimum height of particles in pixels.
-     * @param {Number} [options.maximumHeight=1.0] Sets the maximum height of particles in pixels.
-     * @param {Number} [options.lifeTime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=ParticleSystem.html|Particle Systems Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System.html&label=Showcases|Particle Systems Plane Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
      */
     function ParticleSystem(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -83,11 +86,14 @@ define([
 
         /**
          * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
-         * @type {ParticleSystem~applyForce[]}
+         * @type {ParticleSystem~updateParticle}
          * @default undefined
          */
-        this.forces = options.forces;
-
+        this.updateParticle = options.updateParticle;
+        if (defined(options.forces)) {
+            deprecationWarning('forces', 'forces was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use updateParticle instead.');
+            this.updateParticle = options.forces[0];
+        }
         /**
          * Whether the particle system should loop it's bursts when it is complete.
          * @type {Boolean}
@@ -115,13 +121,17 @@ define([
         this._matrixDirty = true;
         this._combinedMatrix = new Matrix4();
 
-        this._startColor = Color.clone(defaultValue(options.startColor, Color.WHITE));
-        this._endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
+        this._startColor = Color.clone(defaultValue(options.color, defaultValue(options.startColor, Color.WHITE)));
+        this._endColor = Color.clone(defaultValue(options.color, defaultValue(options.endColor, Color.WHITE)));
 
-        this._startScale = defaultValue(options.startScale, 1.0);
-        this._endScale = defaultValue(options.endScale, 1.0);
+        this._startScale = defaultValue(options.scale, defaultValue(options.startScale, 1.0));
+        this._endScale = defaultValue(options.scale, defaultValue(options.endScale, 1.0));
 
-        this._rate = defaultValue(options.rate, 5);
+        this._emissionRate = defaultValue(options.emissionRate, 5);
+        if (defined(options.rate)) {
+            deprecationWarning('rate', 'rate was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use emissionRate instead.');
+            this._emissionRate = options.rate;
+        }
 
         this._minimumSpeed = defaultValue(options.speed, defaultValue(options.minimumSpeed, 1.0));
         this._maximumSpeed = defaultValue(options.speed, defaultValue(options.maximumSpeed, 1.0));
@@ -132,13 +142,32 @@ define([
         this._minimumMass = defaultValue(options.mass, defaultValue(options.minimumMass, 1.0));
         this._maximumMass = defaultValue(options.mass, defaultValue(options.maximumMass, 1.0));
 
-        this._minimumWidth = defaultValue(options.width, defaultValue(options.minimumWidth, 1.0));
-        this._maximumWidth = defaultValue(options.width, defaultValue(options.maximumWidth, 1.0));
+        this._minimumImageSize = defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize));
+        this._maximumImageSize = defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize));
+        if (defined(options.width) || defined(options.minimumWidth) || defined(options.maximumWidth)
+            || defined(options.height) || defined(options.minimumHeight) || defined(options.maximumHeight)) {
 
-        this._minimumHeight = defaultValue(options.height, defaultValue(options.minimumHeight, 1.0));
-        this._maximumHeight = defaultValue(options.height, defaultValue(options.maximumHeight, 1.0));
+            if (defined(options.width)) {
+                deprecationWarning('width', 'width was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                                   ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
+            }
+            if (defined(options.height)) {
+                deprecationWarning('height', 'height was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                            ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
+            }
+            var minimumWidth = defaultValue(options.width, defaultValue(options.minimumWidth, 1.0));
+            var maximumWidth = defaultValue(options.width, defaultValue(options.maximumWidth, 1.0));
+            var minimumHeight = defaultValue(options.height, defaultValue(options.minimumHeight, 1.0));
+            var maximumHeight = defaultValue(options.height, defaultValue(options.maximumHeight, 1.0));
+            this._minimumImageSize = new Cartesian2(minimumWidth, minimumHeight);
+            this._maximumImageSize = new Cartesian2(maximumWidth, maximumHeight);
+        }
 
-        this._lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
+        this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
+        if (defined(options.lifeTime)) {
+            deprecationWarning('lifeTime', 'lifeTime was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use lifetime instead.');
+            this._lifetime = defaultValue(options.lifeTime, Number.MAX_VALUE);
+        }
 
         this._billboardCollection = undefined;
         this._particles = [];
@@ -162,7 +191,7 @@ define([
          * The particle emitter for this
          * @memberof ParticleSystem.prototype
          * @type {ParticleEmitter}
-         * @default CricleEmitter
+         * @default CircleEmitter
          */
         emitter : {
             get : function() {
@@ -298,16 +327,37 @@ define([
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 5
+         * @deprecated
          */
         rate : {
             get : function() {
-                return this._rate;
+                deprecationWarning('rate', 'rate was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use emissionRate instead.');
+                return this._emissionRate;
+            },
+            set : function(value) {
+                deprecationWarning('rate', 'rate was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use emissionRate instead.');
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
+                //>>includeEnd('debug');
+                this._emissionRate = value;
+                this._updateParticlePool = true;
+            }
+        },
+        /**
+         * The number of particles to emit per second.
+         * @memberof ParticleSystem.prototype
+         * @type {Number}
+         * @default 5
+         */
+        emissionRate : {
+            get : function() {
+                return this._emissionRate;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._rate = value;
+                this._emissionRate = value;
                 this._updateParticlePool = true;
             }
         },
@@ -329,7 +379,7 @@ define([
             }
         },
         /**
-         * Sets the maximum speed in meters per second.
+         * Sets the maximum velocity in meters per second.
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
@@ -419,16 +469,21 @@ define([
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
+         * @deprecated
          */
         minimumWidth : {
             get : function() {
-                return this._minimumWidth;
+                deprecationWarning('width', 'width was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                            ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
+                return this._minimumImageSize.x;
             },
             set : function(value) {
+                deprecationWarning('width', 'width was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                            ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._minimumWidth = value;
+                this.this._minimumImageSize.x = value;
             }
         },
         /**
@@ -436,16 +491,21 @@ define([
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
+         * @deprecated
          */
         maximumWidth : {
             get : function() {
-                return this._maximumWidth;
+                deprecationWarning('width', 'width was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                            ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
+                return this._maximumImageSize.x;
             },
             set : function(value) {
+                deprecationWarning('width', 'width was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                            ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._maximumWidth = value;
+                this._maximumImageSize.x = value;
             }
         },
         /**
@@ -453,16 +513,21 @@ define([
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
+         * @deprecated
          */
         minimumHeight : {
             get : function() {
-                return this._minimumHeight;
+                deprecationWarning('height', 'height was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                            ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
+                return this._minimumImageSize.y;
             },
             set : function(value) {
+                deprecationWarning('height', 'height was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                             ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._minimumHeight = value;
+                this._minimumImageSize.y = value;
             }
         },
         /**
@@ -470,16 +535,79 @@ define([
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
+         * @deprecated
          */
         maximumHeight : {
             get : function() {
-                return this._maximumHeight;
+                deprecationWarning('height', 'height was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                             ' height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
+                return this._maximumImageSize.y;
             },
             set : function(value) {
+                deprecationWarning('height', 'height was deprecated in Cesium 1.45.  It will be removed in 1.46.  Instead of width' +
+                                             ' and height components for pixel dimensions we switched to a Cartesian2. Use imageSize instead.');
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._maximumHeight = value;
+                this._maximumImageSize.y = value;
+            }
+        },
+        /**
+         * Sets the maximum width and height of particles in pixels.
+         * @memberof ParticleSystem.prototype
+         * @type {Cartesian2}
+         * @default new Cartesian2(1.0, 1.0)
+         */
+        minimumImageSize : {
+            get : function() {
+                return this._minimumImageSize;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('value', value);
+                Check.typeOf.number.greaterThanOrEquals('value.x', value.x, 0.0);
+                Check.typeOf.number.greaterThanOrEquals('value.y', value.y, 0.0);
+                //>>includeEnd('debug');
+                this._minimumImageSize = value;
+            }
+        },
+        /**
+         * Sets the maximum width and height of particles in pixels.
+         * @memberof ParticleSystem.prototype
+         * @type {Cartesian2}
+         * @default new Cartesian2(1.0, 1.0)
+         */
+        maximumImageSize : {
+            get : function() {
+                return this._maximumImageSize;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('value', value);
+                Check.typeOf.number.greaterThanOrEquals('value.x', value.x, 0.0);
+                Check.typeOf.number.greaterThanOrEquals('value.y', value.y, 0.0);
+                //>>includeEnd('debug');
+                this._maximumImageSize = value;
+            }
+        },
+        /**
+         * How long the particle system will emit particles, in seconds.
+         * @memberof ParticleSystem.prototype
+         * @type {Number}
+         * @default Number.MAX_VALUE
+         * @deprecated
+         */
+        lifeTime : {
+            get : function() {
+                deprecationWarning('lifeTime', 'lifeTime was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use lifetime instead.');
+                return this._lifetime;
+            },
+            set : function(value) {
+                deprecationWarning('lifeTime', 'lifeTime was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use lifetime instead.');
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
+                //>>includeEnd('debug');
+                this._lifetime = value;
             }
         },
         /**
@@ -488,15 +616,15 @@ define([
          * @type {Number}
          * @default Number.MAX_VALUE
          */
-        lifeTime : {
+        lifetime : {
             get : function() {
-                return this._lifeTime;
+                return this._lifetime;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._lifeTime = value;
+                this._lifetime = value;
             }
         },
         /**
@@ -522,7 +650,7 @@ define([
     });
 
     function updateParticlePool(system) {
-        var rate = system._rate;
+        var emissionRate = system._emissionRate;
         var life = system._maximumLife;
 
         var burstAmount = 0;
@@ -537,7 +665,7 @@ define([
         var billboardCollection = system._billboardCollection;
         var image = system.image;
 
-        var particleEstimate = Math.ceil(rate * life + burstAmount);
+        var particleEstimate = Math.ceil(emissionRate * life + burstAmount);
         var particles = system._particles;
         var particlePool = system._particlePool;
         var numToAdd = Math.max(particleEstimate - particles.length - particlePool.length, 0);
@@ -597,8 +725,8 @@ define([
                 image : particle.image
             });
         }
-        billboard.width = particle.size.x;
-        billboard.height = particle.size.y;
+        billboard.width = particle.imageSize.x;
+        billboard.height = particle.imageSize.y;
         billboard.position = particle.position;
         billboard.show = true;
 
@@ -622,10 +750,8 @@ define([
         particle.image = system.image;
         particle.life = CesiumMath.randomBetween(system._minimumLife, system._maximumLife);
         particle.mass = CesiumMath.randomBetween(system._minimumMass, system._maximumMass);
-
-        var width = CesiumMath.randomBetween(system._minimumWidth, system._maximumWidth);
-        var height = CesiumMath.randomBetween(system._minimumHeight, system._maximumHeight);
-        particle.size = Cartesian2.fromElements(width, height, particle.size);
+        particle.imageSize.x = CesiumMath.randomBetween(system._minimumImageSize.x, system._maximumImageSize.x);
+        particle.imageSize.y = CesiumMath.randomBetween(system._minimumImageSize.y, system._maximumImageSize.y);
 
         // Reset the normalizedAge and age in case the particle was reused.
         particle._normalizedAge = 0.0;
@@ -643,10 +769,10 @@ define([
             return 0;
         }
 
-        dt = CesiumMath.mod(dt, system._lifeTime);
+        dt = CesiumMath.mod(dt, system._lifetime);
 
-        // Compute the number of particles to emit based on the rate.
-        var v = dt * system._rate;
+        // Compute the number of particles to emit based on the emissionRate.
+        var v = dt * system._emissionRate;
         var numToEmit = Math.floor(v);
         system._carryOver += (v - numToEmit);
         if (system._carryOver > 1.0)
@@ -702,7 +828,7 @@ define([
 
         var particles = this._particles;
         var emitter = this._emitter;
-        var forces = this.forces;
+        var updateParticle = this.updateParticle;
 
         var i;
         var particle;
@@ -711,7 +837,7 @@ define([
         var length = particles.length;
         for (i = 0; i < length; ++i) {
             particle = particles[i];
-            if (!particle.update(dt, forces)) {
+            if (!particle.update(dt, updateParticle)) {
                 removeBillboard(particle);
                 // Add the particle back to the pool so it can be reused.
                 addParticleToPool(this, particle);
@@ -763,9 +889,9 @@ define([
         this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
         this._currentTime += dt;
 
-        if (this._lifeTime !== Number.MAX_VALUE && this._currentTime > this._lifeTime) {
+        if (this._lifetime !== Number.MAX_VALUE && this._currentTime > this._lifetime) {
             if (this.loop) {
-                this._currentTime = CesiumMath.mod(this._currentTime, this._lifeTime);
+                this._currentTime = CesiumMath.mod(this._currentTime, this._lifetime);
                 if (this.bursts) {
                     var burstLength = this.bursts.length;
                     // Reset any bursts
@@ -817,10 +943,11 @@ define([
     };
 
     /**
-     * A function used to apply a force to the particle on each time step.
-     * @callback ParticleSystem~applyForce
+     * A function used to modify attributes of the particle at each time step. This can include force modifications,
+     * color, sizing, etc.
+     * @callback ParticleSystem~updateParticle
      *
-     * @param {Particle} particle The particle to apply the force to.
+     * @param {Particle} particle The particle being updated.
      * @param {Number} dt The time since the last update.
      *
      * @example
