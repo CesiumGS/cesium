@@ -11,7 +11,6 @@ Change Log
 
 ##### Additions :tada:
 * Added more ParticleSystem Sandcastle examples for rocket and comet tails and weather. [#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
-* Added ParticleSystem parameter to allow for default of one color or scale instead of always requiring start and end versions.[#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
 
 ### 1.44 - 2018-04-02
 
