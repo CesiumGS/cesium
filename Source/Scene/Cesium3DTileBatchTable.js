@@ -848,7 +848,7 @@ define([
             '    float centerY = tile_textureStep.w; \n' +
             '    float xId = mod(batchId, tile_textureDimensions.x); \n' +
             '    float yId = floor(batchId / tile_textureDimensions.x); \n' +
-            '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
+            '    return vec2(centerX + (xId * stepX), centerY + (yId * stepY)); \n' +
             '} \n';
     }
 
@@ -1505,6 +1505,7 @@ define([
                 height : dimensions.y,
                 arrayBufferView : bytes
             },
+            flipY : false,
             sampler : new Sampler({
                 minificationFilter : TextureMinificationFilter.NEAREST,
                 magnificationFilter : TextureMagnificationFilter.NEAREST
