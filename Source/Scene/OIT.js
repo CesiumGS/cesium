@@ -111,29 +111,19 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
-        // Use zeroed arraybuffer instead of null to initialize texture
-        // to workaround Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
-        var source = new Float32Array(width * height * 4);
-
         oit._accumulationTexture = new Texture({
             context : context,
+            width : width,
+            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT,
-            source : {
-                arrayBufferView : source,
-                width : width,
-                height : height
-            }
+            pixelDatatype : PixelDatatype.FLOAT
         });
         oit._revealageTexture = new Texture({
             context : context,
+            width : width,
+            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT,
-            source : {
-                arrayBufferView : source,
-                width : width,
-                height : height
-            }
+            pixelDatatype : PixelDatatype.FLOAT
         });
     }
 
