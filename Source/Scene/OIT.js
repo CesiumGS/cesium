@@ -118,12 +118,20 @@ define([
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT
         });
+
+        // Use zeroed arraybuffer instead of null to initialize texture
+        // to workaround Firefox. Only needed for the second color attachment.
+        var source = new Float32Array(width * height * 4);
         oit._revealageTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            },
+            flipY : false
         });
     }
 
