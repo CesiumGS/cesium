@@ -50,8 +50,8 @@ defineSuite([
         expect(p.loop).toEqual(true);
         expect(p.minimumSpeed).toEqual(1.0);
         expect(p.maximumSpeed).toEqual(1.0);
-        expect(p.minimumLife).toEqual(5.0);
-        expect(p.maximumLife).toEqual(5.0);
+        expect(p.minimumParticleLife).toEqual(5.0);
+        expect(p.maximumParticleLife).toEqual(5.0);
         expect(p.minimumMass).toEqual(1.0);
         expect(p.maximumMass).toEqual(1.0);
         expect(p.image).toBeUndefined();
@@ -67,7 +67,7 @@ defineSuite([
     it('constructor', function() {
         var options = {
             show : false,
-            updateParticle : (function(p) { p.mass++; }),
+            updateCallback : (function(p) { p.mass++; }),
             emitter : new CircleEmitter(10.0),
             modelMatrix : new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0),
             emitterModelMatrix : new Matrix4(10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0),
@@ -80,8 +80,8 @@ defineSuite([
             loop : false,
             minimumSpeed : 22.0,
             maximumSpeed : 23.0,
-            minimumLife : 24.0,
-            maximumLife : 25.0,
+            minimumParticleLife : 24.0,
+            maximumParticleLife : 25.0,
             minimumMass : 26.0,
             maximumMass : 27.0,
             image : 'url/to/image',
@@ -91,7 +91,7 @@ defineSuite([
         };
         var p = new ParticleSystem(options);
         expect(p.show).toEqual(options.show);
-        expect(p.updateParticle).toEqual(options.updateParticle);
+        expect(p.updateCallback).toEqual(options.updateCallback);
         expect(p.emitter).toEqual(options.emitter);
         expect(p.modelMatrix).toEqual(options.modelMatrix);
         expect(p.emitterModelMatrix).toEqual(options.emitterModelMatrix);
@@ -104,8 +104,8 @@ defineSuite([
         expect(p.loop).toEqual(options.loop);
         expect(p.minimumSpeed).toEqual(options.minimumSpeed);
         expect(p.maximumSpeed).toEqual(options.maximumSpeed);
-        expect(p.minimumLife).toEqual(options.minimumLife);
-        expect(p.maximumLife).toEqual(options.maximumLife);
+        expect(p.minimumParticleLife).toEqual(options.minimumParticleLife);
+        expect(p.maximumParticleLife).toEqual(options.maximumParticleLife);
         expect(p.minimumMass).toEqual(options.minimumMass);
         expect(p.maximumMass).toEqual(options.maximumMass);
         expect(p.image).toEqual(options.image);
@@ -131,8 +131,8 @@ defineSuite([
         var loop = false;
         var minimumSpeed = 22.0;
         var maximumSpeed = 23.0;
-        var minimumLife = 24.0;
-        var maximumLife = 25.0;
+        var minimumParticleLife = 24.0;
+        var maximumParticleLife = 25.0;
         var minimumMass = 26.0;
         var maximumMass = 27.0;
         var image = 'url/to/image';
@@ -155,8 +155,8 @@ defineSuite([
         p.loop = loop;
         p.minimumSpeed = minimumSpeed;
         p.maximumSpeed = maximumSpeed;
-        p.minimumLife = minimumLife;
-        p.maximumLife = maximumLife;
+        p.minimumParticleLife = minimumParticleLife;
+        p.maximumParticleLife = maximumParticleLife;
         p.minimumMass = minimumMass;
         p.maximumMass = maximumMass;
         p.image = image;
@@ -178,8 +178,8 @@ defineSuite([
         expect(p.loop).toEqual(loop);
         expect(p.minimumSpeed).toEqual(minimumSpeed);
         expect(p.maximumSpeed).toEqual(maximumSpeed);
-        expect(p.minimumLife).toEqual(minimumLife);
-        expect(p.maximumLife).toEqual(maximumLife);
+        expect(p.minimumParticleLife).toEqual(minimumParticleLife);
+        expect(p.maximumParticleLife).toEqual(maximumParticleLife);
         expect(p.minimumMass).toEqual(minimumMass);
         expect(p.maximumMass).toEqual(maximumMass);
         expect(p.image).toEqual(image);
@@ -260,17 +260,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with invalid minimumLife', function() {
+    it('throws with invalid minimumParticleLife', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.minimumLife = -1.0;
+            p.minimumParticleLife = -1.0;
         }).toThrowDeveloperError();
     });
 
-    it('throws with invalid maximumLife', function() {
+    it('throws with invalid maximumParticleLife', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.maximumLife = -1.0;
+            p.maximumParticleLife = -1.0;
         }).toThrowDeveloperError();
     });
 
