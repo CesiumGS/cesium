@@ -7,7 +7,7 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - echo 'deployPending' && echo -en 'travis_fold:start:script.deployPending\\r'
-  - npm run deploy-set-version -- --version $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
+  - npm run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm run deploy-status -- --status pending --message 'Waiting for build'
   - echo -en 'travis_fold:end:script.deployPending\\r'
 
@@ -26,6 +26,10 @@ script:
   - npm pack
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
 
+  - echo 'buildApps' && echo -en 'travis_fold:start:script.buildApps\\r'
+  - npm run buildApps
+  - echo -en 'travis_fold:end:script.buildApps\\r'
+
   - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
   - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm run deploy-status -- --status success --message Deployed
@@ -34,6 +38,10 @@ script:
   - echo 'test webgl-stub release' && echo -en 'travis_fold:start:script test.release\\r'
   - npm run test -- --browsers Electron --failTaskOnError --webgl-stub --release --suppressPassed
   - echo -en 'travis_fold:end:script test.release\\r'
+
+  - echo 'test node' && echo -en 'travis_fold:start:script test.node\\r'
+  - node index.js
+  - echo -en 'travis_fold:end:script test.node\\r'
 
   - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
   - npm run cloc

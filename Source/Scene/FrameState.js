@@ -208,7 +208,14 @@ define([
              * @type {Number}
              * @default undefined
              */
-            sse : undefined
+            sse : undefined,
+            /**
+             * The minimum brightness of terrain with fog applied.
+             *
+             * @type {Number}
+             * @default undefined
+             */
+            minimumBrightness : undefined
         };
 
         /**

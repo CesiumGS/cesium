@@ -5,12 +5,8 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/destroyObject',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix4',
         'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -29,12 +25,8 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         destroyObject,
-        DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
         GeometryInstance,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix4,
         PolygonGeometry,
         Rectangle,
         RectangleGeometry,
@@ -75,6 +67,7 @@ defineSuite([
         this._primitive = primitive;
         this.pass = Pass.GLOBE;
     }
+
     MockGlobePrimitive.prototype.update = function(frameState) {
         var commandList = frameState.commandList;
         var startLength = commandList.length;
@@ -652,6 +645,25 @@ defineSuite([
         });
     });
 
+    it('drill picking', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
+            asynchronous : false
+        });
+
+        verifyClassificationPrimitiveRender(primitive, boxColor);
+
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[1].primitive).toEqual(depthPrimitive._primitive);
+        });
+    });
+
     it('does not pick when allowPicking is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
@@ -688,12 +700,11 @@ defineSuite([
         var frameState = scene.frameState;
         frameState.afterRender.length = 0;
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
-                return true;
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             primitive.update(frameState);
-            return false;
+            return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
                 expect(arg).toBe(primitive);
@@ -723,8 +734,8 @@ defineSuite([
         var frameState = scene.frameState;
         frameState.afterRender.length = 0;
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
                 return true;
             }
             primitive.update(frameState);
@@ -890,8 +901,8 @@ defineSuite([
 
         return pollToPromise(function() {
             primitive.update(frameState);
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             return primitive.ready;
         }).then(function() {
@@ -965,8 +976,8 @@ defineSuite([
 
         return pollToPromise(function() {
             primitive.update(frameState);
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             return primitive.ready;
         }).then(function() {
@@ -985,4 +996,5 @@ defineSuite([
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
     });
+
 }, 'WebGL');

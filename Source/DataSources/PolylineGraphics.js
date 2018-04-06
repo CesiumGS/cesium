@@ -30,13 +30,13 @@ define([
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
-     * @param {MaterialProperty} [options.depthFailMaterial] A property specifiying the material to used to draw the polyline when it is below the terrain.
+     * @param {MaterialProperty} [options.depthFailMaterial] A property specifiying the material used to draw the polyline when it is below the terrain.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if followSurface is true.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      */
     function PolylineGraphics(options) {
         this._show = undefined;

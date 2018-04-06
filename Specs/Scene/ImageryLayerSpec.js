@@ -1,11 +1,9 @@
 defineSuite([
         'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
-        'Core/loadImage',
-        'Core/loadJsonp',
-        'Core/loadWithXhr',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Renderer/ComputeEngine',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
@@ -26,11 +24,9 @@ defineSuite([
     ], function(
         ImageryLayer,
         EllipsoidTerrainProvider,
-        loadImage,
-        loadJsonp,
-        loadWithXhr,
         Rectangle,
         RequestScheduler,
+        Resource,
         ComputeEngine,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -64,9 +60,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
 
         scene.frameState.commandList.length = 0;
     });
@@ -84,12 +80,12 @@ defineSuite([
     };
 
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         var discardPolicy = new CustomDiscardPolicy();
@@ -122,7 +118,7 @@ defineSuite([
     });
 
     function createWebMercatorProvider() {
-        loadJsonp.loadAndExecuteScript = function(url, functionName) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
                 "authenticationResultCode" : "ValidCredentials",
                 "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
@@ -148,12 +144,12 @@ defineSuite([
             });
         };
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         return new BingMapsImageryProvider({
@@ -289,8 +285,8 @@ defineSuite([
     });
 
     it('assigns texture property when reprojection is skipped because the tile is very small', function() {
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            loadImage.defaultCreateImage('Data/Images/Red256x256.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage('Data/Images/Red256x256.png', crossOrigin, deferred);
         };
 
         var provider = new UrlTemplateImageryProvider({
@@ -398,7 +394,26 @@ defineSuite([
         });
         expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
         expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
-        layer.destroy();
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+                var sampler = imagery.texture.sampler;
+                expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                expect(sampler.magnificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+                imagery.releaseReference();
+                layer.destroy();
+            });
+        });
     });
 
     it('uses default texture filter properties of ImageryProvider', function() {

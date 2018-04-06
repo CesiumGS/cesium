@@ -1,5 +1,4 @@
 defineSuite([
-        'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -7,15 +6,19 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
+        'Core/Matrix4',
         'Core/PerspectiveFrustum',
         'Core/Transforms',
+        'Renderer/Pass',
         'Scene/Cesium3DTileStyle',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
+        'Specs/createCanvas',
         'Specs/createScene',
         'ThirdParty/when'
-    ], function(
-        PointCloud3DTileContent,
+    ], 'Scene/PointCloud3DTileContent', function(
         Cartesian3,
         Color,
         ComponentDatatype,
@@ -23,11 +26,16 @@ defineSuite([
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
+        Matrix4,
         PerspectiveFrustum,
         Transforms,
+        Pass,
         Cesium3DTileStyle,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Expression,
         Cesium3DTilesTester,
+        createCanvas,
         createScene,
         when) {
     'use strict';
@@ -49,6 +57,7 @@ defineSuite([
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
     var pointCloudWithTransformUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithTransform';
+    var pointCloudTilesetUrl = './Data/Cesium3DTiles/Tilesets/TilesetPoints';
 
     function setCamera(longitude, latitude) {
         // Point the camera to the center of the tile
@@ -432,6 +441,117 @@ defineSuite([
         });
     });
 
+    var noAttenuationPixelCount = 16;
+    function attenuationTest(postLoadCallback) {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        var center = new Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        scene.fxaa = false;
+        scene.camera.zoomIn(6);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+            tileset.pointCloudShading.eyeDomeLighting = false;
+            postLoadCallback(scene, tileset);
+            scene.destroyForSpecs();
+        });
+    }
+
+    it('attenuates points based on geometric error', function() {
+        return attenuationTest(function(scene, tileset) {
+            tileset.pointCloudShading.attenuation = true;
+            tileset.pointCloudShading.geometricErrorScale = 1.0;
+            tileset.pointCloudShading.maximumAttenuation = undefined;
+            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
+                expect(pixelCount).toBeGreaterThan(noAttenuationPixelCount);
+            });
+        });
+    });
+
+    it('modulates attenuation using the tileset screen space error', function() {
+        return attenuationTest(function(scene, tileset) {
+            tileset.pointCloudShading.attenuation = true;
+            tileset.pointCloudShading.geometricErrorScale = 1.0;
+            tileset.pointCloudShading.maximumAttenuation = undefined;
+            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 1;
+            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
+                expect(pixelCount).toEqual(noAttenuationPixelCount);
+            });
+        });
+    });
+
+    it('modulates attenuation using the maximumAttenuation parameter', function() {
+        return attenuationTest(function(scene, tileset) {
+            tileset.pointCloudShading.attenuation = true;
+            tileset.pointCloudShading.geometricErrorScale = 1.0;
+            tileset.pointCloudShading.maximumAttenuation = 1;
+            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
+                expect(pixelCount).toEqual(noAttenuationPixelCount);
+            });
+        });
+    });
+
+    it('modulates attenuation using the baseResolution parameter', function() {
+        return attenuationTest(function(scene, tileset) {
+            tileset.pointCloudShading.attenuation = true;
+            tileset.pointCloudShading.geometricErrorScale = 1.0;
+            tileset.pointCloudShading.maximumAttenuation = undefined;
+            tileset.pointCloudShading.baseResolution = CesiumMath.EPSILON20;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
+                expect(pixelCount).toEqual(noAttenuationPixelCount);
+            });
+        });
+    });
+
+    it('modulates attenuation using the baseResolution parameter', function() {
+        return attenuationTest(function(scene, tileset) {
+            // pointCloudNoColorUrl is a single tile with GeometricError = 0,
+            // which results in default baseResolution being computed
+            tileset.pointCloudShading.attenuation = true;
+            tileset.pointCloudShading.geometricErrorScale = 1.0;
+            tileset.pointCloudShading.maximumAttenuation = undefined;
+            tileset.pointCloudShading.baseResolution = CesiumMath.EPSILON20;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
+                expect(pixelCount).toEqual(noAttenuationPixelCount);
+            });
+        });
+    });
+
+    it('modulates attenuation using the geometricErrorScale parameter', function() {
+        return attenuationTest(function(scene, tileset) {
+            tileset.pointCloudShading.attenuation = true;
+            tileset.pointCloudShading.geometricErrorScale = 0.0;
+            tileset.pointCloudShading.maximumAttenuation = undefined;
+            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 1;
+            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
+                expect(pixelCount).toEqual(noAttenuationPixelCount);
+            });
+        });
+    });
+
+    it('attenuates points based on geometric error in 2D', function() {
+        return attenuationTest(function(scene, tileset) {
+            scene.morphTo2D(0);
+            tileset.pointCloudShading.attenuation = true;
+            tileset.pointCloudShading.geometricErrorScale = 1.0;
+            tileset.pointCloudShading.maximumAttenuation = undefined;
+            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.maximumScreenSpaceError = 16;
+            expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
+                expect(pixelCount).toBeGreaterThan(noAttenuationPixelCount);
+            });
+        });
+    });
+
     it('applies shader style', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             var content = tileset._root.content;
@@ -535,7 +655,7 @@ defineSuite([
     });
 
     it('rebuilds shader style when expression changes', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudTilesetUrl).then(function(tileset) {
             // Solid red color
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
@@ -545,6 +665,28 @@ defineSuite([
             tileset.style.color = new Expression('color("lime")');
             tileset.makeStyleDirty();
             expect(scene).toRender([0, 255, 0, 255]);
+
+            tileset.style.color = new Expression('color("blue", 0.5)');
+            tileset.makeStyleDirty();
+            expect(scene).toRender([0, 0, 255, 255]);
+
+            var i;
+            var commands = scene.frameState.commandList;
+            var commandsLength = commands.length;
+            expect(commandsLength).toBeGreaterThan(1); // Just check that at least some children are rendered
+            for (i = 0; i < commandsLength; ++i) {
+                expect(commands[i].pass).toBe(Pass.TRANSLUCENT);
+            }
+
+            tileset.style.color = new Expression('color("yellow")');
+            tileset.makeStyleDirty();
+            expect(scene).toRender([255, 255, 0, 255]);
+
+            commands = scene.frameState.commandList;
+            commandsLength = commands.length;
+            for (i = 0; i < commandsLength; ++i) {
+                expect(commands[i].pass).not.toBe(Pass.TRANSLUCENT);
+            }
         });
     });
 
@@ -682,6 +824,149 @@ defineSuite([
             expect(content.geometryByteLength).toEqual(pointCloudGeometryMemory);
             expect(content.texturesByteLength).toEqual(0);
             expect(content.batchTableByteLength).toEqual(batchTexturesByteLength + pickTexturesByteLength);
+        });
+    });
+
+    it('Rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var tile = tileset._root;
+            tile._isClipped = true;
+            var content = tile.content;
+
+            var noClipFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(noClipFS.includes('clip')).toBe(false);
+
+            var clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                unionClippingRegions : false
+            });
+            tileset.clippingPlanes = clippingPlanes;
+
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipOneIntersectFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipOneIntersectFS.includes('= clip(')).toBe(true);
+            expect(clipOneIntersectFS.includes('float clip')).toBe(true);
+
+            clippingPlanes.unionClippingRegions = true;
+
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipOneUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipOneUnionFS.includes('= clip(')).toBe(true);
+            expect(clipOneUnionFS.includes('float clip')).toBe(true);
+            expect(clipOneUnionFS).not.toEqual(clipOneIntersectFS);
+
+            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 1.0));
+
+            clippingPlanes.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+            var clipTwoUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
+            expect(clipTwoUnionFS.includes('= clip(')).toBe(true);
+            expect(clipTwoUnionFS.includes('float clip')).toBe(true);
+            expect(clipTwoUnionFS).not.toEqual(clipOneIntersectFS);
+            expect(clipTwoUnionFS).not.toEqual(clipOneUnionFS);
+        });
+    });
+
+    it('Clipping planes selectively disable rendering', function () {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10.0);
+            tileset.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    clipPlane
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center)
+            });
+
+            expect(scene).notToRender(color);
+
+            clipPlane.distance = 0.0;
+
+            expect(scene).toRender(color);
+        });
+    });
+
+    it('clipping planes apply edge styling', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10.0);
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    clipPlane
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
+                edgeWidth : 20.0,
+                edgeColor : Color.RED
+            });
+
+            expect(scene).notToRender(color);
+        });
+    });
+
+    it('clipping planes union regions (Uint8)', function() {
+        // Force uint8 mode - there's a slight rendering difference between
+        // float and packed uint8 clipping planes for this test due to the small context
+        spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_Z, 0.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
+                unionClippingRegions: true
+            });
+
+            expect(scene).notToRender(color);
+
+            tileset.clippingPlanes.unionClippingRegions = false;
+
+            expect(scene).toRender(color);
+        });
+    });
+
+    it('clipping planes union regions (Float)', function() {
+        if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+            // This configuration for the test fails in uint8 mode due to the small context
+            return;
+        }
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_Z, -10.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
+                unionClippingRegions: true
+            });
+
+            expect(scene).notToRender(color);
+
+            tileset.clippingPlanes.unionClippingRegions = false;
+
+            expect(scene).toRender(color);
         });
     });
 

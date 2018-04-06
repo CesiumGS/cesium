@@ -32,6 +32,7 @@ function startup(Cesium) {
 // Use a CallbackProperty when your data can't be pre-computed
 // or needs to be derived from other properties at runtime.
 var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.clock.shouldAnimate = true;
 
 var startLatitude = 35;
 var startLongitude = -120;

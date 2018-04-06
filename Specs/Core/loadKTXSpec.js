@@ -4,6 +4,7 @@ defineSuite([
         'Core/Request',
         'Core/RequestErrorEvent',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/RuntimeError'
     ], function(
         loadKTX,
@@ -11,6 +12,7 @@ defineSuite([
         Request,
         RequestErrorEvent,
         RequestScheduler,
+        Resource,
         RuntimeError) {
     'use strict';
 
@@ -24,11 +26,7 @@ defineSuite([
     beforeEach(function() {
         fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'getAllResponseHeaders']);
         fakeXHR.simulateLoad = function(response) {
-            fakeXHR.status = 200;
-            fakeXHR.response = response;
-            if (typeof fakeXHR.onload === 'function') {
-                fakeXHR.onload();
-            }
+            fakeXHR.simulateHttpResponse(200, response);
         };
         fakeXHR.simulateError = function() {
             fakeXHR.response = '';
@@ -36,7 +34,7 @@ defineSuite([
                 fakeXHR.onerror();
             }
         };
-        fakeXHR.simulateHttpError = function(statusCode, response) {
+        fakeXHR.simulateHttpResponse = function(statusCode, response) {
             fakeXHR.status = statusCode;
             fakeXHR.response = response;
             if (typeof fakeXHR.onload === 'function') {
@@ -59,20 +57,6 @@ defineSuite([
 
         expect(fakeXHR.open).toHaveBeenCalledWith('GET', testUrl, true);
         expect(fakeXHR.setRequestHeader).not.toHaveBeenCalled();
-        expect(fakeXHR.send).toHaveBeenCalled();
-    });
-
-    it('creates and sends request with custom headers', function() {
-        var testUrl = 'http://example.invalid/testuri';
-        loadKTX(testUrl, {
-            'Accept' : 'application/json',
-            'Cache-Control' : 'no-cache'
-        });
-
-        expect(fakeXHR.open).toHaveBeenCalledWith('GET', testUrl, true);
-        expect(fakeXHR.setRequestHeader.calls.count()).toEqual(2);
-        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json');
-        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
         expect(fakeXHR.send).toHaveBeenCalled();
     });
 
@@ -118,11 +102,36 @@ defineSuite([
         expect(rejectedError).toBeUndefined();
 
         var error = 'some error';
-        fakeXHR.simulateHttpError(404, error);
+        fakeXHR.simulateHttpResponse(404, error);
         expect(resolvedValue).toBeUndefined();
         expect(rejectedError instanceof RequestErrorEvent).toBe(true);
         expect(rejectedError.statusCode).toEqual(404);
         expect(rejectedError.response).toEqual(error);
+    });
+
+    it('returns a promise that resolves with undefined when the status code is 204', function() {
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadKTX(testUrl);
+
+        expect(promise).toBeDefined();
+
+        var resolved = false;
+        var resolvedValue;
+        var rejectedError;
+        promise.then(function(value) {
+            resolved = true;
+            resolvedValue = value;
+        }, function(error) {
+            rejectedError = error;
+        });
+
+        expect(resolvedValue).toBeUndefined();
+        expect(rejectedError).toBeUndefined();
+
+        fakeXHR.simulateHttpResponse(204);
+        expect(resolved).toBe(true);
+        expect(resolvedValue).toBeUndefined();
+        expect(rejectedError).toBeUndefined();
     });
 
     it('returns a promise that resolves to an uncompressed texture when the request loads', function() {
@@ -232,7 +241,6 @@ defineSuite([
         expect(resolvedValue.bufferView).toBeDefined();
         expect(rejectedError).toBeUndefined();
     });
-
 
     it('cannot parse invalid KTX buffer', function() {
         var invalidKTX = new Uint8Array(validCompressed);
@@ -417,12 +425,12 @@ defineSuite([
         var oldMaximumRequests = RequestScheduler.maximumRequests;
         RequestScheduler.maximumRequests = 0;
 
-        var request = new Request({
-            throttle : true
-        });
-
-        var testUrl = 'http://example.invalid/testuri';
-        var promise = loadKTX(testUrl, undefined, request);
+        var promise = loadKTX(new Resource({
+            url: 'http://example.invalid/testuri',
+            request: new Request({
+                throttle: true
+            })
+        }));
         expect(promise).toBeUndefined();
 
         RequestScheduler.maximumRequests = oldMaximumRequests;

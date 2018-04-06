@@ -11,16 +11,18 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/loadCRN',
-        '../Core/loadImage',
         '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
         '../Shaders/Materials/BumpMapMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
+        '../Shaders/Materials/ElevationContourMaterial',
+        '../Shaders/Materials/ElevationRampMaterial',
         '../Shaders/Materials/FadeMaterial',
         '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
@@ -29,6 +31,7 @@ define([
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial',
         '../Shaders/Materials/RimLightingMaterial',
+        '../Shaders/Materials/SlopeRampMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/Water',
         '../ThirdParty/when'
@@ -45,16 +48,18 @@ define([
         DeveloperError,
         isArray,
         loadCRN,
-        loadImage,
         loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
+        Resource,
         CubeMap,
         Texture,
         BumpMapMaterial,
         CheckerboardMaterial,
         DotMaterial,
+        ElevationContourMaterial,
+        ElevationRampMaterial,
         FadeMaterial,
         GridMaterial,
         NormalMapMaterial,
@@ -63,6 +68,7 @@ define([
         PolylineGlowMaterial,
         PolylineOutlineMaterial,
         RimLightingMaterial,
+        SlopeRampMaterial,
         StripeMaterial,
         WaterMaterial,
         when) {
@@ -226,6 +232,23 @@ define([
      *      <li><code>outlineColor</code>: diffuse color and alpha for the outline.</li>
      *      <li><code>outlineWidth</code>: width of the outline in pixels.</li>
      *  </ul>
+     *  <li>ElevationContour</li>
+     *  <ul>
+     *      <li><code>color</code>: color and alpha for the contour line.</li>
+     *      <li><code>spacing</code>: spacing for contour lines in meters.</li>
+     *      <li><code>width</code>: Number specifying the width of the grid lines in pixels.</li>
+     *  </ul>
+     *  <li>ElevationRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *      <li><code>minimumHeight</code>: minimum height for the ramp.</li>
+     *      <li><code>maximumHeight</code>: maximum height for the ramp.</li>
+     *  </ul>
+     *  <li>SlopeRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *  </ul>
+     * </ul>
      * </ul>
      * </div>
      *
@@ -250,7 +273,7 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -516,8 +539,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -768,14 +789,15 @@ define([
             }
 
             if (uniformValue !== material._texturePaths[uniformId]) {
-                if (typeof uniformValue === 'string') {
+                if (typeof uniformValue === 'string' || uniformValue instanceof Resource) {
+                    var resource = Resource.createIfNeeded(uniformValue);
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
-                        promise = loadKTX(uniformValue);
+                        promise = loadKTX(resource);
                     } else if (crnRegex.test(uniformValue)) {
-                        promise = loadCRN(uniformValue);
+                        promise = loadCRN(resource);
                     } else {
-                        promise = loadImage(uniformValue);
+                        promise = resource.fetchImage();
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
@@ -825,12 +847,12 @@ define([
 
             if (path !== material._texturePaths[uniformId]) {
                 var promises = [
-                    loadImage(uniformValue.positiveX),
-                    loadImage(uniformValue.negativeX),
-                    loadImage(uniformValue.positiveY),
-                    loadImage(uniformValue.negativeY),
-                    loadImage(uniformValue.positiveZ),
-                    loadImage(uniformValue.negativeZ)
+                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
                 ];
 
                 when.all(promises).then(function(images) {
@@ -941,7 +963,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
+            } else if (type === 'string' || uniformValue instanceof Resource ||uniformValue instanceof HTMLCanvasElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {
@@ -1468,6 +1490,61 @@ define([
             var uniforms = material.uniforms;
             return (uniforms.color.alpha < 1.0) || (uniforms.outlineColor.alpha < 1.0);
         }
+    });
+
+    /**
+     * Gets the name of the elevation contour material.
+     * @type {String}
+     * @readonly
+     */
+    Material.ElevationContourType = 'ElevationContour';
+    Material._materialCache.addMaterial(Material.ElevationContourType, {
+        fabric : {
+            type : Material.ElevationContourType,
+            uniforms : {
+                spacing: 100.0,
+                color: new Color(1.0, 0.0, 0.0, 1.0),
+                width: 1.0
+            },
+            source : ElevationContourMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the elevation contour material.
+     * @type {String}
+     * @readonly
+     */
+    Material.ElevationRampType = 'ElevationRamp';
+    Material._materialCache.addMaterial(Material.ElevationRampType, {
+        fabric : {
+            type : Material.ElevationRampType,
+            uniforms : {
+                image: Material.DefaultImageId,
+                minimumHeight: 0.0,
+                maximumHeight: 10000.0
+            },
+            source : ElevationRampMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the slope ramp material.
+     * @type {String}
+     * @readonly
+     */
+    Material.SlopeRampMaterialType = 'SlopeRamp';
+    Material._materialCache.addMaterial(Material.SlopeRampMaterialType, {
+        fabric : {
+            type : Material.SlopeRampMaterialType,
+            uniforms : {
+                image: Material.DefaultImageId
+            },
+            source : SlopeRampMaterial
+        },
+        translucent : false
     });
 
     return Material;

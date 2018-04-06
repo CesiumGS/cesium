@@ -1,22 +1,24 @@
 defineSuite([
-        'Scene/Instanced3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Transforms',
-        'Scene/Cesium3DTileContentState',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
+        'Scene/Model',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
-        Instanced3DModel3DTileContent,
+    ], 'Scene/Instanced3DModel3DTileContent', function(
         Cartesian3,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Transforms,
-        Cesium3DTileContentState,
+        ClippingPlane,
+        ClippingPlaneCollection,
+        Model,
         TileBoundingSphere,
         Cesium3DTilesTester,
         createScene) {
@@ -278,8 +280,8 @@ defineSuite([
             // (24 * 8 * 4) + (36 * 2) = 840
             var geometryByteLength = 840;
 
-            // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-            var texturesByteLength = 262144;
+            // Texture is 211x211 RGB bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+            var texturesByteLength = 196608;
 
             // One RGBA byte pixel per feature
             var batchTexturesByteLength = content.featuresLength * 4;
@@ -302,6 +304,54 @@ defineSuite([
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
             expect(content.batchTableByteLength).toEqual(batchTexturesByteLength + pickTexturesByteLength);
+        });
+    });
+
+    it('Links model to tileset clipping planes based on bounding volume clipping', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var content = tile.content;
+            var model = content._modelInstanceCollection._model;
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+
+            tile._isClipped = false;
+            tile.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeUndefined();
+        });
+    });
+
+    it('rebuilds Model shaders when clipping planes change', function() {
+        spyOn(Model, '_getClippingFunction').and.callThrough();
+
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var content = tile.content;
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            content.clippingPlanesDirty = true;
+            tile.update(tileset, scene.frameState);
+
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
         });
     });
 

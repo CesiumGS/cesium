@@ -3,14 +3,14 @@ define([
         './CompressedTextureBuffer',
         './defined',
         './DeveloperError',
-        './loadArrayBuffer',
+        './Resource',
         './TaskProcessor'
     ], function(
         when,
         CompressedTextureBuffer,
         defined,
         DeveloperError,
-        loadArrayBuffer,
+        Resource,
         TaskProcessor) {
     'use strict';
 
@@ -25,9 +25,7 @@ define([
      *
      * @exports loadCRN
      *
-     * @param {String|ArrayBuffer} urlOrBuffer The URL of the binary data or an ArrayBuffer.
-     * @param {Object} [headers] HTTP headers to send with the requests.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
      * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @exception {RuntimeError} Unsupported compressed format.
@@ -48,18 +46,19 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadCRN(urlOrBuffer, headers, request) {
+    function loadCRN(resourceOrUrlOrBuffer) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(urlOrBuffer)) {
-            throw new DeveloperError('urlOrBuffer is required.');
+        if (!defined(resourceOrUrlOrBuffer)) {
+            throw new DeveloperError('resourceOrUrlOrBuffer is required.');
         }
         //>>includeEnd('debug');
 
         var loadPromise;
-        if (urlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(urlOrBuffer)) {
-            loadPromise = when.resolve(urlOrBuffer);
+        if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
+            loadPromise = when.resolve(resourceOrUrlOrBuffer);
         } else {
-            loadPromise = loadArrayBuffer(urlOrBuffer, headers, request);
+            var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
+            loadPromise = resource.fetchArrayBuffer();
         }
 
         if (!defined(loadPromise)) {
@@ -67,6 +66,9 @@ define([
         }
 
         return loadPromise.then(function(data) {
+            if (!defined(data)) {
+                return;
+            }
             var transferrableObjects = [];
             if (data instanceof ArrayBuffer) {
                 transferrableObjects.push(data);

@@ -1,10 +1,10 @@
 defineSuite([
         'Scene/createOpenStreetMapImageryProvider',
         'Core/DefaultProxy',
-        'Core/loadImage',
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -14,10 +14,10 @@ defineSuite([
     ], function(
         createOpenStreetMapImageryProvider,
         DefaultProxy,
-        loadImage,
         CesiumMath,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
@@ -31,7 +31,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
     });
 
     it('return a UrlTemplateImageryProvider', function() {
@@ -51,6 +51,32 @@ defineSuite([
         });
     });
 
+    it('supports a Resource for the url', function() {
+        var resource = new Resource({
+            url : 'made/up/osm/server/'
+        });
+
+        var provider = createOpenStreetMapImageryProvider({
+            url : resource
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+                expect(url).not.toContain('//');
+
+                // Just return any old image.
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            });
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
     it('supports a slash at the end of the URL', function() {
         var provider = createOpenStreetMapImageryProvider({
             url : 'made/up/osm/server/'
@@ -59,15 +85,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).not.toContain('//');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -81,15 +107,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('made/up/osm/server/');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -111,13 +137,13 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -136,32 +162,6 @@ defineSuite([
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
         expect(providerWithCredit.credit).toBeDefined();
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var provider = createOpenStreetMapImageryProvider({
-            url : 'made/up/osm/server',
-            proxy : proxy
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.proxy).toEqual(proxy);
-
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/osm/server'))).toEqual(0);
-
-                // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
     });
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
@@ -184,15 +184,15 @@ defineSuite([
             expect(provider.rectangle.north).toBeCloseTo(rectangle.north, CesiumMath.EPSILON10);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('/0/0/0');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -233,10 +233,10 @@ defineSuite([
             }, 1);
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {

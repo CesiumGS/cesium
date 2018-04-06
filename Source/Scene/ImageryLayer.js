@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
@@ -45,6 +46,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         FeatureDetection,
         GeographicTilingScheme,
         IndexDatatype,
@@ -305,7 +307,6 @@ define([
         }
     });
 
-
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the brightness of the imagery.
@@ -400,8 +401,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -813,6 +812,13 @@ define([
                 }
             }
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (this.minificationFilter !== TextureMinificationFilter.NEAREST &&
+            this.minificationFilter !== TextureMinificationFilter.LINEAR) {
+            throw new DeveloperError('ImageryLayer minification filter must be NEAREST or LINEAR');
+        }
+        //>>includeEnd('debug');
 
         var sampler = new Sampler({
             minificationFilter : this.minificationFilter,

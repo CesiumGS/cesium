@@ -78,8 +78,8 @@ define([
      *
      * @param {Scene} scene The scene.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
      *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -1264,7 +1264,7 @@ define([
      * the default view for the 3D scene.  The home view for 2D and columbus view shows the
      * entire map.
      *
-     * @param {Number} [duration] The number of seconds to complete the camera flight to home. See {@link Camera#flyTo}
+     * @param {Number} [duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight. See {@link Camera#flyTo}
      */
     Camera.prototype.flyHome = function(duration) {
         var mode = this._mode;
@@ -1499,6 +1499,7 @@ define([
 
     /**
      * Translates the camera's position by <code>amount</code> along the camera's view vector.
+     * When in 2D mode, this will zoom in the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1506,12 +1507,20 @@ define([
      */
     Camera.prototype.moveForward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, amount);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            // 2D mode
+            zoom2D(this, amount);
+        } else {
+            // 3D or Columbus view mode
+            this.move(this.direction, amount);
+        }
     };
 
     /**
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's view vector.
+     * When in 2D mode, this will zoom out the camera instead of translating the camera's position.
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -1519,7 +1528,14 @@ define([
      */
     Camera.prototype.moveBackward = function(amount) {
         amount = defaultValue(amount, this.defaultMoveAmount);
-        this.move(this.direction, -amount);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            // 2D mode
+            zoom2D(this, -amount);
+        } else {
+            // 3D or Columbus view mode
+            this.move(this.direction, -amount);
+        }
     };
 
     /**
@@ -1574,7 +1590,7 @@ define([
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the opposite direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1582,12 +1598,16 @@ define([
      */
     Camera.prototype.lookLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.up, -amount);
+        }
     };
 
     /**
      * Rotates the camera around its up vector by amount, in radians, in the direction
-     * of its right vector.
+     * of its right vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1595,12 +1615,16 @@ define([
      */
     Camera.prototype.lookRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.up, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.up, amount);
+        }
     };
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1608,12 +1632,16 @@ define([
      */
     Camera.prototype.lookUp = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, -amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.right, -amount);
+        }
     };
 
     /**
      * Rotates the camera around its right vector by amount, in radians, in the opposite direction
-     * of its up vector.
+     * of its up vector if not in 2D mode.
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1621,7 +1649,11 @@ define([
      */
     Camera.prototype.lookDown = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this.right, amount);
+
+        // only want view of map to change in 3D mode, 2D visual is incorrect when look changes
+        if (this._mode !== SceneMode.SCENE2D) {
+            this.look(this.right, amount);
+        }
     };
 
     var lookScratchQuaternion = new Quaternion();

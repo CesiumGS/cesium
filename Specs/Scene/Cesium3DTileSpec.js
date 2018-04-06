@@ -2,14 +2,11 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Core/Cartesian3',
         'Core/clone',
-        'Core/defined',
         'Core/HeadingPitchRoll',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Rectangle',
-        'Core/SphereOutlineGeometry',
         'Core/Transforms',
         'Scene/Cesium3DTileRefine',
         'Scene/TileBoundingRegion',
@@ -19,14 +16,11 @@ defineSuite([
         Cesium3DTile,
         Cartesian3,
         clone,
-        defined,
         HeadingPitchRoll,
-        loadWithXhr,
         CesiumMath,
         Matrix3,
         Matrix4,
         Rectangle,
-        SphereOutlineGeometry,
         Transforms,
         Cesium3DTileRefine,
         TileBoundingRegion,
@@ -320,29 +314,34 @@ defineSuite([
     });
 
     describe('debug bounding volumes', function() {
+        var scene;
+        beforeEach(function() {
+            scene = createScene();
+        });
+
+        afterEach(function() {
+            scene.destroyForSpecs();
+        });
+
         it('can be a bounding region', function() {
-            var scene = createScene();
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('can be an oriented bounding box', function() {
-            var scene = createScene();
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox, undefined);
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('can be a bounding sphere', function() {
-            var scene = createScene();
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('creates debug bounding volume for viewer request volume', function() {
-            var scene = createScene();
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithViewerRequestVolume, undefined);
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugViewerRequestVolume).toBeDefined();

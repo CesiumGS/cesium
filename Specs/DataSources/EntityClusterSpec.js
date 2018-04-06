@@ -11,7 +11,6 @@ defineSuite([
         'DataSources/Entity',
         'Scene/SceneTransforms',
         'Specs/createCanvas',
-        'Specs/createGlobe',
         'Specs/createScene'
     ], function(
         EntityCluster,
@@ -26,7 +25,6 @@ defineSuite([
         Entity,
         SceneTransforms,
         createCanvas,
-        createGlobe,
         createScene) {
     'use strict';
 
@@ -50,8 +48,12 @@ defineSuite([
                     tilesWaitingForChildren : 0
                 }
             },
+            tileLoadedEvent : new Event(),
+            terrainProviderChanged : new Event(),
+            imageryLayersUpdatedEvent : new Event(),
             beginFrame : function() {},
             update : function() {},
+            render : function() {},
             endFrame : function() {}
 
         };
@@ -402,7 +404,6 @@ defineSuite([
         expect(cluster._labelCollection).toBeDefined();
         expect(cluster._pointCollection).toBeDefined();
     });
-
 
     it('does not remove entity collection indices when at least one of billboard, label and point remain', function() {
         cluster = new EntityCluster();

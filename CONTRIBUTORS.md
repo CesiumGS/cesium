@@ -1,4 +1,4 @@
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to CesiumJS.  The following people have contributed to CesiumJS, under the following agreements:
 
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
 
@@ -43,6 +43,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Ottavio Hartman](https://github.com/omh1280)
    * [William Ho](https://github.com/williamkho)
    * [Srinivas Kaza](https://github.com/AnimatedRNG)
+   * [Hannah Bollar](https://github.com/hanbollar)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -92,6 +93,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [William Wall](https://github.com/wallw-bits)
 * [virtualcitySYSTEMS GmbH](https://www.virtualcitysystems.de)
    * [Jannes Bolling](https://github.com/jbo023)
+   * [Arne Schilling](https://github.com/arneschilling)
 * [Logilab](https://www.logilab.fr/)
    * [Florent Cayré](https://github.com/fcayre/)
 * [webiks](https://www.webiks.com)
@@ -101,6 +103,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Joshua Bernstein](https://github.com/jbernstein/)
    * [Natanael Rivera](https://github.com/nrivera-Novetta/)
    * [Justin Burr](https://github.com/jburr-nc/)
+   * [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -116,6 +119,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [M.Eng. René Schwarz](https://github.com/DigNative)
 * [Gilles Cébélieu (IGN France)](https://github.com/gcebelieu)
 * [Guillaume Beraudo](https://github.com/gberaudo)
+* [Martine Habib](https://github.com/marhab21)
 * [Thomas Hirsch](https://github.com/relet)
 * [Ayush Khandelwal](https://github.com/ayk115)
 * [Aditya Raisinghani](https://github.com/adi2412)
@@ -168,3 +172,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Rudraksha Shah](https://github.com/Rudraksha20)
 * [Cody Guldner](https://github.com/burn123)
 * [Nacho Carnicero](https://github.com/nacho-carnicero)
+* [Y.Selim Abidin](https://github.com/SelimAbidin)
+* [Tamar Cohen](https://github.com/tamarmot)
+* [Stephen Wiseman](https://github.com/srwiseman)
+* [Gabriel Macario](https://github.com/gabriel-macario)

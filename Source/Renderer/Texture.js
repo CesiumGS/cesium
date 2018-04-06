@@ -164,26 +164,36 @@ define([
         var preMultiplyAlpha = options.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
         var flipY = defaultValue(options.flipY, true);
 
+        var initialized = true;
+
         var gl = context._gl;
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
+
+        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
         if (defined(source)) {
-            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
             if (defined(source.arrayBufferView)) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 // Source: typed array
+                var arrayBufferView = source.arrayBufferView;
                 if (isCompressed) {
-                    gl.compressedTexImage2D(textureTarget, 0, internalFormat, width, height, 0, source.arrayBufferView);
+                    gl.compressedTexImage2D(textureTarget, 0, internalFormat, width, height, 0, arrayBufferView);
                 } else {
-                    gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
+                    if (flipY) {
+                        arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, width, height);
+                    }
+                    gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, arrayBufferView);
                 }
             } else if (defined(source.framebuffer)) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 // Source: framebuffer
                 if (source.framebuffer !== context.defaultFramebuffer) {
                     source.framebuffer._bind();
@@ -195,11 +205,16 @@ define([
                     source.framebuffer._unBind();
                 }
             } else {
+                // Only valid for DOM-Element uploads
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
                 // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
                 gl.texImage2D(textureTarget, 0, internalFormat, pixelFormat, pixelDatatype, source);
             }
         } else {
             gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, null);
+            initialized = false;
         }
         gl.bindTexture(textureTarget, null);
 
@@ -224,6 +239,7 @@ define([
         this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
+        this._initialized = initialized;
         this._sampler = undefined;
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
@@ -469,15 +485,69 @@ define([
         var target = this._textureTarget;
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
+
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
-        if (source.arrayBufferView) {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
-        } else {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
+        var width = source.width;
+        var height = source.height;
+        var arrayBufferView = source.arrayBufferView;
+
+        var textureWidth = this._width;
+        var textureHeight = this._height;
+        var pixelFormat = this._pixelFormat;
+        var pixelDatatype = this._pixelDatatype;
+
+        var preMultiplyAlpha = this._preMultiplyAlpha;
+        var flipY = this._flipY;
+
+        var uploaded = false;
+        if (!this._initialized) {
+            if (xOffset === 0 && yOffset === 0 && width === textureWidth && height === textureHeight) {
+                // initialize the entire texture
+                if (defined(arrayBufferView)) {
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                    if (flipY) {
+                        arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, textureWidth, textureHeight);
+                    }
+                    gl.texImage2D(target, 0, pixelFormat, textureWidth, textureHeight, 0, pixelFormat, pixelDatatype, arrayBufferView);
+                } else {
+                    // Only valid for DOM-Element uploads
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                    gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, source);
+                }
+                uploaded = true;
+            } else {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                // initialize the entire texture to zero
+                var bufferView = PixelFormat.createTypedArray(pixelFormat, pixelDatatype, textureWidth, textureHeight);
+                gl.texImage2D(target, 0, pixelFormat, textureWidth, textureHeight, 0, pixelFormat, pixelDatatype, bufferView);
+            }
+            this._initialized = true;
+        }
+
+        if (!uploaded) {
+            if (arrayBufferView) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                if (flipY) {
+                    arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, width, height);
+                }
+                gl.texSubImage2D(target, 0, xOffset, yOffset, width, height, pixelFormat, pixelDatatype, arrayBufferView);
+            } else {
+                // Only valid for DOM-Element uploads
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                gl.texSubImage2D(target, 0, xOffset, yOffset, pixelFormat, pixelDatatype, source);
+            }
         }
 
         gl.bindTexture(target, null);
@@ -536,6 +606,7 @@ define([
         gl.bindTexture(target, this._texture);
         gl.copyTexSubImage2D(target, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
         gl.bindTexture(target, null);
+        this._initialized = true;
     };
 
     /**

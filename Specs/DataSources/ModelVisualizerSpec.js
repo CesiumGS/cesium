@@ -7,6 +7,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/Matrix4',
         'Core/Quaternion',
+        'Core/Resource',
         'Core/Transforms',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
@@ -14,6 +15,8 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
         'DataSources/NodeTransformationProperty',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -26,6 +29,7 @@ defineSuite([
         JulianDate,
         Matrix4,
         Quaternion,
+        Resource,
         Transforms,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -33,6 +37,8 @@ defineSuite([
         EntityCollection,
         ModelGraphics,
         NodeTransformationProperty,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Globe,
         createScene,
         pollToPromise) {
@@ -136,6 +142,13 @@ defineSuite([
         };
         model.nodeTransformations = nodeTransforms;
 
+        var clippingPlanes = new ClippingPlaneCollection({
+            planes: [
+                new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+            ]
+        });
+        model.clippingPlanes = new ConstantProperty(clippingPlanes);
+
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
         testObject.model = model;
@@ -151,6 +164,9 @@ defineSuite([
         expect(primitive.minimumPixelSize).toEqual(24.0);
         expect(primitive.modelMatrix).toEqual(Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
         expect(primitive.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
+        expect(primitive.clippingPlanes._planes.length).toEqual(clippingPlanes._planes.length);
+        expect(Cartesian3.equals(primitive.clippingPlanes._planes[0].normal, clippingPlanes._planes[0].normal)).toBe(true);
+        expect(primitive.clippingPlanes._planes[0].distance).toEqual(clippingPlanes._planes[0].distance);
 
         // wait till the model is loaded before we can check node transformations
         return pollToPromise(function() {
@@ -164,6 +180,39 @@ defineSuite([
 
             var transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
             expect(node.matrix).toEqual(transformationMatrix);
+        });
+    });
+
+    it('A ModelGraphics with a Resource causes a primitive to be created.', function() {
+        var time = JulianDate.now();
+        var entityCollection = new EntityCollection();
+        visualizer = new ModelVisualizer(scene, entityCollection);
+
+        var model = new ModelGraphics();
+        model.show = new ConstantProperty(true);
+        model.uri = new ConstantProperty(new Resource({
+            url: boxUrl
+        }));
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
+        testObject.model = model;
+
+        visualizer.update(time);
+
+        expect(scene.primitives.length).toEqual(1);
+
+        var primitive = scene.primitives.get(0);
+
+        // wait till the model is loaded before we can check node transformations
+        return pollToPromise(function() {
+            scene.render();
+            return primitive.ready;
+        }).then(function() {
+            visualizer.update(time);
+
+            var node = primitive.getNode('Mesh');
+            expect(node).toBeDefined();
         });
     });
 
@@ -241,6 +290,31 @@ defineSuite([
         var result = new BoundingSphere();
         var state = visualizer.getBoundingSphere(testObject, result);
         expect(state).toBe(BoundingSphereState.FAILED);
+    });
+
+    it('Fails bounding sphere when model fails to load.', function() {
+        var entityCollection = new EntityCollection();
+        visualizer = new ModelVisualizer(scene, entityCollection);
+
+        var time = JulianDate.now();
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var model = new ModelGraphics();
+        testObject.model = model;
+
+        testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
+        model.uri = new ConstantProperty('/path/to/incorrect/file');
+        visualizer.update(time);
+
+        var result = new BoundingSphere();
+        var state = visualizer.getBoundingSphere(testObject, result);
+        expect(state).toBe(BoundingSphereState.PENDING);
+        return pollToPromise(function() {
+            scene.render();
+            state = visualizer.getBoundingSphere(testObject, result);
+            return state !== BoundingSphereState.PENDING;
+        }).then(function() {
+            expect(state).toBe(BoundingSphereState.FAILED);
+        });
     });
 
     it('Compute bounding sphere throws without entity.', function() {

@@ -75,6 +75,16 @@ define([
     });
 
     /**
+     * Called at the beginning of the update cycle, regardless of id a new frame is being rendered, before {@link QuadtreeTileProvider#beginUpdate}
+     * @memberof QuadtreeTileProvider
+     * @function
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     */
+    QuadtreeTileProvider.prototype.update = DeveloperError.throwInstantiationError;
+
+    /**
      * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      * @memberof QuadtreeTileProvider
@@ -196,8 +206,6 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof QuadtreeTileProvider
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

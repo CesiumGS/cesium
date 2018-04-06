@@ -2,7 +2,6 @@ define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
-        '../Core/buildModuleUrl',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -36,6 +35,7 @@ define([
         '../Core/PixelFormat',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Core/TaskProcessor',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/ComputeEngine',
@@ -43,12 +43,10 @@ define([
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
-        '../Renderer/loadCubeMap',
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
-        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -83,7 +81,6 @@ define([
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
-        buildModuleUrl,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -117,6 +114,7 @@ define([
         PixelFormat,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
+        TaskProcessor,
         Transforms,
         ClearCommand,
         ComputeEngine,
@@ -124,12 +122,10 @@ define([
         ContextLimits,
         DrawCommand,
         Framebuffer,
-        loadCubeMap,
         Pass,
         PassState,
         PixelDatatype,
         RenderState,
-        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -161,6 +157,14 @@ define([
         SunPostProcess,
         TweenCollection) {
     'use strict';
+
+    var requestRenderAfterFrame = function (scene) {
+        return function () {
+            scene.frameState.afterRender.push(function() {
+                scene.requestRender();
+            });
+        };
+    };
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
@@ -209,12 +213,15 @@ define([
      * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
+     * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+     * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -235,15 +242,16 @@ define([
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
+        var creditViewport = options.creditViewport;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('options and options.canvas are required.');
         }
         //>>includeEnd('debug');
-
+        var hasCreditContainer = defined(creditContainer);
         var context = new Context(canvas, contextOptions);
-        if (!defined(creditContainer)) {
+        if (!hasCreditContainer) {
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
@@ -253,11 +261,16 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
+        if (!defined(creditViewport)) {
+            creditViewport = canvas.parentNode;
+        }
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer), this._jobScheduler);
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
+        this._removeCreditContainer = !hasCreditContainer;
+        this._creditContainer = creditContainer;
 
         var ps = new PassState(context);
         ps.viewport = new BoundingRectangle();
@@ -327,6 +340,9 @@ define([
         this._depthOnlyRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
+
+        this._preUpdate = new Event();
+        this._postUpdate = new Event();
 
         this._renderError = new Event();
         this._preRender = new Event();
@@ -708,6 +724,43 @@ define([
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
 
+        /**
+         * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
+         * Enabling improves performance of the application, but requires using {@link Scene#requestRender}
+         * to render a new frame explicitly in this mode. This will be necessary in many cases after making changes
+         * to the scene in other parts of the API.
+         *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
+         * @see Scene#maximumRenderTimeChange
+         * @see Scene#requestRender
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.requestRenderMode = defaultValue(options.requestRenderMode, false);
+        this._renderRequested = true;
+
+        /**
+         * If {@link Scene#requestRenderMode} is <code>true</code>, this value defines the maximum change in
+         * simulation time allowed before a render is requested. Lower values increase the number of frames rendered
+         * and higher values decrease the number of frames rendered. If <code>undefined</code>, changes to
+         * the simulation time will never request a render.
+         * This value impacts the rate of rendering for changes in the scene like lighting, entity property updates,
+         * and animations.
+         *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
+         * @see Scene#requestRenderMode
+         *
+         * @type {Number}
+         * @default 0.5
+         */
+        this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.0);
+        this._lastRenderTime = undefined;
+
+        this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(requestRenderAfterFrame(this));
+        this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
+        this._removeGlobeCallbacks = [];
+
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
@@ -720,6 +773,20 @@ define([
     }
 
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
+
+    function updateGlobeListeners(scene, globe) {
+        for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
+            scene._removeGlobeCallbacks[i]();
+        }
+        scene._removeGlobeCallbacks.length = 0;
+
+        var removeGlobeCallbacks = [];
+        if (defined(globe)) {
+            removeGlobeCallbacks.push(globe.imageryLayersUpdatedEvent.addEventListener(requestRenderAfterFrame(scene)));
+            removeGlobeCallbacks.push(globe.terrainProviderChanged.addEventListener(requestRenderAfterFrame(scene)));
+        }
+        scene._removeGlobeCallbacks = removeGlobeCallbacks;
+    }
 
     defineProperties(Scene.prototype, {
         /**
@@ -822,6 +889,8 @@ define([
             set: function(globe) {
                 this._globe = this._globe && this._globe.destroy();
                 this._globe = globe;
+
+                updateGlobeListeners(this, globe);
             }
         },
 
@@ -980,6 +1049,45 @@ define([
         },
 
         /**
+         * Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the event
+         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * @memberof Scene.prototype
+         *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
+         * @see Scene#postUpdate
+         * @see Scene#preRender
+         * @see Scene#postRender
+         *
+         * @type {Event}
+         * @readonly
+         */
+        preUpdate : {
+            get : function() {
+                return this._preUpdate;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised immediately after the scene is updated and before the scene is rendered.
+         * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
+         * parameter.
+         * @memberof Scene.prototype
+         *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
+         * @see Scene#preUpdate
+         * @see Scene#preRender
+         * @see Scene#postRender
+         *
+         * @type {Event}
+         * @readonly
+         */
+        postUpdate : {
+            get : function() {
+                return this._postUpdate;
+            }
+        },
+
+        /**
          * Gets the event that will be raised when an error is thrown inside the <code>render</code> function.
          * The Scene instance and the thrown error are the only two parameters passed to the event handler.
          * By default, errors are not rethrown after this event is raised, but that can be changed by setting
@@ -996,9 +1104,15 @@ define([
         },
 
         /**
-         * Gets the event that will be raised at the start of each call to <code>render</code>.  Subscribers to the event
-         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * Gets the event that will be raised after the scene is updated and immediately before the scene is rendered.
+         * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
+         * parameter.
          * @memberof Scene.prototype
+         *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
+         * @see Scene#preUpdate
+         * @see Scene#postUpdate
+         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -1010,9 +1124,14 @@ define([
         },
 
         /**
-         * Gets the event that will be raised at the end of each call to <code>render</code>.  Subscribers to the event
+         * Gets the event that will be raised immediately after the scene is rendered.  Subscribers to the event
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
+         *
+         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
+         * @see Scene#preUpdate
+         * @see Scene#postUpdate
+         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -1020,6 +1139,20 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
+            }
+        },
+
+        /**
+         * Gets the simulation time when the scene was last rendered. Returns undefined if the scene has not yet been
+         * rendered.
+         * @memberof Scene.prototype
+         *
+         * @type {JulianDate}
+         * @readonly
+         */
+        lastRenderTime : {
+            get : function() {
+                return this._lastRenderTime;
             }
         },
 
@@ -1316,7 +1449,7 @@ define([
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene._mode === SceneMode.SCENE3D && defined(globe)) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
             var ellipsoid = globe.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
@@ -1962,6 +2095,8 @@ define([
 
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                globeDepth.update(context, passState);
+                globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -1985,9 +2120,18 @@ define([
                 passState.framebuffer = fb;
             }
 
+            // Draw terrain classification
             us.updatePass(Pass.TERRAIN_CLASSIFICATION);
             commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
             length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            // Draw classification marked for both terrain and 3D Tiles classification
+            us.updatePass(Pass.CLASSIFICATION);
+            commands = frustumCommands.commands[Pass.CLASSIFICATION];
+            length = frustumCommands.indices[Pass.CLASSIFICATION];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
@@ -2011,6 +2155,14 @@ define([
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+
+                // Draw classification marked for both terrain and 3D Tiles classification
+                us.updatePass(Pass.CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CLASSIFICATION];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
@@ -2089,6 +2241,14 @@ define([
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
+
+                // Draw style over classification marked for both terrain and 3D Tiles classification
+                us.updatePass(Pass.CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
             }
 
             if (length > 0 && context.stencilBuffer) {
@@ -2099,17 +2259,11 @@ define([
                 depthPlane.execute(context, passState);
             }
 
-            // Execute commands in order by pass up to the translucent pass.
-            // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW + 1;
-            var endPass = Pass.TRANSLUCENT;
-            for (var pass = startPass; pass < endPass; ++pass) {
-                us.updatePass(pass);
-                commands = frustumCommands.commands[pass];
-                length = frustumCommands.indices[pass];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
+            us.updatePass(Pass.OPAQUE);
+            commands = frustumCommands.commands[Pass.OPAQUE];
+            length = frustumCommands.indices[Pass.OPAQUE];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
             }
 
             if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
@@ -2273,7 +2427,7 @@ define([
             updateAndClearFramebuffers(scene, passState, backgroundColor);
 
             if (!depthOnly) {
-                updatePrimitives(scene);
+                updateAndRenderPrimitives(scene);
             }
 
             createPotentiallyVisibleSet(scene);
@@ -2453,7 +2607,7 @@ define([
         }
 
         if (!depthOnly) {
-            updatePrimitives(scene);
+            updateAndRenderPrimitives(scene);
         }
 
         createPotentiallyVisibleSet(scene);
@@ -2588,7 +2742,7 @@ define([
         }
     }
 
-    function updatePrimitives(scene) {
+    function updateAndRenderPrimitives(scene) {
         var frameState = scene._frameState;
 
         scene._groundPrimitives.update(frameState);
@@ -2598,7 +2752,7 @@ define([
         updateShadowMaps(scene);
 
         if (scene._globe) {
-            scene._globe.update(frameState);
+            scene._globe.render(frameState);
         }
     }
 
@@ -2666,7 +2820,7 @@ define([
             clear.execute(context, passState);
         }
 
-        var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
+        var useInvertClassification = environmentState.useInvertClassification = !picking && defined(passState.framebuffer) && scene.invertClassification;
         if (useInvertClassification) {
             var depthFramebuffer;
             if (scene.frameState.invertClassificationColor.alpha === 1.0) {
@@ -2728,13 +2882,15 @@ define([
         }
     }
 
-    function callAfterRenderFunctions(frameState) {
+    function callAfterRenderFunctions(scene) {
         // Functions are queued up during primitive update and executed here in case
         // the function modifies scene state that should remain constant over the frame.
-        var functions = frameState.afterRender;
+        var functions = scene._frameState.afterRender;
         for (var i = 0, length = functions.length; i < length; ++i) {
             functions[i]();
+            scene.requestRender();
         }
+
         functions.length = 0;
     }
 
@@ -2759,28 +2915,59 @@ define([
         this._camera._updateCameraChanged();
     };
 
-    function render(scene, time) {
-        scene._pickPositionCacheDirty = true;
-
-        if (!defined(time)) {
-            time = JulianDate.now();
-        }
-
+    function checkForCameraUpdates(scene) {
         var camera = scene._camera;
-        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON15)) {
             if (!scene._cameraStartFired) {
                 camera.moveStart.raiseEvent();
                 scene._cameraStartFired = true;
             }
             scene._cameraMovedTime = getTimestamp();
             Camera.clone(camera, scene._cameraClone);
-        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+
+            return true;
+        }
+
+        if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
             camera.moveEnd.raiseEvent();
             scene._cameraStartFired = false;
         }
 
-        scene._preRender.raiseEvent(scene, time);
-        scene._jobScheduler.resetBudgets();
+        return false;
+    }
+
+    function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
+        if (scene.debugShowFramesPerSecond) {
+            if (!defined(scene._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
+                var container = scene._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                scene._performanceDisplay = performanceDisplay;
+                scene._performanceContainer = performanceContainer;
+            }
+
+            scene._performanceDisplay.throttled = scene.requestRenderMode;
+            scene._performanceDisplay.update(renderedThisFrame);
+        } else if (defined(scene._performanceDisplay)) {
+            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
+            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
+        }
+    }
+
+    function update(scene) {
+        var frameState = scene._frameState;
+
+        if (defined(scene.globe)) {
+            scene.globe.update(frameState);
+        }
+
+        frameState.creditDisplay.update();
+    }
+
+    function render(scene, time) {
+        scene._pickPositionCacheDirty = true;
 
         var context = scene.context;
         var us = context.uniformState;
@@ -2825,47 +3012,92 @@ define([
 
         if (defined(scene.globe)) {
             scene.globe.endFrame(frameState);
+
+            if (!scene.globe.tilesLoaded) {
+                scene._renderRequested = true;
+            }
         }
 
         frameState.creditDisplay.endFrame();
-
-        if (scene.debugShowFramesPerSecond) {
-            if (!defined(scene._performanceDisplay)) {
-                var performanceContainer = document.createElement('div');
-                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
-                var container = scene._canvas.parentNode;
-                container.appendChild(performanceContainer);
-                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-                scene._performanceDisplay = performanceDisplay;
-                scene._performanceContainer = performanceContainer;
-            }
-
-            scene._performanceDisplay.update();
-        } else if (defined(scene._performanceDisplay)) {
-            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
-            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
-        }
-
         context.endFrame();
-        RequestScheduler.update();
-        callAfterRenderFunctions(frameState);
-
-        scene._postRender.raiseEvent(scene, time);
     }
 
-    /**
-     * @private
-     */
-    Scene.prototype.render = function(time) {
+    function tryAndCatchError(scene, time, functionToExecute) {
         try {
-            render(this, time);
+            functionToExecute(scene, time);
         } catch (error) {
-            this._renderError.raiseEvent(this, error);
+            scene._renderError.raiseEvent(scene, error);
 
-            if (this.rethrowRenderErrors) {
+            if (scene.rethrowRenderErrors) {
                 throw error;
             }
         }
+    }
+
+    /**
+     * Update and render the scene.
+     * @param {JulianDate} [time] The simulation time at which to render.
+     *
+     * @private
+     */
+    Scene.prototype.render = function(time) {
+        if (!defined(time)) {
+            time = JulianDate.now();
+        }
+
+        this._jobScheduler.resetBudgets();
+
+        // Update
+        this._preUpdate.raiseEvent(this, time);
+        tryAndCatchError(this, time, update);
+        this._postUpdate.raiseEvent(this, time);
+
+        var cameraChanged = checkForCameraUpdates(this);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
+        if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
+            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
+            shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
+        }
+
+        if (shouldRender) {
+            this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
+            this._renderRequested = false;
+
+            // Render
+            this._preRender.raiseEvent(this, time);
+            tryAndCatchError(this, time, render);
+
+            RequestScheduler.update();
+        }
+
+        updateDebugShowFramesPerSecond(this, shouldRender);
+        callAfterRenderFunctions(this);
+
+        if (shouldRender) {
+            this._postRender.raiseEvent(this, time);
+        }
+    };
+
+    /**
+     * Update and render the scene. Always forces a new render frame regardless of whether a render was
+     * previously requested.
+     * @param {JulianDate} [time] The simulation time at which to render.
+     *
+     * @private
+     */
+    Scene.prototype.forceRender = function(time) {
+        this._renderRequested = true;
+        this.render(time);
+    };
+
+    /**
+     * Requests a new rendered frame when {@link Scene#requestRenderMode} is set to <code>true</code>.
+     * The render rate will not exceed the {@link CesiumWidget#targetFrameRate}.
+     *
+     * @see Scene#requestRenderMode
+     */
+    Scene.prototype.requestRender = function() {
+        this._renderRequested = true;
     };
 
     /**
@@ -3036,7 +3268,7 @@ define([
 
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        callAfterRenderFunctions(frameState);
+        callAfterRenderFunctions(this);
         return object;
     };
 
@@ -3412,6 +3644,28 @@ define([
     };
 
     /**
+     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
+     * HTML element at the same screen position as an object in the scene.
+     *
+     * @param {Cartesian3} position The position in cartesian coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     *
+     * @example
+     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
+     * var scene = widget.scene;
+     * var ellipsoid = scene.globe.ellipsoid;
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * handler.setInputAction(function(movement) {
+     *     console.log(scene.cartesianToCanvasCoordinates(position));
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     */
+    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
+        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
+    };
+
+    /**
      * Instantly completes an active transition.
      */
     Scene.prototype.completeMorph = function(){
@@ -3488,8 +3742,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -3521,6 +3773,9 @@ define([
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();
         }
+        if (this._removeCreditContainer) {
+            this._canvas.parentNode.removeChild(this._creditContainer);
+        }
 
         if (defined(this._oit)) {
             this._oit.destroy();
@@ -3534,29 +3789,14 @@ define([
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
 
-        return destroyObject(this);
-    };
+        this._removeRequestListenerCallback();
+        this._removeTaskProcessorListenerCallback();
+        for (var i = 0; i < this._removeGlobeCallbacks.length; ++i) {
+            this._removeGlobeCallbacks[i]();
+        }
+        this._removeGlobeCallbacks.length = 0;
 
-    /**
-     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
-     * HTML element at the same screen position as an object in the scene.
-     *
-     * @param {Cartesian3} position The position in cartesian coordinates.
-     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
-     *
-     * @example
-     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
-     * var scene = widget.scene;
-     * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-     * handler.setInputAction(function(movement) {
-     *     console.log(scene.cartesianToCanvasCoordinates(position));
-     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-     */
-    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
-        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
+        return destroyObject(this);
     };
 
     return Scene;

@@ -2,8 +2,9 @@ defineSuite([
         'Renderer/CubeMap',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/loadImage',
+        'Core/defined',
         'Core/PixelFormat',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Renderer/PixelDatatype',
@@ -18,8 +19,9 @@ defineSuite([
         CubeMap,
         Cartesian3,
         Color,
-        loadImage,
+        defined,
         PixelFormat,
+        Resource,
         ClearCommand,
         ContextLimits,
         PixelDatatype,
@@ -44,14 +46,17 @@ defineSuite([
             'uniform mediump vec3 u_direction;' +
             'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
 
-        var faceDirections = [
-            new Cartesian3(1.0, 0.0, 0.0),  // +X
-            new Cartesian3(-1.0, 0.0, 0.0), // -X
-            new Cartesian3(0.0, 1.0, 0.0),  // +Y
-            new Cartesian3(0.0, -1.0, 0.0), // -Y
-            new Cartesian3(0.0, 0.0, 1.0),  // +Z
-            new Cartesian3(0.0, 0.0, -1.0)  // -Z
-        ];
+        var faceDirections = options.faceDirections;
+        if (!defined(faceDirections)) {
+            faceDirections = [
+                new Cartesian3(1.0, 0.0, 0.0),  // +X
+                new Cartesian3(-1.0, 0.0, 0.0), // -X
+                new Cartesian3(0.0, 1.0, 0.0),  // +Y
+                new Cartesian3(0.0, -1.0, 0.0), // -Y
+                new Cartesian3(0.0, 0.0, 1.0),  // +Z
+                new Cartesian3(0.0, 0.0, -1.0)  // -Z
+            ];
+        }
 
         var uniformMap = {
             direction : undefined,
@@ -85,19 +90,19 @@ defineSuite([
         context = createContext();
 
         var promises = [];
-        promises.push(loadImage('./Data/Images/Green.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(result) {
             greenImage = result;
         }));
-        promises.push(loadImage('./Data/Images/Blue.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(result) {
             blueImage = result;
         }));
-        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(result) {
             blueAlphaImage = result;
         }));
-        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(result) {
             blueOverRedImage = result;
         }));
-        promises.push(loadImage('./Data/Images/Red16x16.png').then(function(result) {
+        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(result) {
             red16x16Image = result;
         }));
 
@@ -493,6 +498,104 @@ defineSuite([
                 [255, 0, 0, 255],   // -Y
                 [255, 0, 255, 255], // +Z
                 [255, 255, 0, 255]  // -Z
+            ]
+        });
+    });
+
+    it('sub copies images to a cube map', function() {
+        cubeMap = new CubeMap({
+            context : context,
+            width : 2,
+            height : 2
+        });
+        cubeMap.positiveX.copyFrom({
+            width : 1,
+            height : 1,
+            arrayBufferView : new Uint8Array([0, 255, 255, 255])
+        });
+        cubeMap.negativeX.copyFrom({
+            width : 1,
+            height : 1,
+            arrayBufferView : new Uint8Array([0, 0, 255, 255])
+        });
+        cubeMap.positiveY.copyFrom({
+            width : 1,
+            height : 1,
+            arrayBufferView : new Uint8Array([0, 255, 0, 255])
+        });
+        cubeMap.negativeY.copyFrom({
+            width : 1,
+            height : 1,
+            arrayBufferView : new Uint8Array([255, 0, 0, 255])
+        });
+        cubeMap.positiveZ.copyFrom({
+            width : 1,
+            height : 1,
+            arrayBufferView : new Uint8Array([255, 0, 255, 255])
+        });
+        cubeMap.negativeZ.copyFrom({
+            width : 1,
+            height : 1,
+            arrayBufferView : new Uint8Array([0, 255, 0, 255])
+        }, 1, 0);
+
+        var negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
+        Cartesian3.normalize(negativeZDirection, negativeZDirection);
+
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 64, 64, 255], // +X
+                [0, 0, 64, 255], // -X
+                [0, 64, 0, 255], // +Y
+                [64, 0, 0, 255], // -Y
+                [64, 0, 64, 255], // +Z
+                [0, 32, 0, 255]  // -Z
+            ],
+            faceDirections : [
+                new Cartesian3(1.0, 0.0, 0.0),  // +X
+                new Cartesian3(-1.0, 0.0, 0.0), // -X
+                new Cartesian3(0.0, 1.0, 0.0),  // +Y
+                new Cartesian3(0.0, -1.0, 0.0), // -Y
+                new Cartesian3(0.0, 0.0, 1.0),  // +Z
+                negativeZDirection  // -Z
+            ]
+        });
+    });
+
+    it('sub copies array buffers to a cube map', function() {
+        cubeMap = new CubeMap({
+            context : context,
+            width : 2,
+            height : 2
+        });
+        cubeMap.positiveX.copyFrom(blueImage);
+        cubeMap.negativeX.copyFrom(greenImage);
+        cubeMap.positiveY.copyFrom(blueImage);
+        cubeMap.negativeY.copyFrom(greenImage);
+        cubeMap.positiveZ.copyFrom(blueImage);
+        cubeMap.negativeZ.copyFrom(greenImage, 1, 0);
+
+        var negativeZDirection = new Cartesian3(0.25, 0.0, -1.0);
+        Cartesian3.normalize(negativeZDirection, negativeZDirection);
+
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                [0, 0, 64, 255], // +X
+                [0, 64, 0, 255], // -X
+                [0, 0, 64, 255], // +Y
+                [0, 64, 0, 255], // -Y
+                [0, 0, 64, 255], // +Z
+                [0, 32, 0, 255]  // -Z
+            ],
+            faceDirections : [
+                new Cartesian3(1.0, 0.0, 0.0),  // +X
+                new Cartesian3(-1.0, 0.0, 0.0), // -X
+                new Cartesian3(0.0, 1.0, 0.0),  // +Y
+                new Cartesian3(0.0, -1.0, 0.0), // -Y
+                new Cartesian3(0.0, 0.0, 1.0),  // +Z
+                negativeZDirection  // -Z
             ]
         });
     });
