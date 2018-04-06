@@ -10,6 +10,9 @@ Change Log
 * Allow loadWithXhr to work with string URLs in a web worker.
 * Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
 
+##### Additions :tada:
+* Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
+
 ### 1.44 - 2018-04-02
 
 ##### Highlights :sparkler:
