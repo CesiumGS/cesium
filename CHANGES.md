@@ -16,8 +16,6 @@ Change Log
 * Added `customTags` property to the UrlTemplateImageryProvider to allow custom keywords in the template URL. [#5696](https://github.com/AnalyticalGraphicsInc/cesium/pull/5696)
 * Improved CZML Reference Properties example [#5754](https://github.com/AnalyticalGraphicsInc/cesium/pull/5754)
 * Fixed bug with placemarks in imported KML: placemarks with no specified icon would be displayed with default icon. [#5819](https://github.com/AnalyticalGraphicsInc/cesium/issues/5819)
-* Added `allowScripts` property to InfoBox which activates scripts inside entity description [#5501](https://github.com/AnalyticalGraphicsInc/cesium/issues/5501)
-* Added ScriptsInInfoBox sandcastle example
 
 ### 1.38 - 2017-10-02
 
