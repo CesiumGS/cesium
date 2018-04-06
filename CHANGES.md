@@ -9,6 +9,8 @@ Change Log
 * Fixed glTF support to handle skinned meshes when no skin is supplied. [#6061](https://github.com/AnalyticalGraphicsInc/cesium/issues/6061)
 * Allow loadWithXhr to work with string URLs in a web worker.
 * Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
+* Added `allowScripts` property to InfoBox which activates scripts inside entity description [#5501](https://github.com/AnalyticalGraphicsInc/cesium/issues/5501)
+* Added ScriptsInInfoBox sandcastle example
 
 ##### Additions :tada:
 * Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
