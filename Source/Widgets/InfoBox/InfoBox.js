@@ -1,29 +1,29 @@
 define([
-        '../../Core/buildModuleUrl',
-        '../../Core/Check',
-        '../../Core/Color',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/oneTimeWarning',
-        '../../Core/defaultValue',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        '../subscribeAndEvaluate',
-        './InfoBoxViewModel'
-    ], function(
-        buildModuleUrl,
-        Check,
-        Color,
-        defined,
-        defineProperties,
-        destroyObject,
-        oneTimeWarning,
-        defaultValue,
-        knockout,
-        getElement,
-        subscribeAndEvaluate,
-        InfoBoxViewModel) {
+    '../../Core/buildModuleUrl',
+    '../../Core/Check',
+    '../../Core/Color',
+    '../../Core/defined',
+    '../../Core/defineProperties',
+    '../../Core/destroyObject',
+    '../../Core/oneTimeWarning',
+    '../../Core/defaultValue',
+    '../../ThirdParty/knockout',
+    '../getElement',
+    '../subscribeAndEvaluate',
+    './InfoBoxViewModel'
+], function(
+    buildModuleUrl,
+    Check,
+    Color,
+    defined,
+    defineProperties,
+    destroyObject,
+    oneTimeWarning,
+    defaultValue,
+    knockout,
+    getElement,
+    subscribeAndEvaluate,
+    InfoBoxViewModel) {
     'use strict';
 
     /**
@@ -45,7 +45,7 @@ define([
 
         container = getElement(container);
 
-        options = defaultValue(options, {allowScripts: false});
+        options = defaultValue(options, {allowScripts : false});
         var infoElement = document.createElement('div');
         infoElement.className = 'cesium-infoBox';
         infoElement.setAttribute('data-bind', '\
@@ -102,11 +102,11 @@ click: function () { closeClicked.raiseEvent(this); }');
          * * @example
          * var infoBox = new Cesium.InfoBox('infoBoxContainer', {allowScripts: true});
          */
-        allowScripts: {
-            get: function() {
+        allowScripts : {
+            get : function() {
                 return this._allowScripts;
             },
-            set: function(value) {
+            set : function(value) {
                 if (!(value === this._allowScripts)) {
                     this._allowScripts = value;
                     this.createFrame();
@@ -255,7 +255,7 @@ click: function () { closeClicked.raiseEvent(this); }');
 
                 // Measure and set the new custom height, based on text wrapped above.
                 var height = frameContent.getBoundingClientRect().height;
-                frame.style.height =  height + 'px';
+                frame.style.height = height + 'px';
             });
         });
 
@@ -291,7 +291,6 @@ click: function () { closeClicked.raiseEvent(this); }');
             }
             oneTimeWarning('Infobox content script not supported', 'Infobox content script not supported');
         }
-
 
         frame.innerHTML = s;
 
