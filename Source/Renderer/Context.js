@@ -720,7 +720,8 @@ define([
                             width : 1,
                             height : 1,
                             arrayBufferView : new Uint8Array([255, 255, 255, 255])
-                        }
+                        },
+                        flipY : false
                     });
                 }
 
@@ -753,7 +754,8 @@ define([
                             negativeY : face,
                             positiveZ : face,
                             negativeZ : face
-                        }
+                        },
+                        flipY : false
                     });
                 }
 
