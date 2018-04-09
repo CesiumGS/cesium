@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
         CorridorOutlineGeometry,
@@ -11,6 +12,7 @@ defineSuite([
         Cartesian3,
         CornerType,
         Ellipsoid,
+        GeometryOffsetAttribute,
         createPackableSpecs) {
     'use strict';
 
@@ -75,7 +77,7 @@ defineSuite([
         expect(m.indices.length).toEqual(28 * 2); // 5 segments * 4 lines per segment + 4 lines * 2 ends
     });
 
-    it('computes offset attribute', function() {
+    it('computes offset attribute for top vertices', function() {
         var m = CorridorOutlineGeometry.createGeometry(new CorridorOutlineGeometry({
             positions : Cartesian3.fromDegreesArray([
                 90.0, -30.0,
@@ -83,7 +85,7 @@ defineSuite([
             ]),
             cornerType: CornerType.MITERED,
             width : 30000,
-            offsetAttribute: true
+            offsetAttribute: GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 12;
@@ -96,7 +98,7 @@ defineSuite([
         expect(offset).toEqual(expected);
     });
 
-    it('computes offset attribute extruded', function() {
+    it('computes offset attribute extruded for top vertices', function() {
         var m = CorridorOutlineGeometry.createGeometry(new CorridorOutlineGeometry({
             positions : Cartesian3.fromDegreesArray([
                 90.0, -30.0,
@@ -105,7 +107,7 @@ defineSuite([
             cornerType: CornerType.MITERED,
             width : 30000,
             extrudedHeight: 30000,
-            offsetAttribute: true
+            offsetAttribute: GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 24;
@@ -116,6 +118,28 @@ defineSuite([
         var expected = new Array(offset.length);
         expected = arrayFill(expected, 0);
         expected = arrayFill(expected, 1, 0, 12);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var m = CorridorOutlineGeometry.createGeometry(new CorridorOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 30000,
+            extrudedHeight: 30000,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 24;
+        expect(m.attributes.position.values.length).toEqual(24 * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
         expect(offset).toEqual(expected);
     });
 

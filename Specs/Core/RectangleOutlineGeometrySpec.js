@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/GeographicProjection',
         'Core/Math',
         'Core/Matrix2',
@@ -15,6 +16,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Ellipsoid,
+        GeometryOffsetAttribute,
         GeographicProjection,
         CesiumMath,
         Matrix2,
@@ -173,7 +175,7 @@ defineSuite([
         var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
             rectangle : rectangle,
             granularity : 1.0,
-            offsetAttribute : true
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
         var positions = m.attributes.position.values;
 
@@ -187,13 +189,13 @@ defineSuite([
         expect(offset).toEqual(expected);
     });
 
-    it('computes offset attribute extruded', function() {
+    it('computes offset attribute extruded for top vertices', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
         var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
             rectangle : rectangle,
             granularity : 1.0,
             extrudedHeight : 2,
-            offsetAttribute : true
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
         var positions = m.attributes.position.values;
 
@@ -205,6 +207,26 @@ defineSuite([
         var expected = new Array(offset.length);
         expected = arrayFill(expected, 0);
         expected = arrayFill(expected, 1, 0, 8);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            granularity : 1.0,
+            extrudedHeight : 2,
+            offsetAttribute : GeometryOffsetAttribute.ALL
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 16;
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
         expect(offset).toEqual(expected);
     });
 

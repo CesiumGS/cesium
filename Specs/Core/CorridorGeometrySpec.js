@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/Math',
         'Core/Rectangle',
         'Core/VertexFormat',
@@ -14,6 +15,7 @@ defineSuite([
         Cartesian3,
         CornerType,
         Ellipsoid,
+        GeometryOffsetAttribute,
         CesiumMath,
         Rectangle,
         VertexFormat,
@@ -139,7 +141,7 @@ defineSuite([
             ]),
             cornerType: CornerType.MITERED,
             width : 30000,
-            offsetAttribute: true
+            offsetAttribute: GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 12;
@@ -152,7 +154,7 @@ defineSuite([
         expect(offset).toEqual(expected);
     });
 
-    it('computes offset attribute extruded', function() {
+    it('computes offset attribute extruded for top vertices', function() {
         var m = CorridorGeometry.createGeometry(new CorridorGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             positions : Cartesian3.fromDegreesArray([
@@ -162,7 +164,7 @@ defineSuite([
             cornerType: CornerType.MITERED,
             width : 30000,
             extrudedHeight: 30000,
-            offsetAttribute: true
+            offsetAttribute: GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 72;
@@ -174,6 +176,29 @@ defineSuite([
         expected = arrayFill(expected, 0);
         expected = arrayFill(expected, 1, 0, 12);
         expected = arrayFill(expected, 1, 24, 48);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 30000,
+            extrudedHeight: 30000,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 72;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
         expect(offset).toEqual(expected);
     });
 

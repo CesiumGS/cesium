@@ -4,6 +4,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
@@ -12,6 +13,7 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        GeometryOffsetAttribute,
         CesiumMath,
         createPackableSpecs) {
     'use strict';
@@ -348,7 +350,7 @@ defineSuite([
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            offsetAttribute : true
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 8;
@@ -360,7 +362,7 @@ defineSuite([
         expect(offset).toEqual(expected);
     });
 
-    it('computes offset attribute extruded', function() {
+    it('computes offset attribute extruded for top vertices', function() {
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : Cartesian3.fromDegreesArray([
                 -1.0, -1.0,
@@ -369,7 +371,7 @@ defineSuite([
                 -1.0, 1.0
             ]),
             extrudedHeight: 30000,
-            offsetAttribute : true
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 16;
@@ -380,6 +382,28 @@ defineSuite([
         var expected = new Array(offset.length);
         expected = arrayFill(expected, 0);
         expected = arrayFill(expected, 1, 0, 8);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            offsetAttribute : GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 16;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
         expect(offset).toEqual(expected);
     });
 

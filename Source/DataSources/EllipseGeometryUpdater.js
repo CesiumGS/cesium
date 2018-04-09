@@ -9,6 +9,7 @@ define([
         '../Core/EllipseGeometry',
         '../Core/EllipseOutlineGeometry',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
@@ -33,6 +34,7 @@ define([
         EllipseGeometry,
         EllipseOutlineGeometry,
         GeometryInstance,
+        GeometryOffsetAttribute,
         Iso8601,
         OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
@@ -69,7 +71,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.numberOfVerticalLines = undefined;
-        this.offsetAttribute = true;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -249,8 +251,10 @@ define([
         if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
             scratchEllipseGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchEllipseGeometry.rectangle);
+            options.offsetAttribute = GeometryOffsetAttribute.TOP;
         } else {
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.offsetAttribute = GeometryOffsetAttribute.ALL;
         }
     };
 

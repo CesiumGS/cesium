@@ -9,6 +9,7 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/Rectangle',
@@ -36,6 +37,7 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
         GeometryInstance,
+        GeometryOffsetAttribute,
         Iso8601,
         OffsetGeometryInstanceAttribute,
         Rectangle,
@@ -70,7 +72,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.rotation = undefined;
-        this.offsetAttribute = true;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -241,8 +243,10 @@ define([
         if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
             scratchRectangleGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchRectangleGeometry.rectangle);
+            options.offsetAttribute = GeometryOffsetAttribute.TOP;
         } else {
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.offsetAttribute = GeometryOffsetAttribute.ALL;
         }
     };
 

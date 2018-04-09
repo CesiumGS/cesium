@@ -16,6 +16,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryInstance',
+        './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
@@ -44,6 +45,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
+        GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
@@ -366,13 +368,17 @@ define([
             }
         }
 
-        if (options.offsetAttribute) {
+        if (options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
             var size = flatPositions.length / 3;
             var offsetAttribute = new Uint8Array(size);
 
-            if ((top && bottom) || wall) {
-                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
-            } else if (top) {
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                if ((top && bottom) || wall) {
+                    offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+                } else if (top) {
+                    offsetAttribute = arrayFill(offsetAttribute, 1);
+                }
+            } else {
                 offsetAttribute = arrayFill(offsetAttribute, 1);
             }
 
@@ -647,7 +653,7 @@ define([
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._shadowVolume = defaultValue(options.shadowVolume, false);
-        this._offsetAttribute = defaultValue(options.offsetAttribute, false);
+        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
 
         this._rectangle = undefined;
 
@@ -749,7 +755,7 @@ define([
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
         array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex++] = value._offsetAttribute ? 1.0 : 0.0;
+        array[startingIndex++] = value._offsetAttribute;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -796,7 +802,7 @@ define([
         var closeTop = array[startingIndex++] === 1.0;
         var closeBottom = array[startingIndex++] === 1.0;
         var shadowVolume = array[startingIndex++] === 1.0;
-        var offsetAttribute = array[startingIndex++] === 1.0;
+        var offsetAttribute = array[startingIndex++];
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -919,7 +925,7 @@ define([
                 options.geometry = geometryInstance.geometry;
                 geometryInstance.geometry = computeAttributes(options);
 
-                if (polygonGeometry._offsetAttribute) {
+                if (polygonGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
                     var length = geometryInstance.geometry.attributes.position.values.length;
                     var applyOffset = new Uint8Array(length / 3);
                     arrayFill(applyOffset, 1);

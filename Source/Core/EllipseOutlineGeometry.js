@@ -11,6 +11,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PrimitiveType'
@@ -27,6 +28,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PrimitiveType) {
@@ -92,9 +94,14 @@ define([
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var length = positions.length/3;
 
-        if (options.offsetAttribute) {
+        if (options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
             var applyOffset = new Uint8Array(length);
-            applyOffset = arrayFill(applyOffset, 1, 0, length / 2);
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                applyOffset = arrayFill(applyOffset, 1, 0, length / 2);
+            } else {
+                applyOffset = arrayFill(applyOffset, 1);
+            }
+
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
@@ -208,7 +215,7 @@ define([
         this._extrudedHeight = extrudedHeight;
         this._extrude = extrude;
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
-        this._offsetAttribute = defaultValue(options.offsetAttribute, false);
+        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
         this._workerName = 'createEllipseOutlineGeometry';
     }
 
@@ -254,7 +261,7 @@ define([
         array[startingIndex++] = defaultValue(value._extrudedHeight, 0.0);
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++]   = value._numberOfVerticalLines;
-        array[startingIndex] = value._offsetAttribute ? 1.0 : 0.0;
+        array[startingIndex] = value._offsetAttribute;
 
         return array;
     };
@@ -306,7 +313,7 @@ define([
         var extrudedHeight = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
         var numberOfVerticalLines = array[startingIndex++];
-        var offsetAttribute = array[startingIndex] === 1.0;
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.height = height;
@@ -368,7 +375,7 @@ define([
         } else {
             geometry = computeEllipse(options);
 
-            if (ellipseGeometry._offsetAttribute) {
+            if (ellipseGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
                 var length = geometry.attributes.position.values.length;
                 var applyOffset = new Uint8Array(length / 3);
                 arrayFill(applyOffset, 1);

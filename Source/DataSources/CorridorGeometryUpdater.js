@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
@@ -33,6 +34,7 @@ define([
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
+        GeometryOffsetAttribute,
         Iso8601,
         OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
@@ -62,7 +64,7 @@ define([
         this.height = undefined;
         this.extrudedHeight = undefined;
         this.granularity = undefined;
-        this.offsetAttribute = true;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -236,8 +238,10 @@ define([
         if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
             scratchCorridorGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchCorridorGeometry.rectangle);
+            options.offsetAttribute = GeometryOffsetAttribute.TOP;
         } else {
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.offsetAttribute = GeometryOffsetAttribute.ALL;
         }
     };
 

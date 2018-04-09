@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/isArray',
         '../Core/Iso8601',
         '../Core/OffsetGeometryInstanceAttribute',
@@ -33,6 +34,7 @@ define([
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
+        GeometryOffsetAttribute,
         isArray,
         Iso8601,
         OffsetGeometryInstanceAttribute,
@@ -68,7 +70,7 @@ define([
         this.extrudedHeight = undefined;
         this.granularity = undefined;
         this.stRotation = undefined;
-        this.offsetAttribute = true;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -258,8 +260,10 @@ define([
         if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
             scratchPolygonGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchPolygonGeometry.rectangle);
+            options.offsetAttribute = GeometryOffsetAttribute.TOP;
         } else {
             options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, Iso8601.MINIMUM_VALUE);
+            options.offsetAttribute = GeometryOffsetAttribute.ALL;
         }
 
         if (defined(options.extrudedHeight) && !defined(heightValue) && !defined(perPositionHeightValue)) {

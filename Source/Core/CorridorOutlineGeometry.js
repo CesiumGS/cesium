@@ -13,6 +13,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -32,6 +33,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -284,9 +286,14 @@ define([
         attributes.position.values = newPositions;
 
         length /= 3;
-        if (params.offsetAttribute) {
+        if (params.offsetAttribute !== GeometryOffsetAttribute.NONE) {
             var applyOffset = new Uint8Array(length * 2);
-            applyOffset = arrayFill(applyOffset, 1, 0, length);
+            if (params.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                applyOffset = arrayFill(applyOffset, 1, 0, length);
+            } else {
+                applyOffset = arrayFill(applyOffset, 1);
+            }
+
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
@@ -360,7 +367,7 @@ define([
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        this._offsetAttribute = defaultValue(options.offsetAttribute, false);
+        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
         this._workerName = 'createCorridorOutlineGeometry';
 
         /**
@@ -403,7 +410,7 @@ define([
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
         array[startingIndex++] = value._granularity;
-        array[startingIndex] = value._offsetAttribute ? 1.0 : 0.0;
+        array[startingIndex] = value._offsetAttribute;
 
         return array;
     };
@@ -450,7 +457,7 @@ define([
         var extrudedHeight = array[startingIndex++];
         var cornerType = array[startingIndex++];
         var granularity = array[startingIndex++];
-        var offsetAttribute = array[startingIndex] === 1.0;
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.positions = positions;
@@ -518,7 +525,7 @@ define([
             attr = combine(computedPositions, params.cornerType);
             attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
 
-            if (corridorOutlineGeometry._offsetAttribute) {
+            if (corridorOutlineGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
                 var length = attr.attributes.position.values.length;
                 var applyOffset = new Uint8Array(length / 3);
                 arrayFill(applyOffset, 1);

@@ -11,6 +11,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -30,6 +31,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -216,7 +218,7 @@ define([
         this._surfaceHeight = surfaceHeight;
         this._rotation = rotation;
         this._extrudedHeight = extrudedHeight;
-        this._offsetAttribute = defaultValue(options.offsetAttribute, false);
+        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
         this._workerName = 'createRectangleOutlineGeometry';
     }
 
@@ -259,7 +261,7 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
         array[startingIndex++] = defaultValue(value._extrudedHeight, 0.0);
-        array[startingIndex] = value._offsetAttribute ? 1.0 : 0.0;
+        array[startingIndex] = value._offsetAttribute;
 
         return array;
     };
@@ -304,7 +306,7 @@ define([
         var rotation = array[startingIndex++];
         var hasExtrudedHeight = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var offsetAttribute = array[startingIndex] === 1.0;
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.granularity = granularity;
@@ -354,10 +356,15 @@ define([
         }
         if (defined(extrudedHeight)) {
             geometry = constructExtrudedRectangle(options);
-            if (rectangleGeometry._offsetAttribute) {
+            if (rectangleGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
                 var size = geometry.attributes.position.values.length / 3;
                 var offsetAttribute = new Uint8Array(size);
-                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+                if (rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
+                    offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+                } else {
+                    offsetAttribute = arrayFill(offsetAttribute, 1);
+                }
+
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
@@ -371,7 +378,7 @@ define([
             geometry = constructRectangle(options);
             geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
 
-            if (rectangleGeometry._offsetAttribute) {
+            if (rectangleGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
                 var length = geometry.attributes.position.values.length;
                 var applyOffset = new Uint8Array(length / 3);
                 arrayFill(applyOffset, 1);
