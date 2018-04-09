@@ -307,10 +307,10 @@ defineSuite([
         });
 
         var r = geometry.rectangle;
-        expect(CesiumMath.toDegrees(r.north)).toEqual(1.4189407575364013);
-        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.4189407575364013);
-        expect(CesiumMath.toDegrees(r.east)).toEqual(1.4094456877799821);
-        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4094456877799821);
+        expect(CesiumMath.toDegrees(r.north)).toEqual(1.414213562373095);
+        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.414213562373095);
+        expect(CesiumMath.toDegrees(r.east)).toEqual(1.414213562373095);
+        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4142135623730951);
     });
 
     it('computing rectangle property with zero rotation', function() {
