@@ -71,23 +71,23 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         positionEC.xy += halfSize;
     }
 
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+    float mpp = czm_metersPerPixel(positionEC);
 
-    if (sizeInMeters)
-    {
-        originTranslate /= czm_metersPerPixel(positionEC);
-    }
-
-    positionWC.xy += originTranslate;
     if (!sizeInMeters)
     {
-        positionWC.xy += halfSize;
+        originTranslate *= mpp;
     }
 
-    positionWC.xy += translate;
-    positionWC.xy += (pixelOffset * czm_resolutionScale);
+    positionEC.xy += originTranslate;
+    if (!sizeInMeters)
+    {
+        positionEC.xy += halfSize * mpp;
+    }
 
-    return positionWC;
+    positionEC.xy += translate * mpp;
+    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
+
+    return positionEC;
 }
 
 void main()
@@ -255,13 +255,13 @@ void main()
     }
 #endif
 
-#ifdef LOG_DEPTH
-    czm_vertexLogDepth(czm_projection * positionEC);
-#endif
-
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    gl_Position = czm_projection * positionWC;
     v_textureCoordinates = textureCoordinates;
+
+#ifdef LOG_DEPTH
+    czm_vertexLogDepth();
+#endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
