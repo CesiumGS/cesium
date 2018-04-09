@@ -406,7 +406,7 @@ define([
         if (defined(featureTableJson.NORMAL)) {
             normals = featureTable.getPropertyArray('NORMAL', ComponentDatatype.FLOAT, 3);
         } else if (defined(featureTableJson.NORMAL_OCT16P)) {
-            normals = featureTable.getPropertyArray('NORMAL_OCT16P', ComponentDatatype.UNSIGNED_BYTE, 2);
+            normals = featureTable.getPropertyArray('NORMAL_OCT16P', ComponentDatatype.BYTE, 2);
             isOctEncoded16P = true;
         }
 
@@ -695,7 +695,7 @@ define([
                     index : normalLocation,
                     vertexBuffer : normalsVertexBuffer,
                     componentsPerAttribute : 2,
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentDatatype : ComponentDatatype.BYTE,
                     normalize : false,
                     offsetInBytes : 0,
                     strideInBytes : 0
