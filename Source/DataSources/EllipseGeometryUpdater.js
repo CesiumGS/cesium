@@ -248,7 +248,7 @@ define([
         options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
-        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.getHeightReference(Iso8601.MINIMUM_VALUE) === HeightReference.CLAMP_TO_GROUND) {
             scratchEllipseGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchEllipseGeometry.rectangle);
             options.offsetAttribute = GeometryOffsetAttribute.TOP;

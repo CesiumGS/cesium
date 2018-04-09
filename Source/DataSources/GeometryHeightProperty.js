@@ -118,6 +118,14 @@ define([
         return 0;
     };
 
+    GeometryHeightProperty.prototype.getHeightReference = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('time', time);
+        //>>includeEnd('debug');
+
+        return Property.getValueOrDefault(this._heightReference, time, HeightReference.NONE);
+    };
+
     /**
      * Used to get the minimum terrain value for when extrudedHeight is using CLAMP_TO_GROUND;
      * @private

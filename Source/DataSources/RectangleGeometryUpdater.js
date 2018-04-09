@@ -240,7 +240,7 @@ define([
         options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
-        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.getHeightReference(Iso8601.MINIMUM_VALUE) === HeightReference.CLAMP_TO_GROUND) {
             scratchRectangleGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchRectangleGeometry.rectangle);
             options.offsetAttribute = GeometryOffsetAttribute.TOP;

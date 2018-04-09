@@ -250,7 +250,7 @@ define([
                 }
 
                 var offsetProperty = updater.terrainOffsetProperty;
-                if (defined(offsetProperty)) {
+                if (!Property.isConstant(offsetProperty)) {
                     var offset = Property.getValueOrDefault(offsetProperty, time, defaultOffset, offsetScratch);
                     if (!Cartesian3.equals(offset, attributes._lastOffset)) {
                         attributes._lastOffset = Cartesian3.clone(offset, attributes._lastOffset);
@@ -344,7 +344,7 @@ define([
     /**
      * @private
      */
-    function StaticGeometryColorBatch(primitives, appearanceType, depthFailAppearanceType, closed, shadows, offset) {
+    function StaticGeometryColorBatch(primitives, appearanceType, depthFailAppearanceType, closed, shadows) {
         this._solidItems = [];
         this._translucentItems = [];
         this._primitives = primitives;

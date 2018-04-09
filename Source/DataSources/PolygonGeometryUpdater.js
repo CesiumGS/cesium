@@ -257,7 +257,7 @@ define([
         options.closeBottom = closeBottomValue;
 
         var extrudedHeight = polygon.extrudedHeight;
-        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.getHeightReference(Iso8601.MINIMUM_VALUE) === HeightReference.CLAMP_TO_GROUND) {
             scratchPolygonGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchPolygonGeometry.rectangle);
             options.offsetAttribute = GeometryOffsetAttribute.TOP;

@@ -235,7 +235,7 @@ define([
         options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
-        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.getHeightReference(Iso8601.MINIMUM_VALUE) === HeightReference.CLAMP_TO_GROUND) {
             scratchCorridorGeometry.setOptions(options);
             options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchCorridorGeometry.rectangle);
             options.offsetAttribute = GeometryOffsetAttribute.TOP;
