@@ -89,6 +89,7 @@ Change Log
 * Added new `Ion`, `IonResource`, and `IonImageryProvider` objects for loading data hosted on [Cesium ion](https://cesium.com/blog/2018/03/01/hello-cesium-ion/).
 * Added `createWorldTerrain` helper function for easily constructing the new Cesium World Terrain.
 * Added support for a promise to a resource for `CesiumTerrainProvider`, `createTileMapServiceImageryProvider` and `Cesium3DTileset` [#6204](https://github.com/AnalyticalGraphicsInc/cesium/pull/6204)
+* Added `MinimumTerrainHeightProperty`, which can be used for extruding geometry down to terrain [#6214](https://github.com/AnalyticalGraphicsInc/cesium/pull/6214)
 * Added `Cesium.Math.cbrt`. [#6222](https://github.com/AnalyticalGraphicsInc/cesium/pull/6222)
 * Added `PolylineVisualizer` for displaying polyline entities [#6239](https://github.com/AnalyticalGraphicsInc/cesium/pull/6239)
 * `Resource` class [#6205](https://github.com/AnalyticalGraphicsInc/cesium/issues/6205)
