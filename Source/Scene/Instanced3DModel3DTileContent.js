@@ -389,8 +389,8 @@ define([
                 Cartesian3.unpack(normalRight, 0, instanceNormalRight);
                 hasCustomOrientation = true;
             } else {
-                var octNormalUp = featureTable.getProperty('NORMAL_UP_OCT32P', ComponentDatatype.UNSIGNED_SHORT, 2, i, propertyScratch1);
-                var octNormalRight = featureTable.getProperty('NORMAL_RIGHT_OCT32P', ComponentDatatype.UNSIGNED_SHORT, 2, i, propertyScratch2);
+                var octNormalUp = featureTable.getProperty('NORMAL_UP_OCT32P', ComponentDatatype.SHORT, 2, i, propertyScratch1);
+                var octNormalRight = featureTable.getProperty('NORMAL_RIGHT_OCT32P', ComponentDatatype.SHORT, 2, i, propertyScratch2);
                 if (defined(octNormalUp)) {
                     if (!defined(octNormalRight)) {
                         throw new RuntimeError('To define a custom orientation with oct-encoded vectors, both NORMAL_UP_OCT32P and NORMAL_RIGHT_OCT32P must be defined.');
