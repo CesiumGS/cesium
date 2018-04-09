@@ -1,5 +1,6 @@
 defineSuite([
         'Core/EllipseGeometry',
+        'Core/arrayFill',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
@@ -7,6 +8,7 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         EllipseGeometry,
+        arrayFill,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
@@ -137,6 +139,51 @@ defineSuite([
         var numTriangles = 60; // 22 top fill + 22 bottom fill + 2 triangles * 8 sides
         expect(m.attributes.position.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
+    });
+
+    it('computes offset attribute', function() {
+        var m = EllipseGeometry.createGeometry(new EllipseGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            ellipsoid : Ellipsoid.WGS84,
+            center : Cartesian3.fromDegrees(0,0),
+            granularity : 0.1,
+            semiMajorAxis : 1.0,
+            semiMinorAxis : 1.0,
+            offsetAttribute: true
+        }));
+
+        var numVertices = 16;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded', function() {
+        var m = EllipseGeometry.createGeometry(new EllipseGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            ellipsoid : Ellipsoid.WGS84,
+            center : Cartesian3.fromDegrees(0,0),
+            granularity : 0.1,
+            semiMajorAxis : 1.0,
+            semiMinorAxis : 1.0,
+            extrudedHeight : 50000,
+            offsetAttribute: true
+        }));
+
+        var numVertices = 48;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 16);
+        expected = arrayFill(expected, 1, 32, 40);
+        expect(offset).toEqual(expected);
     });
 
     it('compute all vertex attributes extruded', function() {
@@ -275,7 +322,7 @@ defineSuite([
         semiMinorAxis : 1.0,
         stRotation : CesiumMath.PI_OVER_TWO
     });
-    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, 0.0];
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, 0.0, 0];
     createPackableSpecs(EllipseGeometry, packableInstance, packedInstance);
 
 });

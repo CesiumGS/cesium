@@ -44,8 +44,7 @@ define([
     var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     /**
-     * A {@link GeometryUpdater} for boxes.
-     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
+     * An abstract class for updating geometry entites.
      * @alias GeometryUpdater
      * @constructor
      *
@@ -88,8 +87,6 @@ define([
         this._geometryPropertyName = geometryPropertyName;
         this._id = geometryPropertyName + '-' + entity.id;
         this._observedPropertyNames = options.observedPropertyNames;
-
-        this._onEntityPropertyChanged(entity, geometryPropertyName, entity[geometryPropertyName], undefined);
     }
 
     defineProperties(GeometryUpdater.prototype, {

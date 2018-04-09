@@ -1,4 +1,5 @@
 define([
+        './arrayFill',
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
@@ -17,6 +18,7 @@ define([
         './PolygonPipeline',
         './PrimitiveType'
     ], function(
+        arrayFill,
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
@@ -282,6 +284,16 @@ define([
         attributes.position.values = newPositions;
 
         length /= 3;
+        if (params.offsetAttribute) {
+            var applyOffset = new Uint8Array(length * 2);
+            applyOffset = arrayFill(applyOffset, 1, 0, length);
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
+
         var i;
         var iLength = indices.length;
         var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, (iLength + wallIndices.length) * 2);
@@ -348,13 +360,14 @@ define([
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._offsetAttribute = defaultValue(options.offsetAttribute, false);
         this._workerName = 'createCorridorOutlineGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + 5;
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + 6;
     }
 
     /**
@@ -389,7 +402,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
-        array[startingIndex]   = value._granularity;
+        array[startingIndex++] = value._granularity;
+        array[startingIndex] = value._offsetAttribute ? 1.0 : 0.0;
 
         return array;
     };
@@ -402,7 +416,8 @@ define([
         height : undefined,
         extrudedHeight : undefined,
         cornerType : undefined,
-        granularity : undefined
+        granularity : undefined,
+        offsetAttribute: undefined
     };
 
     /**
@@ -434,7 +449,8 @@ define([
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var cornerType = array[startingIndex++];
-        var granularity = array[startingIndex];
+        var granularity = array[startingIndex++];
+        var offsetAttribute = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.positions = positions;
@@ -443,6 +459,7 @@ define([
             scratchOptions.extrudedHeight = extrudedHeight;
             scratchOptions.cornerType = cornerType;
             scratchOptions.granularity = granularity;
+            scratchOptions.offsetAttribute = offsetAttribute;
             return new CorridorOutlineGeometry(scratchOptions);
         }
 
@@ -453,6 +470,7 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._cornerType = cornerType;
         result._granularity = granularity;
+        result._offsetAttribute = offsetAttribute;
 
         return result;
     };
@@ -493,11 +511,23 @@ define([
             height = h;
             params.height = height;
             params.extrudedHeight = extrudedHeight;
+            params.offsetAttribute = corridorOutlineGeometry._offsetAttribute;
             attr = computePositionsExtruded(params);
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, params.cornerType);
             attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
+
+            if (corridorOutlineGeometry._offsetAttribute) {
+                var length = attr.attributes.position.values.length;
+                var applyOffset = new Uint8Array(length / 3);
+                arrayFill(applyOffset, 1);
+                attr.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values: applyOffset
+                });
+            }
         }
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);

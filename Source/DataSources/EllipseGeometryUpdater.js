@@ -1,10 +1,12 @@
 define([
+        '../Core/Cartesian3',
         '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/Ellipsoid',
         '../Core/EllipseGeometry',
         '../Core/EllipseOutlineGeometry',
         '../Core/GeometryInstance',
@@ -16,14 +18,17 @@ define([
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './GroundGeometryUpdater',
         './Property'
     ], function(
+        Cartesian3,
         Check,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        Ellipsoid,
         EllipseGeometry,
         EllipseOutlineGeometry,
         GeometryInstance,
@@ -35,6 +40,7 @@ define([
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        GroundGeometryUpdater,
         Property) {
     'use strict';
 
@@ -64,17 +70,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function EllipseGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, {
+        GroundGeometryUpdater.call(this, {
             entity : entity,
             scene : scene,
             geometryOptions : new EllipseGeometryOptions(entity),
             geometryPropertyName : 'ellipse',
             observedPropertyNames : ['availability', 'position', 'ellipse']
         });
+
+        this._onEntityPropertyChanged(entity, 'ellipse', entity.ellipse, undefined);
     }
 
     if (defined(Object.create)) {
-        EllipseGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        EllipseGeometryUpdater.prototype = Object.create(GroundGeometryUpdater.prototype);
         EllipseGeometryUpdater.prototype.constructor = EllipseGeometryUpdater;
     }
 

@@ -105,7 +105,7 @@ define([
      */
     PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
         if (!defined(value)) {
-            return value;
+            return;
         }
         if (!defined(result)){
             result = new Cartesian3();

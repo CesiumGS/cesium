@@ -1,5 +1,6 @@
 defineSuite([
         'Core/CorridorGeometry',
+        'Core/arrayFill',
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/Ellipsoid',
@@ -9,6 +10,7 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         CorridorGeometry,
+        arrayFill,
         Cartesian3,
         CornerType,
         Ellipsoid,
@@ -126,6 +128,53 @@ defineSuite([
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
         expect(m.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(m.indices.length).toEqual(numTriangles * 3);
+    });
+
+    it('computes offset attribute', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 30000,
+            offsetAttribute: true
+        }));
+
+        var numVertices = 12;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded', function() {
+        var m = CorridorGeometry.createGeometry(new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                90.0, -30.0,
+                90.0, -35.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 30000,
+            extrudedHeight: 30000,
+            offsetAttribute: true
+        }));
+
+        var numVertices = 72;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 12);
+        expected = arrayFill(expected, 1, 24, 48);
+        expect(offset).toEqual(expected);
     });
 
     it('computes right turn', function() {
@@ -296,6 +345,6 @@ defineSuite([
     var packedInstance = [2, positions[0].x, positions[0].y, positions[0].z, positions[1].x, positions[1].y, positions[1].z];
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0);
+    packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0, 0.0);
     createPackableSpecs(CorridorGeometry, corridor, packedInstance);
 });

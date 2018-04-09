@@ -1,5 +1,6 @@
 defineSuite([
         'Core/RectangleOutlineGeometry',
+        'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
@@ -10,6 +11,7 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         RectangleOutlineGeometry,
+        arrayFill,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
@@ -166,6 +168,46 @@ defineSuite([
         expect(geometry2).toBeUndefined();
     });
 
+    it('computes offset attribute', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            granularity : 1.0,
+            offsetAttribute : true
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 8;
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            granularity : 1.0,
+            extrudedHeight : 2,
+            offsetAttribute : true
+        }));
+        var positions = m.attributes.position.values;
+
+        var numVertices = 16;
+        expect(positions.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 8);
+        expect(offset).toEqual(expected);
+    });
+
     var rectangle = new RectangleOutlineGeometry({
         rectangle : new Rectangle(0.1, 0.2, 0.3, 0.4),
         ellipsoid : new Ellipsoid(5, 6, 7),
@@ -174,7 +216,7 @@ defineSuite([
         rotation : 10,
         extrudedHeight : 11
     });
-    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 1, 11];
+    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 1, 11, 0];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'extruded');
 
     rectangle = new RectangleOutlineGeometry({
@@ -184,7 +226,7 @@ defineSuite([
         height : 9,
         rotation : 10
     });
-    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 0, 0];
+    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 0, 0, 0];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
 });

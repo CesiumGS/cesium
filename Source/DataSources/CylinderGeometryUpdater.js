@@ -68,6 +68,8 @@ define([
             geometryPropertyName: 'cylinder',
             observedPropertyNames: ['availability', 'position', 'orientation', 'cylinder']
         });
+
+        this._onEntityPropertyChanged(entity, 'cylinder', entity.cylinder, undefined);
     }
 
     if (defined(Object.create)) {
@@ -170,13 +172,13 @@ define([
 
     CylinderGeometryUpdater.prototype._isDynamic = function(entity, cylinder) {
         return !entity.position.isConstant || //
-                !Property.isConstant(entity.orientation) || //
-                !cylinder.length.isConstant || //
-                !cylinder.topRadius.isConstant || //
-                !cylinder.bottomRadius.isConstant || //
-                !Property.isConstant(cylinder.slices) || //
-                !Property.isConstant(cylinder.outlineWidth) || //
-                !Property.isConstant(cylinder.numberOfVerticalLines);
+               !Property.isConstant(entity.orientation) || //
+               !cylinder.length.isConstant || //
+               !cylinder.topRadius.isConstant || //
+               !cylinder.bottomRadius.isConstant || //
+               !Property.isConstant(cylinder.slices) || //
+               !Property.isConstant(cylinder.outlineWidth) || //
+               !Property.isConstant(cylinder.numberOfVerticalLines);
     };
 
     CylinderGeometryUpdater.prototype._setStaticOptions = function(entity, cylinder) {

@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/StaticGroundGeometryColorBatch',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -18,6 +19,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         StaticGroundGeometryColorBatch,
+        ApproximateTerrainHeights,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -50,7 +52,8 @@ defineSuite([
         // Leave ground primitive uninitialized
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function computeKey(color) {

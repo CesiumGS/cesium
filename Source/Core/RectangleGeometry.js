@@ -1,4 +1,5 @@
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -25,6 +26,7 @@ define([
         './RectangleGeometryLibrary',
         './VertexFormat'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -333,6 +335,7 @@ define([
 
     function constructExtrudedRectangle(options) {
         var shadowVolume = options.shadowVolume;
+        var computeOffsetAttribute = options.offsetAttribute;
         var vertexFormat = options.vertexFormat;
         var surfaceHeight = options.surfaceHeight;
         var extrudedHeight = options.extrudedHeight;
@@ -395,6 +398,17 @@ define([
             });
         }
 
+        if (computeOffsetAttribute) {
+            var size = length / 3 * 2;
+            var offsetAttribute = new Uint8Array(size);
+            offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+            topBottomGeo.attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : offsetAttribute
+            });
+        }
+
         if (vertexFormat.tangent) {
             var topTangents = topBottomGeo.attributes.tangent.values;
             tangents.set(topTangents);
@@ -434,11 +448,13 @@ define([
 
         var wallPositions = new Float64Array(wallCount * 3);
         var wallExtrudeNormals = shadowVolume ? new Float32Array(wallCount * 3) : undefined;
+        var wallOffsetAttribute = computeOffsetAttribute ? new Uint8Array(wallCount) : undefined;
         var wallTextures = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
 
         var posIndex = 0;
         var stIndex = 0;
         var extrudeNormalIndex = 0;
+        var wallOffsetIndex = 0;
         var area = width * height;
         var threeI;
         for (i = 0; i < area; i += width) {
@@ -454,6 +470,10 @@ define([
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+            }
+            if (computeOffsetAttribute) {
+                wallOffsetAttribute[wallOffsetIndex++] = 1;
+                wallOffsetIndex += 1;
             }
         }
 
@@ -471,6 +491,10 @@ define([
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
             }
+            if (computeOffsetAttribute) {
+                wallOffsetAttribute[wallOffsetIndex++] = 1;
+                wallOffsetIndex += 1;
+            }
         }
 
         for (i = area - 1; i > 0; i -= width) {
@@ -486,6 +510,10 @@ define([
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
+            }
+            if (computeOffsetAttribute) {
+                wallOffsetAttribute[wallOffsetIndex++] = 1;
+                wallOffsetIndex += 1;
             }
         }
 
@@ -503,6 +531,10 @@ define([
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 1];
                 wallExtrudeNormals[extrudeNormalIndex++] = topNormals[threeI + 2];
             }
+            if (computeOffsetAttribute) {
+                wallOffsetAttribute[wallOffsetIndex++] = 1;
+                wallOffsetIndex += 1;
+            }
         }
 
         var geo = calculateAttributesWall(wallPositions, vertexFormat, ellipsoid);
@@ -519,6 +551,13 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : wallExtrudeNormals
+            });
+        }
+        if (computeOffsetAttribute) {
+            geo.attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : wallOffsetAttribute
             });
         }
 
@@ -653,6 +692,7 @@ define([
         this._extrudedHeight = defaultValue(options.extrudedHeight, 0.0);
         this._extrude = defined(options.extrudedHeight);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
+        this._offsetAttribute = defaultValue(options.offsetAttribute, false);
         this._workerName = 'createRectangleGeometry';
         this._rotatedRectangle = undefined;
     }
@@ -661,7 +701,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
 
     /**
      * Stores the provided instance into the provided array.
@@ -695,7 +735,8 @@ define([
         array[startingIndex++] = value._stRotation;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
-        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex] = value._offsetAttribute ? 1.0 : 0.0;
 
         return array;
     };
@@ -711,7 +752,8 @@ define([
         rotation : undefined,
         stRotation : undefined,
         extrudedHeight : undefined,
-        shadowVolume : undefined
+        shadowVolume : undefined,
+        offsetAttribute: undefined
     };
 
     /**
@@ -744,7 +786,8 @@ define([
         var stRotation = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var extrude = array[startingIndex++] === 1.0;
-        var shadowVolume = array[startingIndex] === 1.0;
+        var shadowVolume = array[startingIndex++] === 1.0;
+        var offsetAttribute = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.granularity = granularity;
@@ -753,6 +796,8 @@ define([
             scratchOptions.stRotation = stRotation;
             scratchOptions.extrudedHeight = extrude ? extrudedHeight : undefined;
             scratchOptions.shadowVolume = shadowVolume;
+            scratchOptions.offsetAttribute = offsetAttribute;
+
             return new RectangleGeometry(scratchOptions);
         }
 
@@ -766,6 +811,7 @@ define([
         result._extrudedHeight = extrude ? extrudedHeight : undefined;
         result._extrude = extrude;
         result._shadowVolume = shadowVolume;
+        result._offsetAttribute = offsetAttribute;
 
         return result;
     };
@@ -821,6 +867,7 @@ define([
         rectangle = rectangleGeometry._rectangle;
         if (extrude) {
             options.shadowVolume = rectangleGeometry._shadowVolume;
+            options.offsetAttribute = rectangleGeometry._offsetAttribute;
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
             var bottomBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, extrudedHeight, bottomBoundingSphere);
@@ -828,6 +875,18 @@ define([
         } else {
             geometry = constructRectangle(options);
             geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
+
+            if (rectangleGeometry._offsetAttribute) {
+                var length = geometry.attributes.position.values.length;
+                var applyOffset = new Uint8Array(length / 3);
+                arrayFill(applyOffset, 1);
+                geometry.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values: applyOffset
+                });
+            }
+
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 
