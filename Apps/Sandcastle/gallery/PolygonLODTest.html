@@ -54,7 +54,7 @@ function addEntity(i, j) {
             hierarchy : positions,
             material : Cesium.Color.fromRandom({alpha: 1}),
             height : new Cesium.GeometryHeightProperty(10.0, Cesium.HeightReference.RELATIVE_TO_GROUND),
-            extrudedHeight : new Cesium.GeometryHeightProperty(0.0, Cesium.HeightReference.RELATIVE_TO_GROUND)
+            extrudedHeight : new Cesium.GeometryHeightProperty(0.0, Cesium.HeightReference.CLAMP_TO_GROUND)
         }
     });
 }
