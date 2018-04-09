@@ -6,7 +6,6 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/Ellipsoid',
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Iso8601',
@@ -14,7 +13,6 @@ define([
         '../Core/PolygonGeometry',
         '../Core/PolygonHierarchy',
         '../Core/PolygonOutlineGeometry',
-        '../Core/Rectangle',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/GroundPrimitive',
         '../Scene/HeightReference',
@@ -34,7 +32,6 @@ define([
         defined,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
-        Ellipsoid,
         GeometryInstance,
         isArray,
         Iso8601,
@@ -42,7 +39,6 @@ define([
         PolygonGeometry,
         PolygonHierarchy,
         PolygonOutlineGeometry,
-        Rectangle,
         ShowGeometryInstanceAttribute,
         GroundPrimitive,
         HeightReference,
@@ -58,7 +54,6 @@ define([
 
     var scratchColor = new Color();
     var defaultOffset = Cartesian3.ZERO;
-    var scratchRectangle = new Rectangle();
     var offsetScratch = new Cartesian3();
     var scratchPolygonGeometry = new PolygonGeometry({polygonHierarchy: new PolygonHierarchy});
 
@@ -142,13 +137,13 @@ define([
                 show : show,
                 distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color,
-                offset : OffsetGeometryInstanceAttribute.fromCartesian3(offset)
+                offset : offset
             };
         } else {
             attributes = {
                 show : show,
                 distanceDisplayCondition : distanceDisplayConditionAttribute,
-                offset : OffsetGeometryInstanceAttribute.fromCartesian3(offset)
+                offset : offset
             };
         }
 
@@ -188,7 +183,7 @@ define([
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
                 distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
-                offset : OffsetGeometryInstanceAttribute.fromCartesian3(offset)
+                offset : offset
             }
         });
     };
@@ -250,28 +245,26 @@ define([
         var closeTopValue = Property.getValueOrDefault(polygon.closeTop, Iso8601.MINIMUM_VALUE, true);
         var closeBottomValue = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
         var perPositionHeightValue = Property.getValueOrUndefined(polygon.perPositionHeight, Iso8601.MINIMUM_VALUE);
-        var extrudedHeightValue;
-        var extrudedHeight = polygon.extrudedHeight;
-        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
-            scratchPolygonGeometry._rectangle = undefined;
-            scratchPolygonGeometry._polygonHierarchy.positions = hierarchyValue.positions;
-            extrudedHeightValue = GeometryHeightProperty.getMinimumTerrainValue(scratchPolygonGeometry.rectangle);
-        } else {
-            extrudedHeightValue = Property.getValueOrUndefined(polygon.extrudedHeight, Iso8601.MINIMUM_VALUE);
-        }
-
-        if (defined(extrudedHeightValue) && !defined(heightValue) && !defined(perPositionHeightValue)) {
-            heightValue = 0;
-        }
 
         options.polygonHierarchy = hierarchyValue;
         options.height = heightValue;
-        options.extrudedHeight = extrudedHeightValue;
         options.granularity = Property.getValueOrUndefined(polygon.granularity, Iso8601.MINIMUM_VALUE);
         options.stRotation = Property.getValueOrUndefined(polygon.stRotation, Iso8601.MINIMUM_VALUE);
         options.perPositionHeight = perPositionHeightValue;
         options.closeTop = closeTopValue;
         options.closeBottom = closeBottomValue;
+
+        var extrudedHeight = polygon.extrudedHeight;
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
+            scratchPolygonGeometry.setOptions(options);
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchPolygonGeometry.rectangle);
+        } else {
+            options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, Iso8601.MINIMUM_VALUE);
+        }
+
+        if (defined(options.extrudedHeight) && !defined(heightValue) && !defined(perPositionHeightValue)) {
+            options.height = 0;
+        }
     };
 
     PolygonGeometryUpdater.prototype._getIsClosed = function(options) {

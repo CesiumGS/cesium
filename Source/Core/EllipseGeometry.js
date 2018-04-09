@@ -4,7 +4,6 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
-        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -21,11 +20,9 @@ define([
         './IndexDatatype',
         './Math',
         './Matrix3',
-        './Matrix4',
         './PrimitiveType',
         './Quaternion',
         './Rectangle',
-        './Transforms',
         './VertexFormat'
     ], function(
         arrayFill,
@@ -33,7 +30,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
-        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -50,11 +46,9 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix3,
-        Matrix4,
         PrimitiveType,
         Quaternion,
         Rectangle,
-        Transforms,
         VertexFormat) {
     'use strict';
 
@@ -739,6 +733,30 @@ define([
      * @see EllipseGeometry.createGeometry
      */
     function EllipseGeometry(options) {
+        this._center = undefined;
+        this._semiMajorAxis = undefined;
+        this._semiMinorAxis = undefined;
+        this._ellipsoid = undefined;
+        this._rotation = undefined;
+        this._stRotation = undefined;
+        this._height = undefined;
+        this._granularity = undefined;
+        this._vertexFormat = undefined;
+        this._extrudedHeight = undefined;
+        this._extrude = undefined;
+        this._shadowVolume = undefined;
+        this._offsetAttribute = undefined;
+        this._workerName = 'createEllipseGeometry';
+
+        this._rectangle = undefined;
+
+        this.setOptions(options);
+    }
+
+    /**
+     * @private
+     */
+    EllipseGeometry.prototype.setOptions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var center = options.center;
@@ -769,23 +787,22 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._center = Cartesian3.clone(center);
+        this._center = Cartesian3.clone(center, this._center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
-        this._ellipsoid = Ellipsoid.clone(ellipsoid);
+        this._ellipsoid = Ellipsoid.clone(ellipsoid, this._ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
         this._stRotation = defaultValue(options.stRotation, 0.0);
         this._height = height;
         this._granularity = granularity;
-        this._vertexFormat = VertexFormat.clone(vertexFormat);
+        this._vertexFormat = VertexFormat.clone(vertexFormat, this._vertexFormat);
         this._extrudedHeight = defaultValue(extrudedHeight, height);
         this._extrude = extrude;
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._offsetAttribute = defaultValue(options.offsetAttribute, false);
-        this._workerName = 'createEllipseGeometry';
 
         this._rectangle = undefined;
-    }
+    };
 
     /**
      * The number of elements used to pack the object into an array.

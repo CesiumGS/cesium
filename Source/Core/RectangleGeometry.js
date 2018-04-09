@@ -669,6 +669,27 @@ define([
      * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
      */
     function RectangleGeometry(options) {
+        this._rectangle = undefined;
+        this._granularity = undefined;
+        this._ellipsoid = undefined;
+        this._surfaceHeight = undefined;
+        this._rotation = undefined;
+        this._stRotation = undefined;
+        this._vertexFormat = undefined;
+        this._extrudedHeight = undefined;
+        this._extrude = undefined;
+        this._shadowVolume = undefined;
+        this._offsetAttribute = undefined;
+        this._workerName = 'createRectangleGeometry';
+        this._rotatedRectangle = undefined;
+
+        this.setOptions(options);
+    }
+
+    /***
+     * @private
+     */
+    RectangleGeometry.prototype.setOptions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var rectangle = options.rectangle;
@@ -684,18 +705,17 @@ define([
         var rotation = defaultValue(options.rotation, 0.0);
         this._rectangle = rectangle;
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84), this._ellipsoid);
         this._surfaceHeight = defaultValue(options.height, 0.0);
         this._rotation = rotation;
         this._stRotation = defaultValue(options.stRotation, 0.0);
-        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
+        this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT), this._vertexFormat);
         this._extrudedHeight = defaultValue(options.extrudedHeight, 0.0);
         this._extrude = defined(options.extrudedHeight);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._offsetAttribute = defaultValue(options.offsetAttribute, false);
-        this._workerName = 'createRectangleGeometry';
         this._rotatedRectangle = undefined;
-    }
+    };
 
     /**
      * The number of elements used to pack the object into an array.

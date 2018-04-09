@@ -6,17 +6,19 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/Ellipsoid',
         '../Core/EllipseGeometry',
         '../Core/EllipseOutlineGeometry',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/GroundPrimitive',
+        '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
+        './GeometryHeightProperty',
         './GeometryUpdater',
         './GroundGeometryUpdater',
         './Property'
@@ -28,23 +30,32 @@ define([
         defined,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
-        Ellipsoid,
         EllipseGeometry,
         EllipseOutlineGeometry,
         GeometryInstance,
         Iso8601,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         GroundPrimitive,
+        HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
+        GeometryHeightProperty,
         GeometryUpdater,
         GroundGeometryUpdater,
         Property) {
     'use strict';
 
     var scratchColor = new Color();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
+    var scratchEllipseGeometry = new EllipseGeometry({
+        center: new Cartesian3(),
+        semiMajorAxis: 2,
+        semiMinorAxis: 1
+    });
 
     function EllipseGeometryOptions(entity) {
         this.id = entity;
@@ -58,6 +69,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.numberOfVerticalLines = undefined;
+        this.offsetAttribute = true;
     }
 
     /**
@@ -112,6 +124,7 @@ define([
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
+        var offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -124,12 +137,14 @@ define([
             attributes = {
                 show : show,
                 distanceDisplayCondition : distanceDisplayConditionAttribute,
-                color : color
+                color : color,
+                offset : offset
             };
         } else {
             attributes = {
                 show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
+                offset : offset
             };
         }
 
@@ -161,6 +176,7 @@ define([
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
 
         return new GeometryInstance({
             id : entity,
@@ -168,9 +184,14 @@ define([
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+                offset : offset
             }
         });
+    };
+
+    EllipseGeometryUpdater.prototype._computeCenter = function(entity, ellipse, time, result) {
+        return Property.getValueOrUndefined(entity.position, time, result);
     };
 
     EllipseGeometryUpdater.prototype._isHidden = function(entity, ellipse) {
@@ -221,10 +242,16 @@ define([
         options.semiMinorAxis = ellipse.semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMinorAxis);
         options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.heightReference === HeightReference.CLAMP_TO_GROUND) {
+            scratchEllipseGeometry.setOptions(options);
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchEllipseGeometry.rectangle);
+        } else {
+            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+        }
     };
 
     EllipseGeometryUpdater.DynamicGeometryUpdater = DynamicEllipseGeometryUpdater;
