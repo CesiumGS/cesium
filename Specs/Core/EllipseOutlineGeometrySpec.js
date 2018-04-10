@@ -147,7 +147,7 @@ defineSuite([
         rotation : 6,
         extrudedHeight : 7
     });
-    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 3, 2, 6, 5, 1, 1, 7, 1, 4];
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 3, 2, 6, 7, 1, 5, 4];
     createPackableSpecs(EllipseOutlineGeometry, packableInstance, packedInstance, 'extruded');
 
     //Because extrudedHeight is optional and has to be taken into account when packing, we have a second test without it.
@@ -161,6 +161,6 @@ defineSuite([
         height : 5,
         rotation : 6
     });
-    packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 3, 2, 6, 5, 1, 0, 0, 0, 4];
+    packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 3, 2, 6, 5, 1, 5, 4];
     createPackableSpecs(EllipseOutlineGeometry, packableInstance, packedInstance, 'at height');
 });
