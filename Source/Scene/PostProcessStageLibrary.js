@@ -13,7 +13,6 @@ define([
         '../Shaders/PostProcessStages/DepthOfField',
         '../Shaders/PostProcessStages/DepthView',
         '../Shaders/PostProcessStages/EdgeDetection',
-        '../Shaders/PostProcessStages/EightBit',
         '../Shaders/PostProcessStages/FXAA',
         '../Shaders/PostProcessStages/GaussianBlur1D',
         '../Shaders/PostProcessStages/LensFlare',
@@ -39,7 +38,6 @@ define([
         DepthOfField,
         DepthView,
         EdgeDetection,
-        EightBit,
         FXAA,
         GaussianBlur1D,
         LensFlare,
@@ -592,17 +590,6 @@ define([
             uniforms : {
                 brightness : 0.5
             }
-        });
-    };
-
-    /**
-     * Creates a post-process stage that transforms the input texture to a pixelated eight-vit style image.
-     * @return {PostProcessStage} A post-process stage that transforms the input texture to a pixelated eight-vit style image.
-     */
-    PostProcessStageLibrary.createEightBitStage = function() {
-        return new PostProcessStage({
-            name : 'czm_eight_bit',
-            fragmentShader : EightBit
         });
     };
 

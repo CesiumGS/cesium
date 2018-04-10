@@ -39,10 +39,6 @@
         <td><input type="range" min="0" max="1" step="0.01" data-bind="value: brightnessValue, valueUpdate: 'input'"></td>
     </tr>
     <tr>
-        <td>8-bit</td>
-        <td><input type="checkbox" data-bind="checked: eightBitShow"></td>
-    </tr>
-    <tr>
         <td>Night Vision</td>
         <td><input type="checkbox" data-bind="checked: nightVisionShow"></td>
     </tr>
@@ -71,7 +67,6 @@ var viewModel = {
     blackAndWhiteGradations: 5.0,
     brightnessShow: false,
     brightnessValue: 0.5,
-    eightBitShow: false,
     nightVisionShow: false,
     silhouette : true
 };
@@ -89,7 +84,6 @@ var collection = viewer.scene.postProcessStages;
 var silhouette = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
 var blackAndWhite = collection.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
 var brightness = collection.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
-var eightBit = collection.add(Cesium.PostProcessStageLibrary.createEightBitStage());
 var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
 
 function updatePostProcess() {
@@ -99,7 +93,6 @@ function updatePostProcess() {
     blackAndWhite.uniforms.gradations = Number(viewModel.blackAndWhiteGradations);
     brightness.enabled = Boolean(viewModel.brightnessShow);
     brightness.uniforms.brightness = Number(viewModel.brightnessValue);
-    eightBit.enabled = Boolean(viewModel.eightBitShow);
     nightVision.enabled = Boolean(viewModel.nightVisionShow);
 }
 updatePostProcess();
