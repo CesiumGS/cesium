@@ -575,8 +575,9 @@ define([
         var extrudedHeight = defaultValue(options.extrudedHeight, height);
 
         if (!perPositionHeightExtrude) {
-            height = Math.max(height, extrudedHeight);
+            var h = Math.max(height, extrudedHeight);
             extrudedHeight = Math.min(height, extrudedHeight);
+            height = h;
         }
 
         this._vertexFormat = VertexFormat.clone(vertexFormat);

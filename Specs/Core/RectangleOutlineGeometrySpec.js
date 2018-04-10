@@ -174,7 +174,7 @@ defineSuite([
         rotation : 10,
         extrudedHeight : 11
     });
-    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 1, 11];
+    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 11, 10, 9];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'extruded');
 
     rectangle = new RectangleOutlineGeometry({
@@ -184,7 +184,7 @@ defineSuite([
         height : 9,
         rotation : 10
     });
-    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 0, 0];
+    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
 });
