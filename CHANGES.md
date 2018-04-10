@@ -1,6 +1,20 @@
 Change Log
 ==========
 
+### 1.45 - 2018-05-01
+
+##### Fixes :wrench:
+* Fixed bugs in `TimeIntervalCollection.removeInterval`. [#6418](https://github.com/AnalyticalGraphicsInc/cesium/pull/6418).
+* Fixed glTF support to handle meshes with and without tangent vectors, and with/without morph targets, sharing one material. [#6421](https://github.com/AnalyticalGraphicsInc/cesium/pull/6421)
+* Fixed glTF support to handle skinned meshes when no skin is supplied. [#6061](https://github.com/AnalyticalGraphicsInc/cesium/issues/6061)
+* Allow loadWithXhr to work with string URLs in a web worker.
+* `GroundPrimitive`s and `ClassificationPrimitive`s will become ready when `show` is `false`. [#6428](https://github.com/AnalyticalGraphicsInc/cesium/pull/6428) 
+* Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
+* Fix parsing Cesium.js in older browsers that do not support all TypedArray types. [#6396](https://github.com/AnalyticalGraphicsInc/cesium/pull/6396)
+
+##### Additions :tada:
+* Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
+
 ### 1.44 - 2018-04-02
 
 ##### Highlights :sparkler:
