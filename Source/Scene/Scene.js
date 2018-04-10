@@ -1513,7 +1513,9 @@ define([
                 derivedCommands = logDepthDerivedCommands;
             }
 
-            derivedCommands.picking = createPickDerivedCommand(command, context, derivedCommands.picking);
+            if (defined(command.pickId)) {
+                derivedCommands.picking = createPickDerivedCommand(command, context, derivedCommands.picking);
+            }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
@@ -2023,17 +2025,21 @@ define([
             command = command.derivedCommands.logDepth.logDepthCommand;
         }
 
-        if (frameState.passes.pick && defined(command.derivedCommands.picking)) {
-            command = command.derivedCommands.picking.pickCommand;
+        var passes = frameState.passes;
+        if (passes.pick || passes.depth) {
+            if (passes.pick && defined(command.derivedCommands.picking)) {
+                command = command.derivedCommands.picking.pickCommand;
+                command.execute(context, passState);
+                return;
+            } else if (defined(command.derivedCommands.depth)) {
+                command = command.derivedCommands.depth.depthOnlyCommand;
+                command.execute(context, passState);
+                return;
+            }
         }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-            return;
-        }
-
-        if (frameState.passes.depth && defined(command.derivedCommands.depth)) {
-            command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
             return;
         }
 
@@ -2421,10 +2427,21 @@ define([
                 commands = frustumCommands.commands[j];
                 length = frustumCommands.indices[j];
                 for (var k = 0; k < length; ++k) {
-                    // PER ENTITY TODO
                     var command = commands[k];
-                    if (defined(command.derivedCommands.pickCommand)) {
-                        command.derivedCommands.pickCommand.execute(context, passState);
+                    if (!defined(command.derivedCommands)) {
+                        continue;
+                    }
+
+                    if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+                        command = command.derivedCommands.logDepth.logDepthCommand;
+                    }
+
+                    if (defined(command.derivedCommands.picking)) {
+                        command = command.derivedCommands.picking.pickCommand;
+                        command.execute(context, passState);
+                    } else if (defined(command.derivedCommands.depth)) {
+                        command = command.derivedCommands.depth.depthOnlyCommand;
+                        command.execute(context, passState);
                     }
                 }
             }
