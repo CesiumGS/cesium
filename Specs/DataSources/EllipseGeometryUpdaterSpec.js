@@ -199,8 +199,8 @@ defineSuite([
             rotation : 1,
             semiMajorAxis : 3,
             semiMinorAxis : 2,
-            height : 123,
-            extrudedHeight : 431,
+            height : 431,
+            extrudedHeight : 123,
             granularity : 0.97,
             stRotation : 12,
             numberOfVerticalLines : 15
