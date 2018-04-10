@@ -237,7 +237,6 @@ defineSuite([
             showCount += !!scene.primitives.get(1).show;
             expect(showCount).toEqual(1);
         })
-
         .then(function() {
             return pollToPromise(renderScene);
         })
