@@ -158,48 +158,6 @@ defineSuite([
         });
     });
 
-    it('eightBit', function() {
-        var fs =
-            'void main() { \n' +
-            '    gl_FragColor = all(equal(floor(gl_FragCoord.xy), vec2(1.0, 1.0))) ? vec4(1.0, 0.0, 0.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0); \n' +
-            '} \n';
-        scene.primitives.add(new ViewportPrimitive(fs));
-
-        expect(scene).toRenderAndCall(function (rgba) {
-            for (var i = 0; i < 3; ++i) {
-                for (var j = 0; j < 3; ++j) {
-                    if (i === 1 && j === 1) {
-                        continue;
-                    }
-                    var k = i * 4 * 3 + 4 * j;
-                    expect(rgba[k]).toEqual(0);
-                    expect(rgba[k + 1]).toEqual(0);
-                    expect(rgba[k + 2]).toEqual(255);
-                    expect(rgba[k + 3]).toEqual(255);
-                }
-            }
-        });
-
-        scene.postProcessStages.add(PostProcessStageLibrary.createEightBitStage());
-        scene.renderForSpecs();
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeGreaterThan(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toBeGreaterThan(0);
-            expect(rgba[3]).toEqual(255);
-
-            for (var i = 0; i < 3; ++i) {
-                for (var j = 0; j < 3; ++j) {
-                    var k = i * 4 * 3 + 4 * j;
-                    expect(rgba[k]).toEqual(rgba[0]);
-                    expect(rgba[k + 1]).toEqual(rgba[1]);
-                    expect(rgba[k + 2]).toEqual(rgba[2]);
-                    expect(rgba[k + 3]).toEqual(rgba[3]);
-                }
-            }
-        });
-    });
-
     it('night vision', function() {
         var fs =
             'void main() { \n' +
