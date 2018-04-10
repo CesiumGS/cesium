@@ -128,7 +128,8 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._channel = options.channel;
         this._requestType = 'ImageryMaps';
-        this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + GoogleEarthEnterpriseMapsProvider._logoData + '" title="Google Imagery"/></a>');
+        var logoUrl = buildModuleUrl('Assets/Images/google_earth_credit.png');
+        this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + logoUrl + '" title="Google Imagery"/></a>');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -596,8 +597,6 @@ define([
     GoogleEarthEnterpriseMapsProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
-
-    GoogleEarthEnterpriseMapsProvider._logoData = buildModuleUrl('Assets/Images/google_earth_credit.png');
 
     return GoogleEarthEnterpriseMapsProvider;
 });

@@ -110,7 +110,8 @@ define([
         this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
-        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider._logoData + '" title="Bing Imagery"/></a>');
+        var logoUrl = buildModuleUrl('Assets/Images/bing_maps_credit.png');
+        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + logoUrl + '" title="Bing Imagery"/></a>');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -559,8 +560,6 @@ define([
     BingMapsImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
-
-    BingMapsImageryProvider._logoData = buildModuleUrl('Assets/Images/bing_maps_credit.png');
 
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image
