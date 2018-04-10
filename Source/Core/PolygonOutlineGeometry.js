@@ -382,7 +382,8 @@ define([
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
-        var perPositionHeightExtrude = array[startingIndex++] === 1.0;        var perPositionHeight = array[startingIndex++] === 1.0;
+        var perPositionHeightExtrude = array[startingIndex++] === 1.0;
+        var perPositionHeight = array[startingIndex++] === 1.0;
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
