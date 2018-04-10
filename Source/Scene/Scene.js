@@ -1635,8 +1635,6 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        updateDerivedCommands(scene, command);
-
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
 
@@ -1671,6 +1669,8 @@ define([
             cf[command.debugOverlappingFrustums] = defined(cf[command.debugOverlappingFrustums]) ? cf[command.debugOverlappingFrustums] + 1 : 1;
             ++scene._debugFrustumStatistics.totalCommands;
         }
+
+        updateDerivedCommands(scene, command);
     }
 
     var scratchCullingVolume = new CullingVolume();
@@ -2981,18 +2981,8 @@ define([
         var context = scene._context;
         var environmentState = scene._environmentState;
 
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
-        if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
-            var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
-            gd.executeDebugGlobeDepth(context, passState);
-        }
-
-        if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
-            var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
-            pd.executeDebugPickDepth(context, passState);
-        }
-
         var useOIT = environmentState.useOIT;
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
@@ -3017,6 +3007,19 @@ define([
         if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
             passState.framebuffer = defaultFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
+        }
+
+        var frustum = scene.camera.frustum;
+        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+
+        if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
+            var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
+            gd.executeDebugGlobeDepth(context, passState, useLogDepth);
+        }
+
+        if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
+            var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
+            pd.executeDebugPickDepth(context, passState, useLogDepth);
         }
     }
 
