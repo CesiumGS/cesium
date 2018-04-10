@@ -562,36 +562,27 @@ define([
         return geo[0];
     }
 
-    var scratchRotationMatrix = new Matrix3();
-    var scratchCartesian3 = new Cartesian3();
-    var scratchQuaternion = new Quaternion();
     var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
-    var scratchCartographicPoints = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
-
-    function computeRectangle(rectangle, ellipsoid, rotation) {
-        if (rotation === 0.0) {
-            return Rectangle.clone(rectangle);
+    var nwScratch = new Cartographic();
+    var stNwScratch = new Cartographic();
+    function computeRectangle(rectangleGeometry) {
+        if (rectangleGeometry._rotation === 0.0) {
+            return Rectangle.clone(rectangleGeometry._rectangle);
         }
 
-        Rectangle.northeast(rectangle, scratchCartographicPoints[0]);
-        Rectangle.northwest(rectangle, scratchCartographicPoints[1]);
-        Rectangle.southeast(rectangle, scratchCartographicPoints[2]);
-        Rectangle.southwest(rectangle, scratchCartographicPoints[3]);
+        var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
+        var options = RectangleGeometryLibrary.computeOptions(rectangleGeometry, rectangle, nwScratch, stNwScratch);
 
-        ellipsoid.cartographicArrayToCartesianArray(scratchCartographicPoints, scratchRectanglePoints);
+        var height = options.height;
+        var width = options.width;
 
-        var surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.center(rectangle, scratchCartesian3));
-        Quaternion.fromAxisAngle(surfaceNormal, rotation, scratchQuaternion);
+        var positions = scratchRectanglePoints;
+        RectangleGeometryLibrary.computePosition(options, 0, 0, positions[0], stScratch);
+        RectangleGeometryLibrary.computePosition(options, 0, width - 1, positions[1], stScratch);
+        RectangleGeometryLibrary.computePosition(options, height - 1, 0, positions[2], stScratch);
+        RectangleGeometryLibrary.computePosition(options, height - 1, width - 1, positions[3], stScratch);
 
-        Matrix3.fromQuaternion(scratchQuaternion, scratchRotationMatrix);
-        for (var i = 0; i < 4; ++i) {
-            // Apply the rotation
-            Matrix3.multiplyByVector(scratchRotationMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
-        }
-
-        ellipsoid.cartesianArrayToCartographicArray(scratchRectanglePoints, scratchCartographicPoints);
-
-        return Rectangle.fromCartographicArray(scratchCartographicPoints);
+        return Rectangle.fromCartesianArray(positions, rectangleGeometry._ellipsoid);
     }
 
     /**
@@ -780,8 +771,6 @@ define([
     };
 
     var tangentRotationMatrixScratch = new Matrix3();
-    var nwScratch = new Cartographic();
-    var stNwScratch = new Cartographic();
     var quaternionScratch = new Quaternion();
     var centerScratch = new Cartographic();
     /**
@@ -885,7 +874,7 @@ define([
         rectangle : {
             get : function() {
                 if (!defined(this._rotatedRectangle)) {
-                    this._rotatedRectangle = computeRectangle(this._rectangle, this._ellipsoid, this._rotation);
+                    this._rotatedRectangle = computeRectangle(this);
                 }
                 return this._rotatedRectangle;
             }
