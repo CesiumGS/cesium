@@ -104,6 +104,8 @@ define([
                     vertexArray[i] = attributeData.GetValue(i);
                 }
 
+                draco.destroy(attributeData);
+
                 var componentDatatype = ComponentDatatype.fromTypedArray(vertexArray);
                 decodedAttributeData[attributeName] = {
                     array : vertexArray,
