@@ -1973,7 +1973,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     // When building programs for the first time, do not include modifiers for clipping planes and color
-    // since this is the version of the program that will be cached.
+    // since this is the version of the program that will be cached for use with other Models.
     function createProgram(id, model, context) {
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
@@ -4578,12 +4578,14 @@ define([
             var pickProgram = rendererPickPrograms[programId];
 
             nodeCommand.command.shaderProgram = renderProgram;
-            nodeCommand.pickCommand.shaderProgram = pickProgram;
             if (defined(nodeCommand.command2D)) {
                 nodeCommand.command2D.shaderProgram = renderProgram;
             }
-            if (defined(nodeCommand.pickCommand2D)) {
-                nodeCommand.pickCommand2D.shaderProgram = pickProgram;
+            if (model.allowPicking) {
+                nodeCommand.pickCommand.shaderProgram = pickProgram;
+                if (defined(nodeCommand.pickCommand2D)) {
+                    nodeCommand.pickCommand2D.shaderProgram = pickProgram;
+                }
             }
         }
 
