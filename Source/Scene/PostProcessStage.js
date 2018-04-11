@@ -760,7 +760,7 @@ define([
                 var commands = feature._nodeCommands;
                 var commandsLength = commands.length;
                 for (var j = 0; j < commandsLength; ++j) {
-                    pickColor = commands[j].command._idUniformMap.czm_pickColor();
+                    pickColor = commands[j].command.uniformMap.czm_pickColor();
                     ids[offset] = Color.floatToByte(pickColor.red);
                     ids[offset + 1] = Color.floatToByte(pickColor.green);
                     ids[offset + 2] = Color.floatToByte(pickColor.blue);

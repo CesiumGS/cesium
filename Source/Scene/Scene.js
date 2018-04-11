@@ -2056,6 +2056,24 @@ define([
         }
     }
 
+    function executeIdCommand(command, scene, context, passState) {
+        if (!defined(command.derivedCommands)) {
+            return;
+        }
+
+        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+            command = command.derivedCommands.logDepth.logDepthCommand;
+        }
+
+        if (defined(command.derivedCommands.picking)) {
+            command = command.derivedCommands.picking.pickCommand;
+            command.execute(context, passState);
+        } else if (defined(command.derivedCommands.depth)) {
+            command = command.derivedCommands.depth.depthOnlyCommand;
+            command.execute(context, passState);
+        }
+    }
+
     function translucentCompare(a, b, position) {
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
@@ -2422,28 +2440,42 @@ define([
             frustum.far = frustumCommands.far;
             us.updateFrustum(frustum);
 
-            for (j = Pass.GLOBE; j < Pass.TRANSLUCENT; ++j) {
-                us.updatePass(j);
-                commands = frustumCommands.commands[j];
-                length = frustumCommands.indices[j];
-                for (var k = 0; k < length; ++k) {
-                    var command = commands[k];
-                    if (!defined(command.derivedCommands)) {
-                        continue;
-                    }
+            us.updatePass(Pass.GLOBE);
+            commands = frustumCommands.commands[Pass.GLOBE];
+            length = frustumCommands.indices[Pass.GLOBE];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
+            }
 
-                    if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
-                        command = command.derivedCommands.logDepth.logDepthCommand;
-                    }
+            if (clearGlobeDepth) {
+                clearDepth.framebuffer = passState.framebuffer;
+                clearDepth.execute(context, passState);
+                clearDepth.framebuffer = undefined;
+            }
 
-                    if (defined(command.derivedCommands.picking)) {
-                        command = command.derivedCommands.picking.pickCommand;
-                        command.execute(context, passState);
-                    } else if (defined(command.derivedCommands.depth)) {
-                        command = command.derivedCommands.depth.depthOnlyCommand;
-                        command.execute(context, passState);
-                    }
-                }
+            if (clearGlobeDepth && useDepthPlane) {
+                depthPlane.execute(context, passState);
+            }
+
+            us.updatePass(Pass.CESIUM_3D_TILE);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
+            }
+
+            us.updatePass(Pass.OPAQUE);
+            commands = frustumCommands.commands[Pass.OPAQUE];
+            length = frustumCommands.indices[Pass.OPAQUE];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
+            }
+
+            us.updatePass(Pass.TRANSLUCENT);
+            commands = frustumCommands.commands[Pass.TRANSLUCENT];
+            length = frustumCommands.indices[Pass.TRANSLUCENT];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
             }
 
             passState.framebuffer = originalFramebuffer;

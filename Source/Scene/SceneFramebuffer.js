@@ -58,6 +58,8 @@ define([
         post._idTexture = post._idTexture && post._idTexture.destroy();
         post._depthStencilTexture = post._depthStencilTexture && post._depthStencilTexture.destroy();
         post._depthStencilRenderbuffer = post._depthStencilRenderbuffer && post._depthStencilRenderbuffer.destroy();
+        post._depthStencilIdTexture = post._depthStencilIdTexture && post._depthStencilIdTexture.destroy();
+        post._depthStencilIdRenderbuffer = post._depthStencilIdRenderbuffer && post._depthStencilIdRenderbuffer.destroy();
 
         post._framebuffer = undefined;
         post._idFramebuffer = undefined;
@@ -65,6 +67,8 @@ define([
         post._idTexture = undefined;
         post._depthStencilTexture = undefined;
         post._depthStencilRenderbuffer = undefined;
+        post._depthStencilIdTexture = undefined;
+        post._depthStencilIdRenderbuffer = undefined;
     }
 
     SceneFramebuffer.prototype.update = function(context) {
@@ -113,8 +117,21 @@ define([
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
                 pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
             });
+            this._depthStencilIdTexture = new Texture({
+                context : context,
+                width : width,
+                height : height,
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+            });
         } else {
             this._depthStencilRenderbuffer = new Renderbuffer({
+                context : context,
+                width : width,
+                height : height,
+                format : RenderbufferFormat.DEPTH_STENCIL
+            });
+            this._depthStencilIdRenderbuffer = new Renderbuffer({
                 context : context,
                 width : width,
                 height : height,
@@ -133,8 +150,8 @@ define([
         this._idFramebuffer = new Framebuffer({
             context : context,
             colorTextures : [this._idTexture],
-            depthStencilTexture : this._depthStencilTexture,
-            depthStencilRenderbuffer : this._depthStencilRenderbuffer,
+            depthStencilTexture : this._depthStencilIdTexture,
+            depthStencilRenderbuffer : this._depthStencilIdRenderbuffer,
             destroyAttachments : false
         });
     };
