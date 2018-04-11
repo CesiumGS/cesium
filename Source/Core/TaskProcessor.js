@@ -175,12 +175,12 @@ define([
         // Web assembly not supported, use fallback js module if provided
         if (!processor._supportsWasm) {
             if (defined(wasmOptions.fallbackModulePath)) {
-                config.modulePath = wasmOptions.fallbackModulePath;
+                config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
             }
             return when.resolve(config);
         }
 
-        config.modulePath = wasmOptions.modulePath;
+        config.modulePath = buildModuleUrl(wasmOptions.modulePath);
         config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
 
         return Resource.fetchArrayBuffer({

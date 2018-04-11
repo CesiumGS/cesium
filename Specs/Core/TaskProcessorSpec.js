@@ -182,7 +182,7 @@ defineSuite([
 
         return promise.then(function(result) {
             expect(result).toBeDefined();
-            expect(result.modulePath).toEqual('TestWasm/testWasmWrapper');
+            expect(result.modulePath).toMatch(/TestWasm\/testWasmWrapper/);
             expect(result.wasmBinary).toBeDefined();
         });
     });
@@ -200,7 +200,7 @@ defineSuite([
 
         return promise.then(function(result) {
             expect(result).toBeDefined();
-            expect(result.modulePath).toEqual('TestWasm/testWasmFallback');
+            expect(result.modulePath).toMatch(/TestWasm\/testWasmFallback/);
             expect(result.wasmBinary).not.toBeDefined();
         });
     });

@@ -38,9 +38,9 @@ define([
             var processor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
             processor._supportsWasm = false;
             processor.initWebAssemblyModule({
-                modulePath : './ThirdParty/Workers/draco_wasm_wrapper',
+                modulePath : 'ThirdParty/Workers/draco_wasm_wrapper.js',
                 wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
-                fallbackModulePath : './ThirdParty/Workers/draco_decoder'
+                fallbackModulePath : 'ThirdParty/Workers/draco_decoder.js'
             }).then(function () {
                 DracoLoader._taskProcessorReady = true;
             });
