@@ -346,6 +346,7 @@ define([
         this._pickDepthFramebufferWidth = undefined;
         this._pickDepthFramebufferHeight = undefined;
         this._depthOnlyRenderStateCache = {};
+        this._pickRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -1514,7 +1515,7 @@ define([
             }
 
             if (defined(command.pickId)) {
-                derivedCommands.picking = createPickDerivedCommand(command, context, derivedCommands.picking);
+                derivedCommands.picking = createPickDerivedCommand(scene, command, context, derivedCommands.picking);
             }
 
             var oit = scene._oit;
@@ -3546,23 +3547,41 @@ define([
         return shader;
     }
 
-    function createPickDerivedCommand(command, context, result) {
+    function getPickRenderState(scene, renderState) {
+        var cache = scene._pickRenderStateCache;
+        var pickState = cache[renderState.id];
+        if (!defined(pickState)) {
+            var rs = RenderState.getState(renderState);
+            rs.blending.enabled = false;
+
+            pickState = RenderState.fromCache(rs);
+            cache[renderState.id] = pickState;
+        }
+
+        return pickState;
+    }
+
+    function createPickDerivedCommand(scene, command, context, result) {
         if (!defined(result)) {
             result = {};
         }
 
         var shader;
+        var renderState;
         if (defined(result.pickCommand)) {
             shader = result.pickCommand.shaderProgram;
+            renderState = result.pickCommand.renderState;
         }
 
         result.pickCommand = DrawCommand.shallowClone(command, result.pickCommand);
 
         if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
             result.pickCommand.shaderProgram = getPickShaderProgram(context, command.shaderProgram, command.pickId, command.pickIdDeclarations);
+            result.pickCommand.renderState = getPickRenderState(scene, command.renderState);
             result.shaderProgramId = command.shaderProgram.id;
         } else {
             result.pickCommand.shaderProgram = shader;
+            result.pickCommand.renderState = renderState;
         }
 
         return result;

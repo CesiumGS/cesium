@@ -93,8 +93,9 @@ Sandcastle.addToolbarButton('Pick point', function() {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
+var polylines;
 Sandcastle.addToolbarButton('Pick polyline collection', function() {
-    var polylines = scene.primitives.add(new Cesium.PolylineCollection());
+    polylines = scene.primitives.add(new Cesium.PolylineCollection());
     var id = 'line';
     var line = polylines.add({
         positions : Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -116,9 +117,10 @@ Sandcastle.addToolbarButton('Pick polyline collection', function() {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
+var primitive;
 Sandcastle.addToolbarButton('Pick polyline geometry', function() {
     var id = 'line';
-    var primitive = scene.primitives.add(new Cesium.Primitive({
+    primitive = scene.primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolylineGeometry({
                 positions : Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -175,6 +177,14 @@ Sandcastle.addToolbarButton('Pick model', function() {
 
 Sandcastle.reset = function() {
     viewer.entities.removeAll();
+    if (Cesium.defined(polylines)) {
+        scene.primitives.remove(polylines);
+        polylines = undefined;
+    }
+    if (Cesium.defined(primitive)) {
+        scene.primitives.remove(primitive);
+        primitive = undefined;
+    }
     handler = handler && handler.destroy();
 };
 //Sandcastle_End
