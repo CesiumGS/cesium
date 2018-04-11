@@ -125,11 +125,6 @@ define([
     }
 
     function decodeDracoPrimitive(parameters) {
-        if (!defined(dracoDecoder)) {
-            draco = self.wasmModule;
-            dracoDecoder = new draco.Decoder();
-        }
-
         // Skip all paramter types except generic
         var attributesToSkip = ['POSITION', 'NORMAL', 'COLOR', 'TEX_COORD'];
         if (parameters.dequantizeInShader) {
@@ -165,5 +160,32 @@ define([
         return result;
     }
 
-    return createTaskProcessorWorker(decodeDracoPrimitive);
+    function initWorker(dracoModule) {
+        draco = dracoModule;
+        dracoDecoder = new draco.Decoder();
+        self.onmessage = createTaskProcessorWorker(decodeDracoPrimitive);
+        self.postMessage(true);
+    }
+
+    function decodeDraco(event) {
+        var data = event.data;
+
+        // Expect the first message to be to load a web assembly module
+        var wasmConfig = data.webAssemblyConfig;
+        if (wasmConfig !== undefined) {
+            // Require and compile WebAssembly module, or use fallback if not supported
+            return require([wasmConfig.modulePath], function() {
+                var dracoModule = self.DracoDecoderModule;
+                if (wasmConfig.wasmBinaryFile !== undefined) {
+                    dracoModule(wasmConfig).then(function (compiledModule) {
+                        initWorker(compiledModule);
+                    });
+                } else {
+                    initWorker(dracoModule());
+                }
+            });
+        }
+    }
+
+    return decodeDraco;
 });

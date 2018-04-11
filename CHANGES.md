@@ -4,7 +4,7 @@ Change Log
 ### 1.45 - 2018-05-01
 
 ##### Additions :tada:
-* Added `webAssemblyOptions` parameter to `TaskProcessor` to specify options for loading a Web Assembly module in a web worker. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
+* Added `initWebAssemblyModule` function to `TaskProcessor` to loading a Web Assembly module in a web worker. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
 * Added `supportsWebAssembly` function to `FeatureDetection` to check if a browser supports loading Web Assembly modules. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
 
 ##### Fixes :wrench:

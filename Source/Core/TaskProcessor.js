@@ -136,31 +136,51 @@ define([
         return bootstrapperUrlResult;
     }
 
-    function getWebAssemblyLoaderConfig(processor) {
-        if (defined(processor._webAssemblyConfig)) {
-            return when.resolve(processor._webAssemblyConfig);
+    function createWorker(processor) {
+        var worker = new Worker(getBootstrapperUrl());
+        worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
+
+        var bootstrapMessage = {
+            loaderConfig : {},
+            workerModule : TaskProcessor._workerModulePrefix + processor._workerName
+        };
+
+        if (defined(TaskProcessor._loaderConfig)) {
+            bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
+        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
+            bootstrapMessage.loaderConfig.baseUrl =
+                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
+        } else {
+            bootstrapMessage.loaderConfig.paths = {
+                'Workers' : buildModuleUrl('Workers')
+            };
         }
 
+        worker.postMessage(bootstrapMessage);
+
+        worker.onmessage = function(event) {
+            completeTask(processor, event.data);
+        };
+
+        return worker;
+    }
+
+    function getWebAssemblyLoaderConfig(processor, wasmOptions) {
         var config = {
             modulePath : undefined,
             wasmBinaryFile : undefined,
             wasmBinary : undefined
         };
 
-        var wasmOptions = processor._webAssemblyOptions;
-        if (!defined(wasmOptions)) {
-            return when.resolve(config);
-        }
-
         // Web assembly not supported, use fallback js module if provided
         if (!processor._supportsWasm) {
             if (defined(wasmOptions.fallbackModulePath)) {
-                config.modulePath = TaskProcessor._workerModulePrefix + wasmOptions.fallbackModulePath;
+                config.modulePath = wasmOptions.fallbackModulePath;
             }
             return when.resolve(config);
         }
 
-        config.modulePath = TaskProcessor._workerModulePrefix + wasmOptions.modulePath;
+        config.modulePath = wasmOptions.modulePath;
         config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
 
         return Resource.fetchArrayBuffer({
@@ -169,68 +189,6 @@ define([
             config.wasmBinary = arrayBuffer;
             return config;
         });
-    }
-
-    function createWorker(processor) {
-        var worker = new Worker(getBootstrapperUrl());
-        worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
-
-        var bootstrapMessage = {
-            loaderConfig : {},
-            workerModule : TaskProcessor._workerModulePrefix + processor._workerName,
-            webAssemblyConfig : undefined
-        };
-
-        if (defined(TaskProcessor._loaderConfig)) {
-            bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
-        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
-            bootstrapMessage.loaderConfig.baseUrl =
-                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
-            bootstrapMessage.loaderConfig.paths = {
-                'Workers/ThirdParty' : buildModuleUrl('ThirdParty')
-            };
-        } else {
-            bootstrapMessage.loaderConfig.paths = {
-                'Workers/ThirdParty' : buildModuleUrl('ThirdParty'),
-                'Workers' : buildModuleUrl('Workers')
-            };
-        }
-
-        getWebAssemblyLoaderConfig(processor).then(function(wasmConfig) {
-            processor._webAssemblyConfig = wasmConfig;
-
-            return when(canTransferArrayBuffer(), function(canTransferArrayBuffer) {
-                if (!defined(wasmConfig.modulePath)) {
-                    worker.postMessage(bootstrapMessage);
-
-                    worker.onmessage = function(event) {
-                        completeTask(processor, event.data);
-                    };
-
-                    return processor._workerReadyPromise.resolve(canTransferArrayBuffer);
-                }
-
-                bootstrapMessage.webAssemblyConfig = wasmConfig;
-
-                var transferableObjects;
-                var binary = wasmConfig.wasmBinary;
-                if (defined(binary) && canTransferArrayBuffer) {
-                    transferableObjects = [binary];
-                }
-
-                worker.postMessage(bootstrapMessage, transferableObjects);
-
-                worker.onmessage = function() {
-                    worker.onmessage = function(event) {
-                        completeTask(processor, event.data);
-                    };
-
-                    processor._workerReadyPromise.resolve(canTransferArrayBuffer);
-                };
-            });
-        });
-
-        return worker;
     }
 
     /**
@@ -247,22 +205,14 @@ define([
      * @param {Number} [maximumActiveTasks=5] The maximum number of active tasks.  Once exceeded,
      *                                        scheduleTask will not queue any more tasks, allowing
      *                                        work to be rescheduled in future frames.
-     * @param {Object} [webAssemblyOptions] If specified, the worker will load and compile a Web Assembly module before scheduling tasks. An object with the following properties:
-     * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
-     * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
-     * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
      */
-    function TaskProcessor(workerName, maximumActiveTasks, webAssemblyOptions) {
+    function TaskProcessor(workerName, maximumActiveTasks) {
         this._workerName = workerName;
         this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
-        this._webAssemblyOptions = webAssemblyOptions;
         this._activeTasks = 0;
         this._deferreds = {};
         this._nextID = 0;
-        this._workerReadyPromise = when.defer();
         this._supportsWasm = FeatureDetection.supportsWebAssembly(); // exposed for testing purposes
-
-        this._webAssemblyConfig = undefined;
     }
 
     var emptyTransferableObjectArray = [];
@@ -305,8 +255,7 @@ define([
         ++this._activeTasks;
 
         var processor = this;
-        var readyPromise = processor._workerReadyPromise;
-        return readyPromise.then(function (canTransferArrayBuffer) {
+        return when(canTransferArrayBuffer(), function(canTransferArrayBuffer) {
             if (!defined(transferableObjects)) {
                 transferableObjects = emptyTransferableObjectArray;
             } else if (!canTransferArrayBuffer) {
@@ -325,6 +274,48 @@ define([
 
             return deferred.promise;
         });
+    };
+
+    /**
+     * Posts a message to a web worker with configuration to initialize loading
+     * and compiling a web assembly module asychronously, as well as an optional
+     * fallback JavaScript module to use if Web Assembly is not supported.
+     *
+     * @param {Object} [webAssemblyOptions] An object with the following properties:
+     * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
+     * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
+     * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
+     * @returns {Promise} A promise that resolves when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+     */
+    TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
+        if (!defined(this._worker)) {
+            this._worker = createWorker(this);
+        }
+
+        var deferred = when.defer();
+        var processor = this;
+        var worker = this._worker;
+        getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function(wasmConfig) {
+            return when(canTransferArrayBuffer(), function(canTransferArrayBuffer) {
+                var transferableObjects;
+                var binary = wasmConfig.wasmBinary;
+                if (defined(binary) && canTransferArrayBuffer) {
+                    transferableObjects = [binary];
+                }
+
+                worker.onmessage = function(event) {
+                    worker.onmessage = function(event) {
+                        completeTask(processor, event.data);
+                    };
+
+                    deferred.resolve();
+                };
+
+                worker.postMessage({ webAssemblyConfig : wasmConfig }, transferableObjects);
+            });
+        });
+
+        return deferred;
     };
 
     /**

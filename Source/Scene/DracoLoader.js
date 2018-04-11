@@ -32,13 +32,19 @@ define([
 
     // Exposed for testing purposes
     DracoLoader._decoderTaskProcessor = undefined;
+    DracoLoader._taskProcessorReady = false;
     DracoLoader._getDecoderTaskProcessor = function () {
         if (!defined(DracoLoader._decoderTaskProcessor)) {
-            DracoLoader._decoderTaskProcessor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency, {
-                modulePath : 'ThirdParty/Workers/draco_wasm_wrapper_gltf',
-                wasmBinaryFile : 'ThirdParty/draco_decoder_gltf.wasm',
-                fallbackModulePath : 'ThirdParty/Workers/draco_decoder_gltf'
+            var processor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            processor._supportsWasm = false;
+            processor.initWebAssemblyModule({
+                modulePath : './ThirdParty/Workers/draco_wasm_wrapper',
+                wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
+                fallbackModulePath : './ThirdParty/Workers/draco_decoder'
+            }).then(function () {
+                DracoLoader._taskProcessorReady = true;
             });
+            DracoLoader._decoderTaskProcessor = processor;
         }
 
         return DracoLoader._decoderTaskProcessor;
@@ -93,6 +99,11 @@ define([
     }
 
     function scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context) {
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+
         var taskData = loadResources.primitivesToDecode.peek();
         if (!defined(taskData)) {
             // All primitives are processing
