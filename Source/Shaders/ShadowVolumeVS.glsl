@@ -20,12 +20,14 @@ uniform float u_globeMinimumAltitude;
 
 #ifdef SPHERICAL_EXTENTS
 varying vec4 v_sphericalExtents;
+varying vec4 v_stSineCosineUVScale;
 #endif
 
 #ifdef PLANAR_EXTENTS
 varying vec2 v_inversePlaneExtents;
 varying vec4 v_westPlane;
 varying vec4 v_southPlane;
+varying vec4 v_stSineCosineUVScale;
 #endif
 
 #endif
@@ -46,6 +48,7 @@ void main()
 
 #ifdef SPHERICAL_EXTENTS
     v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);
+    v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);
 #endif
 
 #ifdef PLANAR_EXTENTS
@@ -64,6 +67,7 @@ void main()
     v_westPlane = vec4(eastWard, -dot(eastWard, southWestCorner));
     v_southPlane = vec4(northWard, -dot(northWard, southWestCorner));
     v_inversePlaneExtents = vec2(1.0 / eastExtent, 1.0 / northExtent);
+    v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);
 #endif
 
     vec4 position = czm_computePosition();

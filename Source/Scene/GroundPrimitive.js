@@ -793,11 +793,9 @@ define([
                 var attributes;
 
                 if (usePlanarExtents) {
-                    attributes = ClassificationPrimitive.getAttributesForTextureCoordinatePlanes(rectangle, ellipsoid, attributes);
+                    attributes = ClassificationPrimitive.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, geometry._stRotation);
                 } else {
-                    attributes = {
-                        sphericalExtents : ClassificationPrimitive.getSphericalExtentsGeometryInstanceAttribute(rectangle, ellipsoid)
-                    };
+                    attributes = ClassificationPrimitive.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, geometry._stRotation);
                 }
 
                 var instanceAttributes = instance.attributes;

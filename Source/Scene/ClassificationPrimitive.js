@@ -15,6 +15,7 @@ define([
         '../Core/EncodedCartesian3',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
+        '../Core/Matrix2',
         '../Core/Rectangle',
         '../Core/WebGLConstants',
         '../Core/isArray',
@@ -54,6 +55,7 @@ define([
         EncodedCartesian3,
         GeometryInstance,
         GeometryInstanceAttribute,
+        Matrix2,
         Rectangle,
         WebGLConstants,
         isArray,
@@ -1158,6 +1160,92 @@ define([
     }
 
     var cartographicScratch = new Cartographic();
+    var rectangleCenterScratch = new Cartographic();
+    var northCenterScratch = new Cartesian3();
+    var southCenterScratch = new Cartesian3();
+    var eastCenterScratch = new Cartesian3();
+    var westCenterScratch = new Cartesian3();
+    var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2()];
+    var rotation2DScratch = new Matrix2();
+    var min2DScratch = new Cartesian2();
+    var max2DScratch = new Cartesian2();
+    function getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation) {
+        var theta = defaultValue(textureCoordinateRotation, 0.0);
+
+        // Approximate scale such that the rectangle, if scaled and rotated, will completely enclose
+        // the unrotated/unscaled rectangle.
+        var cosTheta = Math.cos(theta);
+        var sinTheta = Math.sin(theta);
+
+        // Build a rectangle centered in 2D space approximating the bounding rectangle's dimensions
+        var cartoCenter = Rectangle.center(rectangle, rectangleCenterScratch);
+
+        var carto = cartographicScratch;
+        carto.latitude = cartoCenter.latitude;
+
+        carto.longitude = rectangle.west;
+        var westCenter = Cartographic.toCartesian(carto, ellipsoid, westCenterScratch);
+
+        carto.longitude = rectangle.east;
+        var eastCenter = Cartographic.toCartesian(carto, ellipsoid, eastCenterScratch);
+
+        carto.longitude = cartoCenter.longitude;
+        carto.latitude = rectangle.north;
+        var northCenter = Cartographic.toCartesian(carto, ellipsoid, northCenterScratch);
+
+        carto.latitude = rectangle.south;
+        var southCenter = Cartographic.toCartesian(carto, ellipsoid, southCenterScratch);
+
+        var northSouthHalfDistance = Cartesian3.distance(northCenter, southCenter) * 0.5;
+        var eastWestHalfDistance = Cartesian3.distance(eastCenter, westCenter) * 0.5;
+
+        var points2D = points2DScratch;
+        points2D[0].x = eastWestHalfDistance;
+        points2D[0].y = northSouthHalfDistance;
+
+        points2D[1].x = -eastWestHalfDistance;
+        points2D[1].y = northSouthHalfDistance;
+
+        points2D[2].x = eastWestHalfDistance;
+        points2D[2].y = -northSouthHalfDistance;
+
+        points2D[3].x = -eastWestHalfDistance;
+        points2D[3].y = -northSouthHalfDistance;
+
+        // Rotate the dimensions rectangle and compute min/max in rotated space
+        var min2D = min2DScratch;
+        min2D.x = Number.POSITIVE_INFINITY;
+        min2D.y = Number.POSITIVE_INFINITY;
+        var max2D = max2DScratch;
+        max2D.x = Number.NEGATIVE_INFINITY;
+        max2D.y = Number.NEGATIVE_INFINITY;
+
+        var rotation2D = Matrix2.fromRotation(-theta, rotation2DScratch);
+        for (var i = 0; i < 4; ++i) {
+            var point2D = points2D[i];
+            Matrix2.multiplyByVector(rotation2D, point2D, point2D);
+            Cartesian2.minimumByComponent(point2D, min2D, min2D);
+            Cartesian2.maximumByComponent(point2D, max2D, max2D);
+        }
+
+        // Depending on the rotation, east/west may be more appropriate for vertical scale than horizontal
+        var scaleU, scaleV;
+        if (Math.abs(sinTheta) < Math.abs(cosTheta)) {
+            scaleU = eastWestHalfDistance / ((max2D.x - min2D.x) * 0.5);
+            scaleV = northSouthHalfDistance / ((max2D.y - min2D.y) * 0.5);
+        } else {
+            scaleU = eastWestHalfDistance / ((max2D.y - min2D.y) * 0.5);
+            scaleV = northSouthHalfDistance / ((max2D.x - min2D.x) * 0.5);
+        }
+
+        return new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [sinTheta, cosTheta, scaleU, scaleV] // Precompute trigonometry for rotation and inverse of scale
+        });
+    }
+
     var cornerScratch = new Cartesian3();
     var northWestScratch = new Cartesian3();
     var southEastScratch = new Cartesian3();
@@ -1170,8 +1258,10 @@ define([
      *
      * @param {Rectangle} rectangle Rectangle object that the points will approximately bound
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
+     * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
+     * @return {Object} An attributes dictionary containing planar texture coordinate attributes.
      */
-    ClassificationPrimitive.getAttributesForTextureCoordinatePlanes = function(rectangle, ellipsoid) {
+    ClassificationPrimitive.getPlanarTextureCoordinateAttributes = function(rectangle, ellipsoid, textureCoordinateRotation) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('rectangle', rectangle);
         Check.typeOf.object('ellipsoid', ellipsoid);
@@ -1191,7 +1281,9 @@ define([
         carto.latitude = rectangle.south;
         var southEast = Cartographic.toCartesian(carto, ellipsoid, southEastScratch);
 
-        var attributes = {};
+        var attributes = {
+            stSineCosineUVScale : getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation)
+        };
         addAttributesForPoint(corner, 'southWest', attributes);
         addAttributesForPoint(northWest, 'northWest', attributes);
         addAttributesForPoint(southEast, 'southEast', attributes);
@@ -1232,8 +1324,10 @@ define([
      *
      * @param {Rectangle} rectangle Rectangle object that the spherical extents will approximately bound
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
+     * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
+     * @return An attributes dictionary containing spherical texture coordinate attributes.
      */
-    ClassificationPrimitive.getSphericalExtentsGeometryInstanceAttribute = function(rectangle, ellipsoid) {
+    ClassificationPrimitive.getSphericalExtentGeometryInstanceAttributes = function(rectangle, ellipsoid, textureCoordinateRotation) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('rectangle', rectangle);
         Check.typeOf.object('ellipsoid', ellipsoid);
@@ -1253,12 +1347,15 @@ define([
         var longitudeRangeInverse = 1.0 / (east - west);
         var latitudeRangeInverse = 1.0 / (north - south);
 
-        return new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            normalize: false,
-            value : [south, west, latitudeRangeInverse, longitudeRangeInverse]
-        });
+        return {
+            sphericalExtents : new GeometryInstanceAttribute({
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 4,
+                normalize: false,
+                value : [south, west, latitudeRangeInverse, longitudeRangeInverse]
+            }),
+            stSineCosineUVScale : getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation)
+        };
     };
 
     return ClassificationPrimitive;

@@ -99,6 +99,10 @@ define([
 
                 'varying vec4 v_sphericalExtents;\n';
         }
+        if (usesSt) {
+            glsl +=
+                'varying vec4 v_stSineCosineUVScale;\n';
+        }
 
         glsl += getLocalFunctions(shaderDependencies, planarExtents);
 
@@ -119,7 +123,10 @@ define([
             glsl += '    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoordinate, normalEC);\n';
         }
         if (usesSt) {
-            glsl += '    materialInput.st = vec2(v, u);\n';
+            // Scale texture coordinates and rotate around 0.5, 0.5
+            glsl +=
+                '    materialInput.st.x = v_stSineCosineUVScale.y * (v - 0.5) * v_stSineCosineUVScale.z + v_stSineCosineUVScale.x * (u - 0.5) * v_stSineCosineUVScale.w + 0.5;\n' +
+                '    materialInput.st.y = v_stSineCosineUVScale.y * (u - 0.5) * v_stSineCosineUVScale.w - v_stSineCosineUVScale.x * (v - 0.5) * v_stSineCosineUVScale.z + 0.5;\n';
         }
         glsl += '    czm_material material = czm_getMaterial(materialInput);\n';
 
@@ -345,3 +352,5 @@ define([
 
     return ShadowVolumeAppearanceShader;
 });
+
+// TODO: have this inject code into ShadowVolumeVS so that's less messy
