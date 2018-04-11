@@ -174,38 +174,34 @@ defineSuite([
 
     it('can load and compile web assembly module', function() {
         var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
-        var wasmOptions = {
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        var promise = taskProcessor.initWebAssemblyModule({
             modulePath : 'TestWasm/testWasmWrapper',
             wasmBinaryFile : binaryUrl
-        };
-        taskProcessor = new TaskProcessor('runWasm', 5, wasmOptions);
-        var promise = taskProcessor.scheduleTask({
-            message : 'foo'
         });
 
         return promise.then(function(result) {
-            expect(taskProcessor._webAssemblyConfig.wasmBinary).toBeDefined();
-            expect(result).toEqual(42);
+            expect(result).toBeDefined();
+            expect(result.modulePath).toEqual('TestWasm/testWasmWrapper');
+            expect(result.wasmBinary).toBeDefined();
         });
     });
 
     it('uses a backup module if web assembly is not supported', function() {
         var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
-        var wasmOptions = {
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        taskProcessor._supportsWasm = false;
+
+        var promise = taskProcessor.initWebAssemblyModule({
             modulePath : 'TestWasm/testWasmWrapper',
             wasmBinaryFile : binaryUrl,
             fallbackModulePath : 'TestWasm/testWasmFallback'
-        };
-        taskProcessor = new TaskProcessor('runWasm', 5, wasmOptions);
-        taskProcessor._supportsWasm = false;
-
-        var promise = taskProcessor.scheduleTask({
-            message : 'foo'
         });
 
         return promise.then(function(result) {
-            expect(taskProcessor._webAssemblyConfig.wasmBinary).not.toBeDefined();
-            expect(result).toEqual(42);
+            expect(result).toBeDefined();
+            expect(result.modulePath).toEqual('TestWasm/testWasmFallback');
+            expect(result.wasmBinary).not.toBeDefined();
         });
     });
 });

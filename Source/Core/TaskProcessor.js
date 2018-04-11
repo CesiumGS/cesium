@@ -285,7 +285,7 @@ define([
      * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
      * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
      * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
-     * @returns {Promise} A promise that resolves when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+     * @returns {Promise.<Object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
      */
     TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
         if (!defined(this._worker)) {
@@ -308,7 +308,7 @@ define([
                         completeTask(processor, event.data);
                     };
 
-                    deferred.resolve();
+                    deferred.resolve(event.data);
                 };
 
                 worker.postMessage({ webAssemblyConfig : wasmConfig }, transferableObjects);
