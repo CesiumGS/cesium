@@ -239,10 +239,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with invalid rate', function() {
+    it('throws with invalid emissionRate', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.rate = -1.0;
+            p.emissionRate = -1.0;
         }).toThrowDeveloperError();
     });
 
@@ -291,35 +291,35 @@ defineSuite([
     it('throws with invalid minimumWidth', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.minimumWidth = -1.0;
+            p.minimumImageSize = new Cartesian2(-1.0, 2.0);
         }).toThrowDeveloperError();
     });
 
     it('throws with invalid maximumWidth', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.maximumWidth = -1.0;
+            p.maximumImageSize = new Cartesian2(-1.0, 2.0);
         }).toThrowDeveloperError();
     });
 
     it('throws with invalid minimumHeight', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.minimumHeight = -1.0;
+            p.minimumImageSize = new Cartesian2(2.0, -1.0);
         }).toThrowDeveloperError();
     });
 
     it('throws with invalid maximumHeight', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.maximumHeight = -1.0;
+            p.maximumImageSize = new Cartesian2(2.0, -1.0);
         }).toThrowDeveloperError();
     });
 
-    it('throws with invalid lifeTime', function() {
+    it('throws with invalid lifetime', function() {
         var p = new ParticleSystem();
         expect(function() {
-            p.lifeTime = -1.0;
+            p.lifetime = -1.0;
         }).toThrowDeveloperError();
     });
 
@@ -327,9 +327,8 @@ defineSuite([
         scene.primitives.add(new ParticleSystem({
             image : greenImage,
             emitter : new CircleEmitter(1.0),
-            rate : 10000,
-            width : 100,
-            height : 100
+            emissoinRate : 10000,
+            imageSize : new Cartesian2(100, 100)
         }));
         scene.camera.position = new Cartesian3(0.0, 0.0, 20.0);
         scene.camera.direction = new Cartesian3(0.0, 0.0, -1.0);

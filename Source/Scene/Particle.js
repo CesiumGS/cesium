@@ -35,7 +35,7 @@ define([
      * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
      * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
      * @param {Cartesian2} [options.size=new Cartesian2(1.0, 1.0)] The dimensions of particles in pixels. This has been deprecated. Use imageSize instead.
-     * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions of the image representing the particle in pixels. Width by Height.
+     * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions, width by height, to scale the particle image in pixels.
      */
     function Particle(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -95,7 +95,7 @@ define([
          */
         this.endScale = defaultValue(options.endScale, 1.0);
         /**
-         * The dimensions of the image representing the particle in pixels. Width by Height.
+         * The dimensions, width by height, to scale the particle image in pixels.
          * @type {Cartesian2}
          * @default new Cartesian(1.0, 1.0)
          */
