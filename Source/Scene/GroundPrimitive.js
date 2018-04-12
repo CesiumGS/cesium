@@ -18,6 +18,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/Resource',
+        '../Renderer/DrawCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
         './ClassificationPrimitive',
@@ -44,6 +45,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         Resource,
+        DrawCommand,
         Pass,
         when,
         ClassificationPrimitive,
@@ -623,6 +625,7 @@ define([
             var colorLength = colorCommands.length;
             var i;
             var colorCommand;
+            var classificationPrimitive = groundPrimitive._classificationPrimitive;
 
             for (i = 0; i < colorLength; ++i) {
                 colorCommand = colorCommands[i];
@@ -632,6 +635,18 @@ define([
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
                 colorCommand.pass = pass;
+
+                // derive a separate appearance command for 2D
+                if (frameState.mode !== SceneMode.SCENE3D &&
+                    colorCommand.shaderProgram === classificationPrimitive._spColor) {
+                    var derivedCommand = colorCommand.derivedCommands.appearance2D;
+                    if (!defined(derivedCommand)) {
+                        derivedCommand = DrawCommand.shallowClone(colorCommand);
+                        derivedCommand.shaderProgram = classificationPrimitive._spColor2D;
+                        colorCommand.derivedCommands.appearance2D = derivedCommand;
+                    }
+                    colorCommand = derivedCommand;
+                }
 
                 commandList.push(colorCommand);
             }
@@ -793,9 +808,9 @@ define([
                 var attributes;
 
                 if (usePlanarExtents) {
-                    attributes = ClassificationPrimitive.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, geometry._stRotation);
+                    attributes = ClassificationPrimitive.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState, geometry._stRotation);
                 } else {
-                    attributes = ClassificationPrimitive.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, geometry._stRotation);
+                    attributes = ClassificationPrimitive.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, frameState, geometry._stRotation);
                 }
 
                 var instanceAttributes = instance.attributes;

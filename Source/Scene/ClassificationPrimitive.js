@@ -197,6 +197,7 @@ define([
         this._spStencil = undefined;
         this._spPick = undefined;
         this._spColor = undefined;
+        this._spColor2D = undefined;
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
@@ -668,10 +669,10 @@ define([
         var isPerInstanceColor = appearance instanceof PerInstanceColorAppearance;
 
         var parts;
-
-        // Create a fragment shader that computes only required material hookups using screen space techniques
         var usePlanarExtents = classificationPrimitive._hasPlanarExtentsAttributes;
         var cullUsingExtents = classificationPrimitive._hasPlanarExtentsAttributes || classificationPrimitive._hasSphericalExtentsAttribute;
+
+        // Create a fragment shader that computes only required material hookups using screen space techniques
         var shadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(appearance, cullUsingExtents, usePlanarExtents);
         var shadowVolumeAppearanceFS = shadowVolumeAppearanceShader.fragmentShaderSource;
         if (isPerInstanceColor) {
@@ -679,6 +680,10 @@ define([
         } else {
             parts = [appearance.material.shaderSource, shadowVolumeAppearanceFS];
         }
+
+        var fsColorSource = new ShaderSource({
+            sources : [parts.join('\n')]
+        });
 
         var colorVSDefines = isPerInstanceColor ? ['PER_INSTANCE_COLOR'] : [];
         if (shadowVolumeAppearanceShader.usesTextureCoordinates) {
@@ -693,15 +698,37 @@ define([
             sources : [vs]
         });
 
-        var fsColorSource = new ShaderSource({
-            sources : [parts.join('\n')]
-        });
-
         classificationPrimitive._spColor = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : classificationPrimitive._spColor,
             vertexShaderSource : vsColorSource,
             fragmentShaderSource : fsColorSource,
+            attributeLocations : attributeLocations
+        });
+
+        // Create a similar fragment shader for 2D, forcing planar extents
+        var shadowVolumeAppearanceShader2D = new ShadowVolumeAppearanceShader(appearance, cullUsingExtents, true);
+        var shadowVolumeAppearanceFS2D = shadowVolumeAppearanceShader2D.fragmentShaderSource;
+        if (isPerInstanceColor) {
+            parts = [shadowVolumeAppearanceFS2D];
+        } else {
+            parts = [appearance.material.shaderSource, shadowVolumeAppearanceFS2D];
+        }
+
+        var fsColorSource2D = new ShaderSource({
+            sources : [parts.join('\n')]
+        });
+
+        var vsColorSource2D = new ShaderSource({
+            defines : isPerInstanceColor ? ['PER_INSTANCE_COLOR', 'COLUMBUS_VIEW_2D'] : ['COLUMBUS_VIEW_2D'],
+            sources : [vs]
+        });
+
+        classificationPrimitive._spColor2D = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : classificationPrimitive._spColor2D,
+            vertexShaderSource : vsColorSource2D,
+            fragmentShaderSource : fsColorSource2D,
             attributeLocations : attributeLocations
         });
     }
@@ -1131,6 +1158,7 @@ define([
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         this._spColor = this._spColor && this._spColor.destroy();
+        this._spColor2D = this._spColor2D && this._spColor2D.destroy();
         return destroyObject(this);
     };
 
@@ -1246,9 +1274,42 @@ define([
         });
     }
 
+    var swizzleScratch = new Cartesian3();
+    function swizzle(cartesian) {
+        Cartesian3.clone(cartesian, swizzleScratch);
+        cartesian.x = swizzleScratch.z;
+        cartesian.y = swizzleScratch.x;
+        cartesian.z = swizzleScratch.y;
+        return cartesian;
+    }
+
     var cornerScratch = new Cartesian3();
     var northWestScratch = new Cartesian3();
     var southEastScratch = new Cartesian3();
+    function add2DTextureCoordinateAttributes(rectangle, frameState, attributes) {
+        var projection = frameState.mapProjection;
+
+        // Compute corner positions in double precision
+        var carto = cartographicScratch;
+        carto.height = 0.0;
+
+        carto.longitude = rectangle.west;
+        carto.latitude = rectangle.south;
+
+        var corner = swizzle(projection.project(carto, cornerScratch));
+
+        carto.latitude = rectangle.north;
+        var northWest = swizzle(projection.project(carto, northWestScratch));
+
+        carto.longitude = rectangle.east;
+        carto.latitude = rectangle.south;
+        var southEast = swizzle(projection.project(carto, southEastScratch));
+
+        addAttributesForPoint(corner, 'southWest2D', attributes);
+        addAttributesForPoint(northWest, 'northWest2D', attributes);
+        addAttributesForPoint(southEast, 'southEast2D', attributes);
+    }
+
     /**
      * Gets an attributes object containing 3 high-precision points as 6 GeometryInstanceAttributes.
      * These points are used to compute eye-space planes, which are then used to compute texture
@@ -1261,14 +1322,17 @@ define([
      * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
      * @return {Object} An attributes dictionary containing planar texture coordinate attributes.
      */
-    ClassificationPrimitive.getPlanarTextureCoordinateAttributes = function(rectangle, ellipsoid, textureCoordinateRotation) {
+    ClassificationPrimitive.getPlanarTextureCoordinateAttributes = function(rectangle, ellipsoid, frameState, textureCoordinateRotation) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('rectangle', rectangle);
         Check.typeOf.object('ellipsoid', ellipsoid);
+        Check.typeOf.object('frameState', frameState);
         //>>includeEnd('debug');
 
         // Compute corner positions in double precision
         var carto = cartographicScratch;
+        carto.height = 0.0;
+
         carto.longitude = rectangle.west;
         carto.latitude = rectangle.south;
 
@@ -1287,6 +1351,8 @@ define([
         addAttributesForPoint(corner, 'southWest', attributes);
         addAttributesForPoint(northWest, 'northWest', attributes);
         addAttributesForPoint(southEast, 'southEast', attributes);
+
+        add2DTextureCoordinateAttributes(rectangle, frameState, attributes);
         return attributes;
     };
 
@@ -1327,10 +1393,11 @@ define([
      * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
      * @return An attributes dictionary containing spherical texture coordinate attributes.
      */
-    ClassificationPrimitive.getSphericalExtentGeometryInstanceAttributes = function(rectangle, ellipsoid, textureCoordinateRotation) {
+    ClassificationPrimitive.getSphericalExtentGeometryInstanceAttributes = function(rectangle, ellipsoid, frameState, textureCoordinateRotation) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('rectangle', rectangle);
         Check.typeOf.object('ellipsoid', ellipsoid);
+        Check.typeOf.object('frameState', frameState);
         //>>includeEnd('debug');
 
         // rectangle cartographic coords !== spherical because it's on an ellipsoid
@@ -1347,7 +1414,7 @@ define([
         var longitudeRangeInverse = 1.0 / (east - west);
         var latitudeRangeInverse = 1.0 / (north - south);
 
-        return {
+        var attributes = {
             sphericalExtents : new GeometryInstanceAttribute({
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 4,
@@ -1356,6 +1423,9 @@ define([
             }),
             stSineCosineUVScale : getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation)
         };
+
+        add2DTextureCoordinateAttributes(rectangle, frameState, attributes);
+        return attributes;
     };
 
     return ClassificationPrimitive;

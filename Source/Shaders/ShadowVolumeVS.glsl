@@ -30,6 +30,13 @@ varying vec4 v_southPlane;
 varying vec4 v_stSineCosineUVScale;
 #endif
 
+#ifdef COLUMBUS_VIEW_2D // ugh... okay this really needs to become more programmatic
+varying vec2 v_inversePlaneExtents;
+varying vec4 v_westPlane;
+varying vec4 v_southPlane;
+varying vec4 v_stSineCosineUVScale;
+#endif
+
 #endif
 
 #ifdef PER_INSTANCE_COLOR
@@ -55,6 +62,25 @@ void main()
     vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest_HIGH(batchId), czm_batchTable_southWest_LOW(batchId))).xyz;
     vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_northWest_HIGH(batchId), czm_batchTable_northWest_LOW(batchId))).xyz;
     vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southEast_HIGH(batchId), czm_batchTable_southEast_LOW(batchId))).xyz;
+
+    vec3 eastWard = southEastCorner - southWestCorner;
+    float eastExtent = length(eastWard);
+    eastWard /= eastExtent;
+
+    vec3 northWard = northWestCorner - southWestCorner;
+    float northExtent = length(northWard);
+    northWard /= northExtent;
+
+    v_westPlane = vec4(eastWard, -dot(eastWard, southWestCorner));
+    v_southPlane = vec4(northWard, -dot(northWard, southWestCorner));
+    v_inversePlaneExtents = vec2(1.0 / eastExtent, 1.0 / northExtent);
+    v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);
+#endif
+
+#ifdef COLUMBUS_VIEW_2D
+    vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest2D_HIGH(batchId), czm_batchTable_southWest2D_LOW(batchId))).xyz;
+    vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_northWest2D_HIGH(batchId), czm_batchTable_northWest2D_LOW(batchId))).xyz;
+    vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southEast2D_HIGH(batchId), czm_batchTable_southEast2D_LOW(batchId))).xyz;
 
     vec3 eastWard = southEastCorner - southWestCorner;
     float eastExtent = length(eastWard);
