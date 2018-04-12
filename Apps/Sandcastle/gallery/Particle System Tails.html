@@ -152,6 +152,7 @@ var forceFunction = function(options, iteration) {
 var matrix4Scratch = new Cesium.Matrix4();
 var scratchAngleForOffset = 0.0;
 var scratchOffset = new Cesium.Cartesian3();
+var imageSize = new Cesium.Cartesian2(15.0, 15.0);
 function createParticleSystems(options, systemsArray) {
     var length = options.numberOfSystems;
     for (var i = 0; i < length; ++i) {
@@ -167,15 +168,14 @@ function createParticleSystems(options, systemsArray) {
             image : getImage(),
             startColor : color,
             endColor : color.withAlpha(0.0),
-            life : 3.5,
+            particleLife : 3.5,
             speed : 0.00005,
-            width : 15.0,
-            height : 15.0,
-            rate : 30.0,
+            imageSize : imageSize,
+            emissionRate : 30.0,
             emitter : new Cesium.CircleEmitter(0.1),
             bursts : [ ],
-            lifeTime : 0.1,
-            forces : [force],
+            lifetime : 0.1,
+            updateCallback : force,
             modelMatrix : particlesModelMatrix,
             emitterModelMatrix : emitterModelMatrix
         }));

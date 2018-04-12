@@ -49,7 +49,8 @@ recenterFunction();
 // snow
 var snowParticleSize = scene.drawingBufferWidth / 100.0;
 var snowRadius = 100000.0;
-
+var minimumSnowImageSize = new Cesium.Cartesian2(snowParticleSize, snowParticleSize);
+var maximumSnowImageSize = new Cesium.Cartesian2(snowParticleSize * 2.0, snowParticleSize * 2.0);
 var snowSystem;
 
 var snowGravityScratch = new Cesium.Cartesian3();
@@ -70,25 +71,24 @@ snowSystem = new Cesium.ParticleSystem({
     modelMatrix : new Cesium.Matrix4.fromTranslation(scene.camera.position),
     minimumSpeed : -1.0,
     maximumSpeed : 0.0,
-    lifeTime : 15.0,
+    lifetime : 15.0,
     emitter : new Cesium.SphereEmitter(snowRadius),
     startScale : 0.5,
     endScale : 1.0,
     image : "../../SampleData/snowflake_particle.png",
-    rate : 7000.0,
+    emissionRate : 7000.0,
     startColor : Cesium.Color.WHITE.withAlpha(0.0),
     endColor : Cesium.Color.WHITE.withAlpha(1.0),
-    minimumWidth : snowParticleSize,
-    minimumHeight :snowParticleSize,
-    maximumWidth : snowParticleSize * 2.0,
-    maximumHeight :snowParticleSize * 2.0,
-    forces : [snowUpdate]
+    minimumImageSize : minimumSnowImageSize,
+    maximumImageSize : maximumSnowImageSize,
+    updateCallback : snowUpdate
 });
 scene.primitives.add(snowSystem);
 
 // rain
 var rainParticleSize = scene.drawingBufferWidth / 80.0;
 var rainRadius = 100000.0;
+var rainImageSize = new Cesium.Cartesian2(rainParticleSize, rainParticleSize * 2.0);
 
 var rainSystem;
 
@@ -110,17 +110,16 @@ var rainUpdate = function(particle, dt) {
 rainSystem = new Cesium.ParticleSystem({
     modelMatrix : new Cesium.Matrix4.fromTranslation(scene.camera.position),
     speed : -1.0,
-    lifeTime : 15.0,
+    lifetime : 15.0,
     emitter : new Cesium.SphereEmitter(rainRadius),
     startScale : 1.0,
     endScale : 0.0,
     image : "../../SampleData/circular_particle.png",
-    rate : 9000.0,
+    emissionRate : 9000.0,
     startColor :new Cesium.Color(0.27, 0.5, 0.70, 0.0),
     endColor : new Cesium.Color(0.27, 0.5, 0.70, 0.98),
-    width : rainParticleSize,
-    height : rainParticleSize * 2,
-    forces : [rainUpdate]
+    imageSize : rainImageSize,
+    updateCallback : rainUpdate
 });
 scene.primitives.add(rainSystem);
 

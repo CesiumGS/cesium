@@ -263,20 +263,16 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
     startScale : viewModel.startScale,
     endScale : viewModel.endScale,
 
-    minimumLife : viewModel.minimumLife,
-    maximumLife : viewModel.maximumLife,
+    minimumParticleLife : viewModel.minimumLife,
+    maximumParticleLife : viewModel.maximumLife,
 
     minimumSpeed : viewModel.minimumSpeed,
     maximumSpeed : viewModel.maximumSpeed,
 
-    minimumWidth : viewModel.particleSize,
-    minimumHeight : viewModel.particleSize,
-
-    maximumWidth : viewModel.particleSize,
-    maximumHeight : viewModel.particleSize,
+    imageSize : new Cesium.Cartesian2(viewModel.particleSize, viewModel.particleSize),
 
     // Particles per second.
-    rate : viewModel.rate,
+    emissionRate : viewModel.rate,
 
     bursts : [
         // these burst will occasionally sync to create a multicolored effect
@@ -285,13 +281,13 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
         new Cesium.ParticleBurst({time : 15.0, minimum : 200, maximum : 300})
     ],
 
-    lifeTime : 16.0,
+    lifetime : 16.0,
 
     emitter : new Cesium.CircleEmitter(2.0),
 
     emitterModelMatrix : computeEmitterModelMatrix(),
 
-    forces : [applyGravity]
+    updateCallback : applyGravity
 }));
 
 var gravityScratch = new Cesium.Cartesian3();
@@ -422,8 +418,7 @@ var options = [{
 }];
 
 Sandcastle.addToolbarMenu(options);
-
-    //Sandcastle_End
+        //Sandcastle_End
     Sandcastle.finishedLoading();
     }
 
