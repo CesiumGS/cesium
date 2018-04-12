@@ -150,6 +150,61 @@ Sandcastle.addToolbarButton('Pick polyline geometry', function() {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
+Sandcastle.addToolbarButton('Pick geometry', function() {
+    var color = Cesium.Color.WHITE;
+    var entity = viewer.entities.add({
+        name : 'box',
+        position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        box : {
+            dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0),
+            material : Cesium.Color.WHITE
+        }
+    });
+    entity.box.material.color = new Cesium.CallbackProperty(function() {
+        return color;
+    }, false);
+
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedObject = scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && (pickedObject.id === entity)) {
+            //entity.box.material.color = Cesium.Color.YELLOW;
+            color = Cesium.Color.YELLOW;
+        } else {
+            //entity.box.material.color = Cesium.Color.WHITE;
+            color = Cesium.Color.WHITE;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+});
+
+Sandcastle.addToolbarButton('Pick ground primitive', function() {
+    var id = 'rect';
+    primitive = scene.primitives.add(new Cesium.GroundPrimitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+                rotation : Cesium.Math.toRadians(45)
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            },
+            id : id
+        }),
+        asynchronous : false,
+        classificationType : Cesium.ClassificationType.TERRAIN
+    }));
+
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedObject = scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && (pickedObject.id === id)) {
+            primitive.getGeometryInstanceAttributes(id).color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.YELLOW);
+        } else {
+            primitive.getGeometryInstanceAttributes(id).color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.WHITE);
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+});
+
 Sandcastle.addToolbarButton('Pick model', function() {
     var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
     var hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0, 0);

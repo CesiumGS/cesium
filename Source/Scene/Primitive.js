@@ -357,8 +357,6 @@ define([
         this._frontFaceDepthFailRS = undefined;
         this._backFaceDepthFailRS = undefined;
 
-        this._pickRS = undefined;
-        this._pickSP = undefined;
         this._pickIds = [];
 
         this._colorCommands = [];
@@ -576,7 +574,6 @@ define([
         var names = getCommonPerInstanceAttributeNames(instances);
         var length = names.length;
 
-        var allowPicking = primitive.allowPicking;
         var attributes = [];
         var attributeIndices = {};
         var boundingSphereAttributeIndices = {};
@@ -630,14 +627,12 @@ define([
             boundingSphereAttributeIndices.radius = attributes.length - 1;
         }
 
-        if (allowPicking) {
-            attributes.push({
-                functionName : 'czm_batchTable_pickColor',
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 4,
-                normalize : true
-            });
-        }
+        attributes.push({
+            functionName : 'czm_batchTable_pickColor',
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 4,
+            normalize : true
+        });
 
         var attributesLength = attributes.length;
         var batchTable = new BatchTable(context, attributes, numberOfInstances);
@@ -654,27 +649,25 @@ define([
                 batchTable.setBatchedAttribute(i, attributeIndex, value);
             }
 
-            if (allowPicking) {
-                var pickObject = {
-                    primitive : defaultValue(instance.pickPrimitive, primitive)
-                };
+            var pickObject = {
+                primitive : defaultValue(instance.pickPrimitive, primitive)
+            };
 
-                if (defined(instance.id)) {
-                    pickObject.id = instance.id;
-                }
-
-                var pickId = context.createPickId(pickObject);
-                primitive._pickIds.push(pickId);
-
-                var pickColor = pickId.color;
-                var color = scratchGetAttributeCartesian4;
-                color.x = Color.floatToByte(pickColor.red);
-                color.y = Color.floatToByte(pickColor.green);
-                color.z = Color.floatToByte(pickColor.blue);
-                color.w = Color.floatToByte(pickColor.alpha);
-
-                batchTable.setBatchedAttribute(i, attributesLength - 1, color);
+            if (defined(instance.id)) {
+                pickObject.id = instance.id;
             }
+
+            var pickId = context.createPickId(pickObject);
+            primitive._pickIds.push(pickId);
+
+            var pickColor = pickId.color;
+            var color = scratchGetAttributeCartesian4;
+            color.x = Color.floatToByte(pickColor.red);
+            color.y = Color.floatToByte(pickColor.green);
+            color.z = Color.floatToByte(pickColor.blue);
+            color.w = Color.floatToByte(pickColor.alpha);
+
+            batchTable.setBatchedAttribute(i, attributesLength - 1, color);
         }
 
         primitive._batchTable = batchTable;
@@ -851,6 +844,18 @@ define([
         }
         return modifiedVS;
     };
+
+    function appendPickToShader(source) {
+        var renamedVS = ShaderSource.replaceMain(source, 'czm_non_pick_main');
+        var pickMain = 'varying vec4 v_pickColor; \n' +
+                       'void main() \n' +
+                       '{ \n' +
+                       '    czm_non_pick_main(); \n' +
+                       '    v_pickColor = czm_batchTable_pickColor(batchId); \n' +
+                       '}';
+
+        return renamedVS + '\n' + pickMain;
+    }
 
     Primitive._updatePickColorAttribute = function(source) {
         var vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, '');
@@ -1368,33 +1373,6 @@ define([
             rs.depthTest.enabled = false;
         }
 
-        if (primitive.allowPicking) {
-            if (twoPasses) {
-                rs.cull = {
-                    enabled : false
-                };
-                primitive._pickRS = RenderState.fromCache(rs);
-            } else {
-                primitive._pickRS = RenderState.fromCache(rs);
-            }
-        } else {
-            rs.colorMask = {
-                red : false,
-                green : false,
-                blue : false,
-                alpha : false
-            };
-
-            if (twoPasses) {
-                rs.cull = {
-                    enabled : false
-                };
-                primitive._pickRS = RenderState.fromCache(rs);
-            } else {
-                primitive._pickRS = RenderState.fromCache(rs);
-            }
-        }
-
         if (defined(primitive._depthFailAppearance)) {
             renderState = primitive._depthFailAppearance.getRenderState();
             rs = clone(renderState, false);
@@ -1423,32 +1401,11 @@ define([
         var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
+        vs = appendPickToShader(vs);
         vs = Primitive._updateColorAttribute(primitive, vs, false);
         vs = modifyForEncodedNormals(primitive, vs);
         vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         var fs = appearance.getFragmentShaderSource();
-
-        // Create pick program
-        if (primitive.allowPicking) {
-            var vsPick = ShaderSource.createPickVertexShaderSource(vs);
-            vsPick = Primitive._updatePickColorAttribute(vsPick);
-
-            primitive._pickSP = ShaderProgram.replaceCache({
-                context : context,
-                shaderProgram : primitive._pickSP,
-                vertexShaderSource : vsPick,
-                fragmentShaderSource : ShaderSource.createPickFragmentShaderSource(fs, 'varying'),
-                attributeLocations : attributeLocations
-            });
-        } else {
-            primitive._pickSP = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-        }
-        validateShaderMatching(primitive._pickSP, attributeLocations);
 
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
@@ -1532,12 +1489,9 @@ define([
 
         var multiplier = twoPasses ? 2 : 1;
         multiplier *= defined(primitive._depthFailAppearance) ? 2 : 1;
-
         colorCommands.length = primitive._va.length * multiplier;
-        pickCommands.length = primitive._va.length;
 
         var length = colorCommands.length;
-        var m = 0;
         var vaIndex = 0;
         for (var i = 0; i < length; ++i) {
             var colorCommand;
@@ -1606,20 +1560,6 @@ define([
                 colorCommand.pass = pass;
             }
 
-            var pickCommand = pickCommands[m];
-            if (!defined(pickCommand)) {
-                pickCommand = pickCommands[m] = new DrawCommand({
-                    owner : primitive,
-                    primitiveType : primitive._primitiveType
-                });
-            }
-            pickCommand.vertexArray = primitive._va[vaIndex];
-            pickCommand.renderState = primitive._pickRS;
-            pickCommand.shaderProgram = primitive._pickSP;
-            pickCommand.uniformMap = uniforms;
-            pickCommand.pass = pass;
-            ++m;
-
             ++vaIndex;
         }
     }
@@ -1682,7 +1622,8 @@ define([
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
-        if (passes.render) {
+        if (passes.render || passes.pick) {
+            var allowPicking = primitive.allowPicking;
             var castShadows = ShadowMode.castShadows(primitive.shadows);
             var receiveShadows = ShadowMode.receiveShadows(primitive.shadows);
             var colorLength = colorCommands.length;
@@ -1700,19 +1641,15 @@ define([
                 colorCommand.castShadows = castShadows;
                 colorCommand.receiveShadows = receiveShadows;
 
+                if (allowPicking) {
+                    colorCommand.pickId = 'v_pickColor';
+                    colorCommand.pickIdDeclarations = 'varying vec4 v_pickColor;';
+                } else {
+                    colorCommand.pickId = undefined;
+                    colorCommand.pickIdDeclarations = undefined;
+                }
+
                 commandList.push(colorCommand);
-            }
-        }
-
-        if (passes.pick) {
-            var pickLength = pickCommands.length;
-            for (var k = 0; k < pickLength; ++k) {
-                var pickCommand = pickCommands[k];
-                pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = boundingSpheres[k];
-                pickCommand.cull = cull;
-
-                commandList.push(pickCommand);
             }
         }
     }
