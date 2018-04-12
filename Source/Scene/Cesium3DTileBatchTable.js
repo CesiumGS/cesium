@@ -1351,7 +1351,7 @@ define([
             if (bivariateVisibilityTest) {
                 if (command.pass !== Pass.TRANSLUCENT && !finalResolution) {
                     if (!defined(derivedCommands.zback)) {
-                        derivedCommands.zback = deriveZBackfaceCommand(derivedCommands.originalCommand);
+                        derivedCommands.zback = deriveZBackfaceCommand(frameState.context, derivedCommands.originalCommand);
                     }
                     tileset._backfaceCommands.push(derivedCommands.zback);
                 }
@@ -1436,7 +1436,24 @@ define([
         return derivedCommand;
     }
 
-    function deriveZBackfaceCommand(command) {
+    function getDisableLogDepthFragmentShaderProgram(context, shaderProgram) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'zBackfaceLogDepth');
+        if (!defined(shader)) {
+            var fs = shaderProgram.fragmentShaderSource.clone();
+            fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
+            fs.defines.push('DISABLE_LOG_DEPTH_FRAGMENT_WRITE');
+
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'zBackfaceLogDepth', {
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : shaderProgram._attributeLocations
+            });
+        }
+
+        return shader;
+    }
+
+    function deriveZBackfaceCommand(context, command) {
         // Write just backface depth of unresolved tiles so resolved stenciled tiles do not appear in front
         var derivedCommand = DrawCommand.shallowClone(command);
         var rs = clone(derivedCommand.renderState, true);
@@ -1459,6 +1476,9 @@ define([
         derivedCommand.renderState = RenderState.fromCache(rs);
         derivedCommand.castShadows = false;
         derivedCommand.receiveShadows = false;
+        // Disable the depth writes in the fragment shader. The back face commands were causing the higher resolution
+        // tiles to disappear.
+        derivedCommand.shaderProgram = getDisableLogDepthFragmentShaderProgram(context, command.shaderProgram);
         return derivedCommand;
     }
 

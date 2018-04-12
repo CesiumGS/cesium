@@ -849,6 +849,18 @@ define([
      */
     CesiumMath.cbrt = defined(Math.cbrt) ? Math.cbrt : cbrt;
 
+    function log2(x) {
+        return Math.log(x) * Math.LOG2E;
+    }
+
+    /**
+     * Finds the base 2 logarithm of a number.
+     *
+     * @param {Number} number The number.
+     * @returns {Number} The result.
+     */
+    CesiumMath.log2 = defined(Math.log2) ? Math.log2 : log2;
+
     /**
      * @private
      */
