@@ -78,9 +78,12 @@ void main()
 #endif
 
 #ifdef COLUMBUS_VIEW_2D
-    vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest2D_HIGH(batchId), czm_batchTable_southWest2D_LOW(batchId))).xyz;
-    vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_northWest2D_HIGH(batchId), czm_batchTable_northWest2D_LOW(batchId))).xyz;
-    vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southEast2D_HIGH(batchId), czm_batchTable_southEast2D_LOW(batchId))).xyz;
+    vec4 planes2D_high = czm_batchTable_planes2D_HIGH(batchId);
+    vec4 planes2D_low = czm_batchTable_planes2D_LOW(batchId);
+
+    vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.xy), vec3(0.0, planes2D_low.xy))).xyz;
+    vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.x, planes2D_high.z), vec3(0.0, planes2D_low.x, planes2D_low.z))).xyz;
+    vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.w, planes2D_high.y), vec3(0.0, planes2D_low.w, planes2D_low.y))).xyz;
 
     vec3 eastWard = southEastCorner - southWestCorner;
     float eastExtent = length(eastWard);
