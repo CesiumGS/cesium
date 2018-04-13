@@ -1,6 +1,7 @@
 // emulated noperspective
+#ifndef LOG_DEPTH
 varying float v_WindowZ;
-
+#endif
 /**
  * Clamps a vertex to the far plane by writing the fragments depth.
  * <p>
@@ -18,7 +19,7 @@ varying float v_WindowZ;
  */
 void czm_writeDepthClampedToFarPlane()
 {
-#ifdef GL_EXT_frag_depth
+#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)
     gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);
 #endif
 }

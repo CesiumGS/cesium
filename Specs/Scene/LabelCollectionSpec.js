@@ -554,15 +554,20 @@ defineSuite([
 
     it('does not render labels that are behind the viewer', function() {
         var label = labels.add({
-            position : new Cartesian3(20.0, 0.0, 0.0), // Behind camera
+            position : Cartesian3.ZERO, // in front of the camera
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
 
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+        });
+
+        label.position = new Cartesian3(20.0, 0.0, 0.0); // Behind camera
         expect(scene).toRender([0, 0, 0, 255]);
 
-        label.position = Cartesian3.ZERO; // Back in front of camera
+        label.position = new Cartesian3(1.0, 0.0, 0.0);  // Back in front of camera
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(10);
         });
@@ -2000,7 +2005,6 @@ defineSuite([
     });
 
     it('computes bounding sphere in Columbus view', function() {
-
         // Disable collision detection to allow controlled camera position,
         // hence predictable bounding sphere size
         var originalEnableCollisionDetection = scene.screenSpaceCameraController.enableCollisionDetection;
@@ -2030,7 +2034,7 @@ defineSuite([
         var expected = BoundingSphere.fromPoints(projectedPositions);
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
-        expect(actual.radius).toBeGreaterThan(expected.radius);
+        expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
         scene.screenSpaceCameraController.enableCollisionDetection = originalEnableCollisionDetection;
     });
 

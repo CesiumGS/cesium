@@ -857,10 +857,10 @@ define([
 
             destroyMorphHandler(transitioner);
 
+            var camera = scene.camera;
             if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
                 transitioner._morphCancelled = false;
 
-                var camera = scene.camera;
                 Cartesian3.clone(camera3D.position, camera.position);
                 Cartesian3.clone(camera3D.direction, camera.direction);
                 Cartesian3.clone(camera3D.up, camera.up);
@@ -868,6 +868,12 @@ define([
                 Cartesian3.normalize(camera.right, camera.right);
 
                 camera.frustum = camera3D.frustum.clone();
+            }
+
+            var frustum = camera.frustum;
+            if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
+                frustum.near = 0.1;
+                frustum.far = 10000000000.0;
             }
 
             var wasMorphing = defined(transitioner._completeMorph);
@@ -910,15 +916,21 @@ define([
 
             destroyMorphHandler(transitioner);
 
+            var camera = scene.camera;
             if (transitioner._previousModeMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
                 transitioner._morphCancelled = false;
 
-                var camera = scene.camera;
                 Cartesian3.clone(cameraCV.position, camera.position);
                 Cartesian3.clone(cameraCV.direction, camera.direction);
                 Cartesian3.clone(cameraCV.up, camera.up);
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
                 Cartesian3.normalize(camera.right, camera.right);
+            }
+
+            var frustum = camera.frustum;
+            if (scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum)) {
+                frustum.near = 0.1;
+                frustum.far = 10000000000.0;
             }
 
             var wasMorphing = defined(transitioner._completeMorph);

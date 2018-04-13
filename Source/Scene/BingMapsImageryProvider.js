@@ -2,6 +2,7 @@ define([
         '../Core/BingMapsApi',
         '../Core/buildModuleUrl',
         '../Core/Cartesian2',
+        '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -22,6 +23,7 @@ define([
         BingMapsApi,
         buildModuleUrl,
         Cartesian2,
+        Check,
         Credit,
         defaultValue,
         defined,
@@ -110,7 +112,7 @@ define([
         this._culture = defaultValue(options.culture, '');
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
-        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider._logoData + '" title="Bing Imagery"/></a>');
+        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider.logoUrl + '" title="Bing Imagery"/></a>');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -560,8 +562,6 @@ define([
         return undefined;
     };
 
-    BingMapsImageryProvider._logoData = buildModuleUrl('Assets/Images/bing_maps_credit.png');
-
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image
      * from a Bing Maps server.
@@ -623,6 +623,31 @@ define([
             level : level
         };
     };
+
+    BingMapsImageryProvider._logoUrl = undefined;
+
+    defineProperties(BingMapsImageryProvider, {
+        /**
+         * Gets or sets the URL to the Bing logo for display in the credit.
+         * @memberof BingMapsImageryProvider
+         * @type {String}
+         */
+        logoUrl: {
+            get: function() {
+                if (!defined(BingMapsImageryProvider._logoUrl)) {
+                    BingMapsImageryProvider._logoUrl = buildModuleUrl('Assets/Images/bing_maps_credit.png');
+                }
+                return BingMapsImageryProvider._logoUrl;
+            },
+            set: function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('value', value);
+                //>>includeEnd('debug');
+
+                BingMapsImageryProvider._logoUrl = value;
+            }
+        }
+    });
 
     function buildImageResource(imageryProvider, x, y, level, request) {
         var imageUrl = imageryProvider._imageUrlTemplate;

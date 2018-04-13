@@ -36,7 +36,6 @@ void main()
     //extrudeDirection is zero for the top layer
     position = position + vec4(extrudeDirection * delta, 0.0);
 #endif
-
     gl_Position = czm_depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
 #endif
 }

@@ -73,6 +73,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Dave Whipps](https://github.com/dwhipps)
 * [Geoscan](https://www.geoscan.aero)
    * [Andrey Orlov](https://github.com/AndreyOrlov)
+   * [George Vinokhodov](https://github.com/Vineg)
 * [The Imagineers](https://www.theimagineers.com/)
    * [Heerco Grond](https://github.com/HeercoGrond)
 * [Camptocamp SA](https://www.camptocamp.com/)

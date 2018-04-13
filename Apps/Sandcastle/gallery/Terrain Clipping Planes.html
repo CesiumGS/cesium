@@ -67,10 +67,13 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 var clippingPlanesEnabled = true;
 var edgeStylingEnabled = true;
 
+var tileset;
+
 loadCesiumMan();
 
 function reset() {
     viewer.entities.removeAll();
+    viewer.scene.primitives.remove(tileset);
 }
 
 function loadCesiumMan() {
@@ -161,7 +164,7 @@ function loadStHelens() {
     });
 
     // Load tileset
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3844) });
+    tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3844) });
     return tileset.readyPromise.then(function() {
         tileset.pointCloudShading.attenuation = true;
 

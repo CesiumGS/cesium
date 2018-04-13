@@ -1919,19 +1919,19 @@ defineSuite([
 
     it('evaluates exp function', function() {
         var expression = new Expression('exp(1.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(Math.E);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(Math.E, CesiumMath.EPSILON10);
 
         expression = new Expression('exp(0.0)');
-        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
 
         expression = new Expression('exp(vec2(1.0, 0.0))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian2(Math.E, 1.0));
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(Math.E, 1.0), CesiumMath.EPSILON10);
 
         expression = new Expression('exp(vec3(1.0, 0.0, 1.0))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(Math.E, 1.0, Math.E));
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(Math.E, 1.0, Math.E), CesiumMath.EPSILON10);
 
         expression = new Expression('exp(vec4(1.0, 0.0, 1.0, 0.0))');
-        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian4(Math.E, 1.0, Math.E, 1.0));
+        expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(Math.E, 1.0, Math.E, 1.0), CesiumMath.EPSILON10);
     });
 
     it('throws if exp function takes an invalid number of arguments', function() {
