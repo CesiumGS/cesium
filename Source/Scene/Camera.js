@@ -2592,7 +2592,7 @@ define([
         var toCenter = Cartesian3.subtract(this.positionWC, boundingSphere.center, scratchToCenter);
         var distance = -Cartesian3.dot(toCenter, this.directionWC);
         var proj = Cartesian3.multiplyByScalar(this.directionWC, distance, scratchProj);
-        var unsignedDistance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+        var unsignedDistance = Math.abs(Cartesian3.magnitude(proj) - boundingSphere.radius);
         return distance < 0.0 ? -unsignedDistance : unsignedDistance;
     };
 
