@@ -16,9 +16,10 @@ module.exports = {
         Uint8ClampedArray: false
     },
     rules: {
-        curly: 'error',
+        'comma-dangle': ['error', 'never'],
+        'curly': 'error',
         'block-scoped-var': 'error',
-        eqeqeq: 'error',
+        'eqeqeq': 'error',
         'guard-for-in': 'error',
         'new-cap': ['error', {properties: false}],
         'no-alert': 'error',
@@ -32,6 +33,7 @@ module.exports = {
         'no-irregular-whitespace': 'error',
         'no-lonely-if': 'error',
         'no-loop-func': 'error',
+        'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
         'no-new': 'error',
         'no-sequences': 'error',
         'no-trailing-spaces': 'error',
@@ -42,8 +44,8 @@ module.exports = {
         'no-useless-escape': 'off',
         'no-use-before-define': ['error', 'nofunc'],
         'quotes': ['error', 'single', {avoidEscape: true}],
-        semi: 'error',
-        strict: 'error',
+        'semi': 'error',
+        'strict': 'error',
         'wrap-iife': ['error', 'any']
     }
 };

@@ -1,10 +1,10 @@
 # Documentation Guide
 
-Cesium's reference documentation is one of the most popular sections of the Cesium website, and a critical resource for developers.  
+CesiumJS's reference documentation is one of the most popular sections of the CesiumJS website, and a critical resource for developers.  
 
 This guide describes best practices for writing reference doc.
 
-Always include doc for new identifiers (classes, functions, properties, constants) in the public Cesium API.
+Always include doc for new identifiers (classes, functions, properties, constants) in the public CesiumJS API.
 
 Generally, just follow the patterns that are already in comparable parts of the code, e.g., if you are documenting a new utility function in `Core`, look at a function in `Core` such as [`binarySearch`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/binarySearch.js); likewise, if you are documenting a new class in `Scene`, look at a similar class such as [`Model`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js).
 
@@ -28,13 +28,13 @@ Generally, just follow the patterns that are already in comparable parts of the 
 
 ## Building the Doc
 
-The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags.  At the command line, build the doc from the root Cesium directory by running the following:
+The reference doc is written in JavaScript code comments using [JSDoc3](http://usejsdoc.org/index.html) tags.  At the command line, build the doc from the root CesiumJS directory by running the following:
 ```
 npm run generateDocumentation
 ```
 This creates a `Build/Documentation` directory with the built HTML files.
 
-There is a link to the doc from Cesium's main `index.html` when running
+There is a link to the doc from CesiumJS's main `index.html` when running
 ```
 npm start
 ```
@@ -43,7 +43,7 @@ npm start
 
 ## Basics
 
-Consider one of the simplest functions in Cesium, `defined`:
+Consider one of the simplest functions in CesiumJS, `defined`:
 ```javascript
 /**
  * @exports defined
@@ -108,7 +108,7 @@ Matrix4.fromRotationTranslation = function(rotation, translation, result) {
 generates
 
 ![](fromRotationTranslation.jpg)
-The Cesium classes in the `Type` column are links to their doc.
+The CesiumJS classes in the `Type` column are links to their doc.
 
 ## `options` Parameters
 

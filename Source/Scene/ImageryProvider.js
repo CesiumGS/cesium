@@ -1,19 +1,19 @@
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/loadCRN',
-        '../Core/loadImage',
-        '../Core/loadImageViaBlob',
-        '../Core/loadKTX'
+        '../Core/loadKTX',
+        '../Core/Resource'
     ], function(
+        Check,
         defined,
         defineProperties,
         DeveloperError,
         loadCRN,
-        loadImage,
-        loadImageViaBlob,
-        loadKTX) {
+        loadKTX,
+        Resource) {
     'use strict';
 
     /**
@@ -37,8 +37,8 @@ define([
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**
@@ -92,6 +92,22 @@ define([
          * @default undefined
          */
         this.defaultGamma = undefined;
+
+        /**
+         * The default texture minification filter to apply to this provider.
+         *
+         * @type {TextureMinificationFilter}
+         * @default undefined
+         */
+        this.defaultMinificationFilter = undefined;
+
+        /**
+         * The default texture magnification filter to apply to this provider.
+         *
+         * @type {TextureMagnificationFilter}
+         * @default undefined
+         */
+        this.defaultMagnificationFilter = undefined;
 
         DeveloperError.throwInstantiationError();
     }
@@ -310,23 +326,28 @@ define([
      * that the request should be retried later.
      *
      * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
-     * @param {String} url The URL of the image.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} url The URL of the image.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(imageryProvider, url, request) {
-        if (ktxRegex.test(url)) {
-            return loadKTX(url, undefined, request);
-        } else if (crnRegex.test(url)) {
-            return loadCRN(url, undefined, request);
+    ImageryProvider.loadImage = function(imageryProvider, url) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('url', url);
+        //>>includeEnd('debug');
+
+        var resource = Resource.createIfNeeded(url);
+
+        if (ktxRegex.test(resource)) {
+            return loadKTX(resource);
+        } else if (crnRegex.test(resource)) {
+            return loadCRN(resource);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return loadImageViaBlob(url, request);
+            return resource.fetchImage(true);
         }
 
-        return loadImage(url, undefined, request);
+        return resource.fetchImage();
     };
 
     return ImageryProvider;

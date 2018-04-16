@@ -313,7 +313,7 @@ define([
         return new ShaderSource({
             sources : this.sources,
             defines : this.defines,
-            pickColorQuantifier : this.pickColorQualifier,
+            pickColorQualifier : this.pickColorQualifier,
             includeBuiltIns : this.includeBuiltIns
         });
     };

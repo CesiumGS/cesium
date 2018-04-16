@@ -111,20 +111,17 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
-        // Use zeroed arraybuffer instead of null to initialize texture
-        // to workaround Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
-        var source = new Float32Array(width * height * 4);
-
         oit._accumulationTexture = new Texture({
             context : context,
+            width : width,
+            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT,
-            source : {
-                arrayBufferView : source,
-                width : width,
-                height : height
-            }
+            pixelDatatype : PixelDatatype.FLOAT
         });
+
+        // Use zeroed arraybuffer instead of null to initialize texture
+        // to workaround Firefox. Only needed for the second color attachment.
+        var source = new Float32Array(width * height * 4);
         oit._revealageTexture = new Texture({
             context : context,
             pixelFormat : PixelFormat.RGBA,
@@ -133,7 +130,8 @@ define([
                 arrayBufferView : source,
                 width : width,
                 height : height
-            }
+            },
+            flipY : false
         });
     }
 
@@ -441,20 +439,20 @@ define([
             // shader compilation errors.
 
             fs.sources.splice(0, 0,
-                    (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
-                    'vec4 czm_gl_FragColor;\n' +
-                    'bool czm_discard = false;\n');
+                (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
+                'vec4 czm_gl_FragColor;\n' +
+                'bool czm_discard = false;\n');
 
             fs.sources.push(
-                    'void main()\n' +
-                    '{\n' +
-                    '    czm_translucent_main();\n' +
-                    '    if (czm_discard)\n' +
-                    '    {\n' +
-                    '        discard;\n' +
-                    '    }\n' +
-                    source +
-                    '}\n');
+                'void main()\n' +
+                '{\n' +
+                '    czm_translucent_main();\n' +
+                '    if (czm_discard)\n' +
+                '    {\n' +
+                '        discard;\n' +
+                '    }\n' +
+                source +
+                '}\n');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
@@ -533,7 +531,7 @@ define([
         return result;
     };
 
-    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands, invertClassification) {
         var command;
         var derivedCommand;
         var j;
@@ -554,6 +552,14 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
+        }
+
+        if (defined(invertClassification)) {
+            command = invertClassification.unclassifiedCommand;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -562,6 +568,14 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
+        }
+
+        if (defined(invertClassification)) {
+            command = invertClassification.unclassifiedCommand;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -569,7 +583,7 @@ define([
         passState.framebuffer = framebuffer;
     }
 
-    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
@@ -582,22 +596,33 @@ define([
         var debugFramebuffer = oit._opaqueFBO;
         passState.framebuffer = oit._translucentFBO;
 
+        var command;
+        var derivedCommand;
+
         for (var j = 0; j < length; ++j) {
-            var command = commands[j];
-            var derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            command = commands[j];
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
+        }
+
+        if (defined(invertClassification)) {
+            command = invertClassification.unclassifiedCommand;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;
     }
 
-    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands) {
+    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands, invertClassification) {
         if (this._translucentMRTSupport) {
-            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands);
+            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands, invertClassification);
             return;
         }
 
-        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands);
+        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands, invertClassification);
     };
 
     OIT.prototype.execute = function(context, passState) {

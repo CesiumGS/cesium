@@ -63,8 +63,8 @@ define([
 
             var lightParameters = generateLightParameters(gltf);
 
-            // Pre-processing to assign skinning info and address incompatibilities
-            splitIncompatibleSkins(gltf);
+            // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
+            splitIncompatibleMaterials(gltf);
 
             var techniques = {};
             ForEach.material(gltf, function(material) {
@@ -247,11 +247,16 @@ define([
             parameterValues.doubleSided = khrMaterialsCommon.doubleSided;
         }
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
+        var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
 
-        var hasSkinning = jointCount > 0;
-        var skinningInfo = {};
-        if (hasSkinning) {
-            skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
+        var skinningInfo;
+        var hasSkinning = false;
+        var hasVertexColors = false;
+
+        if (defined(primitiveInfo)) {
+            skinningInfo = primitiveInfo.skinning;
+            hasSkinning = skinningInfo.skinned;
+            hasVertexColors = primitiveInfo.hasVertexColors;
         }
 
         var vertexShader = 'precision highp float;\n';
@@ -442,6 +447,18 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
+        if (hasVertexColors) {
+            techniqueAttributes.a_vertexColor = 'vertexColor';
+            techniqueParameters.vertexColor = {
+                semantic: 'COLOR_0',
+                type: WebGLConstants.FLOAT_VEC4
+            };
+            vertexShader += 'attribute vec4 a_vertexColor;\n';
+            vertexShader += 'varying vec4 v_vertexColor;\n';
+            vertexShaderMain += '  v_vertexColor = a_vertexColor;\n';
+            fragmentShader += 'varying vec4 v_vertexColor;\n';
+        }
+
         if (addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = 'batchId';
             techniqueParameters.batchId = {
@@ -541,7 +558,7 @@ define([
             } else {
                 fragmentLightingBlock += '  vec3 l = vec3(0.0, 0.0, 1.0);\n';
             }
-            var minimumLighting = optimizeForCesium ? 0.2 : 0.0;
+            var minimumLighting = optimizeForCesium ? '0.2' : '0.0'; // Use strings instead of values as 0.0 -> 0 when stringified
             fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), ' + minimumLighting + ');\n';
 
             if (hasSpecular) {
@@ -606,6 +623,10 @@ define([
             } else {
                 finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
             }
+        }
+
+        if (hasVertexColors) {
+            colorCreationBlock += '  color *= v_vertexColor.rgb;\n';
         }
 
         if (defined(techniqueParameters.emission)) {
@@ -772,9 +793,13 @@ define([
         techniqueKey += transparent.toString() + ';';
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         techniqueKey += jointCount.toString() + ';';
-        if (jointCount > 0) {
-            var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
-            techniqueKey += skinningInfo.type + ';';
+        var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
+        if (defined(primitiveInfo)) {
+            var skinningInfo = primitiveInfo.skinning;
+            if (jointCount > 0) {
+                techniqueKey += skinningInfo.type + ';';
+            }
+            techniqueKey += primitiveInfo.hasVertexColors;
         }
 
         return techniqueKey;
@@ -902,7 +927,7 @@ define([
         });
     }
 
-    function splitIncompatibleSkins(gltf) {
+    function splitIncompatibleMaterials(gltf) {
         var accessors = gltf.accessors;
         var materials = gltf.materials;
         ForEach.mesh(gltf, function(mesh) {
@@ -921,21 +946,31 @@ define([
                        type = jointAccessor.type;
                    }
                    var isSkinned = defined(jointAccessorId);
+                   var hasVertexColors = defined(primitive.attributes.COLOR_0);
 
-                   var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
-                   if (!defined(skinningInfo)) {
-                       khrMaterialsCommon.extras._pipeline.skinning = {
-                           skinned: isSkinned,
-                           componentType: componentType,
-                           type: type
+                   var primitiveInfo = khrMaterialsCommon.extras._pipeline.primitive;
+                   if (!defined(primitiveInfo)) {
+                       khrMaterialsCommon.extras._pipeline.primitive = {
+                           skinning : {
+                               skinned: isSkinned,
+                               componentType: componentType,
+                               type: type
+                           },
+                           hasVertexColors : hasVertexColors
                        };
-                   } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
-                       // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
+                   } else if ((primitiveInfo.skinning.skinned !== isSkinned) || (primitiveInfo.skinning.type !== type) || (primitiveInfo.hasVertexColors !== hasVertexColors)) {
+                       // This primitive uses the same material as another one that either:
+                       // * Isn't skinned
+                       // * Uses a different type to store joints and weights
+                       // * Doesn't have vertex colors
                        var clonedMaterial = clone(material, true);
-                       clonedMaterial.extensions.KHR_materials_common.extras._pipeline.skinning = {
-                           skinned: isSkinned,
-                           componentType: componentType,
-                           type: type
+                       clonedMaterial.extensions.KHR_materials_common.extras._pipeline.primitive = {
+                           skinning : {
+                               skinned: isSkinned,
+                               componentType: componentType,
+                               type: type
+                           },
+                           hasVertexColors : hasVertexColors
                        };
                        // Split this off as a separate material
                        materialId = addToArray(materials, clonedMaterial);

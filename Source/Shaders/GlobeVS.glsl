@@ -22,6 +22,11 @@ varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+#ifdef APPLY_MATERIAL
+varying float v_slope;
+varying float v_height;
+#endif
+
 #ifdef FOG
 varying float v_distance;
 varying vec3 v_mieColor;
@@ -130,10 +135,10 @@ void main()
     float height = position3DAndHeight.w;
     vec2 textureCoordinates = textureCoordAndEncodedNormals.xy;
 
-#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)) && defined(INCLUDE_WEB_MERCATOR_Y)
+#if (defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)) && defined(INCLUDE_WEB_MERCATOR_Y)
     float webMercatorT = textureCoordAndEncodedNormals.z;
     float encodedNormal = textureCoordAndEncodedNormals.w;
-#elif defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
+#elif defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
     float webMercatorT = textureCoordinates.y;
     float encodedNormal = textureCoordAndEncodedNormals.z;
 #elif defined(INCLUDE_WEB_MERCATOR_Y)
@@ -151,10 +156,11 @@ void main()
 
     v_textureCoordinates = vec3(textureCoordinates, webMercatorT);
 
-#if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
-    v_normalMC = czm_octDecode(encodedNormal);
+    vec3 normalMC = czm_octDecode(encodedNormal);
+    v_normalMC = normalMC;
     v_normalEC = czm_normal3D * v_normalMC;
 #elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
@@ -166,5 +172,12 @@ void main()
     v_mieColor = atmosColor.mie;
     v_rayleighColor = atmosColor.rayleigh;
     v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
+#endif
+
+#ifdef APPLY_MATERIAL
+    vec3 finalNormal = normalMC;
+    vec3 ellipsoidNormal = normalize(position3DWC.xyz);
+    v_slope = abs(dot(ellipsoidNormal, finalNormal));
+    v_height = height;
 #endif
 }

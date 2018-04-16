@@ -128,7 +128,7 @@ define([
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1512,6 +1512,7 @@ define([
             var cullEnabled = command.renderState.cull.enabled;
             if (!cullEnabled) {
                 castRenderState = clone(castRenderState, false);
+                castRenderState.cull = clone(castRenderState.cull, false);
                 castRenderState.cull.enabled = false;
                 castRenderState = RenderState.fromCache(castRenderState);
             }

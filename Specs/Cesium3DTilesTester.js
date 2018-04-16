@@ -3,8 +3,8 @@ define([
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
+        'Core/Resource',
         'Scene/Cesium3DTileContentFactory',
-        'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
         'Specs/pollToPromise'
@@ -13,8 +13,8 @@ define([
         Color,
         defaultValue,
         defined,
+        Resource,
         Cesium3DTileContentFactory,
-        Cesium3DTileContentState,
         Cesium3DTileset,
         TileBoundingSphere,
         pollToPromise) {
@@ -121,7 +121,7 @@ define([
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var url = '';
+        var url = Resource.createIfNeeded('');
         expect(function() {
             return Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         }).toThrowRuntimeError();
@@ -129,7 +129,7 @@ define([
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var url = '';
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
         return content;
@@ -142,7 +142,7 @@ define([
         var tileset = {
             basePath : counter++
         };
-        var url = '';
+        var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
 
@@ -338,6 +338,108 @@ define([
             var tile = new Uint8Array(tiles[i]);
             uint8Array.set(tile, byteOffset);
             byteOffset += tile.byteLength;
+        }
+
+        return buffer;
+    };
+
+    Cesium3DTilesTester.generateVectorTileBuffer = function(options) {
+        // Procedurally generate the tile array buffer for testing purposes
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var magic = defaultValue(options.magic, [118, 99, 116, 114]);
+        var version = defaultValue(options.version, 1);
+
+        var featureTableJsonString;
+        var featureTableJsonByteLength = 0;
+        var defineFeatureTable = defaultValue(options.defineFeatureTable, true);
+        if (defineFeatureTable) {
+            var defineRegion = defaultValue(options.defineRegion, true);
+            var featureTableJson = {
+                REGION : defineRegion ? [-1.0, -1.0, 1.0, 1.0, -1.0, 1.0] : undefined,
+                POLYGONS_LENGTH : defaultValue(options.polygonsLength, 0),
+                POLYLINES_LENGTH : defaultValue(options.polylinesLength, 0),
+                POINTS_LENGTH : defaultValue(options.pointsLength, 0),
+                POLYGON_BATCH_IDS : options.polygonBatchIds,
+                POLYLINE_BATCH_IDS : options.polylineBatchIds,
+                POINT_BATCH_IDS : options.pointBatchIds
+            };
+            featureTableJsonString = JSON.stringify(featureTableJson);
+            featureTableJsonByteLength = featureTableJsonString.length;
+        }
+
+        var headerByteLength = 44;
+        var byteLength = headerByteLength + featureTableJsonByteLength;
+        var buffer = new ArrayBuffer(byteLength);
+        var view = new DataView(buffer);
+        view.setUint8(0, magic[0]);
+        view.setUint8(1, magic[1]);
+        view.setUint8(2, magic[2]);
+        view.setUint8(3, magic[3]);
+        view.setUint32(4, version, true);                       // version
+        view.setUint32(8, byteLength, true);                    // byteLength
+        view.setUint32(12, featureTableJsonByteLength, true);   // featureTableJsonByteLength
+        view.setUint32(16, 0, true);                            // featureTableBinaryByteLength
+        view.setUint32(20, 0, true);                            // batchTableJsonByteLength
+        view.setUint32(24, 0, true);                            // batchTableBinaryByteLength
+        view.setUint32(28, 0, true);                            // indicesByteLength
+        view.setUint32(32, 0, true);                            // polygonPositionByteLength
+        view.setUint32(36, 0, true);                            // polylinePositionByteLength
+        view.setUint32(40, 0, true);                            // pointsPositionByteLength
+
+        var i;
+        var byteOffset = headerByteLength;
+        for (i = 0; i < featureTableJsonByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
+            byteOffset++;
+        }
+
+        return buffer;
+    };
+
+    Cesium3DTilesTester.generateGeometryTileBuffer = function(options) {
+        // Procedurally generate the tile array buffer for testing purposes
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var magic = defaultValue(options.magic, [103, 101, 111, 109]);
+        var version = defaultValue(options.version, 1);
+
+        var featureTableJsonString;
+        var featureTableJsonByteLength = 0;
+        var defineFeatureTable = defaultValue(options.defineFeatureTable, true);
+        if (defineFeatureTable) {
+            var featureTableJson = {
+                BOXES_LENGTH : defaultValue(options.boxesLength, 0),
+                CYLINDERS_LENGTH : defaultValue(options.cylindersLength, 0),
+                ELLIPSOIDS_LENGTH : defaultValue(options.ellipsoidsLength, 0),
+                SPHERES_LENGTH : defaultValue(options.spheresLength, 0),
+                BOX_BATCH_IDS : options.boxBatchIds,
+                CYLINDER_BATCH_IDS : options.cylinderBatchIds,
+                ELLIPSOID_BATCH_IDS : options.ellipsoidBatchIds,
+                SPHERE_BATCH_IDS : options.sphereBatchIds
+            };
+            featureTableJsonString = JSON.stringify(featureTableJson);
+            featureTableJsonByteLength = featureTableJsonString.length;
+        }
+
+        var headerByteLength = 28;
+        var byteLength = headerByteLength + featureTableJsonByteLength;
+        var buffer = new ArrayBuffer(byteLength);
+        var view = new DataView(buffer);
+        view.setUint8(0, magic[0]);
+        view.setUint8(1, magic[1]);
+        view.setUint8(2, magic[2]);
+        view.setUint8(3, magic[3]);
+        view.setUint32(4, version, true);                       // version
+        view.setUint32(8, byteLength, true);                    // byteLength
+        view.setUint32(12, featureTableJsonByteLength, true);   // featureTableJsonByteLength
+        view.setUint32(16, 0, true);                            // featureTableBinaryByteLength
+        view.setUint32(20, 0, true);                            // batchTableJsonByteLength
+        view.setUint32(24, 0, true);                            // batchTableBinaryByteLength
+
+        var i;
+        var byteOffset = headerByteLength;
+        for (i = 0; i < featureTableJsonByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
+            byteOffset++;
         }
 
         return buffer;

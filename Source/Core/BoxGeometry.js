@@ -41,7 +41,7 @@ define([
      * @see BoxGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      *
      * @example
      * var box = new Cesium.BoxGeometry({
@@ -824,6 +824,24 @@ define([
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
         });
+    };
+
+    var unitBoxGeometry;
+
+    /**
+     * Returns the geometric representation of a unit box, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    BoxGeometry.getUnitBox = function() {
+        if (!defined(unitBoxGeometry)) {
+            unitBoxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                dimensions : new Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
+            }));
+        }
+        return unitBoxGeometry;
     };
 
     return BoxGeometry;

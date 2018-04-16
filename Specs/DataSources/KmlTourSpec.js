@@ -1,25 +1,21 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/KmlTour',
-        'DataSources/KmlTourFlyTo',
-        'DataSources/KmlTourWait',
-        'DataSources/KmlCamera',
-        'DataSources/KmlLookAt',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Core/Math',
+        'DataSources/KmlLookAt',
+        'DataSources/KmlTourFlyTo',
+        'DataSources/KmlTourWait',
         'Specs/pollToPromise'
     ], function(
         KmlTour,
-        KmlTourFlyTo,
-        KmlTourWait,
-        KmlCamera,
-        KmlLookAt,
         Cartesian3,
         HeadingPitchRange,
         CesiumMath,
-        pollToPromise
-        ) {
+        KmlLookAt,
+        KmlTourFlyTo,
+        KmlTourWait,
+        pollToPromise) {
     'use strict';
 
     function getLookAt() {

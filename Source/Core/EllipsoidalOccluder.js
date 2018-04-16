@@ -20,7 +20,7 @@ define([
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
      * an {@link Ellipsoid} and a camera position.  The ellipsoid is assumed to be located at the
      * origin of the coordinate system.  This class uses the algorithm described in the
-     * {@link http://cesiumjs.org/2013/04/25/Horizon-culling/|Horizon Culling} blog post.
+     * {@link https://cesium.com/blog/2013/04/25/Horizon-culling/|Horizon Culling} blog post.
      *
      * @alias EllipsoidalOccluder
      *
@@ -76,7 +76,7 @@ define([
                 return this._cameraPosition;
             },
             set : function(cameraPosition) {
-                // See http://cesiumjs.org/2013/04/25/Horizon-culling/
+                // See https://cesiumjs.org/2013/04/25/Horizon-culling/
                 var ellipsoid = this._ellipsoid;
                 var cv = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
                 var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
@@ -126,7 +126,7 @@ define([
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
-        // See http://cesiumjs.org/2013/04/25/Horizon-culling/
+        // See https://cesiumjs.org/2013/04/25/Horizon-culling/
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);

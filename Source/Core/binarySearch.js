@@ -1,9 +1,7 @@
 define([
-        './Check',
-        './defined'
+        './Check'
     ], function(
-        Check,
-        defined) {
+        Check) {
     'use strict';
 
     /**

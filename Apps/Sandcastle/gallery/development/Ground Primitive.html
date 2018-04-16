@@ -27,14 +27,10 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-
-//Create the viewer.
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-scene.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestVertexNormals : true
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
 });
+var scene = viewer.scene;
 
 function offsetPositions(positions, degreeOffset) {
     positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
@@ -189,7 +185,7 @@ function createBatchedInstances(color, show) {
 
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.RectangleGeometry({
-                rectangle : Cesium.Rectangle.fromDegrees(west, south, east, north),
+                rectangle : Cesium.Rectangle.fromDegrees(west, south, east, north)
             }),
             attributes: {
                 color : color,

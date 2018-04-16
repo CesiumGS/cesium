@@ -12,10 +12,11 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/GeometryInstance',
         '../Core/isArray',
-        '../Core/loadJson',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
+        '../Core/Resource',
+        '../Renderer/Pass',
         '../ThirdParty/when',
         './ClassificationPrimitive',
         './ClassificationType',
@@ -34,10 +35,11 @@ define([
         GeographicTilingScheme,
         GeometryInstance,
         isArray,
-        loadJson,
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
+        Resource,
+        Pass,
         when,
         ClassificationPrimitive,
         ClassificationType,
@@ -566,75 +568,70 @@ define([
     }
 
     function boundingVolumeIndex(commandIndex, length) {
-        return Math.floor((commandIndex % (length / 2)) / 3);
-    }
-
-    var scratchCommandIndices = {
-        start : 0,
-        end : 0
-    };
-
-    function getCommandIndices(classificationType, length) {
-        var startIndex;
-        var endIndex;
-        if (classificationType === ClassificationType.TERRAIN) {
-            startIndex = 0;
-            endIndex = length / 2;
-        } else if (classificationType === ClassificationType.CESIUM_3D_TILE) {
-            startIndex = length / 2;
-            endIndex = length;
-        } else {
-            startIndex = 0;
-            endIndex = length;
-        }
-
-        scratchCommandIndices.start = startIndex;
-        scratchCommandIndices.end = endIndex;
-        return scratchCommandIndices;
+        return Math.floor((commandIndex % length) / 3);
     }
 
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = groundPrimitive._boundingVolumes;
-        } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
+        } else {
             boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
-        var indices;
-        var startIndex;
-        var endIndex;
-        var classificationType = groundPrimitive.classificationType;
+        var pass;
+        switch (groundPrimitive.classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
+        }
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
-            indices = getCommandIndices(classificationType, colorLength);
-            startIndex = indices.start;
-            endIndex = indices.end;
+            var i;
+            var colorCommand;
 
-            for (var i = startIndex; i < endIndex; ++i) {
-                var colorCommand = colorCommands[i];
+            for (i = 0; i < colorLength; ++i) {
+                colorCommand = colorCommands[i];
                 colorCommand.owner = groundPrimitive;
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommand.pass = pass;
 
                 commandList.push(colorCommand);
+            }
+
+            if (frameState.invertClassification) {
+                var ignoreShowCommands = groundPrimitive._primitive._commandsIgnoreShow;
+                var ignoreShowCommandsLength = ignoreShowCommands.length;
+
+                for (i = 0; i < ignoreShowCommandsLength; ++i) {
+                    var bvIndex = Math.floor(i / 2);
+                    colorCommand = ignoreShowCommands[i];
+                    colorCommand.modelMatrix = modelMatrix;
+                    colorCommand.boundingVolume = boundingVolumes[bvIndex];
+                    colorCommand.cull = cull;
+                    colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+
+                    commandList.push(colorCommand);
+                }
             }
         }
 
         if (passes.pick) {
             var pickLength = pickCommands.length;
-            indices = getCommandIndices(classificationType, pickLength);
-            startIndex = indices.start;
-            endIndex = indices.end;
-
             var primitive = groundPrimitive._primitive._primitive;
             var pickOffsets = primitive._pickOffsets;
-            for (var j = startIndex; j < endIndex; ++j) {
+            for (var j = 0; j < pickLength; ++j) {
                 var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
                 var bv = boundingVolumes[pickOffset.index];
 
@@ -643,6 +640,7 @@ define([
                 pickCommand.modelMatrix = modelMatrix;
                 pickCommand.boundingVolume = bv;
                 pickCommand.cull = cull;
+                pickCommand.pass = pass;
 
                 commandList.push(pickCommand);
             }
@@ -665,7 +663,7 @@ define([
             return initPromise;
         }
 
-        GroundPrimitive._initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
+        GroundPrimitive._initPromise = Resource.fetchJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
             GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });
@@ -686,7 +684,7 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
-        if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+        if (!defined(this._primitive) && !defined(this.geometryInstances)) {
             return;
         }
 
@@ -786,6 +784,7 @@ define([
             });
         }
 
+        this._primitive.show = this.show;
         this._primitive.debugShowShadowVolume = this.debugShowShadowVolume;
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
@@ -848,8 +847,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

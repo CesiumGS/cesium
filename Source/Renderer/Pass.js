@@ -23,10 +23,12 @@ define([
         TERRAIN_CLASSIFICATION : 3,
         CESIUM_3D_TILE : 4,
         CESIUM_3D_TILE_CLASSIFICATION : 5,
-        OPAQUE : 6,
-        TRANSLUCENT : 7,
-        OVERLAY : 8,
-        NUMBER_OF_PASSES : 9
+        CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW : 6,
+        CLASSIFICATION : 7,
+        OPAQUE : 8,
+        TRANSLUCENT : 9,
+        OVERLAY : 10,
+        NUMBER_OF_PASSES : 11
     };
 
     return freezeObject(Pass);

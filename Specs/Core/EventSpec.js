@@ -45,7 +45,7 @@ defineSuite([
         expect(spyListener).not.toHaveBeenCalled();
     });
 
-    it('can remove from withing a callback', function() {
+    it('can remove from within a callback', function() {
         var doNothing = function(evt) {
         };
 
@@ -65,6 +65,25 @@ defineSuite([
         event.removeEventListener(doNothing);
         event.removeEventListener(doNothing2);
         expect(event.numberOfListeners).toEqual(0);
+    });
+
+    it('can remove multiple listeners within a callback', function() {
+        var removeEvent0 =  event.addEventListener(function() { removeEvent0(); });
+                            event.addEventListener(function() {});
+        var removeEvent2 =  event.addEventListener(function() { removeEvent2(); });
+                            event.addEventListener(function() {});
+        var removeEvent4 =  event.addEventListener(function() { removeEvent4(); });
+                            event.addEventListener(function() {});
+        var removeEvent6 =  event.addEventListener(function() { removeEvent6(); });
+                            event.addEventListener(function() {});
+        var removeEvent8 =  event.addEventListener(function() { removeEvent8(); });
+                            event.addEventListener(function() {});
+
+        expect(event.numberOfListeners).toEqual(10);
+        event.raiseEvent();
+        expect(event.numberOfListeners).toEqual(5);
+        event.raiseEvent();
+        expect(event.numberOfListeners).toEqual(5);
     });
 
     it('addEventListener and removeEventListener works with same function of different scopes', function() {

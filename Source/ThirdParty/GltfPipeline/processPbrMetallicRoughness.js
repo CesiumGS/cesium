@@ -46,26 +46,19 @@ define([
                 gltf.techniques = [];
             }
 
-            // Pre-processing to assign skinning info and address incompatibilities
-            splitIncompatibleSkins(gltf);
+            // Pre-processing to address incompatibilities between primitives using the same materials. Handles skinning and vertex color incompatibilities.
+            splitIncompatibleMaterials(gltf);
 
-            if (!defined(gltf.techniques)) {
-                gltf.techniques = [];
-            }
-            var materials = [];
-            ForEach.material(gltf, function(material) {
-                if (defined(material.pbrMetallicRoughness)) {
-                    var pbrMetallicRoughness = material.pbrMetallicRoughness;
-                    var technique = generateTechnique(gltf, material, options);
+            ForEach.material(gltf, function(material, materialIndex) {
+                var pbrMetallicRoughness = material.pbrMetallicRoughness;
+                if (defined(pbrMetallicRoughness)) {
+                    var technique = generateTechnique(gltf, material, materialIndex, options);
 
-                    var newMaterial = {
-                        values : pbrMetallicRoughness,
-                        technique : technique
-                    };
-                    materials.push(newMaterial);
+                    material.values = pbrMetallicRoughness;
+                    material.technique = technique;
+                    delete material.pbrMetallicRoughness;
                 }
             });
-            gltf.materials = materials;
 
             // If any primitives have semantics that aren't declared in the generated
             // shaders, we want to preserve them.
@@ -75,7 +68,7 @@ define([
         return gltf;
     }
 
-    function generateTechnique(gltf, material, options) {
+    function generateTechnique(gltf, material, materialIndex, options) {
         var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
         var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
@@ -100,8 +93,17 @@ define([
         }
         var joints = (defined(skin)) ? skin.joints : [];
         var jointCount = joints.length;
-        var skinningInfo = material.extras._pipeline.skinning;
-        var hasSkinning = defined(skinningInfo.type);
+        var primitiveInfo = material.extras._pipeline.primitive;
+
+        var skinningInfo;
+        var hasSkinning = false;
+        var hasVertexColors = false;
+
+        if (defined(primitiveInfo)) {
+            skinningInfo = primitiveInfo.skinning;
+            hasSkinning = skinningInfo.skinned && (joints.length > 0);
+            hasVertexColors = primitiveInfo.hasVertexColors;
+        }
 
         var hasNormals = true;
         var hasTangents = false;
@@ -109,15 +111,17 @@ define([
         var morphTargets;
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
-                var targets = primitive.targets;
-                if (!hasMorphTargets && defined(targets)) {
-                    hasMorphTargets = true;
-                    morphTargets = targets;
-                }
-                var attributes = primitive.attributes;
-                for (var attribute in attributes) {
-                    if (attribute.indexOf('TANGENT') >= 0) {
-                        hasTangents = true;
+                if (primitive.material === materialIndex) {
+                    var targets = primitive.targets;
+                    if (!hasMorphTargets && defined(targets)) {
+                        hasMorphTargets = true;
+                        morphTargets = targets;
+                    }
+                    var attributes = primitive.attributes;
+                    for (var attribute in attributes) {
+                        if (attribute.indexOf('TANGENT') >= 0) {
+                            hasTangents = true;
+                        }
                     }
                 }
             });
@@ -164,7 +168,7 @@ define([
         for (var name in parameterValues) {
             //generate shader parameters
             if (parameterValues.hasOwnProperty(name)) {
-                var valType = getPBRValueType(name, parameterValues[name]);
+                var valType = getPBRValueType(name);
                 if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
                     hasTexCoords = true;
                 }
@@ -244,7 +248,7 @@ define([
             vertexShaderMain += '    vec3 weightedNormal = a_normal;\n';
         }
         if (hasTangents) {
-            vertexShaderMain += '    vec3 weightedTangent = a_tangent;\n';
+            vertexShaderMain += '    vec4 weightedTangent = a_tangent;\n';
         }
         if (hasMorphTargets) {
             for (var k = 0; k < morphTargets.length; k++) {
@@ -262,8 +266,8 @@ define([
                             vertexShaderMain += '    weightedPosition += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         } else if (targetAttribute === 'NORMAL') {
                             vertexShaderMain += '    weightedNormal += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
-                        } else if (targetAttribute === 'TANGENT') {
-                            vertexShaderMain += '    weightedTangent += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
+                        } else if (hasTangents && targetAttribute === 'TANGENT') {
+                            vertexShaderMain += '    weightedTangent.xyz += u_morphWeights[' + k + '] * a_' + attributeLower + ';\n';
                         }
                     }
                 }
@@ -310,13 +314,14 @@ define([
             techniqueAttributes.a_tangent = 'tangent';
             techniqueParameters.tangent = {
                 semantic : 'TANGENT',
-                type : WebGLConstants.FLOAT_VEC3
+                type : WebGLConstants.FLOAT_VEC4
             };
-            vertexShader += 'attribute vec3 a_tangent;\n';
-            vertexShader += 'varying vec3 v_tangent;\n';
-            vertexShaderMain += '    v_tangent = (u_modelViewMatrix * vec4(weightedTangent, 1.0)).xyz;\n';
+            vertexShader += 'attribute vec4 a_tangent;\n';
+            vertexShader += 'varying vec4 v_tangent;\n';
+            vertexShaderMain += '    v_tangent.xyz = u_normalMatrix * weightedTangent.xyz;\n';
+            vertexShaderMain += '    v_tangent.w = weightedTangent.w;\n';
 
-            fragmentShader += 'varying vec3 v_tangent;\n';
+            fragmentShader += 'varying vec4 v_tangent;\n';
         }
 
         // Add texture coordinates if the material uses them
@@ -356,6 +361,18 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
+        if (hasVertexColors) {
+            techniqueAttributes.a_vertexColor = 'vertexColor';
+            techniqueParameters.vertexColor = {
+                semantic: 'COLOR_0',
+                type: WebGLConstants.FLOAT_VEC4
+            };
+            vertexShader += 'attribute vec4 a_vertexColor;\n';
+            vertexShader += 'varying vec4 v_vertexColor;\n';
+            vertexShaderMain += '  v_vertexColor = a_vertexColor;\n';
+            fragmentShader += 'varying vec4 v_vertexColor;\n';
+        }
+
         if (addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = 'batchId';
             techniqueParameters.batchId = {
@@ -373,37 +390,37 @@ define([
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
         fragmentShader += 'vec3 lambertianDiffuse(vec3 baseColor) \n' +
-                          '{\n' +
-                          '    return baseColor / M_PI;\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return baseColor / M_PI;\n' +
+            '}\n\n';
 
         fragmentShader += 'vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH) \n' +
-                          '{\n' +
-                          '    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);\n' +
+            '}\n\n';
 
         fragmentShader += 'vec3 fresnelSchlick(float metalness, float VdotH) \n' +
-                          '{\n' +
-                          '    return metalness + (vec3(1.0) - metalness) * pow(1.0 - VdotH, 5.0);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return metalness + (vec3(1.0) - metalness) * pow(1.0 - VdotH, 5.0);\n' +
+            '}\n\n';
 
         fragmentShader += 'float smithVisibilityG1(float NdotV, float roughness) \n' +
-                          '{\n' +
-                          '    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;\n' +
-                          '    return NdotV / (NdotV * (1.0 - k) + k);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;\n' +
+            '    return NdotV / (NdotV * (1.0 - k) + k);\n' +
+            '}\n\n';
 
         fragmentShader += 'float smithVisibilityGGX(float roughness, float NdotL, float NdotV) \n' +
-                          '{\n' +
-                          '    return smithVisibilityG1(NdotL, roughness) * smithVisibilityG1(NdotV, roughness);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return smithVisibilityG1(NdotL, roughness) * smithVisibilityG1(NdotV, roughness);\n' +
+            '}\n\n';
 
         fragmentShader += 'float GGX(float roughness, float NdotH) \n' +
-                          '{\n' +
-                          '    float roughnessSquared = roughness * roughness;\n' +
-                          '    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;\n' +
-                          '    return roughnessSquared / (M_PI * f * f);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    float roughnessSquared = roughness * roughness;\n' +
+            '    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;\n' +
+            '    return roughnessSquared / (M_PI * f * f);\n' +
+            '}\n\n';
 
         fragmentShader += 'void main(void) \n{\n';
 
@@ -413,17 +430,17 @@ define([
             if (defined(parameterValues.normalTexture)) {
                 if (hasTangents) {
                     // Read tangents from varying
-                    fragmentShader += '    vec3 t = normalize(v_tangent);\n';
-                    fragmentShader += '    vec3 b = normalize(cross(ng, t));\n';
+                    fragmentShader += '    vec3 t = normalize(v_tangent.xyz);\n';
+                    fragmentShader += '    vec3 b = normalize(cross(ng, t) * v_tangent.w);\n';
                     fragmentShader += '    mat3 tbn = mat3(t, b, ng);\n';
                     fragmentShader += '    vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
                     fragmentShader += '    n = normalize(tbn * (2.0 * n - 1.0));\n';
                 } else {
                     // Add standard derivatives extension
                     fragmentShader = '#ifdef GL_OES_standard_derivatives\n' +
-                                     '#extension GL_OES_standard_derivatives : enable\n' +
-                                     '#endif\n' +
-                                     fragmentShader;
+                        '#extension GL_OES_standard_derivatives : enable\n' +
+                        '#endif\n' +
+                        fragmentShader;
                     // Compute tangents
                     fragmentShader += '#ifdef GL_OES_standard_derivatives\n';
                     fragmentShader += '    vec3 pos_dx = dFdx(v_positionEC);\n';
@@ -464,6 +481,11 @@ define([
                 fragmentShader += '    vec4 baseColorWithAlpha = vec4(1.0);\n';
             }
         }
+
+        if (hasVertexColors) {
+            fragmentShader += '    baseColorWithAlpha *= v_vertexColor;\n';
+        }
+
         fragmentShader += '    vec3 baseColor = baseColorWithAlpha.rgb;\n';
         // Add metallic-roughness to fragment shader
         if (defined(parameterValues.metallicRoughnessTexture)) {
@@ -583,12 +605,8 @@ define([
         var alphaMode = material.alphaMode;
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
-                var alphaCutoff = material.alphaCutoff;
-                if (defined(alphaCutoff)) {
-                    fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
-                } else {
-                    fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
-                }
+                var alphaCutoff = defaultValue(material.alphaCutoff, 0.5);
+                fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
             } else if (alphaMode === 'BLEND') {
                 fragmentShader += '    gl_FragColor = vec4(color, baseColorWithAlpha.a);\n';
             } else {
@@ -602,7 +620,11 @@ define([
         var techniqueStates;
         if (defined(alphaMode) && alphaMode !== 'OPAQUE') {
             techniqueStates = {
-                enable: [
+                enable: parameterValues.doubleSided ? [
+                    WebGLConstants.DEPTH_TEST,
+                    WebGLConstants.BLEND
+                ]: [
+                    WebGLConstants.CULL_FACE,
                     WebGLConstants.DEPTH_TEST,
                     WebGLConstants.BLEND
                 ],
@@ -675,9 +697,7 @@ define([
         return techniqueId;
     }
 
-    function getPBRValueType(paramName, paramValue) {
-        var value;
-
+    function getPBRValueType(paramName) {
         switch (paramName) {
             case 'baseColorFactor':
                 return WebGLConstants.FLOAT_VEC4;
@@ -738,15 +758,16 @@ define([
                 if (!defined(techniqueParameterForSemantic(technique, semantic))) {
                     var accessorId = attributes[semantic];
                     var accessor = accessors[accessorId];
-                    if (semantic.charAt(0) === '_') {
-                        semantic = semantic.slice(1);
+                    var lowerCase = semantic.toLowerCase();
+                    if (lowerCase.charAt(0) === '_') {
+                        lowerCase = lowerCase.slice(1);
                     }
-                    var attributeName = 'a_' + semantic;
-                    technique.parameters[semantic] = {
-                        semantic : semantic,
-                        type : accessor.componentType
+                    var attributeName = 'a_' + lowerCase;
+                    technique.parameters[lowerCase] = {
+                        semantic: semantic,
+                        type: accessor.componentType
                     };
-                    technique.attributes[attributeName] = semantic;
+                    technique.attributes[attributeName] = lowerCase;
                     program.attributes.push(attributeName);
                     var pipelineExtras = vertexShader.extras._pipeline;
                     var shaderText = pipelineExtras.source;
@@ -765,7 +786,7 @@ define([
         });
     }
 
-    function splitIncompatibleSkins(gltf) {
+    function splitIncompatibleMaterials(gltf) {
         var accessors = gltf.accessors;
         var materials = gltf.materials;
         ForEach.mesh(gltf, function(mesh) {
@@ -782,21 +803,48 @@ define([
                     type = jointAccessor.type;
                 }
                 var isSkinned = defined(jointAccessorId);
+                var hasVertexColors = defined(primitive.attributes.COLOR_0);
+                var hasMorphTargets = defined(primitive.targets);
 
-                var skinningInfo = material.extras._pipeline.skinning;
-                if (!defined(skinningInfo)) {
-                    material.extras._pipeline.skinning = {
-                        skinned : isSkinned,
-                        componentType : componentType,
-                        type : type
+                var hasTangents = false;
+                var attributes = primitive.attributes;
+                for (var attribute in attributes) {
+                    if (attribute.indexOf('TANGENT') >= 0) {
+                        hasTangents = true;
+                    }
+                }
+
+                var primitiveInfo = material.extras._pipeline.primitive;
+                if (!defined(primitiveInfo)) {
+                    material.extras._pipeline.primitive = {
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
+                        },
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasTangents : hasTangents
                     };
-                } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
-                    // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
+                } else if ((primitiveInfo.skinning.skinned !== isSkinned) ||
+                        (primitiveInfo.skinning.type !== type) ||
+                        (primitiveInfo.hasVertexColors !== hasVertexColors) ||
+                        (primitiveInfo.hasMorphTargets !== hasMorphTargets) ||
+                        (primitiveInfo.hasTangents !== hasTangents)) {
+                    // This primitive uses the same material as another one that either:
+                    // * Isn't skinned
+                    // * Uses a different type to store joints and weights
+                    // * Doesn't have vertex colors, tangents, or morph targets
                     var clonedMaterial = clone(material, true);
-                    clonedMaterial.material.extras._pipeline.skinning = {
-                        skinned : isSkinned,
-                        componentType : componentType,
-                        type : type
+                    clonedMaterial.extras._pipeline.skinning = {
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
+                        },
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasTangents : hasTangents
                     };
                     // Split this off as a separate material
                     materialId = addToArray(materials, clonedMaterial);

@@ -5,6 +5,7 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
+        './Event',
         './getAbsoluteUri',
         './isCrossOriginUrl',
         './RuntimeError',
@@ -16,6 +17,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        Event,
         getAbsoluteUri,
         isCrossOriginUrl,
         RuntimeError,
@@ -63,6 +65,8 @@ define([
         return TaskProcessor._canTransferArrayBuffer;
     }
 
+    var taskCompletedEvent = new Event();
+
     function completeTask(processor, data) {
         --processor._activeTasks;
 
@@ -84,8 +88,10 @@ define([
                 error = new DeveloperError(data.error.message);
                 error.stack = data.error.stack;
             }
+            taskCompletedEvent.raiseEvent(error);
             deferred.reject(error);
         } else {
+            taskCompletedEvent.raiseEvent();
             deferred.resolve(data.result);
         }
 
@@ -137,7 +143,7 @@ define([
 
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
-        } else if (defined(require.toUrl)) {
+        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
             bootstrapMessage.loaderConfig.baseUrl =
                 getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {
@@ -258,8 +264,6 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {undefined}
      */
     TaskProcessor.prototype.destroy = function() {
         if (defined(this._worker)) {
@@ -267,6 +271,16 @@ define([
         }
         return destroyObject(this);
     };
+
+    /**
+     * An event that's raised when a task is completed successfully.  Event handlers are passed
+     * the error object is a task fails.
+     *
+     * @type {Event}
+     *
+     * @private
+     */
+    TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 
     // exposed for testing purposes
     TaskProcessor._defaultWorkerModulePrefix = 'Workers/';

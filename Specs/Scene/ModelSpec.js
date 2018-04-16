@@ -1,10 +1,8 @@
 defineSuite([
         'Scene/Model',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
-        'Core/clone',
         'Core/Color',
         'Core/combine',
         'Core/defaultValue',
@@ -16,20 +14,22 @@ defineSuite([
         'Core/FeatureDetection',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
-        'Core/loadArrayBuffer',
-        'Core/loadJson',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
         'Core/PrimitiveType',
+        'Core/Resource',
         'Core/Transforms',
         'Core/WebGLConstants',
         'Renderer/Pass',
         'Renderer/RenderState',
         'Renderer/ShaderSource',
         'Scene/Axis',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/ColorBlendMode',
+        'Scene/DracoLoader',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -37,11 +37,9 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Model,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
-        clone,
         Color,
         combine,
         defaultValue,
@@ -53,20 +51,22 @@ defineSuite([
         FeatureDetection,
         HeadingPitchRange,
         JulianDate,
-        loadArrayBuffer,
-        loadJson,
         CesiumMath,
         Matrix3,
         Matrix4,
         PerspectiveFrustum,
         PrimitiveType,
+        Resource,
         Transforms,
         WebGLConstants,
         Pass,
         RenderState,
         ShaderSource,
         Axis,
+        ClippingPlane,
+        ClippingPlaneCollection,
         ColorBlendMode,
+        DracoLoader,
         HeightReference,
         ModelAnimationLoop,
         createScene,
@@ -124,6 +124,9 @@ defineSuite([
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
+    var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
+    var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
+    var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -199,6 +202,8 @@ defineSuite([
             return model.ready;
         }, { timeout: 10000 }).then(function() {
             return model;
+        }).otherwise(function() {
+            return when.reject(model);
         });
     }
 
@@ -247,7 +252,7 @@ defineSuite([
         var modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0));
 
         expect(texturedBoxModel.gltf).toBeDefined();
-        expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
+        expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf');
         expect(texturedBoxModel.show).toEqual(false);
         expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
         expect(texturedBoxModel.scale).toEqual(1.0);
@@ -276,8 +281,7 @@ defineSuite([
         var model = Model.fromGltf({
             url: url
         });
-        expect(model._basePath).toEndWith(params);
-        expect(model._baseUri).toEndWith(params);
+        expect(model.basePath).toEndWith(params);
     });
 
     it('fromGltf takes a base path', function() {
@@ -287,8 +291,25 @@ defineSuite([
             url: url,
             basePath: basePath
         });
-        expect(model._basePath).toEndWith(basePath);
+        expect(model.basePath).toEndWith(basePath);
         expect(model._cacheKey).toEndWith(basePath);
+    });
+
+    it('fromGltf takes Resource as url and basePath parameters', function() {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callThrough();
+
+        var url = new Resource({
+            url: texturedBoxUrl
+        });
+        var basePath = new Resource({
+            url: './Data/Models/Box-Textured-Separate/'
+        });
+        var model = Model.fromGltf({
+            url: url,
+            basePath: basePath
+        });
+        expect(model._resource).toEqual(basePath);
+        expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(url.url);
     });
 
     it('renders', function() {
@@ -375,7 +396,7 @@ defineSuite([
     });
 
     it('Renders x-up model', function() {
-        return loadJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to x-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
 
@@ -391,7 +412,7 @@ defineSuite([
     });
 
     it('Renders y-up model', function() {
-        return loadJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to y-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
 
@@ -407,7 +428,7 @@ defineSuite([
     });
 
     it('Renders z-up model', function() {
-        return loadJson(boxEcefUrl).then(function(gltf) {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be the identity.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
 
@@ -429,7 +450,7 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        return loadJson(boomBoxUrl).then(function(gltf) {
+        return Resource.fetchJson(boomBoxUrl).then(function(gltf) {
             gltf.images[0].uri = 'invalid.png';
             var model = primitives.add(new Model({
                 gltf : gltf
@@ -748,10 +769,104 @@ defineSuite([
         });
     });
 
+    it('destroys attached ClippingPlaneCollections', function() {
+        return loadModel(boxUrl).then(function(model) {
+            var clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            model.clippingPlanes = clippingPlanes;
+            expect(model.isDestroyed()).toEqual(false);
+            expect(clippingPlanes.isDestroyed()).toEqual(false);
+            primitives.remove(model);
+            expect(model.isDestroyed()).toEqual(true);
+            expect(clippingPlanes.isDestroyed()).toEqual(true);
+        });
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to another Model', function() {
+        var clippingPlanes;
+        return loadModel(boxUrl).then(function(model1) {
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            model1.clippingPlanes = clippingPlanes;
+
+            return loadModel(boxUrl);
+        })
+        .then(function(model2) {
+            expect(function() {
+                model2.clippingPlanes = clippingPlanes;
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('destroys ClippingPlaneCollections that are detached', function() {
+        var clippingPlanes;
+        return loadModel(boxUrl).then(function(model1) {
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            model1.clippingPlanes = clippingPlanes;
+            expect(clippingPlanes.isDestroyed()).toBe(false);
+
+            model1.clippingPlanes = undefined;
+            expect(clippingPlanes.isDestroyed()).toBe(true);
+
+            primitives.remove(model1);
+        });
+    });
+
+    it('rebuilds shaders when clipping planes change state', function() {
+        spyOn(Model, '_getClippingFunction').and.callThrough();
+
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+
+            var clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                unionClippingRegions : false
+            });
+            model.clippingPlanes = clippingPlanes;
+
+            scene.renderForSpecs();
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+
+            clippingPlanes.unionClippingRegions = true;
+
+            scene.renderForSpecs();
+            expect(Model._getClippingFunction.calls.count()).toEqual(4);
+
+            primitives.remove(model);
+        });
+    });
+
+    it('rebuilds shaders when color requires coloring shader code', function() {
+        spyOn(Model, '_modifyShaderForColor').and.callThrough();
+
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+
+            model.color = Color.LIME;
+
+            scene.renderForSpecs();
+            expect(Model._modifyShaderForColor.calls.count()).toEqual(1);
+
+            primitives.remove(model);
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('Throws because of invalid extension', function() {
-        return loadJson(boxUrl).then(function(gltf) {
+        return Resource.fetchJson(boxUrl).then(function(gltf) {
             gltf.extensionsRequired = ['NOT_supported_extension'];
             var model = primitives.add(new Model({
                 gltf : gltf
@@ -765,7 +880,7 @@ defineSuite([
     });
 
     it('Throws because of invalid extension', function() {
-        return loadJson(boxUrl).then(function(gltf) {
+        return Resource.fetchJson(boxUrl).then(function(gltf) {
             gltf.extensionsRequired = ['CESIUM_binary_glTF'];
             var model = primitives.add(new Model({
                 gltf : gltf
@@ -824,7 +939,7 @@ defineSuite([
     });
 
     it('loads a model with the KHR_binary_glTF extension as an ArrayBuffer using new Model', function() {
-        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
             return loadModelJson(arrayBuffer).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
@@ -833,7 +948,7 @@ defineSuite([
     });
 
     it('loads a model with the KHR_binary_glTF extension as an Uint8Array using new Model', function() {
-        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
+        return Resource.fetchArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
             return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
@@ -1135,10 +1250,10 @@ defineSuite([
         var spyAdd = jasmine.createSpy('listener');
         animations.animationAdded.addEventListener(spyAdd);
         var a = animations.add({
-            name : 1
+            name : 'animation_1'
         });
         expect(a).toBeDefined();
-        expect(a.name).toEqual(1);
+        expect(a.name).toEqual('animation_1');
         expect(a.startTime).not.toBeDefined();
         expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
@@ -1164,6 +1279,41 @@ defineSuite([
         expect(animations.length).toEqual(0);
         expect(spyRemove).toHaveBeenCalledWith(animBoxesModel, a);
         animations.animationRemoved.removeEventListener(spyRemove);
+    });
+
+    it('adds an animation by index', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+
+        var spyAdd = jasmine.createSpy('listener');
+        animations.animationAdded.addEventListener(spyAdd);
+        var a = animations.add({
+            index : 1
+        });
+        expect(a).toBeDefined();
+        expect(a.name).toEqual('animation_1');
+        animations.remove(a);
+    });
+
+    it('add throws when name and index are not defined', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add();
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws when index is invalid', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : -1
+            });
+        }).toThrowDeveloperError();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : 2
+            });
+        }).toThrowDeveloperError();
     });
 
     it('add throws when model is not loaded', function() {
@@ -1207,7 +1357,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             removeOnStop : true
         });
@@ -1253,7 +1403,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             delay : 1.0
         });
@@ -1277,7 +1427,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             stopTime : stopTime
         });
@@ -1301,7 +1451,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             speedup : 1.5
         });
@@ -1326,7 +1476,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             reverse : true
         });
@@ -1353,7 +1503,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             loop : ModelAnimationLoop.REPEAT
         });
@@ -1383,7 +1533,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             loop : ModelAnimationLoop.MIRRORED_REPEAT
         });
@@ -1417,7 +1567,7 @@ defineSuite([
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
             var animations = m.activeAnimations;
             var a = animations.add({
-                name : 1,
+                name : 'animation_1',
                 startTime : time
             });
 
@@ -1969,6 +2119,15 @@ defineSuite([
         });
     });
 
+    it('loads a glTF 2.0 with node animations set to unclamped', function() {
+        return loadModel(boxAnimatedPbrUrl, {
+            clampAnimations : false
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('loads a glTF 2.0 with skinning', function() {
         return loadModel(riggedSimplePbrUrl).then(function(m) {
             verifyRender(m);
@@ -1984,7 +2143,7 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with alphaMode set to OPAQUE', function() {
-        return loadJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             gltf.materials[0].alphaMode = 'OPAQUE';
 
             return loadModelJson(gltf).then(function(m) {
@@ -1995,7 +2154,7 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with alphaMode set to MASK', function() {
-        return loadJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             gltf.materials[0].alphaMode = 'MASK';
             gltf.materials[0].alphaCutoff = 0.5;
 
@@ -2007,7 +2166,7 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with alphaMode set to BLEND', function() {
-        return loadJson(boxPbrUrl).then(function(gltf) {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
             gltf.materials[0].alphaMode = 'BLEND';
 
             return loadModelJson(gltf).then(function(m) {
@@ -2039,8 +2198,34 @@ defineSuite([
         }
     }
 
+    function checkVertexColors(model) {
+        model.zoomTo();
+        scene.camera.moveUp(0.1);
+        // Red
+        scene.camera.moveLeft(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeGreaterThan(10);
+            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[2]).toBeLessThan(10);
+        });
+        // Green
+        scene.camera.moveRight(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[1]).toBeGreaterThan(20);
+            expect(rgba[2]).toBeLessThan(10);
+        });
+        // Blue
+        scene.camera.moveRight(0.5);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toBeLessThan(10);
+            expect(rgba[1]).toBeLessThan(10);
+            expect(rgba[2]).toBeGreaterThan(20);
+        });
+    }
+
     it('loads a glTF 2.0 with doubleSided set to false', function() {
-        return loadJson(twoSidedPlaneUrl).then(function(gltf) {
+        return Resource.fetchJson(twoSidedPlaneUrl).then(function(gltf) {
             gltf.materials[0].doubleSided = false;
             return loadModelJson(gltf).then(function(m) {
                 m.show = true;
@@ -2050,11 +2235,18 @@ defineSuite([
         });
     });
 
-
     it('loads a glTF 2.0 with doubleSided set to true', function() {
         return loadModel(twoSidedPlaneUrl).then(function(m) {
             m.show = true;
             checkDoubleSided(m, true);
+            primitives.remove(m);
+        });
+    });
+
+    it('load a glTF 2.0 with vertex colors', function() {
+        return loadModel(vertexColorTestUrl).then(function(m) {
+            m.show = true;
+            checkVertexColors(m);
             primitives.remove(m);
         });
     });
@@ -2238,6 +2430,79 @@ defineSuite([
         });
     });
 
+    it('loads a glTF with KHR_draco_mesh_compression extension', function() {
+        return loadModel(dracoCompressedModelUrl, {
+            dequantizeInShader : false
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
+        return loadModel(dracoCompressedModelWithAnimationUrl, {
+            dequantizeInShader : false
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('error decoding a draco compressed glTF causes model loading to fail', function() {
+        var decoder = DracoLoader._getDecoderTaskProcessor();
+        spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
+
+        var model = primitives.add(Model.fromGltf({
+            url : dracoCompressedModelUrl,
+            dequantizeInShader : false
+        }));
+
+        return pollToPromise(function() {
+            scene.renderForSpecs();
+            return model._state === 3; // FAILED
+        }, { timeout: 10000 }).then(function() {
+            model.readyPromise.then(function (e) {
+                fail('should not resolve');
+            }).otherwise(function(e) {
+                expect(e).toBeDefined();
+                expect(e.message).toEqual('Failed to load model: ./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf\nmy error');
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('loads a draco compressed glTF and dequantizes in the shader', function() {
+        return loadModel(dracoCompressedModelUrl, {
+            dequantizeInShader : true
+        }).then(function(m) {
+            verifyRender(m);
+
+            var atrributeData = m._decodedData['0.primitive.0'].attributes;
+            expect(atrributeData['POSITION'].quantization).toBeDefined();
+            expect(atrributeData['TEXCOORD_0'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization.octEncoded).toBe(true);
+
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes', function() {
+        return loadModel(dracoCompressedModelWithAnimationUrl, {
+            dequantizeInShader : true
+        }).then(function(m) {
+            verifyRender(m);
+
+            var atrributeData = m._decodedData['0.primitive.0'].attributes;
+            expect(atrributeData['POSITION'].quantization).toBeDefined();
+            expect(atrributeData['TEXCOORD_0'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization).toBeDefined();
+            expect(atrributeData['JOINTS_0'].quantization).toBeUndefined();
+
+            primitives.remove(m);
+        });
+    });
+
     it('does not issue draw commands when ignoreCommands is true', function() {
         return loadModel(texturedBoxUrl, {
             ignoreCommands : true
@@ -2362,6 +2627,8 @@ defineSuite([
             scene.renderForSpecs();
             var commands = scene.frameState.commandList;
             expect(commands.length).toBe(0);
+
+            primitives.remove(model);
         });
     });
 
@@ -2468,9 +2735,9 @@ defineSuite([
             model.silhouetteColor = Color.GREEN;
 
             // Load a second model
-            return loadModel(boxUrl).then(function(model) {
-                model.show = true;
-                model.silhouetteSize = 1.0;
+            return loadModel(boxUrl).then(function(model2) {
+                model2.show = true;
+                model2.silhouetteSize = 1.0;
                 scene.renderForSpecs();
                 expect(commands.length).toBe(4);
                 expect(commands[0].renderState.stencilTest.enabled).toBe(true);
@@ -2485,7 +2752,139 @@ defineSuite([
                 var reference1 = commands[0].renderState.stencilTest.reference;
                 var reference2 = commands[2].renderState.stencilTest.reference;
                 expect(reference2).toEqual(reference1 + 1);
+
+                primitives.remove(model);
+                primitives.remove(model2);
             });
+        });
+    });
+
+    it('Updates clipping planes when clipping planes are enabled', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var gl = scene.frameState.context._gl;
+            spyOn(gl, 'texImage2D').and.callThrough();
+
+            scene.renderForSpecs();
+            var callsBeforeClipping = gl.texImage2D.calls.count();
+
+            expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+
+            model.clippingPlanes = new ClippingPlaneCollection({
+               planes : [
+                   new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+               ]
+            });
+
+            model.update(scene.frameState);
+            scene.renderForSpecs();
+            expect(gl.texImage2D.calls.count() - callsBeforeClipping * 2).toEqual(2);
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes selectively disable rendering', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            plane.distance = 10.0;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual(modelColor);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes apply edge styling', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            var plane = new ClippingPlane(Cartesian3.UNIT_X, 0.0);
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    plane
+                ],
+                edgeWidth : 5.0,
+                edgeColor : Color.BLUE
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            plane.distance = 5.0;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual([0, 0, 255, 255]);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes union regions', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_Z, 5.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ],
+                unionClippingRegions: true
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            model.clippingPlanes.unionClippingRegions = false;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual(modelColor);
+            });
+
+            primitives.remove(model);
         });
     });
 
@@ -2526,6 +2925,7 @@ defineSuite([
                 removedCallback : false,
                 ellipsoid : Ellipsoid.WGS84,
                 update : function() {},
+                render : function() {},
                 getHeight : function() {
                     return 0.0;
                 },
@@ -2540,6 +2940,8 @@ defineSuite([
                         tilesWaitingForChildren : 0
                     }
                 },
+                tileLoadedEvent : new Event(),
+                imageryLayersUpdatedEvent : new Event(),
                 destroy : function() {}
             };
 
@@ -2734,7 +3136,7 @@ defineSuite([
                 position : Cartesian3.fromDegrees(-72.0, 40.0),
                 show : true
             }).otherwise(function(error) {
-                expect(error.message).toEqual('Height reference is not supported without a scene.');
+                expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
             });
         });
 
@@ -2749,6 +3151,36 @@ defineSuite([
                 expect(function () {
                     return scene.renderForSpecs();
                 }).toThrowDeveloperError();
+
+                primitives.remove(model);
+            });
+        });
+
+        it('height reference without a globe rejects', function() {
+            scene.globe = undefined;
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).otherwise(function(error) {
+                expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
+            });
+        });
+
+        it('changing height reference without a globe throws DeveloperError', function() {
+            scene.globe = undefined;
+            return loadModelJson(texturedBoxModel.gltf, {
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                show : true
+            }).then(function(model) {
+                model.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+                expect(function () {
+                    return scene.renderForSpecs();
+                }).toThrowDeveloperError();
+
+                primitives.remove(model);
             });
         });
     });

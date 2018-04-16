@@ -1,8 +1,6 @@
 define([
-        '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
-        defineProperties,
         DeveloperError) {
     'use strict';
 

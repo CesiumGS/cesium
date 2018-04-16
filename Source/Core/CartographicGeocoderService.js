@@ -1,17 +1,11 @@
 define([
         '../ThirdParty/when',
         './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties'
+        './Check'
     ], function(
         when,
         Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties) {
+        Check) {
     'use strict';
 
     /**

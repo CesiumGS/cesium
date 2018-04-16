@@ -19,12 +19,9 @@ defineSuite([
     });
 
     it('converts a typed array to string when forced to use fromCharCode', function() {
-        var previous = getStringFromTypedArray.decode;
-        getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
 
         verifyString();
-
-        getStringFromTypedArray.decode = previous;
     });
 
     it('converts a sub-region of a typed array to a string', function() {
@@ -58,5 +55,41 @@ defineSuite([
         expect(function() {
             getStringFromTypedArray();
         }).toThrowDeveloperError();
+    });
+
+    it('Unicode 2-byte characters work', function() {
+        var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
+        expect(getStringFromTypedArray(arr)).toEqual('Zürich');
+    });
+
+    it('Unicode 2-byte characters work with decodeWithFromCharCode forced', function() {
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
+
+        var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
+        expect(getStringFromTypedArray(arr)).toEqual('Zürich');
+    });
+
+    it('Unicode 3-byte characters work', function() {
+        var arr = new Uint8Array([224, 162, 160]);
+        expect(getStringFromTypedArray(arr)).toEqual('ࢠ');
+    });
+
+    it('Unicode 3-byte characters work with decodeWithFromCharCode forced', function() {
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
+
+        var arr = new Uint8Array([224, 162, 160]);
+        expect(getStringFromTypedArray(arr)).toEqual('ࢠ');
+    });
+
+    it('Unicode 4-byte characters work', function() {
+        var arr = new Uint8Array([240, 144, 138, 129]);
+        expect(getStringFromTypedArray(arr)).toEqual('𐊁');
+    });
+
+    it('Unicode 4-byte characters work with decodeWithFromCharCode forced', function() {
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
+
+        var arr = new Uint8Array([240, 144, 138, 129]);
+        expect(getStringFromTypedArray(arr)).toEqual('𐊁');
     });
 });

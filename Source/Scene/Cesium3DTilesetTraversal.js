@@ -67,7 +67,7 @@ define([
 
         loadTile(tileset, root, frameState, true);
 
-        if (!tileset.skipLevelOfDetail) {
+        if (!tileset._skipLevelOfDetail) {
             // just execute base traversal and add tiles to _desiredTiles
             tileset._baseTraversal.execute(tileset, root, maximumScreenSpaceError, frameState, outOfCore);
             var leaves = tileset._baseTraversal.leaves;
@@ -167,6 +167,9 @@ define([
      * NOTE: this will no longer work when there is a chain of selected tiles that is longer than the size of the
      * stencil buffer (usually 8 bits). In other words, the subset of the tree containing only selected tiles must be
      * no deeper than 255. It is very, very unlikely this will cause a problem.
+     *
+     * NOTE: when the scene has inverted classification enabled, the stencil buffer will be masked to 4 bits. So, the
+     * selected tiles must be no deeper than 15. This is still very unlikely.
      */
     function traverseAndSelect(tileset, root, frameState) {
         var stack = scratchStack;
@@ -363,7 +366,7 @@ define([
 
     BaseTraversal.prototype.leafHandler = function(tile) {
         // if skipLevelOfDetail is off, leaves of the base traversal get pushed to tileset._desiredTiles. additive tiles have already been pushed
-        if (this.tileset.skipLevelOfDetail || !hasAdditiveContent(tile)) {
+        if (this.tileset._skipLevelOfDetail || !hasAdditiveContent(tile)) {
             if (tile.refine === Cesium3DTileRefine.REPLACE && !childrenAreVisible(tile)) {
                 ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
                 return;
@@ -509,7 +512,7 @@ define([
         if (!tile.hasTilesetContent) {
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 // Always load additive tiles
-                loadTile(tileset, tile, this.frameState);
+                loadTile(tileset, tile, this.frameState, true);
                 if (hasAdditiveContent(tile)) {
                     tileset._desiredTiles.push(tile);
                 }
@@ -635,9 +638,16 @@ define([
         }
     }
 
+    function checkAdditiveVisibility(tileset, tile, frameState) {
+        if (defined(tile.parent) && (tile.parent.refine === Cesium3DTileRefine.ADD)) {
+            return isVisibleAndMeetsSSE(tileset, tile, frameState);
+        }
+        return true;
+    }
+
     function loadTile(tileset, tile, frameState, checkVisibility) {
         if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
-            if (!checkVisibility || isVisibleAndMeetsSSE(tileset, tile, frameState)) {
+            if (!checkVisibility || checkAdditiveVisibility(tileset, tile, frameState)) {
                 tile._requestedFrame = frameState.frameNumber;
                 tileset._requestedTiles.push(tile);
             }

@@ -8,16 +8,20 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
+        'Core/Intersect',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
         'Renderer/RenderState',
         'Scene/BlendingState',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
         'Scene/ImagerySplitDirection',
+        'Scene/Model',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
@@ -35,16 +39,20 @@ defineSuite([
         Ellipsoid,
         EllipsoidTerrainProvider,
         GeographicProjection,
+        Intersect,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
         RenderState,
         BlendingState,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         ImagerySplitDirection,
+        Model,
         QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
@@ -278,6 +286,47 @@ defineSuite([
                             }
                         }
                         expect(tilesFromLayer2).toBe(1);
+                    });
+                });
+            });
+        });
+
+        it('calling _reload adds a callback per layer per tile', function() {
+            var layer1 = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+
+            var layer2 = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Green4x4.png'
+            }));
+
+            return updateUntilDone(scene.globe).then(function() {
+                // Verify that each tile has 2 imagery objects and no loaded callbacks
+                forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                    expect(tile.data.imagery.length).toBe(2);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
+                });
+
+                // Reload each layer
+                layer1._imageryProvider._reload();
+                layer2._imageryProvider._reload();
+
+                // These should be ignored
+                layer1._imageryProvider._reload();
+                layer2._imageryProvider._reload();
+
+                // Verify that each tile has 4 imagery objects (the old imagery and the reloaded imagery for each layer)
+                //  and also has 2 callbacks so the old imagery will be removed once loaded.
+                forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                    expect(tile.data.imagery.length).toBe(4);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(3);
+                });
+
+                return updateUntilDone(scene.globe).then(function() {
+                    // Verify the old imagery was removed and the callbacks are no longer there
+                    forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
+                        expect(tile.data.imagery.length).toBe(2);
+                        expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
                     });
                 });
             });
@@ -606,14 +655,16 @@ defineSuite([
 
         var terrainCredit = new Credit('terrain credit');
         scene.terrainProvider = new CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain',
             credit : terrainCredit
         });
 
         return updateUntilDone(scene.globe).then(function() {
             var creditDisplay = scene.frameState.creditDisplay;
-            expect(creditDisplay._currentFrameCredits.textCredits).toContain(imageryCredit);
-            expect(creditDisplay._currentFrameCredits.textCredits).toContain(terrainCredit);
+            creditDisplay.showLightbox();
+            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(imageryCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(terrainCredit);
+            creditDisplay.hideLightbox();
         });
     });
 
@@ -625,6 +676,9 @@ defineSuite([
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+
+                scene.renderForSpecs();
+
                 expect(replacementQueue.count).toBe(0);
             });
         });
@@ -642,6 +696,7 @@ defineSuite([
 
             surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
 
+            scene.renderForSpecs();
             scene.renderForSpecs();
 
             levelZeroTiles = surface._levelZeroTiles;
@@ -689,6 +744,196 @@ defineSuite([
     it('throws if baseColor is assigned undefined', function() {
         expect(function() {
             scene.globe._surface.tileProvider.baseColor = undefined;
+        }).toThrowDeveloperError();
+    });
+
+    it('clipping planes selectively disable rendering globe surface', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
+
+            var result;
+            expect(scene).toRenderAndCall(function(rgba) {
+                result = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10000.0);
+            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    clipPlane
+                ]
+            });
+
+            expect(scene).notToRender(result);
+
+            clipPlane.distance = 0.0;
+
+            expect(scene).toRender(result);
+
+            scene.globe.clippingPlanes = undefined;
+        });
+    });
+
+    it('renders with clipping planes edge styling on globe surface', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
+
+            var result;
+            expect(scene).toRenderAndCall(function(rgba) {
+                result = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+
+            var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -1000.0);
+            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    clipPlane
+                ],
+                edgeWidth : 20.0,
+                edgeColor : Color.RED
+            });
+
+            expect(scene).notToRender(result);
+
+            clipPlane.distance = 0.0;
+
+            expect(scene).toRender([255, 0, 0, 255]);
+
+            scene.globe.clippingPlanes = undefined;
+        });
+    });
+
+    it('renders with multiple clipping planes clipping regions according to the value of unionClippingPlane', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
+
+            var result;
+            expect(scene).toRenderAndCall(function(rgba) {
+                result = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+
+            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_Z, -10000.0),
+                    new ClippingPlane(Cartesian3.UNIT_X, -1000.0)
+                ],
+                unionClippingRegions: true
+            });
+
+            expect(scene).notToRender(result);
+
+            scene.globe.clippingPlanes.unionClippingRegions = false;
+
+            expect(scene).toRender(result);
+
+            scene.globe.clippingPlanes = undefined;
+        });
+    });
+
+    it('No extra tiles culled with no clipping planes', function() {
+        var globe = scene.globe;
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(globe).then(function() {
+            expect(scene.frameState.commandList.length).toBe(4);
+        });
+    });
+
+    it('Culls tiles when completely inside clipping region', function() {
+        var globe = scene.globe;
+        globe.clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, -1000000.0)
+            ]
+        });
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(globe).then(function() {
+            var surface = globe._surface;
+            var tile = surface._levelZeroTiles[0];
+            expect(tile.isClipped).toBe(true);
+            expect(scene.frameState.commandList.length).toBe(2);
+        });
+    });
+
+    it('Doesn\'t cull, but clips tiles when intersecting clipping plane', function() {
+        var globe = scene.globe;
+        globe.clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 0.0)
+            ]
+        });
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(globe).then(function() {
+            var surface = globe._surface;
+            var tile = surface._levelZeroTiles[0];
+            expect(tile.isClipped).toBe(true);
+            expect(scene.frameState.commandList.length).toBe(4);
+        });
+    });
+
+    it('Doesn\'t cull or clip tiles when completely outside clipping region', function() {
+        var globe = scene.globe;
+        globe.clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(globe).then(function() {
+            var surface = globe._surface;
+            var tile = surface._levelZeroTiles[0];
+            expect(tile.isClipped).toBe(false);
+            expect(scene.frameState.commandList.length).toBe(4);
+        });
+    });
+
+    it('destroys attached ClippingPlaneCollections that have been detached', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var globe = scene.globe;
+        globe.clippingPlanes = clippingPlanes;
+        expect(clippingPlanes.isDestroyed()).toBe(false);
+
+        globe.clippingPlanes = undefined;
+        expect(clippingPlanes.isDestroyed()).toBe(true);
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to a Model', function() {
+        var clippingPlanes = new ClippingPlaneCollection ({
+            planes : [
+                new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
+            ]
+        });
+        var model = scene.primitives.add(Model.fromGltf({
+            url : './Data/Models/Box/CesiumBoxTest.gltf'
+        }));
+        model.clippingPlanes = clippingPlanes;
+        var globe = scene.globe;
+
+        expect(function() {
+            globe.clippingPlanes = clippingPlanes;
         }).toThrowDeveloperError();
     });
 

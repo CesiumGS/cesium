@@ -57,13 +57,13 @@ define([
                         var defaults = {
                             ambient: [0.0, 0.0, 0.0, 1.0],
                             emission: [0.0, 0.0, 0.0, 1.0],
-                            transparency: [1.0]
+                            transparency: 1.0
                         };
                         if (technique !== 'CONSTANT') {
                             defaults.diffuse = [0.0, 0.0, 0.0, 1.0];
                             if (technique !== 'LAMBERT') {
                                 defaults.specular = [0.0, 0.0, 0.0, 1.0];
-                                defaults.shininess = [0.0];
+                                defaults.shininess = 0.0;
                             }
                         }
                         return {
@@ -214,11 +214,42 @@ define([
         }
     }
 
+    function getAnimatedNodes(gltf) {
+        var nodes = {};
+        ForEach.animation(gltf, function(animation) {
+            ForEach.animationChannel(animation, function(channel) {
+                var target = channel.target;
+                var nodeId = target.node;
+                var path = target.path;
+                // Ignore animations that target 'weights'
+                if (path === 'translation' || path === 'rotation' || path === 'scale') {
+                    nodes[nodeId] = true;
+                }
+            });
+        });
+        return nodes;
+    }
+
+    function addDefaultTransformToAnimatedNodes(gltf) {
+        var animatedNodes = getAnimatedNodes(gltf);
+        ForEach.node(gltf, function(node, id) {
+            if (defined(animatedNodes[id])) {
+                delete node.matrix;
+                node.translation = defaultValue(node.translation, [0.0, 0.0, 0.0]);
+                node.rotation = defaultValue(node.rotation, [0.0, 0.0, 0.0, 1.0]);
+                node.scale = defaultValue(node.scale, [1.0, 1.0, 1.0]);
+            }
+        });
+    }
+
     var defaultMaterial = {
         values : {
             emission : [
                 0.5, 0.5, 0.5, 1.0
             ]
+        },
+        extras : {
+            _pipeline: {}
         }
     };
 
@@ -357,7 +388,6 @@ define([
                 }
                 material.technique = defaultTechniqueId;
             }
-
         }
     }
 
@@ -384,14 +414,8 @@ define([
     }
 
     function selectDefaultScene(gltf) {
-        var scenes = gltf.scenes;
-
-        if (!defined(gltf.scene)) {
-            var scenesLength = scenes.length;
-            for (var sceneId = 0; sceneId < scenesLength; sceneId++) {
-                gltf.scene = sceneId;
-                break;
-            }
+        if (defined(gltf.scenes) && !defined(gltf.scene)) {
+            gltf.scene = 0;
         }
     }
 
@@ -483,6 +507,7 @@ define([
     function addDefaults(gltf, options) {
         options = defaultValue(options, {});
         addDefaultsFromTemplate(gltf, gltfTemplate);
+        addDefaultTransformToAnimatedNodes(gltf);
         addDefaultMaterial(gltf);
         addDefaultTechnique(gltf);
         addDefaultByteOffsets(gltf);

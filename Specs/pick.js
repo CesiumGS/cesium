@@ -35,7 +35,7 @@ define([
         var passState = pickFramebuffer.begin(rectangle);
 
         var oldPasses = frameState.passes;
-        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')), new JobScheduler())).passes;
+        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div'), undefined, document.createElement('div')), new JobScheduler())).passes;
         frameState.passes.pick = true;
 
         primitives.update(frameState);

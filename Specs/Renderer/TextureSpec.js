@@ -2,9 +2,9 @@ defineSuite([
         'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
-        'Core/loadImage',
         'Core/loadKTX',
         'Core/PixelFormat',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Renderer/PixelDatatype',
@@ -18,9 +18,9 @@ defineSuite([
         Texture,
         Cartesian2,
         Color,
-        loadImage,
         loadKTX,
         PixelFormat,
+        Resource,
         ClearCommand,
         ContextLimits,
         PixelDatatype,
@@ -57,19 +57,19 @@ defineSuite([
         context = createContext();
 
         var promises = [];
-        promises.push(loadImage('./Data/Images/Green.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         }));
-        promises.push(loadImage('./Data/Images/Blue.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
             blueImage = image;
         }));
-        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(image) {
             blueAlphaImage = image;
         }));
-        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
         }));
-        promises.push(loadImage('./Data/Images/Red16x16.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
             red16x16Image = image;
         }));
         promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
@@ -99,6 +99,7 @@ defineSuite([
             source : blueImage
         });
 
+        expect(texture.id).toBeDefined();
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
@@ -117,7 +118,7 @@ defineSuite([
         var expectedHeight = context.canvas.clientHeight;
         expect(texture.width).toEqual(expectedWidth);
         expect(texture.height).toEqual(expectedHeight);
-        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * PixelFormat.componentsLength(texture.pixelFormat));
 
         command.color = Color.WHITE;
         command.execute(context);
@@ -157,7 +158,7 @@ defineSuite([
         var expectedHeight = context.canvas.clientHeight;
         expect(texture.width).toEqual(expectedWidth);
         expect(texture.height).toEqual(expectedHeight);
-        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * PixelFormat.componentsLength(texture.pixelFormat));
 
         // Clear to white
         command.color = Color.WHITE;
@@ -405,6 +406,25 @@ defineSuite([
         }).contextToRender(Color.NAVY.toBytes());
     });
 
+    it('can copy from a DOM element', function() {
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGB,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            width : blueImage.width,
+            height : blueImage.height
+        });
+
+        texture.copyFrom(blueImage);
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap,
+            epsilon : 1
+        }).contextToRender([0, 0, 255, 255]);
+    });
+
     it('can replace a subset of a texture', function() {
         texture = new Texture({
             context : context,
@@ -582,7 +602,7 @@ defineSuite([
 
         // Uncompressed formats
         expectTextureByteSize(16, 16, PixelFormat.ALPHA, PixelDatatype.UNSIGNED_BYTE, 256);
-        expectTextureByteSize(16, 16, PixelFormat.RGB, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
+        expectTextureByteSize(16, 16, PixelFormat.RGB, PixelDatatype.UNSIGNED_BYTE, 256 * 3);
         expectTextureByteSize(16, 16, PixelFormat.RGBA, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
         expectTextureByteSize(16, 16, PixelFormat.LUMINANCE, PixelDatatype.UNSIGNED_BYTE, 256);
         expectTextureByteSize(16, 16, PixelFormat.LUMINANCE_ALPHA, PixelDatatype.UNSIGNED_BYTE, 256 * 2);

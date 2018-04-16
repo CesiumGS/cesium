@@ -11,10 +11,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
-        '../Core/joinUrls',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
@@ -40,10 +38,8 @@ define([
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
-        getAbsoluteUri,
         getBaseUri,
         getStringFromTypedArray,
-        joinUrls,
         Matrix3,
         Matrix4,
         Quaternion,
@@ -77,10 +73,10 @@ define([
      *
      * @private
      */
-    function Instanced3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+    function Instanced3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
-        this._url = url;
+        this._resource = resource;
         this._modelInstanceCollection = undefined;
         this._batchTable = undefined;
         this._features = undefined;
@@ -204,7 +200,7 @@ define([
          */
         url: {
             get: function() {
-                return this._url;
+                return this._resource.getUrlComponent(true);
             }
         },
 
@@ -327,10 +323,12 @@ define([
             // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
             // This removes all white space and null characters from the end of the string.
             gltfUrl = gltfUrl.replace(/[\s\0]+$/, '');
-            collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(content._url, true), gltfUrl));
+            collectionOptions.url = content._resource.getDerivedResource({
+                url: gltfUrl
+            });
         } else {
             collectionOptions.gltf = gltfView;
-            collectionOptions.basePath = getAbsoluteUri(getBaseUri(content._url, true));
+            collectionOptions.basePath = content._resource.clone();
         }
 
         var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
@@ -451,12 +449,11 @@ define([
     }
 
     function createFeatures(content) {
-        var tileset = content._tileset;
         var featuresLength = content.featuresLength;
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
+                features[i] = new Cesium3DTileFeature(content, i);
             }
             content._features = features;
         }
@@ -512,12 +509,25 @@ define([
         this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
+
+        var model = this._modelInstanceCollection._model;
+
+        if (defined(model)) {
+            // Update for clipping planes
+            var tilesetClippingPlanes = this._tileset.clippingPlanes;
+            if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+                // Dereference the clipping planes from the model if they are irrelevant - saves on shading
+                // Link/Dereference directly to avoid ownership checks.
+                model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
+            }
+        }
+
         this._modelInstanceCollection.update(frameState);
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
         if ((commandStart < commandEnd) && frameState.passes.render) {
-            this._batchTable.addDerivedCommands(frameState, commandStart);
+            this._batchTable.addDerivedCommands(frameState, commandStart, false);
         }
     };
 

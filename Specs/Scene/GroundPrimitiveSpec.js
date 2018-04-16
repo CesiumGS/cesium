@@ -13,6 +13,7 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Renderer/Pass',
+        'Scene/InvertClassification',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createScene',
@@ -32,6 +33,7 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Pass,
+        InvertClassification,
         PerInstanceColorAppearance,
         Primitive,
         createScene,
@@ -72,7 +74,9 @@ defineSuite([
 
     function MockGlobePrimitive(primitive) {
         this._primitive = primitive;
+        this.pass = Pass.GLOBE;
     }
+
     MockGlobePrimitive.prototype.update = function(frameState) {
         var commandList = frameState.commandList;
         var startLength = commandList.length;
@@ -80,7 +84,7 @@ defineSuite([
 
         for (var i = startLength; i < commandList.length; ++i) {
             var command = commandList[i];
-            command.pass = Pass.GLOBE;
+            command.pass = this.pass;
         }
     };
 
@@ -281,6 +285,29 @@ defineSuite([
         expect(frameState.commandList.length).toEqual(0);
     });
 
+    it('becomes ready when show is false', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = scene.groundPrimitives.add(new GroundPrimitive({
+            geometryInstances : rectangleInstance
+        }));
+        primitive.show = false;
+
+        var ready = false;
+        primitive.readyPromise.then(function() {
+            ready = true;
+        });
+
+        return pollToPromise(function() {
+            scene.render();
+            return ready;
+        }).then(function() {
+            expect(ready).toEqual(true);
+        });
+    });
+
     it('does not render other than for the color or pick pass', function() {
         if (!GroundPrimitive.isSupported(scene)) {
             return;
@@ -385,6 +412,82 @@ defineSuite([
             asynchronous : false
         });
         verifyGroundPrimitiveRender(primitive, rectColorAttribute.value);
+    });
+
+    it('renders with invert classification and an opaque color', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        scene.invertClassification = true;
+        scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
+
+        depthPrimitive.pass = Pass.CESIUM_3D_TILE;
+        rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance,
+            asynchronous : false
+        });
+
+        scene.camera.setView({ destination : rectangle });
+
+        var invertedColor = new Array(4);
+        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red);
+        invertedColor[1] = Color.floatToByte(Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green);
+        invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue);
+        invertedColor[3] = 255;
+
+        scene.groundPrimitives.add(depthPrimitive);
+        expect(scene).toRender(invertedColor);
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender(rectColor);
+
+        primitive.getGeometryInstanceAttributes('rectangle').show = [0];
+        expect(scene).toRender(depthColor);
+
+        scene.invertClassification = false;
+    });
+
+    it('renders with invert classification and a translucent color', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        if (!InvertClassification.isTranslucencySupported(scene.context)) {
+            return;
+        }
+
+        scene.invertClassification = true;
+        scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 0.25);
+
+        depthPrimitive.pass = Pass.CESIUM_3D_TILE;
+        rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance,
+            asynchronous : false
+        });
+
+        scene.camera.setView({ destination : rectangle });
+
+        var invertedColor = new Array(4);
+        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red  * scene.invertClassificationColor.alpha);
+        invertedColor[1] = Color.floatToByte(Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green * scene.invertClassificationColor.alpha);
+        invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue * scene.invertClassificationColor.alpha);
+        invertedColor[3] = 255;
+
+        scene.groundPrimitives.add(depthPrimitive);
+        expect(scene).toRender(invertedColor);
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender(rectColor);
+
+        primitive.getGeometryInstanceAttributes('rectangle').show = [0];
+        expect(scene).toRender(depthColor);
+
+        scene.invertClassification = false;
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -652,12 +755,11 @@ defineSuite([
         var frameState = scene.frameState;
         frameState.afterRender.length = 0;
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
-                return true;
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             primitive.update(frameState);
-            return false;
+            return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
                 expect(arg).toBe(primitive);
@@ -687,12 +789,11 @@ defineSuite([
         var frameState = scene.frameState;
         frameState.afterRender.length = 0;
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
-                return true;
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             primitive.update(frameState);
-            return false;
+            return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
                 expect(arg).toBe(primitive);
@@ -807,8 +908,8 @@ defineSuite([
 
         return pollToPromise(function() {
             primitive.update(frameState);
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             return primitive.ready;
         }).then(function() {
@@ -882,8 +983,8 @@ defineSuite([
 
         return pollToPromise(function() {
             primitive.update(frameState);
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             return primitive.ready;
         }).then(function() {

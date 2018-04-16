@@ -913,6 +913,20 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform that indicates if the current camera is orthographic in 3D.
+         *
+         * @alias czm_orthographicIn3D
+         * @see UniformState#orthographicIn3D
+         */
+        czm_orthographicIn3D : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.orthographicIn3D ? 1 : 0;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
          * transforms normal vectors in model coordinates to eye coordinates.
          * <br /><br />
@@ -1118,6 +1132,22 @@ define([
             datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
                 return uniformState.frustumPlanes;
+            }
+        }),
+
+        /**
+         * The log of the current frustums far plane. Used for computing the log depth.
+         *
+         * @alias czm_logFarDistance
+         * @glslUniform
+         *
+         * @private
+         */
+        czm_logFarDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.logFarDistance;
             }
         }),
 
@@ -1587,6 +1617,20 @@ define([
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.minimumDisableDepthTestDistance;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that will be the highlight color of unclassified 3D Tiles.
+         *
+         * @alias czm_invertClassificationColor
+         * @glslUniform
+         */
+        czm_invertClassificationColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.invertClassificationColor;
             }
         })
     };

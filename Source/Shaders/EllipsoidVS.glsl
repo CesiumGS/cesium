@@ -4,7 +4,7 @@ uniform vec3 u_radii;
 
 varying vec3 v_positionEC;
 
-void main() 
+void main()
 {
     // In the vertex data, the cube goes from (-1.0, -1.0, -1.0) to (1.0, 1.0, 1.0) in model coordinates.
     // Scale to consider the radii.  We could also do this once on the CPU when using the BoxGeometry,
@@ -15,8 +15,8 @@ void main()
     v_positionEC = (czm_modelView * p).xyz;     // position in eye coordinates
     gl_Position = czm_modelViewProjection * p;  // position in clip coordinates
 
-    // With multi-frustum, when the ellipsoid primitive is positioned on the intersection of two frustums 
-    // and close to terrain, the terrain (writes depth) in the closest frustum can overwrite part of the 
+    // With multi-frustum, when the ellipsoid primitive is positioned on the intersection of two frustums
+    // and close to terrain, the terrain (writes depth) in the closest frustum can overwrite part of the
     // ellipsoid (does not write depth) that was rendered in the farther frustum.
     //
     // Here, we clamp the depth in the vertex shader to avoid being overwritten; however, this creates

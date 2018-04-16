@@ -11,8 +11,7 @@ define([
      *
      * @exports BingMapsApi
      */
-    var BingMapsApi = {
-    };
+    var BingMapsApi = {};
 
     /**
      * The default Bing Maps API key to use if one is not provided to the
@@ -29,7 +28,7 @@ define([
 
     var printedBingWarning = false;
     var errorCredit;
-    var errorString = 'This application is using Cesium\'s default Bing Maps key.  Please create a new key for the application as soon as possible and prior to deployment by visiting https://www.bingmapsportal.com/, and provide your key to Cesium by setting the Cesium.BingMapsApi.defaultKey property before constructing the CesiumWidget or any other object that uses the Bing Maps API.';
+    var errorString = '<b>This application is using Cesium\'s default Bing Maps key.  Please create a new key for the application as soon as possible and prior to deployment by visiting <a href="https://www.bingmapsportal.com/">https://www.bingmapsportal.com/</a>, and provide your key to Cesium by setting the Cesium.BingMapsApi.defaultKey property before constructing the CesiumWidget or any other object that uses the Bing Maps API.</b>';
 
     BingMapsApi.getKey = function(providedKey) {
         if (defined(providedKey)) {
@@ -41,7 +40,7 @@ define([
                 console.log(errorString);
                 printedBingWarning = true;
             }
-            return 'AsWE_wlRITl2b5Pr5oThzDwMg7Zh6ghwinCT-QinakkCBU9H2BUb7YQlpZXfPoo4';
+            return 'Ar9n20kTp-N8tEg3Dpx-Pgocmx3W0-GUnD_Bgt3h8g6pSeDL8yxByTVGHyMyjI2p';
         }
 
         return BingMapsApi.defaultKey;
@@ -53,7 +52,7 @@ define([
         }
 
         if (!defined(errorCredit)) {
-            errorCredit = new Credit(errorString);
+            errorCredit = new Credit(errorString, true);
         }
 
         return errorCredit;

@@ -1,15 +1,11 @@
 define([
         '../ThirdParty/when',
         './Check',
-        './defined',
-        './DeveloperError',
-        './loadImage'
+        './Resource'
     ], function(
         when,
         Check,
-        defined,
-        DeveloperError,
-        loadImage) {
+        Resource) {
     'use strict';
 
     /**
@@ -26,13 +22,18 @@ define([
         });
 
         var blobUrl = window.URL.createObjectURL(blob);
-        return loadImage(blobUrl, false, request).then(function(image) {
-            window.URL.revokeObjectURL(blobUrl);
-            return image;
-        }, function(error) {
-            window.URL.revokeObjectURL(blobUrl);
-            return when.reject(error);
+        var resource = new Resource({
+            url: blobUrl,
+            request: request
         });
+        return resource.fetchImage()
+            .then(function(image) {
+                window.URL.revokeObjectURL(blobUrl);
+                return image;
+            }, function(error) {
+                window.URL.revokeObjectURL(blobUrl);
+                return when.reject(error);
+            });
     }
 
     return loadImageFromTypedArray;

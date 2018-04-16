@@ -1,6 +1,7 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -18,6 +19,7 @@ define([
     ], function(
         BoundingRectangle,
         Cartesian2,
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -116,13 +118,13 @@ define([
     }
 
     function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
-        textureAtlas.addImage(id, canvas).then(function(index, id) {
+        textureAtlas.addImage(id, canvas).then(function(index) {
             glyphTextureInfo.index = index;
         });
     }
 
     function rebindAllGlyphs(labelCollection, label) {
-        var text = label._text;
+        var text = label._renderedText;
         var textLength = text.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
@@ -267,6 +269,7 @@ define([
                 billboard.scaleByDistance = label._scaleByDistance;
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
                 billboard.disableDepthTestDistance = label._disableDepthTestDistance;
+                billboard._batchIndex = label._batchIndex;
             }
         }
 
@@ -290,7 +293,7 @@ define([
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
-        var text = label._text;
+        var text = label._renderedText;
         var glyph;
         var dimensions;
         var lastLineWidth = 0;
@@ -431,7 +434,7 @@ define([
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />
@@ -459,7 +462,7 @@ define([
      * @see Label
      * @see BillboardCollection
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      *
      * @example
      * // Create a label collection with two labels
@@ -477,6 +480,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
+        this._batchTable = options.batchTable;
 
         this._textureAtlas = undefined;
         this._backgroundTextureAtlas = undefined;
@@ -488,7 +492,8 @@ define([
         this._backgroundBillboardCollection.destroyTextureAtlas = false;
 
         this._billboardCollection = new BillboardCollection({
-            scene : this._scene
+            scene : this._scene,
+            batchTable : this._batchTable
         });
         this._billboardCollection.destroyTextureAtlas = false;
 
@@ -498,6 +503,8 @@ define([
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
+
+        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -810,6 +817,9 @@ define([
         billboardCollection.blendOption = blendOption;
         backgroundBillboardCollection.blendOption = blendOption;
 
+        billboardCollection._highlightColor = this._highlightColor;
+        backgroundBillboardCollection._highlightColor = this._highlightColor;
+
         this._labelsToUpdate.length = 0;
         backgroundBillboardCollection.update(frameState);
         billboardCollection.update(frameState);
@@ -836,8 +846,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
