@@ -45,7 +45,6 @@
 
 <script id="cesium_sandcastle_script">
 
-
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
@@ -56,11 +55,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker : false
 });
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
 viewer.scene.globe.splitDirection = Cesium.ImagerySplitDirection.RIGHT;
-
 
 // Add another globe to the list
 var secondaryGlobe = new Cesium.Globe();
@@ -74,7 +72,6 @@ var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
 });
 secondaryGlobe.terrainProvider = vrTheWorldProvider;
 viewer.scene.globes.push(secondaryGlobe);
-
 
 // Sync the position of the slider with the split position
 var slider = document.getElementById('slider');
@@ -101,7 +98,6 @@ function sliderMove(e) {
   slider.style.left = 100.0 * splitPosition + "%";
   viewer.scene.imagerySplitPosition = splitPosition;
 }
-
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

@@ -3790,6 +3790,7 @@ define([
      * @see Scene#isDestroyed
      */
     Scene.prototype.destroy = function() {
+        var i;
         this._tweens.removeAll();
         this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
@@ -3799,9 +3800,11 @@ define([
         this._primitives = this._primitives && this._primitives.destroy();
         this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
-        for (var i = 0; i < this._globes.length; i++) {
+
+        for (i = 0; i < this._globes.length; ++i) {
             this._globes[i].destroy();
         }
+
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
@@ -3833,7 +3836,7 @@ define([
 
         this._removeRequestListenerCallback();
         this._removeTaskProcessorListenerCallback();
-        for (var i = 0; i < this._removeGlobeCallbacks.length; ++i) {
+        for (i = 0; i < this._removeGlobeCallbacks.length; ++i) {
             this._removeGlobeCallbacks[i]();
         }
         this._removeGlobeCallbacks.length = 0;
