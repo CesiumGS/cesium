@@ -1307,4 +1307,15 @@ defineSuite([
         }).contextToRender();
     });
 
+    it('has czm_logFarDistance', function() {
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_logFarDistance == (2.0 / log2(czm_currentFrustum.y + 1.0)));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
 }, 'WebGL');

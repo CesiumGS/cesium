@@ -195,16 +195,14 @@ define([
      * @param {Number} value The value to return the sign of.
      * @returns {Number} The sign of value.
      */
-    CesiumMath.sign = function(value) {
-        if (value > 0) {
-            return 1;
+    CesiumMath.sign = defaultValue(Math.sign, function sign(value) {
+        value = +value; // coerce to number
+        if (value === 0 || value !== value) {
+            // zero or NaN
+            return value;
         }
-        if (value < 0) {
-            return -1;
-        }
-
-        return 0;
-    };
+        return value > 0 ? 1 : -1;
+    });
 
     /**
      * Returns 1.0 if the given value is positive or zero, and -1.0 if it is negative.
@@ -264,12 +262,9 @@ define([
      * @param {Number} value The number whose hyperbolic sine is to be returned.
      * @returns {Number} The hyperbolic sine of <code>value</code>.
      */
-    CesiumMath.sinh = function(value) {
-        var part1 = Math.pow(Math.E, value);
-        var part2 = Math.pow(Math.E, -1.0 * value);
-
-        return (part1 - part2) * 0.5;
-    };
+    CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
+        return (Math.exp(value) - Math.exp(-value)) / 2.0;
+    });
 
     /**
      * Returns the hyperbolic cosine of a number.
@@ -290,12 +285,9 @@ define([
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
      * @returns {Number} The hyperbolic cosine of <code>value</code>.
      */
-    CesiumMath.cosh = function(value) {
-        var part1 = Math.pow(Math.E, value);
-        var part2 = Math.pow(Math.E, -1.0 * value);
-
-        return (part1 + part2) * 0.5;
-    };
+    CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
+        return (Math.exp(value) + Math.exp(-value)) / 2.0;
+    });
 
     /**
      * Computes the linear interpolation of two values.
@@ -334,7 +326,7 @@ define([
      * @type {Number}
      * @constant
      */
-    CesiumMath.PI_OVER_TWO = Math.PI * 0.5;
+    CesiumMath.PI_OVER_TWO = Math.PI / 2.0;
 
     /**
      * pi/3
@@ -366,7 +358,7 @@ define([
      * @type {Number}
      * @constant
      */
-    CesiumMath.THREE_PI_OVER_TWO = (3.0 * Math.PI) * 0.5;
+    CesiumMath.THREE_PI_OVER_TWO = 3.0 * Math.PI / 2.0;
 
     /**
      * 2pi
@@ -835,11 +827,6 @@ define([
         return Math.log(number) / Math.log(base);
     };
 
-    function cbrt(number) {
-        var result = Math.pow(Math.abs(number), 1.0 / 3.0);
-        return number < 0.0 ? -result : result;
-    }
-
     /**
      * Finds the cube root of a number.
      * Returns NaN if <code>number</code> is not provided.
@@ -847,7 +834,20 @@ define([
      * @param {Number} [number] The number.
      * @returns {Number} The result.
      */
-    CesiumMath.cbrt = defined(Math.cbrt) ? Math.cbrt : cbrt;
+    CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
+        var result = Math.pow(Math.abs(number), 1.0 / 3.0);
+        return number < 0.0 ? -result : result;
+    });
+
+    /**
+     * Finds the base 2 logarithm of a number.
+     *
+     * @param {Number} number The number.
+     * @returns {Number} The result.
+     */
+    CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
+        return Math.log(number) * Math.LOG2E;
+    });
 
     /**
      * @private

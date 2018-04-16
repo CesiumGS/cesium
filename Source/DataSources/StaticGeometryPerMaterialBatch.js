@@ -153,6 +153,7 @@ define([
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
@@ -182,6 +183,7 @@ define([
             this.primitive = primitive;
             this.createPrimitive = false;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;

@@ -307,10 +307,10 @@ defineSuite([
         });
 
         var r = geometry.rectangle;
-        expect(CesiumMath.toDegrees(r.north)).toEqual(1.4189407575364013);
-        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.4189407575364013);
-        expect(CesiumMath.toDegrees(r.east)).toEqual(1.4094456877799821);
-        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4094456877799821);
+        expect(CesiumMath.toDegrees(r.north)).toEqual(1.414213562373095);
+        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.414213562373095);
+        expect(CesiumMath.toDegrees(r.east)).toEqual(1.414213562373095);
+        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4142135623730951);
     });
 
     it('computing rectangle property with zero rotation', function() {
@@ -348,6 +348,6 @@ defineSuite([
         granularity : 1.0,
         ellipsoid : Ellipsoid.UNIT_SPHERE
     });
-    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
 });

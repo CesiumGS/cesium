@@ -1,5 +1,7 @@
 // emulated noperspective
+#ifndef LOG_DEPTH
 varying float v_WindowZ;
+#endif
 
 /**
  * Clamps a vertex to the far plane.
@@ -17,7 +19,9 @@ varying float v_WindowZ;
  */
 vec4 czm_depthClampFarPlane(vec4 coords)
 {
+#ifndef LOG_DEPTH
     v_WindowZ = (0.5 * (coords.z / coords.w) + 0.5) * coords.w;
     coords.z = min(coords.z, coords.w);
+#endif
     return coords;
 }

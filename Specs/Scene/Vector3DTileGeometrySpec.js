@@ -355,7 +355,7 @@ defineSuite([
         });
 
         it('renders a single ellipsoid' + webglMessage, function() {
-            var radii = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
+            var radii = new Cartesian3(500000.0, 500000.0, 500000.0);
             var ellipsoid = packEllipsoids([{
                 modelMatrix : Matrix4.IDENTITY,
                 radii : radii
@@ -390,7 +390,7 @@ defineSuite([
         });
 
         it('renders a single sphere' + webglMessage, function() {
-            var radius = 1000000.0;
+            var radius = 500000.0;
             var sphere = packSpheres([{
                 radius : radius,
                 modelMatrix : Matrix4.IDENTITY
@@ -570,7 +570,7 @@ defineSuite([
         });
 
         it('renders with inverted classification' + webglMessage, function() {
-            var radii = new Cartesian3(10.0, 10.0, 1000.0);
+            var radii = new Cartesian3(100.0, 100.0, 1000.0);
             var ellipsoids = packEllipsoids([{
                 modelMatrix : Matrix4.IDENTITY,
                 radii : radii
@@ -597,17 +597,15 @@ defineSuite([
                 batchTable : batchTable
             }));
             return loadGeometries(geometry).then(function() {
-                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(radii.x, 0.0, 1.0));
+                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 1.0));
+                expect(scene).toRender([255, 255, 255, 255]);
 
+                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(radii.x, 0.0, 1.0));
                 expect(scene).toRender([255, 0, 0, 255]);
 
                 scene.invertClassification = true;
                 scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
-
                 expect(scene).toRender([64, 0, 0, 255]);
-
-                scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 1.0));
-                expect(scene).toRender([255, 255, 255, 255]);
 
                 scene.invertClassification = false;
             });
@@ -662,13 +660,13 @@ defineSuite([
             geometry = scene.primitives.add(new Vector3DTileGeometry({
                 ellipsoids : packEllipsoids([{
                     modelMatrix : Matrix4.IDENTITY,
-                    radii : new Cartesian3(1000000.0, 1000000.0, 1000000.0)
+                    radii : new Cartesian3(500000.0, 500000.0, 500000.0)
                 }]),
                 ellipsoidBatchIds : new Uint16Array([0]),
                 center : center,
                 modelMatrix : modelMatrix,
                 batchTable : batchTable,
-                boundingVolume : new BoundingSphere(center, 1000000.0)
+                boundingVolume : new BoundingSphere(center, 500000.0)
             }));
             return loadGeometries(geometry).then(function() {
                 scene.camera.setView({
