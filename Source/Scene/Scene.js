@@ -2844,6 +2844,10 @@ define([
         if (scene._globe) {
             scene._globe.render(frameState);
         }
+
+        for (var i = 0; i < scene._globes.length; i++) {
+            scene._globes[i].render(frameState);
+        }
     }
 
     function updateAndClearFramebuffers(scene, passState, clearColor) {
