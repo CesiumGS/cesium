@@ -12,7 +12,6 @@ define([
         '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/isArray',
-        '../Core/loadJson',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -34,7 +33,6 @@ define([
         Event,
         GeographicTilingScheme,
         isArray,
-        loadJson,
         CesiumMath,
         Rectangle,
         Resource,
@@ -602,8 +600,8 @@ define([
             };
 
             var requestMetadata = function() {
-                var metadata = loadJson(metadataUrl);
-                return when(metadata, metadataSuccess, metadataFailure);
+                var resource = Resource.createIfNeeded(metadataUrl);
+                return when(resource.fetchJson(), metadataSuccess, metadataFailure);
             };
 
             return requestMetadata();
