@@ -286,6 +286,7 @@ define([
         this._context = context;
         this._computeEngine = new ComputeEngine(context);
         this._globe = undefined;
+        this._globes = [];
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
@@ -3055,6 +3056,10 @@ define([
             scene.globe.update(frameState);
         }
 
+        for (var i = 0; i < scene._globes.length; i++) {
+            scene._globes[i].update(frameState);
+        }
+
         frameState.creditDisplay.update();
     }
 
@@ -3097,6 +3102,11 @@ define([
             scene.globe.beginFrame(frameState);
         }
 
+        var i = 0;
+        for (i = 0; i < scene._globes.length; i++) {
+            scene._globes[i].beginFrame(frameState);
+        }
+
         updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
@@ -3108,6 +3118,10 @@ define([
             if (!scene.globe.tilesLoaded) {
                 scene._renderRequested = true;
             }
+        }
+
+        for (i = 0; i < scene._globes.length; i++) {
+            scene._globes[i].endFrame(frameState);
         }
 
         frameState.creditDisplay.endFrame();
@@ -3769,6 +3783,9 @@ define([
         this._primitives = this._primitives && this._primitives.destroy();
         this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
+        for (var i = 0; i < this._globes.length; i++) {
+            this._globes[i].destroy();
+        }
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
