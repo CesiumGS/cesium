@@ -267,8 +267,6 @@ define([
      *
      * @memberof FrameRateMonitor
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see FrameRateMonitor#isDestroyed

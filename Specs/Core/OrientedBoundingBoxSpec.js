@@ -539,7 +539,7 @@ defineSuite([
 
         var d = Cartesian3.distance(cartesian, center) - scale.x;
         var expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from negative x direction
         Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
@@ -547,7 +547,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.x;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from positive y direction
         Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
@@ -555,7 +555,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.y;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from negative y direction
         Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
@@ -563,7 +563,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.y;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from positive z direction
         Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
@@ -571,7 +571,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.z;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from negative z direction
         Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
@@ -579,7 +579,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.z;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from corner point
         Cartesian3.add(xAxis, yAxis, cartesian);
@@ -590,7 +590,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - cornerDistance;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
     });
 
     it('distanceSquaredTo throws without box', function() {

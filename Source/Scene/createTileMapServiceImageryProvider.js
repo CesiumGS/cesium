@@ -3,7 +3,6 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/GeographicTilingScheme',
         '../Core/Rectangle',
@@ -18,7 +17,6 @@ define([
         Cartographic,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         GeographicTilingScheme,
         Rectangle,
@@ -91,10 +89,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('createTileMapServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         var deferred = when.defer();
         var imageryProvider = new UrlTemplateImageryProvider(deferred.promise);
 
@@ -103,9 +97,7 @@ define([
         var xmlResource;
         when(options.url)
             .then(function(url) {
-                resource = Resource.createIfNeeded(url, {
-                    proxy : options.proxy
-                });
+                resource = Resource.createIfNeeded(url);
                 resource.appendForwardSlash();
 
                 xmlResource = resource.getDerivedResource({

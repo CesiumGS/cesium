@@ -552,7 +552,6 @@ defineSuite([
                  childTileMask : 15
              });
 
-
              // position in the northwest quadrant of the tile.
              var longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.25;
              var latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.75;

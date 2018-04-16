@@ -16,8 +16,8 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/when',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'ThirdParty/when'
     ], function(
         GoogleEarthEnterpriseImageryProvider,
         decodeGoogleEarthEnterpriseData,
@@ -36,8 +36,8 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        when,
-        Uri) {
+        Uri,
+        when) {
     'use strict';
 
     beforeEach(function() {
@@ -222,31 +222,6 @@ defineSuite([
             expect(imageryProvider.credit).toBeUndefined();
 
             installFakeImageRequest('http://fake.fake.invalid/flatfile?f1-03-i.1');
-
-            return imageryProvider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        installMockGetQuadTreePacket();
-        var url = 'http://foo.bar.invalid/';
-
-        var proxy = new DefaultProxy('/proxy/');
-
-        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
-            url : url,
-            proxy : proxy
-        });
-
-        expect(imageryProvider._metadata._resource._url).toEqual(url);
-        expect(imageryProvider.proxy).toEqual(proxy);
-
-        return pollToPromise(function() {
-            return imageryProvider.ready;
-        }).then(function() {
-            installFakeImageRequest('http://foo.bar.invalid/flatfile?f1-03-i.1', true);
 
             return imageryProvider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);

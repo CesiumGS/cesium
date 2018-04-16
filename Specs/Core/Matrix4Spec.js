@@ -917,7 +917,6 @@ defineSuite([
         expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
         expect(Matrix4.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
-
         left = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         right = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 20.0);
         expect(Matrix4.equalsEpsilon(left, right, 3.9)).toEqual(false);
@@ -1655,7 +1654,6 @@ defineSuite([
             Matrix4.multiplyByPointAsVector(new Matrix4());
         }).toThrowDeveloperError();
     });
-
 
     it('multiplyByPointAsVector throws without result parameter', function() {
         expect(function() {

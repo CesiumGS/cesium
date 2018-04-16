@@ -1331,10 +1331,12 @@ define([
         for (var i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             var derivedCommands = command.derivedCommands.tileset;
-            if (!defined(derivedCommands)) {
+            // Command may be marked dirty from Model shader recompilation for clipping planes
+            if (!defined(derivedCommands) || command.dirty) {
                 derivedCommands = {};
                 command.derivedCommands.tileset = derivedCommands;
                 derivedCommands.originalCommand = deriveCommand(command);
+                command.dirty = false;
             }
 
             updateDerivedCommand(derivedCommands.originalCommand, command);

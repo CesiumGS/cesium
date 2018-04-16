@@ -4,7 +4,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
@@ -27,7 +26,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -126,17 +124,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('GoogleEarthEnterpriseTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         var metadata;
         if (defined(options.metadata)) {
             metadata = options.metadata;
         } else {
-            var resource = Resource.createIfNeeded(options.url, {
-                proxy: options.proxy
-            });
+            var resource = Resource.createIfNeeded(options.url);
             metadata = new GoogleEarthEnterpriseMetadata(resource);
         }
 
@@ -150,7 +142,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit({text: credit});
+            credit = new Credit(credit);
         }
         this._credit = credit;
 

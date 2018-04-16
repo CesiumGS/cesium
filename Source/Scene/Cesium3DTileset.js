@@ -28,14 +28,16 @@ define([
         './Axis',
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
+        './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './ClassificationType',
+        './ClippingPlaneCollection',
         './LabelCollection',
-        './PointCloudShading',
         './PointCloudEyeDomeLighting',
+        './PointCloudShading',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -71,14 +73,16 @@ define([
         Axis,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
+        Cesium3DTileContentState,
         Cesium3DTileOptimizations,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         ClassificationType,
+        ClippingPlaneCollection,
         LabelCollection,
-        PointCloudShading,
         PointCloudEyeDomeLighting,
+        PointCloudShading,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -111,7 +115,7 @@ define([
      * @param {Number} [options.skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
      * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
      * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
-     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
+     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
      * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -547,11 +551,7 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
-        /**
-         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset. Clipping planes are not currently supported in Internet Explorer.
-         *
-         * @type {ClippingPlaneCollection}
-         */
+        this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
 
         /**
@@ -812,6 +812,19 @@ define([
                 //>>includeEnd('debug');
 
                 return this._asset;
+            }
+        },
+        /**
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+         *
+         * @type {ClippingPlaneCollection}
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._clippingPlanes;
+            },
+            set : function(value) {
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         },
 
@@ -1473,16 +1486,13 @@ define([
 
     function removeFromProcessingQueue(tileset, tile) {
         return function() {
-            var index = tileset._processingQueue.indexOf(tile);
-            if (index === -1) {
+            if (tile._contentState === Cesium3DTileContentState.FAILED) {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
                 --tileset._statistics.numberOfPendingRequests;
                 return;
             }
 
-            // Remove from processing queue
-            tileset._processingQueue.splice(index, 1);
             --tileset._statistics.numberOfTilesProcessing;
 
             if (tile.hasRenderableContent) {
@@ -1499,13 +1509,31 @@ define([
         };
     }
 
+    function filterProcessingQueue(tileset) {
+        var tiles = tileset._processingQueue;
+        var length = tiles.length;
+
+        var removeCount = 0;
+        for (var i = 0; i < length; ++i) {
+            var tile = tiles[i];
+            if (tile._contentState !== Cesium3DTileContentState.PROCESSING) {
+                ++removeCount;
+                continue;
+            }
+            if (removeCount > 0) {
+                tiles[i - removeCount] = tile;
+            }
+        }
+        tiles.length -= removeCount;
+    }
+
     function processTiles(tileset, frameState) {
+        filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
 
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
-        // Traverse backwards in case a tile is removed as a result of calling process()
-        for (var i = length - 1; i >= 0; --i) {
+        for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
         }
     }
@@ -1846,6 +1874,12 @@ define([
             this._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
+        // Update clipping planes
+        var clippingPlanes = this._clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
+
         this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
 
         this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail;
@@ -1917,8 +1951,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @example
@@ -1927,8 +1959,8 @@ define([
      * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
-        // Destroy debug labels
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
+        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {
