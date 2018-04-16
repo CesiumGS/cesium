@@ -1,3 +1,4 @@
+/*globals process, require, Buffer*/
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -1772,10 +1773,65 @@ define([
         image.src = url;
     };
 
+    function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        // Note: only the 'json' responseType transforms the loaded buffer
+        var URL = require('url').parse(url);
+        var http_s = URL.protocol === 'https:' ? require('https') : require('http');
+        var zlib = require('zlib');
+        var options = {
+            protocol : URL.protocol,
+            hostname : URL.hostname,
+            port : URL.port,
+            path : URL.path,
+            query : URL.query,
+            method : method,
+            headers : headers
+        };
+
+        var req = http_s.request(options, function(res) {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+                deferred.reject(new RequestErrorEvent(res.statusCode, res, res.headers));
+                return;
+            }
+
+            var chunkArray = []; // Array of buffers to receive the response
+            res.on('data', function(chunk) {
+                chunkArray.push(chunk);
+            });
+            res.on('end', function() {
+                var response = Buffer.concat(chunkArray); // Concatenate all buffers
+                if (res.headers['content-encoding'] === 'gzip') { // Must deal with decompression
+                    zlib.gunzip(response, function(error, result) {
+                        if (error) {
+                            deferred.reject(new RuntimeError('Error decompressing response.'));
+                        } else if (responseType === 'json') {
+                            deferred.resolve(JSON.parse(result.toString('utf8')));
+                        } else {
+                            deferred.resolve(new Uint8Array(result).buffer); // Convert Buffer to ArrayBuffer
+                        }
+                    });
+                } else {
+                    deferred.resolve(responseType === 'json' ? JSON.parse(response.toString('utf8')) : response);
+                }
+            });
+        });
+
+        req.end();
+
+        req.on('error', function(e) {
+            deferred.reject(new RequestErrorEvent());
+        });
+    }
+
     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+            return;
+        }
+
+        if (typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]') {
+            loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
             return;
         }
 
