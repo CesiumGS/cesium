@@ -928,6 +928,18 @@ define([
         },
 
         /**
+         * Gets a list of secondary globes to draw in addition to the main globe.
+         * @memberof Scene.prototype
+         *
+         * @type {Array}
+         */
+        globes : {
+            get: function() {
+                return this._globes;
+            }
+        },
+
+        /**
          * Gets the collection of primitives.
          * @memberof Scene.prototype
          *

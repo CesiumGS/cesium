@@ -73,7 +73,7 @@ var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
     credit : 'Terrain data courtesy VT MÄK'
 });
 secondaryGlobe.terrainProvider = vrTheWorldProvider;
-viewer.scene._globes.push(secondaryGlobe);
+viewer.scene.globes.push(secondaryGlobe);
 
 
 // Sync the position of the slider with the split position
