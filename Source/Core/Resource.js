@@ -1773,6 +1773,17 @@ define([
         image.src = url;
     };
 
+    function decodeResponse(loadWithHttpResponse, responseType) {
+        switch (responseType) {
+          case 'text':
+              return loadWithHttpResponse.toString('utf8');
+          case 'json':
+              return JSON.parse(loadWithHttpResponse.toString('utf8'));
+          default:
+              return new Uint8Array(loadWithHttpResponse).buffer;
+        }
+    }
+
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
         var URL = require('url').parse(url);
@@ -1804,18 +1815,12 @@ define([
                     zlib.gunzip(response, function(error, result) {
                         if (error) {
                             deferred.reject(new RuntimeError('Error decompressing response.'));
-                        } else if (responseType === 'json') {
-                            deferred.resolve(JSON.parse(result.toString('utf8')));
-                        } else if (responseType === 'text') {
-                            deferred.resolve(result.toString('utf8'));
                         } else {
-                            deferred.resolve(new Uint8Array(result).buffer); // Convert Buffer to ArrayBuffer
+                            deferred.resolve(decodeResponse(result, responseType));
                         }
                     });
-                } else if (responseType === 'text') {
-                    deferred.resolve(response.toString('utf8'));
                 } else {
-                    deferred.resolve(responseType === 'json' ? JSON.parse(response.toString('utf8')) : new Uint8Array(response).buffer);
+                    deferred.resolve(decodeResponse(response, responseType));
                 }
             });
         });
