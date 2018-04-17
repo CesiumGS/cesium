@@ -985,18 +985,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Gets the Cesium logo element.
-         * @memberof Viewer.prototype
-         * @type {Element}
-         * @readonly
-         */
-        cesiumLogo : {
-            get : function() {
-                return this._cesiumWidget.cesiumLogo;
-            }
-        },
-
-        /**
          * Gets the scene.
          * @memberof Viewer.prototype
          * @type {Scene}

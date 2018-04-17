@@ -354,7 +354,7 @@ define([
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveFrustum.prototype.equals = function(other) {
-        if (!defined(other)) {
+        if (!defined(other) || !(other instanceof PerspectiveFrustum)) {
             return false;
         }
 

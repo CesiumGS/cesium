@@ -412,7 +412,7 @@ define([
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveOffCenterFrustum.prototype.equals = function(other) {
-        return (defined(other) &&
+        return (defined(other) && other instanceof PerspectiveOffCenterFrustum &&
                 this.right === other.right &&
                 this.left === other.left &&
                 this.top === other.top &&
