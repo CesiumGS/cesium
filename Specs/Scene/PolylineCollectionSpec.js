@@ -328,7 +328,7 @@ defineSuite([
         polylines.removeAll();
         expect(polylines.length).toEqual(0);
     });
-    
+
     it('removes a polyline from the updated list when removed', function() {
         var firstPolyline = polylines.add();
         var secondPolyline = polylines.add();
@@ -342,7 +342,6 @@ defineSuite([
 
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });
-
 
     it('can check if it contains a polyline', function() {
         var polyline = polylines.add();
