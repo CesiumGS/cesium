@@ -3,14 +3,25 @@ Change Log
 
 ### 1.45 - 2018-05-01
 
+##### Breaking Changes :mega:
+* `Camera.distanceToBoundingSphere` now returns the signed distance to the bounding sphere. Positive values indicate that the bounding sphere is in the positive half-plane of the camera position and view direction while a negative value indicates it is in the negative half-plane.
+
+##### Additions :tada:
+* Added option `logDepthBuffer` to `Viewer`. With this option there is typically a single frustum using logarithmic depth rendered. This increases performance by issuing less draw calls to the GPU and helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
+* When a log depth buffer is supported, the frustum near and far planes default to `0.1` and `1e10` respectively.
+* Added `Math.log2` to compute the base 2 logarithm of a number.
+* Added 'PeliasGeocoderService', which provides geocoding via a [Pelias](https://pelias.io) server.
+* Added `GeocodeType` enum and use it as an optional parameter to all `GeocoderService` instances to differentiate between autocomplete and search requests.
+
 ##### Fixes :wrench:
 * Fixed bugs in `TimeIntervalCollection.removeInterval`. [#6418](https://github.com/AnalyticalGraphicsInc/cesium/pull/6418).
 * Fixed glTF support to handle meshes with and without tangent vectors, and with/without morph targets, sharing one material. [#6421](https://github.com/AnalyticalGraphicsInc/cesium/pull/6421)
 * Fixed glTF support to handle skinned meshes when no skin is supplied. [#6061](https://github.com/AnalyticalGraphicsInc/cesium/issues/6061)
 * Allow loadWithXhr to work with string URLs in a web worker.
+* `GroundPrimitive`s and `ClassificationPrimitive`s will become ready when `show` is `false`. [#6428](https://github.com/AnalyticalGraphicsInc/cesium/pull/6428)
 * Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
 * Fix parsing Cesium.js in older browsers that do not support all TypedArray types. [#6396](https://github.com/AnalyticalGraphicsInc/cesium/pull/6396)
-
+* Fix flicker when adding, removing, or modifiying entities. [#3945](https://github.com/AnalyticalGraphicsInc/cesium/issues/3945)
 ##### Additions :tada:
 * Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
 
