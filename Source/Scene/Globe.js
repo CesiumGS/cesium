@@ -24,7 +24,6 @@ define([
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
-        './Material',
         './QuadtreePrimitive',
         './SceneMode',
         './ShadowMode'
@@ -54,7 +53,6 @@ define([
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
-        Material,
         QuadtreePrimitive,
         SceneMode,
         ShadowMode) {
