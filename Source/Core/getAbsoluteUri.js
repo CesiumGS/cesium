@@ -25,11 +25,10 @@ define([
      */
      function getAbsoluteUri(relative, base) {
         if (typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]') {
-          // Running node
-            return getAbsoluteUri._implementation(relative, base, {baseURI: 'http://localhost/', location: {href: ''}})
-        } else {
-           return getAbsoluteUri._implementation(relative, base, document);
+            // Running node
+            return getAbsoluteUri._implementation(relative, base, {baseURI: 'http://localhost/', location: {href: ''}});
         }
+        return getAbsoluteUri._implementation(relative, base, document);
      }
 
     getAbsoluteUri._implementation = function(relative, base, documentObject) {
