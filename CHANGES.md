@@ -24,6 +24,7 @@ Change Log
 * Fix flicker when adding, removing, or modifiying entities. [#3945](https://github.com/AnalyticalGraphicsInc/cesium/issues/3945)
 ##### Additions :tada:
 * Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
+* Fixed crash bug in PolylineCollection when a polyline was updated and removed at the same time. [#6455](https://github.com/AnalyticalGraphicsInc/cesium/pull/6455)
 
 ### 1.44 - 2018-04-02
 
