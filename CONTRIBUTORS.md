@@ -177,3 +177,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Tamar Cohen](https://github.com/tamarmot)
 * [Stephen Wiseman](https://github.com/srwiseman)
 * [Gabriel Macario](https://github.com/gabriel-macario)
+* [Jonathan Puckey](https://github.com/puckey)
