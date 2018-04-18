@@ -994,22 +994,22 @@ defineSuite([
             // intermediate delta Y: -8
             expect(action).toHaveBeenCalledWith({
                 distance : {
-                    startPosition : new Cartesian2(0, Math.sqrt(3 * 3 + 1 * 1) * 0.25),
-                    endPosition : new Cartesian2(0, Math.sqrt(-6 * -6 + -8 * -8) * 0.25)
+                    startPosition : new Cartesian2(0, Math.sqrt(3 * 3 + 1 * 1)),
+                    endPosition : new Cartesian2(0, Math.sqrt(-6 * -6 + -8 * -8))
                 },
                 angleAndHeight : {
-                    startPosition : new Cartesian2(Math.atan2(1, 3), (3 + 2) * 0.125),
-                    endPosition : new Cartesian2(Math.atan2(-8, -6), (3 + 11) * 0.125)
+                    startPosition : new Cartesian2(Math.atan2(1, 3), (3 + 2) * 0.5),
+                    endPosition : new Cartesian2(Math.atan2(-8, -6), (3 + 11) * 0.5)
                 }
             });
             expect(action).toHaveBeenCalledWith({
                 distance : {
-                    startPosition : new Cartesian2(0, Math.sqrt(-6 * -6 + -8 * -8) * 0.25),
-                    endPosition : new Cartesian2(0, Math.sqrt(11 * 11 + 9 * 9) * 0.25)
+                    startPosition : new Cartesian2(0, Math.sqrt(-6 * -6 + -8 * -8)),
+                    endPosition : new Cartesian2(0, Math.sqrt(11 * 11 + 9 * 9))
                 },
                 angleAndHeight : {
-                    startPosition : new Cartesian2(Math.atan2(-8, -6), (3 + 11) * 0.125),
-                    endPosition : new Cartesian2(Math.atan2(9, 11), (11 + 20) * 0.125)
+                    startPosition : new Cartesian2(Math.atan2(-8, -6), (3 + 11) * 0.5),
+                    endPosition : new Cartesian2(Math.atan2(9, 11), (11 + 20) * 0.5)
                 }
             });
         } else {
@@ -1017,12 +1017,12 @@ defineSuite([
             expect(action.calls.count()).toEqual(1);
             expect(action).toHaveBeenCalledWith({
                 distance : {
-                    startPosition : new Cartesian2(0, Math.sqrt(3 * 3 + 1 * 1) * 0.25),
-                    endPosition : new Cartesian2(0, Math.sqrt(11 * 11 + 9 * 9) * 0.25)
+                    startPosition : new Cartesian2(0, Math.sqrt(3 * 3 + 1 * 1)),
+                    endPosition : new Cartesian2(0, Math.sqrt(11 * 11 + 9 * 9))
                 },
                 angleAndHeight : {
-                    startPosition : new Cartesian2(Math.atan2(1, 3), (3 + 2) * 0.125),
-                    endPosition : new Cartesian2(Math.atan2(9, 11), (11 + 20) * 0.125)
+                    startPosition : new Cartesian2(Math.atan2(1, 3), (3 + 2) * 0.5),
+                    endPosition : new Cartesian2(Math.atan2(9, 11), (11 + 20) * 0.5)
                 }
             });
         }
