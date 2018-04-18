@@ -1,4 +1,3 @@
-/*globals process, require, Buffer*/
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -11,6 +10,7 @@ define([
         './defineProperties',
         './deprecationWarning',
         './DeveloperError',
+        './FeatureDetection',
         './freezeObject',
         './getAbsoluteUri',
         './getBaseUri',
@@ -38,6 +38,7 @@ define([
         defineProperties,
         deprecationWarning,
         DeveloperError,
+        FeatureDetection,
         freezeObject,
         getAbsoluteUri,
         getBaseUri,
@@ -1787,7 +1788,7 @@ define([
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
         var URL = require('url').parse(url);
-        var http_s = URL.protocol === 'https:' ? require('https') : require('http');
+        var http = URL.protocol === 'https:' ? require('https') : require('http');
         var zlib = require('zlib');
         var options = {
             protocol : URL.protocol,
@@ -1799,37 +1800,35 @@ define([
             headers : headers
         };
 
-        var req = http_s.request(options, function(res) {
-            if (res.statusCode < 200 || res.statusCode >= 300) {
-                deferred.reject(new RequestErrorEvent(res.statusCode, res, res.headers));
-                return;
-            }
-
-            var chunkArray = []; // Array of buffers to receive the response
-            res.on('data', function(chunk) {
-                chunkArray.push(chunk);
-            });
-            res.on('end', function() {
-                var response = Buffer.concat(chunkArray); // Concatenate all buffers
-                if (res.headers['content-encoding'] === 'gzip') { // Must deal with decompression
-                    zlib.gunzip(response, function(error, result) {
-                        if (error) {
-                            deferred.reject(new RuntimeError('Error decompressing response.'));
-                        } else {
-                            deferred.resolve(decodeResponse(result, responseType));
-                        }
-                    });
-                } else {
-                    deferred.resolve(decodeResponse(response, responseType));
+        http.request(options)
+            .on('response', function(res) {
+                if (res.statusCode < 200 || res.statusCode >= 300) {
+                    deferred.reject(new RequestErrorEvent(res.statusCode, res, res.headers));
+                    return;
                 }
-            });
-        });
 
-        req.end();
+                var chunkArray = [];
+                res.on('data', function(chunk) {
+                    chunkArray.push(chunk);
+                });
 
-        req.on('error', function(e) {
-            deferred.reject(new RequestErrorEvent());
-        });
+                res.on('end', function() {
+                    var result = Buffer.concat(chunkArray); // eslint-disable-line
+                    if (res.headers['content-encoding'] === 'gzip') {
+                        zlib.gunzip(result, function(error, resultUnzipped) {
+                            if (error) {
+                                deferred.reject(new RuntimeError('Error decompressing response.'));
+                            } else {
+                                deferred.resolve(decodeResponse(resultUnzipped, responseType));
+                            }
+                        });
+                    } else {
+                        deferred.resolve(decodeResponse(result, responseType));
+                    }
+                });
+            }).on('error', function(e) {
+                deferred.reject(new RequestErrorEvent());
+            }).end();
     }
 
     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -1839,7 +1838,7 @@ define([
             return;
         }
 
-        if (typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]') {
+        if (FeatureDetection.isNodeJs()) {
             loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
             return;
         }

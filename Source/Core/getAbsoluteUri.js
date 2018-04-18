@@ -1,4 +1,3 @@
-/*globals process, require*/
 define([
         '../ThirdParty/Uri',
         './defaultValue',
@@ -23,13 +22,14 @@ define([
      * //absolute Uri will be "https://test.com/awesome.png";
      * var absoluteUri = Cesium.getAbsoluteUri('awesome.png', 'https://test.com');
      */
-     function getAbsoluteUri(relative, base) {
-        if (typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]') {
-            // Running node
-            return getAbsoluteUri._implementation(relative, base, {baseURI: 'http://localhost/', location: {href: ''}});
+    function getAbsoluteUri(relative, base) {
+        var documentObject;
+        if (typeof document !== 'undefined') {
+            documentObject = document;
         }
-        return getAbsoluteUri._implementation(relative, base, document);
-     }
+
+        return getAbsoluteUri._implementation(relative, base, documentObject);
+    }
 
     getAbsoluteUri._implementation = function(relative, base, documentObject) {
         //>>includeStart('debug', pragmas.debug);
@@ -37,7 +37,14 @@ define([
             throw new DeveloperError('relative uri is required.');
         }
         //>>includeEnd('debug');
-        base = defaultValue(base, defaultValue(documentObject.baseURI, documentObject.location.href));
+
+        if (!defined(base)) {
+            if (typeof documentObject === 'undefined') {
+                return relative;
+            }
+            base = defaultValue(documentObject.baseURI, documentObject.location.href);
+        }
+
         var baseUri = new Uri(base);
         var relativeUri = new Uri(relative);
         return relativeUri.resolve(baseUri).toString();
