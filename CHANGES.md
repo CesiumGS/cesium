@@ -13,6 +13,7 @@ Change Log
 * Added 'PeliasGeocoderService', which provides geocoding via a [Pelias](https://pelias.io) server.
 * Added `GeocodeType` enum and use it as an optional parameter to all `GeocoderService` instances to differentiate between autocomplete and search requests.
 * Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
+* Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
 * Added more ParticleSystem Sandcastle examples for rocket and comet tails and weather. [#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
 
 ##### Fixes :wrench:
