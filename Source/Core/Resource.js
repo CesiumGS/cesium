@@ -1,3 +1,4 @@
+/*globals process, require, Buffer*/
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -1772,10 +1773,74 @@ define([
         image.src = url;
     };
 
+    function decodeResponse(loadWithHttpResponse, responseType) {
+        switch (responseType) {
+          case 'text':
+              return loadWithHttpResponse.toString('utf8');
+          case 'json':
+              return JSON.parse(loadWithHttpResponse.toString('utf8'));
+          default:
+              return new Uint8Array(loadWithHttpResponse).buffer;
+        }
+    }
+
+    function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
+        var URL = require('url').parse(url);
+        var http_s = URL.protocol === 'https:' ? require('https') : require('http');
+        var zlib = require('zlib');
+        var options = {
+            protocol : URL.protocol,
+            hostname : URL.hostname,
+            port : URL.port,
+            path : URL.path,
+            query : URL.query,
+            method : method,
+            headers : headers
+        };
+
+        var req = http_s.request(options, function(res) {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+                deferred.reject(new RequestErrorEvent(res.statusCode, res, res.headers));
+                return;
+            }
+
+            var chunkArray = []; // Array of buffers to receive the response
+            res.on('data', function(chunk) {
+                chunkArray.push(chunk);
+            });
+            res.on('end', function() {
+                var response = Buffer.concat(chunkArray); // Concatenate all buffers
+                if (res.headers['content-encoding'] === 'gzip') { // Must deal with decompression
+                    zlib.gunzip(response, function(error, result) {
+                        if (error) {
+                            deferred.reject(new RuntimeError('Error decompressing response.'));
+                        } else {
+                            deferred.resolve(decodeResponse(result, responseType));
+                        }
+                    });
+                } else {
+                    deferred.resolve(decodeResponse(response, responseType));
+                }
+            });
+        });
+
+        req.end();
+
+        req.on('error', function(e) {
+            deferred.reject(new RequestErrorEvent());
+        });
+    }
+
     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+            return;
+        }
+
+        if (typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]') {
+            loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
             return;
         }
 
