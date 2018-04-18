@@ -301,7 +301,7 @@ define([
             this._polylines[polyline._index] = undefined; // Removed later
 
             var polylineUpdateIndex = this._polylinesToUpdate.indexOf(polyline);
-            if(this._polylinesToUpdate.length && polylineUpdateIndex >= 0) {
+            if (polylineUpdateIndex !== -1) {
                 this._polylinesToUpdate.splice(polylineUpdateIndex, 1);
             }
 
