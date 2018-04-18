@@ -404,7 +404,7 @@ define([
         var actualUniforms = stage._actualUniforms;
         for (var name in uniforms) {
             if (uniforms.hasOwnProperty(name)) {
-                if (uniforms.hasOwnProperty(name) && typeof uniforms[name] !== 'function') {
+                if (typeof uniforms[name] !== 'function') {
                     uniformMap[name] = getUniformMapFunction(stage, name);
                     newUniforms[name] = getUniformValueGetterAndSetter(stage, uniforms, name);
                 } else {
@@ -415,7 +415,8 @@ define([
                 actualUniforms[name] = uniforms[name];
 
                 var value = uniformMap[name]();
-                if (typeof value === 'string' || value instanceof Texture) {
+                if (typeof value === 'string' || value instanceof Texture || value instanceof HTMLImageElement ||
+                    value instanceof HTMLCanvasElement || value instanceof HTMLVideoElement) {
                     uniformMap[name + 'Dimensions'] = getUniformMapDimensionsFunction(uniformMap, name);
                 }
             }
@@ -537,15 +538,20 @@ define([
         var promises = [];
         for (i = 0; i < length; ++i) {
             name = dirtyUniforms[i];
-            var stageNameOrUrl = uniforms[name];
-            var stageWithName = stage._textureCache.getStageByName(stageNameOrUrl);
+            var stageNameUrlOrImage = uniforms[name];
+            var stageWithName = stage._textureCache.getStageByName(stageNameUrlOrImage);
             if (defined(stageWithName)) {
-                stage._actualUniforms[name] = createStageOutputTextureFunction(stage, stageNameOrUrl);
-            } else {
+                stage._actualUniforms[name] = createStageOutputTextureFunction(stage, stageNameUrlOrImage);
+            } else if (typeof stageNameUrlOrImage === 'string') {
                 var resource = new Resource({
-                    url : stageNameOrUrl
+                    url : stageNameUrlOrImage
                 });
                 promises.push(resource.fetchImage().then(createLoadImageFunction(stage, name)));
+            } else {
+                stage._texturesToCreate.push({
+                    name : name,
+                    source : stageNameUrlOrImage
+                });
             }
         }
 
@@ -682,8 +688,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

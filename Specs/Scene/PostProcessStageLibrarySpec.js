@@ -347,7 +347,6 @@ defineSuite([
         scene.postProcessStages.ambientOcclusion.uniforms.ambientOcclusionOnly = true;
         scene.renderForSpecs();
         expect(scene).toRenderAndCall(function(rgba) {
-            console.log(rgba);
             for (var i = 0; i < rgba.length; i += 4) {
                 expect(rgba[i]).toEqual(255);
                 expect(rgba[i + 1]).toEqual(255);
