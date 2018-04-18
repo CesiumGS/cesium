@@ -111,6 +111,7 @@ define([
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new PerInstanceColorAppearance({
@@ -142,6 +143,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
