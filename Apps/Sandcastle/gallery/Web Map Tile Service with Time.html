@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -62,7 +64,7 @@ var provider = new Cesium.WebMapTileServiceImageryProvider({
     format : 'image/png',
     clock: viewer.clock,
     times: times,
-    credit : new Cesium.Credit({text: 'NASA Global Imagery Browse Services for EOSDIS'})
+    credit : 'NASA Global Imagery Browse Services for EOSDIS'
 });
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(provider);

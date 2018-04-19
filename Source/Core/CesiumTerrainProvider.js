@@ -94,10 +94,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('CesiumTerrainProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1,
@@ -152,9 +148,7 @@ define([
         var overallAvailability = [];
         when(options.url)
             .then(function(url) {
-                var resource = Resource.createIfNeeded(url, {
-                    proxy: options.proxy
-                });
+                var resource = Resource.createIfNeeded(url);
                 resource.appendForwardSlash();
                 lastResource = resource;
                 metadataResource = lastResource.getDerivedResource({
@@ -167,7 +161,7 @@ define([
                     var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain';
                     var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
                     that._tileCredits = [
-                        new Credit('<span>' + deprecationText + '</span> <a href="' + deprecationLink + '>' + deprecationLinkText + '</a>', true)
+                        new Credit('<span>' + deprecationText + '</span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
                     ];
                     deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
                 } else {

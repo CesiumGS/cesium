@@ -24,6 +24,10 @@ define([
         Property) {
     'use strict';
 
+    var colorScratch = new Color();
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
+
     function Batch(primitives, translucent, width, shadows) {
         this.translucent = translucent;
         this.width = width;
@@ -71,9 +75,6 @@ define([
         }
     };
 
-    var colorScratch = new Color();
-    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
-
     Batch.prototype.update = function(time) {
         var isUpdated = true;
         var removedCount = 0;
@@ -110,6 +111,7 @@ define([
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new PerInstanceColorAppearance({
@@ -141,6 +143,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -161,10 +164,10 @@ define([
 
                 if (!updater.outlineColorProperty.isConstant || waitingOnCreate) {
                     var outlineColorProperty = updater.outlineColorProperty;
-                    outlineColorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastColor, colorScratch)) {
-                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
-                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                    var outlineColor = Property.getValueOrDefault(outlineColorProperty, time, Color.WHITE, colorScratch);
+                    if (!Color.equals(attributes._lastColor, outlineColor)) {
+                        attributes._lastColor = Color.clone(outlineColor, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(outlineColor, attributes.color);
                         if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
                             this.itemsToRemove[removedCount++] = updater;
                         }
@@ -179,7 +182,7 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);

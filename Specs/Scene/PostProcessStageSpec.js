@@ -152,6 +152,31 @@ defineSuite([
         });
     });
 
+    it('can use a image uniform', function() {
+        var ready = false;
+        var image = new Image();
+        image.src = './Data/Images/Blue2x2.png';
+        image.onload = function() { ready = true; };
+
+        return pollToPromise(function() {
+            return ready;
+        }).then(function() {
+            expect(scene).toRender([0, 0, 0, 255]);
+            var stage = scene.postProcessStages.add(new PostProcessStage({
+                fragmentShader : 'uniform sampler2D texture; void main() { gl_FragColor = texture2D(texture, vec2(0.5)); }',
+                uniforms : {
+                    texture : image
+                }
+            }));
+            return pollToPromise(function() {
+                scene.renderForSpecs();
+                return stage.ready;
+            }).then(function() {
+                expect(scene).toRender([0, 0, 255, 255]);
+            });
+        });
+    });
+
     it('destroys', function() {
         var stage = new PostProcessStage({
             fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'

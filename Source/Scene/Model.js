@@ -10,7 +10,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -89,7 +88,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -250,7 +248,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
      * </li>
      * </ul>
      * </p>
@@ -288,6 +286,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -635,6 +634,8 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
+
+        this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
         this._decodedData = {};
 
         this._cachedGeometryByteLength = 0;
@@ -1093,7 +1094,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
      * </li>
      * </ul>
      * </p>
@@ -1128,6 +1129,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      *
      * @returns {Model} The newly created model.
      *
@@ -1169,23 +1171,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.headers)) {
-            deprecationWarning('Model.fromGltf.headers', 'The options.headers parameter has been deprecated. Specify options.url as a Resource instance and set the headers property there.');
-        }
-
         var url = options.url;
         options = clone(options);
 
         // Create resource for the model file
-        var modelResource = Resource.createIfNeeded(url, {
-            headers : options.headers
-        });
+        var modelResource = Resource.createIfNeeded(url);
 
         // Setup basePath to get dependent files
         var basePath = defaultValue(options.basePath, modelResource.clone());
-        var resource = Resource.createIfNeeded(basePath, {
-            headers : options.headers
-        });
+        var resource = Resource.createIfNeeded(basePath);
 
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
@@ -1696,7 +1690,7 @@ define([
 
         ForEach.mesh(model.gltf, function(mesh, id) {
             runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-            if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
+            if (defined(model.extensionsUsed.WEB3D_quantized_attributes) || model._dequantizeInShader) {
                 // Cache primitives according to their program
                 var primitives = mesh.primitives;
                 var primitivesLength = primitives.length;
@@ -1705,10 +1699,10 @@ define([
                     var programId = getProgramForPrimitive(model, primitive);
                     var programPrimitives = model._programPrimitives[programId];
                     if (!defined(programPrimitives)) {
-                        programPrimitives = [];
+                        programPrimitives = {};
                         model._programPrimitives[programId] = programPrimitives;
                     }
-                    programPrimitives.push(primitive);
+                    programPrimitives[id + '.primitive.' + i] = primitive;
                 }
             }
         });
@@ -1880,15 +1874,32 @@ define([
     function modifyShaderForQuantizedAttributes(shader, programName, model) {
         var primitive;
         var primitives = model._programPrimitives[programName];
-        for (var i = 0; i < primitives.length; i++) {
-            primitive = primitives[i];
-            if (getProgramForPrimitive(model, primitive) === programName) {
-                break;
+
+        // If no primitives were cached for this program, there's no need to modify the shader
+        if (!defined(primitives)) {
+            return shader;
+        }
+
+        var primitiveId;
+        for (primitiveId in primitives) {
+            if (primitives.hasOwnProperty(primitiveId)) {
+                primitive = primitives[primitiveId];
+                if (getProgramForPrimitive(model, primitive) === programName) {
+                    break;
+                }
             }
         }
 
-        var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
-        model._quantizedUniforms[programName] = result.uniforms;
+        var result = shader;
+        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+            result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
+            model._quantizedUniforms[programName] = result.uniforms;
+        } else {
+            var decodedData = model._decodedData[primitiveId];
+            if (defined(decodedData)) {
+                result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+            }
+        }
 
         // This is not needed after the program is processed, free the memory
         model._programPrimitives[programName] = undefined;
@@ -1970,7 +1981,7 @@ define([
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
             var quantizedVS = quantizedVertexShaders[id];
             if (!defined(quantizedVS)) {
                 quantizedVS = modifyShaderForQuantizedAttributes(vs, id, model);
@@ -2000,7 +2011,7 @@ define([
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
             vs = quantizedVertexShaders[id];
         }
 
@@ -2577,7 +2588,7 @@ define([
                         var accessor = accessors[primitive.indices];
                         var bufferView = accessor.bufferView;
 
-                        // Used decoded draco buffer if available
+                        // Use buffer of previously decoded draco geometry
                         if (defined(decodedData)) {
                             bufferView = decodedData.bufferView;
                         }
@@ -2891,6 +2902,10 @@ define([
         }
     }
 
+    function createUniformsForDracoQuantizedAttributes(decodedData) {
+        return ModelUtility.createUniformsForDracoQuantizedAttributes(decodedData.attributes);
+    }
+
     function createUniformsForQuantizedAttributes(model, primitive) {
         var programId = getProgramForPrimitive(model, primitive);
         var quantizedUniforms = model._quantizedUniforms[programId];
@@ -3076,10 +3091,13 @@ define([
             }
 
             // Add uniforms for decoding quantized attributes if used
+            var quantizedUniformMap = {};
             if (model.extensionsUsed.WEB3D_quantized_attributes) {
-                var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
-                uniformMap = combine(uniformMap, quantizedUniformMap);
+                quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
+            } else if (model._dequantizeInShader && defined(decodedData)) {
+                quantizedUniformMap = createUniformsForDracoQuantizedAttributes(decodedData);
             }
+            uniformMap = combine(uniformMap, quantizedUniformMap);
 
             var rs = rendererRenderStates[material.technique];
 
@@ -3303,7 +3321,7 @@ define([
             if (programs.hasOwnProperty(id)) {
                 var program = programs[id];
                 var shader = shaders[program.vertexShader].extras._pipeline.source;
-                if (model.extensionsUsed.WEB3D_quantized_attributes) {
+                if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
                     var quantizedVS = quantizedVertexShaders[id];
                     if (!defined(quantizedVS)) {
                         quantizedVS = modifyShaderForQuantizedAttributes(shader, id, model);
@@ -4192,6 +4210,9 @@ define([
                     addDefaults(this.gltf);
                     processModelMaterialsCommon(this.gltf, options);
                     processPbrMetallicRoughness(this.gltf, options);
+
+                    // Skip dequantizing in the shader if not encoded
+                    this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
 
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);

@@ -229,8 +229,8 @@ define([
                 context : context,
                 colorTextures : [new Texture({
                     context : context,
-                    width : width,
-                    height : height,
+                    width : textureWidth,
+                    height : textureHeight,
                     pixelFormat : framebuffer.pixelFormat,
                     pixelDatatype : framebuffer.pixelDatatype
                 })]
@@ -353,8 +353,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

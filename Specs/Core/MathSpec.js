@@ -16,6 +16,14 @@ defineSuite([
         expect(CesiumMath.sign(0)).toEqual(0);
     });
 
+    it('sign of -0', function() {
+        expect(CesiumMath.sign(-0)).toEqual(-0);
+    });
+
+    it('sign of NaN', function() {
+        expect(CesiumMath.sign(NaN)).toBeNaN();
+    });
+
     it('signNotZero of -2', function() {
         expect(CesiumMath.signNotZero(-2)).toEqual(-1);
     });

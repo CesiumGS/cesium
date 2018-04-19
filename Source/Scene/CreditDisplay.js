@@ -4,6 +4,7 @@ define([
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject'
     ], function(
         buildModuleUrl,
@@ -11,6 +12,7 @@ define([
         Credit,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject) {
     'use strict';
 
@@ -271,9 +273,6 @@ define([
         head.insertBefore(css, head.firstChild);
     }
 
-    var cesiumLogo = buildModuleUrl('Assets/Images/cesium_credit.png');
-    var cesiumCredit = new Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="' + cesiumLogo + '" title="CesiumJS"/></a>', true);
-
     /**
      * The credit display is responsible for displaying credits on screen.
      *
@@ -516,11 +515,31 @@ define([
         return false;
     };
 
-    /**
-     * Gets or sets the Cesium logo credit.
-     * @type {Credit}
-     */
-    CreditDisplay.cesiumCredit = cesiumCredit;
+    CreditDisplay._cesiumCredit = undefined;
+    CreditDisplay._cesiumCreditInitialized = false;
+
+    defineProperties(CreditDisplay, {
+        /**
+         * Gets or sets the Cesium logo credit.
+         * @memberof CreditDisplay
+         * @type {Credit}
+         */
+        cesiumCredit: {
+            get: function() {
+                if (!CreditDisplay._cesiumCreditInitialized) {
+                    var cesiumLogo = buildModuleUrl('Assets/Images/cesium_credit.png');
+                    CreditDisplay._cesiumCredit = new Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="' + cesiumLogo + '" title="CesiumJS"/></a>', true);
+                    CreditDisplay._cesiumCreditInitialized = true;
+                }
+
+                return CreditDisplay._cesiumCredit;
+            },
+            set: function(value) {
+                CreditDisplay._cesiumCredit = value;
+                CreditDisplay._cesiumCreditInitialized = true;
+            }
+        }
+    });
 
     return CreditDisplay;
 });

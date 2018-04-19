@@ -1,10 +1,10 @@
 define([
         '../Core/buildModuleUrl',
+        '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -17,11 +17,11 @@ define([
         './ImageryProvider'
     ], function(
         buildModuleUrl,
+        Check,
         Credit,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -114,16 +114,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('GoogleEarthEnterpriseMapsProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
         var url = options.url;
         var path = defaultValue(options.path, '/default_map');
 
-        var resource = Resource.createIfNeeded(url, {
-            proxy : options.proxy
-        }).getDerivedResource({
+        var resource = Resource.createIfNeeded(url).getDerivedResource({
             // We used to just append path to url, so now that we do proper URI resolution, removed the /
             url : (path[0] === '/') ? path.substring(1) : path
         });
@@ -136,7 +130,7 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._channel = options.channel;
         this._requestType = 'ImageryMaps';
-        this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + GoogleEarthEnterpriseMapsProvider._logoData + '" title="Google Imagery"/></a>');
+        this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + GoogleEarthEnterpriseMapsProvider.logoUrl + '" title="Google Imagery"/></a>');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -605,7 +599,30 @@ define([
         return undefined;
     };
 
-    GoogleEarthEnterpriseMapsProvider._logoData = buildModuleUrl('Assets/Images/google_earth_credit.png');
+    GoogleEarthEnterpriseMapsProvider._logoUrl = undefined;
+
+    defineProperties(GoogleEarthEnterpriseMapsProvider, {
+        /**
+         * Gets or sets the URL to the Google Earth logo for display in the credit.
+         * @memberof GoogleEarthEnterpriseMapsProvider
+         * @type {String}
+         */
+        logoUrl: {
+            get: function() {
+                if (!defined(GoogleEarthEnterpriseMapsProvider._logoUrl)) {
+                    GoogleEarthEnterpriseMapsProvider._logoUrl = buildModuleUrl('Assets/Images/google_earth_credit.png');
+                }
+                return GoogleEarthEnterpriseMapsProvider._logoUrl;
+            },
+            set: function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('value', value);
+                //>>includeEnd('debug');
+
+                GoogleEarthEnterpriseMapsProvider._logoUrl = value;
+            }
+        }
+    });
 
     return GoogleEarthEnterpriseMapsProvider;
 });

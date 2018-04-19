@@ -28,6 +28,7 @@ define([
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     function Batch(primitives, translucent, appearanceType, depthFailAppearanceType, depthFailMaterialProperty, closed, shadows) {
         this.translucent = translucent;
@@ -155,6 +156,7 @@ define([
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
@@ -183,6 +185,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -208,7 +211,7 @@ define([
 
                 if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
                     var colorProperty = updater.fillMaterialProperty.color;
-                    var resultColor = colorProperty.getValue(time, colorScratch);
+                    var resultColor = Property.getValueOrDefault(colorProperty, time, Color.WHITE, colorScratch);
                     if (!Color.equals(attributes._lastColor, resultColor)) {
                         attributes._lastColor = Color.clone(resultColor, attributes._lastColor);
                         attributes.color = ColorGeometryInstanceAttribute.toValue(resultColor, attributes.color);
@@ -220,7 +223,7 @@ define([
 
                 if (defined(this.depthFailAppearanceType) && updater.depthFailMaterialProperty instanceof ColorMaterialProperty && (!updater.depthFailMaterialProperty.isConstant || waitingOnCreate)) {
                     var depthFailColorProperty = updater.depthFailMaterialProperty.color;
-                    var depthColor = depthFailColorProperty.getValue(time, colorScratch);
+                    var depthColor = Property.getValueOrDefault(depthFailColorProperty, time, Color.WHITE, colorScratch);
                     if (!Color.equals(attributes._lastDepthFailColor, depthColor)) {
                         attributes._lastDepthFailColor = Color.clone(depthColor, attributes._lastDepthFailColor);
                         attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(depthColor, attributes.depthFailColor);
@@ -235,7 +238,7 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);

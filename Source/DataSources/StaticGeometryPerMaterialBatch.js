@@ -27,6 +27,7 @@ define([
     'use strict';
 
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     function Batch(primitives, appearanceType, materialProperty, depthFailAppearanceType, depthFailMaterialProperty, closed, shadows) {
         this.primitives = primitives;
@@ -143,21 +144,16 @@ define([
 
                 var depthFailAppearance;
                 if (defined(this.depthFailMaterialProperty)) {
-                    var translucent;
-                    if (this.depthFailMaterialProperty instanceof MaterialProperty) {
-                        this.depthFailMaterial = MaterialProperty.getValue(time, this.depthFailMaterialProperty, this.depthFailMaterial);
-                        translucent = this.depthFailMaterial.isTranslucent();
-                    } else {
-                        translucent = this.material.isTranslucent();
-                    }
+                    this.depthFailMaterial = MaterialProperty.getValue(time, this.depthFailMaterialProperty, this.depthFailMaterial);
                     depthFailAppearance = new this.depthFailAppearanceType({
                         material : this.depthFailMaterial,
-                        translucent : translucent,
+                        translucent : this.depthFailMaterial.isTranslucent(),
                         closed : this.closed
                     });
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
@@ -187,6 +183,7 @@ define([
             this.primitive = primitive;
             this.createPrimitive = false;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -213,12 +210,12 @@ define([
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                if (defined(this.depthFailAppearanceType) && this.depthFailAppearanceType instanceof ColorMaterialProperty && !updater.depthFailMaterialProperty.isConstant) {
+                if (defined(this.depthFailAppearanceType) && this.depthFailMaterialProperty instanceof ColorMaterialProperty && !updater.depthFailMaterialProperty.isConstant) {
                     var depthFailColorProperty = updater.depthFailMaterialProperty.color;
-                    depthFailColorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastDepthFailColor, colorScratch)) {
-                        attributes._lastDepthFailColor = Color.clone(colorScratch, attributes._lastDepthFailColor);
-                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.depthFailColor);
+                    var depthFailColor = Property.getValueOrDefault(depthFailColorProperty, time, Color.WHITE, colorScratch);
+                    if (!Color.equals(attributes._lastDepthFailColor, depthFailColor)) {
+                        attributes._lastDepthFailColor = Color.clone(depthFailColor, attributes._lastDepthFailColor);
+                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(depthFailColor, attributes.depthFailColor);
                     }
                 }
 
@@ -230,7 +227,7 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
