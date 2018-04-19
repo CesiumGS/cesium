@@ -1446,7 +1446,8 @@ define([
         return resource.delete({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
             responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            overrideMimeType: options.overrideMimeType,
+            data: options.data
         });
     };
 
