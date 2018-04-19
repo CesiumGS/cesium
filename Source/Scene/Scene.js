@@ -2081,7 +2081,7 @@ define([
         }
 
         if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
-            command = command.derivedCommands.logDepth.logDepthCommand;
+            command = command.derivedCommands.logDepth.command;
         }
 
         if (defined(command.derivedCommands.picking)) {
@@ -3506,7 +3506,8 @@ define([
         callAfterRenderFunctions(this);
         return object;
     };
-?    var fragDepthRegex = /\bgl_FragDepthEXT\b/;
+
+    var fragDepthRegex = /\bgl_FragDepthEXT\b/;
     var discardRegex = /\bdiscard\b/;
 
     function getPickShaderProgram(context, shaderProgram, pickId, pickIdDeclarations) {
