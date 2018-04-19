@@ -628,11 +628,14 @@ define([
         }
 
         var colorTexture = framebuffer.getColorTexture(0);
-        var renderState = this._renderState;
-        if (!defined(renderState) || colorTexture.width !== renderState.viewport.width || colorTexture.height !== renderState.viewport.height) {
-            this._renderState = RenderState.fromCache({
-                viewport : new BoundingRectangle(0, 0, colorTexture.width, colorTexture.height)
-            });
+        var renderState;
+        if (colorTexture.width !== context.drawingBufferWidth || colorTexture.height !== context.drawingBufferHeight) {
+            renderState = this._renderState;
+            if (!defined(renderState) || colorTexture.width !== renderState.viewport.width || colorTexture.height !== renderState.viewport.height) {
+                this._renderState = RenderState.fromCache({
+                    viewport : new BoundingRectangle(0, 0, colorTexture.width, colorTexture.height)
+                });
+            }
         }
 
         this._command.renderState = renderState;

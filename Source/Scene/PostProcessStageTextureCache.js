@@ -229,8 +229,8 @@ define([
                 context : context,
                 colorTextures : [new Texture({
                     context : context,
-                    width : width,
-                    height : height,
+                    width : textureWidth,
+                    height : textureHeight,
                     pixelFormat : framebuffer.pixelFormat,
                     pixelDatatype : framebuffer.pixelDatatype
                 })]
