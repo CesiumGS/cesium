@@ -196,6 +196,7 @@ define([
         this._sp = undefined;
         this._spStencil = undefined;
         this._spPick = undefined;
+        this._spPick2D = undefined;
         this._spColor = undefined;
         this._spColor2D = undefined;
 
@@ -597,6 +598,9 @@ define([
         vs = Primitive._modifyShaderPosition(classificationPrimitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
 
+        var usePlanarExtents = classificationPrimitive._hasPlanarExtentsAttributes;
+        var cullUsingExtents = classificationPrimitive._hasPlanarExtentsAttributes || classificationPrimitive._hasSphericalExtentsAttribute;
+
         if (classificationPrimitive._extruded) {
             vs = modifyForEncodedNormals(primitive, vs);
         }
@@ -625,21 +629,48 @@ define([
             vsPick = Primitive._appendShowToShader(primitive, vsPick);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
-            var pickVS = new ShaderSource({
-                defines : [extrudedDefine],
-                sources : [vsPick]
+            var pick3DShadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, usePlanarExtents);
+            var pickFS3D = new ShaderSource({
+                sources : [pick3DShadowVolumeAppearanceShader.fragmentShaderSource],
+                pickColorQualifier : 'varying'
             });
 
-            var pickFS = new ShaderSource({
-                sources : [ShadowVolumeFS],
-                pickColorQualifier : 'varying'
+            var pickVSDefines = [extrudedDefine];
+            if (pick3DShadowVolumeAppearanceShader.planarExtents) {
+                pickVSDefines.push('PLANAR_EXTENTS');
+            } else {
+                pickVSDefines.push('SPHERICAL_EXTENTS');
+            }
+
+            var pickVS3D = new ShaderSource({
+                defines : pickVSDefines,
+                sources : [vsPick]
             });
 
             classificationPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : classificationPrimitive._spPick,
-                vertexShaderSource : pickVS,
-                fragmentShaderSource : pickFS,
+                vertexShaderSource : pickVS3D,
+                fragmentShaderSource : pickFS3D,
+                attributeLocations : attributeLocations
+            });
+
+            var pickVS2D = new ShaderSource({
+                defines : [extrudedDefine, 'COLUMBUS_VIEW_2D'],
+                sources : [vsPick]
+            });
+
+            var pick2DShadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, true);
+            var pickFS2D = new ShaderSource({
+                sources : [pick2DShadowVolumeAppearanceShader.fragmentShaderSource],
+                pickColorQualifier : 'varying'
+            });
+
+            classificationPrimitive._spPick2D = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : classificationPrimitive._spPick2D,
+                vertexShaderSource : pickVS2D,
+                fragmentShaderSource : pickFS2D,
                 attributeLocations : attributeLocations
             });
         } else {
@@ -669,11 +700,9 @@ define([
         var isPerInstanceColor = appearance instanceof PerInstanceColorAppearance;
 
         var parts;
-        var usePlanarExtents = classificationPrimitive._hasPlanarExtentsAttributes;
-        var cullUsingExtents = classificationPrimitive._hasPlanarExtentsAttributes || classificationPrimitive._hasSphericalExtentsAttribute;
 
         // Create a fragment shader that computes only required material hookups using screen space techniques
-        var shadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(appearance, cullUsingExtents, usePlanarExtents);
+        var shadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, usePlanarExtents, appearance);
         var shadowVolumeAppearanceFS = shadowVolumeAppearanceShader.fragmentShaderSource;
         if (isPerInstanceColor) {
             parts = [shadowVolumeAppearanceFS];
@@ -707,7 +736,7 @@ define([
         });
 
         // Create a similar fragment shader for 2D, forcing planar extents
-        var shadowVolumeAppearanceShader2D = new ShadowVolumeAppearanceShader(appearance, cullUsingExtents, true);
+        var shadowVolumeAppearanceShader2D = new ShadowVolumeAppearanceShader(cullUsingExtents, true, appearance);
         var shadowVolumeAppearanceFS2D = shadowVolumeAppearanceShader2D.fragmentShaderSource;
         if (isPerInstanceColor) {
             parts = [shadowVolumeAppearanceFS2D];
@@ -817,21 +846,16 @@ define([
 
     function createPickCommands(classificationPrimitive, pickCommands) {
         var primitive = classificationPrimitive._primitive;
-        var pickOffsets = primitive._pickOffsets;
-        var length = pickOffsets.length * 3;
+        var length = primitive._va.length * 3; // each geometry (pack of vertex attributes) needs 3 commands: front/back stencils and fill
         pickCommands.length = length;
 
         var j;
         var command;
-        var pickIndex = 0;
+        var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
 
         for (j = 0; j < length; j += 3) {
-            var pickOffset = pickOffsets[pickIndex++];
-
-            var offset = pickOffset.offset;
-            var count = pickOffset.count;
-            var vertexArray = primitive._va[pickOffset.index];
+            var vertexArray = primitive._va[vaIndex++];
 
             // stencil preload command
             command = pickCommands[j];
@@ -843,10 +867,8 @@ define([
             }
 
             command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
-            command.shaderProgram = classificationPrimitive._spStencil;
+            command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
 
             // stencil depth command
@@ -859,13 +881,11 @@ define([
             }
 
             command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
             command.renderState = classificationPrimitive._rsStencilDepthPass;
-            command.shaderProgram = classificationPrimitive._spStencil;
+            command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
 
-            // color command
+            // pick color command
             command = pickCommands[j + 2];
             if (!defined(command)) {
                 command = pickCommands[j + 2] = new DrawCommand({
@@ -875,8 +895,6 @@ define([
             }
 
             command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
             command.renderState = classificationPrimitive._rsPickPass;
             command.shaderProgram = classificationPrimitive._spPick;
             command.uniformMap = uniformMap;
@@ -1157,6 +1175,7 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
+        this._spPick2D = this._spPick2D && this._spPick2D.destroy();
         this._spColor = this._spColor && this._spColor.destroy();
         this._spColor2D = this._spColor2D && this._spColor2D.destroy();
         return destroyObject(this);

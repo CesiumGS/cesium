@@ -621,11 +621,11 @@ define([
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
+        var classificationPrimitive = groundPrimitive._classificationPrimitive;
         if (passes.render) {
             var colorLength = colorCommands.length;
             var i;
             var colorCommand;
-            var classificationPrimitive = groundPrimitive._classificationPrimitive;
 
             for (i = 0; i < colorLength; ++i) {
                 colorCommand = colorCommands[i];
@@ -639,20 +639,20 @@ define([
                 // derive a separate appearance command for 2D
                 if (frameState.mode !== SceneMode.SCENE3D &&
                     colorCommand.shaderProgram === classificationPrimitive._spColor) {
-                    var derivedCommand = colorCommand.derivedCommands.appearance2D;
-                    if (!defined(derivedCommand)) {
-                        derivedCommand = DrawCommand.shallowClone(colorCommand);
-                        derivedCommand.shaderProgram = classificationPrimitive._spColor2D;
-                        colorCommand.derivedCommands.appearance2D = derivedCommand;
+                    var derivedColorCommand = colorCommand.derivedCommands.appearance2D;
+                    if (!defined(derivedColorCommand)) {
+                        derivedColorCommand = DrawCommand.shallowClone(colorCommand);
+                        derivedColorCommand.shaderProgram = classificationPrimitive._spColor2D;
+                        colorCommand.derivedCommands.appearance2D = derivedColorCommand;
                     }
-                    colorCommand = derivedCommand;
+                    colorCommand = derivedColorCommand;
                 }
 
                 commandList.push(colorCommand);
             }
 
             if (frameState.invertClassification) {
-                var ignoreShowCommands = groundPrimitive._classificationPrimitive._commandsIgnoreShow;
+                var ignoreShowCommands = classificationPrimitive._commandsIgnoreShow;
                 var ignoreShowCommandsLength = ignoreShowCommands.length;
 
                 for (i = 0; i < ignoreShowCommandsLength; ++i) {
@@ -670,19 +670,26 @@ define([
 
         if (passes.pick) {
             var pickLength = pickCommands.length;
-            var primitive = groundPrimitive._classificationPrimitive._primitive;
-            var pickOffsets = primitive._pickOffsets;
             for (var j = 0; j < pickLength; ++j) {
-                var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
-                var bv = boundingVolumes[pickOffset.index];
-
                 var pickCommand = pickCommands[j];
+
                 pickCommand.owner = groundPrimitive;
                 pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = bv;
+                pickCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(j, pickLength)];
                 pickCommand.cull = cull;
                 pickCommand.pass = pass;
 
+                // derive a separate appearance command for 2D
+                if (frameState.mode !== SceneMode.SCENE3D &&
+                    pickCommand.shaderProgram === classificationPrimitive._spPick) {
+                    var derivedPickCommand = pickCommand.derivedCommands.pick2D;
+                    if (!defined(derivedPickCommand)) {
+                        derivedPickCommand = DrawCommand.shallowClone(pickCommand);
+                        derivedPickCommand.shaderProgram = classificationPrimitive._spPick2D;
+                        pickCommand.derivedCommands.pick2D = derivedPickCommand;
+                    }
+                    pickCommand = derivedPickCommand;
+                }
                 commandList.push(pickCommand);
             }
         }

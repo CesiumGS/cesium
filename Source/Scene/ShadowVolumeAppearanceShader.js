@@ -1,12 +1,14 @@
 define([
         '../Core/Check',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Renderer/PixelDatatype',
         '../Scene/PerInstanceColorAppearance'
 ], function(
         Check,
         defaultValue,
+        defined,
         defineProperties,
         PixelDatatype,
         PerInstanceColorAppearance) {
@@ -16,18 +18,20 @@ define([
     /**
      * Creates the shadow volume fragment shader for a ClassificationPrimitive to use a given appearance.
      *
-     * @param {Appearance} appearance An Appearance to be used with a ClassificationPrimitive.
-     * @param {Boolean} [extentsCulling=false] Discard fragments outside the instance's spherical extents.
+     * @param {Boolean} extentsCulling Discard fragments outside the instance's spherical extents.
+     * @param {Boolean} planarExtents
+     * @param {Appearance} [appearance] An Appearance to be used with a ClassificationPrimitive. Leave undefined for picking.
      * @returns {String} Shader source for a fragment shader using the input appearance.
      * @private
      */
-    function ShadowVolumeAppearanceShader(appearance, extentsCulling, planarExtents) {
+    function ShadowVolumeAppearanceShader(extentsCulling, planarExtents, appearance) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('appearance', appearance);
+        Check.typeOf.bool('extentsCulling', extentsCulling);
+        Check.typeOf.bool('planarExtents', planarExtents);
         //>>includeEnd('debug');
 
-        this._extentsCulling = defaultValue(extentsCulling, false);
-        this._planarExtents = defaultValue(planarExtents, false);
+        this._extentsCulling = extentsCulling;
+        this._planarExtents = planarExtents;
         this._shaderSource = createShadowVolumeAppearanceShader(appearance, this._extentsCulling, this._planarExtents);
         this._usesTextureCoordinates = shaderDependenciesScratch._requiresTextureCoordinates;
     }
@@ -72,6 +76,9 @@ define([
 
     function createShadowVolumeAppearanceShader(appearance, extentsCull, planarExtents) {
         var shaderDependencies = shaderDependenciesScratch.reset();
+        if (!defined(appearance)) {
+            return getColorlessShader(extentsCull, planarExtents);
+        }
         if (appearance instanceof PerInstanceColorAppearance) {
             return getPerInstanceColorShader(extentsCull, appearance.flat, planarExtents);
         }
@@ -135,8 +142,41 @@ define([
         } else {
             glsl += '    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material);\n';
         }
-
+        glsl += '    czm_writeDepthClampedToFarPlane();\n';
         glsl += '}\n';
+        return glsl;
+    }
+
+    function getColorlessShader(extentsCulling, planarExtents) {
+        var glsl =
+            '#ifdef GL_EXT_frag_depth\n' +
+            '#extension GL_EXT_frag_depth : enable\n' +
+            '#endif\n';
+        if (extentsCulling) {
+            glsl += planarExtents ?
+                'varying vec2 v_inversePlaneExtents;\n' +
+                'varying vec4 v_westPlane;\n' +
+                'varying vec4 v_southPlane;\n' :
+
+                'varying vec4 v_sphericalExtents;\n';
+        }
+        var shaderDependencies = shaderDependenciesScratch;
+        shaderDependencies.requiresTextureCoordinates = extentsCulling;
+        shaderDependencies.requiresNormalEC = false;
+
+        glsl += getLocalFunctions(shaderDependencies, planarExtents);
+
+        glsl += 'void main(void)\n' +
+                '{\n';
+        glsl += '    bool culled = false;\n';
+        var outOfBoundsSnippet =
+                '        culled = true;\n';
+        glsl += getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet);
+        glsl += '    if (!culled) {\n' +
+                '        gl_FragColor.a = 1.0;\n' + // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
+                '        czm_writeDepthClampedToFarPlane();\n' +
+                '    }\n' +
+                '}\n';
         return glsl;
     }
 
@@ -179,11 +219,12 @@ define([
 
                 '    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material);\n';
         }
+        glsl += '    czm_writeDepthClampedToFarPlane();\n';
         glsl += '}\n';
         return glsl;
     }
 
-    function getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents) {
+    function getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet) {
         var glsl = '';
         if (shaderDependencies.requiresEC) {
             glsl +=
@@ -209,9 +250,13 @@ define([
             }
         }
         if (extentsCulling) {
+            if (!defined(outOfBoundsSnippet)) {
+                outOfBoundsSnippet =
+                '        discard;\n';
+            }
             glsl +=
                 '    if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {\n' +
-                '       discard;\n' +
+                    outOfBoundsSnippet +
                 '    }\n';
         }
         // Lots of texture access, so lookup after discard check
