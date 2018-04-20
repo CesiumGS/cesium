@@ -1,7 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
+define(function() {
     'use strict';
     /*global performance*/
 

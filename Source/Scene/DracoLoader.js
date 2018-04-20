@@ -5,8 +5,6 @@ define([
         '../Core/FeatureDetection',
         '../Core/RuntimeError',
         '../Core/TaskProcessor',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/when'
     ], function(
@@ -16,8 +14,6 @@ define([
         FeatureDetection,
         RuntimeError,
         TaskProcessor,
-        Buffer,
-        BufferUsage,
         ForEach,
         when) {
     'use strict';

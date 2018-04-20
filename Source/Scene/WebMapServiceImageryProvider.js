@@ -1,31 +1,23 @@
 define([
-        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/objectToQuery',
-        '../Core/queryToObject',
         '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/Uri',
         './GetFeatureInfoFormat',
         './UrlTemplateImageryProvider'
     ], function(
-        combine,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
-        objectToQuery,
-        queryToObject,
         Resource,
         WebMercatorTilingScheme,
-        Uri,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
     'use strict';
