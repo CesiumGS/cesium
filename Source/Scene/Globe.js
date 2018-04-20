@@ -25,7 +25,6 @@ define([
         './GlobeSurfaceTileProvider',
         './ImagerySplitDirection',
         './ImageryLayerCollection',
-        './Material',
         './QuadtreePrimitive',
         './SceneMode',
         './ShadowMode'
@@ -56,7 +55,6 @@ define([
         GlobeSurfaceTileProvider,
         ImagerySplitDirection,
         ImageryLayerCollection,
-        Material,
         QuadtreePrimitive,
         SceneMode,
         ShadowMode) {
