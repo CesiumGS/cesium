@@ -1,7 +1,6 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
-        '../../Core/Check',
         '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -49,7 +48,6 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Check,
         Clock,
         defaultValue,
         defined,
