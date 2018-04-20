@@ -396,6 +396,72 @@ Sandcastle.addToolbarMenu([{
             throw(error);
         });
     }
+}, {
+    text : 'Vector tile polygons',
+    onselect : function() {
+        viewer.terrainProvider = Cesium.createWorldTerrain();
+
+        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolygons'
+        }));
+
+        tileset.readyPromise.then(function() {
+            camera.position = new Cesium.Cartesian3(6382696.762766026, 20.61495686957654, -83.83598213685399);
+            camera.direction = new Cesium.Cartesian3(-0.9999999739409788, 0.00022792812935066512, 0.000012915478344419502);
+            camera.up = new Cesium.Cartesian3(0.00001291547800893194, -2.9438010410026854e-9, 0.9999999999165953);
+            camera.right = new Cesium.Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+            handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+            handler.setInputAction(function(movement) {
+                if (Cesium.defined(highlighted.feature)) {
+                    highlighted.feature.color = highlighted.originalColor;
+                    highlighted.feature = undefined;
+                }
+                var pickedFeature = viewer.scene.pick(movement.endPosition);
+                if (!Cesium.defined(pickedFeature)) {
+                    return;
+                }
+                highlighted.feature = pickedFeature;
+                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
+                pickedFeature.color = Cesium.Color.YELLOW;
+            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        }).otherwise(function(error) {
+            throw(error);
+        });
+    }
+}, {
+    text : 'Vector tile polylines',
+    onselect : function() {
+        viewer.terrainProvider = Cesium.createWorldTerrain();
+
+        tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+            url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolylines'
+        }));
+
+        tileset.readyPromise.then(function() {
+            camera.position = new Cesium.Cartesian3(6382696.762766026, 20.61495686957654, -83.83598213685399);
+            camera.direction = new Cesium.Cartesian3(-0.9999999739409788, 0.00022792812935066512, 0.000012915478344419502);
+            camera.up = new Cesium.Cartesian3(0.00001291547800893194, -2.9438010410026854e-9, 0.9999999999165953);
+            camera.right = new Cesium.Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+            handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+            handler.setInputAction(function(movement) {
+                if (Cesium.defined(highlighted.feature)) {
+                    highlighted.feature.color = highlighted.originalColor;
+                    highlighted.feature = undefined;
+                }
+                var pickedFeature = viewer.scene.pick(movement.endPosition);
+                if (!Cesium.defined(pickedFeature)) {
+                    return;
+                }
+                highlighted.feature = pickedFeature;
+                Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
+                pickedFeature.color = Cesium.Color.YELLOW;
+            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        }).otherwise(function(error) {
+            throw(error);
+        });
+    }
 }]);
 
 Sandcastle.reset = function() {
@@ -414,6 +480,9 @@ Sandcastle.reset = function() {
     }
     handler = handler && handler.destroy();
     viewer.scene.camera.flyHome(0.0);
+    if (!(viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider)) {
+        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider()
+    }
 };
 //Sandcastle_End
     Sandcastle.finishedLoading();

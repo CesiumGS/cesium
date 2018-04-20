@@ -312,7 +312,6 @@ define([
         var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(ShadowVolumeVS);
         var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false, undefined);
 
-        pickIdDeclarations = batchTable.getPickIdDeclarations();
         pickId = batchTable.getPickId();
 
         var vs = new ShaderSource({
@@ -350,7 +349,6 @@ define([
         fsSource = ShaderSource.replaceMain(fsSource, 'czm_non_pick_main');
         fsSource =
             fsSource + '\n' +
-            defaultValue(pickIdDeclarations, '') + '\n' +
             'void main() \n' +
             '{ \n' +
             '    czm_non_pick_main(); \n' +
