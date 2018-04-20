@@ -9,6 +9,8 @@ Change Log
 * Added `Math.log2` to compute the base 2 logarithm of a number.
 * Added 'PeliasGeocoderService', which provides geocoding via a [Pelias](https://pelias.io) server.
 * Added `GeocodeType` enum and use it as an optional parameter to all `GeocoderService` instances to differentiate between autocomplete and search requests.
+* Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
+* Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
 
 ##### Fixes :wrench:
 * Fixed bugs in `TimeIntervalCollection.removeInterval`. [#6418](https://github.com/AnalyticalGraphicsInc/cesium/pull/6418).
@@ -18,11 +20,8 @@ Change Log
 * `GroundPrimitive`s and `ClassificationPrimitive`s will become ready when `show` is `false`. [#6428](https://github.com/AnalyticalGraphicsInc/cesium/pull/6428)
 * Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
 * Fix parsing Cesium.js in older browsers that do not support all TypedArray types. [#6396](https://github.com/AnalyticalGraphicsInc/cesium/pull/6396)
-* Fix flicker when adding, removing, or modifiying entities. [#3945](https://github.com/AnalyticalGraphicsInc/cesium/issues/3945)
-
-##### Additions :tada:
-* Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
-* Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
+* Fix flicker when adding, removing, or modifying entities. [#3945](https://github.com/AnalyticalGraphicsInc/cesium/issues/3945)
+* Fixed Imagery Layers Texture Filters Sandcastle example. [#]().
 
 ### 1.44 - 2018-04-02
 
