@@ -4,6 +4,7 @@ Change Log
 ### 1.45 - 2018-05-01
 
 ##### Additions :tada:
+* Added `IonGeocoderService` and made it the default geocoding service for the `Geocoder` widget.
 * Added option `logarithmicDepthBuffer` to `Scene`. With this option there is typically a single frustum using logarithmic depth rendered. This increases performance by issuing less draw calls to the GPU and helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
 * When a log depth buffer is supported, the frustum near and far planes default to `0.1` and `1e10` respectively.
 * Added `Math.log2` to compute the base 2 logarithm of a number.
