@@ -715,8 +715,7 @@ define([
         }
 
         if (features.length === 0) {
-            // PER_ENTITY TODO
-            // max pick id is reserved?
+            // max pick id is reserved
             var empty = new Uint8Array(4);
             empty[0] = 255;
             empty[1] = 255;
@@ -742,7 +741,6 @@ define([
             return;
         }
 
-        // PER_ENTITY TODO
         var i;
         var feature;
 
@@ -750,9 +748,9 @@ define([
         var length = features.length;
         for (i = 0; i < length; ++i) {
             feature = features[i];
-            if (defined(feature._nodeCommands)) {
-                textureLength += feature._nodeCommands.length;
-            } else if (defined(feature._batchId)) {
+            if (defined(feature.pickIds)) {
+                textureLength += feature.pickIds.length;
+            } else if (defined(feature.pickId)) {
                 ++textureLength;
             }
         }
@@ -762,20 +760,19 @@ define([
         var ids = new Uint8Array(textureLength * 4);
         for (i = 0; i < length; ++i) {
             feature = features[i];
-            if (defined(feature._nodeCommands)) {
-                var commands = feature._nodeCommands;
-                var commandsLength = commands.length;
-                for (var j = 0; j < commandsLength; ++j) {
-                    pickColor = commands[j].command.uniformMap.czm_pickColor();
+            if (defined(feature.pickIds)) {
+                var pickIds = feature.pickIds;
+                var pickIdsLength = pickIds.length;
+                for (var j = 0; j < pickIdsLength; ++j) {
+                    pickColor = pickIds[j].color;
                     ids[offset] = Color.floatToByte(pickColor.red);
                     ids[offset + 1] = Color.floatToByte(pickColor.green);
                     ids[offset + 2] = Color.floatToByte(pickColor.blue);
                     ids[offset + 3] = Color.floatToByte(pickColor.alpha);
                     offset += 4;
                 }
-            } else if (defined(feature._batchId)) {
-                var batchId = feature._batchId;
-                pickColor = feature._content.batchTable._pickIds[batchId].color;
+            } else if (defined(feature.pickId)) {
+                pickColor = feature.pickId.color;
                 ids[offset] = Color.floatToByte(pickColor.red);
                 ids[offset + 1] = Color.floatToByte(pickColor.green);
                 ids[offset + 2] = Color.floatToByte(pickColor.blue);

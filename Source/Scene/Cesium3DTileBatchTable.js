@@ -500,6 +500,13 @@ define([
             result);
     };
 
+    Cesium3DTileBatchTable.prototype.getPickColor = function(batchId) {
+        //>>includeStart('debug', pragmas.debug);
+        checkBatchId(batchId, this.featuresLength);
+        //>>includeEnd('debug');
+        return this._pickIds[batchId];
+    };
+
     var scratchColor = new Color();
 
     Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {

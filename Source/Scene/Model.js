@@ -1044,6 +1044,15 @@ define([
                 // Handle destroying, checking of unknown, checking for existing ownership
                 ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
+        },
+
+        /**
+         * @private
+         */
+        pickIds : {
+            get : function() {
+                return this._pickIds;
+            }
         }
     });
 

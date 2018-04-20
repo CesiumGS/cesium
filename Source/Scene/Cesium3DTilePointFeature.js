@@ -73,6 +73,8 @@ define([
         this._pointOutlineWidth = undefined;
         this._heightOffset = undefined;
 
+        this._pickIds = [billboard.pickId, label.pickId, polyline.pickId];
+
         setBillboardImage(this);
     }
 
@@ -618,6 +620,15 @@ define([
         primitive : {
             get : function() {
                 return this._content.tileset;
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickIds;
             }
         }
     });

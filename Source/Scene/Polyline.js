@@ -291,6 +291,15 @@ define([
         },
 
         /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
+            }
+        },
+
+        /**
          * Gets or sets the condition specifying at what distance from the camera that this polyline will be displayed.
          * @memberof Polyline.prototype
          * @type {DistanceDisplayCondition}

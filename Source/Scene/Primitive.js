@@ -1823,6 +1823,14 @@ define([
         };
     }
 
+    function createPickIdProperty(primitive, properties, index) {
+        properties.pickId = {
+            get : function() {
+                return primitive._pickIds[index];
+            }
+        };
+    }
+
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
@@ -1899,6 +1907,7 @@ define([
         }
 
         createBoundingSphereProperties(this, properties, index);
+        createPickIdProperty(this, properties, index);
         defineProperties(attributes, properties);
 
         this._lastPerInstanceAttributeIndex = index;
