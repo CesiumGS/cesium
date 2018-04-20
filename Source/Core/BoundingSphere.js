@@ -1199,6 +1199,31 @@ define([
     };
 
     /**
+     * If the given position is not already within the sphere, projects the given position onto the sphere.
+     * @param {Cartesian3} position The position being projected onto this BoundingSphere.
+     * @param {Cartesian3} result The object onto which to store the result.
+     * @returns {Cartesian3} A projected version of the inputted position if it was not originally within the BoundingSphere.
+     */
+    BoundingSphere.prototype.clampToBounds = function(position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('position', position);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+        result = Cartesian3.clone(position, result);
+
+        if (Cartesian3.distance(result, this.center) <= this.radius) {
+            return result;
+        }
+
+        result = Cartesian3.subtract(result, this.center, result);
+        result = Cartesian3.normalize(result, result);
+        result = Cartesian3.multiplyByScalar(result, this.radius, result);
+
+        result = Cartesian3.add(result, this.center, result);
+        return result;
+    };
+
+    /**
      * Determines whether or not a sphere is hidden from view by the occluder.
      *
      * @param {BoundingSphere} sphere The bounding sphere surrounding the occludee object.

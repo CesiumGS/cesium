@@ -67,13 +67,10 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 var clippingPlanesEnabled = true;
 var edgeStylingEnabled = true;
 
-var tileset;
-
 loadCesiumMan();
 
 function reset() {
     viewer.entities.removeAll();
-    viewer.scene.primitives.remove(tileset);
 }
 
 function loadCesiumMan() {
