@@ -743,13 +743,17 @@ define([
             pickId = batchTable.getPickId();
             pickIdDeclaration = batchTable.getPickIdDeclarations();
         } else {
+            content._pickId = context.createPickId({
+                primitive : content._tileset,
+                content : content
+            });
             drawUniformMap = combine(uniformMap, {
                 czm_pickColor : function() {
                     return content._pickId.color;
                 }
             });
             pickId = 'czm_pickColor';
-            pickIdDeclaration = 'uniform vec4 czm_pickId;';
+            pickIdDeclaration = 'uniform vec4 czm_pickColor;';
         }
 
         content._opaqueRenderState = RenderState.fromCache({
@@ -781,7 +785,7 @@ define([
             castShadows : false,
             receiveShadows : false,
             pickId : pickId,
-            pickIdDeclaration : pickIdDeclaration
+            pickIdDeclarations : pickIdDeclaration
         });
     }
 
