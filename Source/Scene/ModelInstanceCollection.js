@@ -338,7 +338,6 @@ define([
                 'attribute vec4 czm_modelMatrixRow2;\n' +
                 batchIdAttribute +
                 pickAttribute +
-                'varying vec4 v_pickColor;\n' +
                 renamedSource +
                 'void main()\n' +
                 '{\n' +

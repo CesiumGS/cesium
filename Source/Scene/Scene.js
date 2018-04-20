@@ -1516,7 +1516,7 @@ define([
                 derivedCommands.logDepth = undefined;
             }
 
-            if (scene.frameState.passes.pick) {
+            if (scene.frameState.passes.pick && !defined(command.pickId)) {
                 return;
             }
 
