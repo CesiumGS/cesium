@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Renderer/PixelDatatype',
+        '../Renderer/ShaderSource', // TODO: where should this file live actually?
         '../Scene/PerInstanceColorAppearance'
 ], function(
         Check,
@@ -11,44 +12,37 @@ define([
         defined,
         defineProperties,
         PixelDatatype,
+        ShaderSource,
         PerInstanceColorAppearance) {
     'use strict';
 
-    var shaderDependenciesScratch = new ShaderDependencies();
     /**
      * Creates the shadow volume fragment shader for a ClassificationPrimitive to use a given appearance.
      *
      * @param {Boolean} extentsCulling Discard fragments outside the instance's spherical extents.
      * @param {Boolean} planarExtents
+     * @param {Boolean} columbusView2D
      * @param {Appearance} [appearance] An Appearance to be used with a ClassificationPrimitive. Leave undefined for picking.
      * @returns {String} Shader source for a fragment shader using the input appearance.
      * @private
      */
-    function ShadowVolumeAppearanceShader(extentsCulling, planarExtents, appearance) {
+    function ShadowVolumeAppearanceShader(extentsCulling, planarExtents, columbusView2D, vertexShader, appearance) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.bool('extentsCulling', extentsCulling);
         Check.typeOf.bool('planarExtents', planarExtents);
+        Check.typeOf.bool('columbusView2D', columbusView2D);
+        Check.typeOf.string('vertexShader', vertexShader);
         //>>includeEnd('debug');
 
+        var shaderDependencies = new ShaderDependencies();
+        this._shaderDependencies = shaderDependencies;
         this._extentsCulling = extentsCulling;
-        this._planarExtents = planarExtents;
-        this._shaderSource = createShadowVolumeAppearanceShader(appearance, this._extentsCulling, this._planarExtents);
-        this._usesTextureCoordinates = shaderDependenciesScratch._requiresTextureCoordinates;
+        this._planarExtents = planarExtents || columbusView2D;
+        this._fragmenShaderSource = createShadowVolumeAppearanceFS(shaderDependencies, appearance, this._extentsCulling, this._planarExtents);
+        this._vertexShaderSource = createShadowVolumeAppearanceVS(shaderDependencies, appearance, planarExtents, columbusView2D, vertexShader);
     }
 
     defineProperties(ShadowVolumeAppearanceShader.prototype, {
-        /**
-         * Whether or not the resulting shader uses texture coordinates.
-         *
-         * @memberof ShadowVolumeAppearanceShader.prototype
-         * @type {Boolean}
-         * @readonly
-         */
-        usesTextureCoordinates : {
-            get : function() {
-                return this._usesTextureCoordinates;
-            }
-        },
         /**
          * Whether or not the resulting shader's texture coordinates are computed from planar extents.
          *
@@ -69,18 +63,28 @@ define([
          */
         fragmentShaderSource : {
             get : function() {
-                return this._shaderSource;
+                return this._fragmenShaderSource;
+            }
+        },
+                /**
+         * The vertex shader source.
+         * @memberof ShadowVolumeAppearanceShader.prototype
+         * @type {String}
+         * @readonly
+         */
+        vertexShaderSource : {
+            get : function() {
+                return this._vertexShaderSource;
             }
         }
     });
 
-    function createShadowVolumeAppearanceShader(appearance, extentsCull, planarExtents) {
-        var shaderDependencies = shaderDependenciesScratch.reset();
+    function createShadowVolumeAppearanceFS(shaderDependencies, appearance, extentsCull, planarExtents) {
         if (!defined(appearance)) {
-            return getColorlessShader(extentsCull, planarExtents);
+            return getColorlessShaderFS(shaderDependencies, extentsCull, planarExtents);
         }
         if (appearance instanceof PerInstanceColorAppearance) {
-            return getPerInstanceColorShader(extentsCull, appearance.flat, planarExtents);
+            return getPerInstanceColorShaderFS(shaderDependencies, extentsCull, appearance.flat, planarExtents);
         }
 
         shaderDependencies.requiresTextureCoordinates = extentsCull;
@@ -111,13 +115,13 @@ define([
                 'varying vec4 v_stSineCosineUVScale;\n';
         }
 
-        glsl += getLocalFunctions(shaderDependencies, planarExtents);
+        glsl += getLocalFunctionsFS(shaderDependencies, planarExtents);
 
         glsl +=
             'void main(void)\n' +
             '{\n';
 
-        glsl += getDependenciesAndCulling(shaderDependencies, extentsCull, planarExtents);
+        glsl += getDependenciesAndCullingFS(shaderDependencies, extentsCull, planarExtents);
 
         glsl += '    czm_materialInput materialInput;\n';
         if (usesNormalEC) {
@@ -147,7 +151,7 @@ define([
         return glsl;
     }
 
-    function getColorlessShader(extentsCulling, planarExtents) {
+    function getColorlessShaderFS(shaderDependencies, extentsCulling, planarExtents) {
         var glsl =
             '#ifdef GL_EXT_frag_depth\n' +
             '#extension GL_EXT_frag_depth : enable\n' +
@@ -160,18 +164,17 @@ define([
 
                 'varying vec4 v_sphericalExtents;\n';
         }
-        var shaderDependencies = shaderDependenciesScratch;
         shaderDependencies.requiresTextureCoordinates = extentsCulling;
         shaderDependencies.requiresNormalEC = false;
 
-        glsl += getLocalFunctions(shaderDependencies, planarExtents);
+        glsl += getLocalFunctionsFS(shaderDependencies, planarExtents);
 
         glsl += 'void main(void)\n' +
                 '{\n';
         glsl += '    bool culled = false;\n';
         var outOfBoundsSnippet =
                 '        culled = true;\n';
-        glsl += getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet);
+        glsl += getDependenciesAndCullingFS(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet);
         glsl += '    if (!culled) {\n' +
                 '        gl_FragColor.a = 1.0;\n' + // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
                 '        czm_writeDepthClampedToFarPlane();\n' +
@@ -180,7 +183,7 @@ define([
         return glsl;
     }
 
-    function getPerInstanceColorShader(extentsCulling, flatShading, planarExtents) {
+    function getPerInstanceColorShaderFS(shaderDependencies, extentsCulling, flatShading, planarExtents) {
         var glsl =
             '#ifdef GL_EXT_frag_depth\n' +
             '#extension GL_EXT_frag_depth : enable\n' +
@@ -194,16 +197,15 @@ define([
 
                 'varying vec4 v_sphericalExtents;\n';
         }
-        var shaderDependencies = shaderDependenciesScratch;
         shaderDependencies.requiresTextureCoordinates = extentsCulling;
         shaderDependencies.requiresNormalEC = !flatShading;
 
-        glsl += getLocalFunctions(shaderDependencies, planarExtents);
+        glsl += getLocalFunctionsFS(shaderDependencies, planarExtents);
 
         glsl += 'void main(void)\n' +
                 '{\n';
 
-        glsl += getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents);
+        glsl += getDependenciesAndCullingFS(shaderDependencies, extentsCulling, planarExtents);
 
         if (flatShading) {
             glsl +=
@@ -224,7 +226,7 @@ define([
         return glsl;
     }
 
-    function getDependenciesAndCulling(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet) {
+    function getDependenciesAndCullingFS(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet) {
         var glsl = '';
         if (shaderDependencies.requiresEC) {
             glsl +=
@@ -271,7 +273,7 @@ define([
         return glsl;
     }
 
-    function getLocalFunctions(shaderDependencies, planarExtents) {
+    function getLocalFunctionsFS(shaderDependencies, planarExtents) {
         var glsl = '';
         if (shaderDependencies.requiresEC) {
             glsl +=
@@ -315,6 +317,80 @@ define([
         return glsl;
     }
 
+    function createShadowVolumeAppearanceVS(shaderDependencies, appearance, planarExtents, columbusView2D, shadowVolumeVS) {
+        var glsl = ShaderSource.replaceMain(shadowVolumeVS, 'computePosition');
+
+        var isPerInstanceColor = defined(appearance) && appearance instanceof PerInstanceColorAppearance;
+        if (isPerInstanceColor) {
+            glsl += 'varying vec4 v_color;\n';
+        }
+
+        var spherical = !(planarExtents || columbusView2D);
+        if (shaderDependencies.requiresTextureCoordinates) {
+            if (spherical) {
+                glsl +=
+                    'varying vec4 v_sphericalExtents;\n' +
+                    'varying vec4 v_stSineCosineUVScale;\n';
+            } else {
+                glsl +=
+                    'varying vec2 v_inversePlaneExtents;\n' +
+                    'varying vec4 v_westPlane;\n' +
+                    'varying vec4 v_southPlane;\n' +
+                    'varying vec4 v_stSineCosineUVScale;\n';
+            }
+        }
+
+        glsl +=
+            'void main()\n' +
+            '{\n' +
+            '   computePosition();\n';
+        if (isPerInstanceColor) {
+            glsl += 'v_color = czm_batchTable_color(batchId);\n';
+        }
+
+        // Add code for computing texture coordinate dependencies
+        if (shaderDependencies.requiresTextureCoordinates) {
+            if (spherical) {
+                glsl +=
+                    'v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);\n' +
+                    'v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);\n';
+            } else {
+                // Two varieties of planar texcoords. 2D/CV case is "compressed"
+                if (columbusView2D) {
+                    glsl +=
+                        'vec4 planes2D_high = czm_batchTable_planes2D_HIGH(batchId);\n' +
+                        'vec4 planes2D_low = czm_batchTable_planes2D_LOW(batchId);\n' +
+                        'vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.xy), vec3(0.0, planes2D_low.xy))).xyz;\n' +
+                        'vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.x, planes2D_high.z), vec3(0.0, planes2D_low.x, planes2D_low.z))).xyz;\n' +
+                        'vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.w, planes2D_high.y), vec3(0.0, planes2D_low.w, planes2D_low.y))).xyz;\n';
+                } else {
+                    glsl +=
+                        'vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest_HIGH(batchId), czm_batchTable_southWest_LOW(batchId))).xyz;\n' +
+                        'vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_northWest_HIGH(batchId), czm_batchTable_northWest_LOW(batchId))).xyz;\n' +
+                        'vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southEast_HIGH(batchId), czm_batchTable_southEast_LOW(batchId))).xyz;\n';
+                }
+                glsl +=
+                    'vec3 eastWard = southEastCorner - southWestCorner;\n' +
+                    'float eastExtent = length(eastWard);\n' +
+                    'eastWard /= eastExtent;\n' +
+
+                    'vec3 northWard = northWestCorner - southWestCorner;\n' +
+                    'float northExtent = length(northWard);\n' +
+                    'northWard /= northExtent;\n' +
+
+                    'v_westPlane = vec4(eastWard, -dot(eastWard, southWestCorner));\n' +
+                    'v_southPlane = vec4(northWard, -dot(northWard, southWestCorner));\n' +
+                    'v_inversePlaneExtents = vec2(1.0 / eastExtent, 1.0 / northExtent);\n' +
+                    'v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);\n';
+            }
+        }
+
+        glsl +=
+            '}\n';
+
+        return glsl;
+    }
+
     /**
      * Tracks shader dependencies.
      * @private
@@ -325,14 +401,6 @@ define([
         this._requiresNormalEC = false; // depends on eye coordinates, needed for material
         this._requiresTextureCoordinates = false; // depends on world coordinates, needed for material and for culling
     }
-
-    ShaderDependencies.prototype.reset = function() {
-        this._requiresEC = false;
-        this._requiresWC = false;
-        this._requiresNormalEC = false;
-        this._requiresTextureCoordinates = false;
-        return this;
-    };
 
     defineProperties(ShaderDependencies.prototype, {
         // Set when assessing final shading (flat vs. phong) and culling using computed texture coordinates
@@ -397,5 +465,3 @@ define([
 
     return ShadowVolumeAppearanceShader;
 });
-
-// TODO: have this inject code into ShadowVolumeVS so that's less messy

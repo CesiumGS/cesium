@@ -4,8 +4,6 @@
 
 #ifdef VECTOR_TILE
 uniform vec4 u_highlightColor;
-//#else
-//varying vec4 v_color;
 #endif
 
 void main(void)

@@ -629,22 +629,15 @@ define([
             vsPick = Primitive._appendShowToShader(primitive, vsPick);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
-            var pick3DShadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, usePlanarExtents);
+            var pick3DShadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, usePlanarExtents, false, vsPick);
             var pickFS3D = new ShaderSource({
                 sources : [pick3DShadowVolumeAppearanceShader.fragmentShaderSource],
                 pickColorQualifier : 'varying'
             });
 
-            var pickVSDefines = [extrudedDefine];
-            if (pick3DShadowVolumeAppearanceShader.planarExtents) {
-                pickVSDefines.push('PLANAR_EXTENTS');
-            } else {
-                pickVSDefines.push('SPHERICAL_EXTENTS');
-            }
-
             var pickVS3D = new ShaderSource({
-                defines : pickVSDefines,
-                sources : [vsPick]
+                defines : [extrudedDefine],
+                sources : [pick3DShadowVolumeAppearanceShader.vertexShaderSource]
             });
 
             classificationPrimitive._spPick = ShaderProgram.replaceCache({
@@ -655,15 +648,15 @@ define([
                 attributeLocations : attributeLocations
             });
 
-            var pickVS2D = new ShaderSource({
-                defines : [extrudedDefine, 'COLUMBUS_VIEW_2D'],
-                sources : [vsPick]
-            });
-
-            var pick2DShadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, true);
+            var pick2DShadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, true, true, vsPick);
             var pickFS2D = new ShaderSource({
                 sources : [pick2DShadowVolumeAppearanceShader.fragmentShaderSource],
                 pickColorQualifier : 'varying'
+            });
+
+            var pickVS2D = new ShaderSource({
+                defines : [extrudedDefine],
+                sources : [pick2DShadowVolumeAppearanceShader.vertexShaderSource]
             });
 
             classificationPrimitive._spPick2D = ShaderProgram.replaceCache({
@@ -702,7 +695,7 @@ define([
         var parts;
 
         // Create a fragment shader that computes only required material hookups using screen space techniques
-        var shadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, usePlanarExtents, appearance);
+        var shadowVolumeAppearanceShader = new ShadowVolumeAppearanceShader(cullUsingExtents, usePlanarExtents, false, vs, appearance);
         var shadowVolumeAppearanceFS = shadowVolumeAppearanceShader.fragmentShaderSource;
         if (isPerInstanceColor) {
             parts = [shadowVolumeAppearanceFS];
@@ -714,17 +707,9 @@ define([
             sources : [parts.join('\n')]
         });
 
-        var colorVSDefines = isPerInstanceColor ? ['PER_INSTANCE_COLOR'] : [];
-        if (shadowVolumeAppearanceShader.usesTextureCoordinates) {
-            if (shadowVolumeAppearanceShader.planarExtents) {
-                colorVSDefines.push('PLANAR_EXTENTS');
-            } else {
-                colorVSDefines.push('SPHERICAL_EXTENTS');
-            }
-        }
         var vsColorSource = new ShaderSource({
-            defines : colorVSDefines,
-            sources : [vs]
+            defines : [extrudedDefine],
+            sources : [shadowVolumeAppearanceShader.vertexShaderSource]
         });
 
         classificationPrimitive._spColor = ShaderProgram.replaceCache({
@@ -736,7 +721,7 @@ define([
         });
 
         // Create a similar fragment shader for 2D, forcing planar extents
-        var shadowVolumeAppearanceShader2D = new ShadowVolumeAppearanceShader(cullUsingExtents, true, appearance);
+        var shadowVolumeAppearanceShader2D = new ShadowVolumeAppearanceShader(cullUsingExtents, true, true, vs, appearance);
         var shadowVolumeAppearanceFS2D = shadowVolumeAppearanceShader2D.fragmentShaderSource;
         if (isPerInstanceColor) {
             parts = [shadowVolumeAppearanceFS2D];
@@ -749,8 +734,8 @@ define([
         });
 
         var vsColorSource2D = new ShaderSource({
-            defines : isPerInstanceColor ? ['PER_INSTANCE_COLOR', 'COLUMBUS_VIEW_2D'] : ['COLUMBUS_VIEW_2D'],
-            sources : [vs]
+            defines : [extrudedDefine],
+            sources : [shadowVolumeAppearanceShader2D.vertexShaderSource]
         });
 
         classificationPrimitive._spColor2D = ShaderProgram.replaceCache({
