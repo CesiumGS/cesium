@@ -28,7 +28,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.text] A Property specifying the text. Explicit newlines '\n' are supported.
-     * @param {Property} [options.font='10px sans-serif'] A Property specifying the CSS font.
+     * @param {Property} [options.font='30px sans-serif'] A Property specifying the CSS font.
      * @param {Property} [options.style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
      * @param {Property} [options.fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.

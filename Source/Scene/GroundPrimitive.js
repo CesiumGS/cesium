@@ -222,7 +222,7 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        this._classificationPrimitive = undefined;
+        this._primitive = undefined;
 
         this._maxHeight = undefined;
         this._minHeight = undefined;
@@ -621,7 +621,7 @@ define([
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
-        var classificationPrimitive = groundPrimitive._classificationPrimitive;
+        var classificationPrimitive = groundPrimitive._primitive;
         if (passes.render) {
             var colorLength = colorCommands.length;
             var i;
@@ -732,7 +732,7 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
-        if (!this.show || (!defined(this._classificationPrimitive) && !defined(this.geometryInstances))) {
+        if (!defined(this._primitive) && !defined(this.geometryInstances)) {
             return;
         }
 
@@ -750,7 +750,7 @@ define([
         var that = this;
         var primitiveOptions = this._classificationPrimitiveOptions;
 
-        if (!defined(this._classificationPrimitive)) {
+        if (!defined(this._primitive)) {
             var ellipsoid = frameState.mapProjection.ellipsoid;
 
             var instance;
@@ -845,8 +845,8 @@ define([
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
 
-            this._classificationPrimitive = new ClassificationPrimitive(primitiveOptions);
-            this._classificationPrimitive.readyPromise.then(function(primitive) {
+            this._primitive = new ClassificationPrimitive(primitiveOptions);
+            this._primitive.readyPromise.then(function(primitive) {
                 that._ready = true;
 
                 if (that.releaseGeometryInstances) {
@@ -862,10 +862,11 @@ define([
             });
         }
 
-        this._classificationPrimitive.appearance = this.appearance;
-        this._classificationPrimitive.debugShowShadowVolume = this.debugShowShadowVolume;
-        this._classificationPrimitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
-        this._classificationPrimitive.update(frameState);
+        this._primitive.appearance = this.appearance;
+        this._primitive.show = this.show;
+        this._primitive.debugShowShadowVolume = this.debugShowShadowVolume;
+        this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        this._primitive.update(frameState);
     };
 
     function shouldUseSpherical(rectangle) {
@@ -899,11 +900,11 @@ define([
      */
     GroundPrimitive.prototype.getGeometryInstanceAttributes = function(id) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._classificationPrimitive)) {
+        if (!defined(this._primitive)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
         //>>includeEnd('debug');
-        return this._classificationPrimitive.getGeometryInstanceAttributes(id);
+        return this._primitive.getGeometryInstanceAttributes(id);
     };
 
     /**
@@ -938,7 +939,7 @@ define([
      * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
-        this._classificationPrimitive = this._classificationPrimitive && this._classificationPrimitive.destroy();
+        this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
 

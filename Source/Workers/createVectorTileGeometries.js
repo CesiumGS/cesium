@@ -8,7 +8,6 @@ define([
         '../Core/EllipsoidGeometry',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
-        '../Core/VertexFormat',
         '../Scene/Vector3DTileBatch',
         './createTaskProcessorWorker'
     ], function(
@@ -21,7 +20,6 @@ define([
         EllipsoidGeometry,
         IndexDatatype,
         Matrix4,
-        VertexFormat,
         Vector3DTileBatch,
         createTaskProcessorWorker) {
     'use strict';
@@ -239,14 +237,14 @@ define([
     }
 
     function createVectorTileGeometries(parameters, transferableObjects) {
-        var boxes = new Float32Array(parameters.boxes);
-        var boxBatchIds = new Uint16Array(parameters.boxBatchIds);
-        var cylinders =  new Float32Array(parameters.cylinders);
-        var cylinderBatchIds = new Uint16Array(parameters.cylinderBatchIds);
-        var ellipsoids =  new Float32Array(parameters.ellipsoids);
-        var ellipsoidBatchIds = new Uint16Array(parameters.ellipsoidBatchIds);
-        var spheres =  new Float32Array(parameters.spheres);
-        var sphereBatchIds = new Uint16Array(parameters.sphereBatchIds);
+        var boxes = defined(parameters.boxes) ? new Float32Array(parameters.boxes) : undefined;
+        var boxBatchIds = defined(parameters.boxBatchIds) ? new Uint16Array(parameters.boxBatchIds) : undefined;
+        var cylinders =  defined(parameters.cylinders) ? new Float32Array(parameters.cylinders) : undefined;
+        var cylinderBatchIds = defined(parameters.cylinderBatchIds) ? new Uint16Array(parameters.cylinderBatchIds) : undefined;
+        var ellipsoids =  defined(parameters.ellipsoids) ? new Float32Array(parameters.ellipsoids) : undefined;
+        var ellipsoidBatchIds = defined(parameters.ellipsoidBatchIds) ? new Uint16Array(parameters.ellipsoidBatchIds) : undefined;
+        var spheres = defined(parameters.spheres) ?  new Float32Array(parameters.spheres) : undefined;
+        var sphereBatchIds = defined(parameters.sphereBatchIds) ? new Uint16Array(parameters.sphereBatchIds) : undefined;
 
         var numberOfBoxes = defined(boxes) ? boxBatchIds.length : 0;
         var numberOfCylinders = defined(cylinders) ? cylinderBatchIds.length : 0;

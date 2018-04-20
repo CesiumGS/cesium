@@ -144,21 +144,16 @@ define([
 
                 var depthFailAppearance;
                 if (defined(this.depthFailMaterialProperty)) {
-                    var translucent;
-                    if (this.depthFailMaterialProperty instanceof MaterialProperty) {
-                        this.depthFailMaterial = MaterialProperty.getValue(time, this.depthFailMaterialProperty, this.depthFailMaterial);
-                        translucent = this.depthFailMaterial.isTranslucent();
-                    } else {
-                        translucent = this.material.isTranslucent();
-                    }
+                    this.depthFailMaterial = MaterialProperty.getValue(time, this.depthFailMaterialProperty, this.depthFailMaterial);
                     depthFailAppearance = new this.depthFailAppearanceType({
                         material : this.depthFailMaterial,
-                        translucent : translucent,
+                        translucent : this.depthFailMaterial.isTranslucent(),
                         closed : this.closed
                     });
                 }
 
                 primitive = new Primitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
@@ -188,6 +183,7 @@ define([
             this.primitive = primitive;
             this.createPrimitive = false;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;

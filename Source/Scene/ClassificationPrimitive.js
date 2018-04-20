@@ -606,9 +606,13 @@ define([
         }
 
         var extrudedDefine = classificationPrimitive._extruded ? 'EXTRUDED_GEOMETRY' : '';
+        // Tesselation on ClassificationPrimitives tends to be low,
+        // which causes problems when interpolating log depth from vertices.
+        // So force computing and writing logarithmic depth in the fragment shader.
+        var disableGlPositionLogDepth = 'DISABLE_GL_POSITION_LOG_DEPTH';
 
         var vsSource = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [vs]
         });
         var fsSource = new ShaderSource({
@@ -636,7 +640,7 @@ define([
             });
 
             var pickVS3D = new ShaderSource({
-                defines : [extrudedDefine],
+                defines : [extrudedDefine, disableGlPositionLogDepth],
                 sources : [pick3DShadowVolumeAppearanceShader.vertexShaderSource]
             });
 
@@ -655,7 +659,7 @@ define([
             });
 
             var pickVS2D = new ShaderSource({
-                defines : [extrudedDefine],
+                defines : [extrudedDefine, disableGlPositionLogDepth],
                 sources : [pick2DShadowVolumeAppearanceShader.vertexShaderSource]
             });
 
@@ -677,7 +681,7 @@ define([
 
         vs = Primitive._appendShowToShader(primitive, vs);
         vsSource = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [vs]
         });
 
@@ -708,7 +712,7 @@ define([
         });
 
         var vsColorSource = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [shadowVolumeAppearanceShader.vertexShaderSource]
         });
 
@@ -734,7 +738,7 @@ define([
         });
 
         var vsColorSource2D = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [shadowVolumeAppearanceShader2D.vertexShaderSource]
         });
 
@@ -986,7 +990,7 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     ClassificationPrimitive.prototype.update = function(frameState) {
-        if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+        if (!defined(this._primitive) && !defined(this.geometryInstances)) {
             return;
         }
 
@@ -1099,6 +1103,7 @@ define([
         this._primitive.appearance = appearance;
         }
 
+        this._primitive.show = this.show;
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
     };

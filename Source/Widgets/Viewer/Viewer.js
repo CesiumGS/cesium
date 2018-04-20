@@ -1,7 +1,6 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
-        '../../Core/Check',
         '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -49,7 +48,6 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Check,
         Clock,
         defaultValue,
         defined,
@@ -981,18 +979,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         canvas : {
             get : function() {
                 return this._cesiumWidget.canvas;
-            }
-        },
-
-        /**
-         * Gets the Cesium logo element.
-         * @memberof Viewer.prototype
-         * @type {Element}
-         * @readonly
-         */
-        cesiumLogo : {
-            get : function() {
-                return this._cesiumWidget.cesiumLogo;
             }
         },
 

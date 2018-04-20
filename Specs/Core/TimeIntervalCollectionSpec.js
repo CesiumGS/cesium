@@ -3,13 +3,15 @@ defineSuite([
         'Core/defaultValue',
         'Core/Iso8601',
         'Core/JulianDate',
-        'Core/TimeInterval'
+        'Core/TimeInterval',
+        'Core/TimeStandard'
     ], function(
         TimeIntervalCollection,
         defaultValue,
         Iso8601,
         JulianDate,
-        TimeInterval) {
+        TimeInterval,
+        TimeStandard) {
     'use strict';
 
     function defaultDataCallback(interval, index) {
@@ -614,6 +616,438 @@ defineSuite([
         expect(intervals.get(1).data.value).toEqual(3);
     });
 
+    it('removeInterval works correctly', function() {
+        // test cases derived from STK Components test suite
+
+        function createTimeInterval(startDays, stopDays, isStartIncluded, isStopIncluded) {
+            return new TimeInterval({
+                start: new JulianDate(startDays, 0.0, TimeStandard.TAI),
+                stop: new JulianDate(stopDays, 0.0, TimeStandard.TAI),
+                isStartIncluded: isStartIncluded,
+                isStopIncluded: isStopIncluded
+            });
+        }
+
+        var intervals = new TimeIntervalCollection();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+        intervals.addInterval(createTimeInterval(30.0, 40.0));
+
+        // Empty
+        expect(intervals.removeInterval(TimeInterval.EMPTY)).toEqual(false);
+        expect(intervals.length).toEqual(2);
+
+        // Before first
+        expect(intervals.removeInterval(createTimeInterval(1.0, 5.0))).toEqual(false);
+        expect(intervals.length).toEqual(2);
+
+        // After last
+        expect(intervals.removeInterval(createTimeInterval(50.0, 60.0))).toEqual(false);
+        expect(intervals.length).toEqual(2);
+
+        // Inside hole
+        expect(intervals.removeInterval(createTimeInterval(22.0, 28.0))).toEqual(false);
+        expect(intervals.length).toEqual(2);
+
+        // From beginning
+        expect(intervals.removeInterval(createTimeInterval(5.0, 15.0))).toEqual(true);
+        expect(intervals.length).toEqual(2);
+        expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(15.0);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
+
+        // From end
+        expect(intervals.removeInterval(createTimeInterval(35.0, 45.0))).toEqual(true);
+        expect(intervals.length).toEqual(2);
+        expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(30.0);
+        expect(JulianDate.totalDays(intervals.get(1).stop)).toEqual(35.0);
+
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+        intervals.addInterval(createTimeInterval(30.0, 40.0));
+
+        // From middle of single interval
+        expect(intervals.removeInterval(createTimeInterval(12.0, 18.0))).toEqual(true);
+        expect(intervals.length).toEqual(3);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(12.0);
+        expect(intervals.get(0).isStopIncluded).toEqual(false);
+        expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(18.0);
+        expect(intervals.get(1).isStartIncluded).toEqual(false);
+
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+        intervals.addInterval(createTimeInterval(30.0, 40.0));
+        intervals.addInterval(createTimeInterval(45.0, 50.0));
+
+        // Span an entire interval and into part of next
+        expect(intervals.removeInterval(createTimeInterval(25.0, 46.0))).toEqual(true);
+        expect(intervals.length).toEqual(2);
+        expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(46.0);
+        expect(intervals.get(1).isStartIncluded).toEqual(false);
+
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+        intervals.addInterval(createTimeInterval(30.0, 40.0));
+        intervals.addInterval(createTimeInterval(45.0, 50.0));
+
+        // Interval ends at same date as an existing interval
+        expect(intervals.removeInterval(createTimeInterval(25.0, 40.0))).toEqual(true);
+        expect(intervals.length).toEqual(2);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
+        expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(45.0);
+
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+        intervals.addInterval(createTimeInterval(30.0, 40.0));
+        intervals.addInterval(createTimeInterval(45.0, 50.0));
+
+        // Interval ends at same date as an existing interval and single point of existing
+        // interval survives.
+        expect(intervals.removeInterval(createTimeInterval(25.0, 40.0, true, false))).toEqual(true);
+        expect(intervals.length).toEqual(3);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
+        expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(40.0);
+        expect(JulianDate.totalDays(intervals.get(1).stop)).toEqual(40.0);
+        expect(intervals.get(1).isStartIncluded).toEqual(true);
+        expect(intervals.get(1).isStopIncluded).toEqual(true);
+        expect(JulianDate.totalDays(intervals.get(2).start)).toEqual(45.0);
+
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+        intervals.addInterval(createTimeInterval(30.0, 40.0));
+        intervals.addInterval(createTimeInterval(40.0, 50.0, false, true));
+
+        // Interval ends at same date as an existing interval, single point of existing
+        // interval survives, and single point can be combined with the next interval.
+        expect(intervals.removeInterval(createTimeInterval(25.0, 40.0, true, false))).toEqual(true);
+        expect(intervals.length).toEqual(2);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
+        expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(40.0);
+        expect(intervals.get(1).isStartIncluded).toEqual(true);
+
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+
+        // End point of removal interval overlaps first point of existing interval.
+        expect(intervals.removeInterval(createTimeInterval(0.0, 10.0))).toEqual(true);
+        expect(intervals.length).toEqual(1);
+        expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(10.0);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
+        expect(intervals.get(0).isStartIncluded).toEqual(false);
+        expect(intervals.get(0).isStopIncluded).toEqual(true);
+
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(10.0, 20.0));
+
+        // Start point of removal interval does NOT overlap last point of existing interval
+        // because the start point is not included.
+        expect(intervals.removeInterval(createTimeInterval(20.0, 30.0, false, true))).toEqual(false);
+        expect(intervals.length).toEqual(1);
+        expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(10.0);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(20.0);
+        expect(intervals.get(0).isStartIncluded).toEqual(true);
+        expect(intervals.get(0).isStopIncluded).toEqual(true);
+
+        // Removing an open interval from an otherwise identical closed interval
+        intervals.removeAll();
+        intervals.addInterval(createTimeInterval(0.0, 20.0));
+        expect(intervals.removeInterval(createTimeInterval(0.0, 20.0, false, false))).toEqual(true);
+        expect(intervals.length).toEqual(2);
+        expect(JulianDate.totalDays(intervals.get(0).start)).toEqual(0.0);
+        expect(JulianDate.totalDays(intervals.get(0).stop)).toEqual(0.0);
+        expect(intervals.get(0).isStartIncluded).toEqual(true);
+        expect(intervals.get(0).isStopIncluded).toEqual(true);
+        expect(JulianDate.totalDays(intervals.get(1).start)).toEqual(20.0);
+        expect(JulianDate.totalDays(intervals.get(1).stop)).toEqual(20.0);
+        expect(intervals.get(1).isStartIncluded).toEqual(true);
+        expect(intervals.get(1).isStopIncluded).toEqual(true);
+    });
+
+    it('removeInterval removes the first interval correctly', function() {
+        var intervals = new TimeIntervalCollection();
+        var from1To3 = new TimeInterval({
+            start: new JulianDate(1),
+            stop: new JulianDate(3),
+            isStopIncluded: true,
+            isStartIncluded: true,
+            data: '1-to-3'
+        });
+        var from3To6 = new TimeInterval({
+            start: new JulianDate(3),
+            stop: new JulianDate(6),
+            isStopIncluded: true,
+            isStartIncluded: true,
+            data: '3-to-6'
+        });
+
+        intervals.addInterval(from1To3);
+        intervals.addInterval(from3To6);
+
+        expect(intervals.length).toEqual(2);
+        expect(intervals.get(0).isStartIncluded).toBeTruthy();
+        expect(intervals.get(0).isStopIncluded).toBeFalsy(); // changed to false because 3-6 overlaps it
+        expect(intervals.get(0).start.dayNumber).toEqual(1);
+        expect(intervals.get(0).stop.dayNumber).toEqual(3);
+        expect(intervals.get(0).data).toEqual('1-to-3');
+        expect(intervals.get(1).isStartIncluded).toBeTruthy();
+        expect(intervals.get(1).isStopIncluded).toBeTruthy();
+        expect(intervals.get(1).start.dayNumber).toEqual(3);
+        expect(intervals.get(1).stop.dayNumber).toEqual(6);
+        expect(intervals.get(1).data).toEqual('3-to-6');
+
+        var toRemove = new TimeInterval({
+            start: new JulianDate(1),
+            stop: new JulianDate(3),
+            isStopIncluded: true,
+            isStartIncluded: true,
+            data: undefined
+        });
+
+        expect(intervals.removeInterval(toRemove)).toEqual(true);
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start.dayNumber).toEqual(3);
+        expect(intervals.stop.dayNumber).toEqual(6);
+        expect(intervals.get(0).start.dayNumber).toEqual(3);
+        expect(intervals.get(0).stop.dayNumber).toEqual(6);
+        expect(intervals.get(0).isStartIncluded).toEqual(false);
+        expect(intervals.get(0).isStopIncluded).toEqual(true);
+        expect(intervals.get(0).data).toEqual('3-to-6');
+    });
+
+    it('should add and remove intervals correctly (some kind of integration test)', function () {
+        // about the year 3000
+        var CONST_DAY_NUM = 3000000;
+
+        function intervalFromSeconds(seconds, data) {
+            // make all intervals a few seconds in length
+            return new TimeInterval({
+                start: new JulianDate(CONST_DAY_NUM, seconds),
+                stop: new JulianDate(CONST_DAY_NUM, seconds + 4),
+                isStartIncluded: true,
+                isStopIncluded: true,
+                data: data
+            });
+        }
+
+        function addIntervals(collection, specs) {
+            specs.forEach(function(spec) {
+                collection.addInterval(intervalFromSeconds(spec.sec, spec.data));
+            });
+        }
+
+        function removeInterval(collection, fromSecond, toSecond) {
+            collection.removeInterval(new TimeInterval({
+                start: new JulianDate(CONST_DAY_NUM, fromSecond),
+                stop: new JulianDate(CONST_DAY_NUM, toSecond),
+                isStartIncluded: true,
+                isStopIncluded: true,
+                data: undefined
+            }));
+        }
+
+        function expectCollection(collection, count, expectation) {
+            expectation.forEach(function(item) {
+                var interval = collection.findIntervalContainingDate(new JulianDate(CONST_DAY_NUM, item.sec));
+                if (item.data === null) {
+                    // expect the interval at this time not to exist
+                    if (interval !== undefined) {
+                        throw new Error('expected undefined at ' + item.sec + ' seconds but it was ' + interval.data);
+                    }
+                    expect(interval).toBeUndefined();
+                } else if (interval === undefined) {
+                    throw new Error('expected ' + item.data + ' at ' + item.sec + ' seconds, but it was undefined');
+                } else if (interval.data !== item.data) {
+                    throw new Error('expected ' + item.data + ' at ' + item.sec + ' seconds, but it was ' + interval.data);
+                }
+            });
+
+            if (collection.length !== count) {
+                throw new Error('Expected interval to have ' + count + ' elements but it had ' + collection.length);
+            }
+        }
+
+        var collection = new TimeIntervalCollection();
+
+        addIntervals(
+            collection,
+            [
+                { sec: 0, data: 0 },
+                { sec: 2, data: 2 },
+                { sec: 4, data: 4 },
+                { sec: 6, data: 6 }
+            ]
+        );
+        expectCollection(
+            collection,
+            4,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 0 },
+                { sec: 2, data: 2 },
+                { sec: 3, data: 2 },
+                { sec: 4, data: 4 },
+                { sec: 5, data: 4 },
+                { sec: 6, data: 6 },
+                { sec: 7, data: 6 },
+                { sec: 8, data: 6 },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        addIntervals(
+            collection,
+            [
+                { sec: 1, data: 1 },
+                { sec: 3, data: 3 }
+            ]
+        );
+        expectCollection(
+            collection,
+            4,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: 3 },
+                { sec: 4, data: 3 },
+                { sec: 5, data: 3 },
+                { sec: 6, data: 3 },
+                { sec: 7, data: 3 },
+                { sec: 8, data: 6 },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        addIntervals(
+            collection,
+            [
+                { sec: 3, data: 31 }
+            ]
+        );
+        expectCollection(
+            collection,
+            4,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: 31 },
+                { sec: 4, data: 31 },
+                { sec: 5, data: 31 },
+                { sec: 6, data: 31 },
+                { sec: 7, data: 31 },
+                { sec: 8, data: 6 },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        removeInterval(collection, 3, 8);
+        expectCollection(
+            collection,
+            3,
+            [
+                { sec: 0, data: 0 },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: null },
+                { sec: 4, data: null },
+                { sec: 5, data: null },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        removeInterval(collection, 0, 1);
+        expectCollection(
+            collection,
+            2,
+            [
+                { sec: 0, data: null },
+                { sec: 1, data: null },
+                { sec: 2, data: 1 },
+                { sec: 3, data: null },
+                { sec: 4, data: null },
+                { sec: 5, data: null },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 9, data: 6 },
+                { sec: 10, data: 6 },
+                { sec: 11, data: null }
+            ]
+        );
+
+        removeInterval(collection, 0, 11);
+        expectCollection(
+            collection,
+            0,
+            [
+                { sec: 0, data: null },
+                { sec: 11, data: null }
+            ]
+        );
+
+        addIntervals(
+            collection,
+            [
+                { sec: 1, data: 1 },
+                { sec: 12, data: 12 }
+            ]
+        );
+        expectCollection(
+            collection,
+            2,
+            [
+                { sec: 0, data: null },
+                { sec: 1, data: 1 },
+                { sec: 2, data: 1 },
+                { sec: 3, data: 1 },
+                { sec: 4, data: 1 },
+                { sec: 5, data: 1 },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 9, data: null },
+                { sec: 10, data: null },
+                { sec: 11, data: null },
+                { sec: 12, data: 12 },
+                { sec: 13, data: 12 },
+                { sec: 14, data: 12 },
+                { sec: 15, data: 12 },
+                { sec: 16, data: 12 },
+                { sec: 17, data: null }
+            ]
+        );
+
+        removeInterval(collection, 0, 3);
+        expectCollection(
+            collection,
+            2,
+            [
+                { sec: 0, data: null },
+                { sec: 1, data: null },
+                { sec: 2, data: null },
+                { sec: 3, data: null },
+                { sec: 4, data: 1 },
+                { sec: 5, data: 1 },
+                { sec: 6, data: null },
+                { sec: 7, data: null },
+                { sec: 8, data: null },
+                { sec: 12, data: 12 },
+                { sec: 16, data: 12 },
+                { sec: 17, data: null }
+            ]
+        );
+    });
+
     it('removeInterval leaves a hole', function() {
         var intervals = new TimeIntervalCollection();
         var interval = new TimeInterval({
@@ -643,7 +1077,7 @@ defineSuite([
         expect(intervals.get(1).isStopIncluded).toEqual(true);
     });
 
-    it('removeInterval with an interval of the exact same size works..', function() {
+    it('removeInterval with an interval of the exact same size works.', function() {
         var intervals = new TimeIntervalCollection();
         var interval = new TimeInterval({
             start : new JulianDate(1),

@@ -3,9 +3,8 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/FeatureDetection',
+        '../Core/RuntimeError',
         '../Core/TaskProcessor',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/when'
     ], function(
@@ -13,9 +12,8 @@ define([
         ComponentDatatype,
         defined,
         FeatureDetection,
+        RuntimeError,
         TaskProcessor,
-        Buffer,
-        BufferUsage,
         ForEach,
         when) {
     'use strict';
@@ -175,6 +173,10 @@ define([
     DracoLoader.decode = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
+        }
+
+        if (FeatureDetection.isInternetExplorer()) {
+            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
         }
 
         var loadResources = model._loadResources;

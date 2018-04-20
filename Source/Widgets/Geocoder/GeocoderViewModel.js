@@ -6,6 +6,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
+        '../../Core/GeocodeType',
         '../../Core/Matrix4',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -19,6 +20,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        GeocodeType,
         Matrix4,
         knockout,
         when,
@@ -79,7 +81,8 @@ define([
             return suggestionsNotEmpty && showSuggestions;
         });
 
-        this._searchCommand = createCommand(function() {
+        this._searchCommand = createCommand(function(geocodeType) {
+            geocodeType = defaultValue(geocodeType, GeocodeType.SEARCH);
             that._focusTextbox = false;
             if (defined(that._selectedSuggestion)) {
                 that.activateSuggestion(that._selectedSuggestion);
@@ -89,7 +92,7 @@ define([
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
-                geocode(that, that._geocoderServices);
+                geocode(that, that._geocoderServices, geocodeType);
             }
         });
 
@@ -338,13 +341,13 @@ define([
         });
     }
 
-    function chainPromise(promise, geocoderService, query) {
+    function chainPromise(promise, geocoderService, query, geocodeType) {
         return promise
             .then(function(result) {
                 if (defined(result) && result.state === 'fulfilled' && result.value.length > 0){
                     return result;
                 }
-                var nextPromise = geocoderService.geocode(query)
+                var nextPromise = geocoderService.geocode(query, geocodeType)
                     .then(function (result) {
                         return {state: 'fulfilled', value: result};
                     })
@@ -356,7 +359,7 @@ define([
             });
     }
 
-    function geocode(viewModel, geocoderServices) {
+    function geocode(viewModel, geocoderServices, geocodeType) {
         var query = viewModel._searchText;
 
         if (hasOnlyWhitespace(query)) {
@@ -368,7 +371,7 @@ define([
 
         var promise = when.resolve();
         for (var i = 0; i < geocoderServices.length; i++) {
-            promise = chainPromise(promise, geocoderServices[i], query);
+            promise = chainPromise(promise, geocoderServices[i], query, geocodeType);
         }
 
         viewModel._geocodePromise = promise;
@@ -442,7 +445,7 @@ define([
                 if (results.length >= 5) {
                     return results;
                 }
-                return service.geocode(query)
+                return service.geocode(query, GeocodeType.AUTOCOMPLETE)
                     .then(function(newResults) {
                         results = results.concat(newResults);
                         return results;

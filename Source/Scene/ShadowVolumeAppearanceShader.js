@@ -279,7 +279,7 @@ define([
             glsl +=
                 'vec4 getEyeCoordinate(vec2 fragCoord) {\n' +
                 '    vec2 coords = fragCoord / czm_viewport.zw;\n' +
-                '    float depth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));\n' +
+                '    float depth = czm_reverseLogDepth(czm_unpackDepth(texture2D(czm_globeDepthTexture, coords)));\n' +
                 '    vec4 windowCoord = vec4(fragCoord, depth, 1.0);\n' +
                 '    vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);\n' +
                 '    return eyeCoordinate;\n' +
@@ -295,8 +295,8 @@ define([
 
                 'vec3 getVectorFromOffset(vec4 eyeCoordinate, vec2 glFragCoordXY, vec2 positiveOffset) {\n' +
                 '    // Sample depths at both offset and negative offset\n' +
-                '    float upOrRightDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw));\n' +
-                '    float downOrLeftDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw));\n' +
+                '    float upOrRightDepth = czm_reverseLogDepth(czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw)));\n' +
+                '    float downOrLeftDepth = czm_reverseLogDepth(czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw)));\n' +
                 '    // Explicitly evaluate both paths\n' +
                 '    bvec2 upOrRightInBounds = lessThan(glFragCoordXY + positiveOffset, czm_viewport.zw);\n' +
                 '    float useUpOrRight = float(upOrRightDepth > 0.0 && upOrRightInBounds.x && upOrRightInBounds.y);\n' +
