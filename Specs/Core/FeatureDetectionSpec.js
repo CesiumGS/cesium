@@ -110,4 +110,8 @@ defineSuite([
             expect(FeatureDetection.imageRenderingValue()).not.toBeDefined();
         }
     });
+
+    it('detects Node.js', function() {
+        expect(FeatureDetection.isNodeJs()).toBe(false);
+    });
 });
