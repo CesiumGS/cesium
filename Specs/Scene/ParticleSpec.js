@@ -21,7 +21,7 @@ defineSuite([
         expect(p.endColor).toEqual(Color.WHITE);
         expect(p.startScale).toEqual(1.0);
         expect(p.endScale).toEqual(1.0);
-        expect(p.size).toEqual(new Cartesian2(1.0, 1.0));
+        expect(p.imageSize).toEqual(new Cartesian2(1.0, 1.0));
     });
 
     it('constructor', function() {
@@ -35,7 +35,7 @@ defineSuite([
             endColor : Color.LIME,
             startScale : 0.5,
             endScale : 20.0,
-            size : new Cartesian2(7.0, 8.0)
+            imageSize : new Cartesian2(7.0, 8.0)
         };
         var p = new Particle(options);
         expect(p.mass).toEqual(options.mass);
@@ -47,7 +47,7 @@ defineSuite([
         expect(p.endColor).toEqual(options.endColor);
         expect(p.startScale).toEqual(options.startScale);
         expect(p.endScale).toEqual(options.endScale);
-        expect(p.size).toEqual(options.size);
+        expect(p.imageSize).toEqual(options.imageSize);
     });
 
     it('update without forces', function() {
@@ -90,6 +90,33 @@ defineSuite([
         var dt = 10.0;
         var expectedPosition = Cartesian3.add(p.position, Cartesian3.multiplyByScalar(p.velocity, 2.0 * dt, new Cartesian3()), new Cartesian3());
         var expectedMass = p.mass + 1;
+
+        expect(p.update(dt, forces)).toEqual(true);
+        expect(p.position).toEqual(expectedPosition);
+        expect(p.velocity).toEqual(velocity);
+        expect(p.age).toEqual(dt);
+        expect(p.normalizedAge).toEqual(dt / p.life);
+        expect(p.mass).toEqual(expectedMass);
+        expect(p.update(dt)).toEqual(false);
+    });
+
+    it('update with updateFunction', function() {
+        var increaseMass = function(particle, dt) {
+            particle.mass++;
+        };
+        var forces = increaseMass;
+
+        var position = new Cartesian3(1.0, 2.0, 3.0);
+        var velocity = Cartesian3.normalize(new Cartesian3(-1.0, 1.0, 1.0), new Cartesian3());
+        var p = new Particle({
+            life : 15.0,
+            position : position,
+            velocity : velocity
+        });
+
+        var dt = 10.0;
+        var expectedMass = p.mass + 1;
+        var expectedPosition = Cartesian3.add(p.position, Cartesian3.multiplyByScalar(p.velocity, dt, new Cartesian3()), new Cartesian3());
 
         expect(p.update(dt, forces)).toEqual(true);
         expect(p.position).toEqual(expectedPosition);
