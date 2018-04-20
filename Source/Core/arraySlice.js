@@ -1,11 +1,9 @@
 define([
         './Check',
-        './defaultValue',
         './defined',
         './FeatureDetection'
     ], function(
         Check,
-        defaultValue,
         defined,
         FeatureDetection) {
     'use strict';

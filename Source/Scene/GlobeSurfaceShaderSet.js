@@ -3,7 +3,6 @@ define([
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        './ClippingPlaneCollection',
         './getClippingFunction',
         './SceneMode'
     ], function(
@@ -11,7 +10,6 @@ define([
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
-        ClippingPlaneCollection,
         getClippingFunction,
         SceneMode) {
     'use strict';
