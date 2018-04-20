@@ -19,11 +19,9 @@ define([
         './IndexDatatype',
         './Math',
         './Matrix3',
-        './Matrix4',
         './PrimitiveType',
         './Quaternion',
         './Rectangle',
-        './Transforms',
         './VertexFormat'
     ], function(
         BoundingSphere,
@@ -46,11 +44,9 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix3,
-        Matrix4,
         PrimitiveType,
         Quaternion,
         Rectangle,
-        Transforms,
         VertexFormat) {
     'use strict';
 
