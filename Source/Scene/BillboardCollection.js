@@ -139,7 +139,7 @@ define([
      * @param {Scene} [options.scene] Must be passed in for billboards that use the height reference property or will be depth tested against the globe.
      * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
      * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
-     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
+     * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many billboards, to
      * many collections with only a few billboards each.  Organize collections so that billboards
@@ -285,7 +285,7 @@ define([
         /**
          * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
          * However, if either all of the billboards are completely opaque or all are completely translucent,
-         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
          * performance by up to 2x.
          * @type {BlendOption}
          * @default BlendOption.OPAQUE_AND_TRANSLUCENT
