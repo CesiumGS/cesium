@@ -435,7 +435,7 @@ define([
             // Otherwise don't trigger CLICK, because we are adding more touches.
         }
 
-        if (numberOfTouches !== 2 && screenSpaceEventHandler._isPinching) {
+        if (numberOfTouches === 0 && screenSpaceEventHandler._isPinching) {
             // transitioning from pinch, trigger PINCH_END
             screenSpaceEventHandler._isPinching = false;
 
@@ -446,7 +446,7 @@ define([
             }
         }
 
-        if (numberOfTouches === 1) {
+        if (numberOfTouches === 1 && !screenSpaceEventHandler._isPinching) {
             // transitioning to single touch, trigger DOWN
             var position = positions.values[0];
             Cartesian2.clone(position, screenSpaceEventHandler._primaryPosition);
