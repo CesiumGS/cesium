@@ -3229,6 +3229,7 @@ define([
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
         result._transformChanged = true;
+        result.frustum = camera.frustum.clone();
 
         return result;
     };

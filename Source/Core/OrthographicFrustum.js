@@ -259,7 +259,7 @@ define([
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     OrthographicFrustum.prototype.equals = function(other) {
-        if (!defined(other)) {
+        if (!defined(other) || !(other instanceof OrthographicFrustum)) {
             return false;
         }
 

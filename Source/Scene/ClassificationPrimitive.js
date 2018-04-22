@@ -527,9 +527,13 @@ define([
         }
 
         var extrudedDefine = classificationPrimitive._extruded ? 'EXTRUDED_GEOMETRY' : '';
+        // Tesselation on ClassificationPrimitives tends to be low,
+        // which causes problems when interpolating log depth from vertices.
+        // So force computing and writing logarithmic depth in the fragment shader.
+        var disableGlPositionLogDepth = 'DISABLE_GL_POSITION_LOG_DEPTH';
 
         var vsSource = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [vs]
         });
         var fsSource = new ShaderSource({
@@ -551,7 +555,7 @@ define([
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             var pickVS = new ShaderSource({
-                defines : [extrudedDefine],
+                defines : [extrudedDefine, disableGlPositionLogDepth],
                 sources : [vsPick]
             });
 
@@ -578,7 +582,7 @@ define([
 
         vs = Primitive._appendShowToShader(primitive, vs);
         vsSource = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [vs]
         });
 

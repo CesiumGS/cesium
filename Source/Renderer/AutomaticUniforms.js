@@ -1136,6 +1136,22 @@ define([
         }),
 
         /**
+         * The log of the current frustums far plane. Used for computing the log depth.
+         *
+         * @alias czm_logFarDistance
+         * @glslUniform
+         *
+         * @private
+         */
+        czm_logFarDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.logFarDistance;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing the sun position in world coordinates.
          *
          * @alias czm_sunPositionWC
