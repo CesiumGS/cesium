@@ -48,6 +48,15 @@ defineSuite([
         expect(barycentricCoordinates(point, p0, p1, p2)).toEqualEpsilon(new Cartesian3(scalar, scalar, scalar), CesiumMath.EPSILON14);
     });
 
+    it('evaluates with equal length sides', function() {
+        var p0 = new Cartesian3(9635312487071484, 13827945400273020, -16479219993905144);
+        var p1 = new Cartesian3(12832234.180639317, -10455085.701705107, 750010.7274386138);
+        var p2 = new Cartesian3(-9689011.10628853, -13420063.892507521, 750010.7274386119);
+        expect(barycentricCoordinates(p0, p0, p1, p2)).toEqual(Cartesian3.UNIT_X);
+        expect(barycentricCoordinates(p1, p0, p1, p2)).toEqual(Cartesian3.UNIT_Y);
+        expect(barycentricCoordinates(p2, p0, p1, p2)).toEqual(Cartesian3.UNIT_Z);
+    });
+
     it('throws without point', function() {
         expect(function() {
             barycentricCoordinates();

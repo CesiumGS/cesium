@@ -1,5 +1,4 @@
 //#define SHOW_TILE_BOUNDARIES
-
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0
