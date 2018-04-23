@@ -1042,6 +1042,10 @@ defineSuite([
         var leftDownAction = createCloningSpy('LEFT_DOWN');
         handler.setInputAction(leftDownAction, leftDownEventType);
 
+        var pinchStartEventType = ScreenSpaceEventType.PINCH_START;
+        var pinchStartAction = createCloningSpy('PINCH_START');
+        handler.setInputAction(pinchStartAction, pinchStartEventType);
+
         var pinchEndEventType = ScreenSpaceEventType.PINCH_END;
         var pinchEndAction = createCloningSpy('PINCH_END');
         handler.setInputAction(pinchEndAction, pinchEndEventType);
@@ -1084,7 +1088,26 @@ defineSuite([
             expect(leftDownAction).not.toHaveBeenCalled();
             pinchEndAction.calls.reset();
 
+            // Putting another finger down should not trigger
+            // PINCH_START:
+            pinchStartAction.calls.reset();
+            DomEventSimulator.firePointerDown(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch2Position
+            ));
+            expect(pinchStartAction).not.toHaveBeenCalled();
+
             // Releasing both fingers should trigger PINCH_END:
+            DomEventSimulator.firePointerUp(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch2Position
+            ));
             DomEventSimulator.firePointerUp(element, combine({
                 pointerType : 'touch',
                 pointerId : 2
