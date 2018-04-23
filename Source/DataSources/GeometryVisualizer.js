@@ -2,6 +2,7 @@ define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
         '../Core/Check',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -11,8 +12,8 @@ define([
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/ShadowMode',
-        './BoxGeometryUpdater',
         './BoundingSphereState',
+        './BoxGeometryUpdater',
         './ColorMaterialProperty',
         './CorridorGeometryUpdater',
         './CylinderGeometryUpdater',
@@ -32,6 +33,7 @@ define([
         AssociativeArray,
         BoundingSphere,
         Check,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -41,8 +43,8 @@ define([
         MaterialAppearance,
         PerInstanceColorAppearance,
         ShadowMode,
-        BoxGeometryUpdater,
         BoundingSphereState,
+        BoxGeometryUpdater,
         ColorMaterialProperty,
         CorridorGeometryUpdater,
         CylinderGeometryUpdater,
@@ -117,15 +119,18 @@ define([
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
+     * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
+     * @param {PrimitiveCollection} [groundPrimitives=scene.groundPrimitives] A collection to add ground primitives related to the entities
      */
-    function GeometryVisualizer(scene, entityCollection) {
+    function GeometryVisualizer(scene, entityCollection, primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
         Check.defined('entityCollection', entityCollection);
         //>>includeEnd('debug');
 
-        var primitives = scene.primitives;
-        var groundPrimitives = scene.groundPrimitives;
+        primitives = defaultValue(primitives, scene.primitives);
+        groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
+
         this._scene = scene;
         this._primitives = primitives;
         this._groundPrimitives = groundPrimitives;

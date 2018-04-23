@@ -38,7 +38,6 @@ define([
     var tangentScratch = new Cartesian3();
     var positionScratch = new Cartesian3();
 
-
     /**
      * A description of a cylinder.
      *

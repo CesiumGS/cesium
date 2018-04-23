@@ -7,7 +7,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './GoogleEarthEnterpriseTileInformation',
         './isBitSet',
         './Math',
@@ -24,7 +23,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         GoogleEarthEnterpriseTileInformation,
         isBitSet,
         CesiumMath,
@@ -67,23 +65,16 @@ define([
         //>>includeEnd('debug');
 
         var url = resourceOrUrl;
-        var proxy;
+
         if (typeof url !== 'string' && !(url instanceof Resource)) {
             //>>includeStart('debug', pragmas.debug);
             Check.typeOf.string('resourceOrUrl.url', resourceOrUrl.url);
             //>>includeEnd('debug');
 
-            if (defined(resourceOrUrl.proxy)) {
-                deprecationWarning('GoogleEarthEnterpriseMetadata', 'The options.url & options.proxy parameters have been deprecated. Specify a URL string or a Resource as the only parameter.');
-            }
-
             url = resourceOrUrl.url;
-            proxy = resourceOrUrl.proxy;
         }
 
-        var resource = Resource.createIfNeeded(url, {
-            proxy: proxy
-        });
+        var resource = Resource.createIfNeeded(url);
         resource.appendForwardSlash();
         this._resource = resource;
 
@@ -546,7 +537,7 @@ define([
                     var provider = providerInfo[i];
                     var copyrightString = provider.copyrightString;
                     if (defined(copyrightString)) {
-                        providers[provider.providerId] = new Credit({text: copyrightString.value});
+                        providers[provider.providerId] = new Credit(copyrightString.value);
                     }
                 }
             })

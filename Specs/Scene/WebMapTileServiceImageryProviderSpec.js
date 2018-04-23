@@ -286,7 +286,6 @@ defineSuite([
 
     // non default parameters values
     it('uses parameters passed to constructor', function() {
-        var proxy = new DefaultProxy('/proxy/');
         var tilingScheme = new GeographicTilingScheme();
         var rectangle = new WebMercatorTilingScheme().rectangle;
         var provider = new WebMapTileServiceImageryProvider({
@@ -301,7 +300,6 @@ defineSuite([
             minimumLevel : 0,
             maximumLevel : 12,
             rectangle : rectangle,
-            proxy : proxy,
             credit : "Thanks for using our WMTS server."
         });
         expect(provider.format).toEqual('someFormat');
@@ -313,7 +311,6 @@ defineSuite([
         expect(provider.credit).toBeDefined();
         expect(provider.credit).toBeInstanceOf(Credit);
         expect(provider.rectangle).toEqual(rectangle);
-        expect(provider.proxy).toEqual(proxy);
     });
 
     it("doesn't care about trailing question mark at the end of URL", function() {
@@ -361,33 +358,6 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var provider = new WebMapTileServiceImageryProvider({
-            layer : 'someLayer',
-            style : 'someStyle',
-            url : 'http://wmts.invalid',
-            tileMatrixSetID : 'someTMS',
-            proxy : proxy
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('http://wmts.invalid'))).toEqual(0);
-
                 // Just return any old image.
                 Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });

@@ -405,7 +405,6 @@ defineSuite([
         expect(cluster._pointCollection).toBeDefined();
     });
 
-
     it('does not remove entity collection indices when at least one of billboard, label and point remain', function() {
         cluster = new EntityCluster();
         cluster._initialize(scene);

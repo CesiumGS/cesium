@@ -11,12 +11,13 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/getExtensionFromUri',
         '../Core/getFilenameFromUri',
+        '../Core/HeadingPitchRange',
+        '../Core/HeadingPitchRoll',
         '../Core/Iso8601',
         '../Core/JulianDate',
         '../Core/Math',
@@ -31,8 +32,6 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
-        '../Core/HeadingPitchRoll',
-        '../Core/HeadingPitchRange',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
@@ -49,6 +48,11 @@ define([
         './Entity',
         './EntityCluster',
         './EntityCollection',
+        './KmlCamera',
+        './KmlLookAt',
+        './KmlTour',
+        './KmlTourFlyTo',
+        './KmlTourWait',
         './LabelGraphics',
         './PathGraphics',
         './PolygonGraphics',
@@ -59,12 +63,7 @@ define([
         './SampledPositionProperty',
         './ScaledPositionProperty',
         './TimeIntervalCollectionProperty',
-        './WallGraphics',
-        './KmlLookAt',
-        './KmlCamera',
-        './KmlTour',
-        './KmlTourFlyTo',
-        './KmlTourWait'
+        './WallGraphics'
     ], function(
         AssociativeArray,
         BoundingRectangle,
@@ -78,12 +77,13 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
         getExtensionFromUri,
         getFilenameFromUri,
+        HeadingPitchRange,
+        HeadingPitchRoll,
         Iso8601,
         JulianDate,
         CesiumMath,
@@ -98,8 +98,6 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
-        HeadingPitchRoll,
-        HeadingPitchRange,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
@@ -116,6 +114,11 @@ define([
         Entity,
         EntityCluster,
         EntityCollection,
+        KmlCamera,
+        KmlLookAt,
+        KmlTour,
+        KmlTourFlyTo,
+        KmlTourWait,
         LabelGraphics,
         PathGraphics,
         PolygonGraphics,
@@ -126,12 +129,7 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics,
-        KmlLookAt,
-        KmlCamera,
-        KmlTour,
-        KmlTourFlyTo,
-        KmlTourWait) {
+        WallGraphics) {
     'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
@@ -2367,41 +2365,17 @@ define([
         var sourceUri = options.sourceUri;
         var uriResolver = options.uriResolver;
         var context = options.context;
-        var query = options.query;
-
-        if (defined(options.query)) {
-            deprecationWarning('KmlDataSource.query', 'The options.query parameter has been deprecated. Specify data or options.sourceUri as a Resource instance and add query parameters there.');
-        }
-
-        if (defined(dataSource._proxy)) {
-            deprecationWarning('KmlDataSource.proxy', 'The options.proxy parameter has been deprecated. Specify data or options.sourceUri as a Resource instance and set the proxy property there.');
-        }
 
         var promise = data;
         if (typeof data === 'string' || (data instanceof Resource)) {
-            data = Resource.createIfNeeded(data, {
-                proxy: dataSource._proxy,
-                queryParameters: query
-            });
-
+            data = Resource.createIfNeeded(data);
             promise = data.fetchBlob();
-
             sourceUri = defaultValue(sourceUri, data.clone());
         } else {
             sourceUri = defaultValue(sourceUri, Resource.DEFAULT.clone());
         }
 
         sourceUri = Resource.createIfNeeded(sourceUri);
-
-        // Explicitly set these deprecated properties because we can use the default
-        //  resource which won't have these set.
-        if (defined(dataSource._proxy)) {
-            sourceUri.proxy = dataSource._proxy;
-        }
-
-        if (defined(query)) {
-            sourceUri.setQueryParameters(query);
-        }
 
         return when(promise)
             .then(function(dataToLoad) {
@@ -2517,7 +2491,6 @@ define([
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
         this._isLoading = false;
-        this._proxy = options.proxy; // TODO: Deprecation warning
         this._pinBuilder = new PinBuilder();
         this._networkLinks = new AssociativeArray();
         this._entityCluster = new EntityCluster();
@@ -2695,7 +2668,6 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
-     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.

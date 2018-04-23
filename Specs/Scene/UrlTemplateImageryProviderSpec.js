@@ -81,7 +81,6 @@ defineSuite([
         });
     });
 
-
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new UrlTemplateImageryProvider({
             url: 'made/up/tms/server/'
@@ -136,32 +135,6 @@ defineSuite([
             credit: 'Thanks to our awesome made up source of this imagery!'
         });
         expect(providerWithCredit.credit).toBeDefined();
-    });
-
-    it('routes tile requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var provider = new UrlTemplateImageryProvider({
-            url: 'made/up/tms/server/{Z}/{X}/{reverseY}',
-            proxy: proxy
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.proxy).toEqual(proxy);
-
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/tms/server'))).toEqual(0);
-
-                // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
     });
 
     it('rectangle passed to constructor does not affect tile numbering', function() {

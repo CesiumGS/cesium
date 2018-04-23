@@ -165,7 +165,6 @@ define([
         }
     });
 
-
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
     /**

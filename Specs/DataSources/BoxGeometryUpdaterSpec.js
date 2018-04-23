@@ -1,31 +1,31 @@
 defineSuite([
-    'DataSources/BoxGeometryUpdater',
-    'Core/Cartesian3',
-    'Core/JulianDate',
-    'Core/TimeIntervalCollection',
-    'DataSources/BoxGraphics',
-    'DataSources/ConstantPositionProperty',
-    'DataSources/ConstantProperty',
-    'DataSources/Entity',
-    'Scene/PrimitiveCollection',
-    'Specs/createDynamicGeometryUpdaterSpecs',
-    'Specs/createDynamicProperty',
-    'Specs/createGeometryUpdaterSpecs',
-    'Specs/createScene'
-], function(
-    BoxGeometryUpdater,
-    Cartesian3,
-    JulianDate,
-    TimeIntervalCollection,
-    BoxGraphics,
-    ConstantPositionProperty,
-    ConstantProperty,
-    Entity,
-    PrimitiveCollection,
-    createDynamicGeometryUpdaterSpecs,
-    createDynamicProperty,
-    createGeometryUpdaterSpecs,
-    createScene) {
+        'DataSources/BoxGeometryUpdater',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/TimeIntervalCollection',
+        'DataSources/BoxGraphics',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/Entity',
+        'Scene/PrimitiveCollection',
+        'Specs/createDynamicGeometryUpdaterSpecs',
+        'Specs/createDynamicProperty',
+        'Specs/createGeometryUpdaterSpecs',
+        'Specs/createScene'
+    ], function(
+        BoxGeometryUpdater,
+        Cartesian3,
+        JulianDate,
+        TimeIntervalCollection,
+        BoxGraphics,
+        ConstantPositionProperty,
+        ConstantProperty,
+        Entity,
+        PrimitiveCollection,
+        createDynamicGeometryUpdaterSpecs,
+        createDynamicProperty,
+        createGeometryUpdaterSpecs,
+        createScene) {
     'use strict';
 
     var scene;

@@ -60,7 +60,6 @@ defineSuite([
         });
     });
 
-
     it('rejects readyPromise on error', function() {
         var provider = new SingleTileImageryProvider({
             url : 'invalid.image.url'
@@ -177,26 +176,6 @@ defineSuite([
                 expect(providerWithCredit.credit).toBeDefined();
             });
         });
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var imageUrl = 'Data/Images/Red16x16.png';
-        var proxy = new DefaultProxy('/proxy/');
-
-        spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-            expect(url.indexOf(proxy.getURL('Data/Images/Red16x16.png'))).toEqual(0);
-            Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
-        });
-
-        var provider = new SingleTileImageryProvider({
-            url : imageUrl,
-            proxy : proxy
-        });
-
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
-
-        expect(provider).toBeDefined();
-        expect(provider.proxy).toEqual(proxy);
     });
 
     it('raises error event when image cannot be loaded', function() {

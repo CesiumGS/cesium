@@ -8,12 +8,10 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/isArray',
-        '../Core/loadJson',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -31,12 +29,10 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
         isArray,
-        loadJson,
         CesiumMath,
         Rectangle,
         Resource,
@@ -604,8 +600,8 @@ define([
             };
 
             var requestMetadata = function() {
-                var metadata = loadJson(metadataUrl);
-                return when(metadata, metadataSuccess, metadataFailure);
+                var resource = Resource.createIfNeeded(metadataUrl);
+                return when(resource.fetchJson(), metadataSuccess, metadataFailure);
             };
 
             return requestMetadata();
@@ -632,21 +628,11 @@ define([
             }
             //>>includeEnd('debug');
 
-            if (defined(options.proxy)) {
-                deprecationWarning('UrlTemplateImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-            }
-
             var customTags = properties.customTags;
             var allTags = combine(tags, customTags);
             var allPickFeaturesTags = combine(pickFeaturesTags, customTags);
-
-            var resource = Resource.createIfNeeded(properties.url, {
-                proxy: properties.proxy
-            });
-
-            var pickFeaturesResource = Resource.createIfNeeded(properties.pickFeaturesUrl, {
-                proxy: properties.proxy
-            });
+            var resource = Resource.createIfNeeded(properties.url);
+            var pickFeaturesResource = Resource.createIfNeeded(properties.pickFeaturesUrl);
 
             that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
             that._urlSchemeZeroPadding = defaultValue(properties.urlSchemeZeroPadding, that.urlSchemeZeroPadding);
@@ -677,7 +663,7 @@ define([
 
             var credit = properties.credit;
             if (typeof credit === 'string') {
-                credit = new Credit({text: credit});
+                credit = new Credit(credit);
             }
             that._credit = credit;
 
