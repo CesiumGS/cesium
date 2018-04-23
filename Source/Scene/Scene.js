@@ -1801,7 +1801,7 @@ define([
             numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
         }
 
-        var logDepthWasDisabled = !logDepth && frustumCommandsList.length !== 0 && frustumCommandsList[0].far / frustumCommandsList[0].near > farToNearRatio;
+        var logDepthWasDisabled = !is2D && !logDepth && frustumCommandsList.length !== 0 && frustumCommandsList[0].far / frustumCommandsList[0].near > farToNearRatio;
         if (logDepthWasDisabled || (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, scene.nearToFarDistance2D);
