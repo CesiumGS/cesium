@@ -173,7 +173,7 @@ define([
         };
 
         // Web assembly not supported, use fallback js module if provided
-        if (!processor._supportsWasm) {
+        if (!FeatureDetection.supportsWebAssembly()) {
             if (!defined(wasmOptions.fallbackModulePath)) {
                 throw new RuntimeError('This browser does not support Web Assembly, and no backup module was provided for ' + processor._workerName);
             }
@@ -214,7 +214,6 @@ define([
         this._activeTasks = 0;
         this._deferreds = {};
         this._nextID = 0;
-        this._supportsWasm = FeatureDetection.supportsWebAssembly(); // exposed for testing purposes
     }
 
     var emptyTransferableObjectArray = [];

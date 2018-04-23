@@ -190,7 +190,8 @@ defineSuite([
     it('uses a backup module if web assembly is not supported', function() {
         var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
         taskProcessor = new TaskProcessor('returnWasmConfig', 5);
-        taskProcessor._supportsWasm = false;
+
+        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
 
         var promise = taskProcessor.initWebAssemblyModule({
             modulePath : 'TestWasm/testWasmWrapper',
@@ -208,7 +209,8 @@ defineSuite([
     it('throws runtime error if web assembly is not supported and no backup is provided', function() {
         var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
         taskProcessor = new TaskProcessor('returnWasmConfig', 5);
-        taskProcessor._supportsWasm = false;
+
+        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
 
         expect(function () {
             taskProcessor.initWebAssemblyModule({

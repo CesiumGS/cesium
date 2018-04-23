@@ -225,6 +225,10 @@ define([
             // Require and compile WebAssembly module, or use fallback if not supported
             return require([wasmConfig.modulePath], function(dracoModule) {
                 if (defined(wasmConfig.wasmBinaryFile)) {
+                    if (!defined(dracoModule)) {
+                        dracoModule = self.DracoDecoderModule;
+                    }
+
                     dracoModule(wasmConfig).then(function (compiledModule) {
                         initWorker(compiledModule);
                     });
