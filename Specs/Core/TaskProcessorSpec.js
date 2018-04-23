@@ -204,4 +204,17 @@ defineSuite([
             expect(result.wasmBinary).not.toBeDefined();
         });
     });
+
+    it('throws runtime error if web assembly is not supported and no backup is provided', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        taskProcessor._supportsWasm = false;
+
+        expect(function () {
+            taskProcessor.initWebAssemblyModule({
+                modulePath : 'TestWasm/testWasmWrapper',
+                wasmBinaryFile : binaryUrl
+            });
+        }).toThrowRuntimeError();
+    });
 });

@@ -174,9 +174,11 @@ define([
 
         // Web assembly not supported, use fallback js module if provided
         if (!processor._supportsWasm) {
-            if (defined(wasmOptions.fallbackModulePath)) {
-                config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
+            if (!defined(wasmOptions.fallbackModulePath)) {
+                throw new RuntimeError('This browser does not support Web Assembly, and no backup module was provided for ' + processor._workerName);
             }
+
+            config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
             return when.resolve(config);
         }
 

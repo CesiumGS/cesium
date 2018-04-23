@@ -36,7 +36,6 @@ define([
     DracoLoader._getDecoderTaskProcessor = function () {
         if (!defined(DracoLoader._decoderTaskProcessor)) {
             var processor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
-            processor._supportsWasm = false;
             processor.initWebAssemblyModule({
                 modulePath : 'ThirdParty/Workers/draco_wasm_wrapper.js',
                 wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
