@@ -325,8 +325,10 @@ Cesium.knockout.getObservable(viewModel, 'emissionRate').subscribe(
 Cesium.knockout.getObservable(viewModel, 'particleSize').subscribe(
     function(newValue) {
         var particleSize = parseFloat(newValue);
-        particleSystem.imageSize.x = particleSize;
-        particleSystem.imageSize.y = particleSize;
+        particleSystem.minimumImageSize.x = particleSize;
+        particleSystem.minimumImageSize.y = particleSize;
+        particleSystem.maximumImageSize.x = particleSize;
+        particleSystem.maximumImageSize.y = particleSize;
     }
 );
 

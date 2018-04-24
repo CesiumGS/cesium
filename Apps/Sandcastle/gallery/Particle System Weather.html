@@ -75,7 +75,7 @@ snowSystem = new Cesium.ParticleSystem({
     emitter : new Cesium.SphereEmitter(snowRadius),
     startScale : 0.5,
     endScale : 1.0,
-    image : "../../SampleData/snowflake_particle.png",
+    image : '../../SampleData/snowflake_particle.png',
     emissionRate : 7000.0,
     startColor : Cesium.Color.WHITE.withAlpha(0.0),
     endColor : Cesium.Color.WHITE.withAlpha(1.0),
@@ -114,7 +114,7 @@ rainSystem = new Cesium.ParticleSystem({
     emitter : new Cesium.SphereEmitter(rainRadius),
     startScale : 1.0,
     endScale : 0.0,
-    image : "../../SampleData/circular_particle.png",
+    image : '../../SampleData/circular_particle.png',
     emissionRate : 9000.0,
     startColor :new Cesium.Color(0.27, 0.5, 0.70, 0.0),
     endColor : new Cesium.Color(0.27, 0.5, 0.70, 0.98),
@@ -124,11 +124,11 @@ rainSystem = new Cesium.ParticleSystem({
 scene.primitives.add(rainSystem);
 
 // button
-Sandcastle.addToolbarButton("Reset Camera", resetCameraFunction);
+Sandcastle.addToolbarButton('Reset Camera', resetCameraFunction);
 
 // drop down
 var options = [{
-    text : "Snow",
+    text : 'Snow',
     onselect : function() {
         rainSystem.show = false;
         snowSystem.show = true;
@@ -141,7 +141,7 @@ var options = [{
         scene.fog.minimumBrightness = 0.8;
     }
 }, {
-    text : "Rain",
+    text : 'Rain',
     onselect : function() {
         rainSystem.show = true;
         snowSystem.show = false;
