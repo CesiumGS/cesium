@@ -10,6 +10,8 @@ Change Log
 * Added `Math.log2` to compute the base 2 logarithm of a number.
 * Added 'PeliasGeocoderService', which provides geocoding via a [Pelias](https://pelias.io) server.
 * Added `GeocodeType` enum and use it as an optional parameter to all `GeocoderService` instances to differentiate between autocomplete and search requests.
+* Added `initWebAssemblyModule` function to `TaskProcessor` to load a Web Assembly module in a web worker. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
+* Added `supportsWebAssembly` function to `FeatureDetection` to check if a browser supports loading Web Assembly modules. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
 * Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
 * Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
 * Added color and scale attributes to the `ParticleSystem` class constructor. When defined the variables override startColor and endColor and startScale and endScale. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
@@ -21,6 +23,7 @@ Change Log
 * Fixed glTF support to handle meshes with and without tangent vectors, and with/without morph targets, sharing one material. [#6421](https://github.com/AnalyticalGraphicsInc/cesium/pull/6421)
 * Fixed glTF support to handle skinned meshes when no skin is supplied. [#6061](https://github.com/AnalyticalGraphicsInc/cesium/issues/6061)
 * Allow loadWithXhr to work with string URLs in a web worker.
+* Updated to Draco 1.3.0 and implemented faster loading of Draco compressed glTF assets in browsers that support Web Assembly. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
 * `GroundPrimitive`s and `ClassificationPrimitive`s will become ready when `show` is `false`. [#6428](https://github.com/AnalyticalGraphicsInc/cesium/pull/6428)
 * Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
 * Fix parsing Cesium.js in older browsers that do not support all TypedArray types. [#6396](https://github.com/AnalyticalGraphicsInc/cesium/pull/6396)
