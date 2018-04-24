@@ -733,7 +733,7 @@ define([
         this.replacementNode = undefined;
 
         this.lastStyleTime = 0;
-        this.clippingPlanesDirty = this._clippingPlanesState === 0;
+        this.clippingPlanesDirty = (this._clippingPlanesState === 0);
         this._clippingPlanesState = 0;
 
         this._debugColorizeTiles = false;
