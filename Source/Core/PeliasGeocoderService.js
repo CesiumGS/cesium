@@ -38,6 +38,7 @@ define([
         //>>includeEnd('debug');
 
         this._url = Resource.createIfNeeded(url);
+        this._url.appendForwardSlash();
     }
 
     defineProperties(PeliasGeocoderService.prototype, {

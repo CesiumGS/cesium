@@ -35,7 +35,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 scene.globe.depthTestAgainstTerrain = true;
-var recenterFunction = function() {
+var resetCameraFunction = function() {
     scene.camera.setView({
         destination : new Cesium.Cartesian3(277096.634865404, 5647834.481964232, 2985563.7039122293),
         orientation : {
@@ -44,7 +44,7 @@ var recenterFunction = function() {
         }
     });
 };
-recenterFunction();
+resetCameraFunction();
 
 // snow
 var snowParticleSize = scene.drawingBufferWidth / 100.0;
@@ -60,7 +60,7 @@ var snowUpdate = function(particle, dt) {
     particle.velocity = Cesium.Cartesian3.add(particle.velocity, snowGravityScratch, particle.velocity);
 
     var distance = Cesium.Cartesian3.distance(scene.camera.position, particle.position);
-    if (distance > (snowRadius)) {
+    if (distance > snowRadius) {
         particle.endColor.alpha = 0.0;
     } else {
         particle.endColor.alpha = snowSystem.endColor.alpha / (distance / snowRadius + 0.1);
@@ -100,7 +100,7 @@ var rainUpdate = function(particle, dt) {
     particle.position = Cesium.Cartesian3.add(particle.position, rainGravityScratch, particle.position);
 
     var distance = Cesium.Cartesian3.distance(scene.camera.position, particle.position);
-    if (distance > (rainRadius)) {
+    if (distance > rainRadius) {
         particle.endColor.alpha = 0.0;
     } else {
         particle.endColor.alpha = rainSystem.endColor.alpha / (distance / rainRadius + 0.1);
@@ -124,7 +124,7 @@ rainSystem = new Cesium.ParticleSystem({
 scene.primitives.add(rainSystem);
 
 // button
-Sandcastle.addToolbarButton("Recenter", recenterFunction);
+Sandcastle.addToolbarButton("Reset Camera", resetCameraFunction);
 
 // drop down
 var options = [{

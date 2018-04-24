@@ -34,10 +34,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var planePosition = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 800.0);
 var particlesOffset = new Cesium.Cartesian3(-8.950115473940969, 34.852766731753945, -30.235411095432937);
 var cameraLocation = Cesium.Cartesian3.add(planePosition, particlesOffset, new Cesium.Cartesian3());
-var recenterCamera = function() {
-    viewer.camera.lookAt(cameraLocation, new Cesium.Cartesian3(170, -170, 170));
+var resetCamera = function() {
+    viewer.camera.lookAt(cameraLocation, new Cesium.Cartesian3(-450, -300, 200));
 };
-recenterCamera();
+resetCamera();
 
 // Draw particle image to a canvas
 var particleCanvas;
@@ -69,9 +69,9 @@ var entity = viewer.entities.add({
 });
 
 // creating particles model matrix
-var transl = Cesium.Matrix4.fromTranslation(particlesOffset, new Cesium.Matrix4());
-var translPosition = Cesium.Matrix4.fromTranslation(planePosition, new Cesium.Matrix4());
-var particlesModelMatrix = Cesium.Matrix4.multiplyTransformation(translPosition, transl, new Cesium.Matrix4());
+var translationOffset = Cesium.Matrix4.fromTranslation(particlesOffset, new Cesium.Matrix4());
+var translationOfPlane = Cesium.Matrix4.fromTranslation(planePosition, new Cesium.Matrix4());
+var particlesModelMatrix = Cesium.Matrix4.multiplyTransformation(translationOfPlane, translationOffset, new Cesium.Matrix4());
 
 // creating the particle systems
 var rocketOptions = {
@@ -130,8 +130,7 @@ var cometOptions = {
 var scratchCartesian3 = new Cesium.Cartesian3();
 var scratchCartographic = new Cesium.Cartographic();
 var forceFunction = function(options, iteration) {
-    var iterationOffset = iteration;
-    var func = function(particle) {
+    return function(particle) {
         scratchCartesian3 = Cesium.Cartesian3.normalize(particle.position, new Cesium.Cartesian3());
         scratchCartesian3 = Cesium.Cartesian3.multiplyByScalar(scratchCartesian3, -1.0, scratchCartesian3);
 
@@ -139,14 +138,13 @@ var forceFunction = function(options, iteration) {
 
         scratchCartographic = Cesium.Cartographic.fromCartesian(particle.position, Cesium.Ellipsoid.WGS84, scratchCartographic);
 
-        var angle = Cesium.Math.PI * 2.0 * iterationOffset / options.numberOfSystems;
-        iterationOffset += options.iterationOffset;
+        var angle = Cesium.Math.PI * 2.0 * iteration / options.numberOfSystems;
+        iteration += options.iterationOffset;
         scratchCartographic.longitude += Math.cos(angle) * options.cartographicStep;
         scratchCartographic.latitude += Math.sin(angle) * options.cartographicStep;
 
         particle.position = Cesium.Cartographic.toCartesian(scratchCartographic);
     };
-    return func;
 };
 
 var matrix4Scratch = new Cesium.Matrix4();
@@ -173,7 +171,6 @@ function createParticleSystems(options, systemsArray) {
             imageSize : imageSize,
             emissionRate : 30.0,
             emitter : new Cesium.CircleEmitter(0.1),
-            bursts : [ ],
             lifetime : 0.1,
             updateCallback : force,
             modelMatrix : particlesModelMatrix,
@@ -201,7 +198,7 @@ var options = [{
     onselect : function() {
         showAll(rocketSystems, false);
         showAll(cometSystems, true);
-        recenterCamera();
+        resetCamera();
 
     }
 }, {
@@ -209,7 +206,7 @@ var options = [{
     onselect : function() {
         showAll(cometSystems, false);
         showAll(rocketSystems, true);
-        recenterCamera();
+        resetCamera();
     }
 }];
 Sandcastle.addToolbarMenu(options);
