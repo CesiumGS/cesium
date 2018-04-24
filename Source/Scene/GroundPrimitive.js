@@ -3,9 +3,7 @@ define([
         '../Core/buildModuleUrl',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -24,15 +22,14 @@ define([
         './ClassificationPrimitive',
         './ClassificationType',
         './PerInstanceColorAppearance',
-        './SceneMode'
+        './SceneMode',
+        './ShadowVolumeAppearance'
     ], function(
         BoundingSphere,
         buildModuleUrl,
         Cartesian2,
         Cartesian3,
-        Cartesian4,
         Cartographic,
-        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -51,7 +48,8 @@ define([
         ClassificationPrimitive,
         ClassificationType,
         PerInstanceColorAppearance,
-        SceneMode) {
+        SceneMode,
+        ShadowVolumeAppearance) {
     'use strict';
 
     /**
@@ -61,7 +59,10 @@ define([
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other.
-     * // TODO add note that textures on ground should use single imagery provider for high precision
+     *
+     * Textured GroundPrimitives were designed for notional patterns and are not meant for precisely mapping
+     * textures to terrain - for that use case, use {@link SingleTileImageryProvider}.
+     *
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
@@ -800,7 +801,7 @@ define([
                 instance = instances[i];
                 geometry = instance.geometry;
                 rectangle = getRectangle(frameState, geometry);
-                if (shouldUseSpherical(rectangle)) {
+                if (ShadowVolumeAppearance.shouldUseSphericalCoordinates(rectangle)) {
                     usePlanarExtents = false;
                     break;
                 }
@@ -815,9 +816,9 @@ define([
                 var attributes;
 
                 if (usePlanarExtents) {
-                    attributes = ClassificationPrimitive.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState, geometry._stRotation);
+                    attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState.mapProjection, geometry._stRotation);
                 } else {
-                    attributes = ClassificationPrimitive.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, frameState, geometry._stRotation);
+                    attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, frameState.mapProjection, geometry._stRotation);
                 }
 
                 var instanceAttributes = instance.attributes;
@@ -868,10 +869,6 @@ define([
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
     };
-
-    function shouldUseSpherical(rectangle) {
-        return Math.max(rectangle.width, rectangle.height) > GroundPrimitive.MAX_WIDTH_FOR_PLANAR_EXTENTS;
-    }
 
     /**
      * @private
@@ -942,31 +939,6 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
-
-    /**
-     * Computes whether the given rectangle is wide enough that texture coordinates
-     * over its area should be computed using spherical extents instead of distance to planes.
-     *
-     * @param {Rectangle} rectangle A rectangle
-     * @private
-     */
-    GroundPrimitive.shouldUseSphericalCoordinates = function(rectangle) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('rectangle', rectangle);
-        //>>includeEnd('debug');
-
-        return shouldUseSpherical(rectangle);
-    };
-
-    /**
-     * Texture coordinates for ground primitives are computed either using spherical coordinates for large areas or
-     * using distance from planes for small areas.
-     *
-     * @type {Number}
-     * @constant
-     * @private
-     */
-    GroundPrimitive.MAX_WIDTH_FOR_PLANAR_EXTENTS = CesiumMath.toRadians(1.0);
 
     return GroundPrimitive;
 });

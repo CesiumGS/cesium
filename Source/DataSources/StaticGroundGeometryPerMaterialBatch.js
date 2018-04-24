@@ -8,6 +8,7 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/RectangleCollisionChecker',
         '../Scene/GroundPrimitive',
+        '../Scene/ShadowVolumeAppearance',
         './BoundingSphereState',
         './ColorMaterialProperty',
         './MaterialProperty',
@@ -22,6 +23,7 @@ define([
         ShowGeometryInstanceAttribute,
         RectangleCollisionChecker,
         GroundPrimitive,
+        ShadowVolumeAppearance,
         BoundingSphereState,
         ColorMaterialProperty,
         MaterialProperty,
@@ -318,7 +320,7 @@ define([
         var items = this._items;
         var length = items.length;
         var geometryInstance = updater.createFillGeometryInstance(time);
-        var usingSphericalCoordinates = GroundPrimitive.shouldUseSphericalCoordinates(geometryInstance.geometry.rectangle);
+        var usingSphericalCoordinates = ShadowVolumeAppearance.shouldUseSphericalCoordinates(geometryInstance.geometry.rectangle);
         for (var i = 0; i < length; ++i) {
             var item = items[i];
             if (item.isMaterial(updater) &&
