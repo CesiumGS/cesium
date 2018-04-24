@@ -279,31 +279,38 @@ define([
             glsl +=
                 'vec4 getEyeCoordinate(vec2 fragCoord) {\n' +
                 '    vec2 coords = fragCoord / czm_viewport.zw;\n' +
-                '    float depth = czm_reverseLogDepth(czm_unpackDepth(texture2D(czm_globeDepthTexture, coords)));\n' +
-                '    vec4 windowCoord = vec4(fragCoord, depth, 1.0);\n' +
+                '    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));\n' +
+                '    vec4 windowCoord = vec4(fragCoord, czm_reverseLogDepth(logDepthOrDepth), 1.0);\n' +
                 '    vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);\n' +
+                '#ifdef LOG_DEPTH\n' +
+                // Essentially same as reverseLogDepth but without normalization. Better precision when using log depth.
+                '    eyeCoordinate.w = 1.0 / (pow(2.0, logDepthOrDepth * czm_log2FarPlusOne) - 1.0);\n' +
+                '#endif\n' +
                 '    return eyeCoordinate;\n' +
                 '}\n';
         }
         if (shaderDependencies.requiresNormalEC) {
             glsl +=
-                'vec3 getEyeCoordinate3FromWindowCoordordinate(vec2 fragCoord, float depth) {\n' +
-                '    vec4 windowCoord = vec4(fragCoord, depth, 1.0);\n' +
+                'vec3 getEyeCoordinate3FromWindowCoordinate(vec2 fragCoord, float logDepthOrDepth) {\n' +
+                '    vec4 windowCoord = vec4(fragCoord, czm_reverseLogDepth(logDepthOrDepth), 1.0);\n' +
                 '    vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);\n' +
+                '#ifdef LOG_DEPTH\n' +
+                // Essentially same as reverseLogDepth but without normalization. Better precision when using log depth.
+                '    eyeCoordinate.w = 1.0 / (pow(2.0, logDepthOrDepth * czm_log2FarPlusOne) - 1.0);\n' +
+                '#endif\n' +
                 '    return eyeCoordinate.xyz / eyeCoordinate.w;\n' +
                 '}\n' +
 
                 'vec3 getVectorFromOffset(vec4 eyeCoordinate, vec2 glFragCoordXY, vec2 positiveOffset) {\n' +
                 '    // Sample depths at both offset and negative offset\n' +
-                '    float upOrRightDepth = czm_reverseLogDepth(czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw)));\n' +
-                '    float downOrLeftDepth = czm_reverseLogDepth(czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw)));\n' +
-                '    // Explicitly evaluate both paths\n' +
+                '    float upOrRightLogDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw));\n' +
+                '    float downOrLeftLogDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw));\n' +
+                '    // Explicitly evaluate both paths\n' + // Necessary for multifrustum and for GroundPrimitives at the edges of the screen
                 '    bvec2 upOrRightInBounds = lessThan(glFragCoordXY + positiveOffset, czm_viewport.zw);\n' +
-                '    float useUpOrRight = float(upOrRightDepth > 0.0 && upOrRightInBounds.x && upOrRightInBounds.y);\n' +
+                '    float useUpOrRight = float(upOrRightLogDepth > 0.0 && upOrRightInBounds.x && upOrRightInBounds.y);\n' +
                 '    float useDownOrLeft = float(useUpOrRight == 0.0);\n' +
-
-                '    vec3 upOrRightEC = getEyeCoordinate3FromWindowCoordordinate(glFragCoordXY + positiveOffset, upOrRightDepth);\n' +
-                '    vec3 downOrLeftEC = getEyeCoordinate3FromWindowCoordordinate(glFragCoordXY - positiveOffset, downOrLeftDepth);\n' +
+                '    vec3 upOrRightEC = getEyeCoordinate3FromWindowCoordinate(glFragCoordXY + positiveOffset, upOrRightLogDepth);\n' +
+                '    vec3 downOrLeftEC = getEyeCoordinate3FromWindowCoordinate(glFragCoordXY - positiveOffset, downOrLeftLogDepth);\n' +
 
                 '    return (upOrRightEC - (eyeCoordinate.xyz / eyeCoordinate.w)) * useUpOrRight + ((eyeCoordinate.xyz / eyeCoordinate.w) - downOrLeftEC) * useDownOrLeft;\n' +
                 '}\n';
