@@ -289,6 +289,7 @@ define([
 
         this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
+        this._updateFrustums = false;
 
         this._tweens = new TweenCollection();
 
@@ -1413,6 +1414,7 @@ define([
                 if (this._logDepthBuffer !== value) {
                     this._logDepthBuffer = value;
                     this._logDepthBufferDirty = true;
+                    this._updateFrustums = true;
                 }
             }
         },
@@ -1801,8 +1803,9 @@ define([
             numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
         }
 
-        if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-               (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8))))))) {
+        if (scene._updateFrustums || (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
+               (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))))) {
+            scene._updateFrustums = false;
             updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
