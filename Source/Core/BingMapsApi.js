@@ -1,13 +1,15 @@
 define([
-        './Credit',
         './defined'
     ], function(
-        Credit,
         defined) {
     'use strict';
 
     /**
-     * Object for setting and retrieving the default BingMaps API key.
+     * Object for setting and retrieving the default Bing Maps API key.
+     *
+     * A Bing API key is only required if you are using {@link BingMapsImageryProvider}
+     * or {@link BingMapsGeocoderService}. You can create your own key at
+     * {@link https://www.bingmapsportal.com/}.
      *
      * @exports BingMapsApi
      */
