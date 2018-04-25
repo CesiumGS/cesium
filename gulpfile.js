@@ -61,7 +61,6 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
-                   '!Source/ThirdParty/draco-decoder-gltf.js',
                    '!Source/ThirdParty/pako_inflate.js',
                    '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];

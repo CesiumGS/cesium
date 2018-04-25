@@ -62,7 +62,7 @@ define([
 
         var url = options.url;
         if (!defined(url)) {
-            url = 'https://api.mapbox.com/v4/';
+            url = 'https://{s}.tiles.mapbox.com/v4/';
         }
         this._url = url;
 

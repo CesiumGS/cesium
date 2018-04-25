@@ -280,8 +280,8 @@ defineSuite([
             // (24 * 8 * 4) + (36 * 2) = 840
             var geometryByteLength = 840;
 
-            // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-            var texturesByteLength = 262144;
+            // Texture is 211x211 RGB bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+            var texturesByteLength = 196608;
 
             // One RGBA byte pixel per feature
             var batchTexturesByteLength = content.featuresLength * 4;

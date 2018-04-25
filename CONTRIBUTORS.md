@@ -73,6 +73,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Dave Whipps](https://github.com/dwhipps)
 * [Geoscan](https://www.geoscan.aero)
    * [Andrey Orlov](https://github.com/AndreyOrlov)
+   * [George Vinokhodov](https://github.com/Vineg)
 * [The Imagineers](https://www.theimagineers.com/)
    * [Heerco Grond](https://github.com/HeercoGrond)
 * [Camptocamp SA](https://www.camptocamp.com/)
@@ -102,6 +103,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Natanael Rivera](https://github.com/nrivera-Novetta/)
    * [Justin Burr](https://github.com/jburr-nc/)
    * [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
+* [Orbit Logic](http://www.orbitlogic.com)
+   * [Roderick Green](https://github.com/roderickgreen/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -174,3 +177,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Tamar Cohen](https://github.com/tamarmot)
 * [Stephen Wiseman](https://github.com/srwiseman)
 * [Gabriel Macario](https://github.com/gabriel-macario)
+* [Jonathan Puckey](https://github.com/puckey)
+* [Mark Erikson](https://github.com/markerikson)

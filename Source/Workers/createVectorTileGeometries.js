@@ -8,7 +8,6 @@ define([
         '../Core/EllipsoidGeometry',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
-        '../Core/VertexFormat',
         '../Scene/Vector3DTileBatch',
         './createTaskProcessorWorker'
     ], function(
@@ -21,7 +20,6 @@ define([
         EllipsoidGeometry,
         IndexDatatype,
         Matrix4,
-        VertexFormat,
         Vector3DTileBatch,
         createTaskProcessorWorker) {
     'use strict';

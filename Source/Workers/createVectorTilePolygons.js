@@ -5,14 +5,10 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/Ellipsoid',
-        '../Core/EllipsoidTangentPlane',
         '../Core/IndexDatatype',
         '../Core/Math',
-        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
-        '../Core/PolygonPipeline',
         '../Core/Rectangle',
-        '../Core/WindingOrder',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
@@ -21,14 +17,10 @@ define([
         Color,
         defined,
         Ellipsoid,
-        EllipsoidTangentPlane,
         IndexDatatype,
         CesiumMath,
-        Matrix4,
         OrientedBoundingBox,
-        PolygonPipeline,
         Rectangle,
-        WindingOrder,
         createTaskProcessorWorker) {
     'use strict';
 
