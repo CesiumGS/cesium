@@ -39,6 +39,18 @@ define([
         this.shadowMaps = [];
 
         /**
+         * The BRDF look up texture generator used for image-based lighting for PBR models
+         * @type {BrdfLutGenerator}
+         */
+        this.brdfLutGenerator = undefined;
+
+        /**
+         * The environment map used for image-based lighting for PBR models
+         * @type {CubeMap}
+         */
+        this.environmentMap = undefined;
+
+        /**
          * The current mode of the scene.
          *
          * @type {SceneMode}
@@ -196,7 +208,14 @@ define([
              * @type {Number}
              * @default undefined
              */
-            sse : undefined
+            sse : undefined,
+            /**
+             * The minimum brightness of terrain with fog applied.
+             *
+             * @type {Number}
+             * @default undefined
+             */
+            minimumBrightness : undefined
         };
 
         /**
@@ -284,6 +303,20 @@ define([
          * @type {Number}
          */
         this.minimumDisableDepthTestDistance = undefined;
+
+        /**
+         * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
+         * unclassified 3D Tile geometry will render with the color multiplied with {@link FrameState#invertClassificationColor}.
+         * @type {Boolean}
+         * @default false
+         */
+        this.invertClassification = false;
+
+        /**
+         * The highlight color of unclassified 3D Tile geometry when {@link FrameState#invertClassification} is <code>true</code>.
+         * @type {Color}
+         */
+        this.invertClassificationColor = undefined;
     }
 
     /**

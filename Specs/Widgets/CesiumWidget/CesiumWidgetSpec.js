@@ -68,6 +68,7 @@ defineSuite([
         expect(widget.container).toBeInstanceOf(HTMLElement);
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
+        expect(widget.creditViewport).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
         expect(widget.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
         expect(widget.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);
@@ -235,6 +236,22 @@ defineSuite([
         expect(widget.scene.orderIndependentTranslucency).toBe(false);
     });
 
+    it('can enable requestRenderMode', function() {
+        widget = createCesiumWidget(container, {
+            requestRenderMode : true
+        });
+
+        expect(widget.scene.requestRenderMode).toBe(true);
+    });
+
+    it('can set maximumRenderTimeChange', function() {
+        widget = createCesiumWidget(container, {
+            maximumRenderTimeChange : Number.POSITIVE_INFINITY
+        });
+
+        expect(widget.scene.maximumRenderTimeChange).toBe(Number.POSITIVE_INFINITY);
+    });
+
     it('throws if no container provided', function() {
         expect(function() {
             return createCesiumWidget(undefined);
@@ -259,6 +276,25 @@ defineSuite([
         expect(function() {
             widget.resolutionScale = -1;
         }).toThrowDeveloperError();
+    });
+
+    it('resizing triggers a render in requestRender mode', function() {
+        widget = createCesiumWidget(container, {
+            requestRenderMode : true,
+            maximumRenderTimeChange : Number.POSITIVE_INFINITY
+        });
+
+        var scene = widget._scene;
+        spyOn(scene, 'requestRender');
+
+        widget.resize();
+
+        expect(scene.requestRender).not.toHaveBeenCalled();
+
+        widget._forceResize = true;
+        widget.resize();
+
+        expect(scene.requestRender).toHaveBeenCalled();
     });
 
     it('throws if no container id does not exist', function() {

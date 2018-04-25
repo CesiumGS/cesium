@@ -993,6 +993,53 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
+    it('moves forward in 2D mode zooms in camera instead of moving it', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.moveForward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
+    it('moves backward in 2D mode zooms out camera instead of moving it', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.moveBackward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
     it('move clamps position in 2D', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
@@ -1065,6 +1112,94 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON15);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(up, new Cartesian3()), CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(dir, CesiumMath.EPSILON15);
+    });
+
+    it('looks left in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookLeft(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks right in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookRight(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks up in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookUp(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks down in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookDown(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
     });
 
     it('twists left', function() {
@@ -1906,7 +2041,6 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
-
     it('get rectangle coordinate returns camera position if scene mode is morphing', function() {
         var rectangle = new Rectangle(
             -CesiumMath.PI_OVER_TWO,
@@ -2605,6 +2739,36 @@ defineSuite([
         expect(distance).toBeLessThan(sphere.radius * 3.0);
     });
 
+    it('flyToBoundingSphere does not zoom closer than minimumZoomDistance', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var minValue = 1000;
+        scene.screenSpaceCameraController.minimumZoomDistance = minValue;
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10.0);
+
+        camera.flyToBoundingSphere(sphere, {
+            duration : 0.0
+        });
+
+        var distance = Cartesian3.distance(camera.position, sphere.center);
+        expect(CesiumMath.equalsEpsilon(distance, minValue, 0.1)).toBe(true);
+    });
+
+    it('flyToBoundingSphere does not zoom further than maximumZoomDistance', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var maxValue = 10000;
+        scene.screenSpaceCameraController.maximumZoomDistance = maxValue;
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 100000);
+
+        camera.flyToBoundingSphere(sphere, {
+            duration : 0.0
+        });
+
+        var distance = Cartesian3.distance(camera.position, sphere.center);
+        expect(CesiumMath.equalsEpsilon(distance, maxValue, 0.1)).toBe(true);
+    });
+
     it('distanceToBoundingSphere', function() {
         scene.mode = SceneMode.SCENE3D;
 
@@ -2678,7 +2842,7 @@ defineSuite([
         var correctResult = new Rectangle(-0.05789100547374969, -0.04365869998457809, 0.05789100547374969, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed in to pole', function() {
@@ -2710,7 +2874,7 @@ defineSuite([
         var correctResult = new Rectangle(3.0837016481160435, -0.04365869998457809, -3.0837016481160435, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed out', function() {

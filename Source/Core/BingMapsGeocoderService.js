@@ -4,16 +4,16 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './loadJsonp',
-        './Rectangle'
+        './Rectangle',
+        './Resource'
     ], function(
         BingMapsApi,
         Check,
         defaultValue,
         defined,
         defineProperties,
-        loadJsonp,
-        Rectangle) {
+        Rectangle,
+        Resource) {
     'use strict';
 
     var url = 'https://dev.virtualearth.net/REST/v1/Locations';
@@ -42,6 +42,13 @@ define([
                 options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
             }
         }
+
+        this._resource = new Resource({
+            url: url,
+            queryParameters: {
+                key: this._key
+            }
+        });
     }
 
     defineProperties(BingMapsGeocoderService.prototype, {
@@ -81,16 +88,13 @@ define([
         Check.typeOf.string('query', query);
         //>>includeEnd('debug');
 
-        var key = this.key;
-        var promise = loadJsonp(url, {
-            parameters : {
-                query : query,
-                key : key
-            },
-            callbackParameterName : 'jsonp'
+        var resource = this._resource.getDerivedResource({
+            queryParameters: {
+                query: query
+            }
         });
 
-        return promise.then(function(result) {
+        return resource.fetchJsonp('jsonp').then(function(result) {
             if (result.resourceSets.length === 0) {
                 return [];
             }

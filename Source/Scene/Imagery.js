@@ -1,12 +1,10 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/RequestState',
         './ImageryState'
     ], function(
         defined,
         destroyObject,
-        RequestState,
         ImageryState) {
     'use strict';
 

@@ -2,34 +2,36 @@ defineSuite([
         'Core/RequestScheduler',
         'Core/Request',
         'Core/RequestState',
-        'Core/RequestType',
         'ThirdParty/when'
     ], function(
         RequestScheduler,
         Request,
         RequestState,
-        RequestType,
         when) {
     'use strict';
 
     var originalMaximumRequests;
     var originalMaximumRequestsPerServer;
     var originalPriorityHeapLength;
+    var originalRequestsByServer;
 
     beforeAll(function() {
         originalMaximumRequests = RequestScheduler.maximumRequests;
         originalMaximumRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
         originalPriorityHeapLength = RequestScheduler.priorityHeapLength;
+        originalRequestsByServer = RequestScheduler.requestsByServer;
     });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        RequestScheduler.requestsByServer = {};
     });
 
     afterEach(function() {
         RequestScheduler.maximumRequests = originalMaximumRequests;
         RequestScheduler.maximumRequestsPerServer = originalMaximumRequestsPerServer;
         RequestScheduler.priorityHeapLength = originalPriorityHeapLength;
+        RequestScheduler.requestsByServer = originalRequestsByServer;
     });
 
     it('request throws when request is undefined', function() {
@@ -63,13 +65,13 @@ defineSuite([
     });
 
     it('getServer with https', function() {
-        var server = RequestScheduler.getServerKey('https://foo.com/1');
-        expect(server).toEqual('foo.com:443');
+        var server = RequestScheduler.getServerKey('https://test.invalid/1');
+        expect(server).toEqual('test.invalid:443');
     });
 
     it('getServer with http', function() {
-        var server = RequestScheduler.getServerKey('http://foo.com/1');
-        expect(server).toEqual('foo.com:80');
+        var server = RequestScheduler.getServerKey('http://test.invalid/1');
+        expect(server).toEqual('test.invalid:80');
     });
 
     it('honors maximumRequests', function() {
@@ -86,7 +88,7 @@ defineSuite([
 
         function createRequest() {
             return new Request({
-                url : 'http://foo.com/1',
+                url : 'http://test.invalid/1',
                 requestFunction : requestFunction,
                 throttle : true
             });
@@ -149,7 +151,7 @@ defineSuite([
             return deferred.promise;
         }
 
-        var url = 'http://foo.com/1';
+        var url = 'http://test.invalid/1';
         var server = RequestScheduler.getServerKey(url);
 
         function createRequest() {
@@ -218,7 +220,7 @@ defineSuite([
 
         function createRequest(priority) {
             var request = new Request({
-                url : 'http://foo.com/1',
+                url : 'http://test.invalid/1',
                 requestFunction : requestFunction,
                 throttle : true,
                 priority : priority
@@ -304,7 +306,7 @@ defineSuite([
     });
 
     it('request goes through immediately when throttle is false', function() {
-        var url = 'https://foo.com/1';
+        var url = 'https://test.invalid/1';
         testImmediateRequest(url, false);
     });
 
@@ -319,7 +321,7 @@ defineSuite([
 
         var request = new Request({
             throttle : true,
-            url : 'https://foo.com/1',
+            url : 'https://test.invalid/1',
             requestFunction : requestFunction
         });
         expect(request.state).toBe(RequestState.UNISSUED);
@@ -344,7 +346,7 @@ defineSuite([
 
         var request = new Request({
             throttle : true,
-            url : 'https://foo.com/1',
+            url : 'https://test.invalid/1',
             requestFunction : requestFunction
         });
 
@@ -375,7 +377,7 @@ defineSuite([
 
         var request = new Request({
             throttle : true,
-            url : 'https://foo.com/1',
+            url : 'https://test.invalid/1',
             requestFunction : requestFunction,
             cancelFunction : cancelFunction
         });
@@ -411,7 +413,7 @@ defineSuite([
         }
 
         var request = new Request({
-            url : 'https://foo.com/1',
+            url : 'https://test.invalid/1',
             requestFunction : requestFunction
         });
 
@@ -444,7 +446,7 @@ defineSuite([
         function createRequest(priority) {
             return new Request({
                 throttle : true,
-                url : 'https://foo.com/1',
+                url : 'https://test.invalid/1',
                 requestFunction : getRequestFunction(priority),
                 priority : priority
             });
@@ -479,7 +481,7 @@ defineSuite([
         function createRequest(priority) {
             return new Request({
                 throttle : true,
-                url : 'https://foo.com/1',
+                url : 'https://test.invalid/1',
                 requestFunction : requestFunction,
                 priorityFunction : getPriorityFunction(priority)
             });
@@ -531,7 +533,7 @@ defineSuite([
         function createRequest(priority) {
             return new Request({
                 throttle : true,
-                url : 'https://foo.com/1',
+                url : 'https://test.invalid/1',
                 requestFunction : requestFunction,
                 priority : priority
             });
@@ -568,7 +570,7 @@ defineSuite([
 
         function createRequest(throttle) {
             return new Request({
-                url : 'http://foo.com/1',
+                url : 'http://test.invalid/1',
                 requestFunction : requestFunction,
                 throttle : throttle
             });
@@ -606,7 +608,7 @@ defineSuite([
 
         function createRequest(throttleByServer) {
             return new Request({
-                url : 'http://foo.com/1',
+                url : 'http://test.invalid/1',
                 requestFunction : requestFunction,
                 throttleByServer : throttleByServer
             });
@@ -639,7 +641,7 @@ defineSuite([
         RequestScheduler.throttleRequests = true;
         var request = new Request({
             throttle : true,
-            url : 'https://foo.com/1',
+            url : 'https://test.invalid/1',
             requestFunction : requestFunction
         });
         var promise = RequestScheduler.request(request);
@@ -648,7 +650,7 @@ defineSuite([
         RequestScheduler.throttleRequests = false;
         request = new Request({
             throttle : true,
-            url : 'https://foo.com/1',
+            url : 'https://test.invalid/1',
             requestFunction : requestFunction
         });
         promise = RequestScheduler.request(request);
@@ -671,7 +673,7 @@ defineSuite([
 
         function createRequest() {
             return new Request({
-                url : 'https://foo.com/1',
+                url : 'https://test.invalid/1',
                 requestFunction : requestFunction
             });
         }
@@ -699,5 +701,186 @@ defineSuite([
         }
 
         RequestScheduler.debugShowStatistics = false;
+    });
+
+    it('successful request causes requestCompletedEvent to be raised', function() {
+        var deferred;
+
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'https://test.invalid/1',
+            requestFunction : requestFunction
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        var eventRaised = false;
+        var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        deferred.resolve();
+
+        return promise.then(function() {
+            expect(eventRaised).toBe(true);
+        }).always(function() {
+            removeListenerCallback();
+        });
+    });
+
+    it('successful data request causes requestCompletedEvent to be raised', function() {
+        var deferred;
+
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D',
+            requestFunction : requestFunction
+        });
+
+        var eventRaised = false;
+        var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        deferred.resolve();
+        RequestScheduler.update();
+
+        return promise.then(function() {
+            expect(eventRaised).toBe(true);
+        }).always(function() {
+            removeListenerCallback();
+        });
+    });
+
+    it('successful blob request causes requestCompletedEvent to be raised', function() {
+        var deferred;
+
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        var uint8Array = new Uint8Array(4);
+        var blob = new Blob([uint8Array], {
+            type : 'application/octet-stream'
+        });
+
+        var blobUrl = window.URL.createObjectURL(blob);
+
+        var request = new Request({
+            url : blobUrl,
+            requestFunction : requestFunction
+        });
+
+        var eventRaised = false;
+        var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        deferred.resolve();
+        RequestScheduler.update();
+
+        return promise.then(function() {
+            expect(eventRaised).toBe(true);
+        }).always(function() {
+            removeListenerCallback();
+        });
+    });
+
+    it('unsuccessful requests raise requestCompletedEvent with error', function() {
+        var deferred;
+        function requestFunction() {
+            deferred = when.defer();
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'https://test.invalid/1',
+            requestFunction : requestFunction
+        });
+
+        var eventRaised = false;
+        var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(function(error) {
+            eventRaised = true;
+            expect(error).toBeDefined();
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        deferred.reject({
+            error: 'error'
+        });
+        RequestScheduler.update();
+
+        return promise.then(function() {
+            expect(eventRaised).toBe(true);
+        }).always(function() {
+            removeListenerCallback();
+        });
+    });
+
+    it('canceled requests do not cause requestCompletedEvent to be raised', function() {
+        var cancelDeferred;
+        function requestCancelFunction() {
+            cancelDeferred = when.defer();
+            return cancelDeferred.promise;
+        }
+
+        var requestToCancel = new Request({
+            url : 'https://test.invalid/1',
+            requestFunction : requestCancelFunction
+        });
+
+        RequestScheduler.request(requestToCancel);
+
+        var removeListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(function() {
+            fail('should not be called');
+        });
+
+        requestToCancel.cancel();
+        RequestScheduler.update();
+        cancelDeferred.resolve();
+        removeListenerCallback();
+    });
+
+    it('RequestScheduler.requestsByServer allows for custom maximum requests', function() {
+        var promise;
+
+        RequestScheduler.requestsByServer['test.invalid:80'] = 23;
+
+        for (var i = 0; i < 23; i++) {
+            promise = RequestScheduler.request(new Request({
+                url: 'http://test.invalid/1',
+                throttle: true,
+                throttleByServer: true,
+                requestFunction: function() { return when.defer(); }
+            }));
+            RequestScheduler.update();
+            expect(promise).toBeDefined();
+        }
+
+        promise = RequestScheduler.request(new Request({
+            url: 'http://test.invalid/1',
+            throttle: true,
+            throttleByServer: true,
+            requestFunction: function() { return when.defer(); }
+        }));
+        expect(promise).toBeUndefined();
     });
 });

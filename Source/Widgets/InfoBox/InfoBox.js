@@ -1,21 +1,21 @@
 define([
         '../../Core/buildModuleUrl',
+        '../../Core/Check',
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../Core/DeveloperError',
         '../../ThirdParty/knockout',
         '../getElement',
         '../subscribeAndEvaluate',
         './InfoBoxViewModel'
     ], function(
         buildModuleUrl,
+        Check,
         Color,
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
         knockout,
         getElement,
         subscribeAndEvaluate,
@@ -34,9 +34,7 @@ define([
      */
     function InfoBox(container) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(container)) {
-            throw new DeveloperError('container is required.');
-        }
+        Check.defined('container', container);
         //>>includeEnd('debug')
 
         container = getElement(container);

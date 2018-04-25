@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
@@ -14,7 +15,8 @@ define([
         '../Core/OrthographicFrustum',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './Sampler'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -22,6 +24,7 @@ define([
         Cartesian4,
         Cartographic,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         EncodedCartesian3,
@@ -31,7 +34,8 @@ define([
         OrthographicFrustum,
         Simon1994PlanetaryPositions,
         Transforms,
-        SceneMode) {
+        SceneMode,
+        Sampler) {
     'use strict';
 
     /**
@@ -57,6 +61,7 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
+        this._logFarDistance = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -150,7 +155,12 @@ define([
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
+        this._brdfLut = new Sampler();
+        this._environmentMap = new Sampler();
+
         this._fogDensity = undefined;
+
+        this._invertClassificationColor = undefined;
 
         this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
@@ -633,6 +643,17 @@ define([
         },
 
         /**
+         * The log of the current frustum's far distance. Used to compute the log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        logFarDistance : {
+            get : function() {
+                return this._logFarDistance;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -797,6 +818,28 @@ define([
         },
 
         /**
+         * The look up texture used to find the BRDF for a material
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        brdfLut : {
+            get : function() {
+                return this._brdfLut;
+            }
+        },
+
+        /**
+         * The environment map of the scene
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        environmentMap : {
+            get : function() {
+                return this._environmentMap;
+            }
+        },
+
+        /**
          * @memberof UniformState.prototype
          * @type {Number}
          */
@@ -817,6 +860,30 @@ define([
         minimumDisableDepthTestDistance : {
             get : function() {
                 return this._minimumDisableDepthTestDistance;
+            }
+        },
+
+        /**
+         * The highlight color of unclassified 3D Tiles.
+         *
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        invertClassificationColor : {
+            get : function() {
+                return this._invertClassificationColor;
+            }
+        },
+
+        /**
+         * Whether or not the current projection is orthographic in 3D.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Boolean}
+         */
+        orthographicIn3D : {
+            get : function() {
+                return this._orthographicIn3D;
             }
         }
     });
@@ -932,6 +999,8 @@ define([
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
+        this._logFarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
+
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
@@ -975,13 +1044,21 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
+        var brdfLutGenerator = frameState.brdfLutGenerator;
+        var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
+        this._brdfLut = brdfLut;
+
+        this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
         this._fogDensity = frameState.fog.density;
+
+        this._invertClassificationColor = frameState.invertClassificationColor;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
 
         // Convert the relative imagerySplitPosition to absolute pixel coordinates
-        this._imagerySplitPosition = frameState.imagerySplitPosition * canvas.clientWidth;
+        this._imagerySplitPosition = frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
         var fov = camera.frustum.fov;
         var viewport = this._viewport;
         var pixelSizePerMeter;

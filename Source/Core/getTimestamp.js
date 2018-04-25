@@ -1,7 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
+define(function() {
     'use strict';
     /*global performance*/
 
@@ -17,7 +14,7 @@ define([
      */
     var getTimestamp;
 
-    if (typeof performance !== 'undefined' && defined(performance.now)) {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function' && isFinite(performance.now())) {
         getTimestamp = function() {
             return performance.now();
         };

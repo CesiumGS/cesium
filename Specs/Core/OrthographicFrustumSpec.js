@@ -1,17 +1,19 @@
 defineSuite([
-    'Core/OrthographicFrustum',
-    'Core/Cartesian2',
-    'Core/Cartesian3',
-    'Core/Cartesian4',
-    'Core/Math',
-    'Core/Matrix4'
-], function(
-    OrthographicFrustum,
-    Cartesian2,
-    Cartesian3,
-    Cartesian4,
-    CesiumMath,
-    Matrix4) {
+        'Core/OrthographicFrustum',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix4',
+        'Specs/createPackableSpecs'
+    ], function(
+        OrthographicFrustum,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        CesiumMath,
+        Matrix4,
+        createPackableSpecs) {
     'use strict';
 
     var frustum, planes;
@@ -23,6 +25,30 @@ defineSuite([
         frustum.width = 2.0;
         frustum.aspectRatio = 1.0;
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
+    });
+
+    it('constructs', function() {
+        var options = {
+            width : 1.0,
+            aspectRatio : 2.0,
+            near : 3.0,
+            far : 4.0,
+            xOffset : 5.0,
+            yOffset : 6.0
+        };
+        var f = new OrthographicFrustum(options);
+        expect(f.width).toEqual(options.width);
+        expect(f.aspectRatio).toEqual(options.aspectRatio);
+        expect(f.near).toEqual(options.near);
+        expect(f.far).toEqual(options.far);
+    });
+
+    it('default constructs', function() {
+        var f = new OrthographicFrustum();
+        expect(f.width).toBeUndefined();
+        expect(f.aspectRatio).toBeUndefined();
+        expect(f.near).toEqual(1.0);
+        expect(f.far).toEqual(500000000.0);
     });
 
     it('undefined width causes an exception', function() {
@@ -167,4 +193,11 @@ defineSuite([
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
     });
+
+    createPackableSpecs(OrthographicFrustum, new OrthographicFrustum({
+        width : 1.0,
+        aspectRatio : 2.0,
+        near : 3.0,
+        far : 4.0
+    }), [1.0, 2.0, 3.0, 4.0]);
 });

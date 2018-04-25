@@ -1,5 +1,5 @@
 define([
-        './knockout-3.4.0',
+        './knockout-3.4.2',
         './knockout-es5',
         '../Widgets/SvgPathBindingHandler'
     ], function(

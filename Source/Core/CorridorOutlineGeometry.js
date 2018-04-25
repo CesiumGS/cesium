@@ -40,6 +40,13 @@ define([
     var cartesian2 = new Cartesian3();
     var cartesian3 = new Cartesian3();
 
+    function scaleToSurface(positions, ellipsoid) {
+        for (var i = 0; i < positions.length; i++) {
+            positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
+        }
+        return positions;
+    }
+
     function combine(computedPositions, cornerType) {
         var wallIndices = [];
         var positions = computedPositions.positions;
@@ -334,11 +341,14 @@ define([
         Check.typeOf.number('options.width', width);
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._positions = positions;
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._width = width;
-        this._height = defaultValue(options.height, 0);
-        this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
+        this._height = Math.max(height, extrudedHeight);
+        this._extrudedHeight = Math.min(height, extrudedHeight);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createCorridorOutlineGeometry';
@@ -382,7 +392,7 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
-        array[startingIndex]   = value._granularity;
+        array[startingIndex] = value._granularity;
 
         return array;
     };
@@ -458,18 +468,20 @@ define([
      */
     CorridorOutlineGeometry.createGeometry = function(corridorOutlineGeometry) {
         var positions = corridorOutlineGeometry._positions;
-        var height = corridorOutlineGeometry._height;
         var width = corridorOutlineGeometry._width;
-        var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
-        var extrude = (height !== extrudedHeight);
+        var ellipsoid = corridorOutlineGeometry._ellipsoid;
 
+        positions = scaleToSurface(positions, ellipsoid);
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
         }
 
-        var ellipsoid = corridorOutlineGeometry._ellipsoid;
+        var height = corridorOutlineGeometry._height;
+        var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON2);
+
         var params = {
             ellipsoid : ellipsoid,
             positions : cleanPositions,
@@ -480,9 +492,6 @@ define([
         };
         var attr;
         if (extrude) {
-            var h = Math.max(height, extrudedHeight);
-            extrudedHeight = Math.min(height, extrudedHeight);
-            height = h;
             params.height = height;
             params.extrudedHeight = extrudedHeight;
             attr = computePositionsExtruded(params);

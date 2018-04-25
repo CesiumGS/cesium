@@ -11,16 +11,18 @@ define([
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './getAttributeOrUniformBySemantic',
         './Model',
         './ModelInstance',
+        './ModelUtility',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -36,16 +38,18 @@ define([
         DeveloperError,
         Matrix4,
         PrimitiveType,
+        Resource,
         RuntimeError,
         Transforms,
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         ShaderSource,
         when,
-        getAttributeOrUniformBySemantic,
         Model,
         ModelInstance,
+        ModelUtility,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -70,11 +74,10 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
-     * @param {String} [options.url] The url to the .gltf file.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Resource|String} [options.url] The url to the .gltf file.
      * @param {Object} [options.requestType] The request type, used for request prioritization
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
-     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
+     * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.
      * @param {Boolean} [options.show=true] Determines if the collection will be shown.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each instance is pickable with {@link Scene#pick}.
@@ -107,11 +110,14 @@ define([
         this._instancingSupported = false;
         this._dynamic = defaultValue(options.dynamic, false);
         this._allowPicking = defaultValue(options.allowPicking, true);
-        this._cull = defaultValue(options.cull, true); // Undocumented option
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
         this._dirty = false;
+
+        // Undocumented options
+        this._cull = defaultValue(options.cull, true);
+        this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._instances = createInstances(this, options.instances);
 
@@ -140,11 +146,10 @@ define([
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
         // Passed on to Model
-        this._url = options.url;
-        this._headers = options.headers;
+        this._url = Resource.createIfNeeded(options.url);
         this._requestType = options.requestType;
         this._gltf = options.gltf;
-        this._basePath = options.basePath;
+        this._basePath = Resource.createIfNeeded(options.basePath);
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
         this._upAxis = options.upAxis; // Undocumented option
@@ -218,9 +223,9 @@ define([
         BoundingSphere.expand(this._boundingSphere, translation, this._boundingSphere);
     };
 
-    function getInstancedUniforms(collection, programName) {
+    function getInstancedUniforms(collection, programId) {
         if (defined(collection._instancedUniformsByProgram)) {
-            return collection._instancedUniformsByProgram[programName];
+            return collection._instancedUniformsByProgram[programId];
         }
 
         var instancedUniformsByProgram = {};
@@ -254,7 +259,7 @@ define([
                                     uniformMap[uniformName] = semantic;
                                 } else {
                                     throw new RuntimeError('Shader program cannot be optimized for instancing. ' +
-                                        'Parameter "' + parameter + '" in program "' + programName +
+                                        'Parameter "' + parameter + '" in program "' + programId +
                                         '" uses unsupported semantic "' + semantic + '"'
                                     );
                                 }
@@ -265,14 +270,14 @@ define([
             }
         }
 
-        return instancedUniformsByProgram[programName];
+        return instancedUniformsByProgram[programId];
     }
 
     var vertexShaderCached;
 
     function getVertexShaderCallback(collection) {
-        return function(vs, programName) {
-            var instancedUniforms = getInstancedUniforms(collection, programName);
+        return function(vs, programId) {
+            var instancedUniforms = getInstancedUniforms(collection, programId);
             var usesBatchTable = defined(collection._batchTable);
 
             var renamedSource = ShaderSource.replaceMain(vs, 'czm_instancing_main');
@@ -334,7 +339,9 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(instancedSource);
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(instancedSource);
             }
 
             return instancedSource;
@@ -342,12 +349,12 @@ define([
     }
 
     function getFragmentShaderCallback(collection) {
-        return function(fs) {
+        return function(fs, programId) {
             var batchTable = collection._batchTable;
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
-                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
             }
             return fs;
         };
@@ -394,13 +401,13 @@ define([
     }
 
     function getUniformMapCallback(collection, context) {
-        return function(uniformMap, programName, node) {
+        return function(uniformMap, programId, node) {
             uniformMap = clone(uniformMap);
             uniformMap.czm_instanced_modifiedModelView = createModifiedModelView(collection, context);
             uniformMap.czm_instanced_nodeTransform = createNodeTransformFunction(node);
 
             // Remove instanced uniforms from the uniform map
-            var instancedUniforms = getInstancedUniforms(collection, programName);
+            var instancedUniforms = getInstancedUniforms(collection, programId);
             for (var uniform in instancedUniforms) {
                 if (instancedUniforms.hasOwnProperty(uniform)) {
                     delete uniformMap[uniform];
@@ -426,9 +433,11 @@ define([
     }
 
     function getVertexShaderNonInstancedCallback(collection) {
-        return function(vs) {
+        return function(vs, programId) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(vs);
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseAttributeOrUniformName)(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -586,7 +595,6 @@ define([
 
         var modelOptions = {
             url : collection._url,
-            headers : collection._headers,
             requestType : collection._requestType,
             gltf : collection._gltf,
             basePath : collection._basePath,
@@ -603,7 +611,8 @@ define([
             pickVertexShaderLoaded : undefined,
             pickFragmentShaderLoaded : undefined,
             pickUniformMapLoaded : undefined,
-            ignoreCommands : true
+            ignoreCommands : true,
+            opaquePass : collection._opaquePass
         };
 
         if (allowPicking && !usesBatchTable) {
@@ -685,7 +694,7 @@ define([
             modelOptions.pickUniformMapLoaded = getPickUniformMapCallback(collection);
 
             if (defined(collection._url)) {
-                modelOptions.cacheKey = collection._url + '#instanced';
+                modelOptions.cacheKey = collection._url.getUrlComponent() + '#instanced';
             }
         } else {
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);
@@ -860,6 +869,32 @@ define([
         };
     }
 
+    function commandsDirty(model) {
+        var nodeCommands = model._nodeCommands;
+        var length = nodeCommands.length;
+
+        for (var i = 0; i < length; i++) {
+            var nc = nodeCommands[i];
+            if (nc.command.dirty) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function generateModelCommands(modelInstanceCollection, instancingSupported) {
+        modelInstanceCollection._drawCommands = [];
+        modelInstanceCollection._pickCommands = [];
+
+        var modelCommands = getModelCommands(modelInstanceCollection._model);
+        if (instancingSupported) {
+            createCommands(modelInstanceCollection, modelCommands.draw, modelCommands.pick);
+        } else {
+            createCommandsNonInstanced(modelInstanceCollection, modelCommands.draw, modelCommands.pick);
+            updateCommandsNonInstanced(modelInstanceCollection);
+        }
+    }
+
     function updateShadows(collection) {
         if (collection.shadows !== collection._shadows) {
             collection._shadows = collection.shadows;
@@ -905,6 +940,7 @@ define([
 
         var instancingSupported = this._instancingSupported;
         var model = this._model;
+
         model.update(frameState);
 
         if (model.ready && (this._state === LoadState.LOADING)) {
@@ -918,12 +954,7 @@ define([
             var modelCommands = getModelCommands(model);
             this._modelCommands = modelCommands.draw;
 
-            if (instancingSupported) {
-                createCommands(this, modelCommands.draw, modelCommands.pick);
-            } else {
-                createCommandsNonInstanced(this, modelCommands.draw, modelCommands.pick);
-                updateCommandsNonInstanced(this);
-            }
+            generateModelCommands(this, instancingSupported);
 
             this._readyPromise.resolve(this);
             return;
@@ -954,6 +985,11 @@ define([
 
             // PERFORMANCE_IDEA: only update dirty sub-sections instead of the whole collection
             updateVertexBuffer(this);
+        }
+
+        // If the model was set to rebuild shaders during update, rebuild instanced commands.
+        if (commandsDirty(model)) {
+            generateModelCommands(this, instancingSupported);
         }
 
         // If any node changes due to an animation, update the commands. This could be inefficient if the model is

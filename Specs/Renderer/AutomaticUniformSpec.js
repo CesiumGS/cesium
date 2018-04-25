@@ -1080,13 +1080,27 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_pass and czm_passGround', function() {
+    it('has czm_pass and czm_passTerrainClassification', function() {
         var us = context.uniformState;
-        us.updatePass(Pass.GROUND);
+        us.updatePass(Pass.TERRAIN_CLASSIFICATION);
 
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_pass == czm_passGround);' +
+            '  gl_FragColor = vec4(czm_pass == czm_passTerrainClassification);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_pass and czm_passCesium3DTileClassification', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passCesium3DTileClassification);' +
             '}';
         expect({
             context : context,
@@ -1259,6 +1273,44 @@ defineSuite([
         var fs =
             'void main() {' +
             '  gl_FragColor = vec4(czm_minimumDisableDepthTestDistance == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_orthographicIn3D', function() {
+        var frameState = createFrameState(context, createMockCamera());
+        context.uniformState.update(frameState);
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_orthographicIn3D == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 1.0;
+        frameState.camera.frustum = frustum;
+        context.uniformState.update(frameState);
+        fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_orthographicIn3D == 1.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_logFarDistance', function() {
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_logFarDistance == (2.0 / log2(czm_currentFrustum.y + 1.0)));' +
             '}';
         expect({
             context : context,

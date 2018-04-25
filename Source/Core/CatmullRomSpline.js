@@ -141,6 +141,7 @@ define([
      * @see HermiteSpline
      * @see LinearSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function CatmullRomSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -265,6 +266,24 @@ define([
      *                             in the array <code>times</code>.
      */
     CatmullRomSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
+
+    /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, wrapped around to the updated animation.
+     */
+    CatmullRomSpline.prototype.wrapTime = Spline.prototype.wrapTime;
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, clamped to the animation period.
+     */
+    CatmullRomSpline.prototype.clampTime = Spline.prototype.clampTime;
 
     /**
      * Evaluates the curve at a given time.

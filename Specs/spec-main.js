@@ -21,6 +21,7 @@
     }
 
     var built = getQueryParameter('built');
+    var release = getQueryParameter('release');
 
     var toRequire = ['Cesium'];
 
@@ -72,6 +73,8 @@
          * Require Jasmine's core files. Specifically, this requires and attaches all of Jasmine's code to the `jasmine` reference.
          */
         window.jasmine = jasmineRequire.core(jasmineRequire);
+
+        window.specsUsingRelease = release;
 
         window.defineSuite = function(deps, name, suite, categories) {
             /*global define,describe*/
@@ -145,6 +148,19 @@
             }, timeout, categories);
         };
 
+        var originalFit = window.fit;
+
+        window.fit = function(description, f, timeout, categories) {
+            originalFit(description, function(done) {
+                var result = f();
+                when(result, function() {
+                    done();
+                }, function(e) {
+                    done.fail('promise rejected: ' + e.toString());
+                });
+            }, timeout, categories);
+        };
+
         var originalBeforeEach = window.beforeEach;
 
         window.beforeEach = function(f) {
@@ -196,7 +212,6 @@
                 });
             });
         };
-
 
         /**
          * ## Runner Parameters

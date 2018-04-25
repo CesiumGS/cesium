@@ -46,8 +46,10 @@ var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var buildingRelease = noDevelopmentGallery;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
-//travis reports 32 cores but only has 3GB of memory, which causes the VM to run out.  Limit to 8 cores instead.
-var concurrency = Math.min(os.cpus().length, 8);
+var concurrency = yargs.argv.concurrency;
+if (!concurrency) {
+    concurrency = os.cpus().length;
+}
 
 //Since combine and minify run in parallel already, split concurrency in half when building both.
 //This can go away when gulp 4 comes out because it allows for synchronous tasks.
@@ -59,6 +61,8 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
+                   '!Source/ThirdParty/pako_inflate.js',
+                   '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
 
 var buildFiles = ['Specs/**/*.js',
@@ -111,7 +115,10 @@ gulp.task('build-watch', function() {
 });
 
 gulp.task('buildApps', function() {
-    return buildCesiumViewer();
+    return Promise.join(
+        buildCesiumViewer(),
+        buildSandcastle()
+    );
 });
 
 gulp.task('clean', function(done) {
@@ -123,22 +130,23 @@ gulp.task('clean', function(done) {
 
 gulp.task('requirejs', function(done) {
     var config = JSON.parse(new Buffer(process.argv[3].substring(2), 'base64').toString('utf8'));
+
+    // Disable module load timeout
+    config.waitSeconds = 0;
+
     requirejs.optimize(config, function() {
         done();
     }, done);
 });
 
-gulp.task('cloc', ['build'], function() {
+gulp.task('cloc', ['clean'], function() {
     var cmdLine;
-    var clocPath = path.join('Tools', 'cloc-1.60', 'cloc-1.60.pl');
-    var cloc_definitions = path.join('Tools', 'cloc-1.60', 'cloc_definitions');
+    var clocPath = path.join('node_modules', 'cloc', 'lib', 'cloc');
 
     //Run cloc on primary Source files only
     var source = new Promise(function(resolve, reject) {
-        var glsl = globby.sync(['Source/Shaders/*.glsl', 'Source/Shaders/**/*.glsl']).join(' ');
-
-        cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions +
-                  ' Source/main.js Source/Core/ Source/DataSources/ Source/Renderer/ Source/Scene/ Source/Widgets/ Source/Workers/ ' + glsl;
+        cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0' +
+                  ' Source/ --exclude-dir=Assets,ThirdParty --not-match-f=copyrightHeader.js';
 
         child_process.exec(cmdLine, function(error, stdout, stderr) {
             if (error) {
@@ -154,7 +162,8 @@ gulp.task('cloc', ['build'], function() {
     //If running cloc on source succeeded, also run it on the tests.
     return source.then(function() {
         return new Promise(function(resolve, reject) {
-            cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0 --read-lang-def=' + cloc_definitions + ' Specs/';
+            cmdLine = 'perl ' + clocPath + ' --quiet --progress-rate=0' +
+                      ' Specs/ --exclude-dir=Data';
             child_process.exec(cmdLine, function(error, stdout, stderr) {
                 if (error) {
                     console.log(stderr);
@@ -250,8 +259,7 @@ gulp.task('makeZipFile', ['release'], function() {
         'README.md',
         'web.config'
     ], {
-        base : '.',
-        nodir : true
+        base : '.'
     });
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
@@ -367,8 +375,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 '*.zip',
                 '*.tgz'
             ], {
-                dot : true, // include hidden files
-                nodir : true // only directory files
+                dot : true // include hidden files
             });
         })
         .then(function(files) {
@@ -510,7 +517,7 @@ function getMimeType(filename) {
         return {type : 'application/font-woff', compress : false, isCompressed : false};
     }
 
-    var mimeType = mime.lookup(filename);
+    var mimeType = mime.getType(filename);
     var compress = compressible(mimeType);
     return {type : mimeType, compress : compress, isCompressed : false};
 }
@@ -537,10 +544,10 @@ function listAll(s3, bucketName, prefix, files, marker) {
 }
 
 gulp.task('deploy-set-version', function() {
-    var version = yargs.argv.version;
-    if (version) {
+    var buildVersion = yargs.argv.buildVersion;
+    if (buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
-        packageJson.version += '-' + version.replace(/[^[0-9A-Za-z-]/g, '');
+        packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });
@@ -906,7 +913,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse, {nodir : true}).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1040,11 +1047,6 @@ function createCesiumJs() {
         file = path.relative('Source', file);
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
-        if (moduleId === 'Scene/OrthographicFrustum' || moduleId === 'Scene/OrthographicOffCenterFrustum' ||
-            moduleId === 'Scene/PerspectiveFrustum' || moduleId === 'Scene/PerspectiveOffCenterFrustum' ||
-            moduleId === 'Scene/CullingVolume') {
-            return;
-        }
 
         var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
         if (moduleId.indexOf('Shaders/') === 0) {
@@ -1094,13 +1096,29 @@ function createGalleryList() {
         fileList.push('!Apps/Sandcastle/gallery/development/**/*.html');
     }
 
+    // On travis, the version is set to something like '1.43.0-branch-name-travisBuildNumber'
+    // We need to extract just the Major.Minor version
+    var majorMinor = packageJson.version.match(/^(.*)\.(.*)\./);
+    var major = majorMinor[1];
+    var minor = Number(majorMinor[2]) - 1; // We want the last release, not current release
+    var tagVersion = major + '.' + minor;
+
+    // Get an array of demos that were added since the last release.
+    // This includes newly staged local demos as well.
+    var newDemos = [];
+    try {
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+    } catch (e) {
+        console.log('Failed to retrieve list of new Sandcastle demos from Git.');
+    }
+
     var helloWorld;
     globby.sync(fileList).forEach(function(file) {
         var demo = filePathToModuleId(path.relative('Apps/Sandcastle/gallery', file));
 
         var demoObject = {
             name : demo,
-            date : fs.statSync(file).mtime.getTime()
+            isNew: newDemos.includes(file)
         };
 
         if (fs.existsSync(file.replace('.html', '') + '.jpg')) {
@@ -1133,7 +1151,8 @@ function createGalleryList() {
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var hello_world_index = ' + helloWorldIndex + ';\n\
-var gallery_demos = [' + demoJSONs.join(', ') + '];';
+var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
+var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;');
 
     fs.writeFileSync(output, contents);
 }
@@ -1150,6 +1169,35 @@ function createJsHintOptions() {
 var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
 
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
+}
+
+function buildSandcastle() {
+    var appStream = gulp.src([
+            'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/images/**',
+            '!Apps/Sandcastle/gallery/**.jpg'
+        ])
+        // Replace require Source with pre-built Cesium
+        .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
+        // Use unminified cesium instead of source
+        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        // Fix relative paths for new location
+        .pipe(gulpReplace('../../Source', '../../../Source'))
+        .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
+        .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
+        .pipe(gulpReplace('Build/Documentation', 'Documentation'))
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    var imageStream = gulp.src([
+            'Apps/Sandcastle/gallery/**.jpg',
+            'Apps/Sandcastle/images/**'
+        ], {
+            base: 'Apps/Sandcastle',
+            buffer: false
+        })
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    return eventStream.merge(appStream, imageStream);
 }
 
 function buildCesiumViewer() {
@@ -1212,8 +1260,7 @@ function buildCesiumViewer() {
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {
-                    base : 'Build/Cesium',
-                    nodir : true
+                    base : 'Build/Cesium'
                 }),
 
             gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {

@@ -1,10 +1,10 @@
 defineSuite([
         'Scene/MapboxImageryProvider',
         'Core/DefaultProxy',
-        'Core/loadImage',
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -14,10 +14,10 @@ defineSuite([
     ], function(
         MapboxImageryProvider,
         DefaultProxy,
-        loadImage,
         CesiumMath,
         Rectangle,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
@@ -31,7 +31,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -47,6 +47,22 @@ defineSuite([
     it('resolves readyPromise', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
+            mapId: 'test-id'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var resource = new Resource({
+            url : 'made/up/mapbox/server/'
+        });
+
+        var provider = new MapboxImageryProvider({
+            url : resource,
             mapId: 'test-id'
         });
 
@@ -78,15 +94,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).not.toContain('//');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -101,15 +117,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('made/up/mapbox/server/');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -132,40 +148,13 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
-        var provider = new MapboxImageryProvider({
-            url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
-            proxy : proxy
-        });
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.proxy).toEqual(proxy);
-
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url.indexOf(proxy.getURL('made/up/mapbox/server'))).toEqual(0);
-
-                // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
-            });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -189,15 +178,15 @@ defineSuite([
             expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toContain('/0/0/0');
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -221,13 +210,12 @@ defineSuite([
         expect(provider.minimumLevel).toEqual(1);
     });
 
-
     it('when no credit is supplied, the provider adds a default credit', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
             mapId: 'test-id'
         });
-        expect(provider.credit.text).toEqual('© Mapbox © OpenStreetMap');
+        expect(provider.credit).toBe(MapboxImageryProvider._defaultCredit);
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -237,7 +225,7 @@ defineSuite([
             mapId: 'test-id',
             credit: creditText
         });
-        expect(providerWithCredit.credit.text).toEqual(creditText);
+        expect(providerWithCredit.credit.html).toEqual(creditText);
     });
 
     it('raises error event when image cannot be loaded', function() {
@@ -260,10 +248,10 @@ defineSuite([
             }, 1);
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -300,15 +288,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(/made\/up\/mapbox\/server\/test-id\/0\/0\/0@2x\.png\?access_token=/.test(url)).toBe(true);
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
             });
         });
     });
@@ -323,15 +311,15 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(/made\/up\/mapbox\/server\/test-id\/0\/0\/0\.png\?access_token=/.test(url)).toBe(true);
 
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
             });
         });
     });

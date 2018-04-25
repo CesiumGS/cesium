@@ -47,6 +47,7 @@ define([
      * @see HermiteSpline
      * @see CatmullRomSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function LinearSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -115,6 +116,24 @@ define([
      *                             in the array <code>times</code>.
      */
     LinearSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
+
+    /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, wrapped around to the updated animation.
+     */
+    LinearSpline.prototype.wrapTime = Spline.prototype.wrapTime;
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, clamped to the animation period.
+     */
+    LinearSpline.prototype.clampTime = Spline.prototype.clampTime;
 
     /**
      * Evaluates the curve at a given time.

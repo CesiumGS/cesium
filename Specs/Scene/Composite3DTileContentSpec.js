@@ -1,12 +1,10 @@
 defineSuite([
-        'Scene/Composite3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
-        Composite3DTileContent,
+    ], 'Scene/Composite3DTileContent', function(
         Cartesian3,
         Color,
         HeadingPitchRange,
@@ -20,12 +18,13 @@ defineSuite([
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
     var compositeOfComposite = './Data/Cesium3DTiles/Composite/CompositeOfComposite/';
+    var compositeOfInstanced = './Data/Cesium3DTiles/Composite/CompositeOfInstanced/';
 
     beforeAll(function() {
         scene = createScene();
         // One item in each data set is always located in the center, so point the camera there
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 30.0));
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
     });
 
     afterAll(function() {
@@ -119,6 +118,10 @@ defineSuite([
 
     it('renders composite of composite', function() {
         return Cesium3DTilesTester.loadTileset(scene, compositeOfComposite).then(expectRenderComposite);
+    });
+
+    it('renders multiple instanced tilesets', function() {
+        return Cesium3DTilesTester.loadTileset(scene, compositeOfInstanced).then(expectRenderComposite);
     });
 
     it('destroys', function() {

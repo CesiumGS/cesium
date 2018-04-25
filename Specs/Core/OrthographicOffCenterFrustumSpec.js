@@ -27,6 +27,32 @@ defineSuite([
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
+    it('constructs', function() {
+        var options = {
+            left : -1.0,
+            right : 2.0,
+            top : 5.0,
+            bottom : -1.0,
+            near : 3.0,
+            far : 4.0
+        };
+        var f = new OrthographicOffCenterFrustum(options);
+        expect(f.width).toEqual(options.width);
+        expect(f.aspectRatio).toEqual(options.aspectRatio);
+        expect(f.near).toEqual(options.near);
+        expect(f.far).toEqual(options.far);
+    });
+
+    it('default constructs', function() {
+        var f = new OrthographicOffCenterFrustum();
+        expect(f.left).toBeUndefined();
+        expect(f.right).toBeUndefined();
+        expect(f.top).toBeUndefined();
+        expect(f.bottom).toBeUndefined();
+        expect(f.near).toEqual(1.0);
+        expect(f.far).toEqual(500000000.0);
+    });
+
     it('left greater than right causes an exception', function() {
         frustum.left = frustum.right + 1.0;
         expect(function() {

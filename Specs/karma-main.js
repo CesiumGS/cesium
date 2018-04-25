@@ -20,12 +20,14 @@
 
     if (release) {
         require.config({
-            baseUrl : '/base/Build/Cesium'
+            baseUrl : '/base/Build/Cesium',
+            waitSeconds : 0
         });
         toRequire.push('../Stubs/paths');
     } else {
         require.config({
-           baseUrl : '/base/Source'
+            baseUrl : '/base/Source',
+            waitSeconds : 0
         });
     }
 

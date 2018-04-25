@@ -176,6 +176,7 @@ define([
      * @see CatmullRomSpline
      * @see LinearSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function HermiteSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -488,6 +489,24 @@ define([
 
     var scratchTimeVec = new Cartesian4();
     var scratchTemp = new Cartesian3();
+
+    /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, wrapped around to the updated animation.
+     */
+    HermiteSpline.prototype.wrapTime = Spline.prototype.wrapTime;
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, clamped to the animation period.
+     */
+    HermiteSpline.prototype.clampTime = Spline.prototype.clampTime;
 
     /**
      * Evaluates the curve at a given time.
