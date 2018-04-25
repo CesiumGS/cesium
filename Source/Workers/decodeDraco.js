@@ -41,14 +41,9 @@ define([
     }
 
     function decodeQuantizedDracoTypedArray(dracoGeometry, attribute, quantization, vertexArrayLength) {
-        var vertexArray;
-        var attributeData = new draco.DracoInt32Array();
-        if (quantization.octEncoded) {
-            vertexArray = new Int16Array(vertexArrayLength);
-        } else {
-            vertexArray = new Uint16Array(vertexArrayLength);
-        }
-        dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+        var vertexArray = new Uint16Array(vertexArrayLength);
+        var attributeData = new draco.DracoUInt16Array();
+        dracoDecoder.GetAttributeUInt16ForAllPoints(dracoGeometry, attribute, attributeData);
 
         for (var i = 0; i < vertexArrayLength; ++i) {
             vertexArray[i] = attributeData.GetValue(i);
@@ -90,7 +85,7 @@ define([
                 dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
                 break;
             case 6: case 8: // DT_UINT32 or DT_UINT64
-                attributeData = new draco.DracoUint32Array();
+                attributeData = new draco.DracoUInt32Array();
                 vertexArray = new Uint32Array(vertexArrayLength);
                 dracoDecoder.GetAttributeUInt32ForAllPoints(dracoGeometry, attribute, attributeData);
                 break;
@@ -131,8 +126,7 @@ define([
                     quantization = {
                         quantizationBits : transform.quantization_bits(),
                         minValues : minValues,
-                        range : transform.range(),
-                        octEncoded : false
+                        range : transform.range()
                     };
                 }
                 draco.destroy(transform);
@@ -140,8 +134,7 @@ define([
                 transform = new draco.AttributeOctahedronTransform();
                 if (transform.InitFromAttribute(attribute)) {
                     quantization = {
-                        quantizationBits : transform.quantization_bits(),
-                        octEncoded : true
+                        quantizationBits : transform.quantization_bits()
                     };
                 }
                 draco.destroy(transform);

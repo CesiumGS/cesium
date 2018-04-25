@@ -1,8 +1,10 @@
 defineSuite([
+        'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/defined',
+        'Core/FeatureDetection',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
@@ -17,12 +19,15 @@ defineSuite([
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
         'Specs/createScene',
+        'Specs/pollToPromise',
         'ThirdParty/when'
-    ], 'Scene/PointCloud3DTileContent', function(
+    ], function(
+        PointCloud3DTileContent,
         Cartesian3,
         Color,
         ComponentDatatype,
         defined,
+        FeatureDetection,
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
@@ -37,6 +42,7 @@ defineSuite([
         Cesium3DTilesTester,
         createCanvas,
         createScene,
+        pollToPromise,
         when) {
     'use strict';
 
@@ -53,6 +59,8 @@ defineSuite([
     var pointCloudNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded';
     var pointCloudQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized';
     var pointCloudQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded';
+    var pointCloudDraco1Url = './Data/Cesium3DTiles/PointCloud/PointCloudDraco1';
+    var pointCloudDraco2Url = './Data/Cesium3DTiles/PointCloud/PointCloudDraco2';
     var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
@@ -228,6 +236,59 @@ defineSuite([
     it('renders point cloud with quantized positions and oct-encoded normals', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders point cloud with draco encoded positions, normals, colors, and batch ids', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Draco decoding is not currently supported in IE
+            return;
+        }
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco1Url).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders point cloud with draco encoded positions and uncompressed normals, colors, and batch ids', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Draco decoding is not currently supported in IE
+            return;
+        }
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco2Url).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('error decoding a draco point cloud causes loading to fail', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Draco decoding is not currently supported in IE
+            return;
+        }
+        return pollToPromise(function() {
+            return defined(PointCloud3DTileContent._getDecoderTaskProcessor());
+        }).then(function() {
+            var decoder = PointCloud3DTileContent._getDecoderTaskProcessor();
+            spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
+            return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco1Url).then(function(tileset) {
+                var root = tileset._root;
+                return root.contentReadyPromise.then(function() {
+                    fail('should not resolve');
+                }).otherwise(function(error) {
+                    expect(error.message).toBe('my error');
+                });
+            });
+        });
+    });
+
+    it('throws error if attempting to decode draco in Internet Explorer', function() {
+        spyOn(FeatureDetection, 'isInternetExplorer').and.returnValue(true);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco1Url).then(function(tileset) {
+            var root = tileset._root;
+            return root.contentReadyPromise.then(function() {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(error.message).toBe('Draco decoding is not currently supported in Internet Explorer.');
+            });
         });
     });
 
@@ -815,7 +876,7 @@ defineSuite([
         });
     });
 
-    it('Rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
+    it('rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var tile = tileset._root;
             tile._isClipped = true;
@@ -859,7 +920,7 @@ defineSuite([
         });
     });
 
-    it('Clipping planes selectively disable rendering', function () {
+    it('clipping planes selectively disable rendering', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {

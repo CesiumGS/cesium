@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -20,6 +21,7 @@ define([
         '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
+        '../Core/TaskProcessor',
         '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -40,6 +42,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        arraySlice,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -61,6 +64,7 @@ define([
         Plane,
         PrimitiveType,
         RuntimeError,
+        TaskProcessor,
         Transforms,
         Buffer,
         BufferUsage,
@@ -87,6 +91,13 @@ define([
     if (!FeatureDetection.supportsTypedArrays()) {
         return {};
     }
+
+    var DecodingState = {
+        NEEDS_DECODE : 0,
+        DECODING : 1,
+        READY : 2,
+        FAILED : 3
+    };
 
     /**
      * Represents the contents of a
@@ -126,6 +137,13 @@ define([
         this._hasColors = false;
         this._hasNormals = false;
         this._hasBatchIds = false;
+
+        // Draco
+        this._decodingState = DecodingState.READY;
+        this._dequantizeInShader = true;
+        this._isQuantizedDraco = false;
+        this._isOctEncodedDraco = false;
+        this._octEncodedRange = 0.0;
 
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
@@ -345,16 +363,17 @@ define([
             throw new RuntimeError('Feature table global property: POINTS_LENGTH must be defined');
         }
 
+        var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
+        if (defined(rtcCenter)) {
+            content._rtcCenter = Cartesian3.unpack(rtcCenter);
+        }
+
         // Get the positions
         var positions;
         var isQuantized = false;
 
         if (defined(featureTableJson.POSITION)) {
             positions = featureTable.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
-            var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
-            if (defined(rtcCenter)) {
-                content._rtcCenter = Cartesian3.unpack(rtcCenter);
-            }
         } else if (defined(featureTableJson.POSITION_QUANTIZED)) {
             positions = featureTable.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
             isQuantized = true;
@@ -370,10 +389,6 @@ define([
                 throw new RuntimeError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
             }
             content._quantizedVolumeOffset = Cartesian3.unpack(quantizedVolumeOffset);
-        }
-
-        if (!defined(positions)) {
-            throw new RuntimeError('Either POSITION or POSITION_QUANTIZED must be defined.');
         }
 
         // Get the colors
@@ -397,8 +412,6 @@ define([
             content._constantColor = Color.clone(Color.DARKGRAY, content._constantColor);
         }
 
-        content._isTranslucent = isTranslucent;
-
         // Get the normals
         var normals;
         var isOctEncoded16P = false;
@@ -414,7 +427,62 @@ define([
         var batchIds;
         if (defined(featureTableJson.BATCH_ID)) {
             batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
+        }
 
+        var hasPositions = defined(positions);
+        var hasColors = defined(colors);
+        var hasNormals = defined(normals);
+        var hasBatchIds = defined(batchIds);
+
+        // Get the draco buffer and semantics
+        var draco = featureTableJson.DRACO;
+        var dracoBuffer;
+        var dracoSemantics;
+        var isQuantizedDraco = false;
+        var isOctEncodedDraco = false;
+        if (defined(draco)) {
+            dracoSemantics = draco.semantics;
+            var dracoByteOffset = draco.byteOffset;
+            var dracoByteLength = draco.byteLength;
+            if (!defined(dracoSemantics) || !defined(dracoByteOffset) || !defined(dracoByteLength)) {
+                throw new RuntimeError('DRACO.semantics, DRACO.byteOffset, and DRACO.byteLength must be defined');
+            }
+
+            var dracoHasPositions = dracoSemantics.indexOf('POSITION') >= 0;
+            var dracoHasRGB = dracoSemantics.indexOf('RGB') >= 0;
+            var dracoHasRGBA = dracoSemantics.indexOf('RGBA') >= 0;
+            var dracoHasColors = dracoHasRGB || dracoHasRGBA;
+            var dracoHasNormals = dracoSemantics.indexOf('NORMAL') >= 0;
+            var dracoHasBatchIds = dracoSemantics.indexOf('BATCH_ID') >= 0;
+            dracoBuffer = arraySlice(featureTableBinary, dracoByteOffset, dracoByteOffset + dracoByteLength);
+
+            if (dracoHasPositions) {
+                isQuantized = false;
+                isQuantizedDraco = content._dequantizeInShader;
+                hasPositions = true;
+            }
+            if (dracoHasRGBA) {
+                isTranslucent = true;
+            } else if (dracoHasRGB) {
+                isTranslucent = false;
+            }
+            if (dracoHasColors) {
+                isRGB565 = false;
+                hasColors = true;
+            }
+            if (dracoHasNormals) {
+                isOctEncoded16P = false;
+                isOctEncodedDraco = content._dequantizeInShader;
+                hasNormals = true;
+            }
+            if (dracoHasBatchIds) {
+                hasBatchIds = true;
+            }
+
+            content._decodingState = DecodingState.NEEDS_DECODE;
+        }
+
+        if (hasBatchIds) {
             var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
             if (!defined(batchLength)) {
                 throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
@@ -427,9 +495,13 @@ define([
             content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
         }
 
+        if (!hasPositions) {
+            throw new RuntimeError('Either POSITION or POSITION_QUANTIZED must be defined.');
+        }
+
         // If points are not batched and there are per-point properties, use these properties for styling purposes
         var styleableProperties;
-        if (!defined(batchIds) && defined(batchTableBinary)) {
+        if (!hasBatchIds && defined(batchTableBinary)) {
             styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(pointsLength, batchTableJson, batchTableBinary);
 
             // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
@@ -451,15 +523,23 @@ define([
             colors : colors,
             normals : normals,
             batchIds : batchIds,
-            styleableProperties : styleableProperties
+            styleableProperties : styleableProperties,
+            draco : {
+                buffer : dracoBuffer,
+                semantics : dracoSemantics,
+                dequantizeInShader : content._dequantizeInShader
+            }
         };
         content._pointsLength = pointsLength;
         content._isQuantized = isQuantized;
+        content._isQuantizedDraco = isQuantizedDraco;
         content._isOctEncoded16P = isOctEncoded16P;
+        content._isOctEncodedDraco = isOctEncodedDraco;
         content._isRGB565 = isRGB565;
-        content._hasColors = defined(colors);
-        content._hasNormals = defined(normals);
-        content._hasBatchIds = defined(batchIds);
+        content._isTranslucent = isTranslucent;
+        content._hasColors = hasColors;
+        content._hasNormals = hasNormals;
+        content._hasBatchIds = hasBatchIds;
 
         // Compute an approximation for base resolution in case it isn't given.
         // Assume a uniform distribution of points in cubical cells throughout the
@@ -471,6 +551,7 @@ define([
     }
 
     var scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier = new Cartesian4();
+    var scratchQuantizedVolumeScaleAndOctEncodedRange = new Cartesian4();
 
     var positionLocation = 0;
     var colorLocation = 1;
@@ -490,7 +571,10 @@ define([
         var styleableProperties = parsedContent.styleableProperties;
         var hasStyleableProperties = defined(styleableProperties);
         var isQuantized = content._isQuantized;
+        var isQuantizedDraco = content._isQuantizedDraco;
         var isOctEncoded16P = content._isOctEncoded16P;
+        var isOctEncodedDraco = content._isOctEncodedDraco;
+        var octEncodedRange = content._octEncodedRange;
         var isRGB565 = content._isRGB565;
         var isTranslucent = content._isTranslucent;
         var hasColors = content._hasColors;
@@ -596,10 +680,17 @@ define([
             }
         };
 
-        if (isQuantized) {
+        if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
             uniformMap = combine(uniformMap, {
-                u_quantizedVolumeScale : function() {
-                    return content._quantizedVolumeScale;
+                u_quantizedVolumeScaleAndOctEncodedRange : function() {
+                    var scratch = scratchQuantizedVolumeScaleAndOctEncodedRange;
+                    if (defined(content._quantizedVolumeScale)) {
+                        scratch.x = content._quantizedVolumeScale.x;
+                        scratch.y = content._quantizedVolumeScale.y;
+                        scratch.z = content._quantizedVolumeScale.z;
+                    }
+                    scratch.w = content._octEncodedRange;
+                    return scratch;
                 }
             });
         }
@@ -652,6 +743,16 @@ define([
                 offsetInBytes : 0,
                 strideInBytes : 0
             });
+        } else if (isQuantizedDraco) {
+            attributes.push({
+                index : positionLocation,
+                vertexBuffer : positionsVertexBuffer,
+                componentsPerAttribute : 3,
+                componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                normalize : false, // Normalization is done in the shader based on quantizationBits
+                offsetInBytes : 0,
+                strideInBytes : 0
+            });
         } else {
             attributes.push({
                 index : positionLocation,
@@ -690,27 +791,27 @@ define([
         }
 
         if (hasNormals) {
+            var componentsPerAttribute;
+            var datatype;
             if (isOctEncoded16P) {
-                attributes.push({
-                    index : normalLocation,
-                    vertexBuffer : normalsVertexBuffer,
-                    componentsPerAttribute : 2,
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    normalize : false,
-                    offsetInBytes : 0,
-                    strideInBytes : 0
-                });
+                componentsPerAttribute = 2;
+                datatype = ComponentDatatype.UNSIGNED_BYTE;
+            } else if (isOctEncodedDraco) {
+                componentsPerAttribute = 2;
+                datatype = (octEncodedRange <= 255) ? ComponentDatatype.UNSIGNED_BYTE : ComponentDatatype.UNSIGNED_SHORT;
             } else {
-                attributes.push({
-                    index : normalLocation,
-                    vertexBuffer : normalsVertexBuffer,
-                    componentsPerAttribute : 3,
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    normalize : false,
-                    offsetInBytes : 0,
-                    strideInBytes : 0
-                });
+                componentsPerAttribute = 3;
+                datatype = ComponentDatatype.FLOAT;
             }
+            attributes.push({
+                index : normalLocation,
+                vertexBuffer : normalsVertexBuffer,
+                componentsPerAttribute : componentsPerAttribute,
+                componentDatatype : datatype,
+                normalize : false,
+                offsetInBytes : 0,
+                strideInBytes : 0
+            });
         }
 
         if (hasBatchIds) {
@@ -851,7 +952,9 @@ define([
         var hasBatchTable = defined(batchTable);
         var hasStyle = defined(style);
         var isQuantized = content._isQuantized;
+        var isQuantizedDraco = content._isQuantizedDraco;
         var isOctEncoded16P = content._isOctEncoded16P;
+        var isOctEncodedDraco = content._isOctEncodedDraco;
         var isRGB565 = content._isRGB565;
         var isTranslucent = content._isTranslucent;
         var hasColors = content._hasColors;
@@ -1002,7 +1105,7 @@ define([
             }
         }
         if (hasNormals) {
-            if (isOctEncoded16P) {
+            if (isOctEncoded16P || isOctEncodedDraco) {
                 vs += 'attribute vec2 a_normal; \n';
             } else {
                 vs += 'attribute vec3 a_normal; \n';
@@ -1013,8 +1116,8 @@ define([
             vs += 'attribute float a_batchId; \n';
         }
 
-        if (isQuantized) {
-            vs += 'uniform vec3 u_quantizedVolumeScale; \n';
+        if (isQuantized || isQuantizedDraco || isOctEncodedDraco) {
+            vs += 'uniform vec4 u_quantizedVolumeScaleAndOctEncodedRange; \n';
         }
 
         if (hasColorStyle) {
@@ -1058,8 +1161,8 @@ define([
             vs += '    vec4 color = u_constantColor; \n';
         }
 
-        if (isQuantized) {
-            vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
+        if (isQuantized || isQuantizedDraco) {
+            vs += '    vec3 position = a_position * u_quantizedVolumeScaleAndOctEncodedRange.xyz; \n';
         } else {
             vs += '    vec3 position = a_position; \n';
         }
@@ -1068,6 +1171,9 @@ define([
         if (hasNormals) {
             if (isOctEncoded16P) {
                 vs += '    vec3 normal = czm_octDecode(a_normal); \n';
+            } else if (isOctEncodedDraco) {
+                // Draco oct-encoding decodes to zxy order
+                vs += '    vec3 normal = czm_octDecode(a_normal, u_quantizedVolumeScaleAndOctEncodedRange.w).zxy; \n';
             } else {
                 vs += '    vec3 normal = a_normal; \n';
             }
@@ -1259,18 +1365,96 @@ define([
 
     var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
+    var scratchModelMatrix = new Matrix4();
+
+    var maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
+    var decoderTaskProcessor;
+    var decoderTaskProcessorReady = false;
+    function getDecoderTaskProcessor() {
+        if (!defined(decoderTaskProcessor)) {
+            decoderTaskProcessor = new TaskProcessor('decodeDracoPointCloud', maxDecodingConcurrency);
+            decoderTaskProcessor.initWebAssemblyModule({
+                modulePath : 'ThirdParty/Workers/draco_wasm_wrapper.js',
+                wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
+                fallbackModulePath : 'ThirdParty/Workers/draco_decoder.js'
+            }).then(function() {
+                decoderTaskProcessorReady = true;
+            });
+        }
+
+        if (decoderTaskProcessorReady) {
+            return decoderTaskProcessor;
+        }
+    }
+
+    // Exposed for testing
+    PointCloud3DTileContent._getDecoderTaskProcessor = getDecoderTaskProcessor;
+
+    function runDecoderTaskProcessor(draco) {
+        if (FeatureDetection.isInternetExplorer()) {
+            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
+        }
+        var decoderTaskProcessor = getDecoderTaskProcessor();
+        if (!defined(decoderTaskProcessor)) {
+            return;
+        }
+        return decoderTaskProcessor.scheduleTask(draco, [draco.buffer.buffer]);
+    }
+
+    function decodeDraco(content, context) {
+        if (content._decodingState === DecodingState.READY) {
+            return false;
+        }
+        if (content._decodingState === DecodingState.NEEDS_DECODE) {
+            var parsedContent = content._parsedContent;
+            var draco = parsedContent.draco;
+            var decodePromise = runDecoderTaskProcessor(draco, context);
+            if (defined(decodePromise)) {
+                content._decodingState = DecodingState.DECODING;
+                decodePromise.then(function(result) {
+                    content._decodingState = DecodingState.READY;
+                    var decodedPositions = defined(result.POSITION) ? result.POSITION.buffer : undefined;
+                    var decodedRgb = defined(result.RGB) ? result.RGB.buffer : undefined;
+                    var decodedRgba = defined(result.RGBA) ? result.RGBA.buffer : undefined;
+                    var decodedNormals = defined(result.NORMAL) ? result.NORMAL.buffer : undefined;
+                    var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.buffer : undefined;
+                    parsedContent.positions = defaultValue(decodedPositions, parsedContent.positions);
+                    parsedContent.colors = defaultValue(defaultValue(decodedRgba, decodedRgb), parsedContent.colors);
+                    parsedContent.normals = defaultValue(decodedNormals, parsedContent.normals);
+                    parsedContent.batchIds = defaultValue(decodedBatchIds, parsedContent.batchIds);
+                    if (content._isQuantizedDraco) {
+                        var quantization = result.POSITION.quantization;
+                        var scale = quantization.range / (1 << quantization.quantizationBits);
+                        content._quantizedVolumeScale = Cartesian3.fromElements(scale, scale, scale);
+                        content._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
+                    }
+                    if (content._isOctEncodedDraco) {
+                        content._octEncodedRange = (1 << result.NORMAL.quantization.quantizationBits) - 1.0;
+                    }
+                }).otherwise(function(error) {
+                    content._decodingState = DecodingState.FAILED;
+                    content._readyPromise.reject(error);
+                });
+            }
+        }
+        return true;
+    }
 
     /**
      * @inheritdoc Cesium3DTileContent#update
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
+        var context = frameState.context;
+        var decoding = decodeDraco(this, context);
+        if (decoding) {
+            return;
+        }
+
         var modelMatrix = this._tile.computedTransform;
         var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
         var updateModelMatrix = modelMatrixChanged || this._mode !== frameState.mode;
 
         this._mode = frameState.mode;
-
-        var context = frameState.context;
 
         if (!defined(this._drawCommand)) {
             createResources(this, frameState);
@@ -1308,17 +1492,17 @@ define([
 
         if (updateModelMatrix) {
             Matrix4.clone(modelMatrix, this._modelMatrix);
+            modelMatrix = Matrix4.clone(modelMatrix, scratchModelMatrix);
+
             if (defined(this._rtcCenter)) {
-                Matrix4.multiplyByTranslation(modelMatrix, this._rtcCenter, this._drawCommand.modelMatrix);
-            } else if (defined(this._quantizedVolumeOffset)) {
-                Matrix4.multiplyByTranslation(modelMatrix, this._quantizedVolumeOffset, this._drawCommand.modelMatrix);
-            } else {
-                Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
+                Matrix4.multiplyByTranslation(modelMatrix, this._rtcCenter, modelMatrix);
+            }
+            if (defined(this._quantizedVolumeOffset)) {
+                Matrix4.multiplyByTranslation(modelMatrix, this._quantizedVolumeOffset, modelMatrix);
             }
 
             if (frameState.mode !== SceneMode.SCENE3D) {
                 var projection = frameState.mapProjection;
-                modelMatrix = this._drawCommand.modelMatrix;
                 var translation = Matrix4.getColumn(modelMatrix, 3, scratchComputedTranslation);
                 if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
                     Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
@@ -1329,7 +1513,8 @@ define([
                 }
             }
 
-            Matrix4.clone(this._drawCommand.modelMatrix, this._pickCommand.modelMatrix);
+            Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
+            Matrix4.clone(modelMatrix, this._pickCommand.modelMatrix);
 
             var boundingVolume;
             if (defined(this._tile._contentBoundingVolume)) {
