@@ -237,6 +237,8 @@ define([
          * The expression must return or convert to a <code>Boolean</code>.
          * </p>
          *
+         * Applicable to all tile formats.
+         *
          * @memberof Cesium3DTileStyle.prototype
          *
          * @type {StyleExpression}
@@ -425,6 +427,9 @@ define([
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -469,6 +474,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -515,6 +523,9 @@ define([
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -559,6 +570,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -605,6 +619,9 @@ define([
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -649,6 +666,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>String</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -695,6 +715,9 @@ define([
          * <p>
          * The expression must return a <code>LabelStyle</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -739,6 +762,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>String</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -785,6 +811,9 @@ define([
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -830,6 +859,9 @@ define([
          * <p>
          * The expression must return a <code>Cartesian2</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -865,6 +897,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Boolean</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -911,6 +946,9 @@ define([
          * <p>
          * The expression must return a <code>Cartesian4</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -946,6 +984,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Cartesian4</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -983,6 +1024,9 @@ define([
          * <p>
          * The expression must return a <code>Cartesian2</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1018,6 +1062,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -1064,6 +1111,9 @@ define([
          * <p>
          * The expression must return a <code>Boolean</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1108,6 +1158,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -1154,6 +1207,9 @@ define([
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1199,6 +1255,9 @@ define([
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1234,6 +1293,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>HorizontalOrigin</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -1280,6 +1342,9 @@ define([
          * <p>
          * The expression must return a <code>VerticalOrigin</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1325,6 +1390,9 @@ define([
          * <p>
          * The expression must return a <code>HorizontalOrigin</code>.
          * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
+         * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1369,6 +1437,9 @@ define([
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>VerticalOrigin</code>.
+         * </p>
+         * <p>
+         * This expression is only applicable to point features in a Vector tile.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
