@@ -21,6 +21,8 @@ Change Log
 * Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
 * Added more ParticleSystem Sandcastle examples for rocket and comet tails and weather. [#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
 * Added color and scale attributes to the `ParticleSystem` class constructor. When defined the variables override startColor and endColor and startScale and endScale. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
+-* Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
+-* Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
 
 ##### Fixes :wrench:
 * Fixed bugs in `TimeIntervalCollection.removeInterval`. [#6418](https://github.com/AnalyticalGraphicsInc/cesium/pull/6418).
@@ -74,10 +76,6 @@ Change Log
   * `sourceType` specifies the type of data source if the URL doesn't have a known file extension.
   * `flyTo=false` optionally disables the automatic `flyTo` after loading the data source.
 * Added a multi-part CZML example to Sandcastle. [#6320](https://github.com/AnalyticalGraphicsInc/cesium/pull/6320)
-* `Credit` has been modified to take an HTML string as the credit content [#6331](https://github.com/AnalyticalGraphicsInc/cesium/pull/6331)
-* Added support for ordering in `DataSourceCollection` [#6316](https://github.com/AnalyticalGraphicsInc/cesium/pull/6316)
-  * All ground geometry from one `DataSource` will render in front of all ground geometry from another `DataSource` in the same collection with a lower index.
-  * Use `DataSourceCollection.raise`, `DataSourceCollection.lower`, `DataSourceCollection.raiseToTop` and `DataSourceCollection.lowerToBottom` functions to change the ordering of a `DataSource` in the collection.
 * Improved processing order of 3D tiles. [#6364](https://github.com/AnalyticalGraphicsInc/cesium/pull/6364)
 
 ##### Fixes :wrench:
