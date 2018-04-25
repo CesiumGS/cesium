@@ -672,6 +672,13 @@ define([
             attributes : attributes
         });
 
+        if (!hasBatchTable) {
+            content._pickId = context.createPickId({
+                primitive : content._tileset,
+                content : content
+            });
+        }
+
         content._opaqueRenderState = RenderState.fromCache({
             depthTest : {
                 enabled : true
@@ -694,7 +701,7 @@ define([
             vertexArray : vertexArray,
             count : pointsLength,
             shaderProgram : undefined, // Updated in createShaders
-            uniformMap : undefined, // Updated in createShaders
+            uniformMap : undefined, // Update in createShaders
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content,
@@ -717,6 +724,119 @@ define([
         });
     }
 
+    function getMutableUniformFunction(mutableUniformDefinition) {
+        return function() {
+            return mutableUniformDefinition.value;
+        };
+    }
+
+    function createUniformMap(content, frameState, style) {
+        var hasStyle = defined(style);
+        var batchTable = content._batchTable;
+        var hasBatchTable = defined(batchTable);
+        var context = frameState.context;
+        var isQuantized = content._isQuantized;
+
+        var uniformMap = {
+            u_pointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier : function() {
+                var scratch = scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier;
+                scratch.x = content._attenuation ? content._maximumAttenuation : content._pointSize;
+                scratch.y = content._tileset.timeSinceLoad;
+
+                if (content._attenuation) {
+                    var geometricError = content.tile.geometricError;
+                    if (geometricError === 0) {
+                        geometricError = defined(content._baseResolution) ? content._baseResolution : content._baseResolutionApproximation;
+                    }
+                    var frustum = frameState.camera.frustum;
+                    var depthMultiplier;
+                    // Attenuation is maximumAttenuation in 2D/ortho
+                    if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
+                        depthMultiplier = Number.POSITIVE_INFINITY;
+                    } else {
+                        depthMultiplier = context.drawingBufferHeight / frameState.camera.frustum.sseDenominator;
+                    }
+
+                    scratch.z = geometricError * content._geometricErrorScale;
+                    scratch.w = depthMultiplier;
+                }
+
+                return scratch;
+            },
+            u_highlightColor : function() {
+                return content._highlightColor;
+            },
+            u_constantColor : function() {
+                return content._constantColor;
+            },
+            u_clippingPlanes : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
+                return (!defined(clippingPlanes) || !clippingPlanes.enabled) ? context.defaultTexture : clippingPlanes.texture;
+            },
+            u_clippingPlanesEdgeStyle : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
+                if (!defined(clippingPlanes)) {
+                    return Color.WHITE.withAlpha(0.0);
+                }
+
+                var style = Color.clone(clippingPlanes.edgeColor);
+                style.alpha = clippingPlanes.edgeWidth;
+                return style;
+            },
+            u_clippingPlanesMatrix : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
+                if (!defined(clippingPlanes)) {
+                    return Matrix4.IDENTITY;
+                }
+                return Matrix4.multiply(content._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+            }
+        };
+
+        if (isQuantized) {
+            uniformMap = combine(uniformMap, {
+                u_quantizedVolumeScale : function() {
+                    return content._quantizedVolumeScale;
+                }
+            });
+        }
+
+        if (hasStyle) {
+            var mutables = style.mutables;
+            if (Object.keys(mutables).length > 0) {
+                var mutableUniforms = {};
+                for (var name in mutables) {
+                    if (mutables.hasOwnProperty(name)) {
+                        var mutableUniformDefinition = mutables[name];
+                        var mutableUniformName = 'u_mutable' + name;
+                        mutableUniforms[mutableUniformName] = getMutableUniformFunction(mutableUniformDefinition);
+                    }
+                }
+                uniformMap = combine(uniformMap, mutableUniforms);
+            }
+        }
+
+        var drawUniformMap = uniformMap;
+
+        if (hasBatchTable) {
+            drawUniformMap = batchTable.getUniformMapCallback()(uniformMap);
+        }
+
+        var pickUniformMap;
+
+        if (hasBatchTable) {
+            pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
+        } else {
+            pickUniformMap = combine(uniformMap, {
+                czm_pickColor : function() {
+                    return content._pickId.color;
+                }
+            });
+        }
+
+        content._drawCommand.uniformMap = drawUniformMap;
+        content._pickCommand.uniformMap = pickUniformMap;
+    }
+
     var defaultProperties = ['POSITION', 'COLOR', 'NORMAL', 'POSITION_ABSOLUTE'];
 
     function getStyleableProperties(source, properties) {
@@ -732,20 +852,15 @@ define([
         }
     }
 
-    function getGLSLType(type) {
+    function getGlslType(type) {
         switch (type) {
-            case 'bool': return 'bool';
-            case 'int': return 'int';
-            case 'uint': return 'uint';
-            case 'float': return 'float';
-            case 'double': return 'double';
+            case 'Boolean': return 'bool';
+            case 'Number': return 'float';
             case 'vec2': return 'vec2';
             case 'vec3': return 'vec3';
             case 'vec4': return 'vec4';
-            case 'Color': return 'vec4';
-            case 'RegExp': throw new RuntimeError('RegExp is not a supported type in the context of GLSL.');
         }
-        throw new RuntimeError('Cannot translate unknown data type into GLSL type.');
+        throw new RuntimeError('Invalid mutable type: "' + type + '"');
     }
 
     function getVertexAttribute(vertexArray, index) {
@@ -758,14 +873,26 @@ define([
         }
     }
 
-    function modifyStyleFunction(source) {
+    function modifyStyleFunction(source, mutables) {
+        var styleName;
+        var replaceName;
+
         // Replace occurrences of czm_tiles3d_style_DEFAULTPROPERTY
         var length = defaultProperties.length;
         for (var i = 0; i < length; ++i) {
             var property = defaultProperties[i];
-            var styleName = 'czm_tiles3d_style_' + property;
-            var replaceName = property.toLowerCase();
+            styleName = 'czm_tiles3d_style_' + property;
+            replaceName = property.toLowerCase();
             source = source.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
+        }
+
+        // Replace occurences of czm_tiles3d_style_MUTABLENAME
+        for (var name in mutables) {
+            if (mutables.hasOwnProperty(name)) {
+                styleName = 'czm_tiles3d_style_' + name;
+                replaceName = 'u_mutable' + name;
+                source = source.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
+            }
         }
 
         // Edit the function header to accept the point position, color, and normal
@@ -776,6 +903,7 @@ define([
         var i;
         var name;
         var attribute;
+        var mutables;
 
         var context = frameState.context;
         var batchTable = content._batchTable;
@@ -804,6 +932,7 @@ define([
         }
 
         if (hasStyle) {
+            mutables = style.mutables;
             var shaderState = {
                 translucent : false
             };
@@ -827,22 +956,25 @@ define([
 
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
-            colorStyleFunction = modifyStyleFunction(colorStyleFunction);
+            colorStyleFunction = modifyStyleFunction(colorStyleFunction, mutables);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
-            showStyleFunction = modifyStyleFunction(showStyleFunction);
+            showStyleFunction = modifyStyleFunction(showStyleFunction, mutables);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
-            pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
+            pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction, mutables);
         }
 
         var usesColorSemantic = styleableProperties.indexOf('COLOR') >= 0;
         var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
 
         // Split default properties from user properties
-        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1 && !(hasStyle && (property in style.mutables)); });
+        var userProperties = styleableProperties.filter(function(property) {
+            return defaultProperties.indexOf(property) === -1 &&
+                !(defined(mutables) && (defined(mutables[property])));
+        });
 
         if (usesNormalSemantic && !hasNormals) {
             throw new RuntimeError('Style references the NORMAL semantic but the point cloud does not have normals');
@@ -902,19 +1034,7 @@ define([
             attributeLocations[attributeName] = attribute.location;
         }
 
-        var uniformMap = {
-            u_pointSizeAndTilesetTime : function() {
-                scratchPointSizeAndTilesetTime.x = content._pointSize;
-                scratchPointSizeAndTilesetTime.y = content._tileset.timeSinceLoad;
-                return scratchPointSizeAndTilesetTime;
-            },
-            u_highlightColor : function() {
-                return content._highlightColor;
-            },
-            u_constantColor : function() {
-                return content._constantColor;
-            }
-        };
+        createUniformMap(content, frameState, style);
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
@@ -929,14 +1049,11 @@ define([
                   'float u_depthMultiplier; \n';
         }
 
-        if (hasStyle) {
-            for (var mutableVariable in style.mutables) {
-                var mutableUniformName = 'u_mutable' + mutableVariable;
-                var mutableUniformDefiniton = style.mutables[mutableVariable];
-                vs += 'uniform ' + getGLSLType(mutableUniformDefiniton.type) + ' ' + mutableUniformName + '; \n';
-                uniformMap[mutableUniformName] = function() {
-                    return mutableUniformDefiniton.value;
-                }
+        for (name in mutables) {
+            if (mutables.hasOwnProperty(name)) {
+                var mutableUniformName = 'u_mutable' + name;
+                var mutableUniformDefinition = mutables[name];
+                vs += 'uniform ' + getGlslType(mutableUniformDefinition.type) + ' ' + mutableUniformName + '; \n';
             }
         }
 
@@ -971,11 +1088,6 @@ define([
 
         if (isQuantized) {
             vs += 'uniform vec3 u_quantizedVolumeScale; \n';
-            uniformMap = combine(uniformMap, {
-                u_quantizedVolumeScale : function() {
-                    return content._quantizedVolumeScale;
-                }
-            });
         }
 
         if (hasColorStyle) {
@@ -1080,14 +1192,6 @@ define([
 
         vs += '} \n';
 
-        if (hasStyle) {
-            for (var mutable in style.mutables) {
-                var styleName = 'czm_tiles3d_style_' + mutable;
-                var replaceName = 'u_mutable' + mutable;
-                vs = vs.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
-            }
-        }
-
         var fs = 'varying vec4 v_color; \n';
 
         if (hasClippedContent) {
@@ -1151,27 +1255,6 @@ define([
             fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         });
-
-        if (hasBatchTable) {
-            drawCommand.uniformMap = batchTable.getUniformMapCallback()(uniformMap);
-        } else {
-            drawCommand.uniformMap = uniformMap;
-        }
-
-        if (hasBatchTable) {
-            pickCommand.uniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
-        } else {
-            content._pickId = context.createPickId({
-                primitive : content._tileset,
-                content : content
-            });
-
-            pickCommand.uniformMap = combine(uniformMap, {
-                czm_pickColor : function() {
-                    return content._pickId.color;
-                }
-            });
-        }
 
         try {
             // Check if the shader compiles correctly. If not there is likely a syntax error with the style.

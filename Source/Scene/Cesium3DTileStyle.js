@@ -188,13 +188,13 @@ define([
          *
          * @default undefined
          *
-         * @exception {DeveloperError} The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
          */
         style : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -287,7 +287,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -346,7 +346,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -410,7 +410,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -1434,7 +1434,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -1446,7 +1446,7 @@ define([
         },
 
         /**
-         * Gets or sets the definition of named variables. Named variables are non-const values passed to expression.
+         * Gets or sets the definition of mutable variables. Mutable variables may be referenced in expressions.
          *
          * @memberof Cesium3DTileStyle.prototype
          *
@@ -1455,8 +1455,18 @@ define([
          * @example
          * var style = new Cesium3DTileStyle({
          *     mutables : {
-         *         pickColor : 'Color',
-		 *         pickPosition : 'Cartesian4',
+         *         radius : {
+         *             type : 'Number',
+         *             value : 50.0
+         *         },
+         *         position : {
+         *             type : 'vec3',
+         *             value : new Cesium.Cartesian3()
+         *         }
+         *         status : {
+         *             type : 'Boolean',
+         *             value : true
+         *         }
          *     }
          * });
          *
@@ -1546,13 +1556,13 @@ define([
         return this._pointSizeShaderFunction;
     };
 
-    Cesium3DTileStyle.prototype.setMutableValue = function(variableName, value) {
+    Cesium3DTileStyle.prototype.setMutableValue = function(mutableName, value) {
         //>>includeStart('debug', pragmas.debug);
-        if (!variableName in this._mutables) {
-            throw new DeveloperError('Unknown mutable "' + variableName + '".');
+        if (!defined(this._mutables[mutableName])) {
+            throw new DeveloperError('Unknown mutable "' + mutableName + '".');
         }
         //>>includeEnd('debug');
-        this._mutables[variableName].value = value;
+        this._mutables[mutableName].value = value;
     };
 
     return Cesium3DTileStyle;
