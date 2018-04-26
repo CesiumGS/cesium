@@ -6,8 +6,10 @@ define([
         './destroyObject',
         './DeveloperError',
         './Event',
+        './FeatureDetection',
         './getAbsoluteUri',
         './isCrossOriginUrl',
+        './Resource',
         './RuntimeError',
         'require'
     ], function(
@@ -18,8 +20,10 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        FeatureDetection,
         getAbsoluteUri,
         isCrossOriginUrl,
+        Resource,
         RuntimeError,
         require) {
     'use strict';
@@ -161,6 +165,34 @@ define([
         return worker;
     }
 
+    function getWebAssemblyLoaderConfig(processor, wasmOptions) {
+        var config = {
+            modulePath : undefined,
+            wasmBinaryFile : undefined,
+            wasmBinary : undefined
+        };
+
+        // Web assembly not supported, use fallback js module if provided
+        if (!FeatureDetection.supportsWebAssembly()) {
+            if (!defined(wasmOptions.fallbackModulePath)) {
+                throw new RuntimeError('This browser does not support Web Assembly, and no backup module was provided for ' + processor._workerName);
+            }
+
+            config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
+            return when.resolve(config);
+        }
+
+        config.modulePath = buildModuleUrl(wasmOptions.modulePath);
+        config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
+
+        return Resource.fetchArrayBuffer({
+            url: config.wasmBinaryFile
+        }).then(function (arrayBuffer) {
+            config.wasmBinary = arrayBuffer;
+            return config;
+        });
+    }
+
     /**
      * A wrapper around a web worker that allows scheduling tasks for a given worker,
      * returning results asynchronously via a promise.
@@ -243,6 +275,48 @@ define([
 
             return deferred.promise;
         });
+    };
+
+    /**
+     * Posts a message to a web worker with configuration to initialize loading
+     * and compiling a web assembly module asychronously, as well as an optional
+     * fallback JavaScript module to use if Web Assembly is not supported.
+     *
+     * @param {Object} [webAssemblyOptions] An object with the following properties:
+     * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
+     * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
+     * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
+     * @returns {Promise.<Object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+     */
+    TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
+        if (!defined(this._worker)) {
+            this._worker = createWorker(this);
+        }
+
+        var deferred = when.defer();
+        var processor = this;
+        var worker = this._worker;
+        getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function(wasmConfig) {
+            return when(canTransferArrayBuffer(), function(canTransferArrayBuffer) {
+                var transferableObjects;
+                var binary = wasmConfig.wasmBinary;
+                if (defined(binary) && canTransferArrayBuffer) {
+                    transferableObjects = [binary];
+                }
+
+                worker.onmessage = function(event) {
+                    worker.onmessage = function(event) {
+                        completeTask(processor, event.data);
+                    };
+
+                    deferred.resolve(event.data);
+                };
+
+                worker.postMessage({ webAssemblyConfig : wasmConfig }, transferableObjects);
+            });
+        });
+
+        return deferred;
     };
 
     /**
