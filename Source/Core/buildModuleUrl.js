@@ -1,11 +1,9 @@
 define([
-        '../ThirdParty/Uri',
         './defined',
         './DeveloperError',
         './Resource',
         'require'
     ], function(
-        Uri,
         defined,
         DeveloperError,
         Resource,

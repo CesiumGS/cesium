@@ -20,6 +20,11 @@ defineSuite([
         expect(typeof supportsTypedArrays).toEqual('boolean');
     });
 
+    it('detects web assembly support', function() {
+        var supportsWebAssembly = FeatureDetection.supportsWebAssembly();
+        expect(typeof supportsWebAssembly).toEqual('boolean');
+    });
+
     function checkVersionArray(array) {
         expect(Array.isArray(array)).toEqual(true);
         array.forEach(function(d) {

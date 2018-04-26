@@ -1,20 +1,20 @@
 define([
         '../../Core/buildModuleUrl',
         '../../Scene/ArcGisMapServerImageryProvider',
-        '../../Scene/BingMapsImageryProvider',
-        '../../Scene/BingMapsStyle',
+        '../../Scene/IonWorldImageryStyle',
         '../../Scene/createOpenStreetMapImageryProvider',
         '../../Scene/createTileMapServiceImageryProvider',
+        '../../Scene/createWorldImagery',
         '../../Scene/IonImageryProvider',
         '../../Scene/MapboxImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
         ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        BingMapsStyle,
+        IonWorldImageryStyle,
         createOpenStreetMapImageryProvider,
         createTileMapServiceImageryProvider,
+        createWorldImagery,
         IonImageryProvider,
         MapboxImageryProvider,
         ProviderViewModel) {
@@ -28,11 +28,10 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Aerial',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
-            tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
+            tooltip : 'Bing Maps aerial imagery, provided by Cesium ion',
             creationFunction : function() {
-                return new BingMapsImageryProvider({
-                    url : 'https://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL
+                return createWorldImagery({
+                    style : IonWorldImageryStyle.AERIAL
                 });
             }
         }));
@@ -40,11 +39,10 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Aerial with Labels',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerialLabels.png'),
-            tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
+            tooltip : 'Bing Maps aerial imagery with labels, provided by Cesium ion',
             creationFunction : function() {
-                return new BingMapsImageryProvider({
-                    url : 'https://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS
+                return createWorldImagery({
+                    style : IonWorldImageryStyle.AERIAL_WITH_LABELS
                 });
             }
         }));
@@ -52,11 +50,10 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Roads',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingRoads.png'),
-            tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
+            tooltip : 'Bing Maps standard road maps, provided by Cesium ion',
             creationFunction : function() {
-                return new BingMapsImageryProvider({
-                    url : 'https://dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.ROAD
+                return createWorldImagery({
+                    style : IonWorldImageryStyle.ROAD
                 });
             }
         }));
