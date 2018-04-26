@@ -49,6 +49,17 @@
 }
 
 .cesium-baseLayerPicker-choices {
+    margin-bottom: 5px;
+}
+
+.cesium-baseLayerPicker-categoryTitle {
+    color: #edffff;
+    border-bottom: 1px solid #888;
+    margin-bottom: 4px;
+    font-size: 10pt;
+}
+
+.cesium-baseLayerPicker-choices {
     display: block;
     position: relative;
     top: auto;

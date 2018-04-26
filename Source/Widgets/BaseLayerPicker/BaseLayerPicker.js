@@ -138,10 +138,24 @@ css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }');
         imageryTitle.innerHTML = 'Imagery';
         dropPanel.appendChild(imageryTitle);
 
+        var imagerySection = document.createElement('div');
+        imagerySection.className = 'cesium-baseLayerPicker-section';
+        imagerySection.setAttribute('data-bind', 'foreach: _imageryProviders');
+        dropPanel.appendChild(imagerySection);
+
+        var imageryCategories = document.createElement('div');
+        imageryCategories.className = 'cesium-baseLayerPicker-category';
+        imagerySection.appendChild(imageryCategories);
+
+        var categoryTitle = document.createElement('div');
+        categoryTitle.className = 'cesium-baseLayerPicker-categoryTitle';
+        categoryTitle.setAttribute('data-bind', 'text: name, visible: $parent._hasCategories');
+        imageryCategories.appendChild(categoryTitle);
+
         var imageryChoices = document.createElement('div');
         imageryChoices.className = 'cesium-baseLayerPicker-choices';
-        imageryChoices.setAttribute('data-bind', 'foreach: imageryProviderViewModels');
-        dropPanel.appendChild(imageryChoices);
+        imageryChoices.setAttribute('data-bind', 'foreach: providers');
+        imageryCategories.appendChild(imageryChoices);
 
         var imageryProvider = document.createElement('div');
         imageryProvider.className = 'cesium-baseLayerPicker-item';
