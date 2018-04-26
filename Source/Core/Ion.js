@@ -12,13 +12,18 @@ define([
     var defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI0NDViM2NkNi0xYTE2LTRlZTUtODBlNy05M2Q4ODg4M2NmMTQiLCJpZCI6MjU5LCJpYXQiOjE1MTgxOTc4MDh9.sld5jPORDf_lWavMEsugh6vHPnjR6j3qd1aBkQTswNM';
 
     /**
-     * Default settings for accessing the Cesium Ion API.
+     * Default settings for accessing the Cesium ion API.
      * @exports Ion
+     *
+     * An ion access token is only required if you are using any ion related APIs.
+     * A default access token is provided for evaluation purposes only.
+     * Sign up for a free ion account and get your own access token at {@link https://cesium.com}
      *
      * @see IonResource
      * @see IonImageryProvider
+     * @see IonGeocoderService
+     * @see createWorldImagery
      * @see createWorldTerrain
-     * @see https://cesium.com
      */
     var Ion = {};
 
@@ -49,6 +54,7 @@ define([
             You can sign up for a free ion account at <a href="https://cesium.com">https://cesium.com</a>.</b>';
 
             defaultTokenCredit = new Credit(defaultTokenMessage, true);
+            console.log(defaultTokenMessage);
         }
 
         return defaultTokenCredit;

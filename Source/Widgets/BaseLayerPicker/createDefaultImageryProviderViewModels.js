@@ -28,7 +28,7 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Aerial',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
-            tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
+            tooltip : 'Bing Maps aerial imagery, provided by Cesium ion',
             creationFunction : function() {
                 return createWorldImagery({
                     style : IonWorldImageryStyle.AERIAL
@@ -39,7 +39,7 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Aerial with Labels',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerialLabels.png'),
-            tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
+            tooltip : 'Bing Maps aerial imagery with labels, provided by Cesium ion',
             creationFunction : function() {
                 return createWorldImagery({
                     style : IonWorldImageryStyle.AERIAL_WITH_LABELS
@@ -50,7 +50,7 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Roads',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingRoads.png'),
-            tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
+            tooltip : 'Bing Maps standard road maps, provided by Cesium ion',
             creationFunction : function() {
                 return createWorldImagery({
                     style : IonWorldImageryStyle.ROAD
