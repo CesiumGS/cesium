@@ -125,6 +125,7 @@ defineSuite([
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
     var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
+    var emissiveUrl = './Data/Models/PBR/BoxEmissive/BoxEmissive.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
 
@@ -2248,6 +2249,21 @@ defineSuite([
             m.show = true;
             checkVertexColors(m);
             primitives.remove(m);
+        });
+    });
+
+    it('load a glTF 2.0 without an emmisive texture and no normals', function() {
+        return loadModel(emissiveUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Emissive texture is red
+                expect(rgba[0]).toBeGreaterThan(10);
+                expect(rgba[1]).toBeLessThan(10);
+                expect(rgba[2]).toBeLessThan(10);
+            });
+
+            primitives.remove(model);
         });
     });
 
