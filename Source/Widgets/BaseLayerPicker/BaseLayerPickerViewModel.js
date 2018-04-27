@@ -99,9 +99,33 @@ define([
         });
         this._imageryProviders = imageryProviders;
 
-        this._hasCategories = knockout.pureComputed(function() {
-            return imageryProviders().length > 1;
+        var terrainObservable = knockout.getObservable(this, 'terrainProviderViewModels');
+        var terrainProviders = knockout.pureComputed(function() {
+            var providers = terrainObservable();
+            var categories = {};
+            var i;
+            for (i = 0; i < providers.length; i++) {
+                var provider = providers[i];
+                var category = provider.category;
+                if (defined(categories[category])) {
+                    categories[category].push(provider);
+                } else {
+                    categories[category] = [provider];
+                }
+            }
+            var allCategoryNames = Object.keys(categories);
+
+            var result = [];
+            for (i = 0; i < allCategoryNames.length; i++) {
+                var name = allCategoryNames[i];
+                result.push({
+                    name: name,
+                    providers: categories[name]
+                });
+            }
+            return result;
         });
+        this._terrainProviders = terrainProviders;
 
         /**
          * Gets the button tooltip.  This property is observable.
