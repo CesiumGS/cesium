@@ -40,7 +40,7 @@ module.exports = asPromise;
  * Returns a promise from a node-style callback function.
  * @memberof util
  * @param {function(?Error, ...*)} fn Function to call
- * @param {*} ctx Function context
+ * @param {Object} ctx Function context
  * @param {...*} params Function arguments
  * @returns {Promise<*>} Promisified function
  */
@@ -229,7 +229,7 @@ function EventEmitter() {
  * Registers an event listener.
  * @param {string} evt Event name
  * @param {function} fn Listener
- * @param {*} [ctx] Listener context
+ * @param {Object} [ctx] Listener context
  * @returns {util.EventEmitter} `this`
  */
 EventEmitter.prototype.on = function on(evt, fn, ctx) {
@@ -1914,13 +1914,13 @@ function Writer() {
 
     /**
      * Operations head.
-     * @type {Object}
+     * @type {*}
      */
     this.head = new Op(noop, 0, 0);
 
     /**
      * Operations tail
-     * @type {Object}
+     * @type {*}
      */
     this.tail = this.head;
 

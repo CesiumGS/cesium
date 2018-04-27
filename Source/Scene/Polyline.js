@@ -276,7 +276,7 @@ define([
         /**
          * Gets or sets the user-defined object returned when the polyline is picked.
          * @memberof Polyline.prototype
-         * @type {Object}
+         * @type {*}
          */
         id : {
             get : function() {

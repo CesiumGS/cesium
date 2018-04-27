@@ -81,7 +81,7 @@ define([
         /**
          * User-defined object returned when the primitive is picked.
          *
-         * @type {Object}
+         * @type {*}
          * @default undefined
          *
          * @see Scene#pick

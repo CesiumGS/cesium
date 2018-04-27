@@ -527,9 +527,9 @@ Autolinker.Util = {
 	/**
 	 * Assigns (shallow copies) the properties of `src` onto `dest`.
 	 *
-	 * @param {Object} dest The destination object.
-	 * @param {Object} src The source object.
-	 * @return {Object} The destination object (`dest`)
+	 * @param {*} dest The destination object.
+	 * @param {*} src The source object.
+	 * @return {*} The destination object (`dest`)
 	 */
 	assign : function( dest, src ) {
 		for( var prop in src ) {
@@ -1408,21 +1408,21 @@ Autolinker.htmlParser.HtmlParser = Autolinker.Util.extend( Object, {
 /**
  * @abstract
  * @class Autolinker.htmlParser.HtmlNode
- * 
+ *
  * Represents an HTML node found in an input string. An HTML node is one of the following:
- * 
+ *
  * 1. An {@link Autolinker.htmlParser.ElementNode ElementNode}, which represents HTML tags.
  * 2. A {@link Autolinker.htmlParser.TextNode TextNode}, which represents text outside or within HTML tags.
  * 3. A {@link Autolinker.htmlParser.EntityNode EntityNode}, which represents one of the known HTML
  *    entities that Autolinker looks for. This includes common ones such as &amp;quot; and &amp;nbsp;
  */
 Autolinker.htmlParser.HtmlNode = Autolinker.Util.extend( Object, {
-	
+
 	/**
 	 * @cfg {String} text (required)
-	 * 
-	 * The original text that was matched for the HtmlNode. 
-	 * 
+	 *
+	 * The original text that was matched for the HtmlNode.
+	 *
 	 * - In the case of an {@link Autolinker.htmlParser.ElementNode ElementNode}, this will be the tag's
 	 *   text.
 	 * - In the case of a {@link Autolinker.htmlParser.TextNode TextNode}, this will be the text itself.
@@ -1430,8 +1430,8 @@ Autolinker.htmlParser.HtmlNode = Autolinker.Util.extend( Object, {
 	 *   the HTML entity.
 	 */
 	text : "",
-	
-	
+
+
 	/**
 	 * @constructor
 	 * @param {Object} cfg The configuration properties for the Match instance, specified in an Object (map).
@@ -1440,19 +1440,19 @@ Autolinker.htmlParser.HtmlNode = Autolinker.Util.extend( Object, {
 		Autolinker.Util.assign( this, cfg );
 	},
 
-	
+
 	/**
 	 * Returns a string name for the type of node that this class represents.
-	 * 
+	 *
 	 * @abstract
 	 * @return {String}
 	 */
 	getType : Autolinker.Util.abstractMethod,
-	
-	
+
+
 	/**
 	 * Retrieves the {@link #text} for the HtmlNode.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getText : function() {
@@ -1506,104 +1506,104 @@ Autolinker.htmlParser.CommentNode = Autolinker.Util.extend( Autolinker.htmlParse
 /**
  * @class Autolinker.htmlParser.ElementNode
  * @extends Autolinker.htmlParser.HtmlNode
- * 
+ *
  * Represents an HTML element node that has been parsed by the {@link Autolinker.htmlParser.HtmlParser}.
- * 
+ *
  * See this class's superclass ({@link Autolinker.htmlParser.HtmlNode}) for more details.
  */
 Autolinker.htmlParser.ElementNode = Autolinker.Util.extend( Autolinker.htmlParser.HtmlNode, {
-	
+
 	/**
 	 * @cfg {String} tagName (required)
-	 * 
+	 *
 	 * The name of the tag that was matched.
 	 */
 	tagName : '',
-	
+
 	/**
 	 * @cfg {Boolean} closing (required)
-	 * 
+	 *
 	 * `true` if the element (tag) is a closing tag, `false` if its an opening tag.
 	 */
 	closing : false,
 
-	
+
 	/**
 	 * Returns a string name for the type of node that this class represents.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getType : function() {
 		return 'element';
 	},
-	
+
 
 	/**
 	 * Returns the HTML element's (tag's) name. Ex: for an &lt;img&gt; tag, returns "img".
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getTagName : function() {
 		return this.tagName;
 	},
-	
-	
+
+
 	/**
 	 * Determines if the HTML element (tag) is a closing tag. Ex: &lt;div&gt; returns
 	 * `false`, while &lt;/div&gt; returns `true`.
-	 * 
+	 *
 	 * @return {Boolean}
 	 */
 	isClosing : function() {
 		return this.closing;
 	}
-	
+
 } );
 /*global Autolinker */
 /**
  * @class Autolinker.htmlParser.EntityNode
  * @extends Autolinker.htmlParser.HtmlNode
- * 
+ *
  * Represents a known HTML entity node that has been parsed by the {@link Autolinker.htmlParser.HtmlParser}.
  * Ex: '&amp;nbsp;', or '&amp#160;' (which will be retrievable from the {@link #getText} method.
- * 
- * Note that this class will only be returned from the HtmlParser for the set of checked HTML entity nodes 
+ *
+ * Note that this class will only be returned from the HtmlParser for the set of checked HTML entity nodes
  * defined by the {@link Autolinker.htmlParser.HtmlParser#htmlCharacterEntitiesRegex}.
- * 
+ *
  * See this class's superclass ({@link Autolinker.htmlParser.HtmlNode}) for more details.
  */
 Autolinker.htmlParser.EntityNode = Autolinker.Util.extend( Autolinker.htmlParser.HtmlNode, {
-	
+
 	/**
 	 * Returns a string name for the type of node that this class represents.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getType : function() {
 		return 'entity';
 	}
-	
+
 } );
 /*global Autolinker */
 /**
  * @class Autolinker.htmlParser.TextNode
  * @extends Autolinker.htmlParser.HtmlNode
- * 
+ *
  * Represents a text node that has been parsed by the {@link Autolinker.htmlParser.HtmlParser}.
- * 
+ *
  * See this class's superclass ({@link Autolinker.htmlParser.HtmlNode}) for more details.
  */
 Autolinker.htmlParser.TextNode = Autolinker.Util.extend( Autolinker.htmlParser.HtmlNode, {
-	
+
 	/**
 	 * Returns a string name for the type of node that this class represents.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getType : function() {
 		return 'text';
 	}
-	
+
 } );
 /*global Autolinker */
 /**
@@ -2240,43 +2240,43 @@ Autolinker.MatchValidator = Autolinker.Util.extend( Object, {
 /**
  * @abstract
  * @class Autolinker.match.Match
- * 
- * Represents a match found in an input string which should be Autolinked. A Match object is what is provided in a 
+ *
+ * Represents a match found in an input string which should be Autolinked. A Match object is what is provided in a
  * {@link Autolinker#replaceFn replaceFn}, and may be used to query for details about the match.
- * 
+ *
  * For example:
- * 
+ *
  *     var input = "...";  // string with URLs, Email Addresses, and Twitter Handles
- *     
+ *
  *     var linkedText = Autolinker.link( input, {
  *         replaceFn : function( autolinker, match ) {
  *             console.log( "href = ", match.getAnchorHref() );
  *             console.log( "text = ", match.getAnchorText() );
- *         
+ *
  *             switch( match.getType() ) {
- *                 case 'url' : 
+ *                 case 'url' :
  *                     console.log( "url: ", match.getUrl() );
- *                     
+ *
  *                 case 'email' :
  *                     console.log( "email: ", match.getEmail() );
- *                     
+ *
  *                 case 'twitter' :
  *                     console.log( "twitter: ", match.getTwitterHandle() );
  *             }
  *         }
  *     } );
- *     
+ *
  * See the {@link Autolinker} class for more details on using the {@link Autolinker#replaceFn replaceFn}.
  */
 Autolinker.match.Match = Autolinker.Util.extend( Object, {
-	
+
 	/**
 	 * @cfg {String} matchedText (required)
-	 * 
+	 *
 	 * The original text that was matched.
 	 */
-	
-	
+
+
 	/**
 	 * @constructor
 	 * @param {Object} cfg The configuration properties for the Match instance, specified in an Object (map).
@@ -2285,38 +2285,38 @@ Autolinker.match.Match = Autolinker.Util.extend( Object, {
 		Autolinker.Util.assign( this, cfg );
 	},
 
-	
+
 	/**
 	 * Returns a string name for the type of match that this class represents.
-	 * 
+	 *
 	 * @abstract
 	 * @return {String}
 	 */
 	getType : Autolinker.Util.abstractMethod,
-	
-	
+
+
 	/**
 	 * Returns the original text that was matched.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getMatchedText : function() {
 		return this.matchedText;
 	},
-	
+
 
 	/**
 	 * Returns the anchor href that should be generated for the match.
-	 * 
+	 *
 	 * @abstract
 	 * @return {String}
 	 */
 	getAnchorHref : Autolinker.Util.abstractMethod,
-	
-	
+
+
 	/**
 	 * Returns the anchor text that should be generated for the match.
-	 * 
+	 *
 	 * @abstract
 	 * @return {String}
 	 */
@@ -2327,59 +2327,59 @@ Autolinker.match.Match = Autolinker.Util.extend( Object, {
 /**
  * @class Autolinker.match.Email
  * @extends Autolinker.match.Match
- * 
+ *
  * Represents a Email match found in an input string which should be Autolinked.
- * 
+ *
  * See this class's superclass ({@link Autolinker.match.Match}) for more details.
  */
 Autolinker.match.Email = Autolinker.Util.extend( Autolinker.match.Match, {
-	
+
 	/**
 	 * @cfg {String} email (required)
-	 * 
+	 *
 	 * The email address that was matched.
 	 */
-	
+
 
 	/**
 	 * Returns a string name for the type of match that this class represents.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getType : function() {
 		return 'email';
 	},
-	
-	
+
+
 	/**
 	 * Returns the email address that was matched.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getEmail : function() {
 		return this.email;
 	},
-	
+
 
 	/**
 	 * Returns the anchor href that should be generated for the match.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getAnchorHref : function() {
 		return 'mailto:' + this.email;
 	},
-	
-	
+
+
 	/**
 	 * Returns the anchor text that should be generated for the match.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getAnchorText : function() {
 		return this.email;
 	}
-	
+
 } );
 /*global Autolinker */
 /**
@@ -2524,174 +2524,174 @@ Autolinker.match.Phone = Autolinker.Util.extend( Autolinker.match.Match, {
 /**
  * @class Autolinker.match.Twitter
  * @extends Autolinker.match.Match
- * 
+ *
  * Represents a Twitter match found in an input string which should be Autolinked.
- * 
+ *
  * See this class's superclass ({@link Autolinker.match.Match}) for more details.
  */
 Autolinker.match.Twitter = Autolinker.Util.extend( Autolinker.match.Match, {
-	
+
 	/**
 	 * @cfg {String} twitterHandle (required)
-	 * 
+	 *
 	 * The Twitter handle that was matched.
 	 */
-	
+
 
 	/**
 	 * Returns the type of match that this class represents.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getType : function() {
 		return 'twitter';
 	},
-	
-	
+
+
 	/**
 	 * Returns a string name for the type of match that this class represents.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getTwitterHandle : function() {
 		return this.twitterHandle;
 	},
-	
+
 
 	/**
 	 * Returns the anchor href that should be generated for the match.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getAnchorHref : function() {
 		return 'https://twitter.com/' + this.twitterHandle;
 	},
-	
-	
+
+
 	/**
 	 * Returns the anchor text that should be generated for the match.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getAnchorText : function() {
 		return '@' + this.twitterHandle;
 	}
-	
+
 } );
 /*global Autolinker */
 /**
  * @class Autolinker.match.Url
  * @extends Autolinker.match.Match
- * 
+ *
  * Represents a Url match found in an input string which should be Autolinked.
- * 
+ *
  * See this class's superclass ({@link Autolinker.match.Match}) for more details.
  */
 Autolinker.match.Url = Autolinker.Util.extend( Autolinker.match.Match, {
-	
+
 	/**
 	 * @cfg {String} url (required)
-	 * 
+	 *
 	 * The url that was matched.
 	 */
-	
+
 	/**
 	 * @cfg {Boolean} protocolUrlMatch (required)
-	 * 
+	 *
 	 * `true` if the URL is a match which already has a protocol (i.e. 'http://'), `false` if the match was from a 'www' or
 	 * known TLD match.
 	 */
-	
+
 	/**
 	 * @cfg {Boolean} protocolRelativeMatch (required)
-	 * 
+	 *
 	 * `true` if the URL is a protocol-relative match. A protocol-relative match is a URL that starts with '//',
 	 * and will be either http:// or https:// based on the protocol that the site is loaded under.
 	 */
-	
+
 	/**
 	 * @cfg {Boolean} stripPrefix (required)
 	 * @inheritdoc Autolinker#stripPrefix
 	 */
-	
+
 
 	/**
 	 * @private
 	 * @property {RegExp} urlPrefixRegex
-	 * 
+	 *
 	 * A regular expression used to remove the 'http://' or 'https://' and/or the 'www.' from URLs.
 	 */
 	urlPrefixRegex: /^(https?:\/\/)?(www\.)?/i,
-	
+
 	/**
 	 * @private
 	 * @property {RegExp} protocolRelativeRegex
-	 * 
+	 *
 	 * The regular expression used to remove the protocol-relative '//' from the {@link #url} string, for purposes
 	 * of {@link #getAnchorText}. A protocol-relative URL is, for example, "//yahoo.com"
 	 */
 	protocolRelativeRegex : /^\/\//,
-	
+
 	/**
 	 * @private
 	 * @property {Boolean} protocolPrepended
-	 * 
+	 *
 	 * Will be set to `true` if the 'http://' protocol has been prepended to the {@link #url} (because the
 	 * {@link #url} did not have a protocol)
 	 */
 	protocolPrepended : false,
-	
+
 
 	/**
 	 * Returns a string name for the type of match that this class represents.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getType : function() {
 		return 'url';
 	},
-	
-	
+
+
 	/**
 	 * Returns the url that was matched, assuming the protocol to be 'http://' if the original
 	 * match was missing a protocol.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getUrl : function() {
 		var url = this.url;
-		
+
 		// if the url string doesn't begin with a protocol, assume 'http://'
 		if( !this.protocolRelativeMatch && !this.protocolUrlMatch && !this.protocolPrepended ) {
 			url = this.url = 'http://' + url;
-			
+
 			this.protocolPrepended = true;
 		}
-		
+
 		return url;
 	},
-	
+
 
 	/**
 	 * Returns the anchor href that should be generated for the match.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getAnchorHref : function() {
 		var url = this.getUrl();
-		
-		return url.replace( /&amp;/g, '&' );  // any &amp;'s in the URL should be converted back to '&' if they were displayed as &amp; in the source html 
+
+		return url.replace( /&amp;/g, '&' );  // any &amp;'s in the URL should be converted back to '&' if they were displayed as &amp; in the source html
 	},
-	
-	
+
+
 	/**
 	 * Returns the anchor text that should be generated for the match.
-	 * 
+	 *
 	 * @return {String}
 	 */
 	getAnchorText : function() {
 		var anchorText = this.getUrl();
-		
+
 		if( this.protocolRelativeMatch ) {
 			// Strip off any protocol-relative '//' from the anchor text
 			anchorText = this.stripProtocolRelativePrefix( anchorText );
@@ -2700,18 +2700,18 @@ Autolinker.match.Url = Autolinker.Util.extend( Autolinker.match.Match, {
 			anchorText = this.stripUrlPrefix( anchorText );
 		}
 		anchorText = this.removeTrailingSlash( anchorText );  // remove trailing slash, if there is one
-		
+
 		return anchorText;
 	},
-	
-	
+
+
 	// ---------------------------------------
-	
+
 	// Utility Functionality
-	
+
 	/**
 	 * Strips the URL prefix (such as "http://" or "https://") from the given text.
-	 * 
+	 *
 	 * @private
 	 * @param {String} text The text of the anchor that is being generated, for which to strip off the
 	 *   url prefix (such as stripping off "http://")
@@ -2720,11 +2720,11 @@ Autolinker.match.Url = Autolinker.Util.extend( Autolinker.match.Match, {
 	stripUrlPrefix : function( text ) {
 		return text.replace( this.urlPrefixRegex, '' );
 	},
-	
-	
+
+
 	/**
 	 * Strips any protocol-relative '//' from the anchor text.
-	 * 
+	 *
 	 * @private
 	 * @param {String} text The text of the anchor that is being generated, for which to strip off the
 	 *   protocol-relative prefix (such as stripping off "//")
@@ -2733,11 +2733,11 @@ Autolinker.match.Url = Autolinker.Util.extend( Autolinker.match.Match, {
 	stripProtocolRelativePrefix : function( text ) {
 		return text.replace( this.protocolRelativeRegex, '' );
 	},
-	
-	
+
+
 	/**
 	 * Removes any trailing slash from the given `anchorText`, in preparation for the text to be displayed.
-	 * 
+	 *
 	 * @private
 	 * @param {String} anchorText The text of the anchor that is being generated, for which to remove any trailing
 	 *   slash ('/') that may exist.
@@ -2749,7 +2749,7 @@ Autolinker.match.Url = Autolinker.Util.extend( Autolinker.match.Match, {
 		}
 		return anchorText;
 	}
-	
+
 } );
 return Autolinker;
 

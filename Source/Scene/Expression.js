@@ -42,7 +42,7 @@ define([
      * @constructor
      *
      * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
-     * @param {Object} [defines] Defines in the style.
+     * @param {*} [defines] Defines in the style.
      *
      * @example
      * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');

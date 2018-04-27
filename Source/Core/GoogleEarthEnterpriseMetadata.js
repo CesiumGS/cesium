@@ -113,7 +113,7 @@ define([
 
         /**
          * Dictionary of provider id to copyright strings.
-         * @type {Object}
+         * @type {*}
          * @default {}
          */
         this.providers = {};

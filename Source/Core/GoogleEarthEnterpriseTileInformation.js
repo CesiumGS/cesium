@@ -39,7 +39,7 @@ define([
     /**
      * Creates GoogleEarthEnterpriseTileInformation from an object
      *
-     * @param {Object} info Object to be cloned
+     * @param {*} info Object to be cloned
      * @param {GoogleEarthEnterpriseTileInformation} [result] The object onto which to store the result.
      * @returns {GoogleEarthEnterpriseTileInformation} The modified result parameter or a new GoogleEarthEnterpriseTileInformation instance if none was provided.
      */

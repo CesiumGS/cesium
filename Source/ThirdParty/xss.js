@@ -154,7 +154,7 @@ function escapeHtml (html) {
  * @param {String} tag
  * @param {String} name
  * @param {String} value
- * @param {Object} cssFilter
+ * @param {*} cssFilter
  * @return {String}
  */
 function safeAttrValue (tag, name, value, cssFilter) {
@@ -755,7 +755,7 @@ var _ = require('./util');
 /**
  * 返回值是否为空
  *
- * @param {Object} obj
+ * @param {*} obj
  * @return {Boolean}
  */
 function isNull (obj) {
@@ -766,7 +766,7 @@ function isNull (obj) {
  * 取标签内的属性列表字符串
  *
  * @param {String} html
- * @return {Object}
+ * @return {*}
  *   - {String} html
  *   - {Boolean} closing
  */
@@ -790,8 +790,8 @@ function getAttrs (html) {
 /**
  * 浅拷贝对象
  *
- * @param {Object} obj
- * @return {Object}
+ * @param {*} obj
+ * @return {*}
  */
 function shallowCopyObject (obj) {
   var ret = {};
@@ -965,7 +965,7 @@ var _ = require('./util');
 /**
  * 返回值是否为空
  *
- * @param {Object} obj
+ * @param {*} obj
  * @return {Boolean}
  */
 function isNull (obj) {
@@ -975,8 +975,8 @@ function isNull (obj) {
 /**
  * 浅拷贝对象
  *
- * @param {Object} obj
- * @return {Object}
+ * @param {*} obj
+ * @return {*}
  */
 function shallowCopyObject (obj) {
   var ret = {};
@@ -990,7 +990,7 @@ function shallowCopyObject (obj) {
  * 创建CSS过滤器
  *
  * @param {Object} options
- *   - {Object} whiteList
+ *   - {*} whiteList
  *   - {Function} onAttr
  *   - {Function} onIgnoreAttr
  *   - {Function} safeAttrValue
