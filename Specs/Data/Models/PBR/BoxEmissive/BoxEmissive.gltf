@@ -95,13 +95,21 @@
   ],
   "materials": [
     {
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
       "emissiveTexture": {
         "index": 0
       },
       "emissiveFactor": [
-        1.0,
-        1.0,
-        1.0
+        1,
+        1,
+        1
       ]
     }
   ],

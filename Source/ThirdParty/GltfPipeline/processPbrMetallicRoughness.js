@@ -513,9 +513,6 @@ define([
         } else {
             if (defined(parameterValues.baseColorFactor)) {
                 fragmentShader += '    vec4 baseColorWithAlpha = u_baseColorFactor;\n';
-            } else if (!hasNormals && (defined(parameterValues.emissiveFactor) || defined(parameterValues.emissiveTexture))) {
-                // Don't use the default base color of (1,1,1) if the material is emissive only. This handling will be better once we support KHR_materials_unlit.
-                fragmentShader += '    vec4 baseColorWithAlpha = vec4(vec3(0.0), 1.0);\n';
             } else {
                 fragmentShader += '    vec4 baseColorWithAlpha = vec4(1.0);\n';
             }
