@@ -408,9 +408,9 @@ define([
         if (hasNormals) {
             fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
-            fragmentShader += 'vec3 lambertianDiffuse(vec3 baseColor) \n' +
+            fragmentShader += 'vec3 lambertianDiffuse(vec3 diffuseColor) \n' +
                 '{\n' +
-                '    return baseColor / M_PI;\n' +
+                '    return diffuseColor / M_PI;\n' +
                 '}\n\n';
 
             fragmentShader += 'vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH) \n' +
@@ -441,6 +441,22 @@ define([
                 '    return roughnessSquared / (M_PI * f * f);\n' +
                 '}\n\n';
         }
+
+        fragmentShader += 'vec3 SRGBtoLINEAR3(vec3 srgbIn) \n' +
+            '{\n' +
+            '    return pow(srgbIn, vec3(2.2));\n' +
+            '}\n\n';
+
+        fragmentShader += 'vec4 SRGBtoLINEAR4(vec4 srgbIn) \n' +
+            '{\n' +
+            '    vec3 linearOut = pow(srgbIn.rgb, vec3(2.2));\n' +
+            '    return vec4(linearOut, srgbIn.a);\n' +
+            '}\n\n';
+
+        fragmentShader += 'vec3 LINEARtoSRGB(vec3 linearIn) \n' +
+            '{\n' +
+            '    return pow(linearIn, vec3(1.0/2.2));\n' +
+            '}\n\n';
 
         fragmentShader += 'void main(void) \n{\n';
 
@@ -490,7 +506,7 @@ define([
 
         // Add base color to fragment shader
         if (defined(parameterValues.baseColorTexture)) {
-            fragmentShader += '    vec4 baseColorWithAlpha = texture2D(u_baseColorTexture, ' + v_texcoord + ');\n';
+            fragmentShader += '    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, ' + v_texcoord + '));\n';
             if (defined(parameterValues.baseColorFactor)) {
                 fragmentShader += '    baseColorWithAlpha *= u_baseColorFactor;\n';
             }
@@ -535,13 +551,15 @@ define([
                     fragmentShader += '    float roughness = 1.0;\n';
                 }
             }
+            fragmentShader += '    vec3 v = -normalize(v_positionEC);\n';
 
             // Generate fragment shader's lighting block
-            fragmentShader += '    vec3 v = -normalize(v_positionEC);\n';
-            fragmentShader += '    vec3 lightColor = vec3(1.0, 1.0, 1.0);\n';
             if (optimizeForCesium) {
+                // The Sun is brighter than your average light source, and has a yellowish tint balanced by the Earth's ambient blue.
+                fragmentShader += '    vec3 lightColor = vec3(1.5, 1.4, 1.2);\n';
                 fragmentShader += '    vec3 l = normalize(czm_sunDirectionEC);\n';
             } else {
+                fragmentShader += '    vec3 lightColor = vec3(1.0, 1.0, 1.0);\n';
                 fragmentShader += '    vec3 l = vec3(0.0, 0.0, 1.0);\n';
             }
             fragmentShader += '    vec3 h = normalize(v + l);\n';
@@ -550,7 +568,7 @@ define([
                 // Figure out if the reflection vector hits the ellipsoid
                 fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
                 fragmentShader += '    float vertexRadius = length(v_positionWC);\n';
-                fragmentShader += '    float horizonDotNadir = 1.0 - ellipsoid.radii.x / vertexRadius;\n';
+                fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, ellipsoid.radii.x / vertexRadius);\n';
                 fragmentShader += '    float reflectionDotNadir = dot(r, normalize(v_positionWC));\n';
                 // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
                 fragmentShader += '    r.x = -r.x;\n';
@@ -567,7 +585,7 @@ define([
 
             fragmentShader += '    vec3 f0 = vec3(0.04);\n';
             fragmentShader += '    float alpha = roughness * roughness;\n';
-            fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness);\n';
+            fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness) * (1.0 - f0);\n';
             fragmentShader += '    vec3 specularColor = mix(f0, baseColor, metalness);\n';
             fragmentShader += '    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);\n';
             fragmentShader += '    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));\n';
@@ -577,37 +595,42 @@ define([
             fragmentShader += '    float G = smithVisibilityGGX(alpha, NdotL, NdotV);\n';
             fragmentShader += '    float D = GGX(alpha, NdotH);\n';
 
-            fragmentShader += '    vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(baseColor);\n';
+            fragmentShader += '    vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);\n';
             fragmentShader += '    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
             fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
             if (optimizeForCesium) {
-                fragmentShader += '    float inverseRoughness = 1.0 - roughness;\n';
+                fragmentShader += '    float inverseRoughness = 1.04 - roughness;\n';
                 fragmentShader += '    inverseRoughness *= inverseRoughness;\n';
                 fragmentShader += '    vec3 sceneSkyBox = textureCube(czm_environmentMap, r).rgb * inverseRoughness;\n';
 
                 fragmentShader += '    float atmosphereHeight = 0.05;\n';
                 fragmentShader += '    float blendRegionSize = 0.1 * ((1.0 - inverseRoughness) * 8.0 + 1.1 - horizonDotNadir);\n';
-                fragmentShader += '    float farAboveHorizon = clamp(horizonDotNadir - blendRegionSize * 0.5, 1.0e-10 - blendRegionSize, 0.99999);\n';
+                fragmentShader += '    float blendRegionOffset = roughness * -1.0;\n';
+                fragmentShader += '    float farAboveHorizon = clamp(horizonDotNadir - blendRegionSize * 0.5 + blendRegionOffset, 1.0e-10 - blendRegionSize, 0.99999);\n';
                 fragmentShader += '    float aroundHorizon = clamp(horizonDotNadir + blendRegionSize * 0.5, 1.0e-10 - blendRegionSize, 0.99999);\n';
                 fragmentShader += '    float farBelowHorizon = clamp(horizonDotNadir + blendRegionSize * 1.5, 1.0e-10 - blendRegionSize, 0.99999);\n';
                 fragmentShader += '    float smoothstepHeight = smoothstep(0.0, atmosphereHeight, horizonDotNadir);\n';
-                fragmentShader += '    float lightScale = smoothstepHeight * 1.5 + 1.0;\n';
 
-                fragmentShader += '    vec3 diffuseIrradiance = mix(vec3(0.5), vec3(0.05), smoothstepHeight);\n';
-                fragmentShader += '    vec3 belowHorizonColor = mix(vec3(0.1, 0.2, 0.4), vec3(0.2, 0.5, 0.7), smoothstepHeight);\n';
+                fragmentShader += '    vec3 belowHorizonColor = mix(vec3(0.1, 0.15, 0.25), vec3(0.4, 0.7, 0.9), smoothstepHeight);\n';
                 fragmentShader += '    vec3 nadirColor = belowHorizonColor * 0.5;\n';
-                fragmentShader += '    vec3 aboveHorizonColor = vec3(0.8, 0.9, 0.95);\n';
-                fragmentShader += '    vec3 blueSkyColor = mix(vec3(0.09, 0.13, 0.24), aboveHorizonColor, reflectionDotNadir * inverseRoughness * 0.5 + 0.5);\n';
+                fragmentShader += '    vec3 aboveHorizonColor = mix(vec3(0.9, 1.0, 1.2), belowHorizonColor, roughness * 0.5);\n';
+                fragmentShader += '    vec3 blueSkyColor = mix(vec3(0.18, 0.26, 0.48), aboveHorizonColor, reflectionDotNadir * inverseRoughness * 0.5 + 0.75);\n';
                 fragmentShader += '    vec3 zenithColor = mix(blueSkyColor, sceneSkyBox, smoothstepHeight);\n';
 
-                fragmentShader += '    vec3 specularIrradiance = mix(zenithColor, aboveHorizonColor, smoothstep(farAboveHorizon, aroundHorizon, reflectionDotNadir) * inverseRoughness);\n';
+                fragmentShader += '    vec3 blueSkyDiffuseColor = vec3(0.7, 0.85, 0.9);\n';
+                fragmentShader += '    float diffuseIrradianceFromEarth = (1.0 - horizonDotNadir) * (reflectionDotNadir * 0.25 + 0.75) * smoothstepHeight;\n';
+                fragmentShader += '    float diffuseIrradianceFromSky = (1.0 - smoothstepHeight) * (1.0 - (reflectionDotNadir * 0.25 + 0.25));\n';
+                fragmentShader += '    vec3 diffuseIrradiance = blueSkyDiffuseColor * clamp(diffuseIrradianceFromEarth + diffuseIrradianceFromSky, 0.0, 1.0);\n';
+
+                fragmentShader += '    float notDistantRough = (1.0 - horizonDotNadir * roughness * 0.8);\n';
+                fragmentShader += '    vec3 specularIrradiance = mix(zenithColor, aboveHorizonColor, smoothstep(farAboveHorizon, aroundHorizon, reflectionDotNadir) * notDistantRough);\n';
                 fragmentShader += '    specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);\n';
                 fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
 
                 fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
-                fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * (specularColor * brdfLut.x + brdfLut.y));\n';
-                fragmentShader += '    color = color * lightScale + IBLColor;\n';
+                fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
+                fragmentShader += '    color += IBLColor;\n';
             }
         } else {
             fragmentShader += '    vec3 color = baseColor;\n';
@@ -617,7 +640,7 @@ define([
             fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
         }
         if (defined(parameterValues.emissiveTexture)) {
-            fragmentShader += '    vec3 emissive = texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb;\n';
+            fragmentShader += '    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb);\n';
             if (defined(parameterValues.emissiveFactor)) {
                 fragmentShader += '    emissive *= u_emissiveFactor;\n';
             }
@@ -630,6 +653,7 @@ define([
         }
 
         // Final color
+        fragmentShader += '    color = LINEARtoSRGB(color);\n';
         var alphaMode = material.alphaMode;
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {

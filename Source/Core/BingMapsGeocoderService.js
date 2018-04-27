@@ -24,24 +24,13 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Scene} options.scene The scene
      * @param {String} [options.key] A key to use with the Bing Maps geocoding service
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options.scene', options.scene);
-        //>>includeEnd('debug');
 
         var key = options.key;
         this._key = BingMapsApi.getKey(key);
-
-        if (defined(key)) {
-            var errorCredit = BingMapsApi.getErrorCredit(key);
-            if (defined(errorCredit)) {
-                options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
-            }
-        }
 
         this._resource = new Resource({
             url: url,
