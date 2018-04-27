@@ -21,9 +21,7 @@ define([
      */
     function getFilenameFromUri(uri) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(uri)) {
-            throw new DeveloperError('uri is required.');
-        }
+        Check.defined('uri', uri);
         //>>includeEnd('debug');
 
         var uriObject = new Uri(uri);

@@ -1,10 +1,12 @@
 define([
         '../ThirdParty/mersenne-twister',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
         MersenneTwister,
+        Check,
         defaultValue,
         defined,
         DeveloperError) {
@@ -410,6 +412,7 @@ define([
      */
     CesiumMath.toRadians = function(degrees) {
         //>>includeStart('debug', pragmas.debug);
+        Check.defined('degrees', degrees);
         if (!defined(degrees)) {
             throw new DeveloperError('degrees is required.');
         }
@@ -424,9 +427,7 @@ define([
      */
     CesiumMath.toDegrees = function(radians) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(radians)) {
-            throw new DeveloperError('radians is required.');
-        }
+        Check.defined('radians', radians);
         //>>includeEnd('debug');
         return radians * CesiumMath.DEGREES_PER_RADIAN;
     };
@@ -443,9 +444,7 @@ define([
      */
     CesiumMath.convertLongitudeRange = function(angle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+        Check.defined('angle', angle);
         //>>includeEnd('debug');
         var twoPi = CesiumMath.TWO_PI;
 
@@ -474,9 +473,7 @@ define([
      */
     CesiumMath.clampToLatitudeRange = function(angle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+        Check.defined('angle', angle);
         //>>includeEnd('debug');
 
         return CesiumMath.clamp(angle, -1*CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
@@ -490,9 +487,7 @@ define([
      */
     CesiumMath.negativePiToPi = function(angle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+        Check.defined('angle', angle);
         //>>includeEnd('debug');
         return CesiumMath.zeroToTwoPi(angle + CesiumMath.PI) - CesiumMath.PI;
     };
@@ -505,9 +500,7 @@ define([
      */
     CesiumMath.zeroToTwoPi = function(angle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+         Check.defined('angle', angle);
         //>>includeEnd('debug');
         var mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
         if (Math.abs(mod) < CesiumMath.EPSILON14 && Math.abs(angle) > CesiumMath.EPSILON14) {
@@ -525,12 +518,8 @@ define([
      */
     CesiumMath.mod = function(m, n) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(m)) {
-            throw new DeveloperError('m is required.');
-        }
-        if (!defined(n)) {
-            throw new DeveloperError('n is required.');
-        }
+        Check.defined('m', m);
+        Check.defined('n', n);
         //>>includeEnd('debug');
         return ((m % n) + n) % n;
     };
@@ -555,15 +544,9 @@ define([
      */
     CesiumMath.equalsEpsilon = function(left, right, relativeEpsilon, absoluteEpsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
-        if (!defined(relativeEpsilon)) {
-            throw new DeveloperError('relativeEpsilon is required.');
-        }
+        Check.defined('left', left);
+        Check.defined('right', right);
+        Check.defined('relativeEpsilon', relativeEpsilon);
         //>>includeEnd('debug');
         absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
         var absDiff = Math.abs(left - right);
@@ -589,9 +572,7 @@ define([
      */
     CesiumMath.factorial = function(n) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof n !== 'number' || n < 0) {
-            throw new DeveloperError('A number greater than or equal to 0 is required.');
-        }
+        Check.number.greaterThanOrEquals('n', n, 0);
         //>>includeEnd('debug');
 
         var length = factorials.length;
@@ -622,9 +603,9 @@ define([
         minimumValue = defaultValue(minimumValue, 0.0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(n)) {
-            throw new DeveloperError('n is required.');
-        }
+        Check.defined('n', n);
+        Check.defined('maximumValue', maximumValue);
+        Check.defined('minimumValue', minimumValue);
         if (maximumValue <= minimumValue) {
             throw new DeveloperError('maximumValue must be greater than minimumValue.');
         }
@@ -651,9 +632,7 @@ define([
      */
     CesiumMath.isPowerOfTwo = function(n) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof n !== 'number' || n < 0) {
-            throw new DeveloperError('A number greater than or equal to 0 is required.');
-        }
+        Check.number.greaterThanOrEquals('n', n, 0);
         //>>includeEnd('debug');
 
         return (n !== 0) && ((n & (n - 1)) === 0);
@@ -673,9 +652,7 @@ define([
      */
     CesiumMath.nextPowerOfTwo = function(n) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof n !== 'number' || n < 0) {
-            throw new DeveloperError('A number greater than or equal to 0 is required.');
-        }
+        Check.number.greaterThanOrEquals('n', n, 0);
         //>>includeEnd('debug');
 
         // From http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
@@ -700,15 +677,9 @@ define([
      */
     CesiumMath.clamp = function(value, min, max) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(min)) {
-            throw new DeveloperError('min is required.');
-        }
-        if (!defined(max)) {
-            throw new DeveloperError('max is required.');
-        }
+        Check.defined('value', value);
+        Check.defined('min', min);
+        Check.defined('max', max);
         //>>includeEnd('debug');
         return value < min ? min : value > max ? max : value;
     };
@@ -723,9 +694,7 @@ define([
      */
     CesiumMath.setRandomNumberSeed = function(seed) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(seed)) {
-            throw new DeveloperError('seed is required.');
-        }
+        Check.defined('seed', seed);
         //>>includeEnd('debug');
 
         randomNumberGenerator = new MersenneTwister(seed);
@@ -765,9 +734,7 @@ define([
      */
     CesiumMath.acosClamped = function(value) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
+        Check.defined('value', value);
         //>>includeEnd('debug');
         return Math.acos(CesiumMath.clamp(value, -1.0, 1.0));
     };
@@ -782,9 +749,7 @@ define([
      */
     CesiumMath.asinClamped = function(value) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
+        Check.defined('value', value);
         //>>includeEnd('debug');
         return Math.asin(CesiumMath.clamp(value, -1.0, 1.0));
     };
@@ -798,12 +763,8 @@ define([
      */
     CesiumMath.chordLength = function(angle, radius) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
-        if (!defined(radius)) {
-            throw new DeveloperError('radius is required.');
-        }
+        Check.defined('angle', angle);
+        Check.defined('radius', radius);
         //>>includeEnd('debug');
         return 2.0 * radius * Math.sin(angle * 0.5);
     };
@@ -817,12 +778,8 @@ define([
      */
     CesiumMath.logBase = function(number, base) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(number)) {
-            throw new DeveloperError('number is required.');
-        }
-        if (!defined(base)) {
-            throw new DeveloperError('base is required.');
-        }
+        Check.defined('number', number);
+        Check.defined('base', base);
         //>>includeEnd('debug');
         return Math.log(number) / Math.log(base);
     };

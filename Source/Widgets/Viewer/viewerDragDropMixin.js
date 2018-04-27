@@ -52,6 +52,7 @@ define([
      */
     function viewerDragDropMixin(viewer, options) {
         //>>includeStart('debug', pragmas.debug);
+        // TODO: HERE
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -98,7 +99,7 @@ define([
                 },
                 set : function(value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value)) {
+                    if (!defined(value)) { // TODO: HERE
                         throw new DeveloperError('value is required.');
                     }
                     //>>includeEnd('debug');

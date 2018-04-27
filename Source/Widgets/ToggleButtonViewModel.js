@@ -24,7 +24,7 @@ define([
      */
     function ToggleButtonViewModel(command, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(command)) {
+        if (!defined(command)) { // TODO: HERE
             throw new DeveloperError('command is required.');
         }
         //>>includeEnd('debug');

@@ -12,6 +12,7 @@ Change Log
 * `BingMapsImageryProvider` is no longer the default base imagery layer.
 * `BingMapsGeocoderService` is no longer the default geocoder service.
 * Cesium no longer ships with a demo Bing Maps API key.
+* `ClippingPlaneCollection` now uses `ClippingPlane` objects instead of`Plane` objects. [#6498](https://github.com/AnalyticalGraphicsInc/cesium/pull/6498) 
 
 ##### Deprecated :hourglass_flowing_sand:
 * `Particle.size`, `ParticleSystem.rate`, `ParticleSystem.lifeTime`, `ParticleSystem.life`, `ParticleSystem.minimumLife`, and `ParticleSystem.maximumLife` have been renamed to `Particle.imageSize`, `ParticleSystem.emissionRate`, `ParticleSystem.lifetime`, `ParticleSystem.particleLife`, `ParticleSystem.minimumParticleLife`, and `ParticleSystem.maximumParticleLife`. Use of the `size`, `rate`, `lifeTime`, `life`, `minimumLife`, and `maximumLife` parameters is deprecated and will be removed in Cesium 1.46.

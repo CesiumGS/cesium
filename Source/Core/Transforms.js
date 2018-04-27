@@ -142,10 +142,9 @@ define([
       } else {
           resultat = function(origin, ellipsoid, result) {
               //>>includeStart('debug', pragmas.debug);
-              if (!defined(origin)) {
-                  throw new DeveloperError('origin is required.');
-              }
+              Check.defined('origin', origin);
               //>>includeEnd('debug');
+
               if (!defined(result)) {
                   result = new Matrix4();
               }
@@ -407,9 +406,7 @@ define([
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(date)) {
-            throw new DeveloperError('date is required.');
-        }
+        Check.defined('date', date);
         //>>includeEnd('debug');
 
         // GMST is actually computed using UT1.  We're using UTC as an approximation of UT1.
@@ -543,9 +540,7 @@ define([
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(date)) {
-            throw new DeveloperError('date is required.');
-        }
+        Check.defined('date', date);
         //>>includeEnd('debug');
         if (!defined(result)) {
             result = new Matrix3();
@@ -591,9 +586,7 @@ define([
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(date)) {
-            throw new DeveloperError('date is required.');
-        }
+        Check.defined('date', date);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -715,17 +708,9 @@ define([
      */
     Transforms.pointToGLWindowCoordinates = function(modelViewProjectionMatrix, viewportTransformation, point, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(modelViewProjectionMatrix)) {
-            throw new DeveloperError('modelViewProjectionMatrix is required.');
-        }
-
-        if (!defined(viewportTransformation)) {
-            throw new DeveloperError('viewportTransformation is required.');
-        }
-
-        if (!defined(point)) {
-            throw new DeveloperError('point is required.');
-        }
+        Check.defined('modelViewProjectionMatrix', modelViewProjectionMatrix);
+        Check.defined('viewportTransformation', viewportTransformation);
+        Check.defined('point', point);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -749,13 +734,8 @@ define([
      */
     Transforms.rotationMatrixFromPositionVelocity = function(position, velocity, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-
-        if (!defined(velocity)) {
-            throw new DeveloperError('velocity is required.');
-        }
+        Check.defined('position', position);
+        Check.defined('velocity', velocity);
         //>>includeEnd('debug');
 
         var normal = defaultValue(ellipsoid, Ellipsoid.WGS84).geodeticSurfaceNormal(position, normalScratch);
@@ -804,15 +784,9 @@ define([
      */
     Transforms.basisTo2D = function(projection, matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(projection)) {
-            throw new DeveloperError('projection is required.');
-        }
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('projection', projection);
+        Check.defined('matrix', matrix);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var rtcCenter = Matrix4.getTranslation(matrix, scratchCenter);
@@ -839,15 +813,9 @@ define([
      */
     Transforms.wgs84To2DModelMatrix = function(projection, center, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(projection)) {
-            throw new DeveloperError('projection is required.');
-        }
-        if (!defined(center)) {
-            throw new DeveloperError('center is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('projection', projection);
+        Check.defined('center', center);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var ellipsoid = projection.ellipsoid;
