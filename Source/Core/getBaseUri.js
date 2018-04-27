@@ -1,11 +1,11 @@
 define([
         '../ThirdParty/Uri',
-        './defined',
-        './DeveloperError'
+        './Check',
+        './defined'
     ], function(
         Uri,
-        defined,
-        DeveloperError) {
+        Check,
+        defined) {
     'use strict';
 
     /**
@@ -25,9 +25,7 @@ define([
      */
     function getBaseUri(uri, includeQuery) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(uri)) {
-            throw new DeveloperError('uri is required.');
-        }
+        Check.defined('uri', uri);
         //>>includeEnd('debug');
 
         var basePath = '';

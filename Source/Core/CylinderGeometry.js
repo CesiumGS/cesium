@@ -2,11 +2,11 @@ define([
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './CylinderGeometryLibrary',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -18,11 +18,11 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Check,
         ComponentDatatype,
         CylinderGeometryLibrary,
         defaultValue,
         defined,
-        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -74,18 +74,10 @@ define([
         var slices = defaultValue(options.slices, 128);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(length)) {
-            throw new DeveloperError('options.length must be defined.');
-        }
-        if (!defined(topRadius)) {
-            throw new DeveloperError('options.topRadius must be defined.');
-        }
-        if (!defined(bottomRadius)) {
-            throw new DeveloperError('options.bottomRadius must be defined.');
-        }
-        if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater than or equal to 3.');
-        }
+        Check.defined('length', length);
+        Check.defined('topRadius', topRadius);
+        Check.defined('bottomRadius', bottomRadius);
+        Check.number.greaterThanOrEquals('slices', slices, 3);
         //>>includeEnd('debug');
 
         this._length = length;
@@ -113,12 +105,8 @@ define([
      */
     CylinderGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -153,9 +141,7 @@ define([
      */
     CylinderGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

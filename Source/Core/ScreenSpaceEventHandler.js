@@ -1,6 +1,7 @@
 define([
         './AssociativeArray',
         './Cartesian2',
+        './Check',
         './defaultValue',
         './defined',
         './destroyObject',
@@ -12,6 +13,7 @@ define([
     ], function(
         AssociativeArray,
         Cartesian2,
+        Check,
         defaultValue,
         defined,
         destroyObject,
@@ -692,12 +694,8 @@ define([
      */
     ScreenSpaceEventHandler.prototype.setInputAction = function(action, type, modifier) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(action)) {
-            throw new DeveloperError('action is required.');
-        }
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
+        Check.defined('action', action);
+        Check.defined('type', type);
         //>>includeEnd('debug');
 
         var key = getInputEventKey(type, modifier);
@@ -716,9 +714,7 @@ define([
      */
     ScreenSpaceEventHandler.prototype.getInputAction = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
+        Check.defined('type', type);
         //>>includeEnd('debug');
 
         var key = getInputEventKey(type, modifier);
@@ -737,9 +733,7 @@ define([
      */
     ScreenSpaceEventHandler.prototype.removeInputAction = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
+        Check.defined('type', type);
         //>>includeEnd('debug');
 
         var key = getInputEventKey(type, modifier);

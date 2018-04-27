@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -12,6 +13,7 @@ define([
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
+        Check,
         Credit,
         defaultValue,
         defined,
@@ -51,9 +53,7 @@ define([
     function SingleTileImageryProvider(options) {
         options = defaultValue(options, {});
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.defined('options.url', options.url);
         //>>includeEnd('debug');
 
         var resource = Resource.createIfNeeded(options.url);

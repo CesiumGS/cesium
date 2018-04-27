@@ -1,6 +1,7 @@
 define([
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -15,6 +16,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -65,15 +67,9 @@ define([
         var subdivisions = Math.round(defaultValue(options.subdivisions, 128));
 
         //>>includeStart('debug', pragmas.debug);
-        if (stackPartitions < 1) {
-            throw new DeveloperError('options.stackPartitions cannot be less than 1');
-        }
-        if (slicePartitions < 0) {
-            throw new DeveloperError('options.slicePartitions cannot be less than 0');
-        }
-        if (subdivisions < 0) {
-            throw new DeveloperError('options.subdivisions must be greater than or equal to zero.');
-        }
+        Check.number.greaterThanOrEquals('stackPartitions', stackPartitions, 1);
+        Check.number.greaterThanOrEquals('slicePartitions', slicePartitions, 0);
+        Check.number.greaterThanOrEquals('subdivisions', subdivisions, 0);
         //>>includeEnd('debug');
 
         this._radii = Cartesian3.clone(radii);
@@ -100,12 +96,8 @@ define([
      */
     EllipsoidOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -138,9 +130,7 @@ define([
      */
     EllipsoidOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

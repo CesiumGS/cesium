@@ -1,5 +1,6 @@
 define([
         '../ThirdParty/when',
+        './Check',
         './CompressedTextureBuffer',
         './defined',
         './DeveloperError',
@@ -7,6 +8,7 @@ define([
         './TaskProcessor'
     ], function(
         when,
+        Check,
         CompressedTextureBuffer,
         defined,
         DeveloperError,
@@ -48,9 +50,7 @@ define([
      */
     function loadCRN(resourceOrUrlOrBuffer) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(resourceOrUrlOrBuffer)) {
-            throw new DeveloperError('resourceOrUrlOrBuffer is required.');
-        }
+        Check.defined('resourceOrUrlOrBuffer', resourceOrUrlOrBuffer);
         //>>includeEnd('debug');
 
         var loadPromise;

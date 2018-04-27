@@ -350,7 +350,7 @@ define([
      */
     function Viewer(container, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(container)) {
+        if (!defined(container)) { // TODO: HERE
             throw new DeveloperError('container is required.');
         }
         //>>includeEnd('debug');
@@ -1313,7 +1313,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      */
     Viewer.prototype.extend = function(mixin, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(mixin)) {
+        if (!defined(mixin)) { // TODO: HERE
             throw new DeveloperError('mixin is required.');
         }
         //>>includeEnd('debug')
@@ -1766,7 +1766,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
     function zoomToOrFly(that, zoomTarget, options, isFlight) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(zoomTarget)) {
+        if (!defined(zoomTarget)) { // TODO: HERE
             throw new DeveloperError('zoomTarget is required.');
         }
         //>>includeEnd('debug');

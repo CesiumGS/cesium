@@ -3,6 +3,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartesian4',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -18,6 +19,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -45,9 +47,7 @@ define([
      */
     function EllipsoidTangentPlane(origin, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(origin)) {
-            throw new DeveloperError('origin is required.');
-        }
+        Check.defined('origin', origin);
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -151,9 +151,7 @@ define([
      */
     EllipsoidTangentPlane.fromPoints = function(cartesians, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesians)) {
-            throw new DeveloperError('cartesians is required.');
-        }
+        Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
 
         var box = AxisAlignedBoundingBox.fromPoints(cartesians, tmp);
@@ -172,9 +170,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
+        Check.defined('cartesian', cartesian);
         //>>includeEnd('debug');
 
         var ray = scratchProjectPointOntoPlaneRay;
@@ -214,9 +210,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesians)) {
-            throw new DeveloperError('cartesians is required.');
-        }
+        Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -245,9 +239,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointToNearestOnPlane = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
+        Check.defined('cartesian', cartesian);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -284,9 +276,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointsToNearestOnPlane = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesians)) {
-            throw new DeveloperError('cartesians is required.');
-        }
+        Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -311,9 +301,7 @@ define([
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesians)) {
-            throw new DeveloperError('cartesians is required.');
-        }
+        Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
 
         var length = cartesians.length;

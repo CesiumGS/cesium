@@ -1,9 +1,9 @@
 define([
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Interval',
         './Math',
         './Matrix3',
@@ -13,9 +13,9 @@ define([
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         Interval,
         CesiumMath,
         Matrix3,
@@ -41,12 +41,8 @@ define([
      */
     IntersectionTests.rayPlane = function(ray, plane, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ray)) {
-            throw new DeveloperError('ray is required.');
-        }
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.defined('ray', ray);
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -97,18 +93,10 @@ define([
      */
     IntersectionTests.rayTriangleParametric  = function(ray, p0, p1, p2, cullBackFaces) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ray)) {
-            throw new DeveloperError('ray is required.');
-        }
-        if (!defined(p0)) {
-            throw new DeveloperError('p0 is required.');
-        }
-        if (!defined(p1)) {
-            throw new DeveloperError('p1 is required.');
-        }
-        if (!defined(p2)) {
-            throw new DeveloperError('p2 is required.');
-        }
+        Check.defined('ray', ray);
+        Check.defined('p0', p0);
+        Check.defined('p1', p1);
+        Check.defined('p2', p2);
         //>>includeEnd('debug');
 
         cullBackFaces = defaultValue(cullBackFaces, false);
@@ -222,21 +210,11 @@ define([
      */
     IntersectionTests.lineSegmentTriangle = function(v0, v1, p0, p1, p2, cullBackFaces, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(v0)) {
-            throw new DeveloperError('v0 is required.');
-        }
-        if (!defined(v1)) {
-            throw new DeveloperError('v1 is required.');
-        }
-        if (!defined(p0)) {
-            throw new DeveloperError('p0 is required.');
-        }
-        if (!defined(p1)) {
-            throw new DeveloperError('p1 is required.');
-        }
-        if (!defined(p2)) {
-            throw new DeveloperError('p2 is required.');
-        }
+        Check.defined('v0', v0);
+        Check.defined('v1', v1);
+        Check.defined('p0', p0);
+        Check.defined('p1', p1);
+        Check.defined('p2', p2);
         //>>includeEnd('debug');
 
         var ray = scratchLineSegmentTriangleRay;
@@ -330,12 +308,8 @@ define([
      */
     IntersectionTests.raySphere = function(ray, sphere, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ray)) {
-            throw new DeveloperError('ray is required.');
-        }
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
+        Check.defined('ray', ray);
+        Check.defined('sphere', sphere);
         //>>includeEnd('debug');
 
         result = raySphere(ray, sphere, result);
@@ -361,15 +335,9 @@ define([
      */
     IntersectionTests.lineSegmentSphere = function(p0, p1, sphere, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(p0)) {
-            throw new DeveloperError('p0 is required.');
-        }
-        if (!defined(p1)) {
-            throw new DeveloperError('p1 is required.');
-        }
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
+        Check.defined('p0', p0);
+        Check.defined('p1', p1);
+        Check.defined('sphere', sphere);
         //>>includeEnd('debug');
 
         var ray = scratchLineSegmentRay;
@@ -401,12 +369,8 @@ define([
      */
     IntersectionTests.rayEllipsoid = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ray)) {
-            throw new DeveloperError('ray is required.');
-        }
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('ellipsoid is required.');
-        }
+        Check.defined('ray', ray);
+        Check.defined('ellipsoid', ellipsoid);
         //>>includeEnd('debug');
 
         var inverseRadii = ellipsoid.oneOverRadii;
@@ -598,12 +562,8 @@ define([
      */
     IntersectionTests.grazingAltitudeLocation = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ray)) {
-            throw new DeveloperError('ray is required.');
-        }
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('ellipsoid is required.');
-        }
+        Check.defined('ray', ray);
+        Check.defined('ellipsoid', ellipsoid);
         //>>includeEnd('debug');
 
         var position = ray.origin;
@@ -714,15 +674,9 @@ define([
      */
     IntersectionTests.lineSegmentPlane = function(endPoint0, endPoint1, plane, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(endPoint0)) {
-            throw new DeveloperError('endPoint0 is required.');
-        }
-        if (!defined(endPoint1)) {
-            throw new DeveloperError('endPoint1 is required.');
-        }
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.defined('endPoint0', endPoint0);
+        Check.defined('endPoint1', endPoint1);
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -775,12 +729,10 @@ define([
      */
     IntersectionTests.trianglePlaneIntersection = function(p0, p1, p2, plane) {
         //>>includeStart('debug', pragmas.debug);
-        if ((!defined(p0)) ||
-            (!defined(p1)) ||
-            (!defined(p2)) ||
-            (!defined(plane))) {
-            throw new DeveloperError('p0, p1, p2, and plane are required.');
-        }
+        Check.defined('p0', p0);
+        Check.defined('p1', p1);
+        Check.defined('p2', p2);
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
 
         var planeNormal = plane.normal;

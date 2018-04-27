@@ -1,5 +1,6 @@
 define([
         '../ThirdParty/when',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -14,6 +15,7 @@ define([
         './TerrainProvider'
     ], function(
         when,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -102,15 +104,10 @@ define([
      */
     function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.buffer)) {
-            throw new DeveloperError('options.buffer is required.');
-        }
-        if (!defined(options.width)) {
-            throw new DeveloperError('options.width is required.');
-        }
-        if (!defined(options.height)) {
-            throw new DeveloperError('options.height is required.');
-        }
+        Check.defined('options', options);
+        Check.defined('options.buffer', options.buffer);
+        Check.typeOf.number('options.width', options.width);
+        Check.typeOf.number('options.height', options.height);
         //>>includeEnd('debug');
 
         this._buffer = options.buffer;
@@ -183,18 +180,10 @@ define([
      */
     HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(x)) {
-            throw new DeveloperError('x is required.');
-        }
-        if (!defined(y)) {
-            throw new DeveloperError('y is required.');
-        }
-        if (!defined(level)) {
-            throw new DeveloperError('level is required.');
-        }
+        Check.defined('tilingScheme', tilingScheme);
+        Check.typeOf.number('x', x);
+        Check.typeOf.number('y', y);
+        Check.typeOf.number('level', level);
         //>>includeEnd('debug');
 
         var ellipsoid = tilingScheme.ellipsoid;
@@ -306,27 +295,13 @@ define([
      */
     HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(thisX)) {
-            throw new DeveloperError('thisX is required.');
-        }
-        if (!defined(thisY)) {
-            throw new DeveloperError('thisY is required.');
-        }
-        if (!defined(thisLevel)) {
-            throw new DeveloperError('thisLevel is required.');
-        }
-        if (!defined(descendantX)) {
-            throw new DeveloperError('descendantX is required.');
-        }
-        if (!defined(descendantY)) {
-            throw new DeveloperError('descendantY is required.');
-        }
-        if (!defined(descendantLevel)) {
-            throw new DeveloperError('descendantLevel is required.');
-        }
+        Check.defined('tilingScheme', tilingScheme);
+        Check.typeOf.number('thisX', thisX);
+        Check.typeOf.number('thisY', thisY);
+        Check.typeOf.number('thisLevel', thisLevel);
+        Check.typeOf.number('descendantX', descendantX);
+        Check.typeOf.number('descendantY', descendantY);
+        Check.typeOf.number('descendantLevel', descendantLevel);
         var levelDifference = descendantLevel - thisLevel;
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
@@ -401,18 +376,10 @@ define([
      */
     HeightmapTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(thisX)) {
-            throw new DeveloperError('thisX is required.');
-        }
-        if (!defined(thisY)) {
-            throw new DeveloperError('thisY is required.');
-        }
-        if (!defined(childX)) {
-            throw new DeveloperError('childX is required.');
-        }
-        if (!defined(childY)) {
-            throw new DeveloperError('childY is required.');
-        }
+        Check.typeOf.number('thisX', thisX);
+        Check.typeOf.number('thisY', thisY);
+        Check.typeOf.number('childX', childX);
+        Check.typeOf.number('childY', childY);
         //>>includeEnd('debug');
 
         var bitNumber = 2; // northwest child

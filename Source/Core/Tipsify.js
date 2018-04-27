@@ -1,8 +1,10 @@
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError) {
@@ -51,9 +53,7 @@ define([
         var cacheSize = defaultValue(options.cacheSize, 24);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(indices)) {
-            throw new DeveloperError('indices is required.');
-        }
+        Check.defined('indices', indices);
         //>>includeEnd('debug');
 
         var numIndices = indices.length;
@@ -62,12 +62,8 @@ define([
         if (numIndices < 3 || numIndices % 3 !== 0) {
             throw new DeveloperError('indices length must be a multiple of three.');
         }
-        if (maximumIndex <= 0) {
-            throw new DeveloperError('maximumIndex must be greater than zero.');
-        }
-        if (cacheSize < 3) {
-            throw new DeveloperError('cacheSize must be greater than two.');
-        }
+        Check.number.greaterThan('maximumIndex', maximumIndex, 0);
+        Check.number.greaterThan('cacheSize', cacheSize, 2);
         //>>includeEnd('debug');
 
         // Compute the maximumIndex if not given
@@ -176,9 +172,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(indices)) {
-            throw new DeveloperError('indices is required.');
-        }
+        Check.defined('indices', indices);
         //>>includeEnd('debug');
 
         var numIndices = indices.length;
@@ -187,12 +181,8 @@ define([
         if (numIndices < 3 || numIndices % 3 !== 0) {
             throw new DeveloperError('indices length must be a multiple of three.');
         }
-        if (maximumIndex <= 0) {
-            throw new DeveloperError('maximumIndex must be greater than zero.');
-        }
-        if (cacheSize < 3) {
-            throw new DeveloperError('cacheSize must be greater than two.');
-        }
+        Check.number.greaterThan('maximumIndex', maximumIndex, 0);
+        Check.number.greaterThan('cacheSize', cacheSize, 2);
         //>>includeEnd('debug');
 
         // Determine maximum index

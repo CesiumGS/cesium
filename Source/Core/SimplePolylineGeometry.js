@@ -1,6 +1,7 @@
 define([
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './Color',
         './ComponentDatatype',
         './defaultValue',
@@ -17,6 +18,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Check,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -110,9 +112,8 @@ define([
         var colorsPerVertex = defaultValue(options.colorsPerVertex, false);
 
         //>>includeStart('debug', pragmas.debug);
-        if ((!defined(positions)) || (positions.length < 2)) {
-            throw new DeveloperError('At least two positions are required.');
-        }
+        Check.defined('positions', positions);
+        Check.number.greaterThanOrEquals('positions.length', positions.length, 2);
         if (defined(colors) && ((colorsPerVertex && colors.length < positions.length) || (!colorsPerVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
         }

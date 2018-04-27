@@ -265,14 +265,12 @@ define([
      */
     function fromTangentPlaneExtents(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(minimumX) ||
-            !defined(maximumX) ||
-            !defined(minimumY) ||
-            !defined(maximumY) ||
-            !defined(minimumZ) ||
-            !defined(maximumZ)) {
-            throw new DeveloperError('all extents (minimum/maximum X/Y/Z) are required.');
-        }
+        Check.typeOf.number('minimumX', minimumX);
+        Check.typeOf.number('maximumX', maximumX);
+        Check.typeOf.number('minimumY', minimumY);
+        Check.typeOf.number('maximumY', maximumY);
+        Check.typeOf.number('minimumZ', minimumZ);
+        Check.typeOf.number('maximumZ', maximumZ);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -324,9 +322,7 @@ define([
      */
     OrientedBoundingBox.fromRectangle = function(rectangle, minimumHeight, maximumHeight, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.defined('rectangle', rectangle);
         if (rectangle.width < 0.0 || rectangle.width > CesiumMath.TWO_PI) {
             throw new DeveloperError('Rectangle width must be between 0 and 2*pi');
         }
@@ -431,13 +427,8 @@ define([
      */
     OrientedBoundingBox.intersectPlane = function(box, plane) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(box)) {
-            throw new DeveloperError('box is required.');
-        }
-
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.defined('box', box);
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
 
         var center = box.center;
@@ -482,12 +473,8 @@ define([
         // See Geometric Tools for Computer Graphics 10.4.2
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(box)) {
-            throw new DeveloperError('box is required.');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
+        Check.defined('box', box);
+        Check.defined('cartesian', cartesian);
         //>>includeEnd('debug');
 
         var offset = Cartesian3.subtract(cartesian, box.center, scratchOffset);
@@ -557,17 +544,9 @@ define([
      */
     OrientedBoundingBox.computePlaneDistances = function(box, position, direction, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(box)) {
-            throw new DeveloperError('box is required.');
-        }
-
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-
-        if (!defined(direction)) {
-            throw new DeveloperError('direction is required.');
-        }
+        Check.defined('box', box);
+        Check.defined('position', position);
+        Check.defined('direction', direction);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -688,12 +667,8 @@ define([
      */
     OrientedBoundingBox.isOccluded = function(box, occluder) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(box)) {
-            throw new DeveloperError('box is required.');
-        }
-        if (!defined(occluder)) {
-            throw new DeveloperError('occluder is required.');
-        }
+        Check.defined('box', box);
+        Check.defined('occluder', occluder);
         //>>includeEnd('debug');
 
         var sphere = BoundingSphere.fromOrientedBoundingBox(box, scratchBoundingSphere);

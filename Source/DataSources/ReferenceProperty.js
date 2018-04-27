@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -6,6 +7,7 @@ define([
         '../Core/RuntimeError',
         './Property'
     ], function(
+        Check,
         defined,
         defineProperties,
         DeveloperError,
@@ -104,10 +106,9 @@ define([
      */
     function ReferenceProperty(targetCollection, targetId, targetPropertyNames) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(targetCollection)) {
-            throw new DeveloperError('targetCollection is required.');
-        }
-        if (!defined(targetId) || targetId === '') {
+        Check.defined('targetCollection', targetCollection);
+        Check.defined('targetId', targetId);
+        if (targetId === '') {
             throw new DeveloperError('targetId is required.');
         }
         if (!defined(targetPropertyNames) || targetPropertyNames.length === 0) {
@@ -230,12 +231,8 @@ define([
      */
     ReferenceProperty.fromString = function(targetCollection, referenceString) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(targetCollection)) {
-            throw new DeveloperError('targetCollection is required.');
-        }
-        if (!defined(referenceString)) {
-            throw new DeveloperError('referenceString is required.');
-        }
+        Check.defined('targetCollection', targetCollection);
+        Check.typeOf.string('referenceString', referenceString);
         //>>includeEnd('debug');
 
         var identifier;

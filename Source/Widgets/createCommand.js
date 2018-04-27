@@ -29,7 +29,7 @@ define([
      */
     function createCommand(func, canExecute) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(func)) {
+        if (!defined(func)) { // TODO: HERE
             throw new DeveloperError('func is required.');
         }
         //>>includeEnd('debug');

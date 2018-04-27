@@ -28,9 +28,8 @@ define([
     function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('context', context);
-        if (!attributes || (attributes.length === 0)) {
-            throw new DeveloperError('At least one attribute is required.');
-        }
+        Check.defined('attributes', attributes);
+        Check.number.greaterThan('attributes.length', attributes.length, 0);
         //>>includeEnd('debug');
 
         var attrs = VertexArrayFacade._verifyAttributes(attributes);

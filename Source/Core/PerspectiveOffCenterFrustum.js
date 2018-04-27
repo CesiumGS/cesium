@@ -1,6 +1,7 @@
 define([
         './Cartesian3',
         './Cartesian4',
+        './Check',
         './CullingVolume',
         './defaultValue',
         './defined',
@@ -10,6 +11,7 @@ define([
     ], function(
         Cartesian3,
         Cartesian4,
+        Check,
         CullingVolume,
         defaultValue,
         defined,
@@ -105,11 +107,12 @@ define([
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frustum.right) || !defined(frustum.left) ||
-            !defined(frustum.top) || !defined(frustum.bottom) ||
-            !defined(frustum.near) || !defined(frustum.far)) {
-            throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
-        }
+        Check.defined('frustum.right', frustum.right);
+        Check.defined('frustum.left', frustum.left);
+        Check.defined('frustum.top', frustum.top);
+        Check.defined('frustum.near', frustum.near);
+        Check.defined('frustum.far', frustum.far);
+        Check.defined('frustum.bottom', frustum.bottom);
         //>>includeEnd('debug');
 
         var t = frustum.top;
@@ -124,9 +127,8 @@ define([
             n !== frustum._near || f !== frustum._far) {
 
             //>>includeStart('debug', pragmas.debug);
-            if (frustum.near <= 0 || frustum.near > frustum.far) {
-                throw new DeveloperError('near must be greater than zero and less than far.');
-            }
+            Check.number.greaterThan('n', n, 0);
+            Check.number.lessThan('n', n, f);
             //>>includeEnd('debug');
 
             frustum._left = l;
@@ -191,17 +193,9 @@ define([
      */
     PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-
-        if (!defined(direction)) {
-            throw new DeveloperError('direction is required.');
-        }
-
-        if (!defined(up)) {
-            throw new DeveloperError('up is required.');
-        }
+        Check.defined('position', position);
+        Check.defined('direction', direction);
+        Check.defined('up', up);
         //>>includeEnd('debug');
 
         var planes = this._cullingVolume.planes;
@@ -347,21 +341,10 @@ define([
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
-            throw new DeveloperError('Both drawingBufferWidth and drawingBufferHeight are required.');
-        }
-        if (drawingBufferWidth <= 0) {
-            throw new DeveloperError('drawingBufferWidth must be greater than zero.');
-        }
-        if (drawingBufferHeight <= 0) {
-            throw new DeveloperError('drawingBufferHeight must be greater than zero.');
-        }
-        if (!defined(distance)) {
-            throw new DeveloperError('distance is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('A result object is required.');
-        }
+        Check.number.greaterThan('drawingBufferWidth', drawingBufferWidth, 0);
+        Check.number.greaterThan('drawingBufferHeight', drawingBufferHeight, 0);
+        Check.typeOf.number('distance', distance);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var inverseNear = 1.0 / this.near;

@@ -4,6 +4,7 @@ define([
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './CornerType',
         './defaultValue',
@@ -25,6 +26,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Check,
         ComponentDatatype,
         CornerType,
         defaultValue,
@@ -133,12 +135,8 @@ define([
         var shape = options.shapePositions;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('options.polylinePositions is required.');
-        }
-        if (!defined(shape)) {
-            throw new DeveloperError('options.shapePositions is required.');
-        }
+        Check.defined('positions', positions);
+        Check.defined('shape', shape);
         //>>includeEnd('debug');
 
         this._positions = positions;
@@ -169,12 +167,8 @@ define([
      */
     PolylineVolumeOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -226,9 +220,7 @@ define([
      */
     PolylineVolumeOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

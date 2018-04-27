@@ -1,11 +1,13 @@
 define([
         './ComponentDatatype',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError'
     ], function(
         ComponentDatatype,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -46,9 +48,7 @@ define([
         far = defaultValue(far, Number.MAX_VALUE);
 
         //>>includeStart('debug', pragmas.debug);
-        if (far <= near) {
-            throw new DeveloperError('far distance must be greater than near distance.');
-        }
+        Check.number.greaterThan('far', 'near', far, near);
         //>>includeEnd('debug');
 
         /**
@@ -132,12 +132,8 @@ define([
      */
     DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition = function(distanceDisplayCondition) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(distanceDisplayCondition)) {
-            throw new DeveloperError('distanceDisplayCondition is required.');
-        }
-        if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
-            throw new DeveloperError('distanceDisplayCondition.far distance must be greater than distanceDisplayCondition.near distance.');
-        }
+        Check.defined('distanceDisplayCondition', distanceDisplayCondition);
+        Check.number.greaterThan('distanceDisplayCondition.far', 'distanceDisplayCondition.near', distanceDisplayCondition.far, distanceDisplayCondition.near);
         //>>includeEnd('debug');
 
         return new DistanceDisplayConditionGeometryInstanceAttribute(distanceDisplayCondition.near, distanceDisplayCondition.far);
@@ -156,9 +152,7 @@ define([
      */
     DistanceDisplayConditionGeometryInstanceAttribute.toValue = function(distanceDisplayCondition, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(distanceDisplayCondition)) {
-            throw new DeveloperError('distanceDisplayCondition is required.');
-        }
+        Check.defined('distanceDisplayCondition', distanceDisplayCondition);
         //>>includeEnd('debug');
 
         if (!defined(result)) {

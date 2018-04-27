@@ -1,19 +1,19 @@
 define([
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './Math'
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         CesiumMath) {
     'use strict';
@@ -135,9 +135,7 @@ define([
      */
     WebMercatorProjection.prototype.unproject = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        Check.defined('cartesian', cartesian);
         //>>includeEnd('debug');
 
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;

@@ -3,6 +3,7 @@ define([
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -19,6 +20,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -110,51 +112,21 @@ define([
      */
     function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
-        if (!defined(options) || !defined(options.quantizedVertices)) {
-            throw new DeveloperError('options.quantizedVertices is required.');
-        }
-        if (!defined(options.indices)) {
-            throw new DeveloperError('options.indices is required.');
-        }
-        if (!defined(options.minimumHeight)) {
-            throw new DeveloperError('options.minimumHeight is required.');
-        }
-        if (!defined(options.maximumHeight)) {
-            throw new DeveloperError('options.maximumHeight is required.');
-        }
-        if (!defined(options.maximumHeight)) {
-            throw new DeveloperError('options.maximumHeight is required.');
-        }
-        if (!defined(options.boundingSphere)) {
-            throw new DeveloperError('options.boundingSphere is required.');
-        }
-        if (!defined(options.horizonOcclusionPoint)) {
-            throw new DeveloperError('options.horizonOcclusionPoint is required.');
-        }
-        if (!defined(options.westIndices)) {
-            throw new DeveloperError('options.westIndices is required.');
-        }
-        if (!defined(options.southIndices)) {
-            throw new DeveloperError('options.southIndices is required.');
-        }
-        if (!defined(options.eastIndices)) {
-            throw new DeveloperError('options.eastIndices is required.');
-        }
-        if (!defined(options.northIndices)) {
-            throw new DeveloperError('options.northIndices is required.');
-        }
-        if (!defined(options.westSkirtHeight)) {
-            throw new DeveloperError('options.westSkirtHeight is required.');
-        }
-        if (!defined(options.southSkirtHeight)) {
-            throw new DeveloperError('options.southSkirtHeight is required.');
-        }
-        if (!defined(options.eastSkirtHeight)) {
-            throw new DeveloperError('options.eastSkirtHeight is required.');
-        }
-        if (!defined(options.northSkirtHeight)) {
-            throw new DeveloperError('options.northSkirtHeight is required.');
-        }
+        Check.defined('options', options);
+        Check.defined('options.quantizedVertices', options.quantizedVertices);
+        Check.defined('options.indices', options.indices);
+        Check.typeOf.number('options.minimumHeight', options.minimumHeight);
+        Check.typeOf.number('options.maximumHeight', options.maximumHeight);
+        Check.defined('options.boundingSphere', options.boundingSphere);
+        Check.defined('options.horizonOcclusionPoint', options.horizonOcclusionPoint);
+        Check.defined('options.westIndices', options.westIndices);
+        Check.defined('options.eastIndices', options.eastIndices);
+        Check.defined('options.southIndices', options.southIndices);
+        Check.defined('options.northIndices', options.northIndices);
+        Check.typeOf.number('options.westSkirtHeight', options.westSkirtHeight);
+        Check.typeOf.number('options.southSkirtHeight', options.southSkirtHeight);
+        Check.typeOf.number('options.eastSkirtHeight', options.eastSkirtHeight);
+        Check.typeOf.number('options.northSkirthHeight', options.northSkirtHeight);
         //>>includeEnd('debug');
 
         this._quantizedVertices = options.quantizedVertices;
@@ -260,18 +232,10 @@ define([
      */
     QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(x)) {
-            throw new DeveloperError('x is required.');
-        }
-        if (!defined(y)) {
-            throw new DeveloperError('y is required.');
-        }
-        if (!defined(level)) {
-            throw new DeveloperError('level is required.');
-        }
+        Check.defined('tilingScheme', tilingScheme);
+        Check.typeOf.number('x', x);
+        Check.typeOf.number('y', y);
+        Check.typeOf.number('level', level);
         //>>includeEnd('debug');
 
         var ellipsoid = tilingScheme.ellipsoid;
@@ -373,27 +337,13 @@ define([
      */
     QuantizedMeshTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(thisX)) {
-            throw new DeveloperError('thisX is required.');
-        }
-        if (!defined(thisY)) {
-            throw new DeveloperError('thisY is required.');
-        }
-        if (!defined(thisLevel)) {
-            throw new DeveloperError('thisLevel is required.');
-        }
-        if (!defined(descendantX)) {
-            throw new DeveloperError('descendantX is required.');
-        }
-        if (!defined(descendantY)) {
-            throw new DeveloperError('descendantY is required.');
-        }
-        if (!defined(descendantLevel)) {
-            throw new DeveloperError('descendantLevel is required.');
-        }
+        Check.defined('tilingScheme', tilingScheme);
+        Check.typeOf.number('thisX', thisX);
+        Check.typeOf.number('thisY', thisY);
+        Check.typeOf.number('thisLevel', thisLevel);
+        Check.typeOf.number('descendantX', descendantX);
+        Check.typeOf.number('descendantY', descendantY);
+        Check.typeOf.number('descendantLevel', descendantLevel);
         var levelDifference = descendantLevel - thisLevel;
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
@@ -576,18 +526,10 @@ define([
      */
     QuantizedMeshTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(thisX)) {
-            throw new DeveloperError('thisX is required.');
-        }
-        if (!defined(thisY)) {
-            throw new DeveloperError('thisY is required.');
-        }
-        if (!defined(childX)) {
-            throw new DeveloperError('childX is required.');
-        }
-        if (!defined(childY)) {
-            throw new DeveloperError('childY is required.');
-        }
+        Check.typeOf.number('thisX', thisX);
+        Check.typeOf.number('thisY', thisY);
+        Check.typeOf.number('childX', childX);
+        Check.typeOf.number('childY', childY);
         //>>includeEnd('debug');
 
         var bitNumber = 2; // northwest child

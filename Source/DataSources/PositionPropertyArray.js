@@ -1,17 +1,17 @@
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Event',
         '../Core/EventHelper',
         '../Core/ReferenceFrame',
         './Property'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Event,
         EventHelper,
         ReferenceFrame,
@@ -109,12 +109,8 @@ define([
      */
     PositionPropertyArray.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        if (!defined(referenceFrame)) {
-            throw new DeveloperError('referenceFrame is required.');
-        }
+        Check.defined('time', time);
+        Check.defined('referenceFrame', referenceFrame);
         //>>includeEnd('debug');
 
         var value = this._value;

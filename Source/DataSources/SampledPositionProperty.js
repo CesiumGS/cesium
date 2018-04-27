@@ -1,5 +1,6 @@
 define([
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -11,6 +12,7 @@ define([
         './SampledProperty'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -210,12 +212,8 @@ define([
      */
     SampledPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        if (!defined(referenceFrame)) {
-            throw new DeveloperError('referenceFrame is required.');
-        }
+        Check.defined('time', time);
+        Check.defined('refernceFrame', referenceFrame);
         //>>includeEnd('debug');
 
         result = this._property.getValue(time, result);

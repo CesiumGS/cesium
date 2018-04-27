@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,6 +8,7 @@ define([
         './Entity',
         './EntityCollection'
     ], function(
+        Check,
         createGuid,
         defined,
         defineProperties,
@@ -199,15 +201,10 @@ define([
     CompositeEntityCollection.prototype.addCollection = function(collection, index) {
         var hasIndex = defined(index);
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(collection)) {
-            throw new DeveloperError('collection is required.');
-        }
+        Check.defined('collection', collection);
         if (hasIndex) {
-            if (index < 0) {
-                throw new DeveloperError('index must be greater than or equal to zero.');
-            } else if (index > this._collections.length) {
-                throw new DeveloperError('index must be less than or equal to the number of collections.');
-            }
+            Check.number.greaterThanOrEqual('index', index, 0);
+            Check.number.lessThanOrEqual('index', index, this._collections.length);
         }
         //>>includeEnd('debug');
 
@@ -283,9 +280,7 @@ define([
      */
     CompositeEntityCollection.prototype.getCollection = function(index) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(index)) {
-            throw new DeveloperError('index is required.', 'index');
-        }
+        Check.typeOf.number('index', index);
         //>>includeEnd('debug');
 
         return this._collections[index];
@@ -300,9 +295,7 @@ define([
 
     function getCollectionIndex(collections, collection) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(collection)) {
-            throw new DeveloperError('collection is required.');
-        }
+        Check.defined('collection', collection);
         //>>includeEnd('debug');
 
         var index = collections.indexOf(collection);
@@ -420,7 +413,7 @@ define([
     CompositeEntityCollection.prototype.resumeEvents = function() {
         //>>includeStart('debug', pragmas.debug);
         if (this._suspendCount === 0) {
-            throw new DeveloperError('resumeEvents can not be called before suspendEvents.');
+            throw new DeveloperError('resumeEvents cannot be called before suspendEvents.');
         }
         //>>includeEnd('debug');
 

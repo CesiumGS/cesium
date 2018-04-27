@@ -1,4 +1,5 @@
 define([
+        '../../Core/Check',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -10,6 +11,7 @@ define([
         '../../DataSources/KmlDataSource',
         '../getElement'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -52,9 +54,7 @@ define([
      */
     function viewerDragDropMixin(viewer, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(viewer)) {
-            throw new DeveloperError('viewer is required.');
-        }
+        Check.defined('viewer', viewer);
         if (viewer.hasOwnProperty('dropTarget')) {
             throw new DeveloperError('dropTarget is already defined by another mixin.');
         }
@@ -98,9 +98,7 @@ define([
                 },
                 set : function(value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value)) {
-                        throw new DeveloperError('value is required.');
-                    }
+                    Check.defined('value', value);
                     //>>includeEnd('debug');
 
                     unsubscribe(dropTarget, handleDrop);

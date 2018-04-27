@@ -2,6 +2,7 @@ define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './Color',
         './ComponentDatatype',
         './defaultValue',
@@ -21,6 +22,7 @@ define([
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
+        Check,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -120,12 +122,9 @@ define([
         var colorsPerVertex = defaultValue(options.colorsPerVertex, false);
 
         //>>includeStart('debug', pragmas.debug);
-        if ((!defined(positions)) || (positions.length < 2)) {
-            throw new DeveloperError('At least two positions are required.');
-        }
-        if (typeof width !== 'number') {
-            throw new DeveloperError('width must be a number');
-        }
+        Check.defined('positions', positions);
+        Check.number.greaterThanOrEquals('positions.length', positions.length, 2);
+        Check.typeOf.number('width', width);
         if (defined(colors) && ((colorsPerVertex && colors.length < positions.length) || (!colorsPerVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
         }
@@ -162,12 +161,8 @@ define([
      */
     PolylineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -227,9 +222,7 @@ define([
      */
     PolylineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

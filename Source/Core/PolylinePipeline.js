@@ -1,9 +1,9 @@
 define([
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Ellipsoid',
         './EllipsoidGeodesic',
         './IntersectionTests',
@@ -14,9 +14,9 @@ define([
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         Ellipsoid,
         EllipsoidGeodesic,
         IntersectionTests,
@@ -224,9 +224,7 @@ define([
         }
         var positions = options.positions;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
         var length = positions.length;

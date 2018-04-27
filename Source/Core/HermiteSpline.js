@@ -1,6 +1,7 @@
 define([
         './Cartesian3',
         './Cartesian4',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -12,6 +13,7 @@ define([
     ], function(
         Cartesian3,
         Cartesian4,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -187,16 +189,14 @@ define([
         var outTangents = options.outTangents;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times) || !defined(inTangents) || !defined(outTangents)) {
-            throw new DeveloperError('times, points, inTangents, and outTangents are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
-        if (inTangents.length !== outTangents.length || inTangents.length !== points.length - 1) {
+        Check.defined('points', points);
+        Check.defined('times', times);
+        Check.defined('inTangents', inTangents);
+        Check.defined('outTangents', outTangents);
+        Check.number.greaterThanOrEquals('points.length', points.length, 2);
+        Check.number.equals('times.length', 'points.length', times.length, points.length);
+        Check.number.equals('inTangents.length', 'outTangents.length', inTangents.length, outTangents.length);
+        if (inTangents.length !== points.length - 1) {
             throw new DeveloperError('inTangents and outTangents must have a length equal to points.length - 1.');
         }
         //>>includeEnd('debug');
@@ -313,15 +313,12 @@ define([
         var tangents = options.tangents;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times) || !defined(tangents)) {
-            throw new DeveloperError('points, times and tangents are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (times.length !== points.length || times.length !== tangents.length) {
-            throw new DeveloperError('times, points and tangents must have the same length.');
-        }
+        Check.defined('points', points);
+        Check.defined('times', times);
+        Check.defined('tangents', tangents);
+        Check.number.greaterThanOrEquals('points.length', points.length, 2);
+        Check.number.equals('points.length', 'times.length', points.length, times.length);
+        Check.number.equals('points.length', 'tangents.length', points.length, tangents.length);
         //>>includeEnd('debug');
 
         var outTangents = tangents.slice(0, tangents.length - 1);
@@ -368,15 +365,10 @@ define([
         var points = options.points;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times)) {
-            throw new DeveloperError('points and times are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
+        Check.defined('points', points);
+        Check.defined('times', times);
+        Check.number.greaterThanOrEquals('points.length', points.length, 2);
+        Check.number.equals('points.length', 'times.length', points.length, times.length);
         //>>includeEnd('debug');
 
         if (points.length < 3) {
@@ -437,15 +429,12 @@ define([
         var lastTangent = options.lastTangent;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times) || !defined(firstTangent) || !defined(lastTangent)) {
-            throw new DeveloperError('points, times, firstTangent and lastTangent are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
+        Check.defined('points', points);
+        Check.defined('times', times);
+        Check.defined('firstTangent', firstTangent);
+        Check.defined('lastTangent', lastTangent);
+        Check.number.greaterThanOrEquals('points.length', points.length, 2);
+        Check.number.equals('points.length', 'times.length', points.length, times.length);
         //>>includeEnd('debug');
 
         if (points.length < 3) {

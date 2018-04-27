@@ -1,6 +1,7 @@
 define([
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -16,6 +17,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -77,15 +79,9 @@ define([
         var minimumHeights = options.minimumHeights;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(wallPositions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
-        if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
-            throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
-        }
-        if (defined(minimumHeights) && minimumHeights.length !== wallPositions.length) {
-            throw new DeveloperError('options.positions and options.minimumHeights must have the same length.');
-        }
+        Check.defined('options.positions', wallPositions);
+        Check.number.equals('options.positions.length', 'options.maximumHeights.length', wallPositions.length, maximumHeights.length);
+        Check.number.equals('options.positions.length', 'options.minimumHeights.length', wallPositions.length, minimumHeights.length);
         //>>includeEnd('debug');
 
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -124,12 +120,8 @@ define([
      */
     WallOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -191,9 +183,7 @@ define([
      */
     WallOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -285,9 +275,7 @@ define([
         var positions = options.positions;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
         var minHeights;

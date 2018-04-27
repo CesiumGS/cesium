@@ -1,5 +1,6 @@
 define([
         '../Core/Clock',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -9,6 +10,7 @@ define([
         './createRawPropertyDescriptor'
     ], function(
         Clock,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -142,9 +144,7 @@ define([
      */
     DataSourceClock.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(source)) {
-            throw new DeveloperError('source is required.');
-        }
+        Check.defined('source', source);
         //>>includeEnd('debug');
 
         this.startTime = defaultValue(this.startTime, source.startTime);

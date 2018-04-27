@@ -632,9 +632,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('rectangle', rectangle);
         Rectangle.validate(rectangle);
-        if (rectangle.north < rectangle.south) {
-            throw new DeveloperError('options.rectangle.north must be greater than or equal to options.rectangle.south');
-        }
+        Check.number.greaterThanOrEquals('rectangle.north', 'rectangle.south', rectangle.north, rectangle.south);
         //>>includeEnd('debug');
 
         var height = defaultValue(options.height, 0.0);

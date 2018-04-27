@@ -1,5 +1,6 @@
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -7,6 +8,7 @@ define([
         './Spline'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -56,15 +58,10 @@ define([
         var times = options.times;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times)) {
-            throw new DeveloperError('points and times are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
+        Check.defined('points', points);
+        Check.defined('times', times);
+        Check.number.equals('points.length', points.length, times.length);
+        Check.number.greaterThanOrEquals('points.length', points.length, 2);
         //>>includeEnd('debug');
 
         this._times = times;

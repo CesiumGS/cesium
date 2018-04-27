@@ -43,7 +43,7 @@ define([
      */
     Intersections2D.clipTriangleAtAxisAlignedThreshold = function(threshold, keepAbove, u0, u1, u2, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(threshold)) {
+        if (!defined(threshold)) { // todo
             throw new DeveloperError('threshold is required.');
         }
         if (!defined(keepAbove)) {
@@ -232,7 +232,7 @@ define([
      */
     Intersections2D.computeBarycentricCoordinates = function(x, y, x1, y1, x2, y2, x3, y3, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(x)) {
+        if (!defined(x)) { // todo
             throw new DeveloperError('x is required.');
         }
         if (!defined(y)) {

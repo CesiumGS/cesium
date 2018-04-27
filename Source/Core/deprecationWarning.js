@@ -1,10 +1,8 @@
 define([
-        './defined',
-        './DeveloperError',
+        './Check',
         './oneTimeWarning'
     ], function(
-        defined,
-        DeveloperError,
+        Check,
         oneTimeWarning) {
     'use strict';
 
@@ -49,9 +47,8 @@ define([
      */
     function deprecationWarning(identifier, message) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(identifier) || !defined(message)) {
-            throw new DeveloperError('identifier and message are required.');
-        }
+        Check.defined('identifier', identifier);
+        Check.defined('message', message);
         //>>includeEnd('debug');
 
         oneTimeWarning(identifier, message);

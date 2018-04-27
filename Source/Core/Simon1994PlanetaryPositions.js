@@ -1,5 +1,6 @@
 define([
         './Cartesian3',
+        './Check',
         './defined',
         './DeveloperError',
         './JulianDate',
@@ -9,6 +10,7 @@ define([
         './TimeStandard'
     ], function(
         Cartesian3,
+        Check,
         defined,
         DeveloperError,
         JulianDate,
@@ -79,9 +81,8 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (inclination < 0 || inclination > CesiumMath.PI) {
-            throw new DeveloperError('The inclination is out of range. Inclination must be greater than or equal to zero and less than or equal to Pi radians.');
-        }
+        Check.number.greaterThanOrEquals('inclination', inclination, 0);
+        Check.number.lessThanOrEquals('inclination', inclination, CesiumMath.PI);
         //>>includeEnd('debug')
 
         var radiusOfPeriapsis = semimajorAxis * (1.0 - eccentricity);
@@ -104,9 +105,7 @@ define([
         var denom = (1.0 + eccentricity * costheta);
 
         //>>includeStart('debug', pragmas.debug);
-        if (denom <= CesiumMath.Epsilon10) {
-            throw new DeveloperError('elements cannot be converted to cartesian');
-        }
+        Check.number.greaterThan('denom', denom, CesiumMath.Epsilon10);
         //>>includeEnd('debug')
 
         var radius = semilatus / denom;
@@ -123,9 +122,7 @@ define([
 
     function chooseOrbit(eccentricity, tolerance) {
         //>>includeStart('debug', pragmas.debug);
-        if (eccentricity < 0) {
-            throw new DeveloperError('eccentricity cannot be negative.');
-        }
+        Check.number.greaterThanOrEquals('eccentricity', eccentricity, 0);
         //>>includeEnd('debug')
 
         if (eccentricity <= tolerance) {
@@ -141,9 +138,8 @@ define([
     // Calculates the true anomaly given the mean anomaly and the eccentricity.
     function meanAnomalyToTrueAnomaly(meanAnomaly, eccentricity) {
         //>>includeStart('debug', pragmas.debug);
-        if (eccentricity < 0.0 || eccentricity >= 1.0) {
-            throw new DeveloperError('eccentricity out of range.');
-        }
+        Check.number.greaterThanOrEquals('eccentricity', eccentricity, 0.0);
+        Check.number.lessThan('eccentricity', eccentricity, 1.0);
         //>>includeEnd('debug')
 
         var eccentricAnomaly = meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity);
@@ -155,9 +151,8 @@ define([
     // Calculates the eccentric anomaly given the mean anomaly and the eccentricity.
     function meanAnomalyToEccentricAnomaly(meanAnomaly, eccentricity) {
         //>>includeStart('debug', pragmas.debug);
-        if (eccentricity < 0.0 || eccentricity >= 1.0) {
-            throw new DeveloperError('eccentricity out of range.');
-        }
+        Check.number.greaterThanOrEquals('eccentricity', eccentricity, 0.0);
+        Check.number.lessThan('eccentricity', eccentricity, 1.0);
         //>>includeEnd('debug')
 
         var revs = Math.floor(meanAnomaly / CesiumMath.TWO_PI);
@@ -198,9 +193,8 @@ define([
      // Calculates the true anomaly given the eccentric anomaly and the eccentricity.
     function eccentricAnomalyToTrueAnomaly(eccentricAnomaly, eccentricity) {
         //>>includeStart('debug', pragmas.debug);
-        if (eccentricity < 0.0 || eccentricity >= 1.0) {
-            throw new DeveloperError('eccentricity out of range.');
-        }
+        Check.number.greaterThanOrEquals('eccentricity', eccentricity, 0.0);
+        Check.number.lessThan('eccentricity', eccentricity, 1.0);
         //>>includeEnd('debug')
 
         // Calculate the number of previous revolutions
@@ -232,9 +226,8 @@ define([
      // system to inertial cartesian coordinates.
     function perifocalToCartesianMatrix(argumentOfPeriapsis, inclination, rightAscension, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (inclination < 0 || inclination > CesiumMath.PI) {
-            throw new DeveloperError('inclination out of range');
-        }
+        Check.number.greaterThanOrEquals('inclination', inclination, 0.0);
+        Check.number.lessThanOrEquals('inclination', inclination, CesiumMath.PI);
         //>>includeEnd('debug')
 
         var cosap = Math.cos(argumentOfPeriapsis);
