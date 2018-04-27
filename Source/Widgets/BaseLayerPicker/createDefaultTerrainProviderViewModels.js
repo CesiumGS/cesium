@@ -25,7 +25,7 @@ define([
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name : 'Cesium World Terrain',
+            name : 'Cesium ion World Terrain',
             iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/CesiumWorldTerrain.png'),
             tooltip : 'High-resolution global terrain tileset curated from several datasources and hosted by Cesium ion',
             creationFunction : function(){

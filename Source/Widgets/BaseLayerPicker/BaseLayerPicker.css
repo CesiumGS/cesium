@@ -44,7 +44,6 @@
     font-size: 16pt;
     text-align: left;
     color: #edffff;
-    border-bottom: 1px solid #888;
     margin-bottom: 4px;
 }
 
@@ -54,16 +53,14 @@
 
 .cesium-baseLayerPicker-categoryTitle {
     color: #edffff;
-    border-bottom: 1px solid #888;
-    margin-bottom: 4px;
-    font-size: 10pt;
+    font-size: 11pt;
 }
 
 .cesium-baseLayerPicker-choices {
     display: block;
-    position: relative;
-    top: auto;
-    right: 0;
+    border: 1px solid #888;
+    border-radius: 5px;
+    padding: 5px 0;
 }
 
 .cesium-baseLayerPicker-item {
