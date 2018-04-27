@@ -626,12 +626,26 @@ define([
         this.useDepthPicking = true;
 
         /**
-         * When <code>true</code>, enables picking translucent geometry using the depth buffer.
-         * {@link Scene#useDepthPicking} must also be true to enable picking the depth buffer.
+         * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for this enabling to work.
+         *
          * <p>
-         * There is a decrease in performance when enabled. There are extra draw calls to write depth for
+         * Render must be called between picks.
+         * <br>There is a decrease in performance when enabled. There are extra draw calls to write depth for
          * translucent geometry.
          * </p>
+         *
+         * @example
+         * // picking the position of a translucent primitive
+         * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+         *      var pickedFeature = viewer.scene.pick(movement.position);
+         *      if (!Cesium.defined(pickedFeature)) {
+         *          // nothing picked
+         *          return;
+         *      }
+         *      viewer.scene.render();
+         *      var worldPosition = viewer.scene.pickPosition(movement.position));
+         * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+         *
          * @type {Boolean}
          * @default false
          */
