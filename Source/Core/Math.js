@@ -413,9 +413,6 @@ define([
     CesiumMath.toRadians = function(degrees) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('degrees', degrees);
-        if (!defined(degrees)) {
-            throw new DeveloperError('degrees is required.');
-        }
         //>>includeEnd('debug');
         return degrees * CesiumMath.RADIANS_PER_DEGREE;
     };

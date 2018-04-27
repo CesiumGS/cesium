@@ -1,6 +1,7 @@
 define([
         './Cartesian3',
         './Cartesian4',
+        './Check',
         './CullingVolume',
         './defaultValue',
         './defined',
@@ -10,6 +11,7 @@ define([
     ], function(
         Cartesian3,
         Cartesian4,
+        Check,
         CullingVolume,
         defaultValue,
         defined,
@@ -103,11 +105,12 @@ define([
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frustum.right) || !defined(frustum.left) ||
-            !defined(frustum.top) || !defined(frustum.bottom) ||
-            !defined(frustum.near) || !defined(frustum.far)) {
-            throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
-        }
+        Check.defined('frustum.right', frustum.right);
+        Check.defined('frustum.top', frustum.top);
+        Check.defined('frustum.left', frustum.left);
+        Check.defined('frustum.bottom', frustum.bottom);
+        Check.defined('frustum.near', frustum.near);
+        Check.defined('frustum.far', frustum.far);
         //>>includeEnd('debug');
 
         if (frustum.top !== frustum._top || frustum.bottom !== frustum._bottom ||
@@ -171,15 +174,9 @@ define([
      */
     OrthographicOffCenterFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-        if (!defined(direction)) {
-            throw new DeveloperError('direction is required.');
-        }
-        if (!defined(up)) {
-            throw new DeveloperError('up is required.');
-        }
+        Check.defined('position', position);
+        Check.defined('direction', direction);
+        Check.defined('up', up);
         //>>includeEnd('debug');
 
         var planes = this._cullingVolume.planes;
@@ -297,6 +294,10 @@ define([
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
+        Check.number.greaterThan('drawingBufferWidth', drawingBufferWidth, 0);
+        Check.number.greaterThan('drawingBufferHeight', drawingBufferHeight, 0);
+        Check.typeOf.('distance', distance);
+        Check.
         if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
             throw new DeveloperError('Both drawingBufferWidth and drawingBufferHeight are required.');
         }

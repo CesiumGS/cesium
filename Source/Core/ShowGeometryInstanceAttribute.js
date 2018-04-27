@@ -1,15 +1,15 @@
 define([
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './defineProperties',
-        './DeveloperError'
+        './defineProperties'
     ], function(
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
-        defineProperties,
-        DeveloperError) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -118,9 +118,7 @@ define([
      */
     ShowGeometryInstanceAttribute.toValue = function(show, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(show)) {
-            throw new DeveloperError('show is required.');
-        }
+        Check.defined('show', show);
         //>>includeEnd('debug');
 
         if (!defined(result)) {

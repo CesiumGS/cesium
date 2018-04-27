@@ -1,17 +1,17 @@
 define([
         '../ThirdParty/xss',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
-        './DeveloperError'
+        './deprecationWarning'
     ], function(
         xss,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
-        DeveloperError) {
+        deprecationWarning) {
     'use strict';
 
     var nextCreditId = 0;
@@ -47,9 +47,9 @@ define([
             var hasText = (defined(text));
 
             //>>includeStart('debug', pragmas.debug);
-            if (!hasText && !hasImage && !hasLink) {
-                throw new DeveloperError('options.text, options.imageUrl, or options.link is required.');
-            }
+            Check.defined('link', link);
+            Check.defined('imageUrl', imageUrl);
+            Check.defined('text', text);
             //>>includeEnd('debug');
 
             if (!hasText && !hasImage) {

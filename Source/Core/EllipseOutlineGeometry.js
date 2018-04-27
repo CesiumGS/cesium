@@ -2,6 +2,7 @@ define([
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -17,6 +18,7 @@ define([
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -165,20 +167,12 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(center)) {
-            throw new DeveloperError('center is required.');
-        }
-        if (!defined(semiMajorAxis)) {
-            throw new DeveloperError('semiMajorAxis is required.');
-        }
-        if (!defined(semiMinorAxis)) {
-            throw new DeveloperError('semiMinorAxis is required.');
-        }
+        Check.defined('center', center);
+        Check.defined('semiMajorAxis', semiMajorAxis);
+        Check.defined('semiMinorAxis', semiMinorAxis);
+        Check.number.greaterThanOrEquals('granularity', granularity, 0);
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
-        }
-        if (granularity <= 0.0) {
-            throw new DeveloperError('granularity must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -214,12 +208,8 @@ define([
      */
     EllipseOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -265,9 +255,7 @@ define([
      */
     EllipseOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

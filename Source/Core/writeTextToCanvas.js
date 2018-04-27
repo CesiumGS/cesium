@@ -35,7 +35,7 @@ define([
      */
     function writeTextToCanvas(text, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(text)) {
+        if (!defined(text)) { // TODO
             throw new DeveloperError('text is required.');
         }
         //>>includeEnd('debug');

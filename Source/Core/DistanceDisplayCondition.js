@@ -1,13 +1,13 @@
 define([
+        './Check',
         './defaultValue',
         './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
+        './defineProperties'
+], function(
+        Check,
         defaultValue,
         defined,
-        defineProperties,
-        DeveloperError) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -79,12 +79,8 @@ define([
      */
     DistanceDisplayCondition.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -105,9 +101,7 @@ define([
      */
     DistanceDisplayCondition.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

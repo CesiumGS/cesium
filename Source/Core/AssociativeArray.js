@@ -1,10 +1,8 @@
 define([
-        './Check',
         './defined',
         './defineProperties',
         './DeveloperError'
     ], function(
-        Check,
         defined,
         defineProperties,
         DeveloperError) {

@@ -35,7 +35,7 @@ define([
     function viewerPerformanceWatchdogMixin(viewer, options) {
         //>>includeStart('debug', pragmas.debug);
         // TODO: HERE
-        if (!defined(viewer)) {
+        if (!defined(viewer)) { // todo
             throw new DeveloperError('viewer is required.');
         }
         //>>includeEnd('debug');
