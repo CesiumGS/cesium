@@ -52,7 +52,7 @@ define([
         } else {
             this._geocoderServices = [
                 new CartographicGeocoderService(),
-                new IonGeocoderService()
+                new IonGeocoderService({ scene: options.scene })
             ];
         }
 
