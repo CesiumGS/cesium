@@ -3,6 +3,16 @@ Change Log
 
 ### 1.45 - 2018-05-01
 
+##### Major Announcements :loudspeaker:
+
+* We've launched Cesium ion, read all about it in our [blog post](https://cesium.com/TBD).
+* Cesium now uses ion services by default for base imagery, terrain, and geocoding. [Sign up](https://cesium.com/TBD) for a free ion account to get your own access token.
+
+##### Breaking Changes :mega:
+* `BingMapsImageryProvider` is no longer the default base imagery layer.
+* `BingMapsGeocoderService` is no longer the default geocoder service.
+* Cesium no longer ships with a demo Bing Maps API key.
+
 ##### Deprecated :hourglass_flowing_sand:
 * `Particle.size`, `ParticleSystem.rate`, `ParticleSystem.lifeTime`, `ParticleSystem.life`, `ParticleSystem.minimumLife`, and `ParticleSystem.maximumLife` have been renamed to `Particle.imageSize`, `ParticleSystem.emissionRate`, `ParticleSystem.lifetime`, `ParticleSystem.particleLife`, `ParticleSystem.minimumParticleLife`, and `ParticleSystem.maximumParticleLife`. Use of the `size`, `rate`, `lifeTime`, `life`, `minimumLife`, and `maximumLife` parameters is deprecated and will be removed in Cesium 1.46.
 * `ParticleSystem.forces` array has been switched out for singular function `ParticleSystems.updateCallback`. Use of the `forces` parameter is deprecated and will be removed in Cesium 1.46.
@@ -10,6 +20,7 @@ Change Log
 
 ##### Additions :tada:
 * Added `IonGeocoderService` and made it the default geocoding service for the `Geocoder` widget.
+* Added `createWorldImagery` which provides Bing Maps imagery via a Cesium ion account.
 * Added option `logarithmicDepthBuffer` to `Scene`. With this option there is typically a single frustum using logarithmic depth rendered. This increases performance by issuing less draw calls to the GPU and helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
 * When a log depth buffer is supported, the frustum near and far planes default to `0.1` and `1e10` respectively.
 * Added `Math.log2` to compute the base 2 logarithm of a number.
@@ -37,6 +48,7 @@ Change Log
 * Fix flicker when adding, removing, or modifying entities. [#3945](https://github.com/AnalyticalGraphicsInc/cesium/issues/3945)
 * Fixed crash bug in PolylineCollection when a polyline was updated and removed at the same time. [#6455](https://github.com/AnalyticalGraphicsInc/cesium/pull/6455)
 * Fixed Imagery Layers Texture Filters Sandcastle example. [#6472](https://github.com/AnalyticalGraphicsInc/cesium/pull/6472).
+* Fixed a bug causing Cesium 3D Tilesets to not clip properly when tiles were unloaded and reloaded. [#6484](https://github.com/AnalyticalGraphicsInc/cesium/issues/6484)
 
 ### 1.44 - 2018-04-02
 
