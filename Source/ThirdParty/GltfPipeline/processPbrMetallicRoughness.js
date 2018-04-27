@@ -422,7 +422,12 @@ define([
             '    return roughnessSquared / (M_PI * f * f);\n' +
             '}\n\n';
 
-        fragmentShader += 'vec4 SRGBtoLINEAR(vec4 srgbIn) \n' +
+        fragmentShader += 'vec3 SRGBtoLINEAR3(vec3 srgbIn) \n' +
+            '{\n' +
+            '    return pow(srgbIn, vec3(2.2));\n' +
+            '}\n\n';
+
+        fragmentShader += 'vec4 SRGBtoLINEAR4(vec4 srgbIn) \n' +
             '{\n' +
             '    vec3 linearOut = pow(srgbIn.rgb, vec3(2.2));\n' +
             '    return vec4(linearOut, srgbIn.a);\n' +
@@ -481,7 +486,7 @@ define([
 
         // Add base color to fragment shader
         if (defined(parameterValues.baseColorTexture)) {
-            fragmentShader += '    vec4 baseColorWithAlpha = SRGBtoLINEAR(texture2D(u_baseColorTexture, ' + v_texcoord + '));\n';
+            fragmentShader += '    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, ' + v_texcoord + '));\n';
             if (defined(parameterValues.baseColorFactor)) {
                 fragmentShader += '    baseColorWithAlpha *= u_baseColorFactor;\n';
             }
@@ -555,7 +560,7 @@ define([
 
         fragmentShader += '    vec3 f0 = vec3(0.04);\n';
         fragmentShader += '    float alpha = roughness * roughness;\n';
-        fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness);\n';
+        fragmentShader += '    vec3 diffuseColor = baseColor * (1.0 - metalness) * (1.0 - f0);\n';
         fragmentShader += '    vec3 specularColor = mix(f0, baseColor, metalness);\n';
         fragmentShader += '    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);\n';
         fragmentShader += '    vec3 r90 = vec3(clamp(reflectance * 25.0, 0.0, 1.0));\n';
@@ -599,7 +604,7 @@ define([
             fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
 
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;\n';
-            fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * (specularColor * brdfLut.x + brdfLut.y));\n';
+            fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y));\n';
             fragmentShader += '    color += IBLColor;\n';
         }
 
@@ -607,7 +612,7 @@ define([
             fragmentShader += '    color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
         }
         if (defined(parameterValues.emissiveTexture)) {
-            fragmentShader += '    vec3 emissive = SRGBtoLINEAR(texture2D(u_emissiveTexture, ' + v_texcoord + ')).rgb;\n';
+            fragmentShader += '    vec3 emissive = SRGBtoLINEAR3(texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb);\n';
             if (defined(parameterValues.emissiveFactor)) {
                 fragmentShader += '    emissive *= u_emissiveFactor;\n';
             }
