@@ -496,16 +496,11 @@ define([
             this._multipleDirtyPlanes = true;
         }
 
-        // Use of Plane objects will be deprecated.
-        // But until then, we have no way of telling if they changed since last frame, so we have to do a full update.
-        var refreshFullTexture = this._multipleDirtyPlanes;
         var dirtyIndex = this._dirtyIndex;
-
-        if (!refreshFullTexture && dirtyIndex === -1) {
+        if (!this._multipleDirtyPlanes && dirtyIndex === -1) {
             return;
         }
-
-        if (!refreshFullTexture) {
+        if (!this._multipleDirtyPlanes) {
             // partial updates possible
             var offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
             var offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);

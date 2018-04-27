@@ -12,6 +12,7 @@ Change Log
 * `BingMapsImageryProvider` is no longer the default base imagery layer.
 * `BingMapsGeocoderService` is no longer the default geocoder service.
 * Cesium no longer ships with a demo Bing Maps API key.
+* `ClippingPlaneCollection` now uses `ClippingPlane` objects instead of`Plane` objects. [#6498](https://github.com/AnalyticalGraphicsInc/cesium/pull/6498) 
 
 ##### Additions :tada:
 * Added `IonGeocoderService` and made it the default geocoding service for the `Geocoder` widget.
