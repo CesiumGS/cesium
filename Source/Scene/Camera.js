@@ -1,4 +1,5 @@
 define([
+        '../Core/AxisAlignedBoundingBox',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -19,6 +20,7 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
         '../Core/OrthographicOffCenterFrustum',
         '../Core/PerspectiveFrustum',
@@ -30,6 +32,7 @@ define([
         './MapMode2D',
         './SceneMode'
     ], function(
+        AxisAlignedBoundingBox,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -50,6 +53,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrientedBoundingBox,
         OrthographicFrustum,
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
@@ -213,6 +217,12 @@ define([
          * @default 0.5
          */
         this.percentageChanged = 0.5;
+
+        /**
+         * Gets and sets the bounding object used to constrain the camera's position.
+         * @type {AxisAlignedBoundingBox|BoundingSphere|OrientedBoundingBox} The bounding object used to restrict positions of the {@link Camera}.
+         */
+        this.boundingObject = undefined;
 
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
@@ -502,7 +512,6 @@ define([
     }
 
     var scratchCartesian = new Cartesian3();
-
     function updateMembers(camera) {
         var mode = camera._mode;
 
@@ -949,6 +958,7 @@ define([
             frustum.bottom = -frustum.top;
         }
 
+        this._limitPosition();
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
         }
@@ -983,7 +993,7 @@ define([
         updateMembers(this);
     };
 
-    var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
+    var scratchAdjustOrthographicFrustumMousePosition = new Cartesian2();
     var pickGlobeScratchRay = new Ray();
     var scratchRayIntersection = new Cartesian3();
     var scratchDepthIntersection = new Cartesian3();
@@ -1008,7 +1018,7 @@ define([
         var depthIntersection;
 
         if (defined(globe)) {
-            var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
+            var mousePosition = scratchAdjustOrthographicFrustumMousePosition;
             mousePosition.x = scene.drawingBufferWidth / 2.0;
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
@@ -1494,6 +1504,7 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, cameraPosition);
         }
+
         this._adjustOrthographicFrustum(true);
     };
 
@@ -3231,7 +3242,47 @@ define([
         result._transformChanged = true;
         result.frustum = camera.frustum.clone();
 
+        if (defined(camera._boundingObject)) {
+            result.boundingObject = camera._boundingObject.clone(result.boundingObject);
+        }
+
         return result;
+    };
+
+    var scratchViewOptions = {
+        destination : new Cartesian3(),
+        orientation : new HeadingPitchRoll()
+    };
+    var scratchClampedValue = new Cartesian3();
+    var scratchDirectionAndNearFrustum = new Cartesian3();
+
+    /**
+     * @private
+     */
+    Camera.prototype._limitPosition = function() {
+        if (!defined(this.boundingObject)) {
+            return;
+        }
+
+        scratchViewOptions.orientation.heading = this.heading;
+        scratchViewOptions.orientation.pitch = this.pitch;
+        scratchViewOptions.orientation.roll = this.roll;
+
+        // solving for positionWC because there's a bug where WC is incorrect in 2D and CV mode
+        scratchClampedValue = this._projection.ellipsoid.cartographicToCartesian(this._positionCartographic);
+
+        if (this._mode === SceneMode.SCENE2D) {
+            scratchViewOptions.destination = this.boundingObject.clampToBounds(scratchClampedValue, scratchClampedValue);
+        } else {
+            // if orthographic view center of screen = camera.position + camera.direction * camera.frustum.near
+            scratchDirectionAndNearFrustum = Cartesian3.multiplyByScalar(this.direction, this.frustum.near, scratchDirectionAndNearFrustum);
+            scratchClampedValue = Cartesian3.add(scratchClampedValue, scratchDirectionAndNearFrustum, scratchClampedValue);
+            scratchClampedValue = this.boundingObject.clampToBounds(scratchClampedValue, scratchClampedValue);
+            scratchClampedValue = Cartesian3.subtract(scratchClampedValue, scratchDirectionAndNearFrustum, scratchClampedValue);
+            scratchViewOptions.destination = Cartesian3.clone(scratchClampedValue, scratchViewOptions.destination);
+        }
+
+        this.setView(scratchViewOptions);
     };
 
     /**

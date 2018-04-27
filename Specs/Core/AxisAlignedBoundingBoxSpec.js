@@ -161,4 +161,27 @@ defineSuite([
             AxisAlignedBoundingBox.intersectPlane(box, undefined);
         }).toThrowDeveloperError();
     });
+
+    it('clampToBounds given input value outside of box', function() {
+        var upperBound = new Cartesian3(1, 1, 1);
+        var lowerBound = new Cartesian3(-1, -1, -1);
+        var box = new AxisAlignedBoundingBox(lowerBound, upperBound);
+
+        var testLocation = new Cartesian3(3, 3, 3);
+        var result = box.clampToBounds(testLocation, new Cartesian3());
+
+        expect(result).not.toEqual(testLocation);
+        expect(result).toEqual(upperBound);
+    });
+
+    it('clampToBounds given input value inside of box', function() {
+        var upperBound = new Cartesian3(1, 1, 1);
+        var lowerBound = new Cartesian3(-1, -1, -1);
+        var box = new AxisAlignedBoundingBox(lowerBound, upperBound);
+
+        var testLocation = new Cartesian3(0.5, 0.5, 0.5);
+        var result = box.clampToBounds(testLocation, new Cartesian3());
+
+        expect(result).toEqual(testLocation);
+    });
 });
