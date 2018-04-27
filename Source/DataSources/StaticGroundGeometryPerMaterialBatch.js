@@ -1,6 +1,5 @@
 define([
         '../Core/AssociativeArray',
-        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
@@ -15,7 +14,6 @@ define([
         './Property'
     ], function(
         AssociativeArray,
-        Color,
         ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
@@ -31,11 +29,13 @@ define([
     'use strict';
 
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, materialProperty, shadows, usingSphericalCoordinates) {
+    function Batch(primitives, appearanceType, classificationType, materialProperty, usingSphericalTextureCoordinates) {
         this.primitives = primitives; // scene level primitive collection
         this.appearanceType = appearanceType;
+        this.classificationType = classificationType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
         this.createPrimitive = true;
@@ -49,8 +49,7 @@ define([
         this.removeMaterialSubscription = materialProperty.definitionChanged.addEventListener(Batch.prototype.onMaterialChanged, this);
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
-        this.shadows = shadows;
-        this.usingSphericalCoordinates = usingSphericalCoordinates;
+        this.usingSphericalTextureCoordinates = usingSphericalTextureCoordinates;
         this.rectangleCollisionCheck = new RectangleCollisionChecker();
     }
 
@@ -62,6 +61,7 @@ define([
         return !this.rectangleCollisionCheck.collides(rectangle);
     };
 
+    // Check if the given updater's material is compatible with this batch
     Batch.prototype.isMaterial = function(updater) {
         var material = this.materialProperty;
         var updaterMaterial = updater.fillMaterialProperty;
@@ -78,10 +78,12 @@ define([
         this.updaters.set(id, updater);
         this.geometry.set(id, geometryInstance);
         this.rectangleCollisionCheck.insert(id, geometryInstance.geometry.rectangle);
+        // Updaters with dynamic attributes must be tracked separately, may exit the batch
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
+            // Listen for show changes. These will be synchronized in updateShows.
             this.subscriptions.set(id, updater.entity.definitionChanged.addEventListener(function(entity, propertyName, newValue, oldValue) {
                 if (propertyName === 'isShowing') {
                     that.showsUpdated.set(updater.id, updater);
@@ -107,8 +109,6 @@ define([
         return this.createPrimitive;
     };
 
-    var colorScratch = new Color();
-
     Batch.prototype.update = function(time) {
         var isUpdated = true;
         var primitive = this.primitive;
@@ -121,9 +121,11 @@ define([
             var geometriesLength = geometries.length;
             if (geometriesLength > 0) {
                 if (defined(primitive)) {
+                    // Keep a handle to the old primitive so it can be removed when the updated version is ready.
                     if (!defined(this.oldPrimitive)) {
                         this.oldPrimitive = primitive;
                     } else {
+                        // For if the new primitive changes again before it is ready.
                         primitives.remove(primitive);
                     }
                 }
@@ -140,31 +142,13 @@ define([
                         if (defined(originalAttributes.color)) {
                             originalAttributes.color.value = attributes.color;
                         }
-                        if (defined(originalAttributes.depthFailColor)) {
-                            originalAttributes.depthFailColor.value = attributes.depthFailColor;
-                        }
                     }
                 }
 
                 this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
 
-                var depthFailAppearance;
-                if (defined(this.depthFailMaterialProperty)) {
-                    var translucent;
-                    if (this.depthFailMaterialProperty instanceof MaterialProperty) {
-                        this.depthFailMaterial = MaterialProperty.getValue(time, this.depthFailMaterialProperty, this.depthFailMaterial);
-                        translucent = this.depthFailMaterial.isTranslucent();
-                    } else {
-                        translucent = this.material.isTranslucent();
-                    }
-                    depthFailAppearance = new this.depthFailAppearanceType({
-                        material : this.depthFailMaterial,
-                        translucent : translucent,
-                        closed : this.closed
-                    });
-                }
-
                 primitive = new GroundPrimitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
@@ -172,8 +156,7 @@ define([
                         translucent : this.material.isTranslucent(),
                         closed : this.closed
                     }),
-                    depthFailAppearance : depthFailAppearance,
-                    shadows : this.shadows
+                    classificationType : this.classificationType
                 });
 
                 primitives.add(primitive);
@@ -194,6 +177,7 @@ define([
             this.primitive = primitive;
             this.createPrimitive = false;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -201,11 +185,6 @@ define([
 
             this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
             this.primitive.appearance.material = this.material;
-
-            if (defined(this.depthFailAppearanceType) && !(this.depthFailMaterialProperty instanceof ColorMaterialProperty)) {
-                this.depthFailMaterial = MaterialProperty.getValue(time, this.depthFailMaterialProperty, this.depthFailMaterial);
-                this.primitive.depthFailAppearance.material = this.depthFailMaterial;
-            }
 
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
@@ -220,15 +199,6 @@ define([
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                if (defined(this.depthFailAppearanceType) && this.depthFailAppearanceType instanceof ColorMaterialProperty && !updater.depthFailMaterialProperty.isConstant) {
-                    var depthFailColorProperty = updater.depthFailMaterialProperty.color;
-                    depthFailColorProperty.getValue(time, colorScratch);
-                    if (!Color.equals(attributes._lastDepthFailColor, colorScratch)) {
-                        attributes._lastDepthFailColor = Color.clone(colorScratch, attributes._lastDepthFailColor);
-                        attributes.depthFailColor = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.depthFailColor);
-                    }
-                }
-
                 var show = entity.isShowing && (updater.hasConstantFill || updater.isFilled(time));
                 var currentShow = attributes.show[0] === 1;
                 if (show !== currentShow) {
@@ -237,7 +207,7 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
@@ -309,28 +279,28 @@ define([
     /**
      * @private
      */
-    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType, shadows) {
+    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType, classificationType) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
-        this._shadows = shadows;
+        this._classificationType = classificationType;
     }
 
     StaticGroundGeometryPerMaterialBatch.prototype.add = function(time, updater) {
         var items = this._items;
         var length = items.length;
         var geometryInstance = updater.createFillGeometryInstance(time);
-        var usingSphericalCoordinates = ShadowVolumeAppearance.shouldUseSphericalCoordinates(geometryInstance.geometry.rectangle);
+        var usingSphericalTextureCoordinates = ShadowVolumeAppearance.shouldUseSphericalCoordinates(geometryInstance.geometry.rectangle);
         for (var i = 0; i < length; ++i) {
             var item = items[i];
             if (item.isMaterial(updater) &&
                 item.nonOverlapping(geometryInstance.geometry.rectangle) &&
-                item.usingSphericalCoordinates === usingSphericalCoordinates) {
+                item.usingSphericalTextureCoordinates === usingSphericalTextureCoordinates) {
                 item.add(time, updater, geometryInstance);
                 return;
             }
         }
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._shadows, usingSphericalCoordinates);
+        var batch = new Batch(this._primitives, this._appearanceType, this._classificationType, updater.fillMaterialProperty, usingSphericalTextureCoordinates);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };

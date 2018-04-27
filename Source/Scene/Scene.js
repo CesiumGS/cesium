@@ -646,6 +646,8 @@ define([
 
         /**
          * Set to true to copy the depth texture after rendering the globe. Makes czm_globeDepthTexture valid.
+         * Set to false if Entities on terrain or GroundPrimitives are not used for a potential performance improvement.
+         *
          * @type {Boolean}
          * @default true
          * @private

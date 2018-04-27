@@ -19,7 +19,6 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryColorBatch',
         'DataSources/StaticGeometryPerMaterialBatch',
-        'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
         'Scene/ClassificationType',
         'Scene/GroundPrimitive',
@@ -50,7 +49,6 @@ defineSuite([
         SampledProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
-        StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
         ClassificationType,
         GroundPrimitive,
@@ -140,6 +138,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new GridMaterialProperty();
+        ellipse.height = new ConstantProperty(1.0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -807,7 +806,8 @@ defineSuite([
                 semiMinorAxis : 1,
                 material : new GridMaterialProperty({
                     color : createDynamicProperty(Color.BLUE)
-                })
+                }),
+                height : 0.0
             }
         });
 

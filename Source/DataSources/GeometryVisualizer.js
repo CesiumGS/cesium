@@ -156,7 +156,7 @@ define([
 
         var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
         this._groundColorBatches = new Array(numberOfClassificationTypes);
-        this._groundMaterialBatches = new Array(numberOfClassificationTypes); // TODO: why is this?
+        this._groundMaterialBatches = new Array(numberOfClassificationTypes);
 
         for (i = 0; i < numberOfClassificationTypes; ++i) {
             this._groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance, i);

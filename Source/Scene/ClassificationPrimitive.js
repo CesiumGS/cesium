@@ -190,56 +190,12 @@ define([
         this._primitive = undefined;
         this._pickPrimitive = options._pickPrimitive;
 
-        var appearance = options.appearance;
+        // Set in update
+        this._hasSphericalExtentsAttribute = false;
+        this._hasPlanarExtentsAttributes = false;
+        this._hasPerColorAttribute = false;
 
-        var hasPerColorAttribute = false;
-        var hasSphericalExtentsAttribute = false;
-        var hasPlanarExtentsAttributes = false;
-
-        var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
-        var geometryInstanceCount = geometryInstancesArray.length;
-            for (var i = 0; i < geometryInstanceCount; i++) {
-            var attributes = geometryInstancesArray[i].attributes;
-            if (defined(attributes)) {
-                if (defined(attributes.color)) {
-                    hasPerColorAttribute = true;
-                } else if (hasPerColorAttribute) {
-                    throw new DeveloperError('All GeometryInstances must have the same attributes.');
-                }
-                if (ShadowVolumeAppearance.hasAttributesForSphericalExtents) {
-                    hasSphericalExtentsAttribute = true;
-                } else if (hasSphericalExtentsAttribute) {
-                    throw new DeveloperError('All GeometryInstances must have the same attributes.');
-                }
-                if (ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(attributes)) {
-                    hasPlanarExtentsAttributes = true;
-                } else if (hasPlanarExtentsAttributes) {
-                    throw new DeveloperError('All GeometryInstances must have the same attributes.');
-                }
-            } else if (hasPerColorAttribute || hasSphericalExtentsAttribute) {
-                throw new DeveloperError('All GeometryInstances must have the same attributes.');
-            }
-        }
-
-        // If attributes include color and appearance is undefined, default to a color appearance
-        if (!defined(appearance) && hasPerColorAttribute) {
-            appearance = new PerInstanceColorAppearance({
-                flat : true
-            });
-        }
-
-        if (!hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
-            throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
-        }
-
-        if (defined(appearance.material) && !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes) {
-            throw new DeveloperError('Materials on ClassificationPrimitives requires sphericalExtents GeometryInstanceAttribute or GeometryInstanceAttributes for computing planes');
-        }
-
-        this._hasPerColorAttribute = hasPerColorAttribute;
-        this._hasSphericalExtentsAttribute = hasSphericalExtentsAttribute;
-        this._hasPlanarExtentsAttributes = hasPlanarExtentsAttributes;
-        this.appearance = appearance;
+        this.appearance = options.appearance;
 
         var readOnlyAttributes;
         if (defined(geometryInstances) && isArray(geometryInstances) && geometryInstances.length > 1) {
@@ -251,7 +207,7 @@ define([
 
         this._primitiveOptions = {
             geometryInstances : undefined,
-            appearance : appearance,
+            appearance : undefined,
             vertexCacheOptimize : defaultValue(options.vertexCacheOptimize, false),
             interleave : defaultValue(options.interleave, false),
             releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
@@ -964,20 +920,53 @@ define([
 
             var i;
             var instance;
-            //>>includeStart('debug', pragmas.debug);
-            var color;
-            for (i = 0; i < length; ++i) {
+
+            var hasPerColorAttribute = false;
+            var hasSphericalExtentsAttribute = false;
+            var hasPlanarExtentsAttributes = false;
+
+            for (i = 0; i < length; i++) {
                 instance = instances[i];
                 var attributes = instance.attributes;
-                if (!defined(attributes) || !defined(attributes.color)) {
-                    //throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                    //throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                } else if (!defined(color)) {
-                    color = attributes.color;
+                if (defined(attributes.color)) {
+                    hasPerColorAttribute = true;
+                }
+                //>>includeStart('debug', pragmas.debug);
+                else if (hasPerColorAttribute) {
+                    throw new DeveloperError('All GeometryInstances must have the same attributes.');
+                }
+                //>>includeEnd('debug');
+
+                // Not expecting these to be set by users, should only be set via GroundPrimitive.
+                // So don't check for mismatch.
+                if (ShadowVolumeAppearance.hasAttributesForSphericalExtents(attributes)) {
+                    hasSphericalExtentsAttribute = true;
+                }
+                if (ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(attributes)) {
+                    hasPlanarExtentsAttributes = true;
                 }
             }
+
+            // default to a color appearance
+            if (hasPerColorAttribute && !defined(appearance)) {
+                appearance = new PerInstanceColorAppearance({
+                    flat : true
+                });
+                this.appearance = appearance;
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
+                throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
+            }
+            if (defined(appearance.material) && !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes) {
+                throw new DeveloperError('Materials on ClassificationPrimitives are not supported except via GroundPrimitive');
+            }
             //>>includeEnd('debug');
+
+            this._hasSphericalExtentsAttribute = hasSphericalExtentsAttribute;
+            this._hasPlanarExtentsAttributes = hasPlanarExtentsAttributes;
+            this._hasPerColorAttribute = hasPerColorAttribute;
 
             var geometryInstances = new Array(length);
             for (i = 0; i < length; ++i) {
@@ -991,6 +980,7 @@ define([
                 });
             }
 
+            primitiveOptions.appearance = appearance;
             primitiveOptions.geometryInstances = geometryInstances;
 
             if (defined(this._createBoundingVolumeFunction)) {
@@ -1049,14 +1039,16 @@ define([
         }
         // Update primitive appearance
         if (this._primitive.appearance !== appearance) {
+            //>>includeStart('debug', pragmas.debug);
             // Check if the appearance is supported by the geometry attributes
             if (!this._hasSphericalExtentsAttribute && !this._hasPlanarExtentsAttributes && defined(appearance.material)) {
-                throw new DeveloperError('Materials on ClassificationPrimitives requires sphericalExtents GeometryInstanceAttribute or GeometryInstanceAttributes for computing planes');
+                throw new DeveloperError('Materials on ClassificationPrimitives are not supported except via GroundPrimitive');
             }
             if (!this._hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
                 throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
             }
-        this._primitive.appearance = appearance;
+            //>>includeEnd('debug');
+            this._primitive.appearance = appearance;
         }
 
         this._primitive.show = this.show;

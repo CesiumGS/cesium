@@ -57,7 +57,7 @@ define([
             shaderDependencies.requiresNormalEC = !appearance.flat;
         } else {
             // Scan material source for what hookups are needed. Assume czm_materialInput materialInput.
-            var materialShaderSource = appearance.material.shaderSource;
+            var materialShaderSource = appearance.material.shaderSource + '\n' + appearance.fragmentShaderSource;
 
             shaderDependencies.normalEC = materialShaderSource.includes('materialInput.normalEC') || materialShaderSource.includes('czm_getDefaultMaterial');
             shaderDependencies.positionToEyeEC = materialShaderSource.includes('materialInput.positionToEyeEC');
@@ -651,18 +651,6 @@ define([
         });
     }
 
-    // Swizzle to 2D/CV projected space. This produces positions that
-    // can directly be used in the VS for 2D/CV, but in practice there's
-    // a lot of duplicated and zero values (see below).
-    var swizzleScratch = new Cartesian3();
-    function swizzle(cartesian) {
-        Cartesian3.clone(cartesian, swizzleScratch);
-        cartesian.x = swizzleScratch.z;
-        cartesian.y = swizzleScratch.x;
-        cartesian.z = swizzleScratch.y;
-        return cartesian;
-    }
-
     var cornerScratch = new Cartesian3();
     var northWestScratch = new Cartesian3();
     var southEastScratch = new Cartesian3();
@@ -675,37 +663,37 @@ define([
         carto.longitude = rectangle.west;
         carto.latitude = rectangle.south;
 
-        var southWestCorner = swizzle(projection.project(carto, cornerScratch));
+        var southWestCorner = projection.project(carto, cornerScratch);
 
         carto.latitude = rectangle.north;
-        var northWest = swizzle(projection.project(carto, northWestScratch));
+        var northWest = projection.project(carto, northWestScratch);
 
         carto.longitude = rectangle.east;
         carto.latitude = rectangle.south;
-        var southEast = swizzle(projection.project(carto, southEastScratch));
+        var southEast = projection.project(carto, southEastScratch);
 
         // Since these positions are all in the 2D plane, there's a lot of zeros
         // and a lot of repetition. So we only need to encode 4 values.
         // Encode:
-        // x: y value for southWestCorner
-        // y: z value for southWestCorner
-        // z: z value for northWest
-        // w: y value for southEast
+        // x: x value for southWestCorner
+        // y: y value for southWestCorner
+        // z: y value for northWest
+        // w: x value for southEast
         var valuesHigh = [0, 0, 0, 0];
         var valuesLow = [0, 0, 0, 0];
-        var encoded = EncodedCartesian3.encode(southWestCorner.y, highLowScratch);
+        var encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
         valuesHigh[0] = encoded.high;
         valuesLow[0] = encoded.low;
 
-        encoded = EncodedCartesian3.encode(southWestCorner.z, highLowScratch);
+        encoded = EncodedCartesian3.encode(southWestCorner.y, highLowScratch);
         valuesHigh[1] = encoded.high;
         valuesLow[1] = encoded.low;
 
-        encoded = EncodedCartesian3.encode(northWest.z, highLowScratch);
+        encoded = EncodedCartesian3.encode(northWest.y, highLowScratch);
         valuesHigh[2] = encoded.high;
         valuesLow[2] = encoded.low;
 
-        encoded = EncodedCartesian3.encode(southEast.y, highLowScratch);
+        encoded = EncodedCartesian3.encode(southEast.x, highLowScratch);
         valuesHigh[3] = encoded.high;
         valuesLow[3] = encoded.low;
 
