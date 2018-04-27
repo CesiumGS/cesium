@@ -64,10 +64,8 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('points', points);
         Check.defined('times', times);
+        Check.number.equals('times.length', 'points.length', times.length, points.length);
         Check.number.greaterThanOrEquals('points.length', points.length, 2);
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
         //>>includeEnd('debug');
 
         this._times = times;

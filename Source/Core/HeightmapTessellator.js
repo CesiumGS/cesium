@@ -3,9 +3,9 @@ define([
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Ellipsoid',
         './EllipsoidalOccluder',
         './freezeObject',
@@ -21,9 +21,9 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         Ellipsoid,
         EllipsoidalOccluder,
         freezeObject,
@@ -135,18 +135,12 @@ define([
      */
     HeightmapTessellator.computeVertices = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.heightmap)) {
-            throw new DeveloperError('options.heightmap is required.');
-        }
-        if (!defined(options.width) || !defined(options.height)) {
-            throw new DeveloperError('options.width and options.height are required.');
-        }
-        if (!defined(options.nativeRectangle)) {
-            throw new DeveloperError('options.nativeRectangle is required.');
-        }
-        if (!defined(options.skirtHeight)) {
-            throw new DeveloperError('options.skirtHeight is required.');
-        }
+        Check.typeOf.object('options', options);
+        Check.defined('options.heightmap', options.heightmap);
+        Check.typeOf.number('options.width', options.width);
+        Check.typeOf.number('options.height', options.height);
+        Check.defined('options.nativeRectangle', options.nativeRectangle);
+        Check.typeOf.number('options.skirtHeight', options.skirtHeight);
         //>>includeEnd('debug');
 
         // This function tends to be a performance hotspot for terrain rendering,

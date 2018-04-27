@@ -1,15 +1,15 @@
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Event',
         './DataSource',
         './EntityCluster',
         './EntityCollection'
     ], function(
+        Check,
         defined,
         defineProperties,
-        DeveloperError,
         Event,
         DataSource,
         EntityCluster,
@@ -159,9 +159,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value must be defined.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
                 this._entityCluster = value;
             }

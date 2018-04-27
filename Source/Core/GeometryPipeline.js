@@ -6,6 +6,7 @@ define([
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
+        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -32,6 +33,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -140,9 +142,7 @@ define([
      */
     GeometryPipeline.toWireframe = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.defined('geometry', geometry);
         //>>includeEnd('debug');
 
         var indices = geometry.indices;
@@ -188,12 +188,8 @@ define([
         attributeName = defaultValue(attributeName, 'normal');
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
-        if (!defined(geometry.attributes.position)) {
-            throw new DeveloperError('geometry.attributes.position is required.');
-        }
+        Check.defined('geometry', geometry);
+        Check.defined('geometry.attributes.positions', geometry.attributes.positions);
         if (!defined(geometry.attributes[attributeName])) {
             throw new DeveloperError('geometry.attributes must have an attribute with the same name as the attributeName parameter, ' + attributeName + '.');
         }
@@ -254,9 +250,7 @@ define([
      */
     GeometryPipeline.createAttributeLocations = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.defined('geometry', geometry);
         //>>includeEnd('debug')
 
         // There can be a WebGL performance hit when attribute 0 is disabled, so
@@ -329,9 +323,7 @@ define([
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.defined('geometry', geometry);
         //>>includeEnd('debug');
 
         var numVertices = Geometry.computeNumberOfVertices(geometry);
@@ -418,9 +410,7 @@ define([
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.defined('geometry', geometry);
         //>>includeEnd('debug');
 
         var indices = geometry.indices;
@@ -497,9 +487,7 @@ define([
      */
     GeometryPipeline.fitToUnsignedShortIndices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.defined('geometry', geometry);
         if ((defined(geometry.indices)) &&
             ((geometry.primitiveType !== PrimitiveType.TRIANGLES) &&
              (geometry.primitiveType !== PrimitiveType.LINES) &&
@@ -604,18 +592,10 @@ define([
      */
     GeometryPipeline.projectTo2D = function(geometry, attributeName, attributeName3D, attributeName2D, projection) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
-        if (!defined(attributeName)) {
-            throw new DeveloperError('attributeName is required.');
-        }
-        if (!defined(attributeName3D)) {
-            throw new DeveloperError('attributeName3D is required.');
-        }
-        if (!defined(attributeName2D)) {
-            throw new DeveloperError('attributeName2D is required.');
-        }
+        Check.defined('geometry', geometry);
+        Check.typeOf.string('attributeName', attributeName);
+        Check.typeOf.string('attributeName3D', attributeName3D);
+        Check.typeOf.string('attributeName2D', attributeName2D);
         if (!defined(geometry.attributes[attributeName])) {
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
@@ -690,18 +670,10 @@ define([
      */
     GeometryPipeline.encodeAttribute = function(geometry, attributeName, attributeHighName, attributeLowName) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
-        if (!defined(attributeName)) {
-            throw new DeveloperError('attributeName is required.');
-        }
-        if (!defined(attributeHighName)) {
-            throw new DeveloperError('attributeHighName is required.');
-        }
-        if (!defined(attributeLowName)) {
-            throw new DeveloperError('attributeLowName is required.');
-        }
+        Check.defined('geometry', geometry);
+        Check.typeOf.string('attributeName', attributeName);
+        Check.typeOf.string('attributeHighName', attributeHighName);
+        Check.typeOf.string('attributeLowName', attributeLowName);
         if (!defined(geometry.attributes[attributeName])) {
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
@@ -783,9 +755,7 @@ define([
      */
     GeometryPipeline.transformToWorldCoordinates = function(instance) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(instance)) {
-            throw new DeveloperError('instance is required.');
-        }
+        Check.defined('instance', instance);
         //>>includeEnd('debug');
 
         var modelMatrix = instance.modelMatrix;
@@ -1025,9 +995,8 @@ define([
      */
     GeometryPipeline.combineInstances = function(instances) {
         //>>includeStart('debug', pragmas.debug);
-        if ((!defined(instances)) || (instances.length < 1)) {
-            throw new DeveloperError('instances is required and must have length greater than zero.');
-        }
+        Check.defined('instances', instances);
+        Check.number.greaterThan('instances.length', instances.length, 0);
         //>>includeEnd('debug');
 
         var instanceGeometry = [];
@@ -1076,15 +1045,10 @@ define([
      */
     GeometryPipeline.computeNormal = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
-        if (!defined(geometry.attributes.position) || !defined(geometry.attributes.position.values)) {
-            throw new DeveloperError('geometry.attributes.position.values is required.');
-        }
-        if (!defined(geometry.indices)) {
-            throw new DeveloperError('geometry.indices is required.');
-        }
+        Check.defined('geometry', geometry);
+        Check.defined('geometry.attributes.position', geometry.attributes.position);
+        Check.defined('geometry.attributes.position.values', geometry.attributes.position.values);
+        Check.defined('geometry.indices', geometry.indices);
         if (geometry.indices.length < 2 || geometry.indices.length % 3 !== 0) {
             throw new DeveloperError('geometry.indices length must be greater than 0 and be a multiple of 3.');
         }
@@ -1227,27 +1191,20 @@ define([
      */
     GeometryPipeline.computeTangentAndBitangent = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.defined('geometry', geometry);
         //>>includeEnd('debug');
 
         var attributes = geometry.attributes;
         var indices = geometry.indices;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(attributes.position) || !defined(attributes.position.values)) {
-            throw new DeveloperError('geometry.attributes.position.values is required.');
-        }
-        if (!defined(attributes.normal) || !defined(attributes.normal.values)) {
-            throw new DeveloperError('geometry.attributes.normal.values is required.');
-        }
-        if (!defined(attributes.st) || !defined(attributes.st.values)) {
-            throw new DeveloperError('geometry.attributes.st.values is required.');
-        }
-        if (!defined(indices)) {
-            throw new DeveloperError('geometry.indices is required.');
-        }
+        Check.defined('attributes.position', attributes.position);
+        Check.defined('attributes.position.values', attributes.position.values);
+        Check.defined('attributes.normal', attributes.normal);
+        Check.defined('attributes.normal.values', attributes.normal.values);
+        Check.defined('attributes.st', attributes.st);
+        Check.defined('attributes.st.values', attributes.st.values);
+        Check.defined('indices', indices);
         if (indices.length < 2 || indices.length % 3 !== 0) {
             throw new DeveloperError('geometry.indices length must be greater than 0 and be a multiple of 3.');
         }
@@ -1366,9 +1323,7 @@ define([
      */
     GeometryPipeline.compressVertices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.defined('geometry', geometry);
         //>>includeEnd('debug');
 
         var extrudeAttribute = geometry.attributes.extrudeDirection;
@@ -1508,9 +1463,7 @@ define([
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
         //>>includeStart('debug', pragmas.debug);
-        if (numberOfVertices < 3) {
-            throw new DeveloperError('The number of vertices must be at least three.');
-        }
+        Check.number.greaterThanOrEquals('numberOfVertices', numberOfVertices, 3);
         if (numberOfVertices % 3 !== 0) {
             throw new DeveloperError('The number of vertices must be a multiple of three.');
         }
@@ -1529,9 +1482,7 @@ define([
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
         //>>includeStart('debug', pragmas.debug);
-        if (numberOfVertices < 3) {
-            throw new DeveloperError('The number of vertices must be at least three.');
-        }
+        Check.number.greaterThanOrEquals('numberOfVertices', numberOfVertices, 3);
         //>>includeEnd('debug');
 
         var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 2) * 3);
@@ -1555,9 +1506,7 @@ define([
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
         //>>includeStart('debug', pragmas.debug);
-        if (numberOfVertices < 3) {
-            throw new DeveloperError('The number of vertices must be at least 3.');
-        }
+        Check.number.greaterThanOrEquals('numberOfVertices', numberOfVertices, 3);
         //>>includeEnd('debug');
 
         var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 2) * 3);
@@ -1596,9 +1545,7 @@ define([
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
         //>>includeStart('debug', pragmas.debug);
-        if (numberOfVertices < 2) {
-            throw new DeveloperError('The number of vertices must be at least two.');
-        }
+        Check.number.greaterThanOrEquals('numberOfVertices', numberOfVertices, 2);
         if (numberOfVertices % 2 !== 0) {
             throw new DeveloperError('The number of vertices must be a multiple of 2.');
         }
@@ -1617,9 +1564,7 @@ define([
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
         //>>includeStart('debug', pragmas.debug);
-        if (numberOfVertices < 2) {
-            throw new DeveloperError('The number of vertices must be at least two.');
-        }
+        Check.number.greaterThanOrEquals('numberOfVertices', numberOfVertices, 2);
         //>>includeEnd('debug');
 
         var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 1) * 2);
@@ -1640,9 +1585,7 @@ define([
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
         //>>includeStart('debug', pragmas.debug);
-        if (numberOfVertices < 2) {
-            throw new DeveloperError('The number of vertices must be at least two.');
-        }
+        Check.number.greaterThanOrEquals('numberOfVertices', numberOfVertices, 2);
         //>>includeEnd('debug');
 
         var indices = IndexDatatype.createTypedArray(numberOfVertices, numberOfVertices * 2);
@@ -2521,9 +2464,7 @@ define([
      */
     GeometryPipeline.splitLongitude = function(instance) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(instance)) {
-            throw new DeveloperError('instance is required.');
-        }
+        Check.defined('instance', instance);
         //>>includeEnd('debug');
 
         var geometry = instance.geometry;

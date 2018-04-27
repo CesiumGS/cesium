@@ -1,4 +1,5 @@
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -6,6 +7,7 @@ define([
         './freezeObject',
         './WebGLConstants'
     ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -122,9 +124,7 @@ define([
      */
     ComponentDatatype.getSizeInBytes = function(componentDatatype){
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(componentDatatype)) {
-            throw new DeveloperError('value is required.');
-        }
+        Check.defined('componentDataType', componentDatatType);
         //>>includeEnd('debug');
 
         switch (componentDatatype) {
@@ -222,12 +222,8 @@ define([
      */
     ComponentDatatype.createTypedArray = function(componentDatatype, valuesOrLength) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(componentDatatype)) {
-            throw new DeveloperError('componentDatatype is required.');
-        }
-        if (!defined(valuesOrLength)) {
-            throw new DeveloperError('valuesOrLength is required.');
-        }
+        Check.defined('componentDatatype', componentDatatype);
+        Check.defined('valuesOrLength', valuesOrLength);
         //>>includeEnd('debug');
 
         switch (componentDatatype) {
@@ -267,12 +263,8 @@ define([
      */
     ComponentDatatype.createArrayBufferView = function(componentDatatype, buffer, byteOffset, length) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(componentDatatype)) {
-            throw new DeveloperError('componentDatatype is required.');
-        }
-        if (!defined(buffer)) {
-            throw new DeveloperError('buffer is required.');
-        }
+        Check.defined('componentDatatype', componentDatatype);
+        Check.defined('buffer', buffer);
         //>>includeEnd('debug');
 
         byteOffset = defaultValue(byteOffset, 0);

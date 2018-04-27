@@ -1,9 +1,7 @@
 define([
-        './defined',
-        './DeveloperError'
+        './Check'
     ], function(
-        defined,
-        DeveloperError) {
+        Check) {
     'use strict';
 
     /**
@@ -18,13 +16,8 @@ define([
      */
     function subdivideArray(array, numberOfArrays) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required.');
-        }
-
-        if (!defined(numberOfArrays) || numberOfArrays < 1) {
-            throw new DeveloperError('numberOfArrays must be greater than 0.');
-        }
+        Check.defined('array', array);
+        Check.number.greaterThan('numberOfArrays', numberOfArrays, 0);
         //>>includeEnd('debug');
 
         var result = [];

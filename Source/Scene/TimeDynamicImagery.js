@@ -65,9 +65,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (this._clock !== value) {
@@ -88,9 +86,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (this._times !== value) {

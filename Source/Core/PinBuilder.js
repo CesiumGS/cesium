@@ -1,5 +1,6 @@
 define([
         './buildModuleUrl',
+        './Check',
         './Color',
         './defined',
         './DeveloperError',
@@ -7,6 +8,7 @@ define([
         './writeTextToCanvas'
     ], function(
         buildModuleUrl,
+        Check,
         Color,
         defined,
         DeveloperError,
@@ -40,12 +42,8 @@ define([
      */
     PinBuilder.prototype.fromColor = function(color, size) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
+        Check.defined('color', color);
+        Check.defined('size', size);
         //>>includeEnd('debug');
         return createPin(undefined, undefined, color, size, this._cache);
     };
@@ -60,15 +58,9 @@ define([
      */
     PinBuilder.prototype.fromUrl = function(url, color, size) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required');
-        }
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
+        Check.defined('url', url);
+        Check.defined('color', color);
+        Check.typeOf.number('size', size);
         //>>includeEnd('debug');
         return createPin(url, undefined, color, size, this._cache);
     };
@@ -83,15 +75,9 @@ define([
      */
     PinBuilder.prototype.fromMakiIconId = function(id, color, size) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required');
-        }
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
+        Check.typeOf.string('id', id);
+        Check.defined('color', color);
+        Check.typeOf.number('size', size);
         //>>includeEnd('debug');
         return createPin(buildModuleUrl('Assets/Textures/maki/' + encodeURIComponent(id) + '.png'), undefined, color, size, this._cache);
     };
@@ -107,15 +93,9 @@ define([
      */
     PinBuilder.prototype.fromText = function(text, color, size) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(text)) {
-            throw new DeveloperError('text is required');
-        }
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(size)) {
-            throw new DeveloperError('size is required');
-        }
+        Check.typeOf.string('text', text);
+        Check.defined('color', color);
+        Check.typeOf.number('size', size);
         //>>includeEnd('debug');
 
         return createPin(undefined, text, color, size, this._cache);

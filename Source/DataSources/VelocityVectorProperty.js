@@ -1,18 +1,18 @@
 define([
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Event',
         '../Core/JulianDate',
         './Property'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Event,
         JulianDate,
         Property) {
@@ -146,9 +146,7 @@ define([
      */
     VelocityVectorProperty.prototype._getValue = function(time, velocityResult, positionResult) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         if (!defined(velocityResult)) {

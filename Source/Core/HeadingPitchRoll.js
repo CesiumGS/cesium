@@ -1,9 +1,11 @@
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Math'
     ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -36,9 +38,7 @@ define([
      */
     HeadingPitchRoll.fromQuaternion = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
+        Check.defined('quaternion', quaternion);
         //>>includeEnd('debug');
         if (!defined(result)) {
             result = new HeadingPitchRoll();
@@ -65,15 +65,9 @@ define([
      */
     HeadingPitchRoll.fromDegrees = function(heading, pitch, roll, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(heading)) {
-            throw new DeveloperError('heading is required');
-        }
-        if (!defined(pitch)) {
-            throw new DeveloperError('pitch is required');
-        }
-        if (!defined(roll)) {
-            throw new DeveloperError('roll is required');
-        }
+        Check.typeOf.number('heading', heading);
+        Check.typeOf.number('pitch', pitch);
+        Check.typeOf.number('roll', roll);
         //>>includeEnd('debug');
         if (!defined(result)) {
             result = new HeadingPitchRoll();

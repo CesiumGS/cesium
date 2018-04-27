@@ -118,12 +118,8 @@ define([
             frustum.near !== frustum._near || frustum.far !== frustum._far) {
 
             //>>includeStart('debug', pragmas.debug);
-            if (frustum.left > frustum.right) {
-                throw new DeveloperError('right must be greater than left.');
-            }
-            if (frustum.bottom > frustum.top) {
-                throw new DeveloperError('top must be greater than bottom.');
-            }
+            Check.number.lessThan('frustum.left', frustum.left, frustum.right);
+            Check.number.lessThan('frustum.bottom', frustum.bottom, frustum.top);
             if (frustum.near <= 0 || frustum.near > frustum.far) {
                 throw new DeveloperError('near must be greater than zero and less than far.');
             }
@@ -296,23 +292,8 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.number.greaterThan('drawingBufferWidth', drawingBufferWidth, 0);
         Check.number.greaterThan('drawingBufferHeight', drawingBufferHeight, 0);
-        Check.typeOf.('distance', distance);
-        Check.
-        if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
-            throw new DeveloperError('Both drawingBufferWidth and drawingBufferHeight are required.');
-        }
-        if (drawingBufferWidth <= 0) {
-            throw new DeveloperError('drawingBufferWidth must be greater than zero.');
-        }
-        if (drawingBufferHeight <= 0) {
-            throw new DeveloperError('drawingBufferHeight must be greater than zero.');
-        }
-        if (!defined(distance)) {
-            throw new DeveloperError('distance is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('A result object is required.');
-        }
+        Check.typeOf.number('distance', distance);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var frustumWidth = this.right - this.left;

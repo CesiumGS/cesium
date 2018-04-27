@@ -1,5 +1,6 @@
 define([
         '../ThirdParty/when',
+        './Check',
         './Credit',
         './defaultValue',
         './defined',
@@ -17,6 +18,7 @@ define([
         './TileProviderError'
     ], function(
         when,
+        Check,
         Credit,
         defaultValue,
         defined,
@@ -64,9 +66,7 @@ define([
     function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.defined('options.url', options.url);
         //>>includeEnd('debug');
 
         var resource = Resource.createIfNeeded(options.url);

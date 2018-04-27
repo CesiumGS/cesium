@@ -1,9 +1,11 @@
 define([
         './Cartesian3',
+        './Check',
         './defined',
         './DeveloperError'
     ], function(
         Cartesian3,
+        Check,
         defined,
         DeveloperError) {
     'use strict';
@@ -60,12 +62,9 @@ define([
         if (!defined(right) || !(right instanceof Array)) {
             throw new DeveloperError('The array right is required.');
         }
-        if (diagonal.length !== right.length) {
-            throw new DeveloperError('diagonal and right must have the same lengths.');
-        }
-        if (lower.length !== upper.length) {
-            throw new DeveloperError('lower and upper must have the same lengths.');
-        } else if (lower.length !== diagonal.length - 1) {
+        Check.number.equals('diagonal.length', 'right.length', diagonal.length, right.length);
+        Check.number.equals('lower.length', 'upper.length', lower.length, upper.length);
+        if (lower.length !== diagonal.length - 1) {
             throw new DeveloperError('lower and upper must be one less than the length of diagonal.');
         }
         //>>includeEnd('debug');

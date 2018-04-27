@@ -2,6 +2,7 @@ define([
         '../Core/AssociativeArray',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -19,6 +20,7 @@ define([
         AssociativeArray,
         Cartesian2,
         Cartesian3,
+        Check,
         Color,
         defaultValue,
         defined,
@@ -79,12 +81,8 @@ define([
      */
     function LabelVisualizer(entityCluster, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entityCluster)) {
-            throw new DeveloperError('entityCluster is required.');
-        }
-        if (!defined(entityCollection)) {
-            throw new DeveloperError('entityCollection is required.');
-        }
+        Check.defined('entityCluster', entityCluster);
+        Check.defined('entityCollection', entityCollection);
         //>>includeEnd('debug');
 
         entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
@@ -105,9 +103,7 @@ define([
      */
     LabelVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var items = this._items.values;
@@ -182,12 +178,8 @@ define([
      */
     LabelVisualizer.prototype.getBoundingSphere = function(entity, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('entity', entity);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var item = this._items.get(entity.id);

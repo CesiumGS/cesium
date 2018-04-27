@@ -1,6 +1,7 @@
 define([
         '../Core/AssociativeArray',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -23,6 +24,7 @@ define([
     ], function(
         AssociativeArray,
         Cartesian3,
+        Check,
         defined,
         destroyObject,
         DeveloperError,
@@ -392,12 +394,8 @@ define([
      */
     function PathVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        if (!defined(entityCollection)) {
-            throw new DeveloperError('entityCollection is required.');
-        }
+        Check.defined('scene', scene);
+        Check.defined('entityCollection', entityCollection);
         //>>includeEnd('debug');
 
         entityCollection.collectionChanged.addEventListener(PathVisualizer.prototype._onCollectionChanged, this);
@@ -419,9 +417,7 @@ define([
      */
     PathVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var updaters = this._updaters;

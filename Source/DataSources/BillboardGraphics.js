@@ -1,15 +1,15 @@
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Event',
         './createPropertyDescriptor'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Event,
         createPropertyDescriptor) {
     'use strict';
@@ -370,9 +370,7 @@ define([
      */
     BillboardGraphics.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(source)) {
-            throw new DeveloperError('source is required.');
-        }
+        Check.defined('source', source);
         //>>includeEnd('debug');
 
         this.color = defaultValue(this._color, source.color);

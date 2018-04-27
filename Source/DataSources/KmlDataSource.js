@@ -2473,12 +2473,8 @@ define([
         var canvas = options.canvas;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(camera)) {
-            throw new DeveloperError('options.camera is required.');
-        }
-        if (!defined(canvas)) {
-            throw new DeveloperError('options.canvas is required.');
-        }
+        Check.defined('camera', camera);
+        Check.defined('canvas', canvas);
         //>>includeEnd('debug');
 
         this._changed = new Event();
@@ -2652,9 +2648,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value must be defined.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
                 this._entityCluster = value;
             }
@@ -2674,9 +2668,7 @@ define([
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(data)) {
-            throw new DeveloperError('data is required.');
-        }
+        Check.defined('data', data);
         //>>includeEnd('debug');
 
         options = defaultValue(options, {});

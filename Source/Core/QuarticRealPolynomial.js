@@ -1,9 +1,10 @@
 define([
+        './Check',
         './CubicRealPolynomial',
-        './DeveloperError',
         './Math',
         './QuadraticRealPolynomial'
     ], function(
+        Check,
         CubicRealPolynomial,
         DeveloperError,
         CesiumMath,
@@ -29,21 +30,11 @@ define([
      */
     QuarticRealPolynomial.computeDiscriminant = function(a, b, c, d, e) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof a !== 'number') {
-            throw new DeveloperError('a is a required number.');
-        }
-        if (typeof b !== 'number') {
-            throw new DeveloperError('b is a required number.');
-        }
-        if (typeof c !== 'number') {
-            throw new DeveloperError('c is a required number.');
-        }
-        if (typeof d !== 'number') {
-            throw new DeveloperError('d is a required number.');
-        }
-        if (typeof e !== 'number') {
-            throw new DeveloperError('e is a required number.');
-        }
+        Check.typeOf.number('a', a);
+        Check.typeOf.number('b', b);
+        Check.typeOf.number('c', c);
+        Check.typeOf.number('d', d);
+        Check.typeOf.number('e', e);
         //>>includeEnd('debug');
 
         var a2 = a * a;
@@ -254,21 +245,11 @@ define([
      */
     QuarticRealPolynomial.computeRealRoots = function(a, b, c, d, e) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof a !== 'number') {
-            throw new DeveloperError('a is a required number.');
-        }
-        if (typeof b !== 'number') {
-            throw new DeveloperError('b is a required number.');
-        }
-        if (typeof c !== 'number') {
-            throw new DeveloperError('c is a required number.');
-        }
-        if (typeof d !== 'number') {
-            throw new DeveloperError('d is a required number.');
-        }
-        if (typeof e !== 'number') {
-            throw new DeveloperError('e is a required number.');
-        }
+        Check.typeOf.number('a', a);
+        Check.typeOf.number('b', a);
+        Check.typeOf.number('c', a);
+        Check.typeOf.number('d', a);
+        Check.typeOf.number('e', a);
         //>>includeEnd('debug');
 
         if (Math.abs(a) < CesiumMath.EPSILON15) {

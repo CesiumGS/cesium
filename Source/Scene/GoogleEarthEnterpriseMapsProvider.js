@@ -106,12 +106,8 @@ define([
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
-        if (!defined(options.channel)) {
-            throw new DeveloperError('options.channel is required.');
-        }
+        Check.defined('options.url', options.url);
+        Check.defined('options.channel', options.channel);
         //>>includeEnd('debug');
 
         var url = options.url;

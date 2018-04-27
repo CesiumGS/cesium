@@ -1,10 +1,12 @@
 define([
+        './Check',
         './defined',
         './DeveloperError',
         './freezeObject',
         './Math',
         './WebGLConstants'
     ], function(
+        Check,
         defined,
         DeveloperError,
         freezeObject,
@@ -103,9 +105,7 @@ define([
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(numberOfVertices)) {
-            throw new DeveloperError('numberOfVertices is required.');
-        }
+        Check.typeOf.number('numberOfVertices', numberOfVertices);
         //>>includeEnd('debug');
 
         if (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
@@ -128,15 +128,10 @@ define([
      */
     IndexDatatype.createTypedArrayFromArrayBuffer = function(numberOfVertices, sourceArray, byteOffset, length) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(numberOfVertices)) {
-            throw new DeveloperError('numberOfVertices is required.');
-        }
-        if (!defined(sourceArray)) {
-            throw new DeveloperError('sourceArray is required.');
-        }
-        if (!defined(byteOffset)) {
-            throw new DeveloperError('byteOffset is required.');
-        }
+        Check.typeOf.number('numberOfVertices', numberOfVertices);
+        Check.defined('sourceArray', sourceArray);
+        Check.typeOf.number('byteOffset', byteOffset);
+        Check.typeOf.number('length', length);
         //>>includeEnd('debug');
 
         if (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES) {

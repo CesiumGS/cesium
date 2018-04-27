@@ -1,6 +1,7 @@
 define([
         '../ThirdParty/sprintf',
         './binarySearch',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -12,6 +13,7 @@ define([
     ], function(
         sprintf,
         binarySearch,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -264,9 +266,7 @@ define([
      */
     JulianDate.fromIso8601 = function(iso8601String, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof iso8601String !== 'string') {
-            throw new DeveloperError(iso8601ErrorMessage);
-        }
+        Check.typeOf.string('iso8601String', iso8601String);
         //>>includeEnd('debug');
 
         //Comma and decimal point both indicate a fractional number according to ISO 8601,
@@ -289,9 +289,7 @@ define([
         var tmp;
         var inLeapYear;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(date)) {
-            throw new DeveloperError(iso8601ErrorMessage);
-        }
+        Check.defined('date', date);
 
         var dashCount;
         //>>includeEnd('debug');
@@ -549,9 +547,7 @@ define([
      */
     JulianDate.toGregorianDate = function(julianDate, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
+        Check.defined('julianDate', julianDate);
         //>>includeEnd('debug');
 
         var isLeapSecond = false;
@@ -629,9 +625,7 @@ define([
      */
     JulianDate.toDate = function(julianDate) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
+        Check.defined('julianDate', julianDate);
         //>>includeEnd('debug');
 
         var gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
@@ -651,9 +645,7 @@ define([
      */
     JulianDate.toIso8601 = function(julianDate, precision) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
+        Check.defined('julianDate', julianDate);
         //>>includeEnd('debug');
 
         var gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
@@ -703,12 +695,8 @@ define([
      */
     JulianDate.compare = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
+        Check.defined('left', left);
+        Check.defined('right', right);
         //>>includeEnd('debug');
 
         var julianDayNumberDifference = left.dayNumber - right.dayNumber;
@@ -746,9 +734,7 @@ define([
      */
     JulianDate.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(epsilon)) {
-            throw new DeveloperError('epsilon is required.');
-        }
+        Check.defined('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return (left === right) ||
@@ -765,9 +751,7 @@ define([
      */
     JulianDate.totalDays = function(julianDate) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
+        Check.defined('julianDate', julianDate);
         //>>includeEnd('debug');
         return julianDate.dayNumber + (julianDate.secondsOfDay / TimeConstants.SECONDS_PER_DAY);
     };
@@ -781,12 +765,8 @@ define([
      */
     JulianDate.secondsDifference = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
+        Check.defined('left', left);
+        Check.defined('right', right);
         //>>includeEnd('debug');
 
         var dayDifference = (left.dayNumber - right.dayNumber) * TimeConstants.SECONDS_PER_DAY;
@@ -802,12 +782,8 @@ define([
      */
     JulianDate.daysDifference = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
+        Check.defined('left', left);
+        Check.defined('right', right);
         //>>includeEnd('debug');
 
         var dayDifference = (left.dayNumber - right.dayNumber);
@@ -845,15 +821,9 @@ define([
      */
     JulianDate.addSeconds = function(julianDate, seconds, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
-        if (!defined(seconds)) {
-            throw new DeveloperError('seconds is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('julianDate', julianDate);
+        Check.typeOf.number('seconds', seconds);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         return setComponents(julianDate.dayNumber, julianDate.secondsOfDay + seconds, result);
@@ -869,15 +839,9 @@ define([
      */
     JulianDate.addMinutes = function(julianDate, minutes, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
-        if (!defined(minutes)) {
-            throw new DeveloperError('minutes is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('julianDate', julianDate);
+        Check.typeOf.number('minutes', minutes);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var newSecondsOfDay = julianDate.secondsOfDay + (minutes * TimeConstants.SECONDS_PER_MINUTE);
@@ -894,15 +858,9 @@ define([
      */
     JulianDate.addHours = function(julianDate, hours, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
-        if (!defined(hours)) {
-            throw new DeveloperError('hours is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('julianDate', julianDate);
+        Check.typeOf.number('hours', hours);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var newSecondsOfDay = julianDate.secondsOfDay + (hours * TimeConstants.SECONDS_PER_HOUR);
@@ -919,15 +877,9 @@ define([
      */
     JulianDate.addDays = function(julianDate, days, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
-        if (!defined(days)) {
-            throw new DeveloperError('days is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('julianDate', julianDate);
+        Check.typeOf.number('days', days);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var newJulianDayNumber = julianDate.dayNumber + days;

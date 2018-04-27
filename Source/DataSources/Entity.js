@@ -260,9 +260,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (value === this._show) {
@@ -474,9 +472,7 @@ define([
      */
     Entity.prototype.isAvailable = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var availability = this._availability;
@@ -497,9 +493,7 @@ define([
         var propertyNames = this._propertyNames;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(propertyName)) {
-            throw new DeveloperError('propertyName is required.');
-        }
+        Check.typeOf.string('propertyName', propertyName);
         if (propertyNames.indexOf(propertyName) !== -1) {
             throw new DeveloperError(propertyName + ' is already a registered property.');
         }
@@ -525,9 +519,7 @@ define([
         var index = propertyNames.indexOf(propertyName);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(propertyName)) {
-            throw new DeveloperError('propertyName is required.');
-        }
+        Check.typeOf.string('propertyName', propertyName);
         if (index === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
         }
@@ -545,9 +537,7 @@ define([
      */
     Entity.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(source)) {
-            throw new DeveloperError('source is required.');
-        }
+        Check.defined('source', source);
         //>>includeEnd('debug');
 
         //Name, show, and availability are not Property objects and are currently handled differently.

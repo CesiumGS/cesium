@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/Color',
         '../Core/createGuid',
         '../Core/defaultValue',
@@ -25,6 +26,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         Color,
         createGuid,
         defaultValue,
@@ -234,9 +236,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (this._show !== value) {
@@ -257,9 +257,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug)
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 var position = this._position;
@@ -284,9 +282,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug)
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 var heightReference = this._heightReference;
@@ -320,9 +316,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 var pixelOffset = this._pixelOffset;
@@ -361,9 +355,8 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && value.far <= value.near) {
-                    throw new DeveloperError('far distance must be greater than near distance.');
-                }
+                Check.defined('value', value);
+                Check.number.greaterThan('value.far', value.far, value.near);
                 //>>includeEnd('debug');
 
                 var scaleByDistance = this._scaleByDistance;
@@ -402,9 +395,8 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && value.far <= value.near) {
-                    throw new DeveloperError('far distance must be greater than near distance.');
-                }
+                Check.defined('value', value);
+                Check.number.greaterThan('value.far', value.far, value.near);
                 //>>includeEnd('debug');
 
                 var translucencyByDistance = this._translucencyByDistance;
@@ -444,9 +436,8 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && value.far <= value.near) {
-                    throw new DeveloperError('far distance must be greater than near distance.');
-                }
+                Check.defined('value', value);
+                Check.number.greaterThan('value.far', value.far, value.near);
                 //>>includeEnd('debug');
 
                 var pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
@@ -485,9 +476,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 var eyeOffset = this._eyeOffset;
@@ -518,9 +507,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (this._horizontalOrigin !== value) {
@@ -550,9 +537,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (this._verticalOrigin !== value) {
@@ -582,9 +567,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (this._scale !== value) {
@@ -627,9 +610,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 var color = this._color;
@@ -651,9 +632,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 if (this._rotation !== value) {
@@ -690,9 +669,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
+                Check.defined('value', value);
                 //>>includeEnd('debug');
 
                 var alignedAxis = this._alignedAxis;
@@ -769,9 +746,8 @@ define([
             set : function(value) {
                 if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (defined(value) && value.far <= value.near) {
-                        throw new DeveloperError('far distance must be greater than near distance.');
-                    }
+                    Check.defined('value', value);
+                    Check.number.greaterThan('value.far', value.far, value.near);
                     //>>includeEnd('debug');
                     this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION);
@@ -793,9 +769,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value) || value < 0.0) {
-                        throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
-                    }
+                    Check.number.greaterThanOrEquals('disableDepthTestDistance', value, 0.0);
                     //>>includeEnd('debug');
                     this._disableDepthTestDistance = value;
                     makeDirty(this, DISABLE_DEPTH_DISTANCE);
@@ -1097,12 +1071,8 @@ define([
      */
     Billboard.prototype.setImage = function(id, image) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
-        }
-        if (!defined(image)) {
-            throw new DeveloperError('image is required.');
-        }
+        Check.defined('id', id);
+        Check.defined('image', image);
         //>>includeEnd('debug');
 
         if (this._imageId === id) {
@@ -1130,12 +1100,8 @@ define([
      */
     Billboard.prototype.setImageSubRegion = function(id, subRegion) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
-        }
-        if (!defined(subRegion)) {
-            throw new DeveloperError('subRegion is required.');
-        }
+        Check.defined('id', id);
+        Check.defined('subReqion', subRegion);
         //>>includeEnd('debug');
 
         if (this._imageId === id && BoundingRectangle.equals(this._imageSubRegion, subRegion)) {
@@ -1153,9 +1119,7 @@ define([
 
     Billboard.prototype._setTranslate = function(value) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
+        Check.defined('value', value);
         //>>includeEnd('debug');
 
         var translate = this._translate;
