@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.46 - 2018-06-01
+
+##### Breaking Changes :mega:
+* `ParticleSystem` no longer uses `forces`. [#]()
+* `Particle` no longer uses `size`, `rate`, `lifeTime`, `life`, `minimumLife`, `maximumLife`, `minimumWidth`, `minimumHeight`, `maximumWidth`, and `maximumHeight`. [#]()
+
 ### 1.45 - 2018-05-01
 
 ##### Major Announcements :loudspeaker:
