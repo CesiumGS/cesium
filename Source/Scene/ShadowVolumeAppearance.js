@@ -11,7 +11,9 @@ define([
         '../Core/EncodedCartesian3',
         '../Core/GeometryInstanceAttribute',
         '../Core/Matrix2',
+        '../Core/Matrix4',
         '../Core/Rectangle',
+        '../Core/Transforms',
         '../Renderer/ShaderSource',
         '../Scene/PerInstanceColorAppearance'
 ], function(
@@ -27,7 +29,9 @@ define([
         EncodedCartesian3,
         GeometryInstanceAttribute,
         Matrix2,
+        Matrix4,
         Rectangle,
+        Transforms,
         ShaderSource,
         PerInstanceColorAppearance) {
     'use strict';
@@ -404,8 +408,10 @@ define([
                     'v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);\n' +
                     'v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);\n';
             } else {
-                // Two varieties of planar texcoords. 2D/CV case is "compressed" to fewer attributes
+                // Two varieties of planar texcoords
                 if (columbusView2D) {
+                    // 2D/CV case may have very large "plane extents," so planes and distances encoded as 3 64 bit positions,
+                    // which in 2D can be encoded as 2 64 bit vec2s
                     glsl +=
                         'vec4 planes2D_high = czm_batchTable_planes2D_HIGH(batchId);\n' +
                         'vec4 planes2D_low = czm_batchTable_planes2D_LOW(batchId);\n' +
@@ -414,9 +420,10 @@ define([
                         'vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.w, planes2D_high.y), vec3(0.0, planes2D_low.w, planes2D_low.y))).xyz;\n';
                 } else {
                     glsl +=
+                        // 3D case has smaller "plane extents," so planes encoded as a 64 bit position and 2 vec3s for distances/direction
                         'vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest_HIGH(batchId), czm_batchTable_southWest_LOW(batchId))).xyz;\n' +
-                        'vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_northWest_HIGH(batchId), czm_batchTable_northWest_LOW(batchId))).xyz;\n' +
-                        'vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southEast_HIGH(batchId), czm_batchTable_southEast_LOW(batchId))).xyz;\n';
+                        'vec3 northWestCorner = czm_normal * czm_batchTable_northward(batchId) + southWestCorner;\n' +
+                        'vec3 southEastCorner = czm_normal * czm_batchTable_eastward(batchId) + southWestCorner;\n';
                 }
                 glsl +=
                     'vec3 eastWard = southEastCorner - southWestCorner;\n' +
@@ -544,25 +551,6 @@ define([
             }
         }
     });
-
-    var encodeScratch = new EncodedCartesian3();
-    function addAttributesForPoint(point, name, attributes) {
-        var encoded = EncodedCartesian3.fromCartesian(point, encodeScratch);
-
-        attributes[name + '_HIGH'] = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
-            value : Cartesian3.pack(encoded.high, [0, 0, 0])
-        });
-
-        attributes[name + '_LOW'] = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
-            value : Cartesian3.pack(encoded.low, [0, 0, 0])
-        });
-    }
 
     var cartographicScratch = new Cartographic();
     var rectangleCenterScratch = new Cartographic();
@@ -712,6 +700,100 @@ define([
         });
     }
 
+    var enuMatrixScratch = new Matrix4();
+    var inverseEnuScratch = new Matrix4();
+    var rectanglePointCartesianScratch = new Cartesian3();
+    var pointsCartographicScratch = [
+        new Cartographic(),
+        new Cartographic(),
+        new Cartographic(),
+        new Cartographic(),
+        new Cartographic(),
+        new Cartographic(),
+        new Cartographic(),
+        new Cartographic()
+    ];
+    /**
+     * When computing planes to bound the rectangle,
+     * need to factor in "bulge" and other distortion.
+     * Flatten the ellipsoid-centered corners and edge-centers of the rectangle
+     * into the plane of the local ENU system, compute bounds in 2D, and
+     * project back to ellipsoid-centered.
+     */
+    function computeRectangleBounds(rectangle, ellipsoid, southWestCornerResult, eastVectorResult, northVectorResult) {
+        // Compute center of rectangle
+        var centerCartographic = Rectangle.center(rectangle, rectangleCenterScratch);
+        var centerCartesian = Cartographic.toCartesian(centerCartographic, ellipsoid, rectanglePointCartesianScratch);
+        var enuMatrix = Transforms.eastNorthUpToFixedFrame(centerCartesian, ellipsoid, enuMatrixScratch);
+        var inverseEnu = Matrix4.inverse(enuMatrix, inverseEnuScratch);
+
+        var west = rectangle.west;
+        var east = rectangle.east;
+        var north = rectangle.north;
+        var south = rectangle.south;
+
+        var cartographics = pointsCartographicScratch;
+        cartographics[0].latitude = south;
+        cartographics[0].longitude = west;
+        cartographics[1].latitude = north;
+        cartographics[1].longitude = west;
+        cartographics[2].latitude = north;
+        cartographics[2].longitude = east;
+        cartographics[3].latitude = south;
+        cartographics[3].longitude = east;
+
+        var longitudeCenter = (west + east) * 0.5;
+        var latitudeCenter = (north + south) * 0.5;
+
+        cartographics[4].latitude = south;
+        cartographics[4].longitude = longitudeCenter;
+        cartographics[5].latitude = north;
+        cartographics[5].longitude = longitudeCenter;
+        cartographics[6].latitude = latitudeCenter;
+        cartographics[6].longitude = west;
+        cartographics[7].latitude = latitudeCenter;
+        cartographics[7].longitude = east;
+
+        var minX = Number.POSITIVE_INFINITY;
+        var maxX = Number.NEGATIVE_INFINITY;
+        var minY = Number.POSITIVE_INFINITY;
+        var maxY = Number.NEGATIVE_INFINITY;
+        for (var i = 0; i < 8; i++) {
+            var pointCartesian = Cartographic.toCartesian(cartographics[i], ellipsoid, rectanglePointCartesianScratch);
+            Matrix4.multiplyByPoint(inverseEnu, pointCartesian, pointCartesian);
+            pointCartesian.z = 0.0; // flatten into XY plane of ENU coordinate system
+            minX = Math.min(minX, pointCartesian.x);
+            maxX = Math.max(maxX, pointCartesian.x);
+            minY = Math.min(minY, pointCartesian.y);
+            maxY = Math.max(maxY, pointCartesian.y);
+        }
+
+        var southWestCorner = southWestCornerResult;
+        southWestCorner.x = minX;
+        southWestCorner.y = minY;
+        southWestCorner.z = 0.0;
+        Matrix4.multiplyByPoint(enuMatrix, southWestCorner, southWestCorner);
+
+        var southEastCorner = eastVectorResult;
+        southEastCorner.x = maxX;
+        southEastCorner.y = minY;
+        southEastCorner.z = 0.0;
+        Matrix4.multiplyByPoint(enuMatrix, southEastCorner, southEastCorner);
+        // make eastward vector
+        Cartesian3.subtract(southEastCorner, southWestCorner, eastVectorResult);
+
+        var northWestCorner = northVectorResult;
+        northWestCorner.x = minX;
+        northWestCorner.y = maxY;
+        northWestCorner.z = 0.0;
+        Matrix4.multiplyByPoint(enuMatrix, northWestCorner, northWestCorner);
+        // make eastward vector
+        Cartesian3.subtract(northWestCorner, southWestCorner, northVectorResult);
+    }
+
+    var eastwardScratch = new Cartesian3();
+    var northwardScratch = new Cartesian3();
+    var encodeScratch = new EncodedCartesian3();
     /**
      * Gets an attributes object containing:
      * - 3 high-precision points as 6 GeometryInstanceAttributes. These points are used to compute eye-space planes.
@@ -737,28 +819,40 @@ define([
         Check.typeOf.object('projection', projection);
         //>>includeEnd('debug');
 
-        // Compute corner positions in double precision
-        var carto = cartographicScratch;
-        carto.height = 0.0;
-
-        carto.longitude = rectangle.west;
-        carto.latitude = rectangle.south;
-
-        var corner = Cartographic.toCartesian(carto, ellipsoid, cornerScratch);
-
-        carto.latitude = rectangle.north;
-        var northWest = Cartographic.toCartesian(carto, ellipsoid, northWestScratch);
-
-        carto.longitude = rectangle.east;
-        carto.latitude = rectangle.south;
-        var southEast = Cartographic.toCartesian(carto, ellipsoid, southEastScratch);
+        var corner = cornerScratch;
+        var eastward = eastwardScratch;
+        var northward = northwardScratch;
+        computeRectangleBounds(rectangle, ellipsoid, corner, eastward, northward);
 
         var attributes = {
             stSineCosineUVScale : getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation)
         };
-        addAttributesForPoint(corner, 'southWest', attributes);
-        addAttributesForPoint(northWest, 'northWest', attributes);
-        addAttributesForPoint(southEast, 'southEast', attributes);
+
+        var encoded = EncodedCartesian3.fromCartesian(corner, encodeScratch);
+        attributes.southWest_HIGH = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            normalize: false,
+            value : Cartesian3.pack(encoded.high, [0, 0, 0])
+        });
+        attributes.southWest_LOW = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            normalize: false,
+            value : Cartesian3.pack(encoded.low, [0, 0, 0])
+        });
+        attributes.eastward = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            normalize: false,
+            value : Cartesian3.pack(eastward, [0, 0, 0])
+        });
+        attributes.northward = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            normalize: false,
+            value : Cartesian3.pack(northward, [0, 0, 0])
+        });
 
         add2DTextureCoordinateAttributes(rectangle, projection, attributes);
         return attributes;
@@ -843,8 +937,7 @@ define([
 
     ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes = function(attributes) {
         return defined(attributes.southWest_HIGH) && defined(attributes.southWest_LOW) &&
-            defined(attributes.northWest_HIGH) && defined(attributes.northWest_LOW) &&
-            defined(attributes.southEast_HIGH) && defined(attributes.southEast_LOW) &&
+            defined(attributes.northward) && defined(attributes.eastward) &&
             defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
             defined(attributes.stSineCosineUVScale);
     };

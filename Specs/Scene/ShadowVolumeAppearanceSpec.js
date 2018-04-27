@@ -1,22 +1,28 @@
 defineSuite([
     'Scene/ShadowVolumeAppearance',
+    'Core/Cartesian3',
     'Core/Cartographic',
     'Core/Math',
     'Core/ComponentDatatype',
     'Core/Ellipsoid',
+    'Core/Matrix4',
     'Core/WebMercatorProjection',
     'Core/Rectangle',
+    'Core/Transforms',
     'Scene/Material',
     'Scene/MaterialAppearance',
     'Scene/PerInstanceColorAppearance'
 ], function(
     ShadowVolumeAppearance,
+    Cartesian3,
     Cartographic,
     CesiumMath,
     ComponentDatatype,
     Ellipsoid,
+    Matrix4,
     WebMercatorProjection,
     Rectangle,
+    Transforms,
     Material,
     MaterialAppearance,
     PerInstanceColorAppearance) {
@@ -77,51 +83,45 @@ defineSuite([
         expect(value[3]).toEqualEpsilon(1.0 / CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON4);
     });
 
-    function checkGeometryInstanceAttributePoint(attribute) {
+    function checkGeometryInstanceAttributeVec3(attribute) {
         expect(attribute.componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(attribute.componentsPerAttribute).toEqual(3);
         expect(attribute.normalize).toEqual(false);
-    }
-
-    function checkPointLow(value, cosineAngle) {
-        // Basically a dot product with UNIT_X.
-        // Cosines of angles get smaller from 0 to 90 degrees, so this is a GreaterThan check.
-        expect(value[0]).toBeGreaterThan(cosineAngle);
-    }
-
-    function checkPointHigh(value) {
-        expect(value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-        expect(value[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-        expect(value[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
     }
 
     it('provides attributes for computing texture coordinates using planes in 3D', function() {
         var attributes = smallRectangleAttributes;
 
         var southWest_LOW = attributes.southWest_LOW;
-        var northWest_LOW = attributes.northWest_LOW;
-        var southEast_LOW = attributes.southEast_LOW;
         var southWest_HIGH = attributes.southWest_HIGH;
-        var northWest_HIGH = attributes.northWest_HIGH;
-        var southEast_HIGH = attributes.southEast_HIGH;
+        var eastward = attributes.eastward;
+        var northward = attributes.northward;
 
-        checkGeometryInstanceAttributePoint(southWest_LOW);
-        checkGeometryInstanceAttributePoint(northWest_LOW);
-        checkGeometryInstanceAttributePoint(southEast_LOW);
-        checkGeometryInstanceAttributePoint(southWest_HIGH);
-        checkGeometryInstanceAttributePoint(northWest_HIGH);
-        checkGeometryInstanceAttributePoint(southEast_HIGH);
+        checkGeometryInstanceAttributeVec3(southWest_LOW);
+        checkGeometryInstanceAttributeVec3(southWest_HIGH);
+        checkGeometryInstanceAttributeVec3(eastward);
+        checkGeometryInstanceAttributeVec3(northward);
 
         // We're using a unit sphere, so expect all HIGH values to be basically 0
-        // and LOW values to be within a small cone around UNIT_X
-        checkPointHigh(southWest_HIGH.value);
-        checkPointHigh(northWest_HIGH.value);
-        checkPointHigh(southEast_HIGH.value);
+        // and LOW value to be within a small cone around UNIT_X
+        expect(southWest_HIGH.value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+        expect(southWest_HIGH.value[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+        expect(southWest_HIGH.value[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
 
-        var cosineAngle = Math.cos(CesiumMath.toRadians(0.2));
-        checkPointLow(southWest_LOW.value, cosineAngle);
-        checkPointLow(northWest_LOW.value, cosineAngle);
-        checkPointLow(southEast_LOW.value, cosineAngle);
+        expect(southWest_LOW.value[0]).toBeGreaterThan(Math.cos(CesiumMath.toRadians(0.2)));
+
+        // Expect eastward and northward to be unit-direction vectors in the ENU coordinate system at the rectangle center
+        var smallRectangleCenter = Cartographic.toCartesian(Rectangle.center(smallTestRectangle), unitSphereEllipsoid);
+        var enuMatrix = Transforms.eastNorthUpToFixedFrame(smallRectangleCenter, unitSphereEllipsoid);
+        var inverseEnu = Matrix4.inverse(enuMatrix, new Matrix4());
+
+        var eastwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(eastward.value), new Cartesian3());
+        eastwardENU = Cartesian3.normalize(eastwardENU, eastwardENU);
+        expect(Cartesian3.equalsEpsilon(eastwardENU, Cartesian3.UNIT_X, CesiumMath.EPSILON7)).toBe(true);
+
+        var northwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(northward.value), new Cartesian3());
+        northwardENU = Cartesian3.normalize(northwardENU, northwardENU);
+        expect(Cartesian3.equalsEpsilon(northwardENU, Cartesian3.UNIT_Y, CesiumMath.EPSILON7)).toBe(true);
     });
 
     it('provides attributes for computing planes in 2D and Columbus View', function() {
