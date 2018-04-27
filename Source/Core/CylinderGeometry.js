@@ -51,10 +51,6 @@ define([
      * @param {Number} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @exception {DeveloperError} options.length must be greater than 0.
-     * @exception {DeveloperError} options.topRadius must be greater than 0.
-     * @exception {DeveloperError} options.bottomRadius must be greater than 0.
-     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater than or equal to 3.
      *
      * @see CylinderGeometry.createGeometry
