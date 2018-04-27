@@ -74,7 +74,7 @@ define([
                defined(material.occlusionTexture) ||
                defined(material.emissiveTexture) ||
                defined(material.emissiveFactor) ||
-               defined(material.alphaMpde) ||
+               defined(material.alphaMode) ||
                defined(material.alphaCutoff) ||
                defined(material.doubleSided);
     }
