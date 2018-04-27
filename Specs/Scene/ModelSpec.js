@@ -2244,7 +2244,7 @@ defineSuite([
         });
     });
 
-    it('load a glTF 2.0 with vertex colors', function() {
+    it('loads a glTF 2.0 with vertex colors', function() {
         return loadModel(vertexColorTestUrl).then(function(m) {
             m.show = true;
             checkVertexColors(m);
@@ -2252,7 +2252,7 @@ defineSuite([
         });
     });
 
-    it('load a glTF 2.0 without an emmisive texture and no normals', function() {
+    it('loads a glTF 2.0 with an emissive texture and no normals', function() {
         return loadModel(emissiveUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
