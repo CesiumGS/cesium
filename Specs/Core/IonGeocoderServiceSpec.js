@@ -4,18 +4,29 @@ defineSuite([
         'Core/GeocodeType',
         'Core/Rectangle',
         'Core/Resource',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Specs/createScene'
     ], function(
         IonGeocoderService,
         Ion,
         GeocodeType,
         Rectangle,
         Resource,
-        when) {
+        when,
+        createScene) {
     'use strict';
 
+    var scene;
+    beforeEach(function() {
+        scene = createScene();
+    });
+
+    afterEach(function() {
+        scene.destroyForSpecs();
+    });
+
     it('Creates with default parameters', function() {
-        var service = new IonGeocoderService();
+        var service = new IonGeocoderService({ scene: scene });
 
         expect(service._accessToken).toEqual(Ion.defaultAccessToken);
         expect(service._server.url).toEqual(Ion.defaultServer.url);
@@ -27,7 +38,8 @@ defineSuite([
 
         var service = new IonGeocoderService({
             accessToken: accessToken,
-            server: server
+            server: server,
+            scene: scene
         });
 
         expect(service._accessToken).toEqual(accessToken);
@@ -35,7 +47,7 @@ defineSuite([
     });
 
     it('calls inner geocoder and returns result', function () {
-        var service = new IonGeocoderService();
+        var service = new IonGeocoderService({ scene: scene });
 
         var expectedResult = when.resolve();
         spyOn(service._pelias, 'geocode').and.returnValue(expectedResult);
