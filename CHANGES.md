@@ -5,7 +5,7 @@ Change Log
 
 ##### Breaking Changes :mega:
 * `ParticleSystem` no longer uses `forces`. [#6510](https://github.com/AnalyticalGraphicsInc/cesium/pull/6510)
-* `Particle` no longer uses `size`, `rate`, `lifeTime`, `life`, `minimumLife`, `maximumLife`, `minimumWidth`, `minimumHeight`, `maximumWidth`, and `maximumHeight`. [#]()
+* `Particle` no longer uses `size`, `rate`, `lifeTime`, `life`, `minimumLife`, `maximumLife`, `minimumWidth`, `minimumHeight`, `maximumWidth`, and `maximumHeight`. [#6510](https://github.com/AnalyticalGraphicsInc/cesium/pull/6510)
 
 ### 1.45 - 2018-05-01
 
