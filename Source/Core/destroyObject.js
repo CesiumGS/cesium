@@ -23,7 +23,7 @@ define([
      *
      * @exports destroyObject
      *
-     * @param {*} object The object to destroy.
+     * @param {Object} object The object to destroy.
      * @param {String} [message] The message to include in the exception that is thrown if
      *                           a destroyed object's function is called.
      *

@@ -162,7 +162,7 @@ function attachModuleSymbols(doclets, modules) {
 
 /**
  * Create the navigation sidebar.
- * @param {Object} members The members that will be used to create the sidebar.
+ * @param {object} members The members that will be used to create the sidebar.
  * @param {array<object>} members.classes
  * @param {array<object>} members.externals
  * @param {array<object>} members.globals
@@ -200,7 +200,7 @@ function buildNav(members) {
 
 /**
     @param {TAFFY} taffyData See <http://taffydb.com/>.
-    @param {Object} opts
+    @param {object} opts
     @param {Tutorial} tutorials
  */
 exports.publish = function(taffyData, opts, tutorials) {

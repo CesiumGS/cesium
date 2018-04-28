@@ -60,7 +60,7 @@ define([
      *
      * @param {Array} array The array to sort.
      * @param {mergeSort~Comparator} comparator The function to use to compare elements in the array.
-     * @param {*} [userDefinedObject] An object to pass as the third parameter to <code>comparator</code>.
+     * @param {*} [userDefinedObject] Any item to pass as the third parameter to <code>comparator</code>.
      *
      * @example
      * // Assume array contains BoundingSpheres in world coordinates.

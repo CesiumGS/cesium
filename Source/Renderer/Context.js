@@ -431,7 +431,7 @@ define([
          * be stored globally, except they're tied to a particular context, and to manage
          * their lifetime.
          *
-         * @type {*}
+         * @type {Object}
          */
         this.cache = {};
 

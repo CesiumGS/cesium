@@ -159,11 +159,11 @@ define([
     /**
      * This combines a map of query parameters.
      *
-     * @param {*} q1 The first map of query parameters. Values in this map will take precedence if preserveQueryParameters is false.
-     * @param {*} q2 The second map of query parameters.
+     * @param {Object} q1 The first map of query parameters. Values in this map will take precedence if preserveQueryParameters is false.
+     * @param {Object} q2 The second map of query parameters.
      * @param {Boolean} preserveQueryParameters If true duplicate parameters will be concatenated into an array. If false, keys in q1 will take precedence.
      *
-     * @returns {*} The combined map of query parameters.
+     * @returns {Object} The combined map of query parameters.
      *
      * @example
      * var q1 = {
@@ -1570,7 +1570,7 @@ define([
      * using XMLHttpRequest, which means that in order to make requests to another origin,
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
      *
-     * @param {*} data Data that is posted with the resource.
+     * @param {Object} data Data that is posted with the resource.
      * @param {Object} [options] Object with the following properties:
      * @param {Object} [options.data] Data that is posted with the resource.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.

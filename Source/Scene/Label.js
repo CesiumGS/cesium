@@ -960,7 +960,7 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined object returned when the label is picked.
+         * Gets or sets the user-defined value returned when the label is picked.
          * @memberof Label.prototype
          * @type {*}
          */

@@ -89,7 +89,7 @@ define([
         this._modelMatrix = new Matrix4();
 
         /**
-         * User-defined object returned when the primitive is picked.
+         * User-defined value returned when the primitive is picked.
          *
          * @type {*}
          * @default undefined

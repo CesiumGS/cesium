@@ -582,7 +582,7 @@ define(function() {
 	/**
 	 * @method jsep.addLiteral
 	 * @param {string} literal_name The name of the literal to add
-	 * @param {Object} literal_value The value of the literal
+	 * @param {*} literal_value The value of the literal
 	 * @return jsep
 	 */
 	jsep.addLiteral = function(literal_name, literal_value) {

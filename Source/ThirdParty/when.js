@@ -41,7 +41,7 @@ define(function () {
 	/**
 	 * Register an observer for a promise or immediate value.
 	 *
-	 * @param {Object} promiseOrValue
+	 * @param {*} promiseOrValue
 	 * @param {function?} [onFulfilled] callback to be called when promiseOrValue is
 	 *   successfully fulfilled.  If promiseOrValue is an immediate value, callback
 	 *   will be invoked immediately.
@@ -64,7 +64,7 @@ define(function () {
 	 * promiseOrValue is a foreign promise, or a new, already-fulfilled {@link Promise}
 	 * whose value is promiseOrValue if promiseOrValue is an immediate value.
 	 *
-	 * @param {Object} promiseOrValue
+	 * @param {*} promiseOrValue
 	 * @returns Guaranteed to return a trusted Promise.  If promiseOrValue is a when.js {@link Promise}
 	 *   returns promiseOrValue, otherwise, returns a new, already-resolved, when.js {@link Promise}
 	 *   whose resolution value is:
@@ -111,7 +111,7 @@ define(function () {
 	 * - if promiseOrValue is a promise
 	 *   - promiseOrValue's value after it is fulfilled
 	 *   - promiseOrValue's reason after it is rejected
-	 * @param {Object} promiseOrValue the rejected value of the returned {@link Promise}
+	 * @param {*} promiseOrValue the rejected value of the returned {@link Promise}
 	 * @returns {Promise} rejected {@link Promise}
 	 */
 	function reject(promiseOrValue) {
@@ -153,7 +153,7 @@ define(function () {
 
 		/**
 		 * Shortcut for .then(function() { return value; })
-		 * @param  {Object} value
+		 * @param  {*} value
 		 * @returns {Promise} a promise that:
 		 *  - is fulfilled if value is not a promise, or
 		 *  - if value is a promise, will fulfill with its value, or reject
@@ -186,7 +186,7 @@ define(function () {
 	 * Create an already-resolved promise for the supplied value
 	 * @private
 	 *
-	 * @param {Object} value
+	 * @param {*} value
 	 * @returns {Promise} fulfilled promise
 	 */
 	function fulfilled(value) {
@@ -207,7 +207,7 @@ define(function () {
 	 * rejection reason.
 	 * @private
 	 *
-	 * @param {Object} reason
+	 * @param {*} reason
 	 * @returns {Promise} rejected promise
 	 */
 	function rejected(reason) {
@@ -306,7 +306,7 @@ define(function () {
 		/**
 		 * Issue a progress event, notifying all progress listeners
 		 * @private
-		 * @param {Object} update progress event payload to pass to all listeners
+		 * @param {*} update progress event payload to pass to all listeners
 		 */
 		_progress = function(update) {
 			processQueue(progressHandlers, update);
@@ -317,7 +317,7 @@ define(function () {
 		 * Transition from pre-resolution state to post-resolution state, notifying
 		 * all listeners of the resolution or rejection
 		 * @private
-		 * @param {Object} value the value of this deferred
+		 * @param {*} value the value of this deferred
 		 */
 		_resolve = function(value) {
 			value = resolve(value);
@@ -379,7 +379,7 @@ define(function () {
 	 * test from http://wiki.commonjs.org/wiki/Promises/A to determine if
 	 * promiseOrValue is a promise.
 	 *
-	 * @param {Object} promiseOrValue anything
+	 * @param {*} promiseOrValue anything
 	 * @returns {boolean} true if promiseOrValue is a {@link Promise}
 	 */
 	function isPromise(promiseOrValue) {
@@ -611,7 +611,7 @@ define(function () {
 	 * @param {Object} resolver
 	 * @param {function} resolver.resolve
 	 * @param {function} resolver.reject
-	 * @param {Object} [resolveValue]
+	 * @param {*} [resolveValue]
 	 * @returns {Promise}
 	 */
 	function chain(promiseOrValue, resolver, resolveValue) {

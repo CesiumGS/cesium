@@ -527,9 +527,9 @@ Autolinker.Util = {
 	/**
 	 * Assigns (shallow copies) the properties of `src` onto `dest`.
 	 *
-	 * @param {*} dest The destination object.
-	 * @param {*} src The source object.
-	 * @return {*} The destination object (`dest`)
+	 * @param {*} dest The destination item of any type.
+	 * @param {*} src The source item of any type.
+	 * @return {*} The destination item of any type (`dest`)
 	 */
 	assign : function( dest, src ) {
 		for( var prop in src ) {
