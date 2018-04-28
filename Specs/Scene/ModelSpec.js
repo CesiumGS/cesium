@@ -1606,6 +1606,34 @@ defineSuite([
         expect(animations.update()).toEqual(false);
     });
 
+    it('animates a single keyframe', function() {
+        return Resource.fetchJson(animBoxesUrl).then(function(gltf) {
+            gltf.accessors['animAccessor_0'].count = 1;
+            gltf.accessors['animAccessor_1'].count = 1;
+
+            return loadModelJson(gltf).then(function(m) {
+                m.show = true;
+                var node = m.getNode('inner_box');
+                var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+                var animations = m.activeAnimations;
+                animations.add({
+                    name : 'animation_0',
+                    startTime : time
+                });
+
+                expect(node.matrix).toEqual(Matrix4.IDENTITY);
+                var previousMatrix = Matrix4.clone(node.matrix);
+
+                for (var i = 1; i < 4; ++i) {
+                    var t = JulianDate.addSeconds(time, i, new JulianDate());
+                    scene.renderForSpecs(t);
+                    expect(node.matrix).toEqual(previousMatrix);
+                }
+                primitives.remove(m);
+            });
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('renders riggedFigure without animation', function() {
