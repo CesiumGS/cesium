@@ -720,9 +720,10 @@ define([
      * into the plane of the local ENU system, compute bounds in 2D, and
      * project back to ellipsoid-centered.
      */
-    function computeRectangleBounds(rectangle, ellipsoid, southWestCornerResult, eastVectorResult, northVectorResult) {
+    function computeRectangleBounds(rectangle, ellipsoid, height, southWestCornerResult, eastVectorResult, northVectorResult) {
         // Compute center of rectangle
         var centerCartographic = Rectangle.center(rectangle, rectangleCenterScratch);
+        centerCartographic.height = height;
         var centerCartesian = Cartographic.toCartesian(centerCartographic, ellipsoid, rectanglePointCartesianScratch);
         var enuMatrix = Transforms.eastNorthUpToFixedFrame(centerCartesian, ellipsoid, enuMatrixScratch);
         var inverseEnu = Matrix4.inverse(enuMatrix, inverseEnuScratch);
@@ -759,6 +760,7 @@ define([
         var minY = Number.POSITIVE_INFINITY;
         var maxY = Number.NEGATIVE_INFINITY;
         for (var i = 0; i < 8; i++) {
+            cartographics[i].height = height;
             var pointCartesian = Cartographic.toCartesian(cartographics[i], ellipsoid, rectanglePointCartesianScratch);
             Matrix4.multiplyByPoint(inverseEnu, pointCartesian, pointCartesian);
             pointCartesian.z = 0.0; // flatten into XY plane of ENU coordinate system
@@ -809,10 +811,11 @@ define([
      * @param {Rectangle} rectangle Rectangle object that the points will approximately bound
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
+     * @param {Number} [height=0] The maximum height for the shadow volume.
      * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
      * @returns {Object} An attributes dictionary containing planar texture coordinate attributes.
      */
-    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(rectangle, ellipsoid, projection, textureCoordinateRotation) {
+    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(rectangle, ellipsoid, projection, height, textureCoordinateRotation) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('rectangle', rectangle);
         Check.typeOf.object('ellipsoid', ellipsoid);
@@ -822,7 +825,7 @@ define([
         var corner = cornerScratch;
         var eastward = eastwardScratch;
         var northward = northwardScratch;
-        computeRectangleBounds(rectangle, ellipsoid, corner, eastward, northward);
+        computeRectangleBounds(rectangle, ellipsoid, defaultValue(height, 0.0), corner, eastward, northward);
 
         var attributes = {
             stSineCosineUVScale : getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation)

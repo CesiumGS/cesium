@@ -169,7 +169,7 @@ defineSuite([
     });
 
     it('provides attributes for rotating texture coordinates', function() {
-        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, unitSphereEllipsoid, projection, CesiumMath.PI_OVER_TWO);
+        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, unitSphereEllipsoid, projection, 0.0, CesiumMath.PI_OVER_TWO);
 
         var stRotationAttribute = attributes.stSineCosineUVScale;
         expect(stRotationAttribute.componentDatatype).toEqual(ComponentDatatype.FLOAT);
@@ -182,7 +182,7 @@ defineSuite([
         expect(value[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON7); // 90 degree rotation of a square, so no scale
         expect(value[3]).toEqualEpsilon(1.0, CesiumMath.EPSILON7);
 
-        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, unitSphereEllipsoid, projection, CesiumMath.PI_OVER_FOUR);
+        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, unitSphereEllipsoid, projection, 0.0, CesiumMath.PI_OVER_FOUR);
         value = attributes.stSineCosineUVScale.value;
         expect(value[0]).toEqualEpsilon(Math.sin(CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);
         expect(value[1]).toEqualEpsilon(Math.cos(CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);

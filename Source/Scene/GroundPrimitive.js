@@ -816,7 +816,7 @@ define([
                 var attributes;
 
                 if (usePlanarExtents) {
-                    attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState.mapProjection, geometry._stRotation);
+                    attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState.mapProjection, this._maxHeight, geometry._stRotation);
                 } else {
                     attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, frameState.mapProjection, geometry._stRotation);
                 }
