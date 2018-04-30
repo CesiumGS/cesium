@@ -419,31 +419,6 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    it('detects if a standard Plane has been added and always performs texture updates', function() {
-        var scene = createScene();
-
-        var gl = scene.frameState.context._gl;
-        spyOn(gl, 'texImage2D').and.callThrough();
-        spyOn(gl, 'texSubImage2D').and.callThrough();
-
-        clippingPlanes = new ClippingPlaneCollection({
-            planes : [new Plane(Cartesian3.UNIT_X, 1.0)],
-            enabled : false,
-            edgeColor : Color.RED,
-            modelMatrix : transform
-        });
-        expect(gl.texImage2D.calls.count()).toEqual(0);
-
-        clippingPlanes.update(scene.frameState);
-        expect(gl.texImage2D.calls.count()).toEqual(2);
-
-        clippingPlanes.update(scene.frameState);
-        expect(gl.texSubImage2D.calls.count()).toEqual(1);
-
-        clippingPlanes.destroy();
-        scene.destroyForSpecs();
-    });
-
     it('provides a function for attaching the ClippingPlaneCollection to objects', function() {
         var clippedObject1 = {
             clippingPlanes : undefined

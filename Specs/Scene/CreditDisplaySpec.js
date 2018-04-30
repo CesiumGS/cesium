@@ -10,16 +10,15 @@ defineSuite([
 
     var container;
     var creditDisplay;
-    var defaultCredit;
 
     beforeEach(function() {
         container = document.createElement('div');
         container.id = 'credit-container';
-        defaultCredit = CreditDisplay.cesiumCredit;
     });
 
     afterEach(function(){
-        CreditDisplay.cesiumCredit = defaultCredit;
+        CreditDisplay.cesiumCredit = undefined;
+        CreditDisplay._cesiumCreditInitialized = false;
         if (defined(creditDisplay)) {
             creditDisplay.destroy();
             creditDisplay = undefined;
@@ -351,23 +350,6 @@ defineSuite([
         creditDisplay.endFrame();
         expect(creditDisplay._cesiumCreditContainer.childNodes.length).toBe(0);
         CreditDisplay.cesiumCredit = cesiumCredit;
-    });
-
-    it('works if Cesium credit replaced', function() {
-        var ionCredit = Credit.getIonCredit({
-            html: '<img src="ion-credit.png"/>',
-            collapsible: false
-        });
-        creditDisplay = new CreditDisplay(container);
-        creditDisplay.beginFrame();
-        creditDisplay.addCredit(ionCredit);
-        creditDisplay.endFrame();
-        expect(creditDisplay._cesiumCreditContainer.childNodes.length).toBe(1);
-        expect(creditDisplay._cesiumCreditContainer.childNodes[0]).toBe(ionCredit._element);
-        creditDisplay.beginFrame();
-        creditDisplay.endFrame();
-        expect(creditDisplay._cesiumCreditContainer.childNodes.length).toBe(1);
-        expect(creditDisplay._cesiumCreditContainer.childNodes[0]).toBe(CreditDisplay.cesiumCredit.element);
     });
 
     // Deprecated specs below, remove for Cesium 1.46

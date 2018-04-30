@@ -388,8 +388,13 @@ define([
         var screenCredits = this._currentFrameCredits.screenCredits;
 
         if (credit._isIon) {
-            this._currentCesiumCredit = credit;
-        } else if (!credit.showOnScreen) {
+            // If this is the an ion logo credit from the ion server
+            // Juse use the default credit (which is identical) to avoid blinking
+            this._currentCesiumCredit = getDefaultCredit();
+            return;
+        }
+
+        if (!credit.showOnScreen) {
             this._currentFrameCredits.lightboxCredits[credit.id] = credit;
         } else {
             screenCredits[credit.id] = credit;
@@ -518,6 +523,20 @@ define([
     CreditDisplay._cesiumCredit = undefined;
     CreditDisplay._cesiumCreditInitialized = false;
 
+    var defaultCredit;
+    function getDefaultCredit() {
+        if (!defined(defaultCredit)) {
+            var logo = buildModuleUrl('Assets/Images/ion-credit.png');
+            defaultCredit = new Credit('<a href="https://cesium.com/" target="_blank"><img src="' + logo + '" title="Cesium ion"/></a>', true);
+        }
+
+        if (!CreditDisplay._cesiumCreditInitialized) {
+            CreditDisplay._cesiumCredit = defaultCredit;
+            CreditDisplay._cesiumCreditInitialized = true;
+        }
+        return defaultCredit;
+    }
+
     defineProperties(CreditDisplay, {
         /**
          * Gets or sets the Cesium logo credit.
@@ -526,12 +545,7 @@ define([
          */
         cesiumCredit: {
             get: function() {
-                if (!CreditDisplay._cesiumCreditInitialized) {
-                    var cesiumLogo = buildModuleUrl('Assets/Images/cesium_credit.png');
-                    CreditDisplay._cesiumCredit = new Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="' + cesiumLogo + '" title="CesiumJS"/></a>', true);
-                    CreditDisplay._cesiumCreditInitialized = true;
-                }
-
+                getDefaultCredit();
                 return CreditDisplay._cesiumCredit;
             },
             set: function(value) {

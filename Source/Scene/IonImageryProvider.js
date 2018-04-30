@@ -177,7 +177,7 @@ define([
                     imageryProvider = factory(endpoint.options);
                 }
 
-                that._tileCredits = endpoint.attributions.map(Credit.getIonCredit);
+                that._tileCredits = IonResource.getCreditsFromEndpoint(endpoint, endpointResource);
 
                 imageryProvider.errorEvent.addEventListener(function(tileProviderError) {
                     //Propagate the errorEvent but set the provider to this instance instead
