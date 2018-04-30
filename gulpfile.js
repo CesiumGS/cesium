@@ -37,7 +37,17 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
+
+var s3Bucket = 'cesium-dev';
+var deployDirectory = '/cesiumjs.org/' + process.env.TRAVIS_BRANCH;
 var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/';
+
+// Website production deployment
+if (process.env.TRAVIS_BRANCH === 'cesiumjs.org') {
+    s3Bucket = 'cesiumjs.org';
+    deployDirectory = '/Cesium';
+    travisDeployUrl = 'https://cesiumjs.org/Cesium/';
+}
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -306,8 +316,8 @@ gulp.task('deploy-s3', function(done) {
     var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
-    var uploadDirectory = argv.d;
-    var bucketName = argv.b;
+    var uploadDirectory = argv.d ? argv.d : deployDirectory;
+    var bucketName = argv.b ? argv.b : s3Bucket;
     var cacheControl = argv.c ? argv.c : 'max-age=3600';
 
     if (argv.confirm) {
