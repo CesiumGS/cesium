@@ -800,7 +800,7 @@ define([
 
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, CesiumMath.EPSILON2);
+        var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         options.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
         options.latScalar = 1.0 / rectangleGeometry._rectangle.height;
