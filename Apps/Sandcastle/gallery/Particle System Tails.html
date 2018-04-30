@@ -129,23 +129,24 @@ var cometOptions = {
 
 var scratchCartesian3 = new Cesium.Cartesian3();
 var scratchCartographic = new Cesium.Cartographic();
+var usingDt = 0;
 var forceFunction = function(options, iteration) {
     return function(particle, dt) {
-        if (dt > 0 && dt < 2) {
-            scratchCartesian3 = Cesium.Cartesian3.normalize(particle.position, new Cesium.Cartesian3());
-            scratchCartesian3 = Cesium.Cartesian3.multiplyByScalar(scratchCartesian3, -1.0, scratchCartesian3);
+        usingDt = Cesium.Math.clamp(dt, 0.0, 0.05);
 
-            particle.position = Cesium.Cartesian3.add(particle.position, scratchCartesian3, particle.position);
+        scratchCartesian3 = Cesium.Cartesian3.normalize(particle.position, new Cesium.Cartesian3());
+        scratchCartesian3 = Cesium.Cartesian3.multiplyByScalar(scratchCartesian3, -40.0 * usingDt, scratchCartesian3);
 
-            scratchCartographic = Cesium.Cartographic.fromCartesian(particle.position, Cesium.Ellipsoid.WGS84, scratchCartographic);
+        scratchCartesian3 = Cesium.Cartesian3.add(particle.position, scratchCartesian3, scratchCartesian3);
 
-            var angle = Cesium.Math.PI * 2.0 * iteration / options.numberOfSystems;
-            iteration += options.iterationOffset;
-            scratchCartographic.longitude += Math.cos(angle) * options.cartographicStep;
-            scratchCartographic.latitude += Math.sin(angle) * options.cartographicStep;
+        scratchCartographic = Cesium.Cartographic.fromCartesian(scratchCartesian3, Cesium.Ellipsoid.WGS84, scratchCartographic);
 
-            particle.position = Cesium.Cartographic.toCartesian(scratchCartographic);
-        }
+        var angle = Cesium.Math.PI * 2.0 * iteration / options.numberOfSystems;
+        iteration += options.iterationOffset;
+        scratchCartographic.longitude += Math.cos(angle) * options.cartographicStep * 30.0 * usingDt;
+        scratchCartographic.latitude += Math.sin(angle) * options.cartographicStep * 30.0 * usingDt;
+
+        particle.position = Cesium.Cartographic.toCartesian(scratchCartographic);
     };
 };
 
