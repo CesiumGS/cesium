@@ -148,7 +148,7 @@ define([
 
         var dates = options.iso8601.split('/');
         if (dates.length !== 2) {
-            throw new DeveloperError('Invalid ISO 8601 date.');
+            throw new DeveloperError('options.iso8601 is an invalid ISO 8601 interval.');
         }
         var start = JulianDate.fromIso8601(dates[0]);
         var stop = JulianDate.fromIso8601(dates[1]);
