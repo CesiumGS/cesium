@@ -52,6 +52,7 @@ Change Log
 * Fixed crash when animating a glTF model with a single keyframe. [#6422](https://github.com/AnalyticalGraphicsInc/cesium/pull/6422)
 * Fixed Imagery Layers Texture Filters Sandcastle example. [#6472](https://github.com/AnalyticalGraphicsInc/cesium/pull/6472).
 * Fixed a bug causing Cesium 3D Tilesets to not clip properly when tiles were unloaded and reloaded. [#6484](https://github.com/AnalyticalGraphicsInc/cesium/issues/6484)
+* Fixed `TimeInterval` so now it throws if `fromIso8601` is given an ISO 8601 string with improper formatting. [#6164](https://github.com/AnalyticalGraphicsInc/cesium/issues/6164)
 * Improved rendering of glTF models that don't contain normals with a temporary unlit shader workaround. [#6501](https://github.com/AnalyticalGraphicsInc/cesium/pull/6501)
 * Fixed rendering of glTF models with emissive-only materials. [#6501](https://github.com/AnalyticalGraphicsInc/cesium/pull/6501)
 * Fixed a bug in shader modification for glTF 1.0 quantized attributes and Draco quantized attributes. [#6523](https://github.com/AnalyticalGraphicsInc/cesium/pull/6523)
