@@ -167,17 +167,12 @@ define([
         }
     };
 
-    function regexIndexOf(text, regex, i) {
-        var indexInSuffix = text.slice(i).search(regex);
-        return indexInSuffix < 0 ? indexInSuffix : indexInSuffix + i;
-    }
-
     function replaceAllButFirstInString(string, find, replace) {
         // Limit search to strings that are not a subset of other tokens.
-        find += '(?![a-zA-Z_$])';
+        find += '(?!\\w)';
         find = new RegExp(find, 'g');
 
-        var index = regexIndexOf(string, find, 0);
+        var index = string.search(find);
         return string.replace(find, function(match, offset) {
             return index === offset ? match : replace;
         });
