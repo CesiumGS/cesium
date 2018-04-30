@@ -313,8 +313,7 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
-        .demand(['b', 'd']).argv;
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]').argv;
 
     var uploadDirectory = argv.d ? argv.d : deployDirectory;
     var bucketName = argv.b ? argv.b : s3Bucket;
