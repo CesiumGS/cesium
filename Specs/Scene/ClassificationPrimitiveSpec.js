@@ -91,7 +91,7 @@ defineSuite([
     beforeEach(function() {
         scene.morphTo3D(0);
 
-        rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
+        rectangle = Rectangle.fromDegrees(-75.0, 25.0, -70.0, 30.0);
 
         var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
         depthColor = depthColorAttribute.value;
@@ -282,6 +282,29 @@ defineSuite([
         expect(frameState.commandList.length).toEqual(0);
     });
 
+    it('becomes ready when show is false', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = scene.groundPrimitives.add(new ClassificationPrimitive({
+            geometryInstances : boxInstance
+        }));
+        primitive.show = false;
+
+        var ready = false;
+        primitive.readyPromise.then(function() {
+            ready = true;
+        });
+
+        return pollToPromise(function() {
+            scene.render();
+            return ready;
+        }).then(function() {
+            expect(ready).toEqual(true);
+        });
+    });
+
     it('does not render other than for the color or pick pass', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
@@ -326,7 +349,9 @@ defineSuite([
         verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
-    it('renders in Columbus view when scene3DOnly is false', function() {
+    // Rendering in 2D/CV is broken:
+    // https://github.com/AnalyticalGraphicsInc/cesium/issues/6308
+    xit('renders in Columbus view when scene3DOnly is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
@@ -340,7 +365,7 @@ defineSuite([
         verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
-    it('renders in 2D when scene3DOnly is false', function() {
+    xit('renders in 2D when scene3DOnly is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }

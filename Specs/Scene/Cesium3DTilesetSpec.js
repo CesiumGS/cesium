@@ -740,8 +740,8 @@ defineSuite([
         var b3dmGeometryMemory = 840; // Only one box in the tile, unlike most other test tiles
         var i3dmGeometryMemory = 840;
 
-        // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-        var texturesByteLength = 262144;
+        // Texture is 211x211 RGB bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+        var texturesByteLength = 196608;
 
         var expectedGeometryMemory = b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
         var expectedTextureMemory = texturesByteLength * 5;

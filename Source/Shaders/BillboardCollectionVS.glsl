@@ -39,7 +39,7 @@ const float SHIFT_RIGHT3 = 1.0 / 8.0;
 const float SHIFT_RIGHT2 = 1.0 / 4.0;
 const float SHIFT_RIGHT1 = 1.0 / 2.0;
 
-vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
+vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 direction, vec2 origin, vec2 translate, vec2 pixelOffset, vec3 alignedAxis, bool validAlignedAxis, float rotation, bool sizeInMeters)
 {
     // Note the halfSize cannot be computed in JavaScript because it is sent via
     // compressed vertex attributes that coerce it to an integer.
@@ -71,23 +71,23 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         positionEC.xy += halfSize;
     }
 
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
+    float mpp = czm_metersPerPixel(positionEC);
 
-    if (sizeInMeters)
-    {
-        originTranslate /= czm_metersPerPixel(positionEC);
-    }
-
-    positionWC.xy += originTranslate;
     if (!sizeInMeters)
     {
-        positionWC.xy += halfSize;
+        originTranslate *= mpp;
     }
 
-    positionWC.xy += translate;
-    positionWC.xy += (pixelOffset * czm_resolutionScale);
+    positionEC.xy += originTranslate;
+    if (!sizeInMeters)
+    {
+        positionEC.xy += halfSize * mpp;
+    }
 
-    return positionWC;
+    positionEC.xy += translate * mpp;
+    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
+
+    return positionEC;
 }
 
 void main()
@@ -255,9 +255,13 @@ void main()
     }
 #endif
 
-    vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    positionEC = addScreenSpaceOffset(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
+    gl_Position = czm_projection * positionEC;
     v_textureCoordinates = textureCoordinates;
+
+#ifdef LOG_DEPTH
+    czm_vertexLogDepth();
+#endif
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
@@ -275,6 +279,9 @@ void main()
         {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
+#ifdef LOG_DEPTH
+            czm_vertexLogDepth(vec4(czm_currentFrustum.x));
+#endif
         }
     }
 #endif
