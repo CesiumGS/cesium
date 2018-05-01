@@ -21,7 +21,7 @@ define([
      *
      * @type {String}
      */
-    BingMapsApi.defaultKey = 'Ahb3XqOqdrFv84q7cYVUwFvDzkr2Wemkhj5j8IczhV4ZkUP3KMm9uuxng0aGzt-Z'; // For use on cesiumjs.org only
+    BingMapsApi.defaultKey = undefined;
 
     BingMapsApi.getKey = function(providedKey) {
         if (defined(providedKey)) {
