@@ -43,7 +43,8 @@ var deployDirectory = '/cesiumjs.org/' + process.env.TRAVIS_BRANCH;
 var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/';
 
 // Website production deployment
-if (process.env.TRAVIS_BRANCH === 'cesiumjs.org') {
+var deployProduction = (process.env.TRAVIS_BRANCH === 'cesiumjs.org');
+if (deployProduction) {
     s3Bucket = 'cesiumjs.org';
     deployDirectory = '/Cesium';
     travisDeployUrl = 'https://cesiumjs.org/Cesium/';
@@ -554,7 +555,7 @@ function listAll(s3, bucketName, prefix, files, marker) {
 
 gulp.task('deploy-set-version', function() {
     var buildVersion = yargs.argv.buildVersion;
-    if (buildVersion) {
+    if (!deployProduction && buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
         packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
