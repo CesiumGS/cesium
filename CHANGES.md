@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.46 - 2018-06-01
+
+##### Additions :tada:
+* Added `Rectangle.equalsEpsilon`
+
 ### 1.45 - 2018-05-01
 
 ##### Major Announcements :loudspeaker:
