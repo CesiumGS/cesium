@@ -129,13 +129,12 @@ var cometOptions = {
 
 var scratchCartesian3 = new Cesium.Cartesian3();
 var scratchCartographic = new Cesium.Cartographic();
-var usingDt = 0;
 var forceFunction = function(options, iteration) {
     return function(particle, dt) {
-        usingDt = Cesium.Math.clamp(dt, 0.0, 0.05);
+        dt = Cesium.Math.clamp(dt, 0.0, 0.05);
 
         scratchCartesian3 = Cesium.Cartesian3.normalize(particle.position, new Cesium.Cartesian3());
-        scratchCartesian3 = Cesium.Cartesian3.multiplyByScalar(scratchCartesian3, -40.0 * usingDt, scratchCartesian3);
+        scratchCartesian3 = Cesium.Cartesian3.multiplyByScalar(scratchCartesian3, -40.0 * dt, scratchCartesian3);
 
         scratchCartesian3 = Cesium.Cartesian3.add(particle.position, scratchCartesian3, scratchCartesian3);
 
@@ -143,8 +142,8 @@ var forceFunction = function(options, iteration) {
 
         var angle = Cesium.Math.PI * 2.0 * iteration / options.numberOfSystems;
         iteration += options.iterationOffset;
-        scratchCartographic.longitude += Math.cos(angle) * options.cartographicStep * 30.0 * usingDt;
-        scratchCartographic.latitude += Math.sin(angle) * options.cartographicStep * 30.0 * usingDt;
+        scratchCartographic.longitude += Math.cos(angle) * options.cartographicStep * 30.0 * dt;
+        scratchCartographic.latitude += Math.sin(angle) * options.cartographicStep * 30.0 * dt;
 
         particle.position = Cesium.Cartographic.toCartesian(scratchCartographic);
     };
