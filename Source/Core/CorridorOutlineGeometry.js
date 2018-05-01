@@ -480,7 +480,7 @@ define([
 
         var height = corridorOutlineGeometry._height;
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON2);
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var params = {
             ellipsoid : ellipsoid,

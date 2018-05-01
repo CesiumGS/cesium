@@ -975,7 +975,7 @@ define([
 
         var height = corridorGeometry._height;
         var extrudedHeight = corridorGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON2);
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {

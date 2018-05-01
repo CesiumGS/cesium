@@ -299,7 +299,8 @@ defineSuite([
 
         var provider = new BingMapsImageryProvider({
             url : url,
-            mapStyle : mapStyle
+            mapStyle : mapStyle,
+            key: 'fake Key'
         });
 
         expect(provider.url).toStartWith(url);

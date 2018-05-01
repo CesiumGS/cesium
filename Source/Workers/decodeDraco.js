@@ -3,23 +3,21 @@ define([
         '../Core/defined',
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
-        '../ThirdParty/draco-decoder-gltf',
         './createTaskProcessorWorker'
     ], function(
         ComponentDatatype,
         defined,
         IndexDatatype,
         RuntimeError,
-        draco,
         createTaskProcessorWorker) {
     'use strict';
 
+    var draco;
     var dracoDecoder;
 
     function decodeIndexArray(dracoGeometry) {
         var numPoints = dracoGeometry.num_points();
         var numFaces = dracoGeometry.num_faces();
-
         var faceIndices = new draco.DracoInt32Array();
         var numIndices = numFaces * 3;
         var indexArray = IndexDatatype.createTypedArray(numPoints, numIndices);
@@ -42,11 +40,80 @@ define([
         };
     }
 
+    function decodeQuantizedDracoTypedArray(dracoGeometry, attribute, quantization, vertexArrayLength) {
+        var vertexArray;
+        var attributeData = new draco.DracoInt32Array();
+        if (quantization.octEncoded) {
+            vertexArray = new Int16Array(vertexArrayLength);
+        } else {
+            vertexArray = new Uint16Array(vertexArrayLength);
+        }
+        dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+
+        for (var i = 0; i < vertexArrayLength; ++i) {
+            vertexArray[i] = attributeData.GetValue(i);
+        }
+
+        draco.destroy(attributeData);
+        return vertexArray;
+    }
+
+    function decodeDracoTypedArray(dracoGeometry, attribute, vertexArrayLength) {
+        var vertexArray;
+        var attributeData;
+
+        // Some attribute types are casted down to 32 bit since Draco only returns 32 bit values
+        switch (attribute.data_type()) {
+            case 1: case 11: // DT_INT8 or DT_BOOL
+                attributeData = new draco.DracoInt8Array();
+                vertexArray = new Int8Array(vertexArrayLength);
+                dracoDecoder.GetAttributeInt8ForAllPoints(dracoGeometry, attribute, attributeData);
+                break;
+            case 2: // DT_UINT8
+                attributeData = new draco.DracoUInt8Array();
+                vertexArray = new Uint8Array(vertexArrayLength);
+                dracoDecoder.GetAttributeUInt8ForAllPoints(dracoGeometry, attribute, attributeData);
+                break;
+            case 3: // DT_INT16
+                attributeData = new draco.DracoInt16Array();
+                vertexArray = new Int16Array(vertexArrayLength);
+                dracoDecoder.GetAttributeInt16ForAllPoints(dracoGeometry, attribute, attributeData);
+                break;
+            case 4: // DT_UINT16
+                attributeData = new draco.DracoUInt16Array();
+                vertexArray = new Uint16Array(vertexArrayLength);
+                dracoDecoder.GetAttributeUInt16ForAllPoints(dracoGeometry, attribute, attributeData);
+                break;
+            case 5: case 7: // DT_INT32 or DT_INT64
+                attributeData = new draco.DracoInt32Array();
+                vertexArray = new Int32Array(vertexArrayLength);
+                dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+                break;
+            case 6: case 8: // DT_UINT32 or DT_UINT64
+                attributeData = new draco.DracoUint32Array();
+                vertexArray = new Uint32Array(vertexArrayLength);
+                dracoDecoder.GetAttributeUInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+                break;
+            case 9: case 10: // DT_FLOAT32 or DT_FLOAT64
+                attributeData = new draco.DracoFloat32Array();
+                vertexArray = new Float32Array(vertexArrayLength);
+                dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
+                break;
+        }
+
+        for (var i = 0; i < vertexArrayLength; ++i) {
+            vertexArray[i] = attributeData.GetValue(i);
+        }
+
+        draco.destroy(attributeData);
+        return vertexArray;
+    }
+
     function decodeAttributeData(dracoGeometry, compressedAttributes) {
         var numPoints = dracoGeometry.num_points();
         var decodedAttributeData = {};
-        var attributeData;
         var vertexArray;
+        var quantization;
         for (var attributeName in compressedAttributes) {
             if (compressedAttributes.hasOwnProperty(attributeName)) {
                 var compressedAttribute = compressedAttributes[attributeName];
@@ -54,7 +121,6 @@ define([
                 var numComponents = attribute.num_components();
 
                 var i;
-                var quantization;
                 var transform = new draco.AttributeQuantizationTransform();
                 if (transform.InitFromAttribute(attribute)) {
                     var minValues = new Array(numComponents);
@@ -82,27 +148,9 @@ define([
 
                 var vertexArrayLength = numPoints * numComponents;
                 if (defined(quantization)) {
-                    attributeData = new draco.DracoInt32Array();
-                    if (quantization.octEncoded) {
-                        vertexArray = new Int16Array(vertexArrayLength);
-                    } else {
-                        vertexArray = new Uint16Array(vertexArrayLength);
-                    }
-                    dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
-                } else if (attribute.data_type() === 4) {
-                    attributeData = new draco.DracoInt32Array();
-                    // Uint16Array is used because there is not currently a way to retrieve the maximum
-                    // value up front via the draco decoder API.  Max values over 65535 require a Uint32Array.
-                    vertexArray = new Uint16Array(vertexArrayLength);
-                    dracoDecoder.GetAttributeInt32ForAllPoints(dracoGeometry, attribute, attributeData);
+                    vertexArray = decodeQuantizedDracoTypedArray(dracoGeometry, attribute, quantization, vertexArrayLength);
                 } else {
-                    attributeData = new draco.DracoFloat32Array();
-                    vertexArray = new Float32Array(vertexArrayLength);
-                    dracoDecoder.GetAttributeFloatForAllPoints(dracoGeometry, attribute, attributeData);
-                }
-
-                for (i = 0; i < vertexArrayLength; ++i) {
-                    vertexArray[i] = attributeData.GetValue(i);
+                    vertexArray = decodeDracoTypedArray(dracoGeometry, attribute, vertexArrayLength);
                 }
 
                 var componentDatatype = ComponentDatatype.fromTypedArray(vertexArray);
@@ -117,6 +165,8 @@ define([
                         quantization : quantization
                     }
                 };
+
+                quantization = undefined;
             }
         }
 
@@ -124,10 +174,6 @@ define([
     }
 
     function decodeDracoPrimitive(parameters) {
-        if (!defined(dracoDecoder)) {
-            dracoDecoder = new draco.Decoder();
-        }
-
         // Skip all paramter types except generic
         var attributesToSkip = ['POSITION', 'NORMAL', 'COLOR', 'TEX_COORD'];
         if (parameters.dequantizeInShader) {
@@ -163,5 +209,35 @@ define([
         return result;
     }
 
-    return createTaskProcessorWorker(decodeDracoPrimitive);
+    function initWorker(dracoModule) {
+        draco = dracoModule;
+        dracoDecoder = new draco.Decoder();
+        self.onmessage = createTaskProcessorWorker(decodeDracoPrimitive);
+        self.postMessage(true);
+    }
+
+    function decodeDraco(event) {
+        var data = event.data;
+
+        // Expect the first message to be to load a web assembly module
+        var wasmConfig = data.webAssemblyConfig;
+        if (defined(wasmConfig)) {
+            // Require and compile WebAssembly module, or use fallback if not supported
+            return require([wasmConfig.modulePath], function(dracoModule) {
+                if (defined(wasmConfig.wasmBinaryFile)) {
+                    if (!defined(dracoModule)) {
+                        dracoModule = self.DracoDecoderModule;
+                    }
+
+                    dracoModule(wasmConfig).then(function (compiledModule) {
+                        initWorker(compiledModule);
+                    });
+                } else {
+                    initWorker(dracoModule());
+                }
+            });
+        }
+    }
+
+    return decodeDraco;
 });

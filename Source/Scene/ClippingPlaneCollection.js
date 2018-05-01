@@ -11,9 +11,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
         '../Core/Intersect',
-        '../Core/Math',
         '../Core/Matrix4',
         '../Core/PixelFormat',
         '../Core/Plane',
@@ -38,9 +36,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
-        FeatureDetection,
         Intersect,
-        CesiumMath,
         Matrix4,
         PixelFormat,
         Plane,
@@ -73,15 +69,13 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._planes = [];
-        this._containsUntrackablePlanes = false;
 
         // Do partial texture updates if just one plane is dirty.
         // If many planes are dirty, refresh the entire texture.
         this._dirtyIndex = -1;
         this._multipleDirtyPlanes = false;
 
-        // Add each plane to check if it's actually a Plane object instead of a ClippingPlane.
-        // Use of Plane objects will be deprecated.
+        // Add each ClippingPlane object.
         var planes = options.planes;
         if (defined(planes)) {
             var planesLength = planes.length;
@@ -260,16 +254,13 @@ define([
      */
     ClippingPlaneCollection.prototype.add = function(plane) {
         var newPlaneIndex = this._planes.length;
-        if (plane instanceof ClippingPlane) {
-            var that = this;
-            plane.onChangeCallback = function(index) {
-                setIndexDirty(that, index);
-            };
-            plane.index = newPlaneIndex;
-        } else {
-            deprecationWarning('ClippingPlaneCollection.add', 'Ability to use Plane objects with ClippingPlaneCollection.add is deprecated and will be removed in Cesium 1.45. Please use ClippingPlane objects instead.');
-            this._containsUntrackablePlanes = true;
-        }
+
+        var that = this;
+        plane.onChangeCallback = function(index) {
+            setIndexDirty(that, index);
+        };
+        plane.index = newPlaneIndex;
+
         setIndexDirty(this, newPlaneIndex);
         this._planes.push(plane);
     };
@@ -505,16 +496,11 @@ define([
             this._multipleDirtyPlanes = true;
         }
 
-        // Use of Plane objects will be deprecated.
-        // But until then, we have no way of telling if they changed since last frame, so we have to do a full udpate.
-        var refreshFullTexture = this._multipleDirtyPlanes || this._containsUntrackablePlanes;
         var dirtyIndex = this._dirtyIndex;
-
-        if (!refreshFullTexture && dirtyIndex === -1) {
+        if (!this._multipleDirtyPlanes && dirtyIndex === -1) {
             return;
         }
-
-        if (!refreshFullTexture) {
+        if (!this._multipleDirtyPlanes) {
             // partial updates possible
             var offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
             var offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
@@ -666,17 +652,6 @@ define([
             clippingPlaneCollection._owner = owner;
             owner[key] = clippingPlaneCollection;
         }
-    };
-
-    /**
-     * Determines if rendering with clipping planes is supported.
-     *
-     * @returns {Boolean} <code>true</code> if ClippingPlaneCollections are supported
-     * @deprecated
-     */
-    ClippingPlaneCollection.isSupported = function() {
-        deprecationWarning('ClippingPlaneCollection.isSupported', 'ClippingPlaneCollection.isSupported is deprecated and will be removed in Cesium 1.45. Clipping Planes are now supported on all platforms capable of running Cesium.');
-        return true;
     };
 
     /**
