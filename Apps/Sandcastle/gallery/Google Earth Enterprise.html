@@ -27,10 +27,10 @@
     function startup(Cesium) {
         'use strict';
 //Sandcastle_Begin
-var geeMetadata = new Cesium.GoogleEarthEnterpriseMetadata({
+var geeMetadata = new Cesium.GoogleEarthEnterpriseMetadata(new Cesium.Resource({
     url : 'http://www.earthenterprise.org/3d',
     proxy : new Cesium.DefaultProxy('/proxy/')
-});
+}));
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     imageryProvider : new Cesium.GoogleEarthEnterpriseImageryProvider({
