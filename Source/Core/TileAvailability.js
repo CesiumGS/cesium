@@ -106,11 +106,9 @@ define([
             }
         }
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(node)) {
-            throw new DeveloperError('The specified position does not exist in any root node of the tiling scheme.');
+            return -1;
         }
-        //>>includeEnd('debug');
 
         return findMaxLevelFromNode(undefined, node, position);
     };
