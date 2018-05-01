@@ -179,3 +179,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Gabriel Macario](https://github.com/gabriel-macario)
 * [Jonathan Puckey](https://github.com/puckey)
 * [Mark Erikson](https://github.com/markerikson)
+* [Hannah Bollar](https://github.com/hanbollar)
