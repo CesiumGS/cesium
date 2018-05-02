@@ -40,7 +40,7 @@ viewer.scene.camera.setView({
 });
 
 // Load the NYC buildings tileset
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3839) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(4258) });
 viewer.scene.primitives.add(tileset);
 
 // HTML overlay for showing feature name on mouseover
@@ -145,6 +145,9 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
                                  '<tr><th>BIN</th><td>' + pickedFeature.getProperty('BIN') + '</td></tr>' +
                                  '<tr><th>DOITT ID</th><td>' + pickedFeature.getProperty('DOITT_ID') + '</td></tr>' +
                                  '<tr><th>SOURCE ID</th><td>' + pickedFeature.getProperty('SOURCE_ID') + '</td></tr>' +
+                                 '<tr><th>Longitude</th><td>' + pickedFeature.getProperty('longitude') + '</td></tr>' +
+                                 '<tr><th>Latitude</th><td>' + pickedFeature.getProperty('latitude') + '</td></tr>' +
+                                 '<tr><th>Height</th><td>' + pickedFeature.getProperty('height') + '</td></tr>' +
                                  '</tbody></table>';
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 //Sandcastle_End

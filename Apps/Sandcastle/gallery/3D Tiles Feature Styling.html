@@ -42,7 +42,7 @@ viewer.scene.camera.setView({
 });
 
 // Load the NYC buildings tileset.
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3839) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(4258) });
 viewer.scene.primitives.add(tileset);
 
 // Color buildings based on their height.
@@ -50,37 +50,33 @@ function colorByHeight() {
     tileset.style = new Cesium.Cesium3DTileStyle({
         color: {
             conditions: [
-                ["${height} >= 300", "rgba(45, 0, 75, 0.5)"],
-                ["${height} >= 200", "rgb(102, 71, 151)"],
-                ["${height} >= 100", "rgb(170, 162, 204)"],
-                ["${height} >= 50", "rgb(224, 226, 238)"],
-                ["${height} >= 25", "rgb(252, 230, 200)"],
-                ["${height} >= 10", "rgb(248, 176, 87)"],
-                ["${height} >= 5", "rgb(198, 106, 11)"],
+                ["Number(${height}) >= 300", "rgba(45, 0, 75, 0.5)"],
+                ["Number(${height}) >= 200", "rgb(102, 71, 151)"],
+                ["Number(${height}) >= 100", "rgb(170, 162, 204)"],
+                ["Number(${height}) >= 50", "rgb(224, 226, 238)"],
+                ["Number(${height}) >= 25", "rgb(252, 230, 200)"],
+                ["Number(${height}) >= 10", "rgb(248, 176, 87)"],
+                ["Number(${height}) >= 5", "rgb(198, 106, 11)"],
                 ["true", "rgb(127, 59, 8)"]
             ]
         }
     });
 }
 
-// Color buildings by their total area.
-function colorByArea() {
-    tileset.style = new Cesium.Cesium3DTileStyle({
-        color: "mix(color('yellow'), color('red'), min(${area} / 10000.0, 1.0))"
-    });
-}
-
 // Color buildings by their latitude coordinate.
 function colorByLatitude() {
     tileset.style = new Cesium.Cesium3DTileStyle({
+        defines: {
+            latitudeRadians: "Number(${latitude}) * 0.0174532925"
+        },
         color: {
             conditions: [
-                ["${latitude} >= 0.7125", "color('purple')"],
-                ["${latitude} >= 0.712", "color('red')"],
-                ["${latitude} >= 0.7115", "color('orange')"],
-                ["${latitude} >= 0.711", "color('yellow')"],
-                ["${latitude} >= 0.7105", "color('lime')"],
-                ["${latitude} >= 0.710", "color('cyan')"],
+                ["${latitudeRadians} >= 0.7125", "color('purple')"],
+                ["${latitudeRadians} >= 0.712", "color('red')"],
+                ["${latitudeRadians} >= 0.7115", "color('orange')"],
+                ["${latitudeRadians} >= 0.711", "color('yellow')"],
+                ["${latitudeRadians} >= 0.7105", "color('lime')"],
+                ["${latitudeRadians} >= 0.710", "color('cyan')"],
                 ["true", "color('blue')"]
             ]
         }
@@ -91,7 +87,7 @@ function colorByLatitude() {
 function colorByDistance() {
     tileset.style = new Cesium.Cesium3DTileStyle({
         defines : {
-            distance : "distance(vec2(${longitude}, ${latitude}), vec2(-1.291777521, 0.7105706624))"
+            distance : "distance(vec2(Number(${longitude}) * 0.0174532925, Number(${latitude}) * 0.0174532925), vec2(-1.291777521, 0.7105706624))"
         },
         color : {
             conditions : [
@@ -105,14 +101,14 @@ function colorByDistance() {
 // Color buildings with a '3' in their name.
 function colorByNameRegex() {
     tileset.style = new Cesium.Cesium3DTileStyle({
-        color : "(regExp('3').test(${name})) ? color('cyan', 0.9) : color('purple', 0.1)"
+        color : "(regExp('3').test(String(${name}))) ? color('cyan', 0.9) : color('purple', 0.1)"
     });
 }
 
 // Show only buildings greater than 200 meters in height.
 function hideByHeight() {
     tileset.style = new Cesium.Cesium3DTileStyle({
-        show : "${height} > 200"
+        show : "Number(${height}) > 200"
     });
 }
 
@@ -120,11 +116,6 @@ Sandcastle.addToolbarMenu([{
     text : 'Color By Height',
     onselect : function() {
         colorByHeight();
-    }
-}, {
-    text : 'Color By Area',
-    onselect : function() {
-        colorByArea();
     }
 }, {
     text : 'Color By Latitude',
