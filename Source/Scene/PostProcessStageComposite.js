@@ -193,6 +193,29 @@ define([
             get : function() {
                 return this._stages.length;
             }
+        },
+        /**
+         * Whether or not this post process stage requires a depth texture. If <code>true</code> and the WEBGL_depth_texture
+         * extension is unavailable, this stage will not execute.
+         *
+         * @memberof PostProcessStageComposite.prototype
+         * @type {Boolean}
+         * @readonly
+         *
+         * @see {Context#depthTexture}
+         * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+         */
+        requiresDepthTexture : {
+            get : function() {
+                var stages = this._stages;
+                var length = stages.length;
+                for (var i = 0; i < length; ++i) {
+                    if (stages[i].requiresDepthTexture) {
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
     });
 
