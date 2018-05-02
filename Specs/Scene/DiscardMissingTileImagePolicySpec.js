@@ -1,22 +1,20 @@
 defineSuite([
         'Scene/DiscardMissingTileImagePolicy',
         'Core/Cartesian2',
-        'Core/loadImage',
-        'Core/loadWithXhr',
+        'Core/Resource',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         DiscardMissingTileImagePolicy,
         Cartesian2,
-        loadImage,
-        loadWithXhr,
+        Resource,
         pollToPromise,
         when) {
     'use strict';
 
     afterEach(function() {
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     describe('construction', function() {
@@ -41,19 +39,19 @@ defineSuite([
         it('requests the missing image url', function() {
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
-            spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 if (/^blob:/.test(url)) {
                     // load blob url normally
-                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(missingImageUrl);
-                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
                 }
             });
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(missingImageUrl);
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                return Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({
@@ -64,7 +62,7 @@ defineSuite([
             return pollToPromise(function() {
                 return policy.isReady();
             }).then(function() {
-                expect(loadImage.createImage).toHaveBeenCalled();
+                expect(Resource._Implementations.createImage).toHaveBeenCalled();
             });
         });
     });
@@ -73,8 +71,8 @@ defineSuite([
         it('discards an image that is identical to the missing image', function() {
             var promises = [];
 
-            promises.push(loadImage('Data/Images/Red16x16.png'));
-            promises.push(loadImage('Data/Images/Green4x4.png'));
+            promises.push(Resource.fetchImage('Data/Images/Red16x16.png'));
+            promises.push(Resource.fetchImage('Data/Images/Green4x4.png'));
 
             var missingImageUrl = 'Data/Images/Red16x16.png';
             var policy = new DiscardMissingTileImagePolicy({
@@ -98,7 +96,7 @@ defineSuite([
         it('discards an image that is identical to the missing image even if the missing image is transparent', function() {
             var promises = [];
 
-            promises.push(loadImage('Data/Images/Transparent.png'));
+            promises.push(Resource.fetchImage('Data/Images/Transparent.png'));
 
             var missingImageUrl = 'Data/Images/Transparent.png';
             var policy = new DiscardMissingTileImagePolicy({
@@ -119,7 +117,7 @@ defineSuite([
         it('does not discard at all when the missing image is transparent and disableCheckIfAllPixelsAreTransparent is set', function() {
             var promises = [];
 
-            promises.push(loadImage('Data/Images/Transparent.png'));
+            promises.push(Resource.fetchImage('Data/Images/Transparent.png'));
 
             var missingImageUrl = 'Data/Images/Transparent.png';
             var policy = new DiscardMissingTileImagePolicy({

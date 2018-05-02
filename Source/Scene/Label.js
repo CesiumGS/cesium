@@ -71,7 +71,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -147,6 +147,7 @@ define([
         this._labelCollection = labelCollection;
         this._glyphs = [];
         this._backgroundBillboard = undefined;
+        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;

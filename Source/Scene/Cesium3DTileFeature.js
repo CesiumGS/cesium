@@ -43,7 +43,7 @@ define([
      *     }
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
-    function Cesium3DTileFeature(tileset, content, batchId) {
+    function Cesium3DTileFeature(content, batchId) {
         this._content = content;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor

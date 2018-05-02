@@ -31,9 +31,7 @@ define([
      *
      * @example
      * // Query the terrain height of two Cartographic positions
-     * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
-     * });
+     * var terrainProvider = Cesium.createWorldTerrain();
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
      *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
@@ -89,7 +87,9 @@ define([
         for (i = 0; i < tileRequests.length; ++i) {
             var tileRequest = tileRequests[i];
             var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
-            var tilePromise = when(requestPromise, createInterpolateFunction(tileRequest), createMarkFailedFunction(tileRequest));
+            var tilePromise = requestPromise
+                .then(createInterpolateFunction(tileRequest))
+                .otherwise(createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);
         }
 

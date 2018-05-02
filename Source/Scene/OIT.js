@@ -111,20 +111,17 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
-        // Use zeroed arraybuffer instead of null to initialize texture
-        // to workaround Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
-        var source = new Float32Array(width * height * 4);
-
         oit._accumulationTexture = new Texture({
             context : context,
+            width : width,
+            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT,
-            source : {
-                arrayBufferView : source,
-                width : width,
-                height : height
-            }
+            pixelDatatype : PixelDatatype.FLOAT
         });
+
+        // Use zeroed arraybuffer instead of null to initialize texture
+        // to workaround Firefox. Only needed for the second color attachment.
+        var source = new Float32Array(width * height * 4);
         oit._revealageTexture = new Texture({
             context : context,
             pixelFormat : PixelFormat.RGBA,
@@ -133,7 +130,8 @@ define([
                 arrayBufferView : source,
                 width : width,
                 height : height
-            }
+            },
+            flipY : false
         });
     }
 
@@ -554,12 +552,14 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -568,12 +568,14 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -599,12 +601,14 @@ define([
 
         for (var j = 0; j < length; ++j) {
             command = commands[j];
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
+            command = defined(command.derivedCommands.logDepth) ? command.derivedCommands.logDepth.command : command;
             derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }

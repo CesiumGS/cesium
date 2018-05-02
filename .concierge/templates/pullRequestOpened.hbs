@@ -1,4 +1,14 @@
 {{#if claEnabled}}
+{{#if errorCla}}
+@{{ userName }}, thanks for the pull request!
+
+If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) so that we can review and merge this pull request.
+
+:x: Maintainers, there was an error processing the CLA, resolve it to continue CLA checking.
+```
+{{ errorCla }}
+```
+{{else}}
 {{#if askForCla}}
 [![Please sign the CLA before we review this PR.](https://img.shields.io/badge/CLA-required-red.svg)](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla)
 
@@ -9,6 +19,7 @@ Can you please send in a [Contributor License Agreement](https://github.com/Anal
 ![Signed CLA is on file.](https://img.shields.io/badge/CLA-signed-brightgreen.svg)
 
 @{{ userName }}, thanks for the pull request! Maintainers, we have a signed CLA from @{{ userName }}, so you can review this at any time.
+{{/if}}
 {{/if}}
 {{else}}
 @{{ userName }}, thanks for the pull request!

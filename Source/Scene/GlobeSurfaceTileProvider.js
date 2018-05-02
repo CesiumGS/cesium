@@ -13,7 +13,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/FeatureDetection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
@@ -22,7 +21,6 @@ define([
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
-        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
@@ -40,6 +38,7 @@ define([
         '../Scene/DepthFunction',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        './ClippingPlaneCollection',
         './GlobeSurfaceTile',
         './ImageryLayer',
         './QuadtreeTileLoadState',
@@ -60,7 +59,6 @@ define([
         destroyObject,
         DeveloperError,
         Event,
-        FeatureDetection,
         GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
@@ -69,7 +67,6 @@ define([
         Matrix4,
         OrientedBoundingBox,
         OrthographicFrustum,
-        Plane,
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
@@ -87,6 +84,7 @@ define([
         DepthFunction,
         PerInstanceColorAppearance,
         Primitive,
+        ClippingPlaneCollection,
         GlobeSurfaceTile,
         ImageryLayer,
         QuadtreeTileLoadState,
@@ -144,6 +142,8 @@ define([
         this._imageryLayers.layerRemoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerRemoved, this);
         this._imageryLayers.layerMoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerMoved, this);
         this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
+        this._tileLoadedEvent = new Event();
+        this._imageryLayersUpdatedEvent = new Event();
 
         this._layerOrderChanged = false;
 
@@ -170,7 +170,7 @@ define([
          * @type {ClippingPlaneCollection}
          * @private
          */
-        this.clippingPlanes = undefined;
+        this._clippingPlanes = undefined;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -253,6 +253,28 @@ define([
         },
 
         /**
+         * Gets an event that is raised when an globe surface tile is loaded and ready to be rendered.
+         * @memberof GlobeSurfaceTileProvider.prototype
+         * @type {Event}
+         */
+        tileLoadedEvent : {
+            get : function() {
+                return this._tileLoadedEvent;
+            }
+        },
+
+        /**
+         * Gets an event that is raised when an imagery layer is added, shown, hidden, moved, or removed.
+         * @memberof GlobeSurfaceTileProvider.prototype
+         * @type {Event}
+         */
+        imageryLayersUpdatedEvent : {
+            get : function() {
+                return this._imageryLayersUpdatedEvent;
+            }
+        },
+
+        /**
          * Gets or sets the terrain provider that describes the surface geometry.
          * @memberof GlobeSurfaceTileProvider.prototype
          * @type {TerrainProvider}
@@ -278,6 +300,21 @@ define([
                     this._quadtree.invalidateAllTiles();
                 }
             }
+        },
+        /**
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+         *
+         * @type {ClippingPlaneCollection}
+         *
+         * @private
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._clippingPlanes;
+            },
+            set : function(value) {
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
+            }
         }
     });
 
@@ -295,6 +332,14 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+     /**
+     * Make updates to the tile provider that are not involved in rendering. Called before the render update cycle.
+     */
+    GlobeSurfaceTileProvider.prototype.update = function(frameState) {
+        // update collection: imagery indices, base layers, raise layer show/hide event
+        this._imageryLayers._update();
+    };
+
     function freeVertexArray(vertexArray) {
         var indexBuffer = vertexArray.indexBuffer;
         vertexArray.destroy();
@@ -307,17 +352,28 @@ define([
         }
     }
 
+    function updateCredits(surface, frameState) {
+        var creditDisplay = frameState.creditDisplay;
+        if (surface._terrainProvider.ready && defined(surface._terrainProvider.credit)) {
+            creditDisplay.addCredit(surface._terrainProvider.credit);
+        }
+
+        var imageryLayers = surface._imageryLayers;
+        for (var i = 0, len = imageryLayers.length; i < len; ++i) {
+            var imageryProvider = imageryLayers.get(i).imageryProvider;
+            if (imageryProvider.ready && defined(imageryProvider.credit)) {
+                creditDisplay.addCredit(imageryProvider.credit);
+            }
+        }
+    }
+
     /**
      * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
-        var imageryLayers = this._imageryLayers;
-
-        // update collection: imagery indices, base layers, raise layer show/hide event
-        imageryLayers._update();
         // update each layer for texture reprojection.
-        imageryLayers.queueReprojectionCommands(frameState);
+        this._imageryLayers.queueReprojectionCommands(frameState);
 
         if (this._layerOrderChanged) {
             this._layerOrderChanged = false;
@@ -329,18 +385,7 @@ define([
         }
 
         // Add credits for terrain and imagery providers.
-        var creditDisplay = frameState.creditDisplay;
-
-        if (this._terrainProvider.ready && defined(this._terrainProvider.credit)) {
-            creditDisplay.addCredit(this._terrainProvider.credit);
-        }
-
-        for (var i = 0, len = imageryLayers.length; i < len; ++i) {
-            var imageryProvider = imageryLayers.get(i).imageryProvider;
-            if (imageryProvider.ready && defined(imageryProvider.credit)) {
-                creditDisplay.addCredit(imageryProvider.credit);
-            }
-        }
+        updateCredits(this, frameState);
 
         var vertexArraysToDestroy = this._vertexArraysToDestroy;
         var length = vertexArraysToDestroy.length;
@@ -364,7 +409,11 @@ define([
                 tiles.length = 0;
             }
         }
-
+        // update clipping planes
+        var clippingPlanes = this._clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
         this._usedDrawCommands = 0;
     };
 
@@ -471,6 +520,11 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
         GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
+        var tileLoadedEvent = this._tileLoadedEvent;
+        tile._loadedCallbacks['tileLoadedEvent'] = function (tile) {
+            tileLoadedEvent.raiseEvent();
+            return true;
+        };
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -511,7 +565,7 @@ define([
             }
         }
 
-        var clippingPlanes = this.clippingPlanes;
+        var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
             tile.isClipped = (planeIntersection !== Intersect.INSIDE);
@@ -617,8 +671,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -629,6 +681,8 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
+        this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+
         return destroyObject(this);
     };
 
@@ -676,12 +730,14 @@ define([
 
             var that = this;
             var imageryProvider = layer.imageryProvider;
+            var tileImageryUpdatedEvent = this._imageryLayersUpdatedEvent;
             imageryProvider._reload = function() {
                 // Clear the layer's cache
                 layer._imageryCache = {};
 
                 that._quadtree.forEachLoadedTile(function(tile) {
-                    if (tile.state !== QuadtreeTileLoadState.DONE) {
+                    // If this layer is still waiting to for the loaded callback, just return
+                    if (defined(tile._loadedCallbacks[layer._layerIndex])) {
                         return;
                     }
 
@@ -717,7 +773,7 @@ define([
                     // Create new TileImageries for all loaded tiles
                     if (layer._createTileImagerySkeletons(tile, terrainProvider, insertionPoint)) {
                         // Add callback to remove old TileImageries when the new TileImageries are ready
-                        tile._loadedCallbacks.push(getTileReadyCallback(tileImageriesToFree, layer, terrainProvider));
+                        tile._loadedCallbacks[layer._layerIndex] = getTileReadyCallback(tileImageriesToFree, layer, terrainProvider);
 
                         tile.state = QuadtreeTileLoadState.LOADING;
                     }
@@ -732,6 +788,7 @@ define([
             });
 
             this._layerOrderChanged = true;
+            tileImageryUpdatedEvent.raiseEvent();
         }
     };
 
@@ -769,10 +826,13 @@ define([
         if (defined(layer.imageryProvider)) {
             layer.imageryProvider._reload = undefined;
         }
+
+        this._imageryLayersUpdatedEvent.raiseEvent();
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
         this._layerOrderChanged = true;
+        this._imageryLayersUpdatedEvent.raiseEvent();
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function(layer, index, show) {
@@ -783,7 +843,8 @@ define([
         }
     };
 
-    function createTileUniformMap(frameState) {
+    var scratchClippingPlaneMatrix = new Matrix4();
+    function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         var uniformMap = {
             u_initialColor : function() {
                 return this.properties.initialColor;
@@ -871,11 +932,17 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
-            u_clippingPlanesLength : function() {
-                return this.properties.clippingPlanes.length;
-            },
             u_clippingPlanes : function() {
-                return this.properties.clippingPlanes;
+                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
+                if (defined(clippingPlanes) && defined(clippingPlanes.texture)) {
+                    // Check in case clippingPlanes hasn't been updated yet.
+                    return clippingPlanes.texture;
+                }
+                return frameState.context.defaultTexture;
+            },
+            u_clippingPlanesMatrix : function() {
+                var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
+                return defined(clippingPlanes) ? Matrix4.multiply(frameState.context.uniformState.view, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix) : Matrix4.IDENTITY;
             },
             u_clippingPlanesEdgeStyle : function() {
                 var style = this.properties.clippingPlanesEdgeColor;
@@ -920,7 +987,6 @@ define([
 
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
-                clippingPlanes : [],
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
                 clippingPlanesEdgeWidth : 0.0
             }
@@ -1168,7 +1234,7 @@ define([
                 command.boundingVolume = new BoundingSphere();
                 command.orientedBoundingBox = undefined;
 
-                uniformMap = createTileUniformMap(frameState);
+                uniformMap = createTileUniformMap(frameState, tileProvider);
 
                 tileProvider._drawCommands.push(command);
                 tileProvider._uniformMaps.push(uniformMap);
@@ -1299,37 +1365,18 @@ define([
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             // update clipping planes
-            var clippingPlanes = tileProvider.clippingPlanes;
-            var length = 0;
-
-            if (defined(clippingPlanes) && tile.isClipped) {
-                length = clippingPlanes.length;
-            }
-
-            var packedPlanes = uniformMapProperties.clippingPlanes;
-            var packedLength = packedPlanes.length;
-            if (packedLength !== length) {
-                packedPlanes.length = length;
-
-                for (var i = packedLength; i < length; ++i) {
-                    packedPlanes[i] = new Cartesian4();
-                }
-            }
-
-            if (defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped) {
-                clippingPlanes.transformAndPackPlanes(context.uniformState.view, packedPlanes);
+            var clippingPlanes = tileProvider._clippingPlanes;
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped;
+            if (clippingPlanesEnabled) {
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
-
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0) && !FeatureDetection.isInternetExplorer();
-            var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : false;
 
             if (defined(tileProvider.uniformMap)) {
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, unionClippingRegions);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, clippingPlanes);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

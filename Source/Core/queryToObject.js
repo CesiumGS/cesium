@@ -40,7 +40,7 @@ define([
         if (queryString === '') {
             return result;
         }
-        var parts = queryString.replace(/\+/g, '%20').split('&');
+        var parts = queryString.replace(/\+/g, '%20').split(/[&;]/);
         for (var i = 0, len = parts.length; i < len; ++i) {
             var subparts = parts[i].split('=');
 

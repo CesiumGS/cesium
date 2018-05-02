@@ -790,7 +790,7 @@ define([
      * @see CorridorGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      *
      * @example
      * var corridor = new Cesium.CorridorGeometry({
@@ -813,23 +813,26 @@ define([
         }
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._positions = positions;
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._width = width;
-        this._height = defaultValue(options.height, 0);
-        this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
+        this._height = Math.max(height, extrudedHeight);
+        this._extrudedHeight = Math.min(height, extrudedHeight);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createCorridorGeometry';
-        this._rectangle = computeRectangle(positions, this._ellipsoid, width, this._cornerType);
+        this._rectangle = undefined;
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 6;
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 6;
     }
 
     /**
@@ -867,9 +870,6 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
-        Rectangle.pack(value._rectangle, array, startingIndex);
-        startingIndex += Rectangle.packedLength;
-
         array[startingIndex++] = value._width;
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
@@ -882,7 +882,6 @@ define([
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
-    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         positions : undefined,
         ellipsoid : scratchEllipsoid,
@@ -925,9 +924,6 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
-        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
-        startingIndex += Rectangle.packedLength;
-
         var width = array[startingIndex++];
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
@@ -954,7 +950,6 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._cornerType = cornerType;
         result._granularity = granularity;
-        result._rectangle = Rectangle.clone(rectangle);
         result._shadowVolume = shadowVolume;
 
         return result;
@@ -968,10 +963,7 @@ define([
      */
     CorridorGeometry.createGeometry = function(corridorGeometry) {
         var positions = corridorGeometry._positions;
-        var height = corridorGeometry._height;
         var width = corridorGeometry._width;
-        var extrudedHeight = corridorGeometry._extrudedHeight;
-        var extrude = (height !== extrudedHeight);
         var ellipsoid = corridorGeometry._ellipsoid;
 
         positions = scaleToSurface(positions, ellipsoid);
@@ -980,6 +972,10 @@ define([
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
         }
+
+        var height = corridorGeometry._height;
+        var extrudedHeight = corridorGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {
@@ -992,9 +988,6 @@ define([
         };
         var attr;
         if (extrude) {
-            var h = Math.max(height, extrudedHeight);
-            extrudedHeight = Math.min(height, extrudedHeight);
-            height = h;
             params.height = height;
             params.extrudedHeight = extrudedHeight;
             params.shadowVolume = corridorGeometry._shadowVolume;
@@ -1047,6 +1040,9 @@ define([
          */
         rectangle : {
             get : function() {
+                if (!defined(this._rectangle)) {
+                    this._rectangle = computeRectangle(this._positions, this._ellipsoid, this._width, this._cornerType);
+                }
                 return this._rectangle;
             }
         }

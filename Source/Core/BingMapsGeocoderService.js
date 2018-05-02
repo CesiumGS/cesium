@@ -4,16 +4,16 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './loadJsonp',
-        './Rectangle'
+        './Rectangle',
+        './Resource'
     ], function(
         BingMapsApi,
         Check,
         defaultValue,
         defined,
         defineProperties,
-        loadJsonp,
-        Rectangle) {
+        Rectangle,
+        Resource) {
     'use strict';
 
     var url = 'https://dev.virtualearth.net/REST/v1/Locations';
@@ -24,24 +24,20 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Scene} options.scene The scene
      * @param {String} [options.key] A key to use with the Bing Maps geocoding service
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('options.scene', options.scene);
-        //>>includeEnd('debug');
 
         var key = options.key;
         this._key = BingMapsApi.getKey(key);
 
-        if (defined(key)) {
-            var errorCredit = BingMapsApi.getErrorCredit(key);
-            if (defined(errorCredit)) {
-                options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
+        this._resource = new Resource({
+            url: url,
+            queryParameters: {
+                key: this._key
             }
-        }
+        });
     }
 
     defineProperties(BingMapsGeocoderService.prototype, {
@@ -81,16 +77,13 @@ define([
         Check.typeOf.string('query', query);
         //>>includeEnd('debug');
 
-        var key = this.key;
-        var promise = loadJsonp(url, {
-            parameters : {
-                query : query,
-                key : key
-            },
-            callbackParameterName : 'jsonp'
+        var resource = this._resource.getDerivedResource({
+            queryParameters: {
+                query: query
+            }
         });
 
-        return promise.then(function(result) {
+        return resource.fetchJsonp('jsonp').then(function(result) {
             if (result.resourceSets.length === 0) {
                 return [];
             }

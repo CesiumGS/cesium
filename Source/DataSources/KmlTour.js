@@ -1,10 +1,9 @@
 define([
-        '../Core/Event',
-        '../Core/defined'
+        '../Core/defined',
+        '../Core/Event'
     ], function(
-        Event,
-        defined
-    ) {
+        defined,
+        Event) {
     'use strict';
     /**
      * @alias KMLTour
