@@ -16,6 +16,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Core/RequestErrorEvent',
         'Core/Resource',
@@ -54,6 +55,7 @@ defineSuite([
         JulianDate,
         CesiumMath,
         NearFarScalar,
+        PerspectiveFrustum,
         Rectangle,
         RequestErrorEvent,
         Resource,
@@ -136,10 +138,7 @@ defineSuite([
             upWC : new Cartesian3(0.0, 1.0, 0.0),
             pitch : 0.0,
             heading : 0.0,
-            frustum : {
-                aspectRatio : 1.0,
-                fov : CesiumMath.PI_OVER_FOUR
-            },
+            frustum : new PerspectiveFrustum(),
             computeViewRectangle : function() {
                 return Rectangle.MAX_VALUE;
             },
@@ -152,6 +151,8 @@ defineSuite([
             clientHeight : 512
         }
     };
+    options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
+    options.camera.frustum.aspectRatio = 1.0;
 
     beforeEach(function() {
         // Reset camera - x value will change during onStop tests

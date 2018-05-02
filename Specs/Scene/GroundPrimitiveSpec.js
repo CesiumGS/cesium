@@ -99,6 +99,7 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+        scene.render(); // clear any afterRender commands
 
         rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
 
@@ -283,6 +284,29 @@ defineSuite([
         primitive.show = false;
         primitive.update(frameState);
         expect(frameState.commandList.length).toEqual(0);
+    });
+
+    it('becomes ready when show is false', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = scene.groundPrimitives.add(new GroundPrimitive({
+            geometryInstances : rectangleInstance
+        }));
+        primitive.show = false;
+
+        var ready = false;
+        primitive.readyPromise.then(function() {
+            ready = true;
+        });
+
+        return pollToPromise(function() {
+            scene.render();
+            return ready;
+        }).then(function() {
+            expect(ready).toEqual(true);
+        });
     });
 
     it('does not render other than for the color or pick pass', function() {

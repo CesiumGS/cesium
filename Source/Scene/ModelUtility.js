@@ -52,7 +52,7 @@ define([
         };
     };
 
-    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId) {
+    ModelUtility.getAttributeOrUniformBySemantic = function(gltf, semantic, programId, ignoreNodes) {
         var techniques = gltf.techniques;
         var parameter;
         for (var techniqueName in techniques) {
@@ -67,7 +67,7 @@ define([
                 for (var attributeName in attributes) {
                     if (attributes.hasOwnProperty(attributeName)) {
                         parameter = parameters[attributes[attributeName]];
-                        if (defined(parameter) && parameter.semantic === semantic) {
+                        if (defined(parameter) && parameter.semantic === semantic && (!ignoreNodes || !defined(parameter.node))) {
                             return attributeName;
                         }
                     }
@@ -75,7 +75,7 @@ define([
                 for (var uniformName in uniforms) {
                     if (uniforms.hasOwnProperty(uniformName)) {
                         parameter = parameters[uniforms[uniformName]];
-                        if (defined(parameter) && parameter.semantic === semantic) {
+                        if (defined(parameter) && parameter.semantic === semantic && (!ignoreNodes || !defined(parameter.node))) {
                             return uniformName;
                         }
                     }
@@ -168,8 +168,12 @@ define([
     };
 
     function replaceAllButFirstInString(string, find, replace) {
-        var index = string.indexOf(find);
-        return string.replace(new RegExp(find, 'g'), function(match, offset) {
+        // Limit search to strings that are not a subset of other tokens.
+        find += '(?!\\w)';
+        find = new RegExp(find, 'g');
+
+        var index = string.search(find);
+        return string.replace(find, function(match, offset) {
             return index === offset ? match : replace;
         });
     }
@@ -345,6 +349,54 @@ define([
             shader : shader,
             uniforms : quantizedUniforms
         };
+    };
+
+    ModelUtility.toClipCoordinatesGLSL = function(gltf, shader) {
+        var positionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'POSITION');
+        var decodedPositionName = positionName.replace('a_', 'gltf_a_dec_');
+        if (shader.indexOf(decodedPositionName) !== -1) {
+            positionName = decodedPositionName;
+        }
+
+        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEWPROJECTION', undefined, true);
+        if (!defined(modelViewProjectionName) || shader.indexOf(modelViewProjectionName) === -1) {
+            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION', undefined, true);
+            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEW', undefined, true);
+            if (shader.indexOf('czm_instanced_modelView ') !== -1) {
+                modelViewName = 'czm_instanced_modelView';
+            } else if (!defined(modelViewName)) {
+                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'CESIUM_RTC_MODELVIEW', undefined, true);
+            }
+            modelViewProjectionName = projectionName + ' * ' + modelViewName;
+        }
+
+        return modelViewProjectionName + ' * vec4(' + positionName + '.xyz, 1.0)';
+    };
+
+    ModelUtility.modifyFragmentShaderForLogDepth = function(shader) {
+        shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
+        shader +=
+            '\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_depth_main(); \n' +
+            '    czm_writeLogDepth(); \n' +
+            '} \n';
+
+        return shader;
+    };
+
+    ModelUtility.modifyVertexShaderForLogDepth = function(shader, toClipCoordinatesGLSL) {
+        shader = ShaderSource.replaceMain(shader, 'czm_depth_main');
+        shader +=
+            '\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_depth_main(); \n' +
+            '    czm_vertexLogDepth(' + toClipCoordinatesGLSL + '); \n' +
+            '} \n';
+
+        return shader;
     };
 
     function getScalarUniformFunction(value) {

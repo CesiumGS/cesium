@@ -663,33 +663,37 @@ define([
     }
 
     function createProgram(model) {
-        var positionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
-        var batchIdName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
+        var gltf = model.gltf;
+
+        var positionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'POSITION');
+        var batchIdName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_BATCHID');
 
         var attributeLocations = {};
         attributeLocations[positionName] = 0;
         attributeLocations[batchIdName] = 1;
 
-        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEWPROJECTION');
+        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEWPROJECTION');
 
         var uniformDecl;
-        var computePosition;
+        var toClip;
 
         if (!defined(modelViewProjectionName)) {
-            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'PROJECTION');
-            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEW');
+            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'PROJECTION');
+            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'MODELVIEW');
             if (!defined(modelViewName)) {
-                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'CESIUM_RTC_MODELVIEW');
+                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'CESIUM_RTC_MODELVIEW');
             }
 
             uniformDecl =
                 'uniform mat4 ' + modelViewName + ';\n' +
                 'uniform mat4 ' + projectionName + ';\n';
-            computePosition = '    vec4 positionInClipCoords = ' + projectionName + ' * ' + modelViewName + ' * vec4(' + positionName + ', 1.0);\n';
+            toClip = projectionName + ' * ' + modelViewName + ' * vec4(' + positionName + ', 1.0)';
         } else {
             uniformDecl = 'uniform mat4 ' + modelViewProjectionName + ';\n';
-            computePosition = '    vec4 positionInClipCoords = ' + modelViewProjectionName + ' * vec4(' + positionName + ', 1.0);\n';
+            toClip = modelViewProjectionName + ' * vec4(' + positionName + ', 1.0)';
         }
+
+        var computePosition = '    vec4 positionInClipCoords = ' + toClip + ';\n';
 
         var vs =
             'attribute vec3 ' + positionName + ';\n' +
@@ -716,6 +720,9 @@ define([
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
+        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClip);
+        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+
         model._shaderProgram = {
             vertexShaderSource : drawVS,
             fragmentShaderSource : drawFS,
@@ -725,6 +732,9 @@ define([
         // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
         var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
         var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
+
+        pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClip);
+        pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
 
         model._pickShaderProgram = {
             vertexShaderSource : pickVS,

@@ -1,6 +1,5 @@
 define([
         '../Core/Check',
-        '../Core/clone',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -8,12 +7,10 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/IonResource',
-        '../Core/Resource',
         '../Core/RuntimeError',
         '../ThirdParty/when',
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
-        './Cesium3DTileset',
         './createTileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
@@ -23,7 +20,6 @@ define([
         './WebMapTileServiceImageryProvider'
     ], function(
         Check,
-        clone,
         Credit,
         defaultValue,
         defined,
@@ -31,12 +27,10 @@ define([
         DeveloperError,
         Event,
         IonResource,
-        Resource,
         RuntimeError,
         when,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
-        Cesium3DTileset,
         createTileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
@@ -183,11 +177,8 @@ define([
                     imageryProvider = factory(endpoint.options);
                 }
 
-                that._tileCredits = endpoint.attributions.map(Credit.getIonCredit);
+                that._tileCredits = IonResource.getCreditsFromEndpoint(endpoint, endpointResource);
 
-                return imageryProvider;
-            })
-            .then(function(imageryProvider) {
                 imageryProvider.errorEvent.addEventListener(function(tileProviderError) {
                     //Propagate the errorEvent but set the provider to this instance instead
                     //of the inner instance.

@@ -527,9 +527,14 @@ define([
         }
 
         var extrudedDefine = classificationPrimitive._extruded ? 'EXTRUDED_GEOMETRY' : '';
+        // Tesselation on ClassificationPrimitives tends to be low,
+        // which causes problems when interpolating log depth from vertices.
+        // So force computing and writing logarithmic depth in the fragment shader.
+        // Re-enable at far distances to avoid z-fighting.
+        var disableGlPositionLogDepth = 'ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT';
 
         var vsSource = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [vs]
         });
         var fsSource = new ShaderSource({
@@ -551,7 +556,7 @@ define([
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             var pickVS = new ShaderSource({
-                defines : [extrudedDefine],
+                defines : [extrudedDefine, disableGlPositionLogDepth],
                 sources : [vsPick]
             });
 
@@ -578,7 +583,7 @@ define([
 
         vs = Primitive._appendShowToShader(primitive, vs);
         vsSource = new ShaderSource({
-            defines : [extrudedDefine],
+            defines : [extrudedDefine, disableGlPositionLogDepth],
             sources : [vs]
         });
 
@@ -834,7 +839,7 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     ClassificationPrimitive.prototype.update = function(frameState) {
-        if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+        if (!defined(this._primitive) && !defined(this.geometryInstances)) {
             return;
         }
 
@@ -931,6 +936,7 @@ define([
             this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
         }
 
+        this._primitive.show = this.show;
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
     };
