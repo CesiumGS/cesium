@@ -3009,8 +3009,11 @@ define([
             scene._oit.execute(context, passState);
         }
 
-        if (usePostProcess && (useOIT || defined(globeFramebuffer))) {
-            var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
+        if (usePostProcess) {
+            var inputFramebuffer = sceneFramebuffer;
+            if (useGlobeDepthFramebuffer && !useOIT) {
+                inputFramebuffer = globeFramebuffer;
+            }
 
             var postProcess = scene.postProcessStages;
             var colorTexture = inputFramebuffer.getColorTexture(0);
