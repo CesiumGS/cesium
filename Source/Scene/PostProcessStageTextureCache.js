@@ -254,7 +254,7 @@ define([
     PostProcessStageTextureCache.prototype.update = function(context) {
         var collection = this._collection;
         var updateDependencies = this._updateDependencies;
-        var aoEnabled = collection.ambientOcclusion.enabled && context.depthTexture;
+        var aoEnabled = defined(collection.ambientOcclusion) && collection.ambientOcclusion.enabled && context.depthTexture;
         var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || collection.bloom.enabled || collection.fxaa.enabled;
         if (updateDependencies || (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)) {
             releaseResources(this);
