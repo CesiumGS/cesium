@@ -17,6 +17,9 @@ Change Log
    * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
    * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
 
+##### Fixes :wrench:
+* Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
+
 ### 1.45 - 2018-05-01
 
 ##### Major Announcements :loudspeaker:
