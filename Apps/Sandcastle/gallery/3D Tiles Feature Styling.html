@@ -71,7 +71,7 @@ function colorByHeight() {
 function colorByLatitude() {
     tileset.style = new Cesium.Cesium3DTileStyle({
         defines: {
-            latitudeRadians: "Number(${latitude}) * 0.0174532925"
+            latitudeRadians: "radians(Number(${latitude}))"
         },
         color: {
             conditions: [
@@ -91,7 +91,7 @@ function colorByLatitude() {
 function colorByDistance() {
     tileset.style = new Cesium.Cesium3DTileStyle({
         defines : {
-            distance : "distance(vec2(Number(${longitude}) * 0.0174532925, Number(${latitude}) * 0.0174532925), vec2(-1.291777521, 0.7105706624))"
+            distance : "distance(vec2(radians(Number(${longitude})), radians(Number(${latitude}))), vec2(-1.291777521, 0.7105706624))"
         },
         color : {
             conditions : [
