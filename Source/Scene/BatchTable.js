@@ -371,7 +371,8 @@ define([
             sampler : new Sampler({
                 minificationFilter : TextureMinificationFilter.NEAREST,
                 magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            }),
+            flipY : false
         });
     }
 
@@ -456,7 +457,7 @@ define([
                '    float numberOfAttributes = float('+ stride + '); \n' +
                '    float xId = mod(batchId * numberOfAttributes, batchTextureDimensions.x); \n' +
                '    float yId = floor(batchId * numberOfAttributes / batchTextureDimensions.x); \n' +
-               '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
+               '    return vec2(centerX + (xId * stepX), centerY + (yId * stepY)); \n' +
                '} \n';
     }
 

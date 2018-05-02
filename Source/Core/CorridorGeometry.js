@@ -813,12 +813,15 @@ define([
         }
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._positions = positions;
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._width = width;
-        this._height = defaultValue(options.height, 0);
-        this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
+        this._height = Math.max(height, extrudedHeight);
+        this._extrudedHeight = Math.min(height, extrudedHeight);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
@@ -960,10 +963,7 @@ define([
      */
     CorridorGeometry.createGeometry = function(corridorGeometry) {
         var positions = corridorGeometry._positions;
-        var height = corridorGeometry._height;
         var width = corridorGeometry._width;
-        var extrudedHeight = corridorGeometry._extrudedHeight;
-        var extrude = (height !== extrudedHeight);
         var ellipsoid = corridorGeometry._ellipsoid;
 
         positions = scaleToSurface(positions, ellipsoid);
@@ -972,6 +972,10 @@ define([
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
         }
+
+        var height = corridorGeometry._height;
+        var extrudedHeight = corridorGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {
@@ -984,9 +988,6 @@ define([
         };
         var attr;
         if (extrude) {
-            var h = Math.max(height, extrudedHeight);
-            extrudedHeight = Math.min(height, extrudedHeight);
-            height = h;
             params.height = height;
             params.extrudedHeight = extrudedHeight;
             params.shadowVolume = corridorGeometry._shadowVolume;

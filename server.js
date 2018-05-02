@@ -42,6 +42,7 @@
     var mime = express.static.mime;
     mime.define({
         'application/json' : ['czml', 'json', 'geojson', 'topojson'],
+        'application/wasm' : ['wasm'],
         'image/crn' : ['crn'],
         'image/ktx' : ['ktx'],
         'model/gltf+json' : ['gltf'],

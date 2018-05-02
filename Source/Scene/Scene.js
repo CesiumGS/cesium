@@ -46,7 +46,6 @@ define([
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -55,6 +54,7 @@ define([
         './CreditDisplay',
         './DebugCameraPrimitive',
         './DepthPlane',
+        './DerivedCommand',
         './DeviceOrientationCameraController',
         './Fog',
         './FrameState',
@@ -125,7 +125,6 @@ define([
         Pass,
         PassState,
         PixelDatatype,
-        RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -134,6 +133,7 @@ define([
         CreditDisplay,
         DebugCameraPrimitive,
         DepthPlane,
+        DerivedCommand,
         DeviceOrientationCameraController,
         Fog,
         FrameState,
@@ -286,6 +286,10 @@ define([
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
+
+        this._logDepthBuffer = context.fragmentDepth;
+        this._logDepthBufferDirty = true;
+        this._updateFrustums = false;
 
         this._tweens = new TweenCollection();
 
@@ -455,8 +459,14 @@ define([
          * @default 1.0
          */
         this.morphTime = 1.0;
+
         /**
-         * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
+         * The far-to-near ratio of the multi-frustum when using a normal depth buffer.
+         * <p>
+         * This value is used to create the near and far values for each frustum of the multi-frustum. It is only used
+         * when {@link Scene#logarithmicDepthBuffer} is <code>false</code>. When <code>logarithmicDepthBuffer</code> is
+         * <code>true</code>, use {@link Scene#logarithmicDepthFarToNearRatio}.
+         * </p>
          *
          * @type {Number}
          * @default 1000.0
@@ -464,9 +474,23 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
+         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer.
+         * <p>
+         * This value is used to create the near and far values for each frustum of the multi-frustum. It is only used
+         * when {@link Scene#logarithmicDepthBuffer} is <code>true</code>. When <code>logarithmicDepthBuffer</code> is
+         * <code>false</code>, use {@link Scene#farToNearRatio}.
+         * </p>
+         *
+         * @type {Number}
+         * @default 1e9
+         */
+        this.logarithmicDepthFarToNearRatio = 1e9;
+
+        /**
          * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
          * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
-         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to the surface.
+         *
          * @type {Number}
          * @default 1.75e6
          */
@@ -602,12 +626,26 @@ define([
         this.useDepthPicking = true;
 
         /**
-         * When <code>true</code>, enables picking translucent geometry using the depth buffer.
-         * {@link Scene#useDepthPicking} must also be true to enable picking the depth buffer.
+         * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for this enabling to work.
+         *
          * <p>
-         * There is a decrease in performance when enabled. There are extra draw calls to write depth for
+         * Render must be called between picks.
+         * <br>There is a decrease in performance when enabled. There are extra draw calls to write depth for
          * translucent geometry.
          * </p>
+         *
+         * @example
+         * // picking the position of a translucent primitive
+         * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+         *      var pickedFeature = viewer.scene.pick(movement.position);
+         *      if (!Cesium.defined(pickedFeature)) {
+         *          // nothing picked
+         *          return;
+         *      }
+         *      viewer.scene.render();
+         *      var worldPosition = viewer.scene.pickPosition(movement.position));
+         * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+         *
          * @type {Boolean}
          * @default false
          */
@@ -690,9 +728,16 @@ define([
 
         var camera = new Camera(this);
         this._camera = camera;
-        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
+
+        if (this._logDepthBuffer) {
+            this._camera.frustum.near = 0.1;
+            this._camera.frustum.far = 10000000000.0;
+        }
+
+        this._cameraClone = Camera.clone(camera);
+        this._frustumChanged = true;
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -764,15 +809,15 @@ define([
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
-        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList, false, undefined);
+        var farToNearRatio = this._logDepthBuffer ? this.logarithmicDepthFarToNearRatio : this.farToNearRatio;
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        updateFrustums(near, far, farToNearRatio, numFrustums, this._logDepthBuffer, this._frustumCommandsList, false, undefined);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
     }
-
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     function updateGlobeListeners(scene, globe) {
         for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
@@ -1368,6 +1413,33 @@ define([
                 //>>includeEnd('debug');
                 this._minimumDisableDepthTestDistance = value;
             }
+        },
+
+        /**
+         * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
+         * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
+         */
+        logarithmicDepthBuffer : {
+            get : function() {
+                return this._logDepthBuffer;
+            },
+            set : function(value) {
+                value = this._context.fragmentDepth && value;
+                if (this._logDepthBuffer !== value) {
+                    this._logDepthBuffer = value;
+                    this._logDepthBufferDirty = true;
+                    this._updateFrustums = true;
+                }
+            }
+        },
+
+        /**
+         * @private
+         */
+        opaqueFrustumNearOffset : {
+            get : function() {
+                return this._logDepthBuffer ? 0.9 : 0.9999;
+            }
         }
     });
 
@@ -1421,24 +1493,48 @@ define([
         }
 
         var derivedCommands = command.derivedCommands;
-        if (command.dirty && defined(derivedCommands)) {
+        if ((scene._logDepthBufferDirty || scene._frustumChanged || command.dirty) && defined(derivedCommands)) {
             command.dirty = false;
+
+            var frustum = scene.camera.frustum;
+            var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+            var logDepthCommand;
+            var logDepthDerivedCommands;
+            if (useLogDepth) {
+                derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(command, context, derivedCommands.logDepth);
+                logDepthCommand = derivedCommands.logDepth.command;
+                logDepthDerivedCommands = logDepthCommand.derivedCommands;
+            } else {
+                derivedCommands.logDepth = undefined;
+            }
+
+            if (scene.frameState.passes.pick) {
+                return;
+            }
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+                if (useLogDepth) {
+                    logDepthDerivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, logDepthCommand, shadowsDirty, context, logDepthDerivedCommands.shadows);
+                }
+            }
+
+            if (useLogDepth) {
+                command = logDepthCommand;
+                derivedCommands = logDepthDerivedCommands;
             }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
                 if (lightShadowsEnabled && command.receiveShadows) {
                     derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
-                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
             }
 
-            derivedCommands.depth = createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
+            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
         }
     }
 
@@ -1501,7 +1597,7 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, nearToFarDistance2D) {
+    function updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, nearToFarDistance2D) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
             var curNear;
@@ -1509,7 +1605,10 @@ define([
 
             if (!is2D) {
                 curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-                curFar = Math.min(far, farToNearRatio * curNear);
+                curFar = farToNearRatio * curNear;
+                if (!logDepth) {
+                    curFar = Math.min(far, curFar);
+                }
             } else {
                 curNear = Math.min(far - nearToFarDistance2D, near + m * nearToFarDistance2D);
                 curFar = Math.min(far, curNear + nearToFarDistance2D);
@@ -1528,10 +1627,6 @@ define([
     function insertIntoBin(scene, command, distance) {
         if (scene.debugShowFrustums) {
             command.debugOverlappingFrustums = 0;
-        }
-
-        if (!scene.frameState.passes.pick) {
-            updateDerivedCommands(scene, command);
         }
 
         var frustumCommandsList = scene._frustumCommandsList;
@@ -1568,6 +1663,8 @@ define([
             cf[command.debugOverlappingFrustums] = defined(cf[command.debugOverlappingFrustums]) ? cf[command.debugOverlappingFrustums] + 1 : 1;
             ++scene._debugFrustumStatistics.totalCommands;
         }
+
+        updateDerivedCommands(scene, command);
     }
 
     var scratchCullingVolume = new CullingVolume();
@@ -1704,24 +1801,26 @@ define([
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var is2D = scene.mode === SceneMode.SCENE2D;
-        var farToNearRatio = scene.farToNearRatio;
-
+        var logDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
+        var farToNearRatio = logDepth ? scene.logarithmicDepthFarToNearRatio : scene.farToNearRatio;
         var numFrustums;
+
         if (!is2D) {
             // The multifrustum for 3D/CV is non-uniformly distributed.
             numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         } else {
             // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
-            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // the camera is moved to just before the frustum and the frustum depth is scaled
             // to be in [1.0, nearToFarDistance2D].
             far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
             near = Math.min(near, far);
             numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
         }
 
-        if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-                (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))) {
-            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
+        if (scene._updateFrustums || (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
+               (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))))) {
+            scene._updateFrustums = false;
+            updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
 
@@ -1840,6 +1939,10 @@ define([
 
         var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
         var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
+
+        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+            command = command.derivedCommands.logDepth.command;
+        }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
@@ -2086,7 +2189,7 @@ define([
                 us.updateFrustum(frustum);
             } else {
                 // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+                frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
                 frustum.far = frustumCommands.far;
                 us.updateFrustum(frustum);
             }
@@ -2656,10 +2759,11 @@ define([
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
+            var useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
             // of the globe are not picked.
-            scene._depthPlane.update(frameState);
+            scene._depthPlane.update(frameState, useLogDepth);
         }
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
@@ -2847,19 +2951,9 @@ define([
         var context = scene._context;
         var environmentState = scene._environmentState;
 
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
-        if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
-            var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
-            gd.executeDebugGlobeDepth(context, passState);
-        }
-
-        if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
-            var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
-            pd.executeDebugPickDepth(context, passState);
-        }
-
         var useOIT = environmentState.useOIT;
         var useFXAA = environmentState.useFXAA;
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
 
         if (useOIT) {
             passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
@@ -2879,6 +2973,19 @@ define([
         if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
             passState.framebuffer = environmentState.originalFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
+        }
+
+        var frustum = scene.camera.frustum;
+        var useLogDepth = scene._logDepthBuffer && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+
+        if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
+            var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
+            gd.executeDebugGlobeDepth(context, passState, useLogDepth);
+        }
+
+        if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
+            var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
+            pd.executeDebugPickDepth(context, passState, useLogDepth);
         }
     }
 
@@ -3052,8 +3159,10 @@ define([
         tryAndCatchError(this, time, update);
         this._postUpdate.raiseEvent(this, time);
 
+        this._frustumChanged = !this._camera.frustum.equals(this._cameraClone.frustum);
+
         var cameraChanged = checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || (this.mode === SceneMode.MORPHING);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._frustumChanged || this._logDepthBufferDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
             shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
@@ -3062,6 +3171,7 @@ define([
         if (shouldRender) {
             this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
             this._renderRequested = false;
+            this._logDepthBufferDirty = false;
 
             // Render
             this._preRender.raiseEvent(this, time);
@@ -3272,92 +3382,6 @@ define([
         return object;
     };
 
-    var fragDepthRegex = /\bgl_FragDepthEXT\b/;
-    var discardRegex = /\bdiscard\b/;
-
-    function getDepthOnlyShaderProgram(context, shaderProgram) {
-        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'depthOnly');
-        if (!defined(shader)) {
-            var attributeLocations = shaderProgram._attributeLocations;
-            var fs = shaderProgram.fragmentShaderSource;
-
-            var writesDepthOrDiscards = false;
-            var sources = fs.sources;
-            var length = sources.length;
-            for (var i = 0; i < length; ++i) {
-                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
-                    writesDepthOrDiscards = true;
-                    break;
-                }
-            }
-
-            if (!writesDepthOrDiscards) {
-                fs = new ShaderSource({
-                    sources : ['void main() { gl_FragColor = vec4(1.0); }']
-                });
-            }
-
-            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'depthOnly', {
-                vertexShaderSource : shaderProgram.vertexShaderSource,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-        }
-
-        return shader;
-    }
-
-    function getDepthOnlyRenderState(scene, renderState) {
-        var cache = scene._depthOnlyRenderStateCache;
-        var depthOnlyState = cache[renderState.id];
-        if (!defined(depthOnlyState)) {
-            var rs = RenderState.getState(renderState);
-            rs.depthMask = true;
-            rs.colorMask = {
-                red : false,
-                green : false,
-                blue : false,
-                alpha : false
-            };
-
-            depthOnlyState = RenderState.fromCache(rs);
-            cache[renderState.id] = depthOnlyState;
-        }
-
-        return depthOnlyState;
-    }
-
-    function createDepthOnlyDerivedCommand(scene, command, context, result) {
-        // For a depth only pass, we bind a framebuffer with only a depth attachment (no color attachments),
-        // do not write color, and write depth. If the fragment shader doesn't modify the fragment depth
-        // or discard, the driver can replace the fragment shader with a pass-through shader. We're unsure if this
-        // actually happens so we modify the shader to use a pass-through fragment shader.
-
-        if (!defined(result)) {
-            result = {};
-        }
-
-        var shader;
-        var renderState;
-        if (defined(result.depthOnlyCommand)) {
-            shader = result.depthOnlyCommand.shaderProgram;
-            renderState = result.depthOnlyCommand.renderState;
-        }
-
-        result.depthOnlyCommand = DrawCommand.shallowClone(command, result.depthOnlyCommand);
-
-        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(context, command.shaderProgram);
-            result.depthOnlyCommand.renderState = getDepthOnlyRenderState(scene, command.renderState);
-            result.shaderProgramId = command.shaderProgram.id;
-        } else {
-            result.depthOnlyCommand.shaderProgram = shader;
-            result.depthOnlyCommand.renderState = renderState;
-        }
-
-        return result;
-    }
-
     function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene._context;
@@ -3508,7 +3532,7 @@ define([
                     uniformState.update(this.frameState);
                     uniformState.updateFrustum(frustum);
                 } else {
-                    frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
+                    frustum.near = renderedFrustum.near * (i !== 0 ? this.opaqueFrustumNearOffset : 1.0);
                     frustum.far = renderedFrustum.far;
                     uniformState.updateFrustum(frustum);
                 }

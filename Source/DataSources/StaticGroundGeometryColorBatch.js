@@ -111,6 +111,7 @@ define([
                 }
 
                 primitive = new GroundPrimitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     classificationType : this.classificationType
@@ -134,6 +135,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;

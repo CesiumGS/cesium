@@ -1,7 +1,6 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
-        '../../Core/Check',
         '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -49,7 +48,6 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Check,
         Clock,
         defaultValue,
         defined,
@@ -272,7 +270,7 @@ define([
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
-     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
+     * @param {ImageryProvider} [options.imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
@@ -981,18 +979,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         canvas : {
             get : function() {
                 return this._cesiumWidget.canvas;
-            }
-        },
-
-        /**
-         * Gets the Cesium logo element.
-         * @memberof Viewer.prototype
-         * @type {Element}
-         * @readonly
-         */
-        cesiumLogo : {
-            get : function() {
-                return this._cesiumWidget.cesiumLogo;
             }
         },
 

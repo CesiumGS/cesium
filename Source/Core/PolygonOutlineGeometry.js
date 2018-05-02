@@ -290,7 +290,7 @@ define([
         Check.typeOf.object('options', options);
         Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
 
-        if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
+        if (options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
         //>>includeEnd('debug');
@@ -298,24 +298,19 @@ define([
         var polygonHierarchy = options.polygonHierarchy;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var height = defaultValue(options.height, 0.0);
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
+        var perPositionHeightExtrude = perPositionHeight && defined(options.extrudedHeight);
 
-        var extrudedHeight = options.extrudedHeight;
-        var extrude = defined(extrudedHeight);
-        if (extrude && !perPositionHeight) {
-            var h = extrudedHeight;
-            extrudedHeight = Math.min(h, height);
-            height = Math.max(h, height);
-        }
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
 
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._granularity = granularity;
-        this._height = height;
-        this._extrudedHeight = defaultValue(extrudedHeight, 0.0);
-        this._extrude = extrude;
+        this._height = Math.max(height, extrudedHeight);
+        this._extrudedHeight = Math.min(extrudedHeight, height);
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
+        this._perPositionHeightExtrude = perPositionHeightExtrude;
         this._workerName = 'createPolygonOutlineGeometry';
 
         /**
@@ -350,9 +345,9 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._granularity;
-        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
-        array[startingIndex++] = value.packedLength;
+        array[startingIndex] = value.packedLength;
 
         return array;
     };
@@ -387,9 +382,9 @@ define([
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
-        var extrude = array[startingIndex++] === 1.0;
+        var perPositionHeightExtrude = array[startingIndex++] === 1.0;
         var perPositionHeight = array[startingIndex++] === 1.0;
-        var packedLength = array[startingIndex++];
+        var packedLength = array[startingIndex];
 
         if (!defined(result)) {
             result = new PolygonOutlineGeometry(dummyOptions);
@@ -400,8 +395,8 @@ define([
         result._height = height;
         result._extrudedHeight = extrudedHeight;
         result._granularity = granularity;
-        result._extrude = extrude;
         result._perPositionHeight = perPositionHeight;
+        result._perPositionHeightExtrude = perPositionHeightExtrude;
         result.packedLength = packedLength;
 
         return result;
@@ -464,9 +459,6 @@ define([
     PolygonOutlineGeometry.createGeometry = function(polygonGeometry) {
         var ellipsoid = polygonGeometry._ellipsoid;
         var granularity = polygonGeometry._granularity;
-        var height = polygonGeometry._height;
-        var extrudedHeight = polygonGeometry._extrudedHeight;
-        var extrude = polygonGeometry._extrude;
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
 
@@ -514,6 +506,10 @@ define([
         var geometry;
         var geometries = [];
         var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+
+        var height = polygonGeometry._height;
+        var extrudedHeight = polygonGeometry._extrudedHeight;
+        var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {

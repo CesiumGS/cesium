@@ -25,25 +25,28 @@ void main()
     {
         discard;
     }
-    else
-    {
-        vec4 color = texture2D(u_pointCloud_colorTexture, v_textureCoordinates);
 
-        // sample from neighbors up, down, left, right
-        float distX = u_distancesAndEdlStrength.x;
-        float distY = u_distancesAndEdlStrength.y;
+    vec4 color = texture2D(u_pointCloud_colorTexture, v_textureCoordinates);
 
-        vec2 responseAndCount = vec2(0.0);
+    // sample from neighbors up, down, left, right
+    float distX = u_distancesAndEdlStrength.x;
+    float distY = u_distancesAndEdlStrength.y;
 
-        responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(0, distY));
-        responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(distX, 0));
-        responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(0, -distY));
-        responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(-distX, 0));
+    vec2 responseAndCount = vec2(0.0);
 
-        float response = responseAndCount.x / responseAndCount.y;
-        float shade = exp(-response * 300.0 * u_distancesAndEdlStrength.z);
-        color.rgb *= shade;
-        gl_FragColor = vec4(color);
-        gl_FragDepthEXT = czm_eyeToWindowCoordinates(vec4(ecAlphaDepth.xyz, 1.0)).z;
-    }
+    responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(0, distY));
+    responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(distX, 0));
+    responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(0, -distY));
+    responseAndCount += neighborContribution(ecAlphaDepth.a, vec2(-distX, 0));
+
+    float response = responseAndCount.x / responseAndCount.y;
+    float shade = exp(-response * 300.0 * u_distancesAndEdlStrength.z);
+    color.rgb *= shade;
+    gl_FragColor = vec4(color);
+
+#ifdef LOG_DEPTH
+    czm_writeLogDepth(1.0 + (czm_projection * vec4(ecAlphaDepth.xyz, 1.0)).w);
+#else
+    gl_FragDepthEXT = czm_eyeToWindowCoordinates(vec4(ecAlphaDepth.xyz, 1.0)).z;
+#endif
 }

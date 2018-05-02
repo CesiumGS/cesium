@@ -19,11 +19,9 @@ define([
         './IndexDatatype',
         './Math',
         './Matrix3',
-        './Matrix4',
         './PrimitiveType',
         './Quaternion',
         './Rectangle',
-        './Transforms',
         './VertexFormat'
     ], function(
         BoundingSphere,
@@ -46,11 +44,9 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix3,
-        Matrix4,
         PrimitiveType,
         Quaternion,
         Rectangle,
-        Transforms,
         VertexFormat) {
     'use strict';
 
@@ -667,7 +663,7 @@ define([
         for (var i = 0; i < positionsCount; ++i) {
             positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
         }
-        var rectangle = Rectangle.fromCartesianArray(positions);
+        var rectangle = Rectangle.fromCartesianArray(positions, ellipseGeometry._ellipsoid);
         // Rectangle width goes beyond 180 degrees when the ellipse crosses a pole.
         // When this happens, make the rectangle into a "circle" around the pole
         if (rectangle.width > CesiumMath.PI) {
@@ -722,9 +718,6 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -745,17 +738,19 @@ define([
         }
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
         this._stRotation = defaultValue(options.stRotation, 0.0);
-        this._height = height;
+        this._height = Math.max(extrudedHeight, height);
         this._granularity = granularity;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._extrudedHeight = defaultValue(extrudedHeight, height);
-        this._extrude = extrude;
+        this._extrudedHeight = Math.min(extrudedHeight, height);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createEllipseGeometry';
 
@@ -766,7 +761,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
 
     /**
      * Stores the provided instance into the provided array.
@@ -805,7 +800,6 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
@@ -861,7 +855,6 @@ define([
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var extrude = array[startingIndex++] === 1.0;
         var shadowVolume = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
@@ -886,7 +879,6 @@ define([
         result._height = height;
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
-        result._extrude = extrude;
         result._shadowVolume = shadowVolume;
 
         return result;
@@ -903,6 +895,10 @@ define([
             return;
         }
 
+        var height = ellipseGeometry._height;
+        var extrudedHeight = ellipseGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
@@ -910,16 +906,14 @@ define([
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
             ellipsoid : ellipseGeometry._ellipsoid,
             rotation : ellipseGeometry._rotation,
-            height : ellipseGeometry._height,
-            extrudedHeight : ellipseGeometry._extrudedHeight,
+            height : height,
             granularity : ellipseGeometry._granularity,
             vertexFormat : ellipseGeometry._vertexFormat,
             stRotation : ellipseGeometry._stRotation
         };
         var geometry;
-        if (ellipseGeometry._extrude) {
-            options.extrudedHeight = Math.min(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
-            options.height = Math.max(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+        if (extrude) {
+            options.extrudedHeight = extrudedHeight;
             options.shadowVolume = ellipseGeometry._shadowVolume;
             geometry = computeExtrudedEllipse(options);
         } else {

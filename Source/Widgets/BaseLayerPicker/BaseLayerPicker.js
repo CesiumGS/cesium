@@ -138,18 +138,32 @@ css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }');
         imageryTitle.innerHTML = 'Imagery';
         dropPanel.appendChild(imageryTitle);
 
+        var imagerySection = document.createElement('div');
+        imagerySection.className = 'cesium-baseLayerPicker-section';
+        imagerySection.setAttribute('data-bind', 'foreach: _imageryProviders');
+        dropPanel.appendChild(imagerySection);
+
+        var imageryCategories = document.createElement('div');
+        imageryCategories.className = 'cesium-baseLayerPicker-category';
+        imagerySection.appendChild(imageryCategories);
+
+        var categoryTitle = document.createElement('div');
+        categoryTitle.className = 'cesium-baseLayerPicker-categoryTitle';
+        categoryTitle.setAttribute('data-bind', 'text: name');
+        imageryCategories.appendChild(categoryTitle);
+
         var imageryChoices = document.createElement('div');
         imageryChoices.className = 'cesium-baseLayerPicker-choices';
-        imageryChoices.setAttribute('data-bind', 'foreach: imageryProviderViewModels');
-        dropPanel.appendChild(imageryChoices);
+        imageryChoices.setAttribute('data-bind', 'foreach: providers');
+        imageryCategories.appendChild(imageryChoices);
 
         var imageryProvider = document.createElement('div');
         imageryProvider.className = 'cesium-baseLayerPicker-item';
         imageryProvider.setAttribute('data-bind', '\
-css: { "cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedImagery },\
+css: { "cesium-baseLayerPicker-selectedItem" : $data === $parents[1].selectedImagery },\
 attr: { title: tooltip },\
 visible: creationCommand.canExecute,\
-click: function($data) { $parent.selectedImagery = $data; }');
+click: function($data) { $parents[1].selectedImagery = $data; }');
         imageryChoices.appendChild(imageryProvider);
 
         var providerIcon = document.createElement('img');
@@ -169,18 +183,32 @@ click: function($data) { $parent.selectedImagery = $data; }');
         terrainTitle.innerHTML = 'Terrain';
         dropPanel.appendChild(terrainTitle);
 
+        var terrainSection = document.createElement('div');
+        terrainSection.className = 'cesium-baseLayerPicker-section';
+        terrainSection.setAttribute('data-bind', 'foreach: _terrainProviders');
+        dropPanel.appendChild(terrainSection);
+
+        var terrainCategories = document.createElement('div');
+        terrainCategories.className = 'cesium-baseLayerPicker-category';
+        terrainSection.appendChild(terrainCategories);
+
+        var terrainCategoryTitle = document.createElement('div');
+        terrainCategoryTitle.className = 'cesium-baseLayerPicker-categoryTitle';
+        terrainCategoryTitle.setAttribute('data-bind', 'text: name');
+        terrainCategories.appendChild(terrainCategoryTitle);
+
         var terrainChoices = document.createElement('div');
         terrainChoices.className = 'cesium-baseLayerPicker-choices';
-        terrainChoices.setAttribute('data-bind', 'foreach: terrainProviderViewModels');
-        dropPanel.appendChild(terrainChoices);
+        terrainChoices.setAttribute('data-bind', 'foreach: providers');
+        terrainCategories.appendChild(terrainChoices);
 
         var terrainProvider = document.createElement('div');
         terrainProvider.className = 'cesium-baseLayerPicker-item';
         terrainProvider.setAttribute('data-bind', '\
-css: { "cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedTerrain },\
+css: { "cesium-baseLayerPicker-selectedItem" : $data === $parents[1].selectedTerrain },\
 attr: { title: tooltip },\
 visible: creationCommand.canExecute,\
-click: function($data) { $parent.selectedTerrain = $data; }');
+click: function($data) { $parents[1].selectedTerrain = $data; }');
         terrainChoices.appendChild(terrainProvider);
 
         var terrainProviderIcon = document.createElement('img');

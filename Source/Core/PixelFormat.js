@@ -147,9 +147,8 @@ define([
          */
         componentsLength : function(pixelFormat) {
             switch (pixelFormat) {
-                // Many GPUs store RGB as RGBA internally
-                // https://devtalk.nvidia.com/default/topic/699479/general-graphics-programming/rgb-auto-converted-to-rgba/post/4142379/#4142379
                 case PixelFormat.RGB:
+                    return 3;
                 case PixelFormat.RGBA:
                     return 4;
                 case PixelFormat.LUMINANCE_ALPHA:
@@ -281,6 +280,46 @@ define([
                 componentsLength = 1;
             }
             return componentsLength * PixelDatatype.sizeInBytes(pixelDatatype) * width * height;
+        },
+
+        /**
+         * @private
+         */
+        createTypedArray : function(pixelFormat, pixelDatatype, width, height) {
+            var constructor;
+            var sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
+            if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
+                constructor = Uint8Array;
+            } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
+                constructor = Uint16Array;
+            } else if (sizeInBytes === Float32Array.BYTES_PER_ELEMENT && pixelDatatype === PixelDatatype.FLOAT) {
+                constructor = Float32Array;
+            } else {
+                constructor = Uint32Array;
+            }
+
+            var size = PixelFormat.componentsLength(pixelFormat) * width * height;
+            return new constructor(size);
+        },
+
+        /**
+         * @private
+         */
+        flipY : function(bufferView, pixelFormat, pixelDatatype, width, height) {
+            if (height === 1) {
+                return bufferView;
+            }
+            var flipped = PixelFormat.createTypedArray(pixelFormat, pixelDatatype, width, height);
+            var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
+            var textureWidth = width * numberOfComponents;
+            for (var i = 0; i < height; ++i) {
+                var row = i * height * numberOfComponents;
+                var flippedRow = (height - i - 1) * height * numberOfComponents;
+                for (var j = 0; j < textureWidth; ++j) {
+                    flipped[flippedRow + j] = bufferView[row + j];
+                }
+            }
+            return flipped;
         }
     };
 

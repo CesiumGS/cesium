@@ -274,4 +274,66 @@ defineSuite([
             batch.removeAllPrimitives();
         });
     });
+
+    it('shows only one primitive while rebuilding primitive', function() {
+        var batch = new StaticGeometryColorBatch(scene.primitives, PerInstanceColorAppearance, undefined, false, ShadowMode.DISABLED);
+
+        function buildEntity() {
+            return new Entity({
+                position : new Cartesian3(1234, 5678, 9101112),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : Color.RED.withAlpha(0.5),
+                    height : 0
+                }
+            });
+        }
+
+        function renderScene() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }
+
+        var entity1 = buildEntity();
+        var entity2 = buildEntity();
+
+        var updater1 = new EllipseGeometryUpdater(entity1, scene);
+        var updater2 = new EllipseGeometryUpdater(entity2, scene);
+
+        batch.add(time, updater1);
+        return pollToPromise(renderScene)
+        .then(function() {
+            expect(scene.primitives.length).toEqual(1);
+            var primitive = scene.primitives.get(0);
+            expect(primitive.show).toBeTruthy();
+        })
+        .then(function() {
+            batch.add(time, updater2);
+        })
+        .then(function() {
+            return pollToPromise(function() {
+                renderScene();
+                return scene.primitives.length === 2;
+            });
+        })
+        .then(function() {
+            var showCount = 0;
+            expect(scene.primitives.length).toEqual(2);
+            showCount += !!scene.primitives.get(0).show;
+            showCount += !!scene.primitives.get(1).show;
+            expect(showCount).toEqual(1);
+        })
+        .then(function() {
+            return pollToPromise(renderScene);
+        })
+        .then(function() {
+            expect(scene.primitives.length).toEqual(1);
+            var primitive = scene.primitives.get(0);
+            expect(primitive.show).toBeTruthy();
+            batch.removeAllPrimitives();
+        });
+    });
 });
