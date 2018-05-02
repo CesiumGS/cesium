@@ -462,4 +462,10 @@ defineSuite([
         expect(CesiumMath.fastApproximateAtan2(1.0, 1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON3);
         expect(CesiumMath.fastApproximateAtan2(-1.0, 1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR + CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON3);
     });
+
+    it('fastApproximateAtan2 throws if both arguments are zero', function() {
+        expect(function() {
+            CesiumMath.fastApproximateAtan2(0, 0);
+        }).toThrowDeveloperError();
+    });
 });

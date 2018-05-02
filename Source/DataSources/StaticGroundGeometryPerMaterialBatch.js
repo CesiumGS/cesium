@@ -57,8 +57,8 @@ define([
         this.invalidated = true;
     };
 
-    Batch.prototype.nonOverlapping = function(rectangle) {
-        return !this.rectangleCollisionCheck.collides(rectangle);
+    Batch.prototype.overlapping = function(rectangle) {
+        return this.rectangleCollisionCheck.collides(rectangle);
     };
 
     // Check if the given updater's material is compatible with this batch
@@ -152,9 +152,8 @@ define([
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
-                        material : this.material,
-                        translucent : this.material.isTranslucent(),
-                        closed : this.closed
+                        material : this.material
+                        // translucent and closed properties overridden
                     }),
                     classificationType : this.classificationType
                 });
@@ -291,15 +290,20 @@ define([
         var length = items.length;
         var geometryInstance = updater.createFillGeometryInstance(time);
         var usingSphericalTextureCoordinates = ShadowVolumeAppearance.shouldUseSphericalCoordinates(geometryInstance.geometry.rectangle);
+        // Check if the Entity represented by the updater can be placed in an existing batch. Requirements:
+        // * compatible material (same material or same color)
+        // * same type of texture coordinates (spherical vs. planar)
+        // * conservatively non-overlapping with any entities in the existing batch
         for (var i = 0; i < length; ++i) {
             var item = items[i];
             if (item.isMaterial(updater) &&
-                item.nonOverlapping(geometryInstance.geometry.rectangle) &&
+                !item.overlapping(geometryInstance.geometry.rectangle) &&
                 item.usingSphericalTextureCoordinates === usingSphericalTextureCoordinates) {
                 item.add(time, updater, geometryInstance);
                 return;
             }
         }
+        // If a compatible batch wasn't found, create a new batch.
         var batch = new Batch(this._primitives, this._appearanceType, this._classificationType, updater.fillMaterialProperty, usingSphericalTextureCoordinates);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
@@ -350,7 +354,7 @@ define([
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var item = items[i];
-            if(item.contains(updater)){
+            if (item.contains(updater)){
                 return item.getBoundingSphere(updater, result);
             }
         }

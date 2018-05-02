@@ -15,7 +15,8 @@ define([
         '../Core/Rectangle',
         '../Core/Transforms',
         '../Renderer/ShaderSource',
-        '../Scene/PerInstanceColorAppearance'
+        '../Scene/PerInstanceColorAppearance',
+        '../Shaders/ShadowVolumeAppearanceFS'
 ], function(
         Cartographic,
         Cartesian2,
@@ -33,7 +34,8 @@ define([
         Rectangle,
         Transforms,
         ShaderSource,
-        PerInstanceColorAppearance) {
+        PerInstanceColorAppearance,
+        ShadowVolumeAppearanceFS) {
     'use strict';
 
     /**
@@ -52,24 +54,28 @@ define([
         //>>includeEnd('debug');
 
         // Compute shader dependencies
-        var shaderDependencies = new ShaderDependencies();
-        shaderDependencies.requiresTextureCoordinates = extentsCulling;
-        shaderDependencies.requiresEC = !appearance.flat;
+        var colorShaderDependencies = new ShaderDependencies();
+        colorShaderDependencies.requiresTextureCoordinates = extentsCulling;
+        colorShaderDependencies.requiresEC = !appearance.flat;
+
+        var pickShaderDependencies = new ShaderDependencies();
+        pickShaderDependencies.requiresTextureCoordinates = extentsCulling;
 
         if (appearance instanceof PerInstanceColorAppearance) {
             // PerInstanceColorAppearance doesn't have material.shaderSource, instead it has its own vertex and fragment shaders
-            shaderDependencies.requiresNormalEC = !appearance.flat;
+            colorShaderDependencies.requiresNormalEC = !appearance.flat;
         } else {
             // Scan material source for what hookups are needed. Assume czm_materialInput materialInput.
             var materialShaderSource = appearance.material.shaderSource + '\n' + appearance.fragmentShaderSource;
 
-            shaderDependencies.normalEC = materialShaderSource.includes('materialInput.normalEC') || materialShaderSource.includes('czm_getDefaultMaterial');
-            shaderDependencies.positionToEyeEC = materialShaderSource.includes('materialInput.positionToEyeEC');
-            shaderDependencies.tangentToEyeMatrix = materialShaderSource.includes('materialInput.tangentToEyeMatrix');
-            shaderDependencies.st = materialShaderSource.includes('materialInput.st');
+            colorShaderDependencies.normalEC = materialShaderSource.indexOf('materialInput.normalEC') !== -1 || materialShaderSource.indexOf('czm_getDefaultMaterial') !== -1;
+            colorShaderDependencies.positionToEyeEC = materialShaderSource.indexOf('materialInput.positionToEyeEC') !== -1;
+            colorShaderDependencies.tangentToEyeMatrix = materialShaderSource.indexOf('materialInput.tangentToEyeMatrix') !== -1;
+            colorShaderDependencies.st = materialShaderSource.indexOf('materialInput.st') !== -1;
         }
 
-        this._shaderDependencies = shaderDependencies;
+        this._colorShaderDependencies = colorShaderDependencies;
+        this._pickShaderDependencies = pickShaderDependencies;
         this._appearance = appearance;
         this._extentsCulling = extentsCulling;
         this._planarExtents = planarExtents;
@@ -79,372 +85,154 @@ define([
      * Create the fragment shader for a ClassificationPrimitive's color pass when rendering for color.
      *
      * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
-     * @returns {String} Shader source for the fragment shader including its material.
+     * @returns {ShaderSource} Shader source for the fragment shader.
      */
-    ShadowVolumeAppearance.prototype.createAppearanceFragmentShader = function(columbusView2D) {
+    ShadowVolumeAppearance.prototype.createFragmentShader = function(columbusView2D) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.bool('columbusView2D', columbusView2D);
         //>>includeEnd('debug');
 
         var appearance = this._appearance;
-        var materialHookups = createShadowVolumeAppearanceFS(this._shaderDependencies, appearance, this._extentsCulling, this._planarExtents || columbusView2D);
-        if (appearance instanceof PerInstanceColorAppearance) {
-            return materialHookups;
+        var dependencies = this._colorShaderDependencies;
+
+        var defines = [];
+        if (!columbusView2D && !this._planarExtents) {
+            defines.push('SPHERICAL');
         }
-        return appearance.material.shaderSource + '\n' + materialHookups;
+        if (dependencies.requiresEC) {
+            defines.push('REQUIRES_EC');
+        }
+        if (dependencies.requiresWC) {
+            defines.push('REQUIRES_WC');
+        }
+        if (dependencies.requiresTextureCoordinates) {
+            defines.push('TEXTURE_COORDINATES');
+        }
+        if (this._extentsCulling) {
+            defines.push('CULL_FRAGMENTS');
+        }
+        if (dependencies.requiresNormalEC) {
+            defines.push('NORMAL_EC');
+        }
+        if (appearance instanceof PerInstanceColorAppearance) {
+            defines.push('PER_INSTANCE_COLOR');
+        }
+
+        // Material inputs. Use of parameters in the material is different
+        // from requirement of the parameters in the overall shader, for example,
+        // texture coordinates may be used for fragment culling but not for the material itself.
+        if (dependencies.normalEC) {
+            defines.push('USES_NORMAL_EC');
+        }
+        if (dependencies.positionToEyeEC) {
+            defines.push('USES_POSITION_TO_EYE_EC');
+        }
+        if (dependencies.tangentToEyeMatrix) {
+            defines.push('USES_TANGENT_TO_EYE');
+        }
+        if (dependencies.st) {
+            defines.push('USES_ST');
+        }
+
+        if (appearance.flat) {
+            defines.push('FLAT');
+        }
+
+        var materialSource = '';
+        if (!(appearance instanceof PerInstanceColorAppearance)) {
+            materialSource = appearance.material.shaderSource;
+        }
+
+        return new ShaderSource({
+            defines : defines,
+            sources : [materialSource, ShadowVolumeAppearanceFS]
+        });
     };
 
-    /**
-     * Create the fragment shader for a ClassificationPrimitive's color pass when rendering for pick.
-     *
-     * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
-     * @returns {String} Shader source for the fragment shader.
-     */
-    ShadowVolumeAppearance.prototype.createPickingFragmentShader = function(columbusView2D) {
+    ShadowVolumeAppearance.prototype.createPickFragmentShader = function(columbusView2D) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.bool('columbusView2D', columbusView2D);
         //>>includeEnd('debug');
 
-        return getPickShaderFS(this._extentsCulling, this._planarExtents || columbusView2D);
+        var dependencies = this._pickShaderDependencies;
+
+        var defines = ['PICK'];
+        if (!columbusView2D && !this._planarExtents) {
+            defines.push('SPHERICAL');
+        }
+        if (dependencies.requiresEC) {
+            defines.push('REQUIRES_EC');
+        }
+        if (dependencies.requiresWC) {
+            defines.push('REQUIRES_WC');
+        }
+        if (dependencies.requiresTextureCoordinates) {
+            defines.push('TEXTURE_COORDINATES');
+        }
+        if (this._extentsCulling) {
+            defines.push('CULL_FRAGMENTS');
+        }
+        return new ShaderSource({
+            defines : defines,
+            sources : [ShadowVolumeAppearanceFS],
+            pickColorQualifier : 'varying'
+        });
     };
 
     /**
-     * Create the vertex shader for a ClassificationPrimitive's color pass, both when rendering for color and for pick.
+     * Create the vertex shader for a ClassificationPrimitive's color pass on the final of 3 shadow volume passes
      *
-     * @param {String} vertexShaderSource Vertex shader source.
+     * @param {String[]} defines External defines to pass to the vertex shader.
+     * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position.
      * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
      * @returns {String} Shader source for the vertex shader.
      */
-    ShadowVolumeAppearance.prototype.createVertexShader = function(vertexShaderSource, columbusView2D) {
+    ShadowVolumeAppearance.prototype.createVertexShader = function(defines, vertexShaderSource, columbusView2D) {
         //>>includeStart('debug', pragmas.debug);
+        Check.defined('defines', defines);
         Check.typeOf.string('vertexShaderSource', vertexShaderSource);
         Check.typeOf.bool('columbusView2D', columbusView2D);
         //>>includeEnd('debug');
-
-        return createShadowVolumeAppearanceVS(this._shaderDependencies, this._appearance, this._planarExtents, columbusView2D, vertexShaderSource);
+        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance);
     };
 
-    function createShadowVolumeAppearanceFS(shaderDependencies, appearance, extentsCull, planarExtents) {
-        if (appearance instanceof PerInstanceColorAppearance) {
-            return getPerInstanceColorShaderFS(shaderDependencies, extentsCull, appearance.flat, planarExtents);
-        }
+    /**
+     * Create the vertex shader for a ClassificationPrimitive's pick pass on the final of 3 shadow volume passes
+     *
+     * @param {String[]} defines External defines to pass to the vertex shader.
+     * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position and picking.
+     * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+     * @returns {String} Shader source for the vertex shader.
+     */
+    ShadowVolumeAppearance.prototype.createPickVertexShader = function(defines, vertexShaderSource, columbusView2D) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('defines', defines);
+        Check.typeOf.string('vertexShaderSource', vertexShaderSource);
+        Check.typeOf.bool('columbusView2D', columbusView2D);
+        //>>includeEnd('debug');
+        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource);
+    };
 
-        var usesNormalEC = shaderDependencies.normalEC;
-        var usesPositionToEyeEC = shaderDependencies.positionToEyeEC;
-        var usesTangentToEyeMat = shaderDependencies.tangentToEyeMatrix;
-        var usesSt = shaderDependencies.st;
+    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance) {
+        var allDefines = defines.slice();
 
-        var glsl =
-            '#ifdef GL_EXT_frag_depth\n' +
-            '#extension GL_EXT_frag_depth : enable\n' +
-            '#endif\n';
-        if (extentsCull || usesSt) {
-            glsl += planarExtents ?
-                'varying vec2 v_inversePlaneExtents;\n' +
-                'varying vec4 v_westPlane;\n' +
-                'varying vec4 v_southPlane;\n' :
-
-                'varying vec4 v_sphericalExtents;\n';
-        }
-        if (usesSt) {
-            glsl +=
-                'varying vec4 v_stSineCosineUVScale;\n';
-        }
-
-        // Get local functions
-        glsl += getLocalFunctionsFS(shaderDependencies, planarExtents);
-
-        glsl +=
-            'void main(void)\n' +
-            '{\n';
-
-        // Compute material input stuff and cull if outside texture coordinate extents
-        glsl += getDependenciesAndCullingFS(shaderDependencies, extentsCull, planarExtents);
-
-        glsl += '    czm_materialInput materialInput;\n';
-        if (usesNormalEC) {
-            glsl += '    materialInput.normalEC = normalEC;\n';
-        }
-        if (usesPositionToEyeEC) {
-            glsl += '    materialInput.positionToEyeEC = -eyeCoordinate.xyz;\n';
-        }
-        if (usesTangentToEyeMat) {
-            glsl += '    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(worldCoordinate, normalEC);\n';
-        }
-        if (usesSt) {
-            // Scale texture coordinates and rotate around 0.5, 0.5
-            glsl +=
-                '    materialInput.st.x = v_stSineCosineUVScale.y * (v - 0.5) * v_stSineCosineUVScale.z + v_stSineCosineUVScale.x * (u - 0.5) * v_stSineCosineUVScale.w + 0.5;\n' +
-                '    materialInput.st.y = v_stSineCosineUVScale.y * (u - 0.5) * v_stSineCosineUVScale.w - v_stSineCosineUVScale.x * (v - 0.5) * v_stSineCosineUVScale.z + 0.5;\n';
-        }
-        glsl += '    czm_material material = czm_getMaterial(materialInput);\n';
-
-        if (appearance.flat) {
-            glsl += '    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);\n';
-        } else {
-            glsl += '    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material);\n';
-        }
-        glsl += '    czm_writeDepthClampedToFarPlane();\n';
-        glsl += '}\n';
-        return glsl;
-    }
-
-    var pickingShaderDependenciesScratch = new ShaderDependencies();
-    function getPickShaderFS(extentsCulling, planarExtents) {
-        var glsl =
-            '#ifdef GL_EXT_frag_depth\n' +
-            '#extension GL_EXT_frag_depth : enable\n' +
-            '#endif\n';
-        if (extentsCulling) {
-            glsl += planarExtents ?
-                'varying vec2 v_inversePlaneExtents;\n' +
-                'varying vec4 v_westPlane;\n' +
-                'varying vec4 v_southPlane;\n' :
-
-                'varying vec4 v_sphericalExtents;\n';
-        }
-        var shaderDependencies = pickingShaderDependenciesScratch;
-        shaderDependencies.reset();
-        shaderDependencies.requiresTextureCoordinates = extentsCulling;
-        shaderDependencies.requiresNormalEC = false;
-
-        glsl += getLocalFunctionsFS(shaderDependencies, planarExtents);
-
-        glsl += 'void main(void)\n' +
-                '{\n';
-        glsl += '    bool culled = false;\n';
-        var outOfBoundsSnippet =
-                '        culled = true;\n';
-        glsl += getDependenciesAndCullingFS(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet);
-        glsl += '    if (!culled) {\n' +
-                '        gl_FragColor.a = 1.0;\n' + // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
-                '        czm_writeDepthClampedToFarPlane();\n' +
-                '    }\n' +
-                '}\n';
-        return glsl;
-    }
-
-    function getPerInstanceColorShaderFS(shaderDependencies, extentsCulling, flatShading, planarExtents) {
-        var glsl =
-            '#ifdef GL_EXT_frag_depth\n' +
-            '#extension GL_EXT_frag_depth : enable\n' +
-            '#endif\n' +
-            'varying vec4 v_color;\n';
-        if (extentsCulling) {
-            glsl += planarExtents ?
-                'varying vec2 v_inversePlaneExtents;\n' +
-                'varying vec4 v_westPlane;\n' +
-                'varying vec4 v_southPlane;\n' :
-
-                'varying vec4 v_sphericalExtents;\n';
-        }
-
-        glsl += getLocalFunctionsFS(shaderDependencies, planarExtents);
-
-        glsl += 'void main(void)\n' +
-                '{\n';
-
-        glsl += getDependenciesAndCullingFS(shaderDependencies, extentsCulling, planarExtents);
-
-        if (flatShading) {
-            glsl +=
-                '    gl_FragColor = v_color;\n';
-        } else {
-            glsl +=
-                '    czm_materialInput materialInput;\n' +
-                '    materialInput.normalEC = normalEC;\n' +
-                '    materialInput.positionToEyeEC = -eyeCoordinate.xyz;\n' +
-                '    czm_material material = czm_getDefaultMaterial(materialInput);\n' +
-                '    material.diffuse = v_color.rgb;\n' +
-                '    material.alpha = v_color.a;\n' +
-
-                '    gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material);\n';
-        }
-        glsl += '    czm_writeDepthClampedToFarPlane();\n';
-        glsl += '}\n';
-        return glsl;
-    }
-
-    function getDependenciesAndCullingFS(shaderDependencies, extentsCulling, planarExtents, outOfBoundsSnippet) {
-        var glsl = '';
-        if (shaderDependencies.requiresEC) {
-            glsl +=
-                '    vec4 eyeCoordinate = getEyeCoordinate(gl_FragCoord.xy);\n';
-        }
-        if (shaderDependencies.requiresWC) {
-            glsl +=
-                '    vec4 worldCoordinate4 = czm_inverseView * eyeCoordinate;\n' +
-                '    vec3 worldCoordinate = worldCoordinate4.xyz / worldCoordinate4.w;\n';
+        if (defined(appearance) && appearance instanceof PerInstanceColorAppearance) {
+            allDefines.push('PER_INSTANCE_COLOR');
         }
         if (shaderDependencies.requiresTextureCoordinates) {
-            if (planarExtents) {
-                glsl +=
-                '    // Unpack planes and transform to eye space\n' +
-                '    float u = computePlanarTextureCoordinates(v_southPlane, eyeCoordinate.xyz / eyeCoordinate.w, v_inversePlaneExtents.y);\n' +
-                '    float v = computePlanarTextureCoordinates(v_westPlane, eyeCoordinate.xyz / eyeCoordinate.w, v_inversePlaneExtents.x);\n';
-            } else {
-                glsl +=
-                '    // Treat world coords as a sphere normal for spherical coordinates\n' +
-                '    vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoordinate);\n' +
-                '    float u = (sphericalLatLong.x - v_sphericalExtents.x) * v_sphericalExtents.z;\n' +
-                '    float v = (sphericalLatLong.y - v_sphericalExtents.y) * v_sphericalExtents.w;\n';
+            allDefines.push('TEXTURE_COORDINATES');
+            if (!(planarExtents || columbusView2D)) {
+                allDefines.push('SPHERICAL');
             }
-        }
-        if (extentsCulling) {
-            if (!defined(outOfBoundsSnippet)) {
-                outOfBoundsSnippet =
-                '        discard;\n';
-            }
-            glsl +=
-                '    if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {\n' +
-                    outOfBoundsSnippet +
-                '    }\n';
-        }
-        // Lots of texture access, so lookup after discard check
-        if (shaderDependencies.requiresNormalEC) {
-            glsl +=
-                '    // compute normal. sample adjacent pixels in 2x2 block in screen space\n' +
-                '    vec3 downUp = getVectorFromOffset(eyeCoordinate, gl_FragCoord.xy, vec2(0.0, 1.0));\n' +
-                '    vec3 leftRight = getVectorFromOffset(eyeCoordinate, gl_FragCoord.xy, vec2(1.0, 0.0));\n' +
-                '    vec3 normalEC = normalize(cross(leftRight, downUp));\n' +
-                '\n';
-        }
-        return glsl;
-    }
-
-    function getLocalFunctionsFS(shaderDependencies, planarExtents) {
-        var glsl = '';
-        if (shaderDependencies.requiresEC || shaderDependencies.requiresNormalEC) {
-            glsl +=
-                'vec4 windowToEyeCoordinates(vec2 xy, float depthOrLogDepth) {\n' +
-                // See reverseLogDepth.glsl. This is separate to re-use the pow.
-                '#ifdef LOG_DEPTH\n' +
-                '    float near = czm_currentFrustum.x;\n' +
-                '    float far = czm_currentFrustum.y;\n' +
-                '    float unscaledDepth = pow(2.0, depthOrLogDepth * czm_log2FarPlusOne) - 1.0;\n' +
-                '    vec4 windowCoord = vec4(xy, far * (1.0 - near / unscaledDepth) / (far - near), 1.0);\n' +
-                '    vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);\n' +
-                '    eyeCoordinate.w = 1.0 / unscaledDepth;\n' + // Better precision
-                '#else\n' +
-                '    vec4 windowCoord = vec4(xy, depthOrLogDepth, 1.0);\n' +
-                '    vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);\n' +
-                '#endif\n' +
-                '    return eyeCoordinate;\n' +
-                '}\n';
-        }
-        if (shaderDependencies.requiresEC) {
-            glsl +=
-                'vec4 getEyeCoordinate(vec2 fragCoord) {\n' +
-                '    vec2 coords = fragCoord / czm_viewport.zw;\n' +
-                '    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, coords));\n' +
-                '    return windowToEyeCoordinates(fragCoord, logDepthOrDepth);\n' +
-                '}\n';
-        }
-        if (shaderDependencies.requiresNormalEC) {
-            glsl +=
-                'vec3 getEyeCoordinate3FromWindowCoordinate(vec2 fragCoord, float logDepthOrDepth) {\n' +
-                '    vec4 eyeCoordinate = windowToEyeCoordinates(fragCoord, logDepthOrDepth);\n' +
-                '    return eyeCoordinate.xyz / eyeCoordinate.w;\n' +
-                '}\n' +
-
-                'vec3 getVectorFromOffset(vec4 eyeCoordinate, vec2 glFragCoordXY, vec2 positiveOffset) {\n' +
-                '    // Sample depths at both offset and negative offset\n' +
-                '    float upOrRightLogDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw));\n' +
-                '    float downOrLeftLogDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY - positiveOffset) / czm_viewport.zw));\n' +
-                '    // Explicitly evaluate both paths\n' + // Necessary for multifrustum and for GroundPrimitives at the edges of the screen
-                '    bvec2 upOrRightInBounds = lessThan(glFragCoordXY + positiveOffset, czm_viewport.zw);\n' +
-                '    float useUpOrRight = float(upOrRightLogDepth > 0.0 && upOrRightInBounds.x && upOrRightInBounds.y);\n' +
-                '    float useDownOrLeft = float(useUpOrRight == 0.0);\n' +
-                '    vec3 upOrRightEC = getEyeCoordinate3FromWindowCoordinate(glFragCoordXY + positiveOffset, upOrRightLogDepth);\n' +
-                '    vec3 downOrLeftEC = getEyeCoordinate3FromWindowCoordinate(glFragCoordXY - positiveOffset, downOrLeftLogDepth);\n' +
-
-                '    return (upOrRightEC - (eyeCoordinate.xyz / eyeCoordinate.w)) * useUpOrRight + ((eyeCoordinate.xyz / eyeCoordinate.w) - downOrLeftEC) * useDownOrLeft;\n' +
-                '}\n';
-        }
-        if (shaderDependencies.requiresTextureCoordinates && planarExtents) {
-            glsl +=
-                'float computePlanarTextureCoordinates(vec4 plane, vec3 eyeCoordinates, float inverseExtent) {\n' +
-                '    return (dot(plane.xyz, eyeCoordinates) + plane.w) * inverseExtent;\n' +
-                '}\n';
-        }
-        return glsl;
-    }
-
-    function createShadowVolumeAppearanceVS(shaderDependencies, appearance, planarExtents, columbusView2D, shadowVolumeVS) {
-        var glsl = ShaderSource.replaceMain(shadowVolumeVS, 'computePosition');
-
-        var isPerInstanceColor = defined(appearance) && appearance instanceof PerInstanceColorAppearance;
-        if (isPerInstanceColor) {
-            glsl += 'varying vec4 v_color;\n';
-        }
-
-        var spherical = !(planarExtents || columbusView2D);
-        if (shaderDependencies.requiresTextureCoordinates) {
-            if (spherical) {
-                glsl +=
-                    'varying vec4 v_sphericalExtents;\n' +
-                    'varying vec4 v_stSineCosineUVScale;\n';
-            } else {
-                glsl +=
-                    'varying vec2 v_inversePlaneExtents;\n' +
-                    'varying vec4 v_westPlane;\n' +
-                    'varying vec4 v_southPlane;\n' +
-                    'varying vec4 v_stSineCosineUVScale;\n';
+            if (columbusView2D) {
+                allDefines.push('COLUMBUS_VIEW_2D');
             }
         }
 
-        glsl +=
-            'void main()\n' +
-            '{\n' +
-            '   computePosition();\n';
-        if (isPerInstanceColor) {
-            glsl += 'v_color = czm_batchTable_color(batchId);\n';
-        }
-
-        // Add code for computing texture coordinate dependencies
-        if (shaderDependencies.requiresTextureCoordinates) {
-            if (spherical) {
-                glsl +=
-                    'v_sphericalExtents = czm_batchTable_sphericalExtents(batchId);\n' +
-                    'v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);\n';
-            } else {
-                // Two varieties of planar texcoords
-                if (columbusView2D) {
-                    // 2D/CV case may have very large "plane extents," so planes and distances encoded as 3 64 bit positions,
-                    // which in 2D can be encoded as 2 64 bit vec2s
-                    glsl +=
-                        'vec4 planes2D_high = czm_batchTable_planes2D_HIGH(batchId);\n' +
-                        'vec4 planes2D_low = czm_batchTable_planes2D_LOW(batchId);\n' +
-                        'vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.xy), vec3(0.0, planes2D_low.xy))).xyz;\n' +
-                        'vec3 northWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.x, planes2D_high.z), vec3(0.0, planes2D_low.x, planes2D_low.z))).xyz;\n' +
-                        'vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.w, planes2D_high.y), vec3(0.0, planes2D_low.w, planes2D_low.y))).xyz;\n';
-                } else {
-                    glsl +=
-                        // 3D case has smaller "plane extents," so planes encoded as a 64 bit position and 2 vec3s for distances/direction
-                        'vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest_HIGH(batchId), czm_batchTable_southWest_LOW(batchId))).xyz;\n' +
-                        'vec3 northWestCorner = czm_normal * czm_batchTable_northward(batchId) + southWestCorner;\n' +
-                        'vec3 southEastCorner = czm_normal * czm_batchTable_eastward(batchId) + southWestCorner;\n';
-                }
-                glsl +=
-                    'vec3 eastWard = southEastCorner - southWestCorner;\n' +
-                    'float eastExtent = length(eastWard);\n' +
-                    'eastWard /= eastExtent;\n' +
-
-                    'vec3 northWard = northWestCorner - southWestCorner;\n' +
-                    'float northExtent = length(northWard);\n' +
-                    'northWard /= northExtent;\n' +
-
-                    'v_westPlane = vec4(eastWard, -dot(eastWard, southWestCorner));\n' +
-                    'v_southPlane = vec4(northWard, -dot(northWard, southWestCorner));\n' +
-                    'v_inversePlaneExtents = vec2(1.0 / eastExtent, 1.0 / northExtent);\n' +
-                    'v_stSineCosineUVScale = czm_batchTable_stSineCosineUVScale(batchId);\n';
-            }
-        }
-
-        glsl +=
-            '}\n';
-
-        return glsl;
+        return new ShaderSource({
+            defines : allDefines,
+            sources : [vertexShaderSource]
+        });
     }
 
     /**
@@ -462,18 +250,6 @@ define([
         this._usesTangentToEyeMat = false;
         this._usesSt = false;
     }
-
-    ShaderDependencies.prototype.reset = function() {
-        this._requiresEC = false;
-        this._requiresWC = false;
-        this._requiresNormalEC = false;
-        this._requiresTextureCoordinates = false;
-
-        this._usesNormalEC = false;
-        this._usesPositionToEyeEC = false;
-        this._usesTangentToEyeMat = false;
-        this._usesSt = false;
-    };
 
     defineProperties(ShaderDependencies.prototype, {
         // Set when assessing final shading (flat vs. phong) and culling using computed texture coordinates
@@ -622,7 +398,8 @@ define([
         }
 
         // Depending on the rotation, east/west may be more appropriate for vertical scale than horizontal
-        var scaleU, scaleV;
+        var scaleU = 1.0;
+        var scaleV = 1.0;
         if (Math.abs(sinTheta) < Math.abs(cosTheta)) {
             scaleU = eastWestHalfDistance / ((max2D.x - min2D.x) * 0.5);
             scaleV = northSouthHalfDistance / ((max2D.y - min2D.y) * 0.5);

@@ -28,7 +28,7 @@ defineSuite([
     PerInstanceColorAppearance) {
 'use strict';
 
-    // using ShadowVolumeVS directly fails on Travis with the --release test
+    // using ShadowVolumeAppearanceVS directly fails on Travis with the --release test
     var testVs =
         'attribute vec3 position3DHigh;\n' +
         'attribute vec3 position3DLow;\n' +
@@ -207,91 +207,167 @@ defineSuite([
         expect(ShadowVolumeAppearance.shouldUseSphericalCoordinates(largeTestRectangle)).toBe(true);
     });
 
-    it('creates vertex shaders', function() {
-        // Check for varying declarations and that they get set
+    it('creates vertex shaders for color', function() {
+        // Check defines
         var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
-        var sphericalTexturedVS3D = sphericalTexturedAppearance.createVertexShader(testVs, false);
-        expect(sphericalTexturedVS3D.includes('varying vec4 v_sphericalExtents;')).toBe(true);
-        expect(sphericalTexturedVS3D.includes('varying vec4 v_stSineCosineUVScale;')).toBe(true);
+        var shaderSource = sphericalTexturedAppearance.createVertexShader([], testVs, false);
+        var defines = shaderSource.defines;
+        expect(defines.length).toEqual(2);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
 
-        expect(sphericalTexturedVS3D.includes('v_sphericalExtents =')).toBe(true);
-        expect(sphericalTexturedVS3D.includes('v_stSineCosineUVScale =')).toBe(true);
+        // 2D variant
+        shaderSource = sphericalTexturedAppearance.createVertexShader([], testVs, true);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(2);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('COLUMBUS_VIEW_2D')).not.toEqual(-1);
 
-        var sphericalTexturedVS2D = sphericalTexturedAppearance.createVertexShader(testVs, true);
-        expect(sphericalTexturedVS2D.includes('varying vec2 v_inversePlaneExtents;')).toBe(true);
-        expect(sphericalTexturedVS2D.includes('varying vec4 v_westPlane;')).toBe(true);
-        expect(sphericalTexturedVS2D.includes('varying vec4 v_southPlane;')).toBe(true);
-        expect(sphericalTexturedVS2D.includes('varying vec4 v_stSineCosineUVScale;')).toBe(true);
-
-        expect(sphericalTexturedVS2D.includes('v_inversePlaneExtents =')).toBe(true);
-        expect(sphericalTexturedVS2D.includes('v_westPlane =')).toBe(true);
-        expect(sphericalTexturedVS2D.includes('v_southPlane =')).toBe(true);
-        expect(sphericalTexturedVS2D.includes('v_stSineCosineUVScale =')).toBe(true);
-
+        // Unculled color appearance - no texcoords at all
         var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance);
-        var sphericalUnculledColorVS3D = sphericalUnculledColorAppearance.createVertexShader(testVs, false);
-        expect(sphericalUnculledColorVS3D.includes('varying vec4 v_color;')).toBe(true);
-        expect(sphericalUnculledColorVS3D.includes('v_color =')).toBe(true);
+        shaderSource = sphericalUnculledColorAppearance.createVertexShader([], testVs, false);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(1);
+        expect(defines.indexOf('PER_INSTANCE_COLOR')).not.toEqual(-1);
 
-        var sphericalUnculledColorVS2D = sphericalUnculledColorAppearance.createVertexShader(testVs, true);
-        expect(sphericalUnculledColorVS2D.includes('varying vec4 v_color;')).toBe(true);
-        expect(sphericalUnculledColorVS2D.includes('v_color =')).toBe(true);
+        // 2D variant
+        shaderSource = sphericalUnculledColorAppearance.createVertexShader([], testVs, true);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(1);
+        expect(defines.indexOf('PER_INSTANCE_COLOR')).not.toEqual(-1);
 
+        // Planar textured, without culling
         var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance);
-        var planarTexturedAppearanceVS3D = planarTexturedAppearance.createVertexShader(testVs, false);
+        shaderSource = planarTexturedAppearance.createVertexShader([], testVs, false);
+        defines = shaderSource.defines;
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.length).toEqual(1);
 
-        expect(planarTexturedAppearanceVS3D.includes('varying vec2 v_inversePlaneExtents;')).toBe(true);
-        expect(planarTexturedAppearanceVS3D.includes('varying vec4 v_westPlane;')).toBe(true);
-        expect(planarTexturedAppearanceVS3D.includes('varying vec4 v_southPlane;')).toBe(true);
-        expect(planarTexturedAppearanceVS3D.includes('varying vec4 v_stSineCosineUVScale;')).toBe(true);
-
-        expect(planarTexturedAppearanceVS3D.includes('v_inversePlaneExtents =')).toBe(true);
-        expect(planarTexturedAppearanceVS3D.includes('v_westPlane =')).toBe(true);
-        expect(planarTexturedAppearanceVS3D.includes('v_southPlane =')).toBe(true);
-        expect(planarTexturedAppearanceVS3D.includes('v_stSineCosineUVScale =')).toBe(true);
+        shaderSource = planarTexturedAppearance.createVertexShader([], testVs, true);
+        defines = shaderSource.defines;
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('COLUMBUS_VIEW_2D')).not.toEqual(-1);
+        expect(defines.length).toEqual(2);
     });
 
-    it('creates fragment shaders', function() {
+    it('creates vertex shaders for pick', function() {
+        // Check defines
         var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
-        var sphericalTexturedFS3D = sphericalTexturedAppearance.createAppearanceFragmentShader(false);
+        var shaderSource = sphericalTexturedAppearance.createPickVertexShader([], testVs, false);
+        var defines = shaderSource.defines;
+        expect(defines.length).toEqual(2);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
+
+        // 2D variant
+        shaderSource = sphericalTexturedAppearance.createPickVertexShader([], testVs, true);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(2);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('COLUMBUS_VIEW_2D')).not.toEqual(-1);
+
+        // Unculled color appearance - no texcoords at all
+        var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance);
+        shaderSource = sphericalUnculledColorAppearance.createPickVertexShader([], testVs, false);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(0);
+
+        // 2D variant
+        shaderSource = sphericalUnculledColorAppearance.createPickVertexShader([], testVs, true);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(0);
+
+        // Planar textured, without culling
+        var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance);
+        shaderSource = planarTexturedAppearance.createPickVertexShader([], testVs, false);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(0);
+
+        shaderSource = planarTexturedAppearance.createPickVertexShader([], testVs, true);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(0);
+    });
+
+    it('creates fragment shaders for color and pick', function() {
+        // Check defines
+        var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
+        var shaderSource = sphericalTexturedAppearance.createFragmentShader(false);
+        var defines = shaderSource.defines;
 
         // Check material hookups, discard for culling, and phong shading
-        expect(sphericalTexturedFS3D.includes('.normalEC =')).toBe(true);
-        expect(sphericalTexturedFS3D.includes('.positionToEyeEC =')).toBe(true);
-        expect(sphericalTexturedFS3D.includes('.tangentToEyeMatrix =')).toBe(true);
-        expect(sphericalTexturedFS3D.includes('.st.x =')).toBe(true);
-        expect(sphericalTexturedFS3D.includes('.st.y =')).toBe(true);
-        expect(sphericalTexturedFS3D.includes('discard;')).toBe(true);
-        expect(sphericalTexturedFS3D.includes('czm_phong')).toBe(true);
+        expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_EC')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_WC')).not.toEqual(-1);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('CULL_FRAGMENTS')).not.toEqual(-1);
+        expect(defines.indexOf('NORMAL_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_NORMAL_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_POSITION_TO_EYE_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_TANGENT_TO_EYE')).not.toEqual(-1);
+        expect(defines.indexOf('USES_ST')).not.toEqual(-1);
+        expect(defines.length).toEqual(10);
 
-        var sphericalTexturedFS2D = sphericalTexturedAppearance.createAppearanceFragmentShader(true);
+        // 2D case
+        shaderSource = sphericalTexturedAppearance.createFragmentShader(true);
+        defines = shaderSource.defines;
 
-        expect(sphericalTexturedFS2D.includes('.normalEC =')).toBe(true);
-        expect(sphericalTexturedFS2D.includes('.positionToEyeEC =')).toBe(true);
-        expect(sphericalTexturedFS2D.includes('.tangentToEyeMatrix =')).toBe(true);
-        expect(sphericalTexturedFS2D.includes('.st.x =')).toBe(true);
-        expect(sphericalTexturedFS2D.includes('.st.y =')).toBe(true);
-        expect(sphericalTexturedFS2D.includes('discard;')).toBe(true);
-        expect(sphericalTexturedFS2D.includes('czm_phong')).toBe(true);
+        expect(defines.indexOf('REQUIRES_EC')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_WC')).not.toEqual(-1);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('CULL_FRAGMENTS')).not.toEqual(-1);
+        expect(defines.indexOf('NORMAL_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_NORMAL_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_POSITION_TO_EYE_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_TANGENT_TO_EYE')).not.toEqual(-1);
+        expect(defines.indexOf('USES_ST')).not.toEqual(-1);
+        expect(defines.length).toEqual(9);
 
-        var planarColorAppearance = new ShadowVolumeAppearance(true, false, perInstanceColorMaterialAppearance);
-        var planarColorFS3D = planarColorAppearance.createAppearanceFragmentShader(false);
-        expect(planarColorFS3D.includes('= v_color')).toBe(true);
-        expect(planarColorFS3D.includes('varying vec4 v_color;')).toBe(true);
-        expect(planarColorFS3D.includes('discard;')).toBe(true);
-        expect(planarColorFS3D.includes('czm_phong')).toBe(true);
+        // Culling with planar texture coordinates on a per-color material
+        var planarColorAppearance = new ShadowVolumeAppearance(true, true, perInstanceColorMaterialAppearance);
+        shaderSource = planarColorAppearance.createFragmentShader(false);
+        defines = shaderSource.defines;
+
+        expect(defines.indexOf('PER_INSTANCE_COLOR')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_EC')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_WC')).not.toEqual(-1);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('CULL_FRAGMENTS')).not.toEqual(-1);
+        expect(defines.indexOf('NORMAL_EC')).not.toEqual(-1);
+        expect(defines.length).toEqual(6);
 
         // Pick
-        var pickColorFS2D = planarColorAppearance.createPickingFragmentShader(true);
-        expect(pickColorFS2D.includes('gl_FragColor.a = 1.0')).toBe(true);
+        shaderSource = planarColorAppearance.createPickFragmentShader(true);
+        defines = shaderSource.defines;
+
+        expect(defines.indexOf('REQUIRES_EC')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_WC')).not.toEqual(-1);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('CULL_FRAGMENTS')).not.toEqual(-1);
+        expect(defines.indexOf('PICK')).not.toEqual(-1);
+        expect(defines.length).toEqual(5);
 
         // Flat
         var flatSphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, flatTextureMaterialAppearance);
-        var flatSphericalTexturedFS3D = flatSphericalTexturedAppearance.createAppearanceFragmentShader(false);
-        expect(flatSphericalTexturedFS3D.includes('gl_FragColor = vec4')).toBe(true);
+        shaderSource = flatSphericalTexturedAppearance.createFragmentShader(false);
+        defines = shaderSource.defines;
+        expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_EC')).not.toEqual(-1);
+        expect(defines.indexOf('REQUIRES_WC')).not.toEqual(-1);
+        expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
+        expect(defines.indexOf('CULL_FRAGMENTS')).not.toEqual(-1);
+        expect(defines.indexOf('NORMAL_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_NORMAL_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_POSITION_TO_EYE_EC')).not.toEqual(-1);
+        expect(defines.indexOf('USES_ST')).not.toEqual(-1);
+        expect(defines.indexOf('FLAT')).not.toEqual(-1);
+        expect(defines.length).toEqual(10);
 
         var flatSphericalColorAppearance = new ShadowVolumeAppearance(false, false, flatPerInstanceColorMaterialAppearance);
-        var flatSphericalColorFS3D = flatSphericalColorAppearance.createAppearanceFragmentShader(false);
-        expect(flatSphericalColorFS3D.includes('gl_FragColor = v_color;')).toBe(true);
+        shaderSource = flatSphericalColorAppearance.createFragmentShader(false);
+        defines = shaderSource.defines;
+        expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
+        expect(defines.indexOf('PER_INSTANCE_COLOR')).not.toEqual(-1);
+        expect(defines.indexOf('FLAT')).not.toEqual(-1);
+        expect(defines.length).toEqual(3);
     });
 });

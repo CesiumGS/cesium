@@ -645,16 +645,6 @@ define([
         this.cameraEventWaitTime = 500.0;
 
         /**
-         * Set to true to copy the depth texture after rendering the globe. Makes czm_globeDepthTexture valid.
-         * Set to false if Entities on terrain or GroundPrimitives are not used for a potential performance improvement.
-         *
-         * @type {Boolean}
-         * @default true
-         * @private
-         */
-        this.copyGlobeDepth = true;
-
-        /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
          * performance improvements by rendering less geometry and dispatching less terrain requests.
          * @type {Fog}
@@ -2199,7 +2189,7 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
                 globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }

@@ -1149,7 +1149,7 @@ define([
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.logFarDistance;
+                return uniformState.log2FarDistance;
             }
         }),
 
@@ -1164,7 +1164,7 @@ define([
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return CesiumMath.log2(uniformState.currentFrustum.y + 1.0);
+                return uniformState.log2FarPlusOne;
             }
         }),
 
@@ -1179,7 +1179,7 @@ define([
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return CesiumMath.log2(uniformState.currentFrustum.x);
+                return uniformState.log2NearDistance;
             }
         }),
 

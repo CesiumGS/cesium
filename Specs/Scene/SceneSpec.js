@@ -715,12 +715,6 @@ defineSuite([
 
             var uniformState = scene.context.uniformState;
 
-            scene.copyGlobeDepth = false;
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(uniformState.globeDepthTexture).not.toBeDefined();
-            });
-
-            scene.copyGlobeDepth = true;
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(uniformState.globeDepthTexture).toBeDefined();
             });

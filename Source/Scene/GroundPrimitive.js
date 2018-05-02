@@ -52,6 +52,12 @@ define([
         ShadowVolumeAppearance) {
     'use strict';
 
+    var GroundPrimitiveUniformMap = {
+        u_globeMinimumAltitude: function() {
+            return 55000.0;
+        }
+    };
+
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.
      * <p>
@@ -234,13 +240,6 @@ define([
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
-        var uniformMap = {
-            u_globeMinimumAltitude: function() {
-                return 55000.0;
-            }
-        };
-        this._uniformMap = uniformMap;
-
         var that = this;
         this._classificationPrimitiveOptions = {
             geometryInstances : undefined,
@@ -255,7 +254,7 @@ define([
             _updateAndQueueCommandsFunction : undefined,
             _pickPrimitive : that,
             _extruded : true,
-            _uniformMap : uniformMap
+            _uniformMap : GroundPrimitiveUniformMap
         };
     }
 
@@ -630,24 +629,20 @@ define([
 
             for (i = 0; i < colorLength; ++i) {
                 colorCommand = colorCommands[i];
+
+                // derive a separate appearance command for 2D if needed
+                if (frameState.mode !== SceneMode.SCENE3D &&
+                    colorCommand.shaderProgram === classificationPrimitive._spColor &&
+                    classificationPrimitive._needs2DShader) {
+                    colorCommand = colorCommand.derivedCommands.appearance2D;
+                }
+
                 colorCommand.owner = groundPrimitive;
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
                 colorCommand.pass = pass;
-
-                // derive a separate appearance command for 2D
-                if (frameState.mode !== SceneMode.SCENE3D &&
-                    colorCommand.shaderProgram === classificationPrimitive._spColor) {
-                    var derivedColorCommand = colorCommand.derivedCommands.appearance2D;
-                    if (!defined(derivedColorCommand)) {
-                        derivedColorCommand = DrawCommand.shallowClone(colorCommand);
-                        derivedColorCommand.shaderProgram = classificationPrimitive._spColor2D;
-                        colorCommand.derivedCommands.appearance2D = derivedColorCommand;
-                    }
-                    colorCommand = derivedColorCommand;
-                }
 
                 commandList.push(colorCommand);
             }
@@ -674,23 +669,19 @@ define([
             for (var j = 0; j < pickLength; ++j) {
                 var pickCommand = pickCommands[j];
 
+                // derive a separate appearance command for 2D if needed
+                if (frameState.mode !== SceneMode.SCENE3D &&
+                    pickCommand.shaderProgram === classificationPrimitive._spPick &&
+                    classificationPrimitive._needs2DShader) {
+                    pickCommand = pickCommand.derivedCommands.pick2D;
+                }
+
                 pickCommand.owner = groundPrimitive;
                 pickCommand.modelMatrix = modelMatrix;
                 pickCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(j, pickLength)];
                 pickCommand.cull = cull;
                 pickCommand.pass = pass;
 
-                // derive a separate appearance command for 2D
-                if (frameState.mode !== SceneMode.SCENE3D &&
-                    pickCommand.shaderProgram === classificationPrimitive._spPick) {
-                    var derivedPickCommand = pickCommand.derivedCommands.pick2D;
-                    if (!defined(derivedPickCommand)) {
-                        derivedPickCommand = DrawCommand.shallowClone(pickCommand);
-                        derivedPickCommand.shaderProgram = classificationPrimitive._spPick2D;
-                        pickCommand.derivedCommands.pick2D = derivedPickCommand;
-                    }
-                    pickCommand = derivedPickCommand;
-                }
                 commandList.push(pickCommand);
             }
         }

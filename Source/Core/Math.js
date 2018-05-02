@@ -894,14 +894,21 @@ define([
         //>>includeEnd('debug');
 
         // atan approximations are usually only reliable over [-1, 1]
-        // So reduce the range by flipping whether x or y is on top.
-        var opposite, adjacent, t; // t used as swap and atan result.
-        t = Math.abs(x);
+        // So reduce the range by flipping whether x or y is on top based on which is bigger.
+        var opposite;
+        var adjacent;
+        var t = Math.abs(x); // t used as swap and atan result.
         opposite = Math.abs(y);
         adjacent = Math.max(t, opposite);
         opposite = Math.min(t, opposite);
 
-        t = CesiumMath.fastApproximateAtan(opposite / adjacent);
+        var oppositeOverAdjacent = opposite / adjacent;
+        //>>includeStart('debug', pragmas.debug);
+        if (isNaN(oppositeOverAdjacent)) {
+            throw new DeveloperError('either x or y must be nonzero');
+        }
+        //>>includeEnd('debug');
+        t = CesiumMath.fastApproximateAtan(oppositeOverAdjacent);
 
         // Undo range reduction
         t = Math.abs(y) > Math.abs(x) ? CesiumMath.PI_OVER_TWO - t : t;

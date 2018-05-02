@@ -14,7 +14,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeVS',
+        '../Shaders/ShadowVolumeAppearanceVS',
         '../ThirdParty/when',
         './BlendingState',
         './ClassificationType',
@@ -41,7 +41,7 @@ define([
         ShaderProgram,
         ShaderSource,
         ShadowVolumeFS,
-        ShadowVolumeVS,
+        ShadowVolumeAppearanceVS,
         when,
         BlendingState,
         ClassificationType,
@@ -173,9 +173,10 @@ define([
         this._sp = undefined;
         this._spStencil = undefined;
         this._spPick = undefined;
-        this._spPick2D = undefined;
         this._spColor = undefined;
-        this._spColor2D = undefined;
+
+        this._spPick2D = undefined; // only derived if necessary
+        this._spColor2D = undefined; // only derived if necessary
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
@@ -346,6 +347,21 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
+            }
+        },
+
+        /**
+         * Returns true if the ClassificationPrimitive needs a separate shader and commands for 2D.
+         * This is because texture coordinates on ClassificationPrimitives are computed differently,
+         * and are used for culling when multiple GeometryInstances are batched in one ClassificationPrimitive.
+         * @memberof ClassificationPrimitive.prototype
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        _needs2DShader : {
+            get : function() {
+                return this._hasPlanarExtentsAttributes || this._hasSphericalExtentsAttribute;
             }
         }
     });
@@ -525,14 +541,14 @@ define([
     function createShaderProgram(classificationPrimitive, frameState) {
         var context = frameState.context;
         var primitive = classificationPrimitive._primitive;
-        var vs = ShadowVolumeVS;
+        var vs = ShadowVolumeAppearanceVS;
         vs = classificationPrimitive._primitive._batchTable.getVertexShaderCallback()(vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
         vs = Primitive._modifyShaderPosition(classificationPrimitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
 
         var planarExtents = classificationPrimitive._hasPlanarExtentsAttributes;
-        var cullUsingExtents = planarExtents || classificationPrimitive._hasSphericalExtentsAttribute;
+        var cullFragmentsUsingExtents = planarExtents || classificationPrimitive._hasSphericalExtentsAttribute;
 
         if (classificationPrimitive._extruded) {
             vs = modifyForEncodedNormals(primitive, vs);
@@ -553,7 +569,7 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
-        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullUsingExtents, planarExtents, classificationPrimitive.appearance);
+        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance);
 
         classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,
@@ -568,15 +584,8 @@ define([
             vsPick = Primitive._appendShowToShader(primitive, vsPick);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
-            var pickFS3D = new ShaderSource({
-                sources : [shadowVolumeAppearance.createPickingFragmentShader(false)],
-                pickColorQualifier : 'varying'
-            });
-
-            var pickVS3D = new ShaderSource({
-                defines : [extrudedDefine, disableGlPositionLogDepth],
-                sources : [shadowVolumeAppearance.createVertexShader(vsPick, false)]
-            });
+            var pickFS3D = shadowVolumeAppearance.createPickFragmentShader(false);
+            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, false);
 
             classificationPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
@@ -586,23 +595,22 @@ define([
                 attributeLocations : attributeLocations
             });
 
-            var pickFS2D = new ShaderSource({
-                sources : [shadowVolumeAppearance.createPickingFragmentShader(true)],
-                pickColorQualifier : 'varying'
-            });
+            // Derive a 2D pick shader if the primitive uses texture coordinate-based fragment culling,
+            // since texture coordinates are computed differently in 2D.
+            if (cullFragmentsUsingExtents) {
+                var pickProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spPick, '2dPick');
+                if (!defined(pickProgram2D)) {
+                    var pickFS2D = shadowVolumeAppearance.createPickFragmentShader(true);
+                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, true);
 
-            var pickVS2D = new ShaderSource({
-                defines : [extrudedDefine, disableGlPositionLogDepth],
-                sources : [shadowVolumeAppearance.createVertexShader(vsPick, true)]
-            });
-
-            classificationPrimitive._spPick2D = ShaderProgram.replaceCache({
-                context : context,
-                shaderProgram : classificationPrimitive._spPick2D,
-                vertexShaderSource : pickVS2D,
-                fragmentShaderSource : pickFS2D,
-                attributeLocations : attributeLocations
-            });
+                    pickProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spPick, '2dPick', {
+                        vertexShaderSource : pickVS2D,
+                        fragmentShaderSource : pickFS2D,
+                        attributeLocations : attributeLocations
+                    });
+                }
+                classificationPrimitive._spPick2D = pickProgram2D;
+            }
         } else {
             classificationPrimitive._spPick = ShaderProgram.fromCache({
                 context : context,
@@ -627,14 +635,8 @@ define([
         });
 
         // Create a fragment shader that computes only required material hookups using screen space techniques
-        var fsColorSource = new ShaderSource({
-            sources : [shadowVolumeAppearance.createAppearanceFragmentShader(false)]
-        });
-
-        var vsColorSource = new ShaderSource({
-            defines : [extrudedDefine, disableGlPositionLogDepth],
-            sources : [shadowVolumeAppearance.createVertexShader(vs, false)]
-        });
+        var fsColorSource = shadowVolumeAppearance.createFragmentShader(false);
+        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, false);
 
         classificationPrimitive._spColor = ShaderProgram.replaceCache({
             context : context,
@@ -644,23 +646,23 @@ define([
             attributeLocations : attributeLocations
         });
 
-        // Create a similar fragment shader for 2D, forcing planar extents
-        var fsColorSource2D = new ShaderSource({
-            sources : [shadowVolumeAppearance.createAppearanceFragmentShader(true)]
-        });
+        // Derive a 2D shader if the primitive uses texture coordinate-based fragment culling,
+        // since texture coordinates are computed differently in 2D.
+        // Any material that uses texture coordinates will also equip texture coordinate-based fragment culling.
+        if (cullFragmentsUsingExtents) {
+            var colorProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spColor, '2dColor');
+            if (!defined(colorProgram2D)) {
+                var fsColorSource2D = shadowVolumeAppearance.createFragmentShader(true);
+                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, true);
 
-        var vsColorSource2D = new ShaderSource({
-            defines : [extrudedDefine, disableGlPositionLogDepth],
-            sources : [shadowVolumeAppearance.createVertexShader(vs, true)]
-        });
-
-        classificationPrimitive._spColor2D = ShaderProgram.replaceCache({
-            context : context,
-            shaderProgram : classificationPrimitive._spColor2D,
-            vertexShaderSource : vsColorSource2D,
-            fragmentShaderSource : fsColorSource2D,
-            attributeLocations : attributeLocations
-        });
+                colorProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spColor, '2dColor', {
+                    vertexShaderSource : vsColorSource2D,
+                    fragmentShaderSource : fsColorSource2D,
+                    attributeLocations : attributeLocations
+                });
+            }
+            classificationPrimitive._spColor2D = colorProgram2D;
+        }
     }
 
     function createColorCommands(classificationPrimitive, colorCommands) {
@@ -672,6 +674,8 @@ define([
         var command;
         var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
+
+        var needs2DShader = classificationPrimitive._needs2DShader;
 
         for (i = 0; i < length; i += 3) {
             var vertexArray = primitive._va[vaIndex++];
@@ -724,6 +728,19 @@ define([
             }
 
             command.uniformMap = uniformMap;
+
+            // derive for 2D if texture coordinates are ever computed
+            if (needs2DShader) {
+                var derivedColorCommand = command.derivedCommands.appearance2D;
+                if (!defined(derivedColorCommand)) {
+                    derivedColorCommand = DrawCommand.shallowClone(command);
+                    command.derivedCommands.appearance2D = derivedColorCommand;
+                }
+                derivedColorCommand.vertexArray = vertexArray;
+                derivedColorCommand.renderState = classificationPrimitive._rsColorPass;
+                derivedColorCommand.shaderProgram = classificationPrimitive._spColor2D;
+                derivedColorCommand.uniformMap = uniformMap;
+            }
         }
 
         var commandsIgnoreShow = classificationPrimitive._commandsIgnoreShow;
@@ -754,6 +771,8 @@ define([
         var command;
         var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
+
+        var needs2DShader = classificationPrimitive._needs2DShader;
 
         for (j = 0; j < length; j += 3) {
             var vertexArray = primitive._va[vaIndex++];
@@ -799,6 +818,19 @@ define([
             command.renderState = classificationPrimitive._rsPickPass;
             command.shaderProgram = classificationPrimitive._spPick;
             command.uniformMap = uniformMap;
+
+            // derive for 2D if texture coordinates are ever computed
+            if (needs2DShader) {
+                var derivedPickCommand = command.derivedCommands.pick2D;
+                if (!defined(derivedPickCommand)) {
+                    derivedPickCommand = DrawCommand.shallowClone(command);
+                    command.derivedCommands.pick2D = derivedPickCommand;
+                }
+                derivedPickCommand.vertexArray = vertexArray;
+                derivedPickCommand.renderState = classificationPrimitive._rsPickPass;
+                derivedPickCommand.shaderProgram = classificationPrimitive._spPick2D;
+                derivedPickCommand.uniformMap = uniformMap;
+            }
         }
     }
 
@@ -920,31 +952,31 @@ define([
 
             var i;
             var instance;
+            var attributes;
 
             var hasPerColorAttribute = false;
             var hasSphericalExtentsAttribute = false;
             var hasPlanarExtentsAttributes = false;
 
+            if (length > 0) {
+                attributes = instances[0].attributes;
+                // Not expecting these to be set by users, should only be set via GroundPrimitive.
+                // So don't check for mismatch.
+                hasSphericalExtentsAttribute = ShadowVolumeAppearance.hasAttributesForSphericalExtents(attributes);
+                hasPlanarExtentsAttributes = ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(attributes);
+            }
+
             for (i = 0; i < length; i++) {
                 instance = instances[i];
-                var attributes = instance.attributes;
+                attributes = instance.attributes;
                 if (defined(attributes.color)) {
                     hasPerColorAttribute = true;
                 }
                 //>>includeStart('debug', pragmas.debug);
                 else if (hasPerColorAttribute) {
-                    throw new DeveloperError('All GeometryInstances must have the same attributes.');
+                    throw new DeveloperError('All GeometryInstances must have color attributes to use per-instance color.');
                 }
                 //>>includeEnd('debug');
-
-                // Not expecting these to be set by users, should only be set via GroundPrimitive.
-                // So don't check for mismatch.
-                if (ShadowVolumeAppearance.hasAttributesForSphericalExtents(attributes)) {
-                    hasSphericalExtentsAttribute = true;
-                }
-                if (ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(attributes)) {
-                    hasPlanarExtentsAttributes = true;
-                }
             }
 
             // default to a color appearance
@@ -957,10 +989,10 @@ define([
 
             //>>includeStart('debug', pragmas.debug);
             if (!hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
-                throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
+                throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttributes on all GeometryInstances');
             }
             if (defined(appearance.material) && !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes) {
-                throw new DeveloperError('Materials on ClassificationPrimitives are not supported except via GroundPrimitive');
+                throw new DeveloperError('Materials on ClassificationPrimitives are not supported except via GroundPrimitives');
             }
             //>>includeEnd('debug');
 
@@ -1113,9 +1145,11 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
-        this._spPick2D = this._spPick2D && this._spPick2D.destroy();
         this._spColor = this._spColor && this._spColor.destroy();
-        this._spColor2D = this._spColor2D && this._spColor2D.destroy();
+
+        // Derived programs, destroyed above if they existed.
+        this._spPick2D = undefined;
+        this._spColor2D = undefined;
         return destroyObject(this);
     };
 
