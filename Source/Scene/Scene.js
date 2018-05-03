@@ -2470,7 +2470,7 @@ define([
             passState.framebuffer = scene._sceneFramebuffer.getIdFramebuffer();
 
             // reset frustum
-            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+            frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
             frustum.far = frustumCommands.far;
             us.updateFrustum(frustum);
 
