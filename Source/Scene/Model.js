@@ -1980,7 +1980,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     // When building programs for the first time, do not include modifiers for clipping planes and color
-    // since this is the version of the program that will be cached.
+    // since this is the version of the program that will be cached for use with other Models.
     function createProgram(id, model, context) {
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;

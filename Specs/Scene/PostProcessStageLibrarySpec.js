@@ -193,6 +193,10 @@ defineSuite([
     });
 
     it('depth view', function() {
+        if (!scene.context.depthTexture) {
+            return;
+        }
+
         var fs =
             'void main() { \n' +
             '    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); \n' +
@@ -279,6 +283,10 @@ defineSuite([
     });
 
     it('depth of field', function() {
+        if (!scene.context.depthTexture) {
+            return;
+        }
+
         var origin = Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
         var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, new HeadingPitchRoll());
 
@@ -343,6 +351,10 @@ defineSuite([
     });
 
     it('ambient occlusion', function() {
+        if (!scene.context.depthTexture) {
+            return;
+        }
+
         scene.postProcessStages.ambientOcclusion.enabled = true;
         scene.postProcessStages.ambientOcclusion.uniforms.ambientOcclusionOnly = true;
         scene.renderForSpecs();

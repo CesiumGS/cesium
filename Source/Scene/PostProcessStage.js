@@ -373,6 +373,29 @@ define([
         }
     });
 
+    var depthTextureRegex = /uniform\s+sampler2D\s+depthTexture/g;
+
+    /**
+     * Whether or not this post process stage is supported.
+     * <p>
+     * A post process stage is not supported when it requires a depth texture and the WEBGL_depth_texture extension is not
+     * supported.
+     * </p>
+     *
+     * @param {Context} context The context.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStage.prototype.isSupported = function(context) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('context', context);
+        //>>includeEnd('debug');
+
+        return !depthTextureRegex.test(this._fragmentShader) || context.depthTexture;
+    };
+
     function getUniformValueGetterAndSetter(stage, uniforms, name) {
         var currentValue = uniforms[name];
         if (typeof currentValue === 'string' || currentValue instanceof HTMLCanvasElement || currentValue instanceof HTMLImageElement ||

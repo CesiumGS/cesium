@@ -1,7 +1,6 @@
 define([
         '../ThirdParty/google-earth-dbroot-parser',
         '../ThirdParty/when',
-        './appendForwardSlash',
         './Check',
         './Credit',
         './defaultValue',
@@ -17,7 +16,6 @@ define([
     ], function(
         dbrootParser,
         when,
-        appendForwardSlash,
         Check,
         Credit,
         defaultValue,

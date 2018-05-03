@@ -1,6 +1,5 @@
 uniform sampler2D depthTexture;
 uniform float length;
-uniform float stepSize;
 uniform vec4 color;
 
 varying vec2 v_textureCoordinates;

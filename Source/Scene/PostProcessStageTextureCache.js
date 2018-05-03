@@ -44,8 +44,8 @@ define([
         return stage.name;
     }
 
-    function getStageDependencies(collection, dependencies, stage, previousName) {
-        if (!stage.enabled) {
+    function getStageDependencies(collection, context, dependencies, stage, previousName) {
+        if (!stage.enabled || !stage.isSupported(context)) {
             return previousName;
         }
 
@@ -70,8 +70,8 @@ define([
         return stage.name;
     }
 
-    function getCompositeDependencies(collection, dependencies, composite, previousName) {
-        if (defined(composite.enabled) && !composite.enabled) {
+    function getCompositeDependencies(collection, context, dependencies, composite, previousName) {
+        if ((defined(composite.enabled) && !composite.enabled) || (defined(composite.isSupported) && !composite.isSupported(context))) {
             return previousName;
         }
 
@@ -81,9 +81,9 @@ define([
         for (var i = 0; i < length; ++i) {
             var stage = composite.get(i);
             if (defined(stage.length)) {
-                currentName = getCompositeDependencies(collection, dependencies, stage, previousName);
+                currentName = getCompositeDependencies(collection, context, dependencies, stage, previousName);
             } else {
-                currentName = getStageDependencies(collection, dependencies, stage, previousName);
+                currentName = getStageDependencies(collection, context, dependencies, stage, previousName);
             }
             // Stages in a series only depend on the previous stage
             if (inSeries) {
@@ -107,7 +107,7 @@ define([
         return currentName;
     }
 
-    function getDependencies(collection) {
+    function getDependencies(collection, context) {
         var dependencies = {};
 
         if (defined(collection.ambientOcclusion)) {
@@ -115,12 +115,12 @@ define([
             var bloom = collection.bloom;
             var fxaa = collection.fxaa;
 
-            var previousName = getCompositeDependencies(collection, dependencies, ao, undefined);
-            previousName = getCompositeDependencies(collection, dependencies, bloom, previousName);
-            previousName = getCompositeDependencies(collection, dependencies, collection, previousName);
-            getStageDependencies(collection, dependencies, fxaa, previousName);
+            var previousName = getCompositeDependencies(collection, context, dependencies, ao, undefined);
+            previousName = getCompositeDependencies(collection, context, dependencies, bloom, previousName);
+            previousName = getCompositeDependencies(collection, context, dependencies, collection, previousName);
+            getStageDependencies(collection, context, dependencies, fxaa, previousName);
         } else {
-            getCompositeDependencies(collection, dependencies, collection, undefined);
+            getCompositeDependencies(collection, context, dependencies, collection, undefined);
         }
 
         return dependencies;
@@ -184,8 +184,8 @@ define([
         return framebuffer;
     }
 
-    function createFramebuffers(cache) {
-        var dependencies = getDependencies(cache._collection);
+    function createFramebuffers(cache, context) {
+        var dependencies = getDependencies(cache._collection, context);
         for (var stageName in dependencies) {
             if (dependencies.hasOwnProperty(stageName)) {
                 cache._stageNameToFramebuffer[stageName] = getFramebuffer(cache, stageName, dependencies[stageName]);
@@ -254,7 +254,8 @@ define([
     PostProcessStageTextureCache.prototype.update = function(context) {
         var collection = this._collection;
         var updateDependencies = this._updateDependencies;
-        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || collection.ambientOcclusion.enabled || collection.bloom.enabled || collection.fxaa.enabled;
+        var aoEnabled = defined(collection.ambientOcclusion) && collection.ambientOcclusion.enabled && context.depthTexture;
+        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || collection.bloom.enabled || collection.fxaa.enabled;
         if (updateDependencies || (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)) {
             releaseResources(this);
             this._framebuffers.length = 0;
@@ -268,7 +269,7 @@ define([
         }
 
         if (this._framebuffers.length === 0) {
-            createFramebuffers(this);
+            createFramebuffers(this, context);
         }
 
         var width = context.drawingBufferWidth;

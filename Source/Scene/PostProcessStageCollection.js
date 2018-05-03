@@ -478,7 +478,7 @@ define([
         var count = 0;
         for (i = 0; i < length; ++i) {
             stage = stages[i];
-            if (stage.ready && stage.enabled) {
+            if (stage.ready && stage.enabled && stage.isSupported(context)) {
                 activeStages[count++] = stage;
             }
         }
@@ -488,24 +488,26 @@ define([
         var bloom = this._bloom;
         var fxaa = this._fxaa;
 
-        if (this._textureCacheDirty || count !== this._lastLength || ao.enabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
+        var aoEnabled = ao.enabled && context.depthTexture;
+
+        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
             this._textureCache.updateDependencies();
 
             this._lastLength = count;
-            this._aoEnabled = ao.enabled;
+            this._aoEnabled = aoEnabled;
             this._bloomEnabled = bloom.enabled;
             this._fxaaEnabled = fxaa.enabled;
             this._textureCacheDirty = false;
         }
 
-        if (defined(this._randomTexture) && !ao.enabled) {
+        if (defined(this._randomTexture) && !aoEnabled) {
             this._randomTexture.destroy();
             this._randomTexture = undefined;
         }
 
-        if (!defined(this._randomTexture) && ao.enabled) {
+        if (!defined(this._randomTexture) && aoEnabled) {
             length = 256 * 256 * 3;
             var random = new Uint8Array(length);
             for (i = 0; i < length; i += 3) {
@@ -613,12 +615,15 @@ define([
         var fxaa = this._fxaa;
         var ao = this._ao;
         var bloom = this._bloom;
-        if (!fxaa.enabled && !ao.enabled && !bloom.enabled && length === 0) {
+
+        var aoEnabled = ao.enabled && context.depthTexture;
+
+        if (!fxaa.enabled && !aoEnabled && !bloom.enabled && length === 0) {
             return;
         }
 
         var initialTexture = colorTexture;
-        if (ao.enabled && ao.ready) {
+        if (aoEnabled && ao.ready) {
             execute(ao, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(ao);
         }

@@ -99,6 +99,7 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+        scene.render(); // clear any afterRender commands
 
         rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
 

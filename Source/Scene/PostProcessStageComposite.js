@@ -232,6 +232,34 @@ define([
     });
 
     /**
+     * Whether or not this post process stage is supported.
+     * <p>
+     * A post process stage is not supported when it requires a depth texture and the WEBGL_depth_texture extension is not
+     * supported.
+     * </p>
+     *
+     * @param {Context} context The context.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageComposite.prototype.isSupported = function(context) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('context', context);
+        //>>includeEnd('debug');
+
+        var stages = this._stages;
+        var length = stages.length;
+        for (var i = 0; i < length; ++i) {
+            if (!stages[i].isSupported(context)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    /**
      * Gets the post-process stage at <code>index</code>
      *
      * @param {Number} index The index of the post-process stage or composite.
