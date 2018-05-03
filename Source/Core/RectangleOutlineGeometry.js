@@ -340,7 +340,7 @@ define([
 
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, CesiumMath.EPSILON2);
+        var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         if (extrude) {
             geometry = constructExtrudedRectangle(options);

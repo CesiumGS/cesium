@@ -13,6 +13,7 @@ define([
      *
      * @exports createWorldTerrain
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server if available.
      * @returns {CesiumTerrainProvider}

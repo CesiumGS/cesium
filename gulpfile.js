@@ -37,7 +37,18 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
+
+var s3Bucket = 'cesium-dev';
+var deployDirectory = '/cesiumjs.org/' + process.env.TRAVIS_BRANCH;
 var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/';
+
+// Website production deployment
+var deployProduction = (process.env.TRAVIS_BRANCH === 'cesiumjs.org');
+if (deployProduction) {
+    s3Bucket = 'cesiumjs.org';
+    deployDirectory = '/Cesium';
+    travisDeployUrl = 'https://cesiumjs.org/Cesium/';
+}
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -61,7 +72,6 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
-                   '!Source/ThirdParty/draco-decoder-gltf.js',
                    '!Source/ThirdParty/pako_inflate.js',
                    '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
@@ -304,11 +314,10 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
-        .demand(['b', 'd']).argv;
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]').argv;
 
-    var uploadDirectory = argv.d;
-    var bucketName = argv.b;
+    var uploadDirectory = argv.d ? argv.d : deployDirectory;
+    var bucketName = argv.b ? argv.b : s3Bucket;
     var cacheControl = argv.c ? argv.c : 'max-age=3600';
 
     if (argv.confirm) {
@@ -546,7 +555,7 @@ function listAll(s3, bucketName, prefix, files, marker) {
 
 gulp.task('deploy-set-version', function() {
     var buildVersion = yargs.argv.buildVersion;
-    if (buildVersion) {
+    if (!deployProduction && buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
         packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
@@ -914,7 +923,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse, { nodir: true }).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1261,7 +1270,8 @@ function buildCesiumViewer() {
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {
-                    base : 'Build/Cesium'
+                    base : 'Build/Cesium',
+                    nodir : true
                 }),
 
             gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {

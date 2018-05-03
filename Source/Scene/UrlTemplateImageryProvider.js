@@ -9,7 +9,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/GeographicTilingScheme',
+        '../Core/GeographicProjection',
         '../Core/isArray',
         '../Core/Math',
         '../Core/Rectangle',
@@ -28,7 +28,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        GeographicTilingScheme,
+        GeographicProjection,
         isArray,
         CesiumMath,
         Rectangle,
@@ -961,7 +961,7 @@ define([
             return;
         }
 
-        if (imageryProvider.tilingScheme instanceof GeographicTilingScheme) {
+        if (imageryProvider.tilingScheme.projection instanceof GeographicProjection) {
             longitudeLatitudeProjectedScratch.x = CesiumMath.toDegrees(longitude);
             longitudeLatitudeProjectedScratch.y = CesiumMath.toDegrees(latitude);
         } else {

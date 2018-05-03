@@ -558,7 +558,8 @@ define([
         // Tesselation on ClassificationPrimitives tends to be low,
         // which causes problems when interpolating log depth from vertices.
         // So force computing and writing logarithmic depth in the fragment shader.
-        var disableGlPositionLogDepth = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        // Re-enable at far distances to avoid z-fighting.
+        var disableGlPositionLogDepth = 'ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT';
 
         var vsSource = new ShaderSource({
             defines : [extrudedDefine, disableGlPositionLogDepth],

@@ -105,7 +105,6 @@ define([
         //>>includeEnd('debug');
 
         this._key = BingMapsApi.getKey(options.key);
-        this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
         this._resource = Resource.createIfNeeded(options.url);
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
@@ -511,10 +510,6 @@ define([
 
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         var result = getRectangleAttribution(this._attributionList, level, rectangle);
-
-        if (defined(this._keyErrorCredit)) {
-            result.push(this._keyErrorCredit);
-        }
 
         return result;
     };
