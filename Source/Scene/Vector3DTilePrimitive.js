@@ -816,7 +816,7 @@ define([
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
-        var uniformMap = primitive._pickUniformMap;
+        var uniformMap = defaultValue(primitive._pickUniformMap, primitive._uniformMap);
 
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
