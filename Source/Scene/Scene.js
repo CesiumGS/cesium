@@ -1547,7 +1547,7 @@ define([
             }
 
             if (defined(command.pickId)) {
-                derivedCommands.picking = createPickDerivedCommand(scene, command, context, derivedCommands.picking);
+                derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
             }
 
             var oit = scene._oit;
@@ -3524,107 +3524,6 @@ define([
         callAfterRenderFunctions(this);
         return object;
     };
-
-    var fragDepthRegex = /\bgl_FragDepthEXT\b/;
-    var discardRegex = /\bdiscard\b/;
-
-    function getPickShaderProgram(context, shaderProgram, pickId, pickIdDeclarations) {
-        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'pick');
-        if (!defined(shader)) {
-            var attributeLocations = shaderProgram._attributeLocations;
-            var fs = shaderProgram.fragmentShaderSource;
-
-            var writesDepthOrDiscards = false;
-            var sources = fs.sources;
-            var length = sources.length;
-            var i;
-            for (i = 0; i < length; ++i) {
-                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
-                    writesDepthOrDiscards = true;
-                    break;
-                }
-            }
-
-            var newMain;
-            if (!writesDepthOrDiscards) {
-                newMain =
-                    defaultValue(pickIdDeclarations, '') + '\n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    gl_FragColor = ' + pickId + '; \n' +
-                    '} \n';
-                fs = new ShaderSource({
-                    sources : [newMain]
-                });
-            } else {
-                newMain =
-                    'void main() \n' +
-                    '{ \n' +
-                    '    czm_non_pick_main(); \n' +
-                    '    if (gl_FragColor.a == 0.0) { \n' +
-                    '        discard; \n' +
-                    '    } \n' +
-                    '    gl_FragColor = ' + pickId + '; \n' +
-                    '} \n';
-                var newSources = new Array(length + 1);
-                for (i = 0; i < length; ++i) {
-                    newSources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_pick_main');
-                }
-                newSources[length] = newMain;
-                fs = new ShaderSource({
-                    sources : newSources
-                });
-            }
-
-            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'pick', {
-                vertexShaderSource : shaderProgram.vertexShaderSource,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-        }
-
-        return shader;
-    }
-
-    function getPickRenderState(scene, renderState) {
-        var cache = scene._pickRenderStateCache;
-        var pickState = cache[renderState.id];
-        if (!defined(pickState)) {
-            var rs = RenderState.getState(renderState);
-            rs.blending.enabled = false;
-
-            pickState = RenderState.fromCache(rs);
-            cache[renderState.id] = pickState;
-        }
-
-        return pickState;
-    }
-
-    function createPickDerivedCommand(scene, command, context, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-
-        var shader;
-        var renderState;
-        if (defined(result.pickCommand)) {
-            shader = result.pickCommand.shaderProgram;
-            renderState = result.pickCommand.renderState;
-        }
-
-        result.pickCommand = DrawCommand.shallowClone(command, result.pickCommand);
-
-        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.pickCommand.shaderProgram = getPickShaderProgram(context, command.shaderProgram, command.pickId, command.pickIdDeclarations);
-            result.pickCommand.renderState = getPickRenderState(scene, command.renderState);
-            result.shaderProgramId = command.shaderProgram.id;
-        } else {
-            result.pickCommand.shaderProgram = shader;
-            result.pickCommand.renderState = renderState;
-        }
-
-        return result;
-    }
 
     function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
