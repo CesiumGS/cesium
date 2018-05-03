@@ -498,8 +498,8 @@ define([
                     height : 256
                 },
                 sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    wrapS : TextureWrap.REPEAT,
+                    wrapT : TextureWrap.REPEAT,
                     minificationFilter : TextureMinificationFilter.NEAREST,
                     magnificationFilter : TextureMagnificationFilter.NEAREST
                 })

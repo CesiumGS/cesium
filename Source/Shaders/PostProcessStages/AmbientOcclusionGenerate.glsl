@@ -58,9 +58,7 @@ void main(void)
     float gapAngle = 90.0 * czm_radiansPerDegree;
 
     // RandomNoise
-    vec2 noiseMapSize = vec2(256.0, 256.0);
-    vec2 noiseScale = vec2(czm_viewport.z /  noiseMapSize.x, czm_viewport.w / noiseMapSize.y);
-    float randomVal = texture2D(randomTexture, v_textureCoordinates * noiseScale).x;
+    float randomVal = texture2D(randomTexture, v_textureCoordinates).x;
 
     float inverseViewportWidth = 1.0 / czm_viewport.z;
     float inverseViewportHeight = 1.0 / czm_viewport.w;
