@@ -2,20 +2,24 @@ defineSuite([
         'Scene/PostProcessStage',
         'Core/BoundingRectangle',
         'Core/Color',
+        'Core/defined',
         'Core/PixelFormat',
         'Renderer/PixelDatatype',
         'Scene/PostProcessStageSampleMode',
         'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/when'
     ], function(
         PostProcessStage,
         BoundingRectangle,
         Color,
+        defined,
         PixelFormat,
         PixelDatatype,
         PostProcessStageSampleMode,
         createScene,
-        pollToPromise) {
+        pollToPromise,
+        when) {
     'use strict';
 
     var scene;
@@ -174,6 +178,56 @@ defineSuite([
             }).then(function() {
                 expect(scene).toRender([0, 0, 255, 255]);
             });
+        });
+    });
+
+    it('isSupported throws without a context', function() {
+        var stage = new PostProcessStage({
+            fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
+        });
+        expect(function() {
+            return stage.isSupported();
+        }).toThrowDeveloperError();
+    });
+
+    it('isSupported', function() {
+        var stage = new PostProcessStage({
+            fragmentShader : 'void main() { gl_FragColor = vec4(1.0); }'
+        });
+        expect(stage.isSupported(scene.context)).toEqual(true);
+        stage = new PostProcessStage({
+            fragmentShader : 'uniform sampler2D depthTexture; void main() { texture2D(depthTexture, vec2(0.5)); }'
+        });
+        expect(stage.isSupported(scene.context)).toEqual(scene.context.depthTexture);
+    });
+
+    it('does not run a stage that requires depth textures when depth textures are not supported', function() {
+        var s = createScene();
+        s.context._depthTexture = false;
+
+        if (defined(s._globeDepth)) {
+            s._globeDepth.destroy();
+            s._globeDepth = undefined;
+            if (defined(s._oit)) {
+                s._oit.destroy();
+                s._oit = undefined;
+            }
+        }
+
+        expect(s).toRender([0, 0, 0, 255]);
+        var stage = s.postProcessStages.add(new PostProcessStage({
+            fragmentShader : 'uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }'
+        }));
+        return pollToPromise(function() {
+            s.renderForSpecs();
+            return stage.ready;
+        }).then(function() {
+            expect(s).toRender([0, 0, 0, 255]);
+        }).always(function(e) {
+            s.destroyForSpecs();
+            if (e) {
+                return when.reject(e);
+            }
         });
     });
 

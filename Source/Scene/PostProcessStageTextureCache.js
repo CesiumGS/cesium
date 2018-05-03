@@ -45,7 +45,7 @@ define([
     }
 
     function getStageDependencies(collection, context, dependencies, stage, previousName) {
-        if (!stage.enabled || (stage.requiresDepthTexture && !context.depthTexture)) {
+        if (!stage.enabled || !stage.isSupported(context)) {
             return previousName;
         }
 
@@ -71,7 +71,7 @@ define([
     }
 
     function getCompositeDependencies(collection, context, dependencies, composite, previousName) {
-        if ((defined(composite.enabled) && !composite.enabled) || (defined(composite.requiresDepthTexture) && composite.requiresDepthTexture && !context.depthTexture)) {
+        if ((defined(composite.enabled) && !composite.enabled) || (defined(composite.isSupported) && !composite.isSupported(context))) {
             return previousName;
         }
 

@@ -450,7 +450,7 @@ define([
         var count = 0;
         for (i = 0; i < length; ++i) {
             stage = stages[i];
-            if (stage.ready && stage.enabled && (!stage.requiresDepthTexture || context.depthTexture)) {
+            if (stage.ready && stage.enabled && stage.isSupported(context)) {
                 activeStages[count++] = stage;
             }
         }
