@@ -7,6 +7,10 @@ Change Log
 
 * Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
 
+##### Additions :tada:
+
+* Added support for loading Draco encoded Point Cloud tiles [#6559](https://github.com/AnalyticalGraphicsInc/cesium/pull/6559)
+
 ### 1.45 - 2018-05-01
 
 ##### Major Announcements :loudspeaker:
