@@ -19,12 +19,14 @@ define([
         './DynamicGeometryBatch',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
+        './Entity',
         './PlaneGeometryUpdater',
         './PolygonGeometryUpdater',
         './PolylineVolumeGeometryUpdater',
         './RectangleGeometryUpdater',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
+        './StaticGroundGeometryColorBatch',
         './StaticGroundGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch',
         './WallGeometryUpdater'
@@ -49,12 +51,14 @@ define([
         DynamicGeometryBatch,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
+        Entity,
         PlaneGeometryUpdater,
         PolygonGeometryUpdater,
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
+        StaticGroundGeometryColorBatch,
         StaticGroundGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch,
         WallGeometryUpdater) {
@@ -144,6 +148,9 @@ define([
         this._openColorBatches = new Array(numberOfShadowModes);
         this._openMaterialBatches = new Array(numberOfShadowModes);
 
+        var supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(scene);
+        this._supportsMaterialsforEntitiesOnTerrain = supportsMaterialsforEntitiesOnTerrain;
+
         var i;
         for (i = 0; i < numberOfShadowModes; ++i) {
             this._outlineBatches[i] = new StaticOutlineGeometryBatch(primitives, scene, i);
@@ -155,13 +162,24 @@ define([
         }
 
         var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
-        this._groundColorBatches = new Array(numberOfClassificationTypes);
-        this._groundMaterialBatches = new Array(numberOfClassificationTypes);
+        var groundMaterialBatches;
+        var groundColorBatches = new Array(numberOfClassificationTypes);
+        if (supportsMaterialsforEntitiesOnTerrain) {
+            groundMaterialBatches = new Array(numberOfClassificationTypes);
 
-        for (i = 0; i < numberOfClassificationTypes; ++i) {
-            this._groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance, i);
-            this._groundMaterialBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance, i);
+            for (i = 0; i < numberOfClassificationTypes; ++i) {
+                groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance, i);
+                groundMaterialBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance, i);
+            }
+        } else {
+            groundMaterialBatches = [];
+            for (i = 0; i < numberOfClassificationTypes; ++i) {
+                groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+            }
         }
+
+        this._groundMaterialBatches = groundMaterialBatches;
+        this._groundColorBatches = groundColorBatches;
 
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
@@ -380,6 +398,7 @@ define([
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
                     this._groundColorBatches[classificationType].add(time, updater);
                 } else {
+                    // If unsupported, updater will not be on terrain.
                     this._groundMaterialBatches[classificationType].add(time, updater);
                 }
             } else if (updater.isClosed) {

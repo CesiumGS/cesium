@@ -464,7 +464,7 @@ defineSuite([
     });
 
     it('renders small GeometryInstances with texture', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             return;
         }
 
@@ -495,7 +495,7 @@ defineSuite([
     });
 
     it('renders large GeometryInstances with texture', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             return;
         }
 

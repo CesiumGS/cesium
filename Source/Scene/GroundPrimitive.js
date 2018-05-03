@@ -4,6 +4,8 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -30,6 +32,8 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Check,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
@@ -66,6 +70,9 @@ define([
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other.
      *
+     * Support for the WEBGL_depth_texture extension is required to use GeometryInstances with different PerInstanceColors
+     * or materials besides PerInstanceColorAppearance.
+     *
      * Textured GroundPrimitives were designed for notional patterns and are not meant for precisely mapping
      * textures to terrain - for that use case, use {@link SingleTileImageryProvider}.
      *
@@ -83,7 +90,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
-     * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to PerInstanceColorAppearance when GeometryInstances have a color attribute.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to a flat PerInstanceColorAppearance when GeometryInstances have a color attribute.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -786,7 +793,18 @@ define([
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
 
-            // Determine whether to add spherical or planar extent attributes
+            // Determine whether to add spherical or planar extent attributes for computing texture coordinates.
+            // This depends on the size of the GeometryInstances.
+
+            // If all the GeometryInstances have the same per-instance color,
+            // don't bother with texture coordinates at all.
+            var allSameColor = false;
+            var color;
+            var attributes;
+            if (length > 0 && defined(instances[0].attributes) && defined(instances[0].attributes.color)) {
+                color = instances[0].attributes.color;
+                allSameColor = true;
+            }
             var usePlanarExtents = true;
             for (i = 0; i < length; ++i) {
                 instance = instances[i];
@@ -794,7 +812,10 @@ define([
                 rectangle = getRectangle(frameState, geometry);
                 if (ShadowVolumeAppearance.shouldUseSphericalCoordinates(rectangle)) {
                     usePlanarExtents = false;
-                    break;
+                }
+                attributes = instance.attributes;
+                if (defined(color) && defined(attributes) && defined(attributes.color)) {
+                    allSameColor = allSameColor && ColorGeometryInstanceAttribute.equals(color, attributes.color);
                 }
             }
 
@@ -804,12 +825,15 @@ define([
                 instanceType = geometry.constructor;
 
                 rectangle = getRectangle(frameState, geometry);
-                var attributes;
 
-                if (usePlanarExtents) {
-                    attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState.mapProjection, this._maxHeight, geometry._stRotation);
+                if (!allSameColor) {
+                    if (usePlanarExtents) {
+                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState.mapProjection, this._maxHeight, geometry._stRotation);
+                    } else {
+                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, frameState.mapProjection, geometry._stRotation);
+                    }
                 } else {
-                    attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, frameState.mapProjection, geometry._stRotation);
+                    attributes = {};
                 }
 
                 var instanceAttributes = instance.attributes;
@@ -929,6 +953,21 @@ define([
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
+    };
+
+    /**
+     * Checks if the given Scene supports materials on GroundPrimitives.
+     * Materials on GroundPrimitives require support for the WEBGL_depth_texture extension.
+     *
+     * @param {Scene} scene The current scene.
+     * @returns {Boolean} Whether or not the current scene supports materials on GroundPrimitives.
+     */
+    GroundPrimitive.supportsMaterials = function(scene) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('scene', scene);
+        //>>includeEnd('debug');
+
+        return scene.frameState.context.depthTexture;
     };
 
     return GroundPrimitive;

@@ -840,4 +840,71 @@ defineSuite([
             visualizer.destroy();
         });
     });
+
+    it('batches ground entities by identical color if ground entity materials are not supported', function() {
+        spyOn(GroundPrimitive, 'supportsMaterials').and.callFake(function() {
+            return false;
+        });
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, entities, scene.primitives, scene.groundPrimitives);
+
+        var blueColor = Color.BLUE.withAlpha(0.5);
+        entities.add({
+            position : new Cartesian3(1, 2, 3),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : blueColor
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : new Cartesian3(12, 34, 45),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : blueColor
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : new Cartesian3(123, 456, 789),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : Color.BLUE.withAlpha(0.6)
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(2);
+
+            entities.removeAll();
+            visualizer.destroy();
+        });
+    });
+
 }, 'WebGL');
