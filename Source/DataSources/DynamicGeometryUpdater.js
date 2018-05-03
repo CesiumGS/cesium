@@ -77,7 +77,8 @@ define([
         //>>includeEnd('debug');
 
         var geometryUpdater = this._geometryUpdater;
-        var onTerrain = geometryUpdater._onTerrain;
+        // Other materials require additional batch table attributes that aren't updated at this time.
+        var onTerrain = geometryUpdater._onTerrain && geometryUpdater._materialProperty instanceof ColorMaterialProperty;
 
         var primitives = this._primitives;
         var groundPrimitives = this._groundPrimitives;
