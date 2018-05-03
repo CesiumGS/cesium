@@ -31,7 +31,7 @@ script:
   - echo -en 'travis_fold:end:script.buildApps\\r'
 
   - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
-  - npm run deploy-s3 -- --confirm -c 'no-cache'
+  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm run deploy-status -- --status success --message Deployed
   - echo -en 'travis_fold:end:script.deploy\\r'
 
