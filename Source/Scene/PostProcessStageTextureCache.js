@@ -45,7 +45,7 @@ define([
     }
 
     function getStageDependencies(collection, context, dependencies, stage, previousName) {
-        if (!stage.enabled || !stage.isSupported(context)) {
+        if (!stage.enabled || !stage._isSupported(context)) {
             return previousName;
         }
 
@@ -71,7 +71,7 @@ define([
     }
 
     function getCompositeDependencies(collection, context, dependencies, composite, previousName) {
-        if ((defined(composite.enabled) && !composite.enabled) || (defined(composite.isSupported) && !composite.isSupported(context))) {
+        if ((defined(composite.enabled) && !composite.enabled) || (defined(composite._isSupported) && !composite._isSupported(context))) {
             return previousName;
         }
 
@@ -254,8 +254,10 @@ define([
     PostProcessStageTextureCache.prototype.update = function(context) {
         var collection = this._collection;
         var updateDependencies = this._updateDependencies;
-        var aoEnabled = defined(collection.ambientOcclusion) && collection.ambientOcclusion.enabled && context.depthTexture;
-        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || collection.bloom.enabled || collection.fxaa.enabled;
+        var aoEnabled = defined(collection.ambientOcclusion) && collection.ambientOcclusion.enabled && collection.ambientOcclusion._isSupported(context);
+        var bloomEnabled = defined(collection.bloom) && collection.bloom.enabled && collection.bloom._isSupported(context);
+        var fxaaEnabled = defined(collection.fxaa) && collection.fxaa.enabled && collection.fxaa._isSupported(context);
+        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || bloomEnabled || fxaaEnabled;
         if (updateDependencies || (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)) {
             releaseResources(this);
             this._framebuffers.length = 0;

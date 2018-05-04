@@ -478,7 +478,7 @@ define([
         var count = 0;
         for (i = 0; i < length; ++i) {
             stage = stages[i];
-            if (stage.ready && stage.enabled && stage.isSupported(context)) {
+            if (stage.ready && stage.enabled && stage._isSupported(context)) {
                 activeStages[count++] = stage;
             }
         }
@@ -488,17 +488,19 @@ define([
         var bloom = this._bloom;
         var fxaa = this._fxaa;
 
-        var aoEnabled = ao.enabled && context.depthTexture;
+        var aoEnabled = ao.enabled && ao._isSupported(context);
+        var bloomEnabled = bloom.enabled && bloom._isSupported(context);
+        var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloom.enabled !== this._bloomEnabled || fxaa.enabled !== this._fxaaEnabled) {
+        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloomEnabled !== this._bloomEnabled || fxaaEnabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
             this._textureCache.updateDependencies();
 
             this._lastLength = count;
             this._aoEnabled = aoEnabled;
-            this._bloomEnabled = bloom.enabled;
-            this._fxaaEnabled = fxaa.enabled;
+            this._bloomEnabled = bloomEnabled;
+            this._fxaaEnabled = fxaaEnabled;
             this._textureCacheDirty = false;
         }
 
@@ -524,8 +526,8 @@ define([
                     height : 256
                 },
                 sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    wrapS : TextureWrap.REPEAT,
+                    wrapT : TextureWrap.REPEAT,
                     minificationFilter : TextureMinificationFilter.NEAREST,
                     magnificationFilter : TextureMagnificationFilter.NEAREST
                 })
@@ -616,9 +618,11 @@ define([
         var ao = this._ao;
         var bloom = this._bloom;
 
-        var aoEnabled = ao.enabled && context.depthTexture;
+        var aoEnabled = ao.enabled && ao._isSupported(context);
+        var bloomEnabled = bloom.enabled && bloom._isSupported(context);
+        var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (!fxaa.enabled && !aoEnabled && !bloom.enabled && length === 0) {
+        if (!fxaaEnabled && !aoEnabled && !bloomEnabled && length === 0) {
             return;
         }
 
@@ -627,7 +631,7 @@ define([
             execute(ao, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(ao);
         }
-        if (bloom.enabled && bloom.ready) {
+        if (bloomEnabled && bloom.ready) {
             execute(bloom, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(bloom);
         }
@@ -642,7 +646,7 @@ define([
             lastTexture = getOutputTexture(activeStages[length - 1]);
         }
 
-        if (fxaa.enabled && fxaa.ready) {
+        if (fxaaEnabled && fxaa.ready) {
             execute(fxaa, context, lastTexture, depthTexture, idTexture);
         }
     };
