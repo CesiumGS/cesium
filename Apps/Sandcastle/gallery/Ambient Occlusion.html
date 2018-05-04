@@ -60,6 +60,10 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+if (!viewer.scene.postProcessStages.ambientOcclusion.isSupported(viewer.scene)) {
+    console.log('This browser does not support the ambient occlusion post process.');
+}
+
 // Power Plant design model provided by Bentley Systems
 var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3837) });
 tileset.readyPromise.then(function(tileset) {

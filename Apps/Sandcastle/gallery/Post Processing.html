@@ -81,10 +81,14 @@ for (var name in viewModel) {
 }
 
 var collection = viewer.scene.postProcessStages;
-var silhouette = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
+var silhouette = collection.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
 var blackAndWhite = collection.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
 var brightness = collection.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
 var nightVision = collection.add(Cesium.PostProcessStageLibrary.createNightVisionStage());
+
+if (!silhouette.isSupported(viewer.scene)) {
+    console.log('This browser does not support the silhouette post process.');
+}
 
 function updatePostProcess() {
     silhouette.enabled = Boolean(viewModel.silhouette);
