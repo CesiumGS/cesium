@@ -207,11 +207,11 @@ defineSuite([
         }
 
         expect(s).toRender([0, 0, 0, 255]);
-        var stage = new PostProcessStageComposite({
+        var stage = scene.postProcessStages.add(new PostProcessStageComposite({
             stages : [new PostProcessStage({
                 fragmentShader : 'uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }'
             })]
-        });
+        }));
         return pollToPromise(function() {
             s.renderForSpecs();
             return stage.ready;
