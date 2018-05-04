@@ -3138,7 +3138,7 @@ define([
 
             var pickIdDeclarations;
             if (allowPicking) {
-                if (defined(model._pickIdLoaded)) {
+                if (defined(model._pickIdLoaded) && defined(model._uniformMapLoaded)) {
                     pickIdDeclarations = model._pickIdDeclarationsLoaded();
                     pickId = model._pickIdLoaded();
                 } else {

@@ -519,7 +519,6 @@ define([
         };
 
         primitive._uniformMap = primitive._batchTable.getUniformMapCallback()(uniformMap);
-        primitive._pickUniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
     }
 
     function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds, batchIdLookUp) {
@@ -816,7 +815,7 @@ define([
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
-        var uniformMap = defaultValue(primitive._pickUniformMap, primitive._uniformMap);
+        var uniformMap = primitive._uniformMap;
 
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];

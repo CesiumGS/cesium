@@ -79,7 +79,8 @@ defineSuite([
                     batchTableByteLength : 0
                 },
                 colorBlendMode : ColorBlendMode.HIGHLIGHT
-            }
+            },
+            getFeature : function(id) { return { batchId : id }; }
         };
 
         function MockGlobePrimitive(primitive) {
