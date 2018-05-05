@@ -12,6 +12,7 @@ Change Log
 * `BingMapsImageryProvider` is no longer the default base imagery layer.
 * `BingMapsGeocoderService` is no longer the default geocoder service.
 * Cesium no longer ships with a demo Bing Maps API key.
+* `ClippingPlaneCollection` now uses `ClippingPlane` objects instead of`Plane` objects. [#6498](https://github.com/AnalyticalGraphicsInc/cesium/pull/6498)
 
 ##### Deprecated :hourglass_flowing_sand:
 * `Particle.size`, `ParticleSystem.rate`, `ParticleSystem.lifeTime`, `ParticleSystem.life`, `ParticleSystem.minimumLife`, and `ParticleSystem.maximumLife` have been renamed to `Particle.imageSize`, `ParticleSystem.emissionRate`, `ParticleSystem.lifetime`, `ParticleSystem.particleLife`, `ParticleSystem.minimumParticleLife`, and `ParticleSystem.maximumParticleLife`. Use of the `size`, `rate`, `lifeTime`, `life`, `minimumLife`, and `maximumLife` parameters is deprecated and will be removed in Cesium 1.46.
@@ -48,8 +49,11 @@ Change Log
 * Fixed a bug causing crashes when setting colors on un-pickable models. [$6442](https://github.com/AnalyticalGraphicsInc/cesium/issues/6442)
 * Fix flicker when adding, removing, or modifying entities. [#3945](https://github.com/AnalyticalGraphicsInc/cesium/issues/3945)
 * Fixed crash bug in PolylineCollection when a polyline was updated and removed at the same time. [#6455](https://github.com/AnalyticalGraphicsInc/cesium/pull/6455)
+* Fixed crash when animating a glTF model with a single keyframe. [#6422](https://github.com/AnalyticalGraphicsInc/cesium/pull/6422)
 * Fixed Imagery Layers Texture Filters Sandcastle example. [#6472](https://github.com/AnalyticalGraphicsInc/cesium/pull/6472).
 * Fixed a bug causing Cesium 3D Tilesets to not clip properly when tiles were unloaded and reloaded. [#6484](https://github.com/AnalyticalGraphicsInc/cesium/issues/6484)
+* Improved rendering of glTF models that don't contain normals with a temporary unlit shader workaround. [#6501](https://github.com/AnalyticalGraphicsInc/cesium/pull/6501)
+* Fixed rendering of glTF models with emissive-only materials. [#6501](https://github.com/AnalyticalGraphicsInc/cesium/pull/6501)
 
 ### 1.44 - 2018-04-02
 
