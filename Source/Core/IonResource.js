@@ -28,7 +28,7 @@ define([
      * @constructor
      * @augments Resource
      *
-     * @param {*} endpoint The result of the Cesium ion asset endpoint service.
+     * @param {Object} endpoint The result of the Cesium ion asset endpoint service.
      * @param {Resource} endpointResource The resource used to retreive the endpoint.
      *
      * @see Ion

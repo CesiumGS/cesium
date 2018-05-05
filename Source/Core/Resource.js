@@ -395,7 +395,7 @@ define([
          * Query parameters appended to the url.
          *
          * @memberof Resource.prototype
-         * @type {*}
+         * @type {Object}
          *
          * @readonly
          */
@@ -1693,7 +1693,7 @@ define([
      * using XMLHttpRequest, which means that in order to make requests to another origin,
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
      *
-     * @param {*} data Data that is posted with the resource.
+     * @param {Object} data Data that is posted with the resource.
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.

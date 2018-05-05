@@ -9,9 +9,9 @@ define([
      *
      * @exports clone
      *
-     * @param {*} object The object to clone.
+     * @param {Object} object The object to clone.
      * @param {Boolean} [deep=false] If true, all properties will be deep cloned recursively.
-     * @returns {*} The cloned object.
+     * @returns {Object} The cloned object.
      */
     function clone(object, deep) {
         if (object === null || typeof object !== 'object') {
