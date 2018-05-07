@@ -11,7 +11,7 @@ Change Log
 * Removed `Scene.copyGlobeDepth`. Globe depth will now be copied by default when supported. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
 
 ##### Additions :tada:
-* Added support for materials on static terrain entities and `GroundPrimitives`. This functionality requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), so it is not available in Internet Explorer. Textured materials on static terrain entities and `GroundPrimitives` are best suited for notational patterns and are not intended for precisely mapping textures to terrain - for that use case, use `SingleTileImageryProvider`. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+* Added support for materials on terrain entities and `GroundPrimitives`. This functionality requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), so it is not available in Internet Explorer. Textured materials on terrain entities and `GroundPrimitives` are best suited for notational patterns and are not intended for precisely mapping textures to terrain - for that use case, use `SingleTileImageryProvider`. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
 * Added `GroundPrimitive.supportsMaterials` and `Entity.supportsMaterialsforEntitiesOnTerrain`, both of which can be used to check if materials on terrain entities and `GroundPrimitives` is supported. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
 
 ### 1.45 - 2018-05-01

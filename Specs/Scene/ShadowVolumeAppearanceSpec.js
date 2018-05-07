@@ -43,8 +43,8 @@ defineSuite([
     var largeTestRectangle = Rectangle.fromDegrees(-45.0, -45.0, 45.0, 45.0);
     var smallTestRectangle = Rectangle.fromDegrees(-0.1, -0.1, 0.1, 0.1);
 
-    var largeRectangleAttributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(largeTestRectangle, unitSphereEllipsoid, projection);
-    var smallRectangleAttributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, unitSphereEllipsoid, projection);
+    var largeRectangleAttributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(largeTestRectangle, largeTestRectangle, unitSphereEllipsoid, projection);
+    var smallRectangleAttributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, smallTestRectangle, unitSphereEllipsoid, projection);
 
     var perInstanceColorMaterialAppearance = new PerInstanceColorAppearance();
     var flatPerInstanceColorMaterialAppearance = new PerInstanceColorAppearance({
@@ -169,27 +169,31 @@ defineSuite([
     });
 
     it('provides attributes for rotating texture coordinates', function() {
-        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, unitSphereEllipsoid, projection, 0.0, CesiumMath.PI_OVER_TWO);
+        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, smallTestRectangle, unitSphereEllipsoid, projection, 0.0, CesiumMath.PI_OVER_TWO);
 
-        var stRotationAttribute = attributes.stSineCosineUVScale;
-        expect(stRotationAttribute.componentDatatype).toEqual(ComponentDatatype.FLOAT);
-        expect(stRotationAttribute.componentsPerAttribute).toEqual(4);
-        expect(stRotationAttribute.normalize).toEqual(false);
+        var uMaxVmax = attributes.uMaxVmax;
+        var uvMinAndExtents = attributes.uvMinAndExtents;
+        expect(uMaxVmax.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(uMaxVmax.componentsPerAttribute).toEqual(4);
+        expect(uMaxVmax.normalize).toEqual(false);
 
-        var value = stRotationAttribute.value;
-        expect(value[0]).toEqualEpsilon(Math.sin(CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
-        expect(value[1]).toEqualEpsilon(Math.cos(CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
-        expect(value[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON7); // 90 degree rotation of a square, so no scale
-        expect(value[3]).toEqualEpsilon(1.0, CesiumMath.EPSILON7);
+        expect(uvMinAndExtents.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(uvMinAndExtents.componentsPerAttribute).toEqual(4);
+        expect(uvMinAndExtents.normalize).toEqual(false);
 
-        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, unitSphereEllipsoid, projection, 0.0, CesiumMath.PI_OVER_FOUR);
-        value = attributes.stSineCosineUVScale.value;
-        expect(value[0]).toEqualEpsilon(Math.sin(CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);
-        expect(value[1]).toEqualEpsilon(Math.cos(CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);
+        // 90 degree rotation of a square, so "max" point in Y direction is 0,0, "max" point in X direction is 1,1
+        var value = uMaxVmax.value;
+        expect(value[0]).toEqual(0.0);
+        expect(value[1]).toEqual(0.0);
+        expect(value[2]).toEqual(1.0);
+        expect(value[3]).toEqual(1.0);
 
-        var expectedScale = Math.sqrt(2.0) * 0.5; // 45 degree rotation of a square, so scale to square diagonal
-        expect(value[2]).toEqualEpsilon(expectedScale, CesiumMath.EPSILON7);
-        expect(value[3]).toEqualEpsilon(expectedScale, CesiumMath.EPSILON7);
+        // So "min" of texture coordinates is at 1, 0 and extents are just 1s
+        value = uvMinAndExtents.value;
+        expect(value[0]).toEqual(1.0);
+        expect(value[1]).toEqual(0.0);
+        expect(value[2]).toEqual(1.0);
+        expect(value[3]).toEqual(1.0);
     });
 
     it('checks for spherical extent attributes', function() {

@@ -11,12 +11,14 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/EllipseGeometry',
         '../Core/GeographicTilingScheme',
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
+        '../Core/RectangleGeometry',
         '../Core/Resource',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
@@ -39,12 +41,14 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        EllipseGeometry,
         GeographicTilingScheme,
         GeometryInstance,
         isArray,
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
+        RectangleGeometry,
         Resource,
         DrawCommand,
         Pass,
@@ -473,6 +477,26 @@ define([
         return rectangle;
     }
 
+    function getUnrotatedRectangle(ellipsoid, geometry, boundingRectangle, result) {
+        if (geometry instanceof RectangleGeometry) {
+            Rectangle.clone(geometry._rectangle, result);
+        } else if (geometry instanceof EllipseGeometry) {
+            var rotation = geometry._rotation;
+            geometry._rotation = 0.0;
+            Rectangle.clone(geometry.rectangle, result);
+            geometry._rotation = rotation;
+        } else {
+            Rectangle.clone(boundingRectangle, result);
+        }
+    }
+
+    function getGeometryRotation(geometry) {
+        if ((geometry instanceof RectangleGeometry) || (geometry instanceof EllipseGeometry)) {
+            return geometry._rotation;
+        }
+        return 0.0;
+    }
+
     var scratchDiagonalCartesianNE = new Cartesian3();
     var scratchDiagonalCartesianSW = new Cartesian3();
     var scratchDiagonalCartographic = new Cartographic();
@@ -718,6 +742,7 @@ define([
         return GroundPrimitive._initPromise;
     };
 
+    var geometryRectangleScratch = new Rectangle();
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -824,13 +849,17 @@ define([
                 geometry = instance.geometry;
                 instanceType = geometry.constructor;
 
-                rectangle = getRectangle(frameState, geometry);
+                var boundingRectangle = getRectangle(frameState, geometry);
+                var geometryRectangle = geometryRectangleScratch;
+                getUnrotatedRectangle(ellipsoid, geometry, boundingRectangle, geometryRectangle);
+                var geometryRotation = getGeometryRotation(geometry);
+                var texcoordRotation = geometry._stRotation;
 
                 if (!allSameColor) {
                     if (usePlanarExtents) {
-                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(rectangle, ellipsoid, frameState.mapProjection, this._maxHeight, geometry._stRotation);
+                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, geometryRectangle, ellipsoid, frameState.mapProjection, this._maxHeight, texcoordRotation, geometryRotation);
                     } else {
-                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(rectangle, ellipsoid, frameState.mapProjection, geometry._stRotation);
+                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, geometryRectangle, ellipsoid, frameState.mapProjection, texcoordRotation, geometryRotation);
                     }
                 } else {
                     attributes = {};

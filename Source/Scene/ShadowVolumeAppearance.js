@@ -328,45 +328,40 @@ define([
         }
     });
 
-    var cartographicScratch = new Cartographic();
-    var rectangleCenterScratch = new Cartographic();
-    var northCenterScratch = new Cartesian3();
-    var southCenterScratch = new Cartesian3();
-    var eastCenterScratch = new Cartesian3();
-    var westCenterScratch = new Cartesian3();
+    function pointLineDistance(point1, point2, point) {
+        return Math.abs((point2.y - point1.y) * point.x - (point2.x - point1.x) * point.y + point2.x * point1.y - point2.y * point1.x) / Cartesian2.distance(point2, point1);
+    }
+
     var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2()];
+    var rotatedPoint2DScratch = new Cartesian2();
     var rotation2DScratch = new Matrix2();
     var min2DScratch = new Cartesian2();
     var max2DScratch = new Cartesian2();
-    function getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation) {
-        var theta = defaultValue(textureCoordinateRotation, 0.0);
+    var rectangleCenterScratch = new Cartographic();
 
-        // Compute approximate scale such that the rectangle, if scaled and rotated,
-        // will completely enclose the unrotated/unscaled rectangle.
-        var cosTheta = Math.cos(theta);
-        var sinTheta = Math.sin(theta);
+    // boundingRectangle is a rectangle around the rotated geometry while geometryRectangle is the bounding box around the unrotated geometry.
+    function addTextureCoordinateRotationAttributes(attributes, boundingRectangle, geometryRectangle, textureCoordinateRotation, geometryRotation) {
+        textureCoordinateRotation = defaultValue(textureCoordinateRotation, 0.0);
+        geometryRotation = defaultValue(geometryRotation, 0.0);
 
-        // Build a rectangle centered in 2D space approximating the input rectangle's dimensions
-        var cartoCenter = Rectangle.center(rectangle, rectangleCenterScratch);
+        var i;
+        var point2D;
 
-        var carto = cartographicScratch;
-        carto.latitude = cartoCenter.latitude;
+        // Assume a computed "east-north" texture coordinate system.
+        // The "desired" texture coordinate system forms a rectangle around the geometryRectangle that completely bounds it.
+        // Both the geometry and the "desired" texture coordinate system rectangles may be rotated.
+        // Compute the corners of the "desired" texture coordinate system in "east-north" texture space by the following:
+        // - Treat all rectangles as if the centers are at 0, 0
+        // - rotate the geometryRectangle by geometryRotation - textureCoordinateRotation
+        // - compute corners of box bounding transformed geometryRectangle. Call this "desired local"
+        // - rotate 3 of the corners in "desired local" by textureCoordinateRotation, then compute the equivalent of
+        //   each point in the "east-north" texture coordinate system.
 
-        carto.longitude = rectangle.west;
-        var westCenter = Cartographic.toCartesian(carto, ellipsoid, westCenterScratch);
+        // Perform all computations in cartographic coordinates, no need to project.
 
-        carto.longitude = rectangle.east;
-        var eastCenter = Cartographic.toCartesian(carto, ellipsoid, eastCenterScratch);
-
-        carto.longitude = cartoCenter.longitude;
-        carto.latitude = rectangle.north;
-        var northCenter = Cartographic.toCartesian(carto, ellipsoid, northCenterScratch);
-
-        carto.latitude = rectangle.south;
-        var southCenter = Cartographic.toCartesian(carto, ellipsoid, southCenterScratch);
-
-        var northSouthHalfDistance = Cartesian3.distance(northCenter, southCenter) * 0.5;
-        var eastWestHalfDistance = Cartesian3.distance(eastCenter, westCenter) * 0.5;
+        var northSouthHalfDistance = geometryRectangle.height * 0.5;
+        var eastWestHalfDistance = geometryRectangle.width * 0.5;
+        var boundingRectangleCenter = Rectangle.center(boundingRectangle, rectangleCenterScratch);
 
         var points2D = points2DScratch;
         points2D[0].x = eastWestHalfDistance;
@@ -381,7 +376,6 @@ define([
         points2D[3].x = -eastWestHalfDistance;
         points2D[3].y = -northSouthHalfDistance;
 
-        // Rotate the dimensions rectangle and compute min/max in rotated space
         var min2D = min2DScratch;
         min2D.x = Number.POSITIVE_INFINITY;
         min2D.y = Number.POSITIVE_INFINITY;
@@ -389,33 +383,59 @@ define([
         max2D.x = Number.NEGATIVE_INFINITY;
         max2D.y = Number.NEGATIVE_INFINITY;
 
-        var rotation2D = Matrix2.fromRotation(-theta, rotation2DScratch);
-        for (var i = 0; i < 4; ++i) {
-            var point2D = points2D[i];
-            Matrix2.multiplyByVector(rotation2D, point2D, point2D);
+        var toDesiredLocal = Matrix2.fromRotation(geometryRotation - textureCoordinateRotation, rotation2DScratch);
+        for (i = 0; i < 4; ++i) {
+            point2D = Matrix2.multiplyByVector(toDesiredLocal, points2D[i], rotatedPoint2DScratch);
             Cartesian2.minimumByComponent(point2D, min2D, min2D);
             Cartesian2.maximumByComponent(point2D, max2D, max2D);
         }
 
-        // Depending on the rotation, east/west may be more appropriate for vertical scale than horizontal
-        var scaleU = 1.0;
-        var scaleV = 1.0;
-        if (Math.abs(sinTheta) < Math.abs(cosTheta)) {
-            scaleU = eastWestHalfDistance / ((max2D.x - min2D.x) * 0.5);
-            scaleV = northSouthHalfDistance / ((max2D.y - min2D.y) * 0.5);
-        } else {
-            scaleU = eastWestHalfDistance / ((max2D.y - min2D.y) * 0.5);
-            scaleV = northSouthHalfDistance / ((max2D.x - min2D.x) * 0.5);
+        points2D[0].x = min2D.x;
+        points2D[0].y = min2D.y;
+
+        points2D[1].x = min2D.x;
+        points2D[1].y = max2D.y;
+
+        points2D[2].x = max2D.x;
+        points2D[2].y = min2D.y;
+
+        var toDesiredInComputed = Matrix2.fromRotation(textureCoordinateRotation, rotation2DScratch);
+        northSouthHalfDistance = geometryRectangle.height * 0.5;
+        eastWestHalfDistance = geometryRectangle.width * 0.5;
+
+        for (i = 0; i < 3; ++i) {
+            point2D = points2D[i];
+            Matrix2.multiplyByVector(toDesiredInComputed, point2D, point2D);
+            // Convert point into east-north texture coordinate space
+            point2D.x = (point2D.x + boundingRectangleCenter.longitude - boundingRectangle.west) / boundingRectangle.width;
+            point2D.y = (point2D.y + boundingRectangleCenter.latitude - boundingRectangle.south) / boundingRectangle.height;
         }
 
-        return new GeometryInstanceAttribute({
+        // Encode these points in the batch table.
+        // These will be used to create lines in east-north texture coordinate space.
+        // Distance from an east-north texture coordinate to each line is a desired texture coordinate.
+        var minXYCorner = points2D[0];
+        var maxYCorner = points2D[1];
+        var maxXCorner = points2D[2];
+        attributes.uMaxVmax = new GeometryInstanceAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 4,
             normalize: false,
-            value : [sinTheta, cosTheta, scaleU, scaleV] // Precompute trigonometry for rotation and inverse of scale
+            value : [maxYCorner.x, maxYCorner.y, maxXCorner.x, maxXCorner.y]
+        });
+
+        var inverseExtentX = 1.0 / pointLineDistance(minXYCorner, maxYCorner, maxXCorner);
+        var inverseExtentY = 1.0 / pointLineDistance(minXYCorner, maxXCorner, maxYCorner);
+
+        attributes.uvMinAndExtents = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [minXYCorner.x, minXYCorner.y, inverseExtentX, inverseExtentY]
         });
     }
 
+    var cartographicScratch = new Cartographic();
     var cornerScratch = new Cartesian3();
     var northWestScratch = new Cartesian3();
     var southEastScratch = new Cartesian3();
@@ -585,16 +605,19 @@ define([
      * @see ShadowVolumeAppearance
      * @private
      *
-     * @param {Rectangle} rectangle Rectangle object that the points will approximately bound
+     * @param {Rectangle} boundingRectangle Rectangle object that the points will approximately bound
+     * @param {Rectangle} geometryRectangle If the geometry can be rotated, the bounding rectangle for the unrotated geometry.
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
      * @param {Number} [height=0] The maximum height for the shadow volume.
      * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
+     * @param {Number} [geometryRotation] If the geometry can be rotated, the rotation in radians.
      * @returns {Object} An attributes dictionary containing planar texture coordinate attributes.
      */
-    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(rectangle, ellipsoid, projection, height, textureCoordinateRotation) {
+    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(boundingRectangle, geometryRectangle, ellipsoid, projection, height, textureCoordinateRotation, geometryRotation) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('boundingRectangle', boundingRectangle);
+        Check.typeOf.object('geometryRectangle', geometryRectangle);
         Check.typeOf.object('ellipsoid', ellipsoid);
         Check.typeOf.object('projection', projection);
         //>>includeEnd('debug');
@@ -602,11 +625,10 @@ define([
         var corner = cornerScratch;
         var eastward = eastwardScratch;
         var northward = northwardScratch;
-        computeRectangleBounds(rectangle, ellipsoid, defaultValue(height, 0.0), corner, eastward, northward);
+        computeRectangleBounds(boundingRectangle, ellipsoid, defaultValue(height, 0.0), corner, eastward, northward);
 
-        var attributes = {
-            stSineCosineUVScale : getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation)
-        };
+        var attributes = {};
+        addTextureCoordinateRotationAttributes(attributes, boundingRectangle, geometryRectangle, textureCoordinateRotation, geometryRotation);
 
         var encoded = EncodedCartesian3.fromCartesian(corner, encodeScratch);
         attributes.southWest_HIGH = new GeometryInstanceAttribute({
@@ -634,7 +656,7 @@ define([
             value : Cartesian3.pack(northward, [0, 0, 0])
         });
 
-        add2DTextureCoordinateAttributes(rectangle, projection, attributes);
+        add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes);
         return attributes;
     };
 
@@ -674,27 +696,30 @@ define([
      * @see ShadowVolumeAppearance
      * @private
      *
-     * @param {Rectangle} rectangle Rectangle object that the spherical extents will approximately bound
+     * @param {Rectangle} boundingRectangle Rectangle object that the spherical extents will approximately bound
+     * @param {Rectangle} geometryRectangle If the geometry can be rotated, the bounding rectangle for the unrotated geometry.
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
      * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
+     * @param {Number} [geometryRotation] If the geometry can be rotated, the rotation in radians.
      * @returns {Object} An attributes dictionary containing spherical texture coordinate attributes.
      */
-    ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function(rectangle, ellipsoid, projection, textureCoordinateRotation) {
+    ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function(boundingRectangle, geometryRectangle, ellipsoid, projection, textureCoordinateRotation, geometryRotation) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('boundingRectangle', boundingRectangle);
+        Check.typeOf.object('geometryRectangle', geometryRectangle);
         Check.typeOf.object('ellipsoid', ellipsoid);
         Check.typeOf.object('projection', projection);
         //>>includeEnd('debug');
 
         // rectangle cartographic coords !== spherical because it's on an ellipsoid
-        var southWestExtents = latLongToSpherical(rectangle.south, rectangle.west, ellipsoid, sphericalScratch);
+        var southWestExtents = latLongToSpherical(boundingRectangle.south, boundingRectangle.west, ellipsoid, sphericalScratch);
 
         // Slightly pad extents to avoid floating point error when fragment culling at edges.
         var south = southWestExtents.x - CesiumMath.EPSILON5;
         var west = southWestExtents.y - CesiumMath.EPSILON5;
 
-        var northEastExtents = latLongToSpherical(rectangle.north, rectangle.east, ellipsoid, sphericalScratch);
+        var northEastExtents = latLongToSpherical(boundingRectangle.north, boundingRectangle.east, ellipsoid, sphericalScratch);
         var north = northEastExtents.x + CesiumMath.EPSILON5;
         var east = northEastExtents.y + CesiumMath.EPSILON5;
 
@@ -707,11 +732,11 @@ define([
                 componentsPerAttribute: 4,
                 normalize: false,
                 value : [south, west, latitudeRangeInverse, longitudeRangeInverse]
-            }),
-            stSineCosineUVScale : getTextureCoordinateRotationAttribute(rectangle, ellipsoid, textureCoordinateRotation)
+            })
         };
 
-        add2DTextureCoordinateAttributes(rectangle, projection, attributes);
+        addTextureCoordinateRotationAttributes(attributes, boundingRectangle, geometryRectangle, textureCoordinateRotation, geometryRotation);
+        add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes);
         return attributes;
     };
 
@@ -719,13 +744,13 @@ define([
         return defined(attributes.southWest_HIGH) && defined(attributes.southWest_LOW) &&
             defined(attributes.northward) && defined(attributes.eastward) &&
             defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
-            defined(attributes.stSineCosineUVScale);
+            defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
     };
 
     ShadowVolumeAppearance.hasAttributesForSphericalExtents = function(attributes) {
         return defined(attributes.sphericalExtents) &&
         defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
-        defined(attributes.stSineCosineUVScale);
+        defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
     };
 
     function shouldUseSpherical(rectangle) {

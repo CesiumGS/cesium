@@ -157,6 +157,22 @@ defineSuite([
         }).contextToRender();
     });
 
+    it('has czm_lineDistance', function() {
+        var fs =
+            'void main() { ' +
+            '  vec2 point1 = vec2(0.0, 0.0); ' +
+            '  vec2 point2 = vec2(1.0, 0.0); ' +
+            '  vec2 point = vec2(0.5, 1.0); ' +
+            '  float expected = 1.0; ' +
+            '  float actual = czm_lineDistance(point1, point2, point); ' +
+            '  gl_FragColor = vec4(actual == expected); ' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
     it('has czm_tangentToEyeSpaceMatrix', function() {
         var fs =
             'void main() { ' +

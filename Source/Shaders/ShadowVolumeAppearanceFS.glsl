@@ -10,7 +10,9 @@ varying vec2 v_inversePlaneExtents;
 varying vec4 v_westPlane;
 varying vec4 v_southPlane;
 #endif // SPHERICAL
-varying vec4 v_stSineCosineUVScale;
+varying vec2 v_uvMin;
+varying vec3 v_uMaxAndInverseDistance;
+varying vec3 v_vMaxAndInverseDistance;
 #endif // TEXTURE_COORDINATES
 
 #ifdef PER_INSTANCE_COLOR
@@ -52,21 +54,22 @@ void main(void)
 #endif
 
 #ifdef TEXTURE_COORDINATES
+    vec2 uv;
 #ifdef SPHERICAL
     // Treat world coords as a sphere normal for spherical coordinates
     vec2 sphericalLatLong = czm_approximateSphericalCoordinates(worldCoordinate);
-    float u = (sphericalLatLong.x - v_sphericalExtents.x) * v_sphericalExtents.z;
-    float v = (sphericalLatLong.y - v_sphericalExtents.y) * v_sphericalExtents.w;
+    uv.x = (sphericalLatLong.y - v_sphericalExtents.y) * v_sphericalExtents.w;
+    uv.y = (sphericalLatLong.x - v_sphericalExtents.x) * v_sphericalExtents.z;
 #else // SPHERICAL
     // Unpack planes and transform to eye space
-    float u = czm_planeDistance(v_southPlane, eyeCoordinate.xyz / eyeCoordinate.w) * v_inversePlaneExtents.y;
-    float v = czm_planeDistance(v_westPlane, eyeCoordinate.xyz / eyeCoordinate.w) * v_inversePlaneExtents.x;
+    uv.x = czm_planeDistance(v_westPlane, eyeCoordinate.xyz / eyeCoordinate.w) * v_inversePlaneExtents.x;
+    uv.y = czm_planeDistance(v_southPlane, eyeCoordinate.xyz / eyeCoordinate.w) * v_inversePlaneExtents.y;
 #endif // SPHERICAL
 #endif // TEXTURE_COORDINATES
 
 #ifdef PICK
 #ifdef CULL_FRAGMENTS
-    if (0.0 <= u && u <= 1.0 && 0.0 <= v && v <= 1.0) {
+    if (0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0) {
         gl_FragColor.a = 1.0; // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
         czm_writeDepthClampedToFarPlane();
     }
@@ -76,7 +79,7 @@ void main(void)
 #else // PICK
 
 #ifdef CULL_FRAGMENTS
-    if (u <= 0.0 || 1.0 <= u || v <= 0.0 || 1.0 <= v) {
+    if (uv.x <= 0.0 || 1.0 <= uv.x || uv.y <= 0.0 || 1.0 <= uv.y) {
         discard;
     }
 #endif
@@ -125,8 +128,8 @@ void main(void)
 #endif
 
 #ifdef USES_ST
-    materialInput.st.x = v_stSineCosineUVScale.y * (v - 0.5) * v_stSineCosineUVScale.z + v_stSineCosineUVScale.x * (u - 0.5) * v_stSineCosineUVScale.w + 0.5;
-    materialInput.st.y = v_stSineCosineUVScale.y * (u - 0.5) * v_stSineCosineUVScale.w - v_stSineCosineUVScale.x * (v - 0.5) * v_stSineCosineUVScale.z + 0.5;
+    materialInput.st.x = czm_lineDistance(v_uvMin, v_uMaxAndInverseDistance.xy, uv) * v_uMaxAndInverseDistance.z;
+    materialInput.st.y = czm_lineDistance(v_uvMin, v_vMaxAndInverseDistance.xy, uv) * v_vMaxAndInverseDistance.z;
 #endif
 
     czm_material material = czm_getMaterial(materialInput);
