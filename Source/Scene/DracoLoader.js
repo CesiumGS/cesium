@@ -169,6 +169,7 @@ define([
                 var bufferView = gltf.bufferViews[compressionData.bufferView];
                 var typedArray = arraySlice(gltf.buffers[bufferView.buffer].extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
                 loadResources.primitivesToDecode.enqueue({
+                    isPointCloud : false,
                     mesh : meshId,
                     primitive : primitiveId,
                     array : typedArray,
@@ -209,6 +210,22 @@ define([
         }
 
         return when.all(decodingPromises);
+    };
+
+    /**
+     * Decodes a compressed point cloud. Returns undefined if the task cannot be scheduled.
+     * @private
+     */
+    DracoLoader.decodePointCloud = function(parameters) {
+        if (FeatureDetection.isInternetExplorer()) {
+            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
+        }
+        var decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+        return decoderTaskProcessor.scheduleTask(parameters, [parameters.buffer.buffer]);
     };
 
     return DracoLoader;

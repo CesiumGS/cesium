@@ -21,7 +21,6 @@ define([
         '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
-        '../Core/TaskProcessor',
         '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -37,6 +36,7 @@ define([
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './ClippingPlaneCollection',
+        './DracoLoader',
         './getClipAndStyleCode',
         './getClippingFunction',
         './SceneMode',
@@ -64,7 +64,6 @@ define([
         Plane,
         PrimitiveType,
         RuntimeError,
-        TaskProcessor,
         Transforms,
         Buffer,
         BufferUsage,
@@ -80,6 +79,7 @@ define([
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         ClippingPlaneCollection,
+        DracoLoader,
         getClipAndStyleCode,
         getClippingFunction,
         SceneMode,
@@ -153,7 +153,7 @@ define([
         this._translucentRenderState = undefined;
 
         this._highlightColor = Color.clone(Color.WHITE);
-        this._pointSize = 1.0;
+        this._pointSize = 10.0;
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
@@ -525,6 +525,7 @@ define([
             batchIds : batchIds,
             styleableProperties : styleableProperties,
             draco : {
+                isPointCloud : true,
                 buffer : dracoBuffer,
                 semantics : dracoSemantics,
                 dequantizeInShader : content._dequantizeInShader
@@ -1367,40 +1368,6 @@ define([
     var scratchComputedMatrixIn2D = new Matrix4();
     var scratchModelMatrix = new Matrix4();
 
-    var maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
-    var decoderTaskProcessor;
-    var decoderTaskProcessorReady = false;
-    function getDecoderTaskProcessor() {
-        if (!defined(decoderTaskProcessor)) {
-            decoderTaskProcessor = new TaskProcessor('decodeDracoPointCloud', maxDecodingConcurrency);
-            decoderTaskProcessor.initWebAssemblyModule({
-                modulePath : 'ThirdParty/Workers/draco_wasm_wrapper.js',
-                wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
-                fallbackModulePath : 'ThirdParty/Workers/draco_decoder.js'
-            }).then(function() {
-                decoderTaskProcessorReady = true;
-            });
-        }
-
-        if (decoderTaskProcessorReady) {
-            return decoderTaskProcessor;
-        }
-    }
-
-    // Exposed for testing
-    PointCloud3DTileContent._getDecoderTaskProcessor = getDecoderTaskProcessor;
-
-    function runDecoderTaskProcessor(draco) {
-        if (FeatureDetection.isInternetExplorer()) {
-            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
-        }
-        var decoderTaskProcessor = getDecoderTaskProcessor();
-        if (!defined(decoderTaskProcessor)) {
-            return;
-        }
-        return decoderTaskProcessor.scheduleTask(draco, [draco.buffer.buffer]);
-    }
-
     function decodeDraco(content, context) {
         if (content._decodingState === DecodingState.READY) {
             return false;
@@ -1408,28 +1375,28 @@ define([
         if (content._decodingState === DecodingState.NEEDS_DECODE) {
             var parsedContent = content._parsedContent;
             var draco = parsedContent.draco;
-            var decodePromise = runDecoderTaskProcessor(draco, context);
+            var decodePromise = DracoLoader.decodePointCloud(draco, context);
             if (defined(decodePromise)) {
                 content._decodingState = DecodingState.DECODING;
                 decodePromise.then(function(result) {
                     content._decodingState = DecodingState.READY;
-                    var decodedPositions = defined(result.POSITION) ? result.POSITION.buffer : undefined;
-                    var decodedRgb = defined(result.RGB) ? result.RGB.buffer : undefined;
-                    var decodedRgba = defined(result.RGBA) ? result.RGBA.buffer : undefined;
-                    var decodedNormals = defined(result.NORMAL) ? result.NORMAL.buffer : undefined;
-                    var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.buffer : undefined;
+                    var decodedPositions = defined(result.POSITION) ? result.POSITION.array : undefined;
+                    var decodedRgb = defined(result.RGB) ? result.RGB.array : undefined;
+                    var decodedRgba = defined(result.RGBA) ? result.RGBA.array : undefined;
+                    var decodedNormals = defined(result.NORMAL) ? result.NORMAL.array : undefined;
+                    var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.array : undefined;
                     parsedContent.positions = defaultValue(decodedPositions, parsedContent.positions);
                     parsedContent.colors = defaultValue(defaultValue(decodedRgba, decodedRgb), parsedContent.colors);
                     parsedContent.normals = defaultValue(decodedNormals, parsedContent.normals);
                     parsedContent.batchIds = defaultValue(decodedBatchIds, parsedContent.batchIds);
                     if (content._isQuantizedDraco) {
-                        var quantization = result.POSITION.quantization;
+                        var quantization = result.POSITION.data.quantization;
                         var scale = quantization.range / (1 << quantization.quantizationBits);
                         content._quantizedVolumeScale = Cartesian3.fromElements(scale, scale, scale);
                         content._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
                     }
                     if (content._isOctEncodedDraco) {
-                        content._octEncodedRange = (1 << result.NORMAL.quantization.quantizationBits) - 1.0;
+                        content._octEncodedRange = (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
                     }
                 }).otherwise(function(error) {
                     content._decodingState = DecodingState.FAILED;

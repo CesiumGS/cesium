@@ -97,6 +97,8 @@ define([
         return vertexArray;
     }
 
+    f
+
     function decodeDraco(parameters) {
         var dequantizeInShader = parameters.dequantizeInShader;
         var results = {};
