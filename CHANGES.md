@@ -3,8 +3,21 @@ Change Log
 
 ### 1.46 - 2018-06-01
 
-##### Fixes :wrench:
+##### Deprecated :hourglass_flowing_sand:
+* The `Scene.fxaa` property has been deprecated and will be removed in Cesium 1.47. Use `Scene.postProcessStages.fxaa.enabled`.
 
+##### Additions :tada:
+* Added a post-processing framework. [#5615](https://github.com/AnalyticalGraphicsInc/cesium/pull/5615)
+   * Added `Scene.postProcessStages` which is a collection of post-process stages to be run in order.
+      * Has a built-in `ambientOcclusion` property which will apply screen space ambient occlusion to the scene and run before all stages.
+      * Has a built-in `bloom` property which applies a bloom filter to the scene before all other stages but after the ambient occlusion stage.
+      * Has a built-in `fxaa` property which applies Fast Approximate Anti-aliasing (FXAA) to the scene after all other stages.
+   * Added `PostProcessStageLibrary` which contains several built-in stages that can be added to the collection.
+   * Added `PostProcessStage` which takes a fragment shader that processes the color and depth texture from the stage run before it.
+   * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
+   * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
+
+##### Fixes :wrench:
 * Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
 
 ##### Additions :tada:
