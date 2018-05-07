@@ -347,7 +347,7 @@ define([
          * The sampler to use when sampling this texture.
          * Create a sampler by calling {@link Sampler}.  If this
          * parameter is not specified, a default sampler is used.  The default sampler clamps texture
-         * coordinates in both directions, uses linear filtering for both magnification and minifcation,
+         * coordinates in both directions, uses linear filtering for both magnification and minification,
          * and uses a maximum anisotropy of 1.0.
          * @memberof Texture.prototype
          * @type {Object}

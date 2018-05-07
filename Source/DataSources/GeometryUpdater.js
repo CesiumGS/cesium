@@ -401,8 +401,8 @@ define([
     /**
      * @param {Entity} entity
      * @param {String} propertyName
-     * @param {Object} newValue
-     * @param {Object} oldValue
+     * @param {*} newValue
+     * @param {*} oldValue
      * @private
      */
     GeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
