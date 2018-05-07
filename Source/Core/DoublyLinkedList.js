@@ -31,7 +31,7 @@ define([
 
     /**
      * Adds the item to the end of the list
-     * @param {Object} [item]
+     * @param {*} [item]
      * @return {DoublyLinkedListNode}
      */
     DoublyLinkedList.prototype.add = function(item) {

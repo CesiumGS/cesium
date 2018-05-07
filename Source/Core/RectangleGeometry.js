@@ -339,10 +339,8 @@ define([
         var shadowVolume = options.shadowVolume;
         var offsetAttributeValue = options.offsetAttribute;
         var vertexFormat = options.vertexFormat;
-        var surfaceHeight = options.surfaceHeight;
-        var extrudedHeight = options.extrudedHeight;
-        var minHeight = Math.min(extrudedHeight, surfaceHeight);
-        var maxHeight = Math.max(extrudedHeight, surfaceHeight);
+        var minHeight = options.extrudedHeight;
+        var maxHeight = options.surfaceHeight;
 
         var height = options.height;
         var width = options.width;
@@ -354,9 +352,6 @@ define([
             options.vertexFormat.normal = true;
         }
         var topBottomGeo = constructRectangle(options);
-        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
-            return topBottomGeo;
-        }
 
         var topPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, maxHeight, ellipsoid, false);
         topPositions = new Float64Array(topPositions);
@@ -716,16 +711,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        var rotation = defaultValue(options.rotation, 0.0);
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._rectangle = rectangle;
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84), this._ellipsoid);
-        this._surfaceHeight = defaultValue(options.height, 0.0);
-        this._rotation = rotation;
+        this._surfaceHeight = Math.max(height, extrudedHeight);
+        this._rotation = defaultValue(options.rotation, 0.0);
         this._stRotation = defaultValue(options.stRotation, 0.0);
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT), this._vertexFormat);
-        this._extrudedHeight = defaultValue(options.extrudedHeight, 0.0);
-        this._extrude = defined(options.extrudedHeight);
+        this._extrudedHeight = Math.min(height, extrudedHeight);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
         this._rotatedRectangle = undefined;
@@ -735,7 +731,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
+    RectangleGeometry.packedLength = Rectangle.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
 
     /**
      * Stores the provided instance into the provided array.
@@ -768,7 +764,6 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = value._stRotation;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
         array[startingIndex] = value._offsetAttribute;
 
@@ -819,7 +814,6 @@ define([
         var rotation = array[startingIndex++];
         var stRotation = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var extrude = array[startingIndex++] === 1.0;
         var shadowVolume = array[startingIndex++] === 1.0;
         var offsetAttribute = array[startingIndex];
 
@@ -828,7 +822,7 @@ define([
             scratchOptions.height = surfaceHeight;
             scratchOptions.rotation = rotation;
             scratchOptions.stRotation = stRotation;
-            scratchOptions.extrudedHeight = extrude ? extrudedHeight : undefined;
+            scratchOptions.extrudedHeight = extrudedHeight;
             scratchOptions.shadowVolume = shadowVolume;
             scratchOptions.offsetAttribute = offsetAttribute;
 
@@ -842,8 +836,7 @@ define([
         result._surfaceHeight = surfaceHeight;
         result._rotation = rotation;
         result._stRotation = stRotation;
-        result._extrudedHeight = extrude ? extrudedHeight : undefined;
-        result._extrude = extrude;
+        result._extrudedHeight = extrudedHeight;
         result._shadowVolume = shadowVolume;
         result._offsetAttribute = offsetAttribute;
 
@@ -869,9 +862,6 @@ define([
 
         var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
-        var surfaceHeight = rectangleGeometry._surfaceHeight;
-        var extrude = rectangleGeometry._extrude;
-        var extrudedHeight = rectangleGeometry._extrudedHeight;
         var rotation = rectangleGeometry._rotation;
         var stRotation = rectangleGeometry._stRotation;
         var vertexFormat = rectangleGeometry._vertexFormat;
@@ -887,6 +877,10 @@ define([
         } else {
             Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
+
+        var surfaceHeight = rectangleGeometry._surfaceHeight;
+        var extrudedHeight = rectangleGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         options.lonScalar = 1.0 / rectangleGeometry._rectangle.width;
         options.latScalar = 1.0 / rectangleGeometry._rectangle.height;

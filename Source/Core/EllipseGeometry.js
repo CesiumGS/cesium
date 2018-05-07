@@ -775,9 +775,6 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -798,17 +795,19 @@ define([
         }
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._center = Cartesian3.clone(center, this._center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
         this._ellipsoid = Ellipsoid.clone(ellipsoid, this._ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
         this._stRotation = defaultValue(options.stRotation, 0.0);
-        this._height = height;
+        this._height = Math.max(extrudedHeight, height);
         this._granularity = granularity;
         this._vertexFormat = VertexFormat.clone(vertexFormat, this._vertexFormat);
-        this._extrudedHeight = defaultValue(extrudedHeight, height);
-        this._extrude = extrude;
+        this._extrudedHeight = Math.min(extrudedHeight, height);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
 
@@ -819,7 +818,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 10;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -916,7 +915,6 @@ define([
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var extrude = array[startingIndex++] === 1.0;
         var shadowVolume = array[startingIndex++] === 1.0;
         var offsetAttribute = array[startingIndex];
 
@@ -944,7 +942,6 @@ define([
         result._height = height;
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
-        result._extrude = extrude;
         result._shadowVolume = shadowVolume;
         result._offsetAttribute = offsetAttribute;
 
@@ -962,6 +959,10 @@ define([
             return;
         }
 
+        var height = ellipseGeometry._height;
+        var extrudedHeight = ellipseGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
@@ -969,16 +970,14 @@ define([
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
             ellipsoid : ellipseGeometry._ellipsoid,
             rotation : ellipseGeometry._rotation,
-            height : ellipseGeometry._height,
-            extrudedHeight : ellipseGeometry._extrudedHeight,
+            height : height,
             granularity : ellipseGeometry._granularity,
             vertexFormat : ellipseGeometry._vertexFormat,
             stRotation : ellipseGeometry._stRotation
         };
         var geometry;
-        if (ellipseGeometry._extrude) {
-            options.extrudedHeight = Math.min(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
-            options.height = Math.max(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+        if (extrude) {
+            options.extrudedHeight = extrudedHeight;
             options.shadowVolume = ellipseGeometry._shadowVolume;
             options.offsetAttribute = ellipseGeometry._offsetAttribute;
             geometry = computeExtrudedEllipse(options);

@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
         '../Core/Math',
@@ -48,6 +49,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        GeographicProjection,
         GeographicTilingScheme,
         IndexDatatype,
         CesiumMath,
@@ -480,7 +482,7 @@ define([
         // Use Web Mercator for our texture coordinate computations if this imagery layer uses
         // that projection and the terrain tile falls entirely inside the valid bounds of the
         // projection.
-        var useWebMercatorT = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme &&
+        var useWebMercatorT = imageryProvider.tilingScheme.projection instanceof WebMercatorProjection &&
                               tile.rectangle.north < WebMercatorProjection.MaximumLatitude &&
                               tile.rectangle.south > -WebMercatorProjection.MaximumLatitude;
 
@@ -847,7 +849,7 @@ define([
             });
         }
 
-        if (imageryProvider.tilingScheme instanceof WebMercatorTilingScheme) {
+        if (imageryProvider.tilingScheme.projection instanceof WebMercatorProjection) {
             imagery.textureWebMercator = texture;
         } else {
             imagery.texture = texture;
@@ -932,7 +934,7 @@ define([
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (needGeographicProjection &&
-            !(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            !(this._imageryProvider.tilingScheme.projection instanceof GeographicProjection) &&
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
@@ -1210,7 +1212,7 @@ define([
         var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
-        var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
+        var latitudeFactor = !(layer._imageryProvider.tilingScheme.projection instanceof GeographicProjection) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeRectangle = tilingScheme.rectangle;
         var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * tilingSchemeRectangle.width * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 

@@ -183,9 +183,6 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(center)) {
@@ -205,15 +202,17 @@ define([
         }
         //>>includeEnd('debug');
 
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = defaultValue(options.extrudedHeight, height);
+
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
-        this._height = height;
+        this._height = Math.max(extrudedHeight, height);
         this._granularity = granularity;
-        this._extrudedHeight = extrudedHeight;
-        this._extrude = extrude;
+        this._extrudedHeight = Math.min(extrudedHeight, height);
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
         this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
         this._workerName = 'createEllipseOutlineGeometry';
@@ -223,7 +222,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 10;
+    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 8;
 
     /**
      * Stores the provided instance into the provided array.
@@ -257,9 +256,7 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
-        array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
-        array[startingIndex++] = defaultValue(value._extrudedHeight, 0.0);
-        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++]   = value._numberOfVerticalLines;
         array[startingIndex] = value._offsetAttribute;
 
@@ -309,15 +306,13 @@ define([
         var rotation = array[startingIndex++];
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
-        var hasExtrudedHeight = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var extrude = array[startingIndex++] === 1.0;
         var numberOfVerticalLines = array[startingIndex++];
         var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.height = height;
-            scratchOptions.extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
+            scratchOptions.extrudedHeight = extrudedHeight;
             scratchOptions.granularity = granularity;
             scratchOptions.rotation = rotation;
             scratchOptions.semiMajorAxis = semiMajorAxis;
@@ -335,8 +330,7 @@ define([
         result._rotation = rotation;
         result._height = height;
         result._granularity = granularity;
-        result._extrudedHeight = hasExtrudedHeight ? extrudedHeight : undefined;
-        result._extrude = extrude;
+        result._extrudedHeight = extrudedHeight;
         result._numberOfVerticalLines = numberOfVerticalLines;
         result._offsetAttribute = offsetAttribute;
 
@@ -354,6 +348,10 @@ define([
             return;
         }
 
+        var height = ellipseGeometry._height;
+        var extrudedHeight = ellipseGeometry._extrudedHeight;
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
+
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
@@ -361,15 +359,13 @@ define([
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
             ellipsoid : ellipseGeometry._ellipsoid,
             rotation : ellipseGeometry._rotation,
-            height : ellipseGeometry._height,
-            extrudedHeight : ellipseGeometry._extrudedHeight,
+            height : height,
             granularity : ellipseGeometry._granularity,
             numberOfVerticalLines : ellipseGeometry._numberOfVerticalLines
         };
         var geometry;
-        if (ellipseGeometry._extrude) {
-            options.extrudedHeight = Math.min(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
-            options.height = Math.max(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+        if (extrude) {
+            options.extrudedHeight = extrudedHeight;
             options.offsetAttribute = ellipseGeometry._offsetAttribute;
             geometry = computeExtrudedEllipse(options);
         } else {

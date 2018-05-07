@@ -1,5 +1,6 @@
 define([
         '../Core/buildModuleUrl',
+        '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -16,6 +17,7 @@ define([
         './ImageryProvider'
     ], function(
         buildModuleUrl,
+        Check,
         Credit,
         defaultValue,
         defined,
@@ -128,7 +130,7 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._channel = options.channel;
         this._requestType = 'ImageryMaps';
-        this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + GoogleEarthEnterpriseMapsProvider._logoData + '" title="Google Imagery"/></a>');
+        this._credit = new Credit('<a href="http://www.google.com/enterprise/mapsearth/products/earthenterprise.html"><img src="' + GoogleEarthEnterpriseMapsProvider.logoUrl + '" title="Google Imagery"/></a>');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -597,7 +599,30 @@ define([
         return undefined;
     };
 
-    GoogleEarthEnterpriseMapsProvider._logoData = buildModuleUrl('Assets/Images/google_earth_credit.png');
+    GoogleEarthEnterpriseMapsProvider._logoUrl = undefined;
+
+    defineProperties(GoogleEarthEnterpriseMapsProvider, {
+        /**
+         * Gets or sets the URL to the Google Earth logo for display in the credit.
+         * @memberof GoogleEarthEnterpriseMapsProvider
+         * @type {String}
+         */
+        logoUrl: {
+            get: function() {
+                if (!defined(GoogleEarthEnterpriseMapsProvider._logoUrl)) {
+                    GoogleEarthEnterpriseMapsProvider._logoUrl = buildModuleUrl('Assets/Images/google_earth_credit.png');
+                }
+                return GoogleEarthEnterpriseMapsProvider._logoUrl;
+            },
+            set: function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('value', value);
+                //>>includeEnd('debug');
+
+                GoogleEarthEnterpriseMapsProvider._logoUrl = value;
+            }
+        }
+    });
 
     return GoogleEarthEnterpriseMapsProvider;
 });

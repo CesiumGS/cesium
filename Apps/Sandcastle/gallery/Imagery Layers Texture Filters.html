@@ -55,11 +55,11 @@ var layers = viewer.imageryLayers;
 layers.removeAll();
 
 var layerLinear = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : require.toUrl('Assets/Textures/NaturalEarthII')
+    url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
 }));
 
 var layerNearest = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : require.toUrl('Assets/Textures/NaturalEarthII')
+    url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
 }));
 
 // Set the texture minification and magnification filters of layerNearest. Default is LINEAR.

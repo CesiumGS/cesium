@@ -1024,7 +1024,7 @@ define([
             'varying float v_WindowZ;\n' +
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
-            '#ifdef GL_EXT_frag_depth\n' +
+            '#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)\n' +
             '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
             '#endif\n' +
             '}\n';
@@ -1916,7 +1916,7 @@ define([
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
-     * @param {Object} id The id of the {@link GeometryInstance}.
+     * @param {*} id The id of the {@link GeometryInstance}.
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.

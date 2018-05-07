@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/Rectangle',
         '../Core/Resource',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        GeographicProjection,
         GeographicTilingScheme,
         Rectangle,
         Resource,
@@ -198,7 +200,7 @@ define([
                 // 'global-mercator' and 'global-geodetic' profiles. In the gdal2Tiles case, X and Y are always in
                 // geodetic degrees.
                 var isGdal2tiles = tilingSchemeName === 'geodetic' || tilingSchemeName === 'mercator';
-                if (tilingScheme instanceof GeographicTilingScheme || isGdal2tiles) {
+                if (tilingScheme.projection instanceof GeographicProjection || isGdal2tiles) {
                     sw = Cartographic.fromDegrees(swXY.x, swXY.y);
                     ne = Cartographic.fromDegrees(neXY.x, neXY.y);
                 } else {
