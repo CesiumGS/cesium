@@ -3,9 +3,8 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/FeatureDetection',
+        '../Core/RuntimeError',
         '../Core/TaskProcessor',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/when'
     ], function(
@@ -13,9 +12,8 @@ define([
         ComponentDatatype,
         defined,
         FeatureDetection,
+        RuntimeError,
         TaskProcessor,
-        Buffer,
-        BufferUsage,
         ForEach,
         when) {
     'use strict';
@@ -30,9 +28,18 @@ define([
 
     // Exposed for testing purposes
     DracoLoader._decoderTaskProcessor = undefined;
+    DracoLoader._taskProcessorReady = false;
     DracoLoader._getDecoderTaskProcessor = function () {
         if (!defined(DracoLoader._decoderTaskProcessor)) {
-            DracoLoader._decoderTaskProcessor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            var processor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            processor.initWebAssemblyModule({
+                modulePath : 'ThirdParty/Workers/draco_wasm_wrapper.js',
+                wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
+                fallbackModulePath : 'ThirdParty/Workers/draco_decoder.js'
+            }).then(function () {
+                DracoLoader._taskProcessorReady = true;
+            });
+            DracoLoader._decoderTaskProcessor = processor;
         }
 
         return DracoLoader._decoderTaskProcessor;
@@ -87,6 +94,11 @@ define([
     }
 
     function scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context) {
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+
         var taskData = loadResources.primitivesToDecode.peek();
         if (!defined(taskData)) {
             // All primitives are processing
@@ -175,6 +187,10 @@ define([
     DracoLoader.decode = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
+        }
+
+        if (FeatureDetection.isInternetExplorer()) {
+            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
         }
 
         var loadResources = model._loadResources;

@@ -2842,7 +2842,7 @@ defineSuite([
         var correctResult = new Rectangle(-0.05789100547374969, -0.04365869998457809, 0.05789100547374969, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed in to pole', function() {
@@ -2874,7 +2874,7 @@ defineSuite([
         var correctResult = new Rectangle(3.0837016481160435, -0.04365869998457809, -3.0837016481160435, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed out', function() {

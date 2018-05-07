@@ -1,5 +1,4 @@
 //#define SHOW_TILE_BOUNDARIES
-
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0
@@ -183,6 +182,7 @@ void main()
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
     vec2 waterMaskTextureCoordinates = v_textureCoordinates.xy * waterMaskScale + waterMaskTranslation;
+    waterMaskTextureCoordinates.y = 1.0 - waterMaskTextureCoordinates.y;
 
     float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
 

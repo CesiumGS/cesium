@@ -14,7 +14,7 @@ define([
      * @alias ConstantProperty
      * @constructor
      *
-     * @param {Object} [value] The property value.
+     * @param {*} [value] The property value.
      *
      * @see ConstantPositionProperty
      */
@@ -68,7 +68,7 @@ define([
     /**
      * Sets the value of the property.
      *
-     * @param {Object} value The property value.
+     * @param {*} value The property value.
      */
     ConstantProperty.prototype.setValue = function(value) {
         var oldValue = this._value;

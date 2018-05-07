@@ -98,7 +98,7 @@ defineSuite([
         return testNonImageryExternalResource({
             type: '3DTILES',
             externalType: '3DTILES',
-            options: { url: 'https://test.invalid/tileset.json' },
+            options: { url: 'http://test.invalid/tileset.json' },
             attributions: []
         });
     });
@@ -107,7 +107,7 @@ defineSuite([
         return testNonImageryExternalResource({
             type: 'TERRAIN',
             externalType: 'STK_TERRAIN_SERVER',
-            options: { url: 'https://test.invalid/world' },
+            options: { url: 'http://test.invalid/world' },
             attributions: []
         });
     });
@@ -116,7 +116,7 @@ defineSuite([
         return testNonImageryExternalResource({
             type: 'IMAGERY',
             externalType: 'URL_TEMPLATE',
-            url: 'https://test.invalid/world',
+            url: 'http://test.invalid/world',
             attributions: []
         })
         .then(fail)
@@ -209,7 +209,7 @@ defineSuite([
         var externalEndpoint = {
             type: '3DTILES',
             externalType: '3DTILES',
-            options: { url: 'https://test.invalid/tileset.json' },
+            options: { url: 'http://test.invalid/tileset.json' },
             attributions: []
         };
         var options = {};
@@ -233,7 +233,7 @@ defineSuite([
         var externalEndpoint = {
             type: '3DTILES',
             externalType: '3DTILES',
-            options: { url: 'https://test.invalid/tileset.json' },
+            options: { url: 'http://test.invalid/tileset.json' },
             attributions: []
         };
 

@@ -684,7 +684,7 @@ define([
      * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
-        if (!this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+        if (!defined(this._primitive) && !defined(this.geometryInstances)) {
             return;
         }
 
@@ -784,6 +784,7 @@ define([
             });
         }
 
+        this._primitive.show = this.show;
         this._primitive.debugShowShadowVolume = this.debugShowShadowVolume;
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
@@ -804,7 +805,7 @@ define([
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
-     * @param {Object} id The id of the {@link GeometryInstance}.
+     * @param {*} id The id of the {@link GeometryInstance}.
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
