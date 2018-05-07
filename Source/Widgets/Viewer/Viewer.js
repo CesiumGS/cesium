@@ -1076,6 +1076,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets the post-process stages.
+         * @memberof Viewer.prototype
+         *
+         * @type {PostProcessStageCollection}
+         * @readonly
+         */
+        postProcessStages : {
+            get : function() {
+                return this.scene.postProcessStages;
+            }
+        },
+
+        /**
          * Gets the clock.
          * @memberof Viewer.prototype
          * @type {Clock}
