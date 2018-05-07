@@ -85,7 +85,7 @@ define([
 
         /**
          * Gets or sets the data associated with this interval.
-         * @type {Object}
+         * @type {*}
          */
         this.data = options.data;
 
@@ -394,16 +394,16 @@ define([
      * Function interface for merging interval data.
      * @callback TimeInterval~MergeCallback
      *
-     * @param {Object} leftData The first data instance.
-     * @param {Object} rightData The second data instance.
-     * @returns {Object} The result of merging the two data instances.
+     * @param {*} leftData The first data instance.
+     * @param {*} rightData The second data instance.
+     * @returns {*} The result of merging the two data instances.
      */
 
     /**
      * Function interface for comparing interval data.
      * @callback TimeInterval~DataComparer
-     * @param {Object} leftData The first data instance.
-     * @param {Object} rightData The second data instance.
+     * @param {*} leftData The first data instance.
+     * @param {*} rightData The second data instance.
      * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
      */
 

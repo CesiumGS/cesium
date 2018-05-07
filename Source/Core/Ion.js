@@ -54,7 +54,6 @@ define([
             You can sign up for a free ion account at <a href="https://cesium.com">https://cesium.com</a>.</b>';
 
             defaultTokenCredit = new Credit(defaultTokenMessage, true);
-            console.log(defaultTokenMessage);
         }
 
         return defaultTokenCredit;
