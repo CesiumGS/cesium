@@ -375,7 +375,7 @@ define([
         var solidBatchesLength = solidBatches.length;
         for (i = 0; i < solidBatchesLength; i++) {
             var solidBatch = solidBatches[i];
-            if(solidBatch.contains(updater)){
+            if (solidBatch.contains(updater)){
                 return solidBatch.getBoundingSphere(updater, result);
             }
         }
@@ -384,7 +384,7 @@ define([
         var translucentBatchesLength = translucentBatches.length;
         for (i = 0; i < translucentBatchesLength; i++) {
             var translucentBatch = translucentBatches[i];
-            if(translucentBatch.contains(updater)){
+            if (translucentBatch.contains(updater)){
                 return translucentBatch.getBoundingSphere(updater, result);
             }
         }

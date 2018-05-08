@@ -19,7 +19,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Scene/BlendingState',
-        '../Shaders/PostProcessFilters/PointCloudEyeDomeLighting'
+        '../Shaders/PostProcessStages/PointCloudEyeDomeLighting'
     ], function(
         Cartesian3,
         Color,
