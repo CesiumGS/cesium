@@ -20,6 +20,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
+* Fixed a bug causing intermittent crashes with clippin planes due to uninitialized textures. [#6566](https://github.com/AnalyticalGraphicsInc/cesium/issues/6566)
 
 ### 1.45 - 2018-05-01
 

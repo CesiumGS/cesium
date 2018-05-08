@@ -459,7 +459,8 @@ define([
 
         if (!defined(clippingPlanesTexture)) {
             // Allocate twice as much space as needed to avoid frequent texture reallocation.
-            requiredResolution.x *= 2;
+            // Allocate in the Y direction, since texture may be as wide as context texture support.
+            requiredResolution.y *= 2;
 
             var sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
@@ -663,6 +664,33 @@ define([
      */
     ClippingPlaneCollection.useFloatTexture = function(context) {
         return context.floatingPointTexture;
+    };
+
+    /**
+     * Function for getting the clipping plane collection's texture resolution.
+     * If the ClippingPlaneCollection hasn't been updated, returns the resolution that will be
+     * allocated based on the current plane count.
+     *
+     * @param {ClippingPlaneCollection} clippingPlaneCollection The clipping plane collection
+     * @param {Context} context The rendering context
+     * @param {Cartesian2} result A Cartesian2 for the result.
+     * @returns {Cartesian2} The required resolution.
+     * @private
+     */
+    ClippingPlaneCollection.getTextureResolution = function(clippingPlaneCollection, context, result) {
+        var texture = clippingPlaneCollection.texture;
+        if (defined(texture)) {
+            result.x = texture.width;
+            result.y = texture.height;
+            return result;
+        }
+
+        var pixelsNeeded = ClippingPlaneCollection.useFloatTexture(context) ? clippingPlaneCollection.length : clippingPlaneCollection.length * 2;
+        var requiredResolution = computeTextureResolution(pixelsNeeded, result);
+
+        // Allocate twice as much space as needed to avoid frequent texture reallocation.
+        requiredResolution.y *= 2;
+        return requiredResolution;
     };
 
     /**
