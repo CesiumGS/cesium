@@ -200,7 +200,6 @@ defineSuite([
         var positions = encodePositions(rectangle, minHeight, maxHeight, cartoPositions);
 
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-        batchTable.update(mockTileset, scene.frameState);
 
         var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
 
@@ -221,6 +220,8 @@ defineSuite([
 
             var features = [];
             polylines.createFeatures(mockTileset, features);
+
+            var getFeature = mockTileset.getFeature;
             mockTileset.getFeature = function(index) {
                 return features[index];
             };
@@ -231,7 +232,7 @@ defineSuite([
                 expect(result).toBe(features[0]);
             });
 
-            mockTileset.getFeature = undefined;
+            mockTileset.getFeature = getFeature;
         });
     });
 

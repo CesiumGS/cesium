@@ -210,7 +210,6 @@ defineSuite([
         var positions = encodePositions(rectangle, minHeight, maxHeight, cartoPositions);
 
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-        batchTable.update(mockTileset, scene.frameState);
 
         points = scene.primitives.add(new Vector3DTilePoints({
             positions : positions,
