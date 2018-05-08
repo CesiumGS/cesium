@@ -68,7 +68,8 @@ defineSuite([
         },
         tileset : {
             ellipsoid : Ellipsoid.WGS84
-        }
+        },
+        getFeature : function(id) { return { batchId : id }; }
     };
 
     beforeEach(function() {

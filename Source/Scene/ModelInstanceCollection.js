@@ -156,6 +156,9 @@ define([
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
 
+        this._pickIdLoaded = options.pickIdLoaded;
+        this._pickIdDeclarationsLoaded = options.pickIdDeclarationsLoaded;
+
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
 
@@ -555,9 +558,8 @@ define([
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
             uniformMapLoaded : undefined,
-            pickVertexShaderLoaded : undefined,
-            pickFragmentShaderLoaded : undefined,
-            pickUniformMapLoaded : undefined,
+            pickIdDeclarationsLoaded : collection._pickIdDeclarationsLoaded,
+            pickIdLoaded : collection._pickIdLoaded,
             ignoreCommands : true,
             opaquePass : collection._opaquePass
         };

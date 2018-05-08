@@ -992,7 +992,7 @@ define([
          */
         pickId : {
             get : function() {
-                if (this._glyphs.length === 0) {
+                if (this._glyphs.length === 0 || !defined(this._glyphs[0].billboard)) {
                     return undefined;
                 }
                 return this._glyphs[0].billboard.pickId;

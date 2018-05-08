@@ -838,12 +838,12 @@ defineSuite([
             model.clippingPlanes = clippingPlanes;
 
             scene.renderForSpecs();
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
 
             clippingPlanes.unionClippingRegions = true;
 
             scene.renderForSpecs();
-            expect(Model._getClippingFunction.calls.count()).toEqual(4);
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
 
             primitives.remove(model);
         });

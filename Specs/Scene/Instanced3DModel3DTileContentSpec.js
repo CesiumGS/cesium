@@ -287,19 +287,18 @@ defineSuite([
             var batchTexturesByteLength = content.featuresLength * 4;
             var pickTexturesByteLength = content.featuresLength * 4;
 
-            // Features have not been picked or colored yet, so the batch table contribution is 0.
+            // Only the pick texture memory has been created.
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
-            expect(content.batchTableByteLength).toEqual(0);
+            expect(content.batchTableByteLength).toEqual(pickTexturesByteLength);
 
             // Color a feature and expect the texture memory to increase
             content.getFeature(0).color = Color.RED;
             scene.renderForSpecs();
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
-            expect(content.batchTableByteLength).toEqual(batchTexturesByteLength);
+            expect(content.batchTableByteLength).toEqual(batchTexturesByteLength + pickTexturesByteLength);
 
-            // Pick the tile and expect the texture memory to increase
             scene.pickForSpecs();
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
@@ -351,7 +350,7 @@ defineSuite([
             content.clippingPlanesDirty = true;
             tile.update(tileset, scene.frameState);
 
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
         });
     });
 

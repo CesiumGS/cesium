@@ -3146,6 +3146,7 @@ define([
                     pickId = 'czm_pickColor';
                 }
             }
+
             var command = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
