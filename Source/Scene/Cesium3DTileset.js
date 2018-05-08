@@ -1435,8 +1435,25 @@ define([
 
         ++statistics.numberOfPendingRequests;
 
+        var removeFunction = removeFromProcessingQueue(tileset, tile);
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
-        tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).otherwise(handleTileFailure(tileset, tile));
+        tile.contentReadyPromise.then(function() {
+            removeFunction();
+            tileset.tileLoad.raiseEvent(tile);
+        }).otherwise(function(error) {
+            removeFunction();
+            var url = tile._contentResource.url;
+            var message = defined(error.message) ? error.message : error.toString();
+            if (tileset.tileFailed.numberOfListeners > 0) {
+                tileset.tileFailed.raiseEvent({
+                    url : url,
+                    message : message
+                });
+            } else {
+                console.log('A 3D tile failed to load: ' + url);
+                console.log('Error: ' + message);
+            }
+        });
     }
 
     function requestTiles(tileset, outOfCore) {
@@ -1459,32 +1476,15 @@ define([
         };
     }
 
-    function handleTileFailure(tileset, tile) {
-        return function(error) {
-            if (tileset._processingQueue.indexOf(tile) >= 0) {
-                // Failed during processing
-                --tileset._statistics.numberOfTilesProcessing;
-            } else {
-                // Failed when making request
-                --tileset._statistics.numberOfPendingRequests;
-            }
-
-            var url = tile._contentResource.url;
-            var message = defined(error.message) ? error.message : error.toString();
-            if (tileset.tileFailed.numberOfListeners > 0) {
-                tileset.tileFailed.raiseEvent({
-                    url : url,
-                    message : message
-                });
-            } else {
-                console.log('A 3D tile failed to load: ' + url);
-                console.log('Error: ' + message);
-            }
-        };
-    }
-
-    function handleTileSuccess(tileset, tile) {
+    function removeFromProcessingQueue(tileset, tile) {
         return function() {
+            if (tile._contentState === Cesium3DTileContentState.FAILED) {
+                // Not in processing queue
+                // For example, when a url request fails and the ready promise is rejected
+                --tileset._statistics.numberOfPendingRequests;
+                return;
+            }
+
             --tileset._statistics.numberOfTilesProcessing;
 
             if (tile.hasRenderableContent) {
@@ -1498,8 +1498,6 @@ define([
                     tile.replacementNode = tileset._replacementList.add(tile);
                 }
             }
-
-            tileset.tileLoad.raiseEvent(tile);
         };
     }
 
