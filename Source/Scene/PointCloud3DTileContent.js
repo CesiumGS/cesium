@@ -448,12 +448,12 @@ define([
                 throw new RuntimeError('DRACO.semantics, DRACO.byteOffset, and DRACO.byteLength must be defined');
             }
 
-            var dracoHasPositions = dracoSemantics.indexOf('POSITION') >= 0;
-            var dracoHasRGB = dracoSemantics.indexOf('RGB') >= 0;
-            var dracoHasRGBA = dracoSemantics.indexOf('RGBA') >= 0;
-            var dracoHasColors = dracoHasRGB || dracoHasRGBA;
-            var dracoHasNormals = dracoSemantics.indexOf('NORMAL') >= 0;
-            var dracoHasBatchIds = dracoSemantics.indexOf('BATCH_ID') >= 0;
+            var dracoHasPositions = (dracoSemantics.indexOf('POSITION') >= 0);
+            var dracoHasRGB = (dracoSemantics.indexOf('RGB') >= 0);
+            var dracoHasRGBA = (dracoSemantics.indexOf('RGBA') >= 0);
+            var dracoHasColors = (dracoHasRGB || dracoHasRGBA);
+            var dracoHasNormals = (dracoSemantics.indexOf('NORMAL') >= 0);
+            var dracoHasBatchIds = (dracoSemantics.indexOf('BATCH_ID') >= 0);
             dracoBuffer = arraySlice(featureTableBinary, dracoByteOffset, dracoByteOffset + dracoByteLength);
 
             if (dracoHasPositions) {
@@ -686,9 +686,7 @@ define([
                 u_quantizedVolumeScaleAndOctEncodedRange : function() {
                     var scratch = scratchQuantizedVolumeScaleAndOctEncodedRange;
                     if (defined(content._quantizedVolumeScale)) {
-                        scratch.x = content._quantizedVolumeScale.x;
-                        scratch.y = content._quantizedVolumeScale.y;
-                        scratch.z = content._quantizedVolumeScale.z;
+                        Cartesian3.clone(content._quantizedVolumeScale, scratch);
                     }
                     scratch.w = content._octEncodedRange;
                     return scratch;
@@ -1011,8 +1009,8 @@ define([
             pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
 
-        var usesColorSemantic = styleableProperties.indexOf('COLOR') >= 0;
-        var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
+        var usesColorSemantic = (styleableProperties.indexOf('COLOR') >= 0);
+        var usesNormalSemantic = (styleableProperties.indexOf('NORMAL') >= 0);
 
         // Split default properties from user properties
         var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
