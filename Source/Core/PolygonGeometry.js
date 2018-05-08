@@ -800,7 +800,7 @@ define([
 
         var height = polygonGeometry._height;
         var extrudedHeight = polygonGeometry._extrudedHeight;
-        var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON2);
+        var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var options = {
             perPositionHeight: perPositionHeight,

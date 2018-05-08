@@ -29,6 +29,7 @@ define([
             name : 'Bing Maps Aerial',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
             tooltip : 'Bing Maps aerial imagery, provided by Cesium ion',
+            category: 'Cesium ion',
             creationFunction : function() {
                 return createWorldImagery({
                     style : IonWorldImageryStyle.AERIAL
@@ -40,6 +41,7 @@ define([
             name : 'Bing Maps Aerial with Labels',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerialLabels.png'),
             tooltip : 'Bing Maps aerial imagery with labels, provided by Cesium ion',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return createWorldImagery({
                     style : IonWorldImageryStyle.AERIAL_WITH_LABELS
@@ -51,6 +53,7 @@ define([
             name : 'Bing Maps Roads',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingRoads.png'),
             tooltip : 'Bing Maps standard road maps, provided by Cesium ion',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return createWorldImagery({
                     style : IonWorldImageryStyle.ROAD
@@ -182,6 +185,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             name : 'Sentinel-2',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/sentinel-2.png'),
             tooltip : 'Sentinel-2 cloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 and 2017).',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return new IonImageryProvider({ assetId: 3954 });
             }
@@ -191,6 +195,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             name : 'Blue Marble',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/blueMarble.png'),
             tooltip : 'Blue Marble Next Generation July, 2004 imagery from NASA.',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return new IonImageryProvider({ assetId: 3845 });
             }
@@ -200,6 +205,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             name : 'Earth at night',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/earthAtNight.png'),
             tooltip : 'The Earth at night, also known as The Black Marble, is a 500 meter resolution global composite imagery layer released by NASA.',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return new IonImageryProvider({ assetId: 3812 });
             }
@@ -209,6 +215,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             name : 'Natural Earth\u00a0II',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return createTileMapServiceImageryProvider({
                     url : buildModuleUrl('Assets/Textures/NaturalEarthII')

@@ -913,7 +913,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse, { nodir: true }).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1260,7 +1260,8 @@ function buildCesiumViewer() {
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {
-                    base : 'Build/Cesium'
+                    base : 'Build/Cesium',
+                    nodir : true
                 }),
 
             gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {

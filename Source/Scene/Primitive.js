@@ -1889,7 +1889,7 @@ define([
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
-     * @param {Object} id The id of the {@link GeometryInstance}.
+     * @param {*} id The id of the {@link GeometryInstance}.
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.

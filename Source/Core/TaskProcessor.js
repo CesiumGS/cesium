@@ -224,7 +224,7 @@ define([
      * Otherwise, returns a promise that will resolve to the result posted back by the worker when
      * finished.
      *
-     * @param {*} parameters Any input data that will be posted to the worker.
+     * @param {Object} parameters Any input data that will be posted to the worker.
      * @param {Object[]} [transferableObjects] An array of objects contained in parameters that should be
      *                                      transferred to the worker instead of copied.
      * @returns {Promise.<Object>|undefined} Either a promise that will resolve to the result when available, or undefined

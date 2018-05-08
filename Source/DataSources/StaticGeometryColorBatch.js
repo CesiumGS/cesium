@@ -295,24 +295,6 @@ define([
         return BoundingSphereState.DONE;
     };
 
-    Batch.prototype.removeAllPrimitives = function() {
-        var primitives = this.primitives;
-
-        var primitive = this.primitive;
-        if (defined(primitive)) {
-            primitives.remove(primitive);
-            this.primitive = undefined;
-            this.geometry.removeAll();
-            this.updaters.removeAll();
-        }
-
-        var oldPrimitive = this.oldPrimitive;
-        if (defined(oldPrimitive)) {
-            primitives.remove(oldPrimitive);
-            this.oldPrimitive = undefined;
-        }
-    };
-
     Batch.prototype.destroy = function() {
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -323,7 +305,7 @@ define([
         if (defined(oldPrimitive)) {
             primitives.remove(oldPrimitive);
         }
-        if(defined(this.removeMaterialSubscription)) {
+        if (defined(this.removeMaterialSubscription)) {
             this.removeMaterialSubscription();
         }
     };
@@ -452,7 +434,7 @@ define([
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var item = items[i];
-            if(item.contains(updater)){
+            if (item.contains(updater)){
                 return item.getBoundingSphere(updater, result);
             }
         }

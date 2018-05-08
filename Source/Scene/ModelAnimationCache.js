@@ -114,6 +114,12 @@ define([
     ConstantSpline.prototype.evaluate = function(time, result) {
         return this._value;
     };
+    ConstantSpline.prototype.wrapTime = function(time) {
+        return 0.0;
+    };
+    ConstantSpline.prototype.clampTime = function(time) {
+        return 0.0;
+    };
 
     ModelAnimationCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, input, path, output) {
         var key = getAnimationSplineKey(model, animationName, samplerName);

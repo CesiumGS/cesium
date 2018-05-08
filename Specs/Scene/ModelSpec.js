@@ -125,6 +125,7 @@ defineSuite([
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
     var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
+    var emissiveUrl = './Data/Models/PBR/BoxEmissive/BoxEmissive.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
 
@@ -1605,6 +1606,34 @@ defineSuite([
         expect(animations.update()).toEqual(false);
     });
 
+    it('animates a single keyframe', function() {
+        return Resource.fetchJson(animBoxesUrl).then(function(gltf) {
+            gltf.accessors['animAccessor_0'].count = 1;
+            gltf.accessors['animAccessor_1'].count = 1;
+
+            return loadModelJson(gltf).then(function(m) {
+                m.show = true;
+                var node = m.getNode('inner_box');
+                var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+                var animations = m.activeAnimations;
+                animations.add({
+                    name : 'animation_0',
+                    startTime : time
+                });
+
+                expect(node.matrix).toEqual(Matrix4.IDENTITY);
+                var previousMatrix = Matrix4.clone(node.matrix);
+
+                for (var i = 1; i < 4; ++i) {
+                    var t = JulianDate.addSeconds(time, i, new JulianDate());
+                    scene.renderForSpecs(t);
+                    expect(node.matrix).toEqual(previousMatrix);
+                }
+                primitives.remove(m);
+            });
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('renders riggedFigure without animation', function() {
@@ -2243,11 +2272,26 @@ defineSuite([
         });
     });
 
-    it('load a glTF 2.0 with vertex colors', function() {
+    it('loads a glTF 2.0 with vertex colors', function() {
         return loadModel(vertexColorTestUrl).then(function(m) {
             m.show = true;
             checkVertexColors(m);
             primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with an emissive texture and no normals', function() {
+        return loadModel(emissiveUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Emissive texture is red
+                expect(rgba[0]).toBeGreaterThan(10);
+                expect(rgba[1]).toBeLessThan(10);
+                expect(rgba[2]).toBeLessThan(10);
+            });
+
+            primitives.remove(model);
         });
     });
 
