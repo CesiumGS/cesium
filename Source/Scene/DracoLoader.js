@@ -169,7 +169,6 @@ define([
                 var bufferView = gltf.bufferViews[compressionData.bufferView];
                 var typedArray = arraySlice(gltf.buffers[bufferView.buffer].extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
                 loadResources.primitivesToDecode.enqueue({
-                    isPointCloud : false,
                     mesh : meshId,
                     primitive : primitiveId,
                     array : typedArray,

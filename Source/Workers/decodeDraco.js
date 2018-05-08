@@ -271,10 +271,10 @@ define([
     }
 
     function decode(parameters) {
-        if (parameters.isPointCloud) {
-            return decodePointCloud(parameters);
+        if (defined(parameters.primitive)) {
+            return decodePrimitive(parameters);
         }
-        return decodePrimitive(parameters);
+        return decodePointCloud(parameters);
     }
 
     function initWorker(dracoModule) {

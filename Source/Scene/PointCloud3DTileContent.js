@@ -525,7 +525,6 @@ define([
             batchIds : batchIds,
             styleableProperties : styleableProperties,
             draco : {
-                isPointCloud : true,
                 buffer : dracoBuffer,
                 semantics : dracoSemantics,
                 dequantizeInShader : content._dequantizeInShader
