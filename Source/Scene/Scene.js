@@ -2061,7 +2061,7 @@ define([
 
         var passes = frameState.passes;
         if (passes.pick || passes.depth) {
-            if (passes.pick && defined(command.derivedCommands.picking)) {
+            if (passes.pick && !passes.depth && defined(command.derivedCommands.picking)) {
                 command = command.derivedCommands.picking.pickCommand;
                 command.execute(context, passState);
                 return;

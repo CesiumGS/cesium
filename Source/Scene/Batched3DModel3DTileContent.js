@@ -241,12 +241,6 @@ define([
         };
     }
 
-    function getPickIdDeclarationsCallback(content) {
-        return function() {
-            return content._batchTable.getPickIdDeclarations();
-        };
-    }
-
     function getClassificationFragmentShaderCallback(content) {
         return function(fs) {
             var batchTable = content._batchTable;
@@ -407,7 +401,6 @@ define([
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 fragmentShaderLoaded : getFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
-                pickIdDeclarationsLoaded : getPickIdDeclarationsCallback(content),
                 pickIdLoaded : getPickIdCallback(content),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject
@@ -426,7 +419,6 @@ define([
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
-                pickIdDeclarationsLoaded : getPickIdDeclarationsCallback(content),
                 pickIdLoaded : getPickIdCallback(content),
                 classificationType : tileset._classificationType,
                 batchTable : batchTable

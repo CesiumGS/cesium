@@ -1102,6 +1102,8 @@ define([
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
+                    'uniform sampler2D tile_pickTexture;\n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1111,6 +1113,7 @@ define([
             } else {
                 source +=
                     'uniform sampler2D tile_batchTexture; \n' +
+                    'uniform sampler2D tile_pickTexture;\n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1179,10 +1182,6 @@ define([
         return 'texture2D(tile_pickTexture, tile_featureSt)';
     };
 
-    Cesium3DTileBatchTable.prototype.getPickIdDeclarations = function() {
-        return 'uniform sampler2D tile_pickTexture; \n' +
-               'varying vec2 tile_featureSt; \n';
-    };
     ///////////////////////////////////////////////////////////////////////////
 
     var StyleCommandsNeeded = {

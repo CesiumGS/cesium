@@ -845,7 +845,7 @@ define([
         return modifiedVS;
     };
 
-    function appendPickToShader(source) {
+    function appendPickToVertexShader(source) {
         var renamedVS = ShaderSource.replaceMain(source, 'czm_non_pick_main');
         var pickMain = 'varying vec4 v_pickColor; \n' +
                        'void main() \n' +
@@ -855,6 +855,10 @@ define([
                        '}';
 
         return renamedVS + '\n' + pickMain;
+    }
+
+    function appendPickToFragmentShader(source) {
+        return 'varying vec4 v_pickColor;\n' + source;
     }
 
     Primitive._updatePickColorAttribute = function(source) {
@@ -1005,7 +1009,7 @@ define([
             '    vec4 position = gl_Position;\n' +
             '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
             '    position.z = min(position.z, position.w);\n' +
-            '    gl_Position = position;' +
+            '    gl_Position = position;\n' +
             '}\n';
         return modifiedVS;
     }
@@ -1401,11 +1405,12 @@ define([
         var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
-        vs = appendPickToShader(vs);
+        vs = appendPickToVertexShader(vs);
         vs = Primitive._updateColorAttribute(primitive, vs, false);
         vs = modifyForEncodedNormals(primitive, vs);
         vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         var fs = appearance.getFragmentShaderSource();
+        fs = appendPickToFragmentShader(fs);
 
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
@@ -1420,12 +1425,15 @@ define([
             vs = primitive._batchTable.getVertexShaderCallback()(primitive._depthFailAppearance.vertexShaderSource);
             vs = Primitive._appendShowToShader(primitive, vs);
             vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
+            vs = appendPickToVertexShader(vs);
             vs = Primitive._updateColorAttribute(primitive, vs, true);
             vs = modifyForEncodedNormals(primitive, vs);
             vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
             vs = depthClampVS(vs);
 
-            fs = depthClampFS(primitive._depthFailAppearance.getFragmentShaderSource());
+            fs = primitive._depthFailAppearance.getFragmentShaderSource();
+            fs = appendPickToFragmentShader(fs);
+            fs = depthClampFS(fs);
 
             primitive._spDepthFail = ShaderProgram.replaceCache({
                 context : context,
@@ -1643,10 +1651,8 @@ define([
 
                 if (allowPicking) {
                     colorCommand.pickId = 'v_pickColor';
-                    colorCommand.pickIdDeclarations = 'varying vec4 v_pickColor;';
                 } else {
                     colorCommand.pickId = undefined;
-                    colorCommand.pickIdDeclarations = undefined;
                 }
 
                 commandList.push(colorCommand);

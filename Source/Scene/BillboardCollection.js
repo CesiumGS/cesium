@@ -1659,11 +1659,9 @@ define([
 
             var uniforms = this._uniforms;
             var pickId;
-            var pickIdDeclarations;
             if (defined(this._batchTable)) {
                 uniforms = this._batchTable.getUniformMapCallback()(uniforms);
                 pickId = this._batchTable.getPickId();
-                pickIdDeclarations = this._batchTable.getPickIdDeclarations();
             } else {
                 pickId = 'v_pickColor';
             }
@@ -1691,7 +1689,6 @@ define([
                 command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
                 command.pickId = pickId;
-                command.pickIdDeclarations = pickIdDeclarations;
 
                 if (this._instanced) {
                     command.count = 6;

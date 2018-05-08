@@ -157,7 +157,6 @@ define([
         this._shadows = this.shadows;
 
         this._pickIdLoaded = options.pickIdLoaded;
-        this._pickIdDeclarationsLoaded = options.pickIdDeclarationsLoaded;
 
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
@@ -368,6 +367,8 @@ define([
                 var gltf = collection._model.gltf;
                 var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
                 fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
+            } else {
+                fs = 'varying vec4 v_pickColor;\n' + fs;
             }
             return fs;
         };
@@ -417,6 +418,20 @@ define([
                 vs = 'uniform float a_batchId\n;' + vs;
             }
             return vs;
+        };
+    }
+
+    function getFragmentShaderNonInstancedCallback(collection) {
+        return function(fs, programId) {
+            var batchTable = collection._batchTable;
+            if (defined(batchTable)) {
+                var gltf = collection._model.gltf;
+                var diffuseAttributeOrUniformName = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseAttributeOrUniformName)(fs);
+            } else {
+                fs = 'uniform vec4 czm_pickColor;\n' + fs;
+            }
+            return fs;
         };
     }
 
@@ -558,7 +573,6 @@ define([
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
             uniformMapLoaded : undefined,
-            pickIdDeclarationsLoaded : collection._pickIdDeclarationsLoaded,
             pickIdLoaded : collection._pickIdLoaded,
             ignoreCommands : true,
             opaquePass : collection._opaquePass
@@ -644,7 +658,7 @@ define([
             }
         } else {
             modelOptions.vertexShaderLoaded = getVertexShaderNonInstancedCallback(collection);
-            modelOptions.fragmentShaderLoaded = getFragmentShaderCallback(collection);
+            modelOptions.fragmentShaderLoaded = getFragmentShaderNonInstancedCallback(collection);
             modelOptions.uniformMapLoaded = getUniformMapNonInstancedCallback(collection, context);
         }
 
@@ -694,10 +708,8 @@ define([
             drawCommand.cull = cull;
             if (defined(collection._batchTable)) {
                 drawCommand.pickId = collection._batchTable.getPickId();
-                drawCommand.pickIdDeclarations = collection._batchTable.getPickIdDeclarations();
             } else {
                 drawCommand.pickId = 'v_pickColor';
-                drawCommand.pickIdDeclarations = 'varying vec4 v_pickColor;';
             }
             collection._drawCommands.push(drawCommand);
         }

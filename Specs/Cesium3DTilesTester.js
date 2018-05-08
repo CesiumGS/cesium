@@ -128,7 +128,11 @@ define([
     };
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
-        var tileset = {};
+        var tileset = {
+            _statistics : {
+                batchTableByteLength : 0
+            }
+        };
         var url = Resource.createIfNeeded('');
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
@@ -175,7 +179,7 @@ define([
     };
 
     Cesium3DTilesTester.generateBatchedTileBuffer = function(options) {
-        // Procedurally generate the tile array buffer for testing purposes
+        // Proce durally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [98, 51, 100, 109]);
         var version = defaultValue(options.version, 1);

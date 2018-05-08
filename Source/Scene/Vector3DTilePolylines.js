@@ -437,8 +437,7 @@ define([
                 uniformMap : uniformMap,
                 boundingVolume : primitive._boundingVolume,
                 pass : Pass.TRANSLUCENT,
-                pickId : primitive._batchTable.getPickId(),
-                pickIdDeclarations : primitive._batchTable.getPickIdDeclarations()
+                pickId : primitive._batchTable.getPickId()
             });
         }
 

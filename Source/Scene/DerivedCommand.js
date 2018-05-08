@@ -215,54 +215,32 @@ define([
         return result;
     };
 
-    function getPickShaderProgram(context, shaderProgram, pickId, pickIdDeclarations) {
+    function getPickShaderProgram(context, shaderProgram, pickId) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'pick');
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
             var fs = shaderProgram.fragmentShaderSource;
 
-            var writesDepthOrDiscards = false;
             var sources = fs.sources;
             var length = sources.length;
-            var i;
-            for (i = 0; i < length; ++i) {
-                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
-                    writesDepthOrDiscards = true;
-                    break;
-                }
-            }
 
-            var newMain;
-            if (!writesDepthOrDiscards) {
-                newMain =
-                    defaultValue(pickIdDeclarations, '') + '\n' +
-                    'void main() \n' +
-                    '{ \n' +
-                    '    gl_FragColor = ' + pickId + '; \n' +
-                    '} \n';
-                fs = new ShaderSource({
-                    sources : [newMain]
-                });
-            } else {
-                newMain =
-                    'void main() \n' +
-                    '{ \n' +
-                    '    czm_non_pick_main(); \n' +
-                    '    if (gl_FragColor.a == 0.0) { \n' +
-                    '        discard; \n' +
-                    '    } \n' +
-                    '    gl_FragColor = ' + pickId + '; \n' +
-                    '} \n';
-                var newSources = new Array(length + 1);
-                for (i = 0; i < length; ++i) {
-                    newSources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_pick_main');
-                }
-                newSources[length] = newMain;
-                fs = new ShaderSource({
-                    sources : newSources
-                });
+            var newMain =
+                'void main() \n' +
+                '{ \n' +
+                '    czm_non_pick_main(); \n' +
+                '    if (gl_FragColor.a == 0.0) { \n' +
+                '        discard; \n' +
+                '    } \n' +
+                '    gl_FragColor = ' + pickId + '; \n' +
+                '} \n';
+            var newSources = new Array(length + 1);
+            for (var i = 0; i < length; ++i) {
+                newSources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_pick_main');
             }
-
+            newSources[length] = newMain;
+            fs = new ShaderSource({
+                sources : newSources
+            });
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'pick', {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
@@ -302,7 +280,7 @@ define([
         result.pickCommand = DrawCommand.shallowClone(command, result.pickCommand);
 
         if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.pickCommand.shaderProgram = getPickShaderProgram(context, command.shaderProgram, command.pickId, command.pickIdDeclarations);
+            result.pickCommand.shaderProgram = getPickShaderProgram(context, command.shaderProgram, command.pickId);
             result.pickCommand.renderState = getPickRenderState(scene, command.renderState);
             result.shaderProgramId = command.shaderProgram.id;
         } else {

@@ -573,7 +573,6 @@ define([
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickIdDeclarationsLoaded = options.pickIdDeclarationsLoaded;
         this._pickIdLoaded = options.pickIdLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
@@ -2005,6 +2004,10 @@ define([
         drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
         drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
+        if (!defined(model._uniformMapLoaded)) {
+            drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
+
         createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
 
@@ -2037,6 +2040,10 @@ define([
 
         drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
         drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+
+        if (!defined(model._uniformMapLoaded)) {
+            drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
 
         createAttributesAndProgram(id, drawFS, drawVS, model, context);
     }
@@ -3136,13 +3143,10 @@ define([
                 uniformMap = combine(uniformMap, pickUniforms);
             }
 
-            var pickIdDeclarations;
             if (allowPicking) {
                 if (defined(model._pickIdLoaded) && defined(model._uniformMapLoaded)) {
-                    pickIdDeclarations = model._pickIdDeclarationsLoaded();
                     pickId = model._pickIdLoaded();
                 } else {
-                    pickIdDeclarations = 'uniform vec4 czm_pickColor;';
                     pickId = 'czm_pickColor';
                 }
             }
@@ -3162,7 +3166,6 @@ define([
                 renderState : rs,
                 owner : owner,
                 pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass,
-                pickIdDeclarations : pickIdDeclarations,
                 pickId : pickId
             });
 

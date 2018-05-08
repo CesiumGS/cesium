@@ -220,12 +220,6 @@ define([
         };
     }
 
-    function getPickIdDeclarationsCallback(content) {
-        return function() {
-            return content._batchTable.getPickIdDeclarations();
-        };
-    }
-
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var propertyScratch1 = new Array(4);
     var propertyScratch2 = new Array(4);
@@ -327,7 +321,6 @@ define([
             incrementallyLoadTextures : false,
             upAxis : content._tileset._gltfUpAxis,
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
-            pickIdDeclarationsLoaded : getPickIdDeclarationsCallback(content),
             pickIdLoaded : getPickIdCallback(content)
         };
 

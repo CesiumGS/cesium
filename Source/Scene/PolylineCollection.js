@@ -639,7 +639,6 @@ define([
                             command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
                             command.debugShowBoundingVolume = debugShowBoundingVolume;
                             command.pickId = 'v_pickColor';
-                            command.pickIdDeclarations = 'varying vec4 v_pickColor;';
 
                             command.uniformMap = uniformMap;
                             command.count = count;
@@ -710,7 +709,6 @@ define([
                     command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
                     command.debugShowBoundingVolume = debugShowBoundingVolume;
                     command.pickId = 'v_pickColor';
-                    command.pickIdDeclarations = 'varying vec4 v_pickColor;';
 
                     command.uniformMap = uniformMap;
                     command.count = count;
@@ -1184,7 +1182,7 @@ define([
 
         var fs = new ShaderSource({
             defines : defines,
-            sources : [this.material.shaderSource, PolylineFS]
+            sources : ['varying vec4 v_pickColor;\n', this.material.shaderSource, PolylineFS]
         });
 
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);

@@ -163,7 +163,6 @@ define([
         this._attributeLocations = options._attributeLocations;
         this._uniformMap = options._uniformMap;
         this._pickId = options._pickId;
-        this._pickIdDeclarations = options._pickIdDeclarations;
         this._modelMatrix = options._modelMatrix;
         this._boundingSphere = options._boundingSphere;
 
@@ -278,7 +277,6 @@ define([
         var batchTable = primitive._batchTable;
         var attributeLocations = defaultValue(primitive._attributeLocations, defaultAttributeLocations);
 
-        var pickIdDeclarations = primitive._pickIdDeclarations;
         var pickId = primitive._pickId;
         var vertexShaderSource = primitive._vertexShaderSource;
         var fragmentShaderSource = primitive._fragmentShaderSource;
@@ -294,7 +292,6 @@ define([
             fragmentShaderSource = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_pick_main');
             fragmentShaderSource =
                 fragmentShaderSource +
-                defaultValue(pickIdDeclarations, '') + '\n' +
                 'void main() \n' +
                 '{ \n' +
                 '    czm_non_pick_main(); \n' +

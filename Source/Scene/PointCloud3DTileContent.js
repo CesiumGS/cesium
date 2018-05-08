@@ -736,12 +736,10 @@ define([
 
         var drawUniformMap = uniformMap;
         var pickId;
-        var pickIdDeclaration;
 
         if (hasBatchTable) {
             drawUniformMap = batchTable.getUniformMapCallback()(uniformMap);
             pickId = batchTable.getPickId();
-            pickIdDeclaration = batchTable.getPickIdDeclarations();
         } else {
             content._pickId = context.createPickId({
                 primitive : content._tileset,
@@ -753,7 +751,6 @@ define([
                 }
             });
             pickId = 'czm_pickColor';
-            pickIdDeclaration = 'uniform vec4 czm_pickColor;';
         }
 
         content._opaqueRenderState = RenderState.fromCache({
@@ -784,8 +781,7 @@ define([
             owner : content,
             castShadows : false,
             receiveShadows : false,
-            pickId : pickId,
-            pickIdDeclarations : pickIdDeclaration
+            pickId : pickId
         });
     }
 
@@ -1106,7 +1102,13 @@ define([
 
         vs += '} \n';
 
-        var fs = 'varying vec4 v_color; \n';
+        var fs = '';
+
+        if (!hasBatchTable) {
+            fs += 'uniform vec4 czm_pickColor;\n';
+        }
+
+        fs += 'varying vec4 v_color; \n';
 
         if (hasClippedContent) {
             fs += 'uniform sampler2D u_clippingPlanes; \n' +

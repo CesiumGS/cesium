@@ -224,7 +224,6 @@ define([
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._classificationShaderLoaded = options.classificationShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickIdDeclarationsLoaded = options.pickIdDeclarationsLoaded;
         this._pickIdLoaded = options.pickIdLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
@@ -959,13 +958,7 @@ define([
         var vertexShaderSource = shader.vertexShaderSource;
         var fragmentShaderSource = shader.fragmentShaderSource;
         var attributeLocations = shader.attributeLocations;
-
-        var pickId;
-        var pickIdDeclarations;
-        if (defined(model._pickIdLoaded)) {
-            pickId = model._pickIdLoaded();
-            pickIdDeclarations = model._pickIdDeclarationsLoaded();
-        }
+        var pickId = defined(model._pickIdLoaded) ? model._pickIdLoaded() : undefined;
 
         model._primitive = new Vector3DTilePrimitive({
             classificationType : model._classificationType,
@@ -983,7 +976,6 @@ define([
             _attributeLocations : attributeLocations,
             _uniformMap : uniformMap,
             _pickId : pickId,
-            _pickIdDeclarations : pickIdDeclarations,
             _modelMatrix : new Matrix4(), // updated in update()
             _boundingSphere : boundingSphere // used to update boundingVolume
         });

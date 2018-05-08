@@ -226,6 +226,8 @@ defineSuite([
             var features = [];
             points.createFeatures(mockTileset, features);
             points.applyStyle(scene.frameState, undefined, features);
+
+            var getFeature = mockTileset.getFeature;
             mockTileset.getFeature = function(index) {
                 return features[index];
             };
@@ -237,7 +239,7 @@ defineSuite([
             });
             scene.frameState.passes.pick = false;
 
-            mockTileset.getFeature = undefined;
+            mockTileset.getFeature = getFeature;
         });
     });
 
