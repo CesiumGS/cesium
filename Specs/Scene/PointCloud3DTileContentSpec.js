@@ -15,6 +15,7 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
+        'Scene/DracoLoader',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
@@ -38,6 +39,7 @@ defineSuite([
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,
+        DracoLoader,
         Expression,
         Cesium3DTilesTester,
         createCanvas,
@@ -59,8 +61,8 @@ defineSuite([
     var pointCloudNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded';
     var pointCloudQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized';
     var pointCloudQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded';
-    var pointCloudDraco1Url = './Data/Cesium3DTiles/PointCloud/PointCloudDraco1';
-    var pointCloudDraco2Url = './Data/Cesium3DTiles/PointCloud/PointCloudDraco2';
+    var pointCloudDracoUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDraco';
+    var pointCloudDracoPartialUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDracoPartial';
     var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
@@ -244,7 +246,7 @@ defineSuite([
             // Draco decoding is not currently supported in IE
             return;
         }
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco1Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
@@ -254,7 +256,7 @@ defineSuite([
             // Draco decoding is not currently supported in IE
             return;
         }
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco2Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoPartialUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
@@ -265,11 +267,11 @@ defineSuite([
             return;
         }
         return pollToPromise(function() {
-            return defined(PointCloud3DTileContent._getDecoderTaskProcessor());
+            return DracoLoader._taskProcessorReady;
         }).then(function() {
-            var decoder = PointCloud3DTileContent._getDecoderTaskProcessor();
+            var decoder = DracoLoader._getDecoderTaskProcessor();
             spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
-            return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco1Url).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
                 var root = tileset._root;
                 return root.contentReadyPromise.then(function() {
                     fail('should not resolve');
@@ -282,7 +284,7 @@ defineSuite([
 
     it('throws error if attempting to decode draco in Internet Explorer', function() {
         spyOn(FeatureDetection, 'isInternetExplorer').and.returnValue(true);
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDraco1Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
             var root = tileset._root;
             return root.contentReadyPromise.then(function() {
                 fail('should not resolve');
