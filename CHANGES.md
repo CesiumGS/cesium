@@ -16,13 +16,10 @@ Change Log
    * Added `PostProcessStage` which takes a fragment shader that processes the color and depth texture from the stage run before it.
    * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
    * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
+* Added support for loading Draco compressed Point Cloud tiles for 2-3x better compression [#6559](https://github.com/AnalyticalGraphicsInc/cesium/pull/6559)
 
 ##### Fixes :wrench:
 * Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
-
-##### Additions :tada:
-
-* Added support for loading Draco encoded Point Cloud tiles [#6559](https://github.com/AnalyticalGraphicsInc/cesium/pull/6559)
 
 ### 1.45 - 2018-05-01
 
