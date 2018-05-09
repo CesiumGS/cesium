@@ -1448,7 +1448,8 @@ define([
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
-        if (frameState.passes.pick) {
+        var passes = frameState.passes;
+        if (passes.pick || passes.postProcess) {
             createPickTexture(this, context);
         }
 

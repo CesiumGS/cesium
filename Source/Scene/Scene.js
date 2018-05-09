@@ -1585,6 +1585,7 @@ define([
         passes.render = false;
         passes.pick = false;
         passes.depth = false;
+        passes.postProcess = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -3224,6 +3225,7 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
+        frameState.passes.postProcess = scene.postProcessStages.hasSelectedFeatures;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;
