@@ -20,6 +20,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
+* `ProviderViewModel`s with no category are displayed in an untitled group in `BaseLayerPicker` instead of being labeled as `'Other'` [#6574](https://github.com/AnalyticalGraphicsInc/cesium/pull/6574)
 
 ### 1.45 - 2018-05-01
 
