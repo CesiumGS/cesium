@@ -12,8 +12,10 @@ Change Log
       * Has a built-in `ambientOcclusion` property which will apply screen space ambient occlusion to the scene and run before all stages.
       * Has a built-in `bloom` property which applies a bloom filter to the scene before all other stages but after the ambient occlusion stage.
       * Has a built-in `fxaa` property which applies Fast Approximate Anti-aliasing (FXAA) to the scene after all other stages.
-   * Added `PostProcessStageLibrary` which contains several built-in stages that can be added to the collection.
    * Added `PostProcessStage` which takes a fragment shader that processes the color and depth texture from the stage run before it.
+      * Has a `selectedFeatures` property which is an array of primitives used for selectively applying a post-process stage. In the fragment shader, use the function `bool czm_selected(vec2 textureCoordinates` to determine whether or not the stage should be applied at that fragment.
+   * Added `PostProcessStageLibrary` which contains several built-in stages that can be added to the collection.
+      * The black-and-white and silhouette stages have per-feature support.
    * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
    * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
 

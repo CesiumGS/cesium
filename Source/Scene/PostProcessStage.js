@@ -348,6 +348,17 @@ define([
         },
         /**
          * The features selected for applying the post-process.
+         * <p>
+         * In the fragment shader, use <code>czm_selected</code> to determine whether or not to apply the post-process
+         * stage to that fragment. For example:
+         * <code>
+         * if (czm_selected(v_textureCoordinates)) {
+         *     // apply post-process stage
+         * } else {
+         *     gl_FragColor = texture2D(colorTexture, v_textureCordinates);
+         * }
+         * </code>
+         * </p>
          *
          * @memberof PostProcessStageComposite.prototype
          * @type {Array}
