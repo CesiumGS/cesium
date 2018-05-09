@@ -192,6 +192,7 @@ define([
                !Property.isConstant(ellipse.stRotation) || //
                !Property.isConstant(ellipse.outlineWidth) || //
                !Property.isConstant(ellipse.numberOfVerticalLines) || //
+               !Property.isConstant(ellipse.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 

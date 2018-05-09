@@ -4,17 +4,19 @@ define([
     '../Core/defineProperties',
     '../Core/Iso8601',
     '../Core/oneTimeWarning',
-    './GeometryUpdater',
-    './Property'
+    './ConstantProperty',
+    './GeometryUpdater'
 ], function(
     defaultValue,
     defined,
     defineProperties,
     Iso8601,
     oneTimeWarning,
-    GeometryUpdater,
-    Property) {
+    ConstantProperty,
+    GeometryUpdater) {
     'use strict';
+
+    var defaultZIndex = new ConstantProperty(0);
 
     /**
      * An abstract class for updating ground geometry entities.
@@ -62,12 +64,11 @@ define([
         if (!defined(geometry)) {
             return;
         }
-        var zIndex = Property.getValueOrUndefined(geometry.zIndex, Iso8601.MINIMUM_VALUE);
-        if (defined(zIndex) && (this._dynamic || !Property.isConstant(geometry.zIndex) || defined(this._options.height) || defined(this._options.extrudedHeight))) {
+        if (defined(geometry.zIndex) && (defined(geometry.height) || defined(geometry.extrudedHeight))) {
             oneTimeWarning(oneTimeWarning.geometryZIndex);
         }
 
-        this._zIndex = defaultValue(zIndex, 0);
+        this._zIndex = defaultValue(geometry.zIndex, defaultZIndex);
     };
 
     return GroundGeometryUpdater;

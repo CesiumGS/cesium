@@ -213,6 +213,9 @@ define([
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
+        // Used when inserting in an OrderedPrimitiveCollection
+        this._zIndex = undefined;
+
         var that = this;
         this._primitiveOptions = {
             geometryInstances : undefined,

@@ -189,6 +189,7 @@ define([
                !Property.isConstant(corridor.width) || //
                !Property.isConstant(corridor.outlineWidth) || //
                !Property.isConstant(corridor.cornerType) || //
+               !Property.isConstant(corridor.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
