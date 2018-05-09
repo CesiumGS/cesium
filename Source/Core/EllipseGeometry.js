@@ -675,6 +675,27 @@ define([
         return rectangle;
     }
 
+    var scratchEllipseGeometry = new EllipseGeometry({
+        center : Cartesian3.ZERO,
+        semiMajorAxis : 2,
+        semiMinorAxis : 1
+    });
+    function computeUnrotatedTextureRectangle(ellipseGeometry) {
+        var rotatedEllipse = scratchEllipseGeometry;
+        rotatedEllipse._center = Cartesian3.clone(ellipseGeometry._center, rotatedEllipse._center);
+        rotatedEllipse._semiMajorAxis = ellipseGeometry._semiMajorAxis;
+        rotatedEllipse._semiMinorAxis = ellipseGeometry._semiMinorAxis;
+        rotatedEllipse._ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid, rotatedEllipse._ellipsoid);
+        rotatedEllipse._granularity = ellipseGeometry._granularity;
+
+        // Rotate to align the texture coordinates with ENU
+        // Ellipse texture rotation is backwards, so + instead of -
+        rotatedEllipse._rotation = ellipseGeometry._rotation + ellipseGeometry._stRotation;
+        rotatedEllipse._rectangle = undefined;
+
+        return computeRectangle(rotatedEllipse);
+    }
+
     /**
      * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -755,6 +776,7 @@ define([
         this._workerName = 'createEllipseGeometry';
 
         this._rectangle = undefined;
+        this._unrotatedTextureRectangle = undefined;
     }
 
     /**
@@ -963,6 +985,17 @@ define([
                     this._rectangle = computeRectangle(this);
                 }
                 return this._rectangle;
+            }
+        },
+        /**
+         * @private
+         */
+        unrotatedTextureRectangle : {
+            get : function() {
+                if (!defined(this._unrotatedTextureRectangle)) {
+                    this._unrotatedTextureRectangle = computeUnrotatedTextureRectangle(this);
+                }
+                return this._unrotatedTextureRectangle;
             }
         }
     });

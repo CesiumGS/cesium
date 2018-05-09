@@ -580,6 +580,24 @@ define([
         return Rectangle.fromCartesianArray(positions, rectangleGeometry._ellipsoid);
     }
 
+    var scratchRectangleGeometry = new RectangleGeometry({
+        rectangle : new Rectangle()
+    });
+    function computeUnrotatedTextureRectangle(rectangleGeometry) {
+        var rotatedRectangle = scratchRectangleGeometry;
+
+        rotatedRectangle._rectangle = Rectangle.clone(rectangleGeometry._rectangle, rotatedRectangle._rectangle);
+        rotatedRectangle._granularity = rectangleGeometry._granularity;
+        rotatedRectangle._ellipsoid = Ellipsoid.clone(rectangleGeometry._ellipsoid, rotatedRectangle._ellipsoid);
+        rotatedRectangle._surfaceHeight = rectangleGeometry._surfaceHeight;
+
+        // Rotate to align the texture coordinates with ENU
+        rotatedRectangle._rotation = rectangleGeometry._rotation - rectangleGeometry._stRotation;
+
+        var result = computeRectangle(rotatedRectangle);
+        return Rectangle.clone(result);
+    }
+
     /**
      * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -651,6 +669,8 @@ define([
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createRectangleGeometry';
         this._rotatedRectangle = undefined;
+
+        this._unrotatedTextureRectangle = undefined;
     }
 
     /**
@@ -871,6 +891,17 @@ define([
                     this._rotatedRectangle = computeRectangle(this);
                 }
                 return this._rotatedRectangle;
+            }
+        },
+        /**
+         * @private
+         */
+        unrotatedTextureRectangle : {
+            get : function() {
+                if (!defined(this._unrotatedTextureRectangle)) {
+                    this._unrotatedTextureRectangle = computeUnrotatedTextureRectangle(this);
+                }
+                return this._unrotatedTextureRectangle;
             }
         }
     });

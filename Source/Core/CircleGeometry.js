@@ -184,6 +184,14 @@ define([
             get : function() {
                 return this._ellipseGeometry.rectangle;
             }
+        },
+        /**
+         * @private
+         */
+        unrotatedTextureRectangle : {
+            get : function() {
+                return this._ellipseGeometry.unrotatedTextureRectangle;
+            }
         }
     });
 

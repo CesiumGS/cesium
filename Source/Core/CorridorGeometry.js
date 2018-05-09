@@ -1045,6 +1045,14 @@ define([
                 }
                 return this._rectangle;
             }
+        },
+        /**
+         * @private
+         */
+        unrotatedTextureRectangle : {
+            get : function() {
+                return this.rectangle;
+            }
         }
     });
 
