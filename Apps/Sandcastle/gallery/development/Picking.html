@@ -481,7 +481,7 @@ Sandcastle.reset = function() {
     handler = handler && handler.destroy();
     viewer.scene.camera.flyHome(0.0);
     if (!(viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider)) {
-        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider()
+        viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
     }
 };
 //Sandcastle_End
