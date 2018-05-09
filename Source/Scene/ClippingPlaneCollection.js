@@ -503,9 +503,12 @@ define([
         }
         if (!this._multipleDirtyPlanes) {
             // partial updates possible
-            var offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
-            var offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
+            var offsetX = 0;
+            var offsetY = 0;
             if (useFloatTexture) {
+                offsetY = Math.floor(dirtyIndex / clippingPlanesTexture.width);
+                offsetX = Math.floor(dirtyIndex - offsetY * clippingPlanesTexture.width);
+
                 packPlanesAsFloats(this, dirtyIndex, dirtyIndex + 1);
                 clippingPlanesTexture.copyFrom({
                     width : 1,
@@ -513,6 +516,9 @@ define([
                     arrayBufferView : this._float32View
                 }, offsetX, offsetY);
             } else {
+                offsetY = Math.floor((dirtyIndex * 2) / clippingPlanesTexture.width);
+                offsetX = Math.floor((dirtyIndex * 2) - offsetY * clippingPlanesTexture.width);
+
                 packPlanesAsUint8(this, dirtyIndex, dirtyIndex + 1);
                 clippingPlanesTexture.copyFrom({
                     width : 2,
