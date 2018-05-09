@@ -253,6 +253,8 @@ define([
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
+        this._useFragmentCulling = false;
+
         var that = this;
         this._classificationPrimitiveOptions = {
             geometryInstances : undefined,
@@ -686,6 +688,13 @@ define([
 
         if (passes.pick) {
             var pickLength = pickCommands.length;
+
+            var pickOffsets;
+            if (!groundPrimitive._useFragmentCulling) {
+                // Must be using pick offsets
+                classificationPrimitive = groundPrimitive._primitive;
+                pickOffsets = classificationPrimitive._primitive._pickOffsets;
+            }
             for (var j = 0; j < pickLength; ++j) {
                 var pickCommand = pickCommands[j];
 
@@ -695,10 +704,15 @@ define([
                     classificationPrimitive._needs2DShader) {
                     pickCommand = pickCommand.derivedCommands.pick2D;
                 }
+                var bv = boundingVolumes[boundingVolumeIndex(j, pickLength)];
+                if (!groundPrimitive._useFragmentCulling) {
+                    var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
+                    bv = boundingVolumes[pickOffset.index];
+                }
 
                 pickCommand.owner = groundPrimitive;
                 pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(j, pickLength)];
+                pickCommand.boundingVolume = bv;
                 pickCommand.cull = cull;
                 pickCommand.pass = pass;
 
@@ -806,64 +820,66 @@ define([
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
 
-            // Determine whether to add spherical or planar extent attributes for computing texture coordinates.
-            // This depends on the size of the GeometryInstances.
+            var useFragmentCulling = GroundPrimitive._supportsMaterials(frameState.context);
+            this._useFragmentCulling = useFragmentCulling;
 
-            // If all the GeometryInstances have the same per-instance color,
-            // don't bother with texture coordinates at all.
-            var allSameColor = false;
-            var color;
-            var attributes;
-            if (length > 0 && defined(instances[0].attributes) && defined(instances[0].attributes.color)) {
-                color = instances[0].attributes.color;
-                allSameColor = true;
-            }
-            var usePlanarExtents = true;
-            for (i = 0; i < length; ++i) {
-                instance = instances[i];
-                geometry = instance.geometry;
-                rectangle = getRectangle(frameState, geometry);
-                if (ShadowVolumeAppearance.shouldUseSphericalCoordinates(rectangle)) {
-                    usePlanarExtents = false;
+            if (useFragmentCulling) {
+                // Determine whether to add spherical or planar extent attributes for computing texture coordinates.
+                // This depends on the size of the GeometryInstances.
+                var attributes;
+                var usePlanarExtents = true;
+                for (i = 0; i < length; ++i) {
+                    instance = instances[i];
+                    geometry = instance.geometry;
+                    rectangle = getRectangle(frameState, geometry);
+                    if (ShadowVolumeAppearance.shouldUseSphericalCoordinates(rectangle)) {
+                        usePlanarExtents = false;
+                        break;
+                    }
                 }
-                attributes = instance.attributes;
-                if (defined(color) && defined(attributes) && defined(attributes.color)) {
-                    allSameColor = allSameColor && ColorGeometryInstanceAttribute.equals(color, attributes.color);
-                }
-            }
 
-            for (i = 0; i < length; ++i) {
-                instance = instances[i];
-                geometry = instance.geometry;
-                instanceType = geometry.constructor;
+                for (i = 0; i < length; ++i) {
+                    instance = instances[i];
+                    geometry = instance.geometry;
+                    instanceType = geometry.constructor;
 
-                var boundingRectangle = getRectangle(frameState, geometry);
-                var unrotatedTextureRectangle = geometry.unrotatedTextureRectangle;
-                var texcoordRotation = getStRotation(geometry);
+                    var boundingRectangle = getRectangle(frameState, geometry);
+                    var unrotatedTextureRectangle = geometry.unrotatedTextureRectangle;
+                    var texcoordRotation = getStRotation(geometry);
 
-                if (!allSameColor) {
                     if (usePlanarExtents) {
                         attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, unrotatedTextureRectangle, ellipsoid, frameState.mapProjection, this._maxHeight, texcoordRotation);
                     } else {
                         attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, unrotatedTextureRectangle, ellipsoid, frameState.mapProjection, texcoordRotation);
                     }
-                } else {
-                    attributes = {};
-                }
 
-                var instanceAttributes = instance.attributes;
-                for (var attributeKey in instanceAttributes) {
-                    if (instanceAttributes.hasOwnProperty(attributeKey)) {
-                        attributes[attributeKey] = instanceAttributes[attributeKey];
+                    var instanceAttributes = instance.attributes;
+                    for (var attributeKey in instanceAttributes) {
+                        if (instanceAttributes.hasOwnProperty(attributeKey)) {
+                            attributes[attributeKey] = instanceAttributes[attributeKey];
+                        }
                     }
-                }
 
-                groundInstances[i] = new GeometryInstance({
-                    geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
-                        getComputeMaximumHeightFunction(this)),
-                    attributes : attributes,
-                    id : instance.id
-                });
+                    groundInstances[i] = new GeometryInstance({
+                        geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
+                            getComputeMaximumHeightFunction(this)),
+                        attributes : attributes,
+                        id : instance.id
+                    });
+                }
+            } else {
+                // ClassificationPrimitive will check if the colors are all the same if it detects lack of fragment culling attributes
+                for (i = 0; i < length; ++i) {
+                    instance = instances[i];
+                    geometry = instance.geometry;
+                    instanceType = geometry.constructor;
+                    groundInstances[i] = new GeometryInstance({
+                        geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
+                            getComputeMaximumHeightFunction(this)),
+                        attributes : instance.attributes,
+                        id : instance.id
+                    });
+                }
             }
 
             primitiveOptions.geometryInstances = groundInstances;
@@ -971,6 +987,17 @@ define([
     };
 
     /**
+     * Exposed for testing.
+     *
+     * @param {Context} context Rendering context
+     * @returns {Boolean} Whether or not the current context supports materials on GroundPrimitives.
+     * @private
+     */
+    GroundPrimitive._supportsMaterials = function(context) {
+        return context.depthTexture;
+    };
+
+    /**
      * Checks if the given Scene supports materials on GroundPrimitives.
      * Materials on GroundPrimitives require support for the WEBGL_depth_texture extension.
      *
@@ -982,7 +1009,7 @@ define([
         Check.typeOf.object('scene', scene);
         //>>includeEnd('debug');
 
-        return scene.frameState.context.depthTexture;
+        return GroundPrimitive._supportsMaterials(scene.frameState.context);
     };
 
     return GroundPrimitive;

@@ -206,6 +206,8 @@ define([
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
 
+        this._usePickOffsets = false;
+
         this._primitiveOptions = {
             geometryInstances : undefined,
             appearance : undefined,
@@ -764,8 +766,20 @@ define([
     }
 
     function createPickCommands(classificationPrimitive, pickCommands) {
+        var usePickOffsets = classificationPrimitive._usePickOffsets;
+
         var primitive = classificationPrimitive._primitive;
         var length = primitive._va.length * 3; // each geometry (pack of vertex attributes) needs 3 commands: front/back stencils and fill
+
+        // Fallback for batching same-color geometry instances
+        var pickOffsets;
+        var pickIndex = 0;
+        var pickOffset;
+        if (usePickOffsets) {
+            pickOffsets = primitive._pickOffsets;
+            length = pickOffsets.length * 3;
+        }
+
         pickCommands.length = length;
 
         var j;
@@ -777,6 +791,10 @@ define([
 
         for (j = 0; j < length; j += 3) {
             var vertexArray = primitive._va[vaIndex++];
+            if (usePickOffsets) {
+                pickOffset = pickOffsets[pickIndex++];
+                vertexArray = primitive._va[pickOffset.index];
+            }
 
             // stencil preload command
             command = pickCommands[j];
@@ -791,6 +809,10 @@ define([
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            if (usePickOffsets) {
+                command.offset = pickOffset.offset;
+                command.count = pickOffset.count;
+            }
 
             // stencil depth command
             command = pickCommands[j + 1];
@@ -805,6 +827,10 @@ define([
             command.renderState = classificationPrimitive._rsStencilDepthPass;
             command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            if (usePickOffsets) {
+                command.offset = pickOffset.offset;
+                command.count = pickOffset.count;
+            }
 
             // pick color command
             command = pickCommands[j + 2];
@@ -819,6 +845,10 @@ define([
             command.renderState = classificationPrimitive._rsPickPass;
             command.shaderProgram = classificationPrimitive._spPick;
             command.uniformMap = uniformMap;
+            if (usePickOffsets) {
+                command.offset = pickOffset.offset;
+                command.count = pickOffset.count;
+            }
 
             // derive for 2D if texture coordinates are ever computed
             if (needs2DShader) {
@@ -956,6 +986,8 @@ define([
             var attributes;
 
             var hasPerColorAttribute = false;
+            var allColorsSame = true;
+            var firstColor;
             var hasSphericalExtentsAttribute = false;
             var hasPlanarExtentsAttributes = false;
 
@@ -965,12 +997,13 @@ define([
                 // So don't check for mismatch.
                 hasSphericalExtentsAttribute = ShadowVolumeAppearance.hasAttributesForSphericalExtents(attributes);
                 hasPlanarExtentsAttributes = ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(attributes);
+                firstColor = attributes.color;
             }
 
             for (i = 0; i < length; i++) {
                 instance = instances[i];
-                attributes = instance.attributes;
-                if (defined(attributes.color)) {
+                var color = instance.attributes.color;
+                if (defined(color)) {
                     hasPerColorAttribute = true;
                 }
                 //>>includeStart('debug', pragmas.debug);
@@ -978,6 +1011,14 @@ define([
                     throw new DeveloperError('All GeometryInstances must have color attributes to use per-instance color.');
                 }
                 //>>includeEnd('debug');
+
+                allColorsSame = allColorsSame && defined(color) && ColorGeometryInstanceAttribute.equals(firstColor, color);
+            }
+
+            // If no attributes exist for computing spherical extents or fragment culling,
+            // throw if the colors aren't all the same.
+            if (!allColorsSame && !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes) {
+                throw new DeveloperError('All GeometryInstances must have the same color attribute except via GroundPrimitives');
             }
 
             // default to a color appearance
@@ -997,6 +1038,7 @@ define([
             }
             //>>includeEnd('debug');
 
+            this._usePickOffsets = !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes;
             this._hasSphericalExtentsAttribute = hasSphericalExtentsAttribute;
             this._hasPlanarExtentsAttributes = hasPlanarExtentsAttributes;
             this._hasPerColorAttribute = hasPerColorAttribute;

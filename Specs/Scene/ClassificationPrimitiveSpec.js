@@ -778,6 +778,67 @@ defineSuite([
         });
     });
 
+    it('update throws when batched instance colors are different and no culling attributes are provided', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        var neCarto = Rectangle.northeast(rectangle);
+        var nwCarto = Rectangle.northwest(rectangle);
+
+        var ne = ellipsoid.cartographicToCartesian(neCarto);
+        var nw = ellipsoid.cartographicToCartesian(nwCarto);
+
+        var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+        var distance = Cartesian3.magnitude(direction) * 0.25;
+        Cartesian3.normalize(direction, direction);
+        Cartesian3.multiplyByScalar(direction, distance, direction);
+
+        var center = Rectangle.center(rectangle);
+        var origin = ellipsoid.cartographicToCartesian(center);
+
+        var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+
+        var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+
+        var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+        var boxInstance1 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
+            }),
+            modelMatrix : modelMatrix,
+            id : 'box1',
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0))
+            }
+        });
+
+        Cartesian3.negate(direction, direction);
+        var origin2 = Cartesian3.add(origin, direction, new Cartesian3());
+        modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+
+        var boxInstance2 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
+            }),
+            modelMatrix : modelMatrix,
+            id : 'box2',
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 0.0, 1.0, 1.0))
+            }
+        });
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance1, boxInstance2],
+            asynchronous : false
+        });
+
+        expect(function() {
+            verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
+        }).toThrowDeveloperError();
+    });
+
     it('update throws when one batched instance color is undefined', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;

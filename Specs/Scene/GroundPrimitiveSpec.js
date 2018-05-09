@@ -866,6 +866,27 @@ defineSuite([
         });
     });
 
+    it('picking without depth texture', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        spyOn(GroundPrimitive, '_supportsMaterials').and.callFake(function() {
+            return false;
+        });
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance,
+            asynchronous : false
+        });
+
+        verifyGroundPrimitiveRender(primitive, rectColor);
+
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.id).toEqual('rectangle');
+        });
+    });
+
     it('does not pick when allowPicking is false', function() {
         if (!GroundPrimitive.isSupported(scene)) {
             return;
@@ -947,6 +968,47 @@ defineSuite([
                 expect(primitive.ready).toBe(true);
             });
         });
+    });
+
+    it('update throws when batched instance colors are different and materials on GroundPrimitives are not supported', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+        spyOn(GroundPrimitive, '_supportsMaterials').and.callFake(function() {
+            return false;
+        });
+
+        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+        var rectangleInstance1 = new GeometryInstance({
+            geometry : new RectangleGeometry({
+                ellipsoid : ellipsoid,
+                rectangle : new Rectangle(rectangle.west, rectangle.south, rectangle.east, (rectangle.north + rectangle.south) * 0.5)
+            }),
+            id : 'rectangle1',
+            attributes : {
+                color : rectColorAttribute
+            }
+        });
+        rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
+        var rectangleInstance2 = new GeometryInstance({
+            geometry : new RectangleGeometry({
+                ellipsoid : ellipsoid,
+                rectangle : new Rectangle(rectangle.west, (rectangle.north + rectangle.south) * 0.5, rectangle.east, rectangle.north)
+            }),
+            id : 'rectangle2',
+            attributes : {
+                color : rectColorAttribute
+            }
+        });
+
+        primitive = new GroundPrimitive({
+            geometryInstances : [rectangleInstance1, rectangleInstance2],
+            asynchronous : false
+        });
+
+        expect(function() {
+            verifyGroundPrimitiveRender(primitive, rectColorAttribute.value);
+        }).toThrowDeveloperError();
     });
 
     it('update throws when one batched instance color is undefined', function() {
