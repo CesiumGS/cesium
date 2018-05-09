@@ -264,6 +264,22 @@ defineSuite([
         expect(r.west).toEqualEpsilon(-CesiumMath.PI, CesiumMath.EPSILON7);
     });
 
+    it('computing unrotatedTextureRectangle property', function() {
+        var center = Cartesian3.fromDegrees(0, 0);
+        var ellipse = new EllipseGeometry({
+            center : center,
+            semiMajorAxis : 2000.0,
+            semiMinorAxis : 1000.0,
+            stRotation : CesiumMath.toRadians(45)
+        });
+
+        var r = ellipse.unrotatedTextureRectangle;
+        expect(r.north).toEqualEpsilon(0.00024947054494468227 , CesiumMath.EPSILON7);
+        expect(r.south).toEqualEpsilon(-0.00024947054494468227, CesiumMath.EPSILON7);
+        expect(r.east).toEqualEpsilon(0.00024780049692545245, CesiumMath.EPSILON7);
+        expect(r.west).toEqualEpsilon(-0.00024780049692545245, CesiumMath.EPSILON7);
+    });
+
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
     var packableInstance = new EllipseGeometry({

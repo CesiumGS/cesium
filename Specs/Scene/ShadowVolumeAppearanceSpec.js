@@ -181,14 +181,14 @@ defineSuite([
         expect(uvMinAndExtents.componentsPerAttribute).toEqual(4);
         expect(uvMinAndExtents.normalize).toEqual(false);
 
-        // 90 degree rotation of a square, so "max" point in Y direction is 0,0, "max" point in X direction is 1,1
+        // 90 degree rotation of a square, so "max" in Y direction is (0,0), "max" in X direction is (1,1)
         var value = uMaxVmax.value;
         expect(value[0]).toEqual(0.0);
         expect(value[1]).toEqual(0.0);
         expect(value[2]).toEqual(1.0);
         expect(value[3]).toEqual(1.0);
 
-        // So "min" of texture coordinates is at 1, 0 and extents are just 1s
+        // So "min" of texture coordinates is at (1,0) and extents are just 1s
         value = uvMinAndExtents.value;
         expect(value[0]).toEqual(1.0);
         expect(value[1]).toEqual(0.0);

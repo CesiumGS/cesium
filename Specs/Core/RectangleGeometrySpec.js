@@ -313,6 +313,22 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4142135623730951);
     });
 
+    it('computing unrotatedTextureRectangle property', function() {
+        var rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var geometry = new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            stRotation : CesiumMath.toRadians(45.0)
+        });
+
+        var r = geometry.unrotatedTextureRectangle;
+        expect(CesiumMath.toDegrees(r.north)).toEqual(1.414213562373095);
+        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.414213562373095);
+        expect(CesiumMath.toDegrees(r.east)).toEqual(1.414213562373095);
+        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4142135623730951);
+    });
+
     it('computing rectangle property with zero rotation', function() {
         expect(function() {
             return RectangleGeometry.createGeometry(new RectangleGeometry({

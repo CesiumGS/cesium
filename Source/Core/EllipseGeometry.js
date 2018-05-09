@@ -988,6 +988,9 @@ define([
             }
         },
         /**
+         * For stRotation on GroundPrimitives.
+         * Returns the rectangle part of an oriented rectangle that tightly bounds
+         * the oriented geometry in Cartographic space.
          * @private
          */
         unrotatedTextureRectangle : {

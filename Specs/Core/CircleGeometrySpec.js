@@ -164,6 +164,23 @@ defineSuite([
         expect(r.west).toEqual(-1.3196344953554853);
     });
 
+    it('computing unrotatedTextureRectangle property', function() {
+        var center = Cartesian3.fromDegrees(-75.59777, 40.03883);
+        var ellipse = new CircleGeometry({
+            center : center,
+            radius : 1000.0,
+            stRotation : CesiumMath.toRadians(45)
+        });
+
+        // Should be the same as rectangle property
+        var unrotatedTextureRectangle = ellipse.unrotatedTextureRectangle;
+        var rectangle = ellipse.rectangle;
+        expect(unrotatedTextureRectangle.north).toEqual(rectangle.north);
+        expect(unrotatedTextureRectangle.south).toEqual(rectangle.south);
+        expect(unrotatedTextureRectangle.east).toEqual(rectangle.east);
+        expect(unrotatedTextureRectangle.west).toEqual(rectangle.west);
+    });
+
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
     var packableInstance = new CircleGeometry({

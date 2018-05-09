@@ -281,6 +281,28 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
     });
 
+    it('computing unrotatedTextureRectangle property', function() {
+        var c = new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -67.655, 0.0,
+                -67.655, 15.0,
+                -67.655, 20.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 1,
+            granularity : Math.PI / 6.0
+        });
+
+        // Corridors don't support geometry orientation or stRotation, so expect this to equal the standard rectangle.
+        var unrotatedTextureRectangle = c.unrotatedTextureRectangle;
+        var rectangle = c.rectangle;
+        expect(unrotatedTextureRectangle.north).toEqual(rectangle.north);
+        expect(unrotatedTextureRectangle.south).toEqual(rectangle.south);
+        expect(unrotatedTextureRectangle.east).toEqual(rectangle.east);
+        expect(unrotatedTextureRectangle.west).toEqual(rectangle.west);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
          90.0, -30.0,
          90.0, -31.0

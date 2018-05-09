@@ -647,6 +647,29 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
     });
 
+    it('computing unrotatedTextureRectangle property', function() {
+        var p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -10.0, -10.0, 0,
+                    -10.0, 10.0, 0,
+                    10.0, -10.0, 0,
+                    10.0, 10.0, 0
+                ])},
+            granularity: CesiumMath.PI,
+            stRotation : CesiumMath.toRadians(45)
+        });
+
+        var r = p.unrotatedTextureRectangle;
+        // Rotated should be a square
+        var expectedExtent = 10.0 * Math.sqrt(2.0);
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(expectedExtent, CesiumMath.EPSILON7);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(-expectedExtent, CesiumMath.EPSILON7);
+        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(expectedExtent, CesiumMath.EPSILON7);
+        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-expectedExtent, CesiumMath.EPSILON7);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
         -12.4, 3.5,
         -12.0, 3.5,

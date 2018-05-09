@@ -341,11 +341,13 @@ define([
         textureCoordinateRotation = defaultValue(textureCoordinateRotation, 0.0);
         var points2D = points2DScratch;
 
-        // Assume a computed "east-north" texture coordinate system.
-        // The "desired" texture coordinate system forms a rectangle around the geometry that completely bounds it.
-        // Compute 3 corners of the "desired" texture coordinate system in "east-north" texture space by the following:
-        // - rotate 3 of the corners in unrotatedTextureRectangle by textureCoordinateRotation around the center of both rectangles
-        // - compute the equivalent of each point in the "east-north" texture system
+        // Assume a computed "east-north" texture coordinate system based on spherical or planar tricks, bounded by `boundingRectangle`.
+        // The "desired" texture coordinate system forms an oriented rectangle (un-oriented provided) around the geometry that completely and tightly bounds it.
+        // We want to map from the "east-north" texture coordinate system into the "desired" system using a pair of lines (analagous planes in 2D)
+        // Compute 3 corners of the "desired" texture coordinate system in "east-north" texture space by the following in cartographic space:
+        // - rotate 3 of the corners in unrotatedTextureRectangle by textureCoordinateRotation around the center of both rectangles (which should be the same)
+        // - apply the "east-north" system's normalization formula to the rotated cartographics, even though this is likely to produce values outside [0-1].
+        // This gives us a set of points in the "east-north" texture coordinate system that can be used to map "east-north" texture coordinates to "desired."
 
         points2D[0].x = unrotatedTextureRectangle.west;
         points2D[0].y = unrotatedTextureRectangle.south;
