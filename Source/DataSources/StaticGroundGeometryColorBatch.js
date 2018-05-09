@@ -6,7 +6,6 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/GroundPrimitive',
-        '../Scene/OrderedGroundPrimitiveCollection',
         './BoundingSphereState',
         './Property'
     ], function(
@@ -17,7 +16,6 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         GroundPrimitive,
-        OrderedGroundPrimitiveCollection,
         BoundingSphereState,
         Property) {
     'use strict';

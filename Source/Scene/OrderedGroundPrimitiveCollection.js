@@ -95,6 +95,8 @@ define([
 
         this.remove(primitive, true);
         this.add(primitive, zIndex);
+
+        return primitive;
     };
 
     /**
@@ -105,9 +107,6 @@ define([
      * @returns {Boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
      */
     OrderedGroundPrimitiveCollection.prototype.remove = function(primitive, doNotDestroy) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('primitive', primitive);
-        //>>includeEnd('debug');
         if (this.contains(primitive)) {
             var index = primitive._zIndex;
             var collection = this._collections[index];
@@ -151,6 +150,7 @@ define([
 
         this._collections = {};
         this._collectionsArray = [];
+        this._length = 0;
     };
 
     /**
@@ -160,17 +160,11 @@ define([
      * @returns {Boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
      */
     OrderedGroundPrimitiveCollection.prototype.contains = function(primitive) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('primitive', primitive);
-        //>>includeEnd('debug');
+        if (!defined(primitive)) {
+            return false;
+        }
         var collection = this._collections[primitive._zIndex];
         return defined(collection) && collection.contains(primitive);
-    };
-
-    OrderedGroundPrimitiveCollection.prototype.get = function() {
-        //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('get is not supported.');
-        //>>includeEnd('debug');
     };
 
     /**

@@ -1236,10 +1236,6 @@ define([
         var coordinates = readCoordinates(coordinatesNode, ellipsoid);
         var polyline = styleEntity.polyline;
         if (canExtrude && extrude) {
-            if (defined(zIndex)) {
-                oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings');
-            }
-
             var wall = new WallGraphics();
             entity.wall = wall;
             wall.positions = coordinates;
@@ -1272,7 +1268,7 @@ define([
             corridor.zIndex = zIndex;
         } else {
             if (defined(zIndex)) {
-                oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings');
+                oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
             }
 
             polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();

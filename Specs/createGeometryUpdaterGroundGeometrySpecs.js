@@ -25,7 +25,7 @@ define([
             var entity = createEntity();
 
             var updater = new Updater(entity, getScene());
-            expect(updater.zIndex).toBe(0);
+            expect(updater.zIndex.getValue()).toBe(0);
         });
 
         it('uses zIndex value', function() {
@@ -33,7 +33,7 @@ define([
             entity[geometryPropertyName].zIndex = 22;
 
             var updater = new Updater(entity, getScene());
-            expect(updater.zIndex).toBe(22);
+            expect(updater.zIndex.getValue()).toBe(22);
         });
 
         it('A time-varying color causes ground geometry to be dynamic', function() {
