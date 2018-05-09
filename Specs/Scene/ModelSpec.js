@@ -2442,38 +2442,6 @@ defineSuite([
         });
     });
 
-    it('loads with custom pickFragmentShader and pickUniformMap', function() {
-        function pickFragmentShaderLoaded(fs) {
-            return ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-        }
-
-        var pickId = scene.context.createPickId({
-            custom : 'custom'
-        });
-
-        function pickUniformMapLoaded(uniformMap) {
-            return combine(uniformMap, {
-                czm_pickColor : function() {
-                    return pickId.color;
-                }
-            });
-        }
-
-        var options = {
-            pickFragmentShaderLoaded : pickFragmentShaderLoaded,
-            pickUniformMapLoaded : pickUniformMapLoaded
-        };
-
-        return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
-            model.show = true;
-            expect(scene).toPickAndCall(function(result) {
-                expect(result.custom).toEqual('custom');
-            });
-
-            primitives.remove(model);
-        });
-    });
-
     it('loads a glTF with KHR_draco_mesh_compression extension', function() {
         return loadModel(dracoCompressedModelUrl, {
             dequantizeInShader : false

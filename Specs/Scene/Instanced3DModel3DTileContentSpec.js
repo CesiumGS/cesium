@@ -287,18 +287,19 @@ defineSuite([
             var batchTexturesByteLength = content.featuresLength * 4;
             var pickTexturesByteLength = content.featuresLength * 4;
 
-            // Only the pick texture memory has been created.
+            // Features have not been picked or colored yet, so the batch table contribution is 0.
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
-            expect(content.batchTableByteLength).toEqual(pickTexturesByteLength);
+            expect(content.batchTableByteLength).toEqual(0);
 
             // Color a feature and expect the texture memory to increase
             content.getFeature(0).color = Color.RED;
             scene.renderForSpecs();
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
-            expect(content.batchTableByteLength).toEqual(batchTexturesByteLength + pickTexturesByteLength);
+            expect(content.batchTableByteLength).toEqual(batchTexturesByteLength);
 
+            // Pick the tile and expect the texture memory to increase
             scene.pickForSpecs();
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
