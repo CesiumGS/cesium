@@ -73,7 +73,7 @@ define([
          */
         this.iconUrl = options.iconUrl;
 
-        this._category = defaultValue(options.category, 'Other');
+        this._category = defaultValue(options.category, '');
 
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
     }
