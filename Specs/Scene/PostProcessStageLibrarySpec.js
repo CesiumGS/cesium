@@ -163,7 +163,9 @@ defineSuite([
                 });
 
                 stage.selectedFeatures = [model];
-                expect(scene).not.toRender(color);
+                expect(scene).toRenderAndCall(function(rgba) {
+                    expect(rgba).not.toEqual(color);
+                });
             });
         });
     });

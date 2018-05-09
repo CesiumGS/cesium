@@ -290,7 +290,9 @@ defineSuite([
             }).then(function() {
                 expect(scene).toRender([255, 0, 0, 255]);
                 stage.selectedFeatures = [model];
-                expect(scene).not.toRender([255, 0, 0, 255]);
+                expect(scene).toRenderAndCall(function(rgba) {
+                    expect(rgba).not.toEqual([255, 0, 0, 255]);
+                });
             });
         });
     });
