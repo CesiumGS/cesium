@@ -3134,7 +3134,7 @@ define([
             var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
             var pickId;
-            if(!defined(model._uniformMapLoaded)) {
+            if (!defined(model._uniformMapLoaded)) {
                 pickId = context.createPickId(owner);
                 pickIds.push(pickId);
                 var pickUniforms = {

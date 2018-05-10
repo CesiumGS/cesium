@@ -179,7 +179,7 @@ define([
     };
 
     Cesium3DTilesTester.generateBatchedTileBuffer = function(options) {
-        // Proce durally generate the tile array buffer for testing purposes
+        // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [98, 51, 100, 109]);
         var version = defaultValue(options.version, 1);

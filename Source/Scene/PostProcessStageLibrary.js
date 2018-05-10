@@ -230,7 +230,7 @@ define([
      * <li><code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.</li>
      * <li><code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.</li>
      * </ul>
-     * @return {PostProcessStageComposite} A post-process stage that applies a edge detection effect.
+     * @return {PostProcessStageComposite} A post-process stage that applies an edge detection effect.
      *
      * @example
      * // multiple silhouette effects
