@@ -622,7 +622,7 @@ define([
         /**
          * @private
          */
-        pickId : {
+        pickIds : {
             get : function() {
                 var ids  = this._pickIds;
                 ids[0] = this._billboard.pickId;

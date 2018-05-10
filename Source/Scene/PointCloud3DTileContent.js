@@ -110,7 +110,6 @@ define([
         this._parsedContent = undefined;
 
         this._drawCommand = undefined;
-        this._pickCommand = undefined;
         this._pickId = undefined; // Only defined when batchTable is undefined
         this._isTranslucent = false;
         this._styleTranslucent = false;

@@ -306,7 +306,8 @@ define([
             fsDecl += 'uniform sampler2D edgeTexture' + i + '; \n';
             fsLoop +=
                 '        vec4 edge' + i + ' = texture2D(edgeTexture' + i + ', v_textureCoordinates); \n' +
-                '        if (edge' + i + '.a == 1.0) { \n' +
+                '        if (edge' + i + '.a == 1.0) \n' +
+                '        { \n' +
                 '            color = edge' + i + '; \n' +
                 '            break; \n' +
                 '        } \n';
@@ -318,7 +319,8 @@ define([
             'varying vec2 v_textureCoordinates; \n' +
             'void main() { \n' +
             '    vec4 color = vec4(0.0); \n' +
-            '    for (int i = 0; i < ' + edgeDetectionStages.length + '; i++) { \n' +
+            '    for (int i = 0; i < ' + edgeDetectionStages.length + '; i++) \n' +
+            '    { \n' +
             fsLoop +
             '    } \n' +
             '    gl_FragColor = color; \n' +

@@ -360,7 +360,7 @@ define([
          * </code>
          * </p>
          *
-         * @memberof PostProcessStageComposite.prototype
+         * @memberof PostProcessStage.prototype
          * @type {Array}
          */
         selectedFeatures : {
