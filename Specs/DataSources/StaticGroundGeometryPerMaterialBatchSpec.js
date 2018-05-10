@@ -20,6 +20,7 @@ defineSuite([
         'DataSources/PolylineGraphics',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ClassificationType',
+        'Scene/GroundPrimitive',
         'Scene/MaterialAppearance',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
@@ -47,6 +48,7 @@ defineSuite([
         PolylineGraphics,
         TimeIntervalCollectionProperty,
         ClassificationType,
+        GroundPrimitive,
         MaterialAppearance,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
@@ -65,6 +67,11 @@ defineSuite([
     });
 
     it('handles shared material being invalidated with geometry', function() {
+        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
         var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, ClassificationType.BOTH);
 
         var ellipse = new EllipseGraphics();
@@ -114,6 +121,11 @@ defineSuite([
     });
 
     it('updates with sampled distance display condition out of range', function() {
+        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
         var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
         var ddc = new TimeIntervalCollectionProperty();
         ddc.intervals.addInterval(TimeInterval.fromIso8601({
@@ -159,6 +171,11 @@ defineSuite([
     });
 
     it('shows only one primitive while rebuilding primitive', function() {
+        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
         var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, ClassificationType.BOTH);
 
         function buildEntity(x, y, z) {
@@ -228,6 +245,11 @@ defineSuite([
     });
 
     it('batches overlapping entities with the same material separately', function() {
+        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
         var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, ClassificationType.BOTH);
 
         var ellipse = new EllipseGraphics();
@@ -268,6 +290,11 @@ defineSuite([
     });
 
     it('batches nonoverlapping entities that both use color materials', function() {
+        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
         var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, ClassificationType.BOTH);
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
