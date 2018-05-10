@@ -55,6 +55,9 @@ define([
     OrderedGroundPrimitiveCollection.prototype.add = function(primitive, zIndex) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('primitive', primitive);
+        if (defined(zIndex)) {
+            Check.typeOf.number('zIndex', zIndex);
+        }
         //>>includeEnd('debug');
 
         zIndex = defaultValue(zIndex, 0);
@@ -86,7 +89,7 @@ define([
     OrderedGroundPrimitiveCollection.prototype.set = function(primitive, zIndex) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('primitive', primitive);
-        Check.defined('zIndex', zIndex);
+        Check.typeOf.number('zIndex', zIndex);
         //>>includeEnd('debug');
 
         if (zIndex === primitive._zIndex) {
