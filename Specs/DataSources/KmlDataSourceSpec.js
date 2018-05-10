@@ -4100,7 +4100,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
-            expect(console.warn).toHaveBeenCalledWith('KML - gx:drawOrder is not supported in LineStrings');
+            expect(console.warn).toHaveBeenCalledWith('KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
         });
     });
 
