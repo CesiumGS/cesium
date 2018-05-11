@@ -1,9 +1,8 @@
-/*global define*/
 define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * This enumerated type is used in determining to what extent an object, the occludee,
@@ -11,8 +10,7 @@ define([
      * it has no visibility, may partially block an occludee from view, or may not block it at all,
      * leading to full visibility.
      *
-     * @namespace
-     * @alias Visibility
+     * @exports Visibility
      */
     var Visibility = {
         /**

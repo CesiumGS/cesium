@@ -1,14 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         PerformanceWatchdog,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
     var scene;
     beforeAll(function() {
@@ -16,7 +12,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('can create and destroy', function() {
@@ -28,7 +24,7 @@ defineSuite([
             container : 'testContainer',
             scene : scene
         });
-        expect(widget.container).toBe(container);
+        expect(widget.container.id).toEqual(container.id);
         expect(widget.isDestroyed()).toEqual(false);
 
         widget.destroy();
@@ -75,4 +71,4 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
-});
+}, 'WebGL');

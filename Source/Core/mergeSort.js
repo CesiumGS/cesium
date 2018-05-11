@@ -1,11 +1,10 @@
-/*global define*/
 define([
         './defined',
         './DeveloperError'
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     var leftScratchArray = [];
     var rightScratchArray = [];
@@ -61,7 +60,7 @@ define([
      *
      * @param {Array} array The array to sort.
      * @param {mergeSort~Comparator} comparator The function to use to compare elements in the array.
-     * @param {Object} [userDefinedObject] An object to pass as the third parameter to <code>comparator</code>.
+     * @param {*} [userDefinedObject] Any item to pass as the third parameter to <code>comparator</code>.
      *
      * @example
      * // Assume array contains BoundingSpheres in world coordinates.
@@ -71,7 +70,7 @@ define([
      *     return Cesium.BoundingSphere.distanceSquaredTo(b, position) - Cesium.BoundingSphere.distanceSquaredTo(a, position);
      * }, position);
      */
-    var mergeSort = function(array, comparator, userDefinedObject) {
+    function mergeSort(array, comparator, userDefinedObject) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required.');
@@ -93,15 +92,15 @@ define([
         // trim scratch arrays
         leftScratchArray.length = 0;
         rightScratchArray.length = 0;
-    };
+    }
 
     /**
      * A function used to compare two items while performing a merge sort.
      * @callback mergeSort~Comparator
      *
-     * @param {Object} a An item in the array.
-     * @param {Object} b An item in the array.
-     * @param {Object} [userDefinedObject] An object that was passed to {@link mergeSort}.
+     * @param {*} a An item in the array.
+     * @param {*} b An item in the array.
+     * @param {*} [userDefinedObject] An object that was passed to {@link mergeSort}.
      * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
      *          a positive value if <code>a</code> is greater than <code>b</code>, or
      *          0 if <code>a</code> is equal to <code>b</code>.

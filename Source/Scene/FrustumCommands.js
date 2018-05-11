@@ -1,9 +1,10 @@
-/*global define*/
 define([
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        '../Renderer/Pass'
     ], function(
-        defaultValue) {
-    "use strict";
+        defaultValue,
+        Pass) {
+    'use strict';
 
     /**
      * Defines a list of commands whose geometry are bound by near and far distances from the camera.
@@ -15,12 +16,22 @@ define([
      *
      * @private
      */
-    var FrustumCommands = function(near, far) {
+    function FrustumCommands(near, far) {
         this.near = defaultValue(near, 0.0);
         this.far = defaultValue(far, 0.0);
-        this.opaqueCommands = [];
-        this.translucentCommands = [];
-    };
+
+        var numPasses = Pass.NUMBER_OF_PASSES;
+        var commands = new Array(numPasses);
+        var indices = new Array(numPasses);
+
+        for (var i = 0; i < numPasses; ++i) {
+            commands[i] = [];
+            indices[i] = 0;
+        }
+
+        this.commands = commands;
+        this.indices = indices;
+    }
 
     return FrustumCommands;
 });

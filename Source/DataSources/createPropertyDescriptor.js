@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -7,7 +6,7 @@ define([
         defaultValue,
         defined,
         ConstantProperty) {
-    "use strict";
+    'use strict';
 
     function createProperty(name, privateName, subscriptionName, configurable, createPropertyCallback) {
         return {
@@ -23,8 +22,8 @@ define([
                     this[subscriptionName] = undefined;
                 }
 
-                var hasValue = defined(value);
-                if (hasValue && !defined(value.getValue) && defined(createPropertyCallback)) {
+                var hasValue = value !== undefined;
+                if (hasValue && (!defined(value) || !defined(value.getValue)) && defined(createPropertyCallback)) {
                     value = createPropertyCallback(value);
                 }
 
@@ -53,7 +52,9 @@ define([
      * @private
      */
     function createPropertyDescriptor(name, configurable, createPropertyCallback) {
-        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false), defaultValue(createPropertyCallback, createConstantProperty));
+        //Safari 8.0.3 has a JavaScript bug that causes it to confuse two variables and treat them as the same.
+        //The two extra toString calls work around the issue.
+        return createProperty(name, '_' + name.toString(), '_' + name.toString() + 'Subscription', defaultValue(configurable, false), defaultValue(createPropertyCallback, createConstantProperty));
     }
 
     return createPropertyDescriptor;

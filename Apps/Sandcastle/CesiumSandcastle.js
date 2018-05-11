@@ -1,25 +1,37 @@
-/*global require,Blob,CodeMirror,JSHINT*/
-/*global gallery_demos*/// defined by gallery/gallery-index.js, created by build
+/*global require,Blob,JSHINT*/
+/*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
-    baseUrl : '../../Source',
-    packages : [{
-        name : 'dojo',
-        location : '../ThirdParty/dojo-release-1.9.3/dojo'
+    baseUrl: '../../Source',
+    packages: [{
+        name: 'dojo',
+        location: '../ThirdParty/dojo-release-1.10.4/dojo'
     }, {
-        name : 'dijit',
-        location : '../ThirdParty/dojo-release-1.9.3/dijit'
+        name: 'dijit',
+        location: '../ThirdParty/dojo-release-1.10.4/dijit'
     }, {
-        name : 'Sandcastle',
-        location : '../Apps/Sandcastle'
+        name: 'Sandcastle',
+        location: '../Apps/Sandcastle'
     }, {
-        name : 'Source',
-        location : '.'
+        name: 'Source',
+        location: '.'
     }, {
-        name : 'CodeMirror',
-        location : '../ThirdParty/codemirror-4.6'
+        name: 'CesiumUnminified',
+        location: '../Build/CesiumUnminified',
+        main: 'Cesium'
+    }, {
+        name: 'CodeMirror',
+        location: '../ThirdParty/codemirror-4.6'
+    }, {
+        name: 'ThirdParty',
+        location: '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
+        "dijit/Dialog",
+        "dijit/form/Button",
+        "dijit/form/Form",
+        "dijit/form/Textarea",
+        'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
         'dijit/registry',
@@ -33,22 +45,25 @@ require({
         'dojo/mouse',
         'dojo/on',
         'dojo/parser',
+        'dojo/promise/all',
         'dojo/query',
+        'dojo/when',
         'Sandcastle/LinkButton',
         'Source/Cesium',
-        'CodeMirror/lib/codemirror',
+        'Source/Core/defined',
+        'Source/Core/Resource',
+        'ThirdParty/clipboard.min',
+        'ThirdParty/pako.min',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
         'CodeMirror/mode/javascript/javascript',
         'CodeMirror/mode/css/css',
         'CodeMirror/mode/xml/xml',
         'CodeMirror/mode/htmlmixed/htmlmixed',
-        'dijit/form/Button',
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/form/TextBox',
-        'dijit/form/Textarea',
         'dijit/Menu',
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
@@ -59,6 +74,11 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'
     ], function(
+        Dialog,
+        Button,
+        Form,
+        TextArea,
+        CodeMirror,
         ContentPane,
         popup,
         registry,
@@ -72,17 +92,23 @@ require({
         mouse,
         on,
         parser,
+        all,
         query,
+        when,
         LinkButton,
         Cesium,
-        CodeMirror) {
-    "use strict";
+        defined,
+        Resource,
+        ClipboardJS,
+        pako) {
+    'use strict';
+
+    // attach clipboard handling to our Copy button
+    var clipboardjs = new ClipboardJS('.copyButton');
 
     //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
-    window.Cesium = Cesium;
-
-    function defined(value) {
-        return value !== undefined;
+    if (!defined(window.Cesium)) {
+        window.Cesium = Cesium;
     }
 
     parser.parse();
@@ -132,6 +158,7 @@ require({
     var subtabs = {};
     var docError = false;
     var galleryError = false;
+    var deferredLoadError = false;
     var galleryTooltipTimer;
     var activeGalleryTooltipDemo;
     var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
@@ -151,7 +178,14 @@ require({
     var searchTerm = '';
     var searchRegExp;
     var hintTimer;
-    var currentTab = '';
+    var defaultDemo = 'Hello World';
+    var defaultLabel = 'Showcases';
+    var currentTab = defaultLabel;
+    var newDemo;
+    var demoHtml = '';
+    var demoCode = '';
+
+    var defaultHtml = '<style>\n@import url(../templates/bucket.css);\n</style>\n<div id=\"cesiumContainer\" class=\"fullSize\"></div>\n<div id=\"loadingOverlay\"><h1>Loading...</h1></div>\n<div id=\"toolbar\"></div>';
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -240,7 +274,7 @@ require({
                 var member = local.docTypes[lowerText][i];
                 var ele = document.createElement('a');
                 ele.target = '_blank';
-                ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
+                ele.textContent = member.replace('.html', '').replace('module-', '').replace('#.', '.').replace('#', '.');
                 ele.href = '../../Build/Documentation/' + member;
                 ele.onclick = onDocClick;
                 docMessage.appendChild(ele);
@@ -261,7 +295,16 @@ require({
     function makeLineLabel(msg, className) {
         var element = document.createElement('abbr');
         element.className = className;
-        element.innerHTML = '&nbsp;';
+        switch (className) {
+        case 'hintMarker':
+            element.innerHTML = '&#9650;';
+            break;
+        case 'errorMarker':
+            element.innerHTML = '&times;';
+            break;
+        default:
+            element.innerHTML = '&#9654;';
+        }
         element.title = msg;
         return element;
     }
@@ -279,7 +322,7 @@ require({
         var selectedTabName = registry.byId('innerPanel').selectedChildWidget.title;
         var suffix = selectedTabName + 'Demos';
         if (selectedTabName === 'All') {
-            suffix = '';
+            suffix = 'all';
         } else if (selectedTabName === 'Search Results') {
             suffix = 'searchDemo';
         }
@@ -339,6 +382,7 @@ require({
         }
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+        /*eslint-disable new-cap*/
         if (!JSHINT(getScriptFromEditor(false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
@@ -350,6 +394,7 @@ require({
                 }
             }
         }
+        /*eslint-enable new-cap*/
     }
 
     function scheduleHint() {
@@ -425,7 +470,7 @@ require({
     });
 
     function registerScroll(demoContainer) {
-        if (defined(document.onmousewheel)) {
+        if (document.onmousewheel !== undefined) {
             demoContainer.addEventListener('mousewheel', function(e) {
                 if (defined(e.wheelDelta) && e.wheelDelta) {
                     demoContainer.scrollLeft -= e.wheelDelta * 70 / 120;
@@ -479,6 +524,14 @@ require({
         }
     });
 
+    window.onbeforeunload = function (e) {
+        var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
+        var jsText = (jsEditor.getValue()).replace(/\s/g, '');
+        if (demoHtml !== htmlText || demoCode !== jsText) {
+            return 'Be sure to save a copy of any important edits before leaving this page.';
+        }
+    };
+
     registry.byId('codeContainer').watch('selectedChildWidget', function(name, oldPane, newPane) {
         if (newPane.id === 'jsContainer') {
             jsEditor.focus();
@@ -489,7 +542,7 @@ require({
 
     function getScriptFromEditor(addExtraLine) {
         return 'function startup(Cesium) {\n' +
-               '    "use strict";\n' +
+               '    \'use strict\';\n' +
                '//Sandcastle_Begin\n' +
                (addExtraLine ? '\n' : '') +
                jsEditor.getValue() +
@@ -509,7 +562,8 @@ require({
         var headNodes = bucketDoc.head.childNodes;
         var node;
         var nodes = [];
-        for (var i = 0, len = headNodes.length; i < len; ++i) {
+        var i, len;
+        for (i = 0, len = headNodes.length; i < len; ++i) {
             node = headNodes[i];
             // header is included in blank frame.
             if (node.tagName === 'SCRIPT' && node.src.indexOf('Sandcastle-header.js') < 0) {
@@ -643,51 +697,108 @@ require({
         }
     }
 
+    var queryObject = {};
+    if (window.location.search) {
+        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+    }
+    if (!defined(queryObject.src)) {
+        queryObject.src = defaultDemo + '.html';
+    }
+    if (!defined(queryObject.label)) {
+        queryObject.label = defaultLabel;
+    }
+
     function loadFromGallery(demo) {
+        deferredLoadError = false;
         document.getElementById('saveAsFile').download = demo.name + '.html';
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
 
-        //requestDemo is synchronous
-        requestDemo(demo.name).then(function(value) {
+        return requestDemo(demo.name).then(function(value) {
             demo.code = value;
+
+            if (typeof demo.bucket === 'string') {
+                loadBucket(demo.bucket);
+            }
+
+            function applyLoadedDemo(code, html) {
+                jsEditor.setValue(code);
+                jsEditor.clearHistory();
+                htmlEditor.setValue(html);
+                htmlEditor.clearHistory();
+                demoCode = code.replace(/\s/g, '');
+                demoHtml = html.replace(/\s/g, '');
+                CodeMirror.commands.runCesium(jsEditor);
+                clearRun();
+            }
+
+            var json, code, html;
+            if (defined(queryObject.gist)) {
+                Resource.fetchJsonp('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
+                    .then(function(data) {
+                        var files = data.data.files;
+                        var code = files['Cesium-Sandcastle.js'].content;
+                        var htmlFile = files['Cesium-Sandcastle.html'];
+                        var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
+                        applyLoadedDemo(code, html);
+                    }).otherwise(function(error) {
+                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
+                        console.log(error);
+                    });
+            } else if (defined(queryObject.code)) {
+                //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
+                json = JSON.parse(window.atob(queryObject.code));
+                code = json.code;
+                html = json.html;
+
+                applyLoadedDemo(code, html);
+            } else if (window.location.hash.indexOf('#c=') === 0) {
+                // data stored in the hash as:
+                // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
+                var base64String = window.location.hash.substr(3);
+                // restore padding
+                while (base64String.length % 4 !== 0) {
+                    base64String += '=';
+                }
+                var jsonString = pako.inflate(atob(base64String), { raw: true, to: 'string' });
+                // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
+                jsonString = '["' + jsonString + '"]';
+                json = JSON.parse(jsonString);
+                // index 0 is code, index 1 is html
+                code = json[0];
+                html = json[1];
+
+                applyLoadedDemo(code, html);
+            } else {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(demo.code, 'text/html');
+
+                var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+                if (!script) {
+                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                    return;
+                }
+
+                var scriptMatch = scriptCodeRegex.exec(script.textContent);
+                if (!scriptMatch) {
+                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                    return;
+                }
+
+                var scriptCode = scriptMatch[1];
+
+                var htmlText = '';
+                var childIndex = 0;
+                var childNode = doc.body.childNodes[childIndex];
+                while (childIndex < doc.body.childNodes.length && childNode !== script) {
+                    htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
+                    childNode = doc.body.childNodes[++childIndex];
+                }
+                htmlText = htmlText.replace(/^\s+/, '');
+
+                applyLoadedDemo(scriptCode, htmlText);
+            }
         });
-
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(demo.code, 'text/html');
-
-        var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
-        if (!script) {
-            appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-            return;
-        }
-
-        var scriptMatch = scriptCodeRegex.exec(script.textContent);
-        if (!scriptMatch) {
-            appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-            return;
-        }
-
-        var scriptCode = scriptMatch[1];
-        jsEditor.setValue(scriptCode);
-        jsEditor.clearHistory();
-
-        var htmlText = '';
-        var childIndex = 0;
-        var childNode = doc.body.childNodes[childIndex];
-        while (childIndex < doc.body.childNodes.length && childNode !== script) {
-            htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
-            childNode = doc.body.childNodes[++childIndex];
-        }
-        htmlText = htmlText.replace(/^\s+/, '');
-
-        htmlEditor.setValue(htmlText);
-        htmlEditor.clearHistory();
-
-        if (typeof demo.bucket === 'string') {
-            loadBucket(demo.bucket);
-        }
-        CodeMirror.commands.runCesium(jsEditor);
     }
 
     window.addEventListener('popstate', function(e) {
@@ -721,6 +832,9 @@ require({
                 }
                 if (galleryError) {
                     appendConsole('consoleError', 'Error loading gallery, please run the build script.', true);
+                }
+                if (deferredLoadError) {
+                    appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '. Redirecting to HelloWorld.\n', true);
                 }
             }
         } else if (defined(e.data.log)) {
@@ -796,6 +910,8 @@ require({
         scheduleHintNoChange();
     });
 
+    var searchContainer;
+
     function hideSearchContainer() {
         if (dom.byId('searchContainer')) {
             var innerPanel = registry.byId('innerPanel');
@@ -810,6 +926,64 @@ require({
         }
     }
 
+    function getBaseUrl() {
+        // omits query string and hash
+        return location.protocol + '//' + location.host + location.pathname;
+    }
+
+    registry.byId('buttonShareDrop').on('click', function() {
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+
+        // data stored in the hash as:
+        // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
+        var jsonString = JSON.stringify([code, html]);
+        // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
+        jsonString = jsonString.substr(2, jsonString.length - 4);
+        var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
+        base64String = base64String.replace(/\=+$/, ''); // remove padding
+
+        var shareUrlBox = document.getElementById('shareUrl');
+        shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
+        shareUrlBox.select();
+    });
+
+    registry.byId('buttonImport').on('click', function() {
+        var gistId = document.getElementById("gistId").value;
+        var gistParameter = '&gist=';
+        var gistIndex = gistId.indexOf(gistParameter);
+        if (gistIndex !== -1) {
+            gistId = gistId.substring(gistIndex + gistParameter.length);
+        }
+        window.location.href = getBaseUrl() + '?gist=' + gistId;
+    });
+
+    function getPushStateUrl(demo) {
+        var obj = {};
+        if (demo.name !== defaultDemo) {
+            obj.src = demo.name + '.html';
+        }
+        if (currentTab !== defaultLabel) {
+            obj.label = currentTab;
+        }
+        var query = ioQuery.objectToQuery(obj);
+        return query === '' ? query : '?' + query;
+    }
+
+    registry.byId('buttonNew').on('click', function() {
+        var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
+        var jsText = (jsEditor.getValue()).replace(/\s/g, '');
+        var confirmChange = true;
+        if (demoHtml !== htmlText || demoCode !== jsText) {
+            confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
+        }
+        if (confirmChange) {
+            window.history.pushState(newDemo, newDemo.name, getPushStateUrl(newDemo));
+            loadFromGallery(newDemo).then(function() {
+                document.title = newDemo.name + ' - Cesium Sandcastle';
+            });
+        }
+    });
     // Clicking the 'Run' button simply reloads the iframe.
     registry.byId('buttonRun').on('click', function() {
         CodeMirror.commands.runCesium(jsEditor);
@@ -830,7 +1004,7 @@ require({
     }
 
     registry.byId('dropDownSaveAs').on('show', function() {
-        var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
+        var currentDemoName = queryObject.src;
         currentDemoName = currentDemoName.replace('.html', '');
         var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
         var label = encodeHTML(registry.byId('label').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
@@ -849,6 +1023,13 @@ require({
 
     registry.byId('buttonNewWindow').on('click', function() {
         var baseHref = window.location.href;
+
+        //Handle case where demo is in a sub-directory.
+        var searchLen = window.location.search.length;
+        if (searchLen > 0) {
+            baseHref = baseHref.substring(0, baseHref.length - searchLen);
+        }
+
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 
@@ -890,30 +1071,21 @@ require({
         this.originalResize(changeSize, resultSize);
     };
 
-    var queryObject = {};
-    if (window.location.search) {
-        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
-    } else {
-        queryObject.src = 'Hello World.html';
-        queryObject.label = 'Showcases';
-    }
-
     function requestDemo(name) {
         return xhr.get({
-            url : 'gallery/' + name + '.html',
-            handleAs : 'text',
-            sync : true,
-            error : function(error) {
-                appendConsole('consoleError', error, true);
-                galleryError = true;
+            url: 'gallery/' + name + '.html',
+            handleAs: 'text',
+            error: function(error) {
+                loadFromGallery(gallery_demos[hello_world_index]).then(function() {
+                    deferredLoadError = true;
+                });
             }
         });
     }
 
-    function loadDemoFromFile(index) {
-        var demo = gallery_demos[index];
-
-        requestDemo(demo.name).then(function(value) {
+    var newInLabel = 'New in ' + window.Cesium.VERSION;
+    function loadDemoFromFile(demo) {
+        return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
             demo.code = value;
 
@@ -929,14 +1101,23 @@ require({
 
             var labelsMeta = doc.querySelector('meta[name="cesium-sandcastle-labels"]');
             var labels = labelsMeta && labelsMeta.getAttribute('content');
-            demo.label = labels ? labels : '';
+            if (demo.isNew) {
+                demo.label = labels ? labels + ',' + newInLabel : newInLabel;
+            } else {
+                demo.label = labels ? labels : '';
+            }
 
             // Select the demo to load upon opening based on the query parameter.
             if (defined(queryObject.src)) {
                 if (demo.name === queryObject.src.replace('.html', '')) {
-                    loadFromGallery(demo);
-                    window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
-                    document.title = demo.name + ' - Cesium Sandcastle';
+                    loadFromGallery(demo).then(function() {
+                        window.history.replaceState(demo, demo.name, getPushStateUrl(demo));
+                        if (defined(queryObject.gist)) {
+                            document.title = 'Gist Import - Cesium Sandcastle';
+                        } else {
+                            document.title = demo.name + ' - Cesium Sandcastle';
+                        }
+                    });
                 }
             }
 
@@ -947,19 +1128,33 @@ require({
                 content : demo.description.replace(/\\n/g, '<br/>')
             });
 
-            addFileToTab(index);
+            addFileToTab(demo);
+            return demo;
         });
     }
 
+    var loading = true;
     function setSubtab(tabName) {
-        currentTab = defined(queryObject.label) ? queryObject.label : tabName;
-        queryObject.label = undefined;
+        currentTab = defined(tabName) && !loading ? tabName : queryObject.label;
+        queryObject.label = tabName;
+        loading = false;
     }
 
-    function addFileToGallery(index) {
+    function insertSortedById(parentTab, galleryButton) {
+        var child;
+        for (child = parentTab.lastChild; child !== null; child = child.previousSibling) {
+            if (galleryButton.id >= child.id) {
+                parentTab.insertBefore(galleryButton, child.nextSibling);
+                return;
+            }
+        }
+        parentTab.appendChild(galleryButton);
+    }
+
+    function addFileToGallery(demo) {
         var searchDemos = dom.byId('searchDemos');
-        createGalleryButton(index, searchDemos, 'searchDemo');
-        loadDemoFromFile(index);
+        insertSortedById(searchDemos, createGalleryButton(demo, 'searchDemo'));
+        return loadDemoFromFile(demo);
     }
 
     function onShowCallback() {
@@ -968,8 +1163,7 @@ require({
         };
     }
 
-    function addFileToTab(index) {
-        var demo = gallery_demos[index];
+    function addFileToTab(demo) {
         if (demo.label !== '') {
             var labels = demo.label.split(',');
             for (var j = 0; j < labels.length; j++) {
@@ -986,13 +1180,12 @@ require({
                 }
                 var tabName = label + 'Demos';
                 var tab = dom.byId(tabName);
-                createGalleryButton(index, tab, tabName);
+                insertSortedById(tab, createGalleryButton(demo, tabName));
             }
         }
     }
 
-    function createGalleryButton(index, tab, tabName) {
-        var demo = gallery_demos[index];
+    function createGalleryButton(demo, tabName) {
         var imgSrc = 'templates/Gallery_tile.jpg';
         if (defined(demo.img)) {
             imgSrc = 'gallery/' + demo.img;
@@ -1002,18 +1195,29 @@ require({
         demoLink.id = demo.name + tabName;
         demoLink.className = 'linkButton';
         demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
-        tab.appendChild(demoLink);
 
+        if (demo.name === "Hello World") {
+            newDemo = demo;
+        }
         demoLink.onclick = function(e) {
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
             } else {
-                loadFromGallery(demo);
-                var demoSrc = demo.name + '.html';
-                if (demoSrc !== window.location.search.substring(1)) {
-                    window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&label=' + currentTab);
+                var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
+                var jsText = (jsEditor.getValue()).replace(/\s/g, '');
+                var confirmChange = true;
+                if (demoHtml !== htmlText || demoCode !== jsText) {
+                    confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
                 }
-                document.title = demo.name + ' - Cesium Sandcastle';
+                if (confirmChange) {
+                    delete queryObject.gist;
+                    delete queryObject.code;
+
+                    window.history.pushState(demo, demo.name, getPushStateUrl(demo));
+                    loadFromGallery(demo).then(function() {
+                        document.title = demo.name + ' - Cesium Sandcastle';
+                    });
+                }
             }
             e.preventDefault();
         };
@@ -1023,15 +1227,18 @@ require({
                       '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" onDragStart="return false;" />'
         }).placeAt(demoLink);
 
-        on(dom.byId(demoLink.id), 'mouseover', function() {
+        on(demoLink, 'mouseover', function() {
             scheduleGalleryTooltip(demo);
         });
 
-        on(dom.byId(demoLink.id), 'mouseout', function() {
+        on(demoLink, 'mouseout', function() {
             closeGalleryTooltip();
         });
+
+        return demoLink;
     }
 
+    var promise;
     if (!defined(gallery_demos)) {
         galleryErrorMsg.textContent = 'No demos found, please run the build script.';
         galleryErrorMsg.style.display = 'inline-block';
@@ -1047,55 +1254,71 @@ require({
         subtabs[label] = cp;
         registerScroll(dom.byId('showcasesContainer'));
 
+        if (has_new_gallery_demos) {
+            var name = 'New in ' + window.Cesium.VERSION;
+            subtabs[name] = new ContentPane({
+                content: '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
+                title: name,
+                onShow: function() {
+                    setSubtab(this.title);
+                }
+            }).placeAt('innerPanel');
+            registerScroll(dom.byId(name + 'Container'));
+        }
+
         var i;
         var len = gallery_demos.length;
 
-        // Sort alphabetically.  This will eventually be a user option.
-        gallery_demos.sort(function(a, b) {
-            var aName = a.name.toUpperCase();
-            var bName = b.name.toUpperCase();
-            return bName < aName ? 1 : bName > aName ? -1 : 0;
-        });
-
         var queryInGalleryIndex = false;
         var queryName = queryObject.src.replace('.html', '');
+        var promises = [];
         for (i = 0; i < len; ++i) {
-            addFileToGallery(i);
-            if (gallery_demos[i].name === queryName) {
-                queryInGalleryIndex = true;
-            }
+            promises.push(addFileToGallery(gallery_demos[i]));
         }
 
-        label = 'All';
-        cp = new ContentPane({
-            content : '<div id="allContainer" class="demosContainer"><div class="demos" id="allDemos"></div></div>',
-            title : label,
-            onShow : function() {
-                setSubtab(this.title);
+        promise = all(promises).then(function(results) {
+            var resultsLength = results.length;
+            for (i = 0; i < resultsLength; ++i) {
+                if (results[i].name === queryName) {
+                    queryInGalleryIndex = true;
+                }
             }
-        }).placeAt('innerPanel');
-        subtabs[label] = cp;
-        registerScroll(dom.byId('allContainer'));
 
-        var demos = dom.byId('allDemos');
-        for (i = 0; i < len; ++i) {
-            if (!/Development/i.test(gallery_demos[i].label)) {
-                createGalleryButton(i, demos, 'all');
+            label = 'All';
+            cp = new ContentPane({
+                content : '<div id="allContainer" class="demosContainer"><div class="demos" id="allDemos"></div></div>',
+                title : label,
+                onShow : function() {
+                    setSubtab(this.title);
+                }
+            }).placeAt('innerPanel');
+            subtabs[label] = cp;
+            registerScroll(dom.byId('allContainer'));
+
+            var demos = dom.byId('allDemos');
+            for (i = 0; i < len; ++i) {
+                var demo = gallery_demos[i];
+                if (!/Development/i.test(demo.label)) {
+                    insertSortedById(demos, createGalleryButton(demo, 'all'));
+                }
             }
-        }
 
-        if (!queryInGalleryIndex) {
-            gallery_demos.push({
-                name : queryName,
-                description : ''
-            });
-            addFileToGallery(gallery_demos.length - 1);
-        }
+            if (!queryInGalleryIndex) {
+                var emptyDemo = {
+                    name : queryName,
+                    description : ''
+                };
+                gallery_demos.push(emptyDemo);
+                return addFileToGallery(emptyDemo);
+            }
+        });
     }
 
-    dom.byId('searchDemos').appendChild(galleryErrorMsg);
-    var searchContainer = registry.byId('searchContainer');
+    when(promise).then(function() {
+        dom.byId('searchDemos').appendChild(galleryErrorMsg);
+        searchContainer = registry.byId('searchContainer');
 
-    hideSearchContainer();
-    registry.byId('innerPanel').selectChild(subtabs[currentTab]);
+        hideSearchContainer();
+        registry.byId('innerPanel').selectChild(subtabs[currentTab]);
+    });
 });

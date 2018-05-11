@@ -1,36 +1,41 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/SceneTransforms',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Core/OrthographicFrustum',
+        'Core/Rectangle',
+        'Scene/Camera',
+        'Scene/SceneMode',
+        'Specs/createScene'
     ], function(
         SceneTransforms,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        OrthographicFrustum,
+        Rectangle,
+        Camera,
+        SceneMode,
+        createScene) {
+    'use strict';
 
     var scene;
     var defaultCamera;
 
     beforeAll(function() {
         scene = createScene();
-        defaultCamera = scene.camera.clone();
+        defaultCamera = Camera.clone(scene.camera);
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
+        scene.mode = SceneMode.SCENE3D;
         scene.camera.position = defaultCamera.position.clone();
         scene.camera.direction = defaultCamera.direction.clone();
         scene.camera.up = defaultCamera.up.clone();
@@ -40,7 +45,6 @@ defineSuite([
     });
 
     it('throws an exception without scene', function() {
-        var ellipsoid = Ellipsoid.WGS84;
         var position = Cartesian3.fromDegrees(0.0, 0.0);
         expect(function() {
             SceneTransforms.wgs84ToWindowCoordinates(undefined, position);
@@ -160,28 +164,79 @@ defineSuite([
     });
 
     it('returns correct window position in 2D', function() {
-        // Update scene state
-        scene.morphTo2D(0);
-        scene.initializeFrame();
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
 
-        var ellipsoid = Ellipsoid.WGS84;
-        var position = Cartesian3.fromDegrees(0,0);
-
-        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
-        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
-        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
-    });
-
-    it('returns correct drawing buffer position in 2D', function() {
         // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
 
-        var ellipsoid = Ellipsoid.WGS84;
         var position = Cartesian3.fromDegrees(0,0);
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
 
+        expect(windowCoordinates.x).toBeGreaterThan(0.0);
+        expect(windowCoordinates.y).toBeGreaterThan(0.0);
+
+        expect(windowCoordinates.x).toBeLessThan(1.0);
+        expect(windowCoordinates.y).toBeLessThan(1.0);
+    });
+
+    it('returns correct window position in 3D with orthographic frustum', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        scene.camera.frustum = frustum;
+
+        // Update scene state
+        scene.renderForSpecs();
+
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
+
+        var position = Cartesian3.fromDegrees(0,0);
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+
+        expect(windowCoordinates.x).toBeGreaterThan(0.0);
+        expect(windowCoordinates.y).toBeGreaterThan(0.0);
+
+        expect(windowCoordinates.x).toBeLessThan(1.0);
+        expect(windowCoordinates.y).toBeLessThan(1.0);
+    });
+
+    it('returns correct drawing buffer position in 2D', function() {
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
+
+        // Update scene state
+        scene.morphTo2D(0);
+        scene.renderForSpecs();
+
+        var position = Cartesian3.fromDegrees(0,0);
         var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
-        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
-        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+
+        expect(drawingBufferCoordinates.x).toBeGreaterThan(0.0);
+        expect(drawingBufferCoordinates.y).toBeGreaterThan(0.0);
+
+        expect(drawingBufferCoordinates.x).toBeLessThan(1.0);
+        expect(drawingBufferCoordinates.y).toBeLessThan(1.0);
+    });
+
+    it('should not error when zoomed out and in 2D', function() {
+        var scene = createScene();
+        scene.camera.setView({
+            destination : Cartesian3.fromDegrees(75, 15, 30000000.0)
+        });
+
+        // Update scene state
+        scene.morphTo2D(0);
+        scene.renderForSpecs();
+
+        var position = Cartesian3.fromDegrees(-80, 25);
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+        expect(windowCoordinates).toBeDefined();
+        scene.destroyForSpecs();
     });
 }, 'WebGL');

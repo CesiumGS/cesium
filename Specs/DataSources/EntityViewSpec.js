@@ -1,33 +1,36 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/EntityView',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/JulianDate',
         'DataSources/ConstantPositionProperty',
         'DataSources/Entity',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         EntityView,
+        BoundingSphere,
         Cartesian3,
         Ellipsoid,
         JulianDate,
         ConstantPositionProperty,
         Entity,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
     var scene;
+    var defaultOffset = EntityView.defaultOffset3D;
 
     beforeAll(function() {
         scene = createScene();
     });
 
+    beforeEach(function() {
+        EntityView.defaultOffset3D = defaultOffset.clone();
+    });
+
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('default constructor sets expected values', function() {
@@ -53,8 +56,37 @@ defineSuite([
         entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0.0, 0.0));
         var view = new EntityView(entity, scene);
         view.update(JulianDate.now());
-        expect(Cartesian3.equalsEpsilon(EntityView.defaultOffset3D, sampleOffset, 1e-10)).toBe(true);
-        expect(Cartesian3.equalsEpsilon(view.scene.camera.position, sampleOffset, 1e-10)).toBe(true);
+        expect(EntityView.defaultOffset3D).toEqualEpsilon(sampleOffset, 1e-10);
+        expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+    });
+
+    it('uses entity viewFrom', function() {
+        var sampleOffset = new Cartesian3(1, 2, 3);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0.0, 0.0));
+        entity.viewFrom = sampleOffset;
+        var view = new EntityView(entity, scene);
+        view.update(JulianDate.now());
+        expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+    });
+
+    it('uses entity bounding sphere', function() {
+        var sampleOffset = new Cartesian3(-1.3322676295501878e-15, -7.348469228349534, 7.3484692283495345);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0.0, 0.0));
+        var view = new EntityView(entity, scene, undefined);
+        view.update(JulianDate.now(), new BoundingSphere(new Cartesian3(3, 4, 5), 6));
+        expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
+    });
+
+    it('uses entity viewFrom if available and boundingsphere is supplied', function() {
+        var sampleOffset = new Cartesian3(1, 2, 3);
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0.0, 0.0));
+        entity.viewFrom = sampleOffset;
+        var view = new EntityView(entity, scene, undefined, new BoundingSphere(new Cartesian3(3, 4, 5), 6));
+        view.update(JulianDate.now());
+        expect(view.scene.camera.position).toEqualEpsilon(sampleOffset, 1e-10);
     });
 
     it('update throws without time parameter', function() {

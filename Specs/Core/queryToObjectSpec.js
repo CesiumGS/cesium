@@ -1,10 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Core/queryToObject'
     ], function(
         queryToObject) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('can decode data', function() {
         var str = 'key1=some%20value&key2=a%2Fb';
@@ -37,6 +35,16 @@ defineSuite([
 
         expect(obj).toEqual({
             key : ['a', 'b']
+        });
+    });
+
+    it('can use ; instead of &', function() {
+        var str = 'key=a;key=b;key2=c';
+        var obj = queryToObject(str);
+
+        expect(obj).toEqual({
+            key : ['a', 'b'],
+            key2 : 'c'
         });
     });
 

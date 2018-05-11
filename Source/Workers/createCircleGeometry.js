@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/CircleGeometry',
@@ -9,7 +8,7 @@ define([
         CircleGeometry,
         defined,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     function createCircleGeometry(circleGeometry, offset) {
         if (defined(offset)) {

@@ -446,8 +446,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     }
 
     return topology;
-  };
-
+  }
   function cartesianRingArea(ring) {
     var i = -1,
         n = ring.length,

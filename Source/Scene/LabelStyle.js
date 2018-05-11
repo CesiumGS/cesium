@@ -1,15 +1,13 @@
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes how to draw a label.
      *
-     * @namespace
-     * @alias LabelStyle
+     * @exports LabelStyle
      *
      * @see Label#style
      */

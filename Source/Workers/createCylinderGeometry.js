@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Core/CylinderGeometry',
         '../Core/defined'
     ], function(
         CylinderGeometry,
         defined) {
-    "use strict";
+    'use strict';
 
     return function(cylinderGeometry, offset) {
         if (defined(offset)) {

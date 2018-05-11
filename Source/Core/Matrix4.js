@@ -1,10 +1,10 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartesian4',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
+        './defineProperties',
         './freezeObject',
         './Math',
         './Matrix3',
@@ -12,14 +12,15 @@ define([
     ], function(
         Cartesian3,
         Cartesian4,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
+        defineProperties,
         freezeObject,
         CesiumMath,
         Matrix3,
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     /**
      * A 4x4 matrix, indexable as a column-major order array.
@@ -47,6 +48,7 @@ define([
      * @see Matrix4.fromColumnMajorArray
      * @see Matrix4.fromRowMajorArray
      * @see Matrix4.fromRotationTranslation
+     * @see Matrix4.fromTranslationRotationScale
      * @see Matrix4.fromTranslationQuaternionRotationScale
      * @see Matrix4.fromTranslation
      * @see Matrix4.fromScale
@@ -57,11 +59,12 @@ define([
      * @see Matrix4.computePerspectiveOffCenter
      * @see Matrix4.computeInfinitePerspectiveOffCenter
      * @see Matrix4.computeViewportTransformation
+     * @see Matrix4.computeView
      * @see Matrix2
      * @see Matrix3
      * @see Packable
      */
-    var Matrix4 = function(column0Row0, column1Row0, column2Row0, column3Row0,
+    function Matrix4(column0Row0, column1Row0, column2Row0, column3Row0,
                            column0Row1, column1Row1, column2Row1, column3Row1,
                            column0Row2, column1Row2, column2Row2, column3Row2,
                            column0Row3, column1Row3, column2Row3, column3Row3) {
@@ -81,7 +84,7 @@ define([
         this[13] = defaultValue(column3Row1, 0.0);
         this[14] = defaultValue(column3Row2, 0.0);
         this[15] = defaultValue(column3Row3, 0.0);
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -95,16 +98,13 @@ define([
      * @param {Matrix4} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     Matrix4.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -125,6 +125,8 @@ define([
         array[startingIndex++] = value[13];
         array[startingIndex++] = value[14];
         array[startingIndex] = value[15];
+
+        return array;
     };
 
     /**
@@ -133,12 +135,11 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix4} [result] The object into which to store the result.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      */
     Matrix4.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -232,13 +233,11 @@ define([
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values is required');
-        }
+        Check.defined('values', values);
         //>>includeEnd('debug');
 
         return Matrix4.clone(values, result);
@@ -250,13 +249,11 @@ define([
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
+        Check.defined('values', values);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -291,13 +288,11 @@ define([
      * @param {Matrix3} rotation The upper left portion of the matrix representing the rotation.
      * @param {Cartesian3} [translation=Cartesian3.ZERO] The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromRotationTranslation = function(rotation, translation, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rotation)) {
-            throw new DeveloperError('rotation is required.');
-        }
+        Check.typeOf.object('rotation', rotation);
         //>>includeEnd('debug');
 
         translation = defaultValue(translation, Cartesian3.ZERO);
@@ -336,7 +331,7 @@ define([
      * @param {Quaternion} rotation The rotation transformation.
      * @param {Cartesian3} scale The non-uniform scale transformation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * var result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
@@ -347,15 +342,9 @@ define([
      */
     Matrix4.fromTranslationQuaternionRotationScale = function(translation, rotation, scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(translation)) {
-            throw new DeveloperError('translation is required.');
-        }
-        if (!defined(rotation)) {
-            throw new DeveloperError('rotation is required.');
-        }
-        if (!defined(scale)) {
-            throw new DeveloperError('scale is required.');
-        }
+        Check.typeOf.object('translation', translation);
+        Check.typeOf.object('rotation', rotation);
+        Check.typeOf.object('scale', scale);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -410,19 +399,32 @@ define([
     };
 
     /**
+     * Creates a Matrix4 instance from a {@link TranslationRotationScale} instance.
+     *
+     * @param {TranslationRotationScale} translationRotationScale The instance.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
+     */
+    Matrix4.fromTranslationRotationScale = function(translationRotationScale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('translationRotationScale', translationRotationScale);
+        //>>includeEnd('debug');
+
+        return Matrix4.fromTranslationQuaternionRotationScale(translationRotationScale.translation, translationRotationScale.rotation, translationRotationScale.scale, result);
+    };
+
+    /**
      * Creates a Matrix4 instance from a Cartesian3 representing the translation.
      *
      * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.multiplyByTranslation
      */
     Matrix4.fromTranslation = function(translation, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(translation)) {
-            throw new DeveloperError('translation is required.');
-        }
+        Check.typeOf.object('translation', translation);
         //>>includeEnd('debug');
 
         return Matrix4.fromRotationTranslation(Matrix3.IDENTITY, translation, result);
@@ -433,7 +435,7 @@ define([
      *
      * @param {Cartesian3} scale The x, y, and z scale factors.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -445,9 +447,7 @@ define([
      */
     Matrix4.fromScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scale)) {
-            throw new DeveloperError('scale is required.');
-        }
+        Check.typeOf.object('scale', scale);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -482,7 +482,7 @@ define([
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -494,9 +494,7 @@ define([
      */
     Matrix4.fromUniformScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof scale !== 'number') {
-            throw new DeveloperError('scale is required.');
-        }
+        Check.typeOf.number('scale', scale);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -526,7 +524,7 @@ define([
     };
 
     var fromCameraF = new Cartesian3();
-    var fromCameraS = new Cartesian3();
+    var fromCameraR = new Cartesian3();
     var fromCameraU = new Cartesian3();
 
     /**
@@ -534,66 +532,58 @@ define([
      *
      * @param {Camera} camera The camera to use.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromCamera = function(camera, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(camera)) {
-            throw new DeveloperError('camera is required.');
-        }
+        Check.typeOf.object('camera', camera);
         //>>includeEnd('debug');
 
-        var eye = camera.eye;
-        var target = camera.target;
+        var position = camera.position;
+        var direction = camera.direction;
         var up = camera.up;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(eye)) {
-            throw new DeveloperError('camera.eye is required.');
-        }
-        if (!defined(target)) {
-            throw new DeveloperError('camera.target is required.');
-        }
-        if (!defined(up)) {
-            throw new DeveloperError('camera.up is required.');
-        }
+        Check.typeOf.object('camera.position', position);
+        Check.typeOf.object('camera.direction', direction);
+        Check.typeOf.object('camera.up', up);
         //>>includeEnd('debug');
 
-        Cartesian3.normalize(Cartesian3.subtract(target, eye, fromCameraF), fromCameraF);
-        Cartesian3.normalize(Cartesian3.cross(fromCameraF, up, fromCameraS), fromCameraS);
-        Cartesian3.normalize(Cartesian3.cross(fromCameraS, fromCameraF, fromCameraU), fromCameraU);
+        Cartesian3.normalize(direction, fromCameraF);
+        Cartesian3.normalize(Cartesian3.cross(fromCameraF, up, fromCameraR), fromCameraR);
+        Cartesian3.normalize(Cartesian3.cross(fromCameraR, fromCameraF, fromCameraU), fromCameraU);
 
-        var sX = fromCameraS.x;
-        var sY = fromCameraS.y;
-        var sZ = fromCameraS.z;
+        var sX = fromCameraR.x;
+        var sY = fromCameraR.y;
+        var sZ = fromCameraR.z;
         var fX = fromCameraF.x;
         var fY = fromCameraF.y;
         var fZ = fromCameraF.z;
         var uX = fromCameraU.x;
         var uY = fromCameraU.y;
         var uZ = fromCameraU.z;
-        var eyeX = eye.x;
-        var eyeY = eye.y;
-        var eyeZ = eye.z;
-        var t0 = sX * -eyeX + sY * -eyeY+ sZ * -eyeZ;
-        var t1 = uX * -eyeX + uY * -eyeY+ uZ * -eyeZ;
-        var t2 = fX * eyeX + fY * eyeY + fZ * eyeZ;
+        var positionX = position.x;
+        var positionY = position.y;
+        var positionZ = position.z;
+        var t0 = sX * -positionX + sY * -positionY+ sZ * -positionZ;
+        var t1 = uX * -positionX + uY * -positionY+ uZ * -positionZ;
+        var t2 = fX * positionX + fY * positionY + fZ * positionZ;
 
-        //The code below this comment is an optimized
-        //version of the commented lines.
-        //Rather that create two matrices and then multiply,
-        //we just bake in the multiplcation as part of creation.
-        //var rotation = new Matrix4(
-        //                sX,  sY,  sZ, 0.0,
-        //                uX,  uY,  uZ, 0.0,
-        //               -fX, -fY, -fZ, 0.0,
-        //                0.0,  0.0,  0.0, 1.0);
-        //var translation = new Matrix4(
-        //                1.0, 0.0, 0.0, -eye.x,
-        //                0.0, 1.0, 0.0, -eye.y,
-        //                0.0, 0.0, 1.0, -eye.z,
-        //                0.0, 0.0, 0.0, 1.0);
-        //return rotation.multiply(translation);
+        // The code below this comment is an optimized
+        // version of the commented lines.
+        // Rather that create two matrices and then multiply,
+        // we just bake in the multiplcation as part of creation.
+        // var rotation = new Matrix4(
+        //                 sX,  sY,  sZ, 0.0,
+        //                 uX,  uY,  uZ, 0.0,
+        //                -fX, -fY, -fZ, 0.0,
+        //                 0.0,  0.0,  0.0, 1.0);
+        // var translation = new Matrix4(
+        //                 1.0, 0.0, 0.0, -position.x,
+        //                 0.0, 1.0, 0.0, -position.y,
+        //                 0.0, 0.0, 1.0, -position.z,
+        //                 0.0, 0.0, 0.0, 1.0);
+        // return rotation.multiply(translation);
         if (!defined(result)) {
             return new Matrix4(
                     sX,   sY,  sZ, t0,
@@ -618,7 +608,6 @@ define([
         result[14] = t2;
         result[15] = 1.0;
         return result;
-
     };
 
      /**
@@ -629,30 +618,20 @@ define([
       * @param {Number} near The distance to the near plane in meters.
       * @param {Number} far The distance to the far plane in meters.
       * @param {Matrix4} result The object in which the result will be stored.
-      * @returns The modified result parameter.
+      * @returns {Matrix4} The modified result parameter.
       *
-      * @exception {DeveloperError} fovY must be in [0, PI).
+      * @exception {DeveloperError} fovY must be in (0, PI].
       * @exception {DeveloperError} aspectRatio must be greater than zero.
       * @exception {DeveloperError} near must be greater than zero.
       * @exception {DeveloperError} far must be greater than zero.
       */
     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (fovY <= 0.0 || fovY > Math.PI) {
-            throw new DeveloperError('fovY must be in [0, PI).');
-        }
-        if (aspectRatio <= 0.0) {
-            throw new DeveloperError('aspectRatio must be greater than zero.');
-        }
-        if (near <= 0.0) {
-            throw new DeveloperError('near must be greater than zero.');
-        }
-        if (far <= 0.0) {
-            throw new DeveloperError('far must be greater than zero.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.number.greaterThan('fovY', fovY, 0.0);
+        Check.typeOf.number.lessThan('fovY', fovY, Math.PI);
+        Check.typeOf.number.greaterThan('near', near, 0.0);
+        Check.typeOf.number.greaterThan('far', far, 0.0);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var bottom = Math.tan(fovY * 0.5);
@@ -691,31 +670,17 @@ define([
     * @param {Number} near The distance to the near plane in meters.
     * @param {Number} far The distance to the far plane in meters.
     * @param {Matrix4} result The object in which the result will be stored.
-    * @returns The modified result parameter.
+    * @returns {Matrix4} The modified result parameter.
     */
     Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
-        if (!defined(bottom)) {
-            throw new DeveloperError('bottom is required.');
-        }
-        if (!defined(top)) {
-            throw new DeveloperError('top is required.');
-        }
-        if (!defined(near)) {
-            throw new DeveloperError('near is required.');
-        }
-        if (!defined(far)) {
-            throw new DeveloperError('far is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.number('left', left);
+        Check.typeOf.number('right', right);
+        Check.typeOf.number('bottom', bottom);
+        Check.typeOf.number('top', top);
+        Check.typeOf.number('near', near);
+        Check.typeOf.number('far', far);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var a = 1.0 / (right - left);
@@ -758,31 +723,17 @@ define([
      * @param {Number} near The distance to the near plane in meters.
      * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      */
     Matrix4.computePerspectiveOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
-        if (!defined(bottom)) {
-            throw new DeveloperError('bottom is required.');
-        }
-        if (!defined(top)) {
-            throw new DeveloperError('top is required.');
-        }
-        if (!defined(near)) {
-            throw new DeveloperError('near is required.');
-        }
-        if (!defined(far)) {
-            throw new DeveloperError('far is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.number('left', left);
+        Check.typeOf.number('right', right);
+        Check.typeOf.number('bottom', bottom);
+        Check.typeOf.number('top', top);
+        Check.typeOf.number('near', near);
+        Check.typeOf.number('far', far);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var column0Row0 = 2.0 * near / (right - left);
@@ -820,30 +771,17 @@ define([
      * @param {Number} bottom The number of meters below of the camera that will be in view.
      * @param {Number} top The number of meters above of the camera that will be in view.
      * @param {Number} near The distance to the near plane in meters.
-     * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      */
     Matrix4.computeInfinitePerspectiveOffCenter = function(left, right, bottom, top, near, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
-        if (!defined(bottom)) {
-            throw new DeveloperError('bottom is required.');
-        }
-        if (!defined(top)) {
-            throw new DeveloperError('top is required.');
-        }
-        if (!defined(near)) {
-            throw new DeveloperError('near is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.number('left', left);
+        Check.typeOf.number('right', right);
+        Check.typeOf.number('bottom', bottom);
+        Check.typeOf.number('top', top);
+        Check.typeOf.number('near', near);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var column0Row0 = 2.0 * near / (right - left);
@@ -880,7 +818,7 @@ define([
      * @param {Number}[nearDepthRange=0.0] The near plane distance in window coordinates.
      * @param {Number}[farDepthRange=1.0] The far plane distance in window coordinates.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      *
      * @example
      * // Create viewport transformation using an explicit viewport and depth range.
@@ -893,9 +831,7 @@ define([
      */
     Matrix4.computeViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         viewport = defaultValue(viewport, defaultValue.EMPTY_OBJECT);
@@ -938,6 +874,44 @@ define([
     };
 
     /**
+     * Computes a Matrix4 instance that transforms from world space to view space.
+     *
+     * @param {Cartesian3} position The position of the camera.
+     * @param {Cartesian3} direction The forward direction.
+     * @param {Cartesian3} up The up direction.
+     * @param {Cartesian3} right The right direction.
+     * @param {Matrix4} result The object in which the result will be stored.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.computeView = function(position, direction, up, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('position', position);
+        Check.typeOf.object('direction', direction);
+        Check.typeOf.object('up', up);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        result[0] = right.x;
+        result[1] = up.x;
+        result[2] = -direction.x;
+        result[3] = 0.0;
+        result[4] = right.y;
+        result[5] = up.y;
+        result[6] = -direction.y;
+        result[7] = 0.0;
+        result[8] = right.z;
+        result[9] = up.z;
+        result[10] = -direction.z;
+        result[11] = 0.0;
+        result[12] = -Cartesian3.dot(right, position);
+        result[13] = -Cartesian3.dot(up, position);
+        result[14] = Cartesian3.dot(direction, position);
+        result[15] = 1.0;
+        return result;
+    };
+
+    /**
      * Computes an Array from the provided Matrix4 instance.
      * The array will be in column-major order.
      *
@@ -958,9 +932,7 @@ define([
      */
     Matrix4.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
+        Check.typeOf.object('matrix', matrix);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -1006,12 +978,11 @@ define([
      */
     Matrix4.getElementIndex = function(column, row) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof row !== 'number' || row < 0 || row > 3) {
-            throw new DeveloperError('row must be 0, 1, 2, or 3.');
-        }
-        if (typeof column !== 'number' || column < 0 || column > 3) {
-            throw new DeveloperError('column must be 0, 1, 2, or 3.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('row', row, 0);
+        Check.typeOf.number.lessThanOrEquals('row', row, 3);
+
+        Check.typeOf.number.greaterThanOrEquals('column', column, 0);
+        Check.typeOf.number.lessThanOrEquals('column', column, 3);
         //>>includeEnd('debug');
 
         return column * 4 + row;
@@ -1046,16 +1017,12 @@ define([
      */
     Matrix4.getColumn = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
+        Check.typeOf.object('matrix', matrix);
 
-        if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index must be 0, 1, 2, or 3.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 3);
+
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var startIndex = index * 4;
@@ -1077,7 +1044,7 @@ define([
      * @param {Matrix4} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to set.
      * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified column.
-     * @param {Cartesian4} result The object onto which to store the result.
+     * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
@@ -1099,18 +1066,13 @@ define([
      */
     Matrix4.setColumn = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index must be 0, 1, 2, or 3.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 3);
+
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result = Matrix4.clone(matrix, result);
@@ -1119,6 +1081,45 @@ define([
         result[startIndex + 1] = cartesian.y;
         result[startIndex + 2] = cartesian.z;
         result[startIndex + 3] = cartesian.w;
+        return result;
+    };
+
+    /**
+     * Computes a new matrix that replaces the translation in the rightmost column of the provided
+     * matrix with the provided translation.  This assumes the matrix is an affine transformation
+     *
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Cartesian3} translation The translation that replaces the translation of the provided matrix.
+     * @param {Cartesian4} result The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.setTranslation = function(matrix, translation, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('translation', translation);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
+
+        result[4] = matrix[4];
+        result[5] = matrix[5];
+        result[6] = matrix[6];
+        result[7] = matrix[7];
+
+        result[8] = matrix[8];
+        result[9] = matrix[9];
+        result[10] = matrix[10];
+        result[11] = matrix[11];
+
+        result[12] = translation.x;
+        result[13] = translation.y;
+        result[14] = translation.z;
+        result[15] = matrix[15];
+
         return result;
     };
 
@@ -1151,16 +1152,12 @@ define([
      */
     Matrix4.getRow = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
+        Check.typeOf.object('matrix', matrix);
 
-        if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index must be 0, 1, 2, or 3.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 3);
+
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var x = matrix[index];
@@ -1181,7 +1178,7 @@ define([
      * @param {Matrix4} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to set.
      * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified row.
-     * @param {Cartesian4} result The object onto which to store the result.
+     * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
@@ -1203,18 +1200,13 @@ define([
      */
     Matrix4.setRow = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index must be 0, 1, 2, or 3.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 3);
+
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result = Matrix4.clone(matrix, result);
@@ -1236,12 +1228,8 @@ define([
      */
     Matrix4.getScale = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = Cartesian3.magnitude(Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn));
@@ -1275,15 +1263,9 @@ define([
      */
     Matrix4.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var left0 = left[0];
@@ -1369,15 +1351,9 @@ define([
      */
     Matrix4.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = left[0] + right[0];
@@ -1409,15 +1385,9 @@ define([
      */
     Matrix4.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = left[0] - right[0];
@@ -1460,15 +1430,9 @@ define([
      */
     Matrix4.multiplyTransformation = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var left0 = left[0];
@@ -1548,15 +1512,9 @@ define([
      */
     Matrix4.multiplyByMatrix3 = function(matrix, rotation, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(rotation)) {
-            throw new DeveloperError('rotation is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('rotation', rotation);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var left0 = matrix[0];
@@ -1626,15 +1584,9 @@ define([
      */
     Matrix4.multiplyByTranslation = function(matrix, translation, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(translation)) {
-            throw new DeveloperError('translation is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('translation', translation);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var x = translation.x;
@@ -1667,33 +1619,30 @@ define([
     var uniformScaleScratch = new Cartesian3();
 
     /**
-     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
      * by an implicit uniform scale matrix.  This is an optimization
-     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code> with less allocations and arithmetic operations.
+     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
+     * <code>m</code> must be an affine matrix.
+     * This function performs fewer allocations and arithmetic operations.
      *
-     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Matrix4} matrix The affine matrix on the left-hand side.
      * @param {Number} scale The uniform scale on the right-hand side.
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
-     * @see Matrix4.fromUniformScale
-     * @see Matrix4.multiplyByScale
      *
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
+     *
+     * @see Matrix4.fromUniformScale
+     * @see Matrix4.multiplyByScale
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (typeof scale !== 'number') {
-            throw new DeveloperError('scale is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number('scale', scale);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         uniformScaleScratch.x = scale;
@@ -1703,33 +1652,30 @@ define([
     };
 
     /**
-     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * Multiplies an affine transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
      * by an implicit non-uniform scale matrix.  This is an optimization
-     * for <code>Matrix4.multiply(m, Matrix4.fromScale(scale), m);</code> with less allocations and arithmetic operations.
+     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code>, where
+     * <code>m</code> must be an affine matrix.
+     * This function performs fewer allocations and arithmetic operations.
      *
-     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Matrix4} matrix The affine matrix on the left-hand side.
      * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
-     * @see Matrix4.fromScale
-     * @see Matrix4.multiplyByUniformScale
      *
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
      * Cesium.Matrix4.multiplyByScale(m, scale, m);
+     *
+     * @see Matrix4.fromScale
+     * @see Matrix4.multiplyByUniformScale
      */
     Matrix4.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(scale)) {
-            throw new DeveloperError('scale is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('scale', scale);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var scaleX = scale.x;
@@ -1770,15 +1716,9 @@ define([
      */
     Matrix4.multiplyByVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var vX = cartesian.x;
@@ -1816,15 +1756,9 @@ define([
      */
     Matrix4.multiplyByPointAsVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var vX = cartesian.x;
@@ -1856,16 +1790,9 @@ define([
      */
     Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var vX = cartesian.x;
@@ -1907,15 +1834,9 @@ define([
      */
     Matrix4.multiplyByScalar = function(matrix, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar must be a number');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = matrix[0] * scalar;
@@ -1961,12 +1882,8 @@ define([
      */
     Matrix4.negate = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = -matrix[0];
@@ -2012,12 +1929,8 @@ define([
      */
     Matrix4.transpose = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var matrix1 = matrix[1];
@@ -2055,12 +1968,8 @@ define([
      */
     Matrix4.abs = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = Math.abs(matrix[0]);
@@ -2176,9 +2085,7 @@ define([
      */
     Matrix4.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon must be a number');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return (left === right) ||
@@ -2211,12 +2118,8 @@ define([
      */
     Matrix4.getTranslation = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = matrix[12];
@@ -2249,12 +2152,8 @@ define([
      */
     Matrix4.getRotation = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = matrix[0];
@@ -2288,12 +2187,8 @@ define([
       */
     Matrix4.inverse = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         // Special case for a zero scale matrix that can occur, for example,
@@ -2433,12 +2328,8 @@ define([
      */
     Matrix4.inverseTransformation = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         //This function is an optimized version of the below 4 lines.
@@ -2494,6 +2385,17 @@ define([
                                                 0.0, 1.0, 0.0, 0.0,
                                                 0.0, 0.0, 1.0, 0.0,
                                                 0.0, 0.0, 0.0, 1.0));
+
+    /**
+     * An immutable Matrix4 instance initialized to the zero matrix.
+     *
+     * @type {Matrix4}
+     * @constant
+     */
+    Matrix4.ZERO = freezeObject(new Matrix4(0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 0.0));
 
     /**
      * The index into Matrix4 for column 0, row 0.
@@ -2623,6 +2525,20 @@ define([
      */
     Matrix4.COLUMN3ROW3 = 15;
 
+    defineProperties(Matrix4.prototype, {
+        /**
+         * Gets the number of items in the collection.
+         * @memberof Matrix4.prototype
+         *
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return Matrix4.packedLength;
+            }
+        }
+    });
+
     /**
      * Duplicates the provided Matrix4 instance.
      *
@@ -2642,6 +2558,28 @@ define([
      */
     Matrix4.prototype.equals = function(right) {
         return Matrix4.equals(this, right);
+    };
+
+    /**
+     * @private
+     */
+    Matrix4.equalsArray = function(matrix, array, offset) {
+        return matrix[0] === array[offset] &&
+               matrix[1] === array[offset + 1] &&
+               matrix[2] === array[offset + 2] &&
+               matrix[3] === array[offset + 3] &&
+               matrix[4] === array[offset + 4] &&
+               matrix[5] === array[offset + 5] &&
+               matrix[6] === array[offset + 6] &&
+               matrix[7] === array[offset + 7] &&
+               matrix[8] === array[offset + 8] &&
+               matrix[9] === array[offset + 9] &&
+               matrix[10] === array[offset + 10] &&
+               matrix[11] === array[offset + 11] &&
+               matrix[12] === array[offset + 12] &&
+               matrix[13] === array[offset + 13] &&
+               matrix[14] === array[offset + 14] &&
+               matrix[15] === array[offset + 15];
     };
 
     /**

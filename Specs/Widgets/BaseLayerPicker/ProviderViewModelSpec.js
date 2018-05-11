@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/BaseLayerPicker/ProviderViewModel',
         'ThirdParty/knockout',
@@ -7,8 +6,7 @@ defineSuite([
         ProviderViewModel,
         knockout,
         createCommand) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     var spyCreationFunction;
     beforeEach(function() {
@@ -21,6 +19,7 @@ defineSuite([
                 name : knockout.observable('name'),
                 tooltip : knockout.observable('tooltip'),
                 iconUrl : knockout.observable('iconUrl'),
+                category: 'mycategory',
                 creationFunction : createCommand(spyCreationFunction)
             };
 
@@ -28,6 +27,7 @@ defineSuite([
             expect(viewModel.name).toBe(options.name());
             expect(viewModel.tooltip).toBe(options.tooltip());
             expect(viewModel.iconUrl).toBe(options.iconUrl());
+            expect(viewModel.category).toBe(options.category);
 
             expect(viewModel.creationCommand).toBeDefined();
             viewModel.creationCommand();

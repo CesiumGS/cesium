@@ -1,4 +1,4 @@
-@import url('../../ThirdParty/dojo-release-1.9.3/dijit/themes/claro/claro.css');
+@import url('../../ThirdParty/dojo-release-1.10.4/dijit/themes/claro/claro.css');
 
 html, body {
     height: 100%;
@@ -30,13 +30,17 @@ html, body {
 }
 
 #toolbar, #galleryContainer {
+    -ms-user-select: none;
     -moz-user-select: -moz-none;  /* allows for re-enabling on sub-elements like the search box */
     -webkit-user-select: none;
+    user-select: none;
 }
 
 #search {
+    -ms-user-select: text;
     -moz-user-select: text;
     -webkit-user-select: text;
+    user-select: text;
  }
 
 .cesiumTitle {
@@ -132,12 +136,6 @@ html, body {
     border: none;
     width: 100%;
     height: 100%;
-    -moz-transition-property: -moz-transform;
-    -moz-transition-duration: 0.5s;
-    -moz-transform-origin: 200px 150px;
-    -webkit-transition-property: -webkit-transform;
-    -webkit-transition-duration: 0.5s;
-    -webkit-transform-origin: 200px 150px;
     transition-property: transform;
     transition-duration: 0.5s;
     transform-origin: 200px 150px;
@@ -146,8 +144,6 @@ html, body {
 .makeThumbnail {
     width: 900px;
     height: 600px;
-    -moz-transform: scale(0.25);
-    -webkit-transform: scale(0.25);
     transform: scale(0.25);
 }
 
@@ -198,6 +194,7 @@ a.linkButton:focus, a.linkButton:hover {
     font-weight: bold;
     background-color: #F42;
     border-radius: 3px;
+    border: none;
 }
 
 .CodeMirror pre.errorLine {
@@ -211,6 +208,7 @@ a.linkButton:focus, a.linkButton:hover {
     font-weight: bold;
     background-color: #FE2;
     border-radius: 3px;
+    border: none;
 }
 
 .CodeMirror pre.hintLine {
@@ -224,6 +222,7 @@ a.linkButton:focus, a.linkButton:hover {
     font-weight: bold;
     background-color: #2E2;
     border-radius: 3px;
+    border: none;
 }
 
 .CodeMirror pre.highlightLine {
@@ -237,6 +236,7 @@ a.linkButton:focus, a.linkButton:hover {
     font-weight: bold;
     background-color: #CEF;
     border-radius: 3px;
+    border: none;
 }
 
 .CodeMirror pre.searchLine {
@@ -245,4 +245,18 @@ a.linkButton:focus, a.linkButton:hover {
 
 .CodeMirror-gutter-text {
     cursor: default;
+}
+
+.gitHubIcon {
+    background-image: url('./images/gitHub16px.png');
+    width: 16px;
+    height: 16px;
+    text-align: center;
+}
+
+.shareIcon {
+    background-image: url('./images/share16px.png');
+    width: 16px;
+    height: 16px;
+    text-align: center;
 }

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Color',
         '../../Core/defined',
@@ -7,7 +6,7 @@ define([
         Color,
         defined,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

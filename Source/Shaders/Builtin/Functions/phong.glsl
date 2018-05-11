@@ -28,8 +28,12 @@ float czm_private_getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm
  */
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
-    // Diffuse from directional light sources at eye (for top-down and horizon views)
-    float diffuse = czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material) + czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
+    // Diffuse from directional light sources at eye (for top-down)
+    float diffuse = czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material);
+    if (czm_sceneMode == czm_sceneMode3D) {
+        // (and horizon views in 3D)
+        diffuse += czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
+    }
 
     // Specular from sun and pseudo-moon
     float specular = czm_private_getSpecularOfMaterial(czm_sunDirectionEC, toEye, material) + czm_private_getSpecularOfMaterial(czm_moonDirectionEC, toEye, material);

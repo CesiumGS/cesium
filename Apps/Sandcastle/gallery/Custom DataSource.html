@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="A custom DataSource implementation.">
     <meta name="cesium-sandcastle-labels" content="Showcases, DataSources, Tutorials">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 /**
  * This class is an example of a custom DataSource.  It loads JSON data as
@@ -41,7 +41,7 @@ function startup(Cesium) {
  * dataSource.loadUrl('sample.json');
  * viewer.dataSources.add(dataSource);
  */
-var WebGLGlobeDataSource = function(name) {
+function WebGLGlobeDataSource(name) {
     //All public configuration is defined as ES5 properties
     //These are just the "private" variables and their defaults.
     this._name = name;
@@ -53,7 +53,8 @@ var WebGLGlobeDataSource = function(name) {
     this._seriesNames = [];
     this._seriesToDisplay = undefined;
     this._heightScale = 10000000;
-};
+    this._entityCluster = new Cesium.EntityCluster();
+}
 
 Object.defineProperties(WebGLGlobeDataSource.prototype, {
     //The below properties must be implemented by all DataSource instances
@@ -155,15 +156,15 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
         },
         set : function(value) {
             this._seriesToDisplay = value;
-            
-            //Iterate over all polylines and set their show property
+
+            //Iterate over all entities and set their show property
             //to true only if they are part of the current series.
             var collection = this._entityCollection;
-            var entities = collection.entities;
+            var entities = collection.values;
             collection.suspendEvents();
             for (var i = 0; i < entities.length; i++) {
                 var entity = entities[i];
-                entity.polyline.show.setValue(value === entity.seriesName);
+                entity.show = value === entity.seriesName;
             }
             collection.resumeEvents();
         }
@@ -182,6 +183,35 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
                 throw new Cesium.DeveloperError('value must be greater than 0');
             }
             this._heightScale = value;
+        }
+    },
+    /**
+     * Gets whether or not this data source should be displayed.
+     * @memberof WebGLGlobeDataSource.prototype
+     * @type {Boolean}
+     */
+    show : {
+        get : function() {
+            return this._entityCollection;
+        },
+        set : function(value) {
+            this._entityCollection = value;
+        }
+    },
+    /**
+     * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+     * @memberof WebGLGlobeDataSource.prototype
+     * @type {EntityCluster}
+     */
+    clustering : {
+        get : function() {
+            return this._entityCluster;
+        },
+        set : function(value) {
+            if (!Cesium.defined(value)) {
+                throw new Cesium.DeveloperError('value must be defined.');
+            }
+            this._entityCluster = value;
         }
     }
 });
@@ -208,12 +238,12 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
     //Use 'when' to load the URL into a json object
     //and then process is with the `load` function.
     var that = this;
-    return Cesium.when(Cesium.loadJson(url), function(json) {
+    return Cesium.Resource.fetchJson(url).then(function(json) {
         return that.load(json, url);
     }).otherwise(function(error) {
-        //Otherwise will catch any errors or exceptions that occur 
-        //during the promise processing. When this happens, 
-        //we raise the error event and reject the promise. 
+        //Otherwise will catch any errors or exceptions that occur
+        //during the promise processing. When this happens,
+        //we raise the error event and reject the promise.
         this._setLoading(false);
         that._error.raiseEvent(that, error);
         return Cesium.when.reject(error);
@@ -222,7 +252,7 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
 
 /**
  * Loads the provided data, replacing any existing data.
- * @param {Object} data The object to be processed.
+ * @param {Array} data The object to be processed.
  */
 WebGLGlobeDataSource.prototype.load = function(data) {
     //>>includeStart('debug', pragmas.debug);
@@ -239,7 +269,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
     var heightScale = this.heightScale;
     var entities = this._entityCollection;
 
-    //It's a good idea to suspend events when making changes to a 
+    //It's a good idea to suspend events when making changes to a
     //large amount of entities.  This will cause events to be batched up
     //into the minimal amount of function calls and all take place at the
     //end of processing (when resumeEvents is called).
@@ -287,7 +317,6 @@ WebGLGlobeDataSource.prototype.load = function(data) {
 
             //WebGL Globe only contains lines, so that's the only graphics we create.
             var polyline = new Cesium.PolylineGraphics();
-            polyline.show = new Cesium.ConstantProperty(show);
             polyline.material = new Cesium.ColorMaterialProperty(color);
             polyline.width = new Cesium.ConstantProperty(2);
             polyline.followSurface = new Cesium.ConstantProperty(false);
@@ -296,6 +325,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             //The polyline instance itself needs to be on an entity.
             var entity = new Cesium.Entity({
                 id : seriesName + ' index ' + i.toString(),
+                show : show,
                 polyline : polyline,
                 seriesName : seriesName //Custom property to indicate series name
             });
@@ -323,7 +353,7 @@ WebGLGlobeDataSource.prototype._setLoading = function(isLoading) {
 var dataSource = new WebGLGlobeDataSource();
 dataSource.loadUrl('../../SampleData/population909500.json').then(function() {
 
-    //After the initial load, create buttons to let the user switch among series. 
+    //After the initial load, create buttons to let the user switch among series.
     function createSeriesSetter(seriesName) {
         return function() {
             dataSource.seriesToDisplay = seriesName;

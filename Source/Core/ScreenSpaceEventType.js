@@ -1,15 +1,13 @@
-/*global define*/
 define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
      *
-     * @namespace
-     * @alias ScreenSpaceEventType
+     * @exports ScreenSpaceEventType
      */
     var ScreenSpaceEventType = {
         /**
@@ -69,14 +67,6 @@ define([
         RIGHT_CLICK : 7,
 
         /**
-         * Represents a mouse right double click event.
-         *
-         * @type {Number}
-         * @constant
-         */
-        RIGHT_DOUBLE_CLICK : 8,
-
-        /**
          * Represents a mouse middle button down event.
          *
          * @type {Number}
@@ -99,14 +89,6 @@ define([
          * @constant
          */
         MIDDLE_CLICK : 12,
-
-        /**
-         * Represents a mouse middle double click event.
-         *
-         * @type {Number}
-         * @constant
-         */
-        MIDDLE_DOUBLE_CLICK : 13,
 
         /**
          * Represents a mouse move event.

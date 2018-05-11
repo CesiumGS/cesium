@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  It is intended to be
@@ -16,9 +15,9 @@ define([
      * @constructor
      * @private
      */
-    var QuadtreeTileProvider = function QuadtreeTileProvider() {
+    function QuadtreeTileProvider() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Computes the default geometric error for level zero of the quadtree.
@@ -76,6 +75,16 @@ define([
     });
 
     /**
+     * Called at the beginning of the update cycle, regardless of id a new frame is being rendered, before {@link QuadtreeTileProvider#beginUpdate}
+     * @memberof QuadtreeTileProvider
+     * @function
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     */
+    QuadtreeTileProvider.prototype.update = DeveloperError.throwInstantiationError;
+
+    /**
      * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      * @memberof QuadtreeTileProvider
@@ -105,7 +114,7 @@ define([
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link QuadtreeTileProvider#ready} returns true.
      *
-     * @see {QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError}
+     * @see QuadtreeTileProvider#computeDefaultLevelZeroMaximumGeometricError
      *
      * @memberof QuadtreeTileProvider
      * @function
@@ -169,8 +178,6 @@ define([
      *
      * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information of the current rendering frame.
-     * @param {Cartesian3} cameraCartesianPosition The position of the camera in world coordinates.
-     * @param {Cartographic} cameraCartographicPosition The position of the camera in cartographic / geodetic coordinates.
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
@@ -200,14 +207,13 @@ define([
      *
      * @memberof QuadtreeTileProvider
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreeTileProvider#isDestroyed
      *
      * @example
      * provider = provider && provider();
+     *
+     * @see QuadtreeTileProvider#isDestroyed
      */
     QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;
 

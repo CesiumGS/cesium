@@ -1,17 +1,18 @@
-/*global define*/
 define([
         './Cartesian2',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
+        './defineProperties',
         './freezeObject'
     ], function(
         Cartesian2,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
+        defineProperties,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A 2x2 matrix, indexable as a column-major order array.
@@ -31,11 +32,68 @@ define([
      * @see Matrix3
      * @see Matrix4
      */
-    var Matrix2 = function(column0Row0, column1Row0, column0Row1, column1Row1) {
+    function Matrix2(column0Row0, column1Row0, column0Row1, column1Row1) {
         this[0] = defaultValue(column0Row0, 0.0);
         this[1] = defaultValue(column0Row1, 0.0);
         this[2] = defaultValue(column1Row0, 0.0);
         this[3] = defaultValue(column1Row1, 0.0);
+    }
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    Matrix2.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {Matrix2} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
+     */
+    Matrix2.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value[0];
+        array[startingIndex++] = value[1];
+        array[startingIndex++] = value[2];
+        array[startingIndex++] = value[3];
+
+        return array;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Matrix2} [result] The object into which to store the result.
+     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     */
+    Matrix2.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Matrix2();
+        }
+
+        result[0] = array[startingIndex++];
+        result[1] = array[startingIndex++];
+        result[2] = array[startingIndex++];
+        result[3] = array[startingIndex++];
+        return result;
     };
 
     /**
@@ -45,18 +103,18 @@ define([
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
-    Matrix2.clone = function(values, result) {
-        if (!defined(values)) {
+    Matrix2.clone = function(matrix, result) {
+        if (!defined(matrix)) {
             return undefined;
         }
         if (!defined(result)) {
-            return new Matrix2(values[0], values[2],
-                               values[1], values[3]);
+            return new Matrix2(matrix[0], matrix[2],
+                               matrix[1], matrix[3]);
         }
-        result[0] = values[0];
-        result[1] = values[1];
-        result[2] = values[2];
-        result[3] = values[3];
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
         return result;
     };
 
@@ -82,9 +140,7 @@ define([
      */
     Matrix2.fromArray = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -105,13 +161,11 @@ define([
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
     Matrix2.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values parameter is required');
-        }
+        Check.defined('values', values);
         //>>includeEnd('debug');
 
         return Matrix2.clone(values, result);
@@ -123,13 +177,11 @@ define([
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
     Matrix2.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
+        Check.defined('values', values);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -148,7 +200,7 @@ define([
      *
      * @param {Cartesian2} scale The x and y scale factors.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -158,9 +210,7 @@ define([
      */
     Matrix2.fromScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scale)) {
-            throw new DeveloperError('scale is required.');
-        }
+        Check.typeOf.object('scale', scale);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -181,7 +231,7 @@ define([
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -191,9 +241,7 @@ define([
      */
     Matrix2.fromUniformScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof scale !== 'number') {
-            throw new DeveloperError('scale is required.');
-        }
+        Check.typeOf.number('scale', scale);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -214,7 +262,7 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
+     * @returns {Matrix2} The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise.
@@ -224,9 +272,7 @@ define([
      */
     Matrix2.fromRotation = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+        Check.typeOf.number('angle', angle);
         //>>includeEnd('debug');
 
         var cosAngle = Math.cos(angle);
@@ -254,9 +300,7 @@ define([
      */
     Matrix2.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
+        Check.typeOf.object('matrix', matrix);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -287,12 +331,11 @@ define([
      */
     Matrix2.getElementIndex = function(column, row) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof row !== 'number' || row < 0 || row > 1) {
-            throw new DeveloperError('row must be 0 or 1.');
-        }
-        if (typeof column !== 'number' || column < 0 || column > 1) {
-            throw new DeveloperError('column must be 0 or 1.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('row', row, 0);
+        Check.typeOf.number.lessThanOrEquals('row', row, 1);
+
+        Check.typeOf.number.greaterThanOrEquals('column', column, 0);
+        Check.typeOf.number.lessThanOrEquals('column', column, 1);
         //>>includeEnd('debug');
 
         return column * 2 + row;
@@ -310,15 +353,12 @@ define([
      */
     Matrix2.getColumn = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index must be 0 or 1.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 1);
+
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var startIndex = index * 2;
@@ -343,18 +383,13 @@ define([
      */
     Matrix2.setColumn = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index must be 0 or 1.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 1);
+
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result = Matrix2.clone(matrix, result);
@@ -376,15 +411,12 @@ define([
      */
     Matrix2.getRow = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index must be 0 or 1.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 1);
+
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var x = matrix[index];
@@ -408,18 +440,13 @@ define([
      */
     Matrix2.setRow = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index must be 0 or 1.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 1);
+
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result = Matrix2.clone(matrix, result);
@@ -439,12 +466,8 @@ define([
      */
     Matrix2.getScale = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = Cartesian2.magnitude(Cartesian2.fromElements(matrix[0], matrix[1], scratchColumn));
@@ -476,15 +499,9 @@ define([
      */
     Matrix2.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var column0Row0 = left[0] * right[0] + left[2] * right[1];
@@ -509,15 +526,9 @@ define([
      */
     Matrix2.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = left[0] + right[0];
@@ -537,15 +548,9 @@ define([
      */
     Matrix2.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = left[0] - right[0];
@@ -565,15 +570,9 @@ define([
      */
     Matrix2.multiplyByVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
@@ -594,21 +593,45 @@ define([
      */
     Matrix2.multiplyByScalar = function(matrix, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = matrix[0] * scalar;
         result[1] = matrix[1] * scalar;
         result[2] = matrix[2] * scalar;
         result[3] = matrix[3] * scalar;
+        return result;
+    };
+
+    /**
+     * Computes the product of a matrix times a (non-uniform) scale, as if the scale were a scale matrix.
+     *
+     * @param {Matrix2} matrix The matrix on the left-hand side.
+     * @param {Cartesian2} scale The non-uniform scale on the right-hand side.
+     * @param {Matrix2} result The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter.
+     *
+     *
+     * @example
+     * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromScale(scale), m);
+     * Cesium.Matrix2.multiplyByScale(m, scale, m);
+     *
+     * @see Matrix2.fromScale
+     * @see Matrix2.multiplyByUniformScale
+     */
+    Matrix2.multiplyByScale = function(matrix, scale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('scale', scale);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        result[0] = matrix[0] * scale.x;
+        result[1] = matrix[1] * scale.x;
+        result[2] = matrix[2] * scale.y;
+        result[3] = matrix[3] * scale.y;
         return result;
     };
 
@@ -621,12 +644,8 @@ define([
      */
     Matrix2.negate = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = -matrix[0];
@@ -645,12 +664,8 @@ define([
      */
     Matrix2.transpose = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var column0Row0 = matrix[0];
@@ -674,12 +689,8 @@ define([
      */
     Matrix2.abs = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required,');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = Math.abs(matrix[0]);
@@ -709,6 +720,16 @@ define([
     };
 
     /**
+     * @private
+     */
+    Matrix2.equalsArray = function(matrix, array, offset) {
+        return matrix[0] === array[offset] &&
+               matrix[1] === array[offset + 1] &&
+               matrix[2] === array[offset + 2] &&
+               matrix[3] === array[offset + 3];
+    };
+
+    /**
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
@@ -720,9 +741,7 @@ define([
      */
     Matrix2.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon must be a number');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return (left === right) ||
@@ -742,6 +761,15 @@ define([
      */
     Matrix2.IDENTITY = freezeObject(new Matrix2(1.0, 0.0,
                                                 0.0, 1.0));
+
+    /**
+     * An immutable Matrix2 instance initialized to the zero matrix.
+     *
+     * @type {Matrix2}
+     * @constant
+     */
+    Matrix2.ZERO = freezeObject(new Matrix2(0.0, 0.0,
+                                            0.0, 0.0));
 
     /**
      * The index into Matrix2 for column 0, row 0.
@@ -790,6 +818,20 @@ define([
      * matrix[Cesium.Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
      */
     Matrix2.COLUMN1ROW1 = 3;
+
+    defineProperties(Matrix2.prototype, {
+        /**
+         * Gets the number of items in the collection.
+         * @memberof Matrix2.prototype
+         *
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return Matrix2.packedLength;
+            }
+        }
+    });
 
     /**
      * Duplicates the provided Matrix2 instance.

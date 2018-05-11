@@ -1,7 +1,11 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/clone',
+        '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -9,28 +13,40 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/EncodedCartesian3',
         '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
-        '../Core/GeometryInstance',
-        '../Core/GeometryInstanceAttribute',
         '../Core/isArray',
         '../Core/Matrix4',
+        '../Core/RuntimeError',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../ThirdParty/when',
+        './BatchTable',
         './CullFace',
-        './Pass',
+        './DepthFunction',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Cartographic,
         clone,
+        Color,
         combine,
         ComponentDatatype,
         defaultValue,
@@ -38,26 +54,33 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        EncodedCartesian3,
         FeatureDetection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        GeometryInstance,
-        GeometryInstanceAttribute,
         isArray,
         Matrix4,
+        RuntimeError,
         subdivideArray,
         TaskProcessor,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
-        ShaderSource,
-        when,
-        CullFace,
         Pass,
+        RenderState,
+        ShaderProgram,
+        ShaderSource,
+        VertexArray,
+        when,
+        BatchTable,
+        CullFace,
+        DepthFunction,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode) {
-    "use strict";
+        SceneMode,
+        ShadowMode) {
+    'use strict';
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
@@ -84,7 +107,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
+     * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
@@ -96,9 +119,7 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     *
-     * @see GeometryInstance
-     * @see Appearance
+     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -165,8 +186,13 @@ define([
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * }));
+     *
+     * @see GeometryInstance
+     * @see Appearance
+     * @see ClassificationPrimitive
+     * @see GroundPrimitive
      */
-    var Primitive = function(options) {
+    function Primitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -177,14 +203,15 @@ define([
          * Changing this property after the primitive is rendered has no effect.
          * </p>
          *
-         * @type Array
+         * @readonly
+         * @type GeometryInstance[]|GeometryInstance
          *
          * @default undefined
          */
         this.geometryInstances = options.geometryInstances;
 
         /**
-         * The {@link Appearance} used to shade this primitive.  Each geometry
+         * The {@link Appearance} used to shade this primitive. Each geometry
          * instance is shaded with the same appearance.  Some appearances, like
          * {@link PerInstanceColorAppearance} allow giving each instance unique
          * properties.
@@ -198,13 +225,36 @@ define([
         this._material = undefined;
 
         /**
+         * The {@link Appearance} used to shade this primitive when it fails the depth test. Each geometry
+         * instance is shaded with the same appearance.  Some appearances, like
+         * {@link PerInstanceColorAppearance} allow giving each instance unique
+         * properties.
+         *
+         * <p>
+         * When using an appearance that requires a color attribute, like PerInstanceColorAppearance,
+         * add a depthFailColor per-instance attribute instead.
+         * </p>
+         *
+         * <p>
+         * Requires the EXT_frag_depth WebGL extension to render properly. If the extension is not supported,
+         * there may be artifacts.
+         * </p>
+         * @type Appearance
+         *
+         * @default undefined
+         */
+        this.depthFailAppearance = options.depthFailAppearance;
+        this._depthFailAppearance = undefined;
+        this._depthFailMaterial = undefined;
+
+        /**
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
          * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * <p>
-         * If the model matrix is changed after creation, it only affects primitives with one instance and only in 3D mode.
+         * This property is only supported in 3D mode.
          * </p>
          *
          * @type Matrix4
@@ -258,25 +308,41 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        /**
+         * @private
+         */
+        this.rtcCenter = options.rtcCenter;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+            throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
+        }
+        //>>includeEnd('debug');
+
+        /**
+         * Determines whether this primitive casts or receives shadows from each light source.
+         *
+         * @type {ShadowMode}
+         *
+         * @default ShadowMode.DISABLED
+         */
+        this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
+
         this._translucent = undefined;
 
         this._state = PrimitiveState.READY;
         this._geometries = [];
-        this._vaAttributes = undefined;
         this._error = undefined;
         this._numberOfInstances = 0;
-        this._validModelMatrix = false;
 
         this._boundingSpheres = [];
         this._boundingSphereWC = [];
         this._boundingSphereCV = [];
         this._boundingSphere2D = [];
         this._boundingSphereMorph = [];
-        this._perInstanceAttributeLocations = undefined;
         this._perInstanceAttributeCache = [];
         this._instanceIds = [];
         this._lastPerInstanceAttributeIndex = 0;
-        this._dirtyAttributes = [];
 
         this._va = [];
         this._attributeLocations = undefined;
@@ -286,6 +352,11 @@ define([
         this._backFaceRS = undefined;
         this._sp = undefined;
 
+        this._depthFailAppearance = undefined;
+        this._spDepthFail = undefined;
+        this._frontFaceDepthFailRS = undefined;
+        this._backFaceDepthFailRS = undefined;
+
         this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
@@ -293,10 +364,28 @@ define([
         this._colorCommands = [];
         this._pickCommands = [];
 
+        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
+
+        this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
+        this._createRenderStatesFunction = options._createRenderStatesFunction;
+        this._createShaderProgramFunction = options._createShaderProgramFunction;
+        this._createCommandsFunction = options._createCommandsFunction;
+        this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
+
+        this._createPickOffsets = options._createPickOffsets;
+        this._pickOffsets = undefined;
+
         this._createGeometryResults = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
-    };
+
+        this._batchTable = undefined;
+        this._batchTableAttributeIndices = undefined;
+        this._instanceBoundingSpheres = undefined;
+        this._instanceBoundingSpheresCV = undefined;
+        this._batchTableBoundingSpheresUpdated = false;
+        this._batchTableBoundingSphereAttributeIndices = undefined;
+    }
 
     defineProperties(Primitive.prototype, {
         /**
@@ -414,22 +503,197 @@ define([
         /**
          * Gets a promise that resolves when the primitive is ready to render.
          * @memberof Primitive.prototype
-         * @type {Promise}
+         * @type {Promise.<Primitive>}
          * @readonly
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         }
     });
 
+    function getCommonPerInstanceAttributeNames(instances) {
+        var length = instances.length;
+
+        var attributesInAllInstances = [];
+        var attributes0 = instances[0].attributes;
+        var name;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                var attribute = attributes0[name];
+                var inAllInstances = true;
+
+                // Does this same attribute exist in all instances?
+                for (var i = 1; i < length; ++i) {
+                    var otherAttribute = instances[i].attributes[name];
+
+                    if (!defined(otherAttribute) ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllInstances = false;
+                        break;
+                    }
+                }
+
+                if (inAllInstances) {
+                    attributesInAllInstances.push(name);
+                }
+            }
+        }
+
+        return attributesInAllInstances;
+    }
+
+    var scratchGetAttributeCartesian2 = new Cartesian2();
+    var scratchGetAttributeCartesian3 = new Cartesian3();
+    var scratchGetAttributeCartesian4 = new Cartesian4();
+
+    function getAttributeValue(value) {
+        var componentsPerAttribute = value.length;
+        if (componentsPerAttribute === 1) {
+            return value[0];
+        } else if (componentsPerAttribute === 2) {
+            return Cartesian2.unpack(value, 0, scratchGetAttributeCartesian2);
+        } else if (componentsPerAttribute === 3) {
+            return Cartesian3.unpack(value, 0, scratchGetAttributeCartesian3);
+        } else if (componentsPerAttribute === 4) {
+            return Cartesian4.unpack(value, 0, scratchGetAttributeCartesian4);
+        }
+    }
+
+    function createBatchTable(primitive, context) {
+        var geometryInstances = primitive.geometryInstances;
+        var instances = (isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
+        var numberOfInstances = instances.length;
+        if (numberOfInstances === 0) {
+            return;
+        }
+
+        var names = getCommonPerInstanceAttributeNames(instances);
+        var length = names.length;
+
+        var allowPicking = primitive.allowPicking;
+        var attributes = [];
+        var attributeIndices = {};
+        var boundingSphereAttributeIndices = {};
+
+        var firstInstance = instances[0];
+        var instanceAttributes = firstInstance.attributes;
+
+        var i;
+        var name;
+        var attribute;
+
+        for (i = 0; i < length; ++i) {
+            name = names[i];
+            attribute = instanceAttributes[name];
+
+            attributeIndices[name] = i;
+            attributes.push({
+                functionName : 'czm_batchTable_' + name,
+                componentDatatype : attribute.componentDatatype,
+                componentsPerAttribute : attribute.componentsPerAttribute,
+                normalize : attribute.normalize
+            });
+        }
+
+        if (names.indexOf('distanceDisplayCondition') !== -1) {
+            attributes.push({
+                functionName : 'czm_batchTable_boundingSphereCenter3DHigh',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereCenter3DLow',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereCenter2DHigh',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereCenter2DLow',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            },{
+                functionName : 'czm_batchTable_boundingSphereRadius',
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 1
+            });
+            boundingSphereAttributeIndices.center3DHigh = attributes.length - 5;
+            boundingSphereAttributeIndices.center3DLow = attributes.length - 4;
+            boundingSphereAttributeIndices.center2DHigh = attributes.length - 3;
+            boundingSphereAttributeIndices.center2DLow = attributes.length - 2;
+            boundingSphereAttributeIndices.radius = attributes.length - 1;
+        }
+
+        if (allowPicking) {
+            attributes.push({
+                functionName : 'czm_batchTable_pickColor',
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                normalize : true
+            });
+        }
+
+        var attributesLength = attributes.length;
+        var batchTable = new BatchTable(context, attributes, numberOfInstances);
+
+        for (i = 0; i < numberOfInstances; ++i) {
+            var instance = instances[i];
+            instanceAttributes = instance.attributes;
+
+            for (var j = 0; j < length; ++j) {
+                name = names[j];
+                attribute = instanceAttributes[name];
+                var value = getAttributeValue(attribute.value);
+                var attributeIndex = attributeIndices[name];
+                batchTable.setBatchedAttribute(i, attributeIndex, value);
+            }
+
+            if (allowPicking) {
+                var pickObject = {
+                    primitive : defaultValue(instance.pickPrimitive, primitive)
+                };
+
+                if (defined(instance.id)) {
+                    pickObject.id = instance.id;
+                }
+
+                var pickId = context.createPickId(pickObject);
+                primitive._pickIds.push(pickId);
+
+                var pickColor = pickId.color;
+                var color = scratchGetAttributeCartesian4;
+                color.x = Color.floatToByte(pickColor.red);
+                color.y = Color.floatToByte(pickColor.green);
+                color.z = Color.floatToByte(pickColor.blue);
+                color.w = Color.floatToByte(pickColor.alpha);
+
+                batchTable.setBatchedAttribute(i, attributesLength - 1, color);
+            }
+        }
+
+        primitive._batchTable = batchTable;
+        primitive._batchTableAttributeIndices = attributeIndices;
+        primitive._batchTableBoundingSphereAttributeIndices = boundingSphereAttributeIndices;
+    }
+
     function cloneAttribute(attribute) {
+        var clonedValues;
+        if (isArray(attribute.values)) {
+            clonedValues = attribute.values.slice(0);
+        } else {
+            clonedValues = new attribute.values.constructor(attribute.values);
+        }
         return new GeometryAttribute({
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
             normalize : attribute.normalize,
-            values : new attribute.values.constructor(attribute.values)
+            values : clonedValues
         });
     }
 
@@ -445,7 +709,11 @@ define([
         var indices;
         if (defined(geometry.indices)) {
             var sourceValues = geometry.indices;
-            indices = new sourceValues.constructor(sourceValues);
+            if (isArray(sourceValues)) {
+                indices = sourceValues.slice(0);
+            } else {
+                indices = new sourceValues.constructor(sourceValues);
+            }
         }
 
         return new Geometry({
@@ -456,36 +724,18 @@ define([
         });
     }
 
-    function cloneGeometryInstanceAttribute(attribute) {
-        return new GeometryInstanceAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
-            normalize : attribute.normalize,
-            value : new attribute.value.constructor(attribute.value)
-        });
-    }
-
     function cloneInstance(instance, geometry) {
-        var attributes = instance.attributes;
-        var newAttributes = {};
-        for (var property in attributes) {
-            if (attributes.hasOwnProperty(property)) {
-                newAttributes[property] = cloneGeometryInstanceAttribute(attributes[property]);
-            }
-        }
-
-        return new GeometryInstance({
+        return {
             geometry : geometry,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
-            attributes : newAttributes,
             pickPrimitive : instance.pickPrimitive,
             id : instance.id
-        });
+        };
     }
 
     var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
-    function createColumbusViewShader(primitive, vertexShaderSource, scene3DOnly) {
+    Primitive._modifyShaderPosition = function(primitive, vertexShaderSource, scene3DOnly) {
         var match;
 
         var forwardDecl = '';
@@ -502,74 +752,171 @@ define([
                 forwardDecl += functionName + ';\n';
             }
 
-            if (!scene3DOnly) {
-                attributes +=
-                    'attribute vec3 ' + name + '2DHigh;\n' +
-                    'attribute vec3 ' + name + '2DLow;\n';
+            if (!defined(primitive.rtcCenter)) {
+                // Use GPU RTE
+                if (!scene3DOnly) {
+                    attributes +=
+                        'attribute vec3 ' + name + '2DHigh;\n' +
+                        'attribute vec3 ' + name + '2DLow;\n';
+
+                    computeFunctions +=
+                        functionName + '\n' +
+                        '{\n' +
+                        '    vec4 p;\n' +
+                        '    if (czm_morphTime == 1.0)\n' +
+                        '    {\n' +
+                        '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                        '    }\n' +
+                        '    else if (czm_morphTime == 0.0)\n' +
+                        '    {\n' +
+                        '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
+                        '    }\n' +
+                        '    else\n' +
+                        '    {\n' +
+                        '        p = czm_columbusViewMorph(\n' +
+                        '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
+                        '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
+                        '                czm_morphTime);\n' +
+                        '    }\n' +
+                        '    return p;\n' +
+                        '}\n\n';
+                } else {
+                    computeFunctions +=
+                        functionName + '\n' +
+                        '{\n' +
+                        '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                        '}\n\n';
+                }
+            } else {
+                // Use RTC
+                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DHigh;/g, '');
+                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DLow;/g, '');
+
+                forwardDecl += 'uniform mat4 u_modifiedModelView;\n';
+                attributes += 'attribute vec4 position;\n';
 
                 computeFunctions +=
                     functionName + '\n' +
                     '{\n' +
-                    '    vec4 p;\n' +
-                    '    if (czm_morphTime == 1.0)\n' +
-                    '    {\n' +
-                    '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                    '    }\n' +
-                    '    else if (czm_morphTime == 0.0)\n' +
-                    '    {\n' +
-                    '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
-                    '    }\n' +
-                    '    else\n' +
-                    '    {\n' +
-                    '        p = czm_columbusViewMorph(\n' +
-                    '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
-                    '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
-                    '                czm_morphTime);\n' +
-                    '    }\n' +
-                    '    return p;\n' +
+                    '    return u_modifiedModelView * position;\n' +
                     '}\n\n';
-            } else {
-                computeFunctions +=
-                    functionName + '\n' +
-                    '{\n' +
-                    '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                    '}\n\n';
+
+                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewRelativeToEye\s+\*\s+/g, '');
+                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewProjectionRelativeToEye/g, 'czm_projection');
             }
         }
 
         return [forwardDecl, attributes, vertexShaderSource, computeFunctions].join('\n');
-    }
+    };
 
-    function createPickVertexShaderSource(vertexShaderSource) {
-        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-        var pickMain =
-            'attribute vec4 pickColor; \n' +
-            'varying vec4 czm_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    czm_pickColor = pickColor; \n' +
-            '}';
-
-        return renamedVS + '\n' + pickMain;
-    }
-
-    function appendShow(primitive, vertexShaderSource) {
-        if (!defined(primitive._attributeLocations.show)) {
+    Primitive._appendShowToShader = function(primitive, vertexShaderSource) {
+        if (!defined(primitive._batchTableAttributeIndices.show)) {
             return vertexShaderSource;
         }
 
-        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_show_main()');
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_show_main');
         var showMain =
-            'attribute float show;\n' +
             'void main() \n' +
             '{ \n' +
             '    czm_non_show_main(); \n' +
-            '    gl_Position *= show; \n' +
+            '    gl_Position *= czm_batchTable_show(batchId); \n' +
             '}';
 
         return renamedVS + '\n' + showMain;
-    }
+    };
+
+    Primitive._updateColorAttribute = function(primitive, vertexShaderSource, isDepthFail) {
+        // some appearances have a color attribute for per vertex color.
+        // only remove if color is a per instance attribute.
+        if (!defined(primitive._batchTableAttributeIndices.color) && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
+            return vertexShaderSource;
+        }
+
+        if (vertexShaderSource.search(/attribute\s+vec4\s+color;/g) === -1) {
+            return vertexShaderSource;
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (isDepthFail && !defined(primitive._batchTableAttributeIndices.depthFailColor)) {
+            throw new DeveloperError('A depthFailColor per-instance attribute is required when using a depth fail appearance that uses a color attribute.');
+        }
+        //>>includeEnd('debug');
+
+        var modifiedVS = vertexShaderSource;
+        modifiedVS = modifiedVS.replace(/attribute\s+vec4\s+color;/g, '');
+        if (!isDepthFail) {
+            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_color(batchId)$2');
+        } else {
+            modifiedVS = modifiedVS.replace(/(\b)color(\b)/g, '$1czm_batchTable_depthFailColor(batchId)$2');
+        }
+        return modifiedVS;
+    };
+
+    Primitive._updatePickColorAttribute = function(source) {
+        var vsPick = source.replace(/attribute\s+vec4\s+pickColor;/g, '');
+        vsPick = vsPick.replace(/(\b)pickColor(\b)/g, '$1czm_batchTable_pickColor(batchId)$2');
+        return vsPick;
+    };
+
+    Primitive._appendDistanceDisplayConditionToShader = function(primitive, vertexShaderSource, scene3DOnly) {
+        if (!defined(primitive._batchTableAttributeIndices.distanceDisplayCondition)) {
+            return vertexShaderSource;
+        }
+
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_distanceDisplayCondition_main');
+        var distanceDisplayConditionMain =
+            'void main() \n' +
+            '{ \n' +
+            '    czm_non_distanceDisplayCondition_main(); \n' +
+            '    vec2 distanceDisplayCondition = czm_batchTable_distanceDisplayCondition(batchId);\n' +
+            '    vec3 boundingSphereCenter3DHigh = czm_batchTable_boundingSphereCenter3DHigh(batchId);\n' +
+            '    vec3 boundingSphereCenter3DLow = czm_batchTable_boundingSphereCenter3DLow(batchId);\n' +
+            '    vec3 boundingSphereCenter2DHigh = czm_batchTable_boundingSphereCenter2DHigh(batchId);\n' +
+            '    vec3 boundingSphereCenter2DLow = czm_batchTable_boundingSphereCenter2DLow(batchId);\n' +
+            '    float boundingSphereRadius = czm_batchTable_boundingSphereRadius(batchId);\n';
+
+        if (!scene3DOnly) {
+            distanceDisplayConditionMain +=
+                '    vec4 centerRTE;\n' +
+                '    if (czm_morphTime == 1.0)\n' +
+                '    {\n' +
+                '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n' +
+                '    }\n' +
+                '    else if (czm_morphTime == 0.0)\n' +
+                '    {\n' +
+                '        centerRTE = czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy);\n' +
+                '    }\n' +
+                '    else\n' +
+                '    {\n' +
+                '        centerRTE = czm_columbusViewMorph(\n' +
+                '                czm_translateRelativeToEye(boundingSphereCenter2DHigh.zxy, boundingSphereCenter2DLow.zxy),\n' +
+                '                czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow),\n' +
+                '                czm_morphTime);\n' +
+                '    }\n';
+        } else {
+            distanceDisplayConditionMain +=
+                '    vec4 centerRTE = czm_translateRelativeToEye(boundingSphereCenter3DHigh, boundingSphereCenter3DLow);\n';
+        }
+
+        distanceDisplayConditionMain +=
+            '    float radiusSq = boundingSphereRadius * boundingSphereRadius; \n' +
+            '    float distanceSq; \n' +
+            '    if (czm_sceneMode == czm_sceneMode2D) \n' +
+            '    { \n' +
+            '        distanceSq = czm_eyeHeight2D.y - radiusSq; \n' +
+            '    } \n' +
+            '    else \n' +
+            '    { \n' +
+            '        distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - radiusSq; \n' +
+            '    } \n' +
+            '    distanceSq = max(distanceSq, 0.0); \n' +
+            '    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n' +
+            '    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n' +
+            '    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n' +
+            '    gl_Position *= show; \n' +
+            '}';
+        return renamedVS + '\n' + distanceDisplayConditionMain;
+    };
 
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
@@ -583,10 +930,10 @@ define([
         }
 
         var containsTangent = vertexShaderSource.search(/attribute\s+vec3\s+tangent;/g) !== -1;
-        var containsBinormal = vertexShaderSource.search(/attribute\s+vec3\s+binormal;/g) !== -1;
+        var containsBitangent = vertexShaderSource.search(/attribute\s+vec3\s+bitangent;/g) !== -1;
 
         var numComponents = containsSt && containsNormal ? 2.0 : 1.0;
-        numComponents += containsTangent || containsBinormal ? 1 : 0;
+        numComponents += containsTangent || containsBitangent ? 1 : 0;
 
         var type = (numComponents > 1) ? 'vec' + numComponents : 'float';
 
@@ -602,12 +949,12 @@ define([
             decode += '    st = czm_decompressTextureCoordinates(' + stComponent + ');\n';
         }
 
-        if (containsNormal && containsTangent && containsBinormal) {
+        if (containsNormal && containsTangent && containsBitangent) {
             globalDecl +=
                 'vec3 normal;\n' +
                 'vec3 tangent;\n' +
-                'vec3 binormal;\n';
-            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'yz' : 'xy') + ', normal, tangent, binormal);\n';
+                'vec3 bitangent;\n';
+            decode += '    czm_octDecode(' + attributeName + '.' + (containsSt ? 'yz' : 'xy') + ', normal, tangent, bitangent);\n';
         } else {
             if (containsNormal) {
                 globalDecl += 'vec3 normal;\n';
@@ -619,9 +966,9 @@ define([
                 decode += '    tangent = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
             }
 
-            if (containsBinormal) {
-                globalDecl += 'vec3 binormal;\n';
-                decode += '    binormal = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
+            if (containsBitangent) {
+                globalDecl += 'vec3 bitangent;\n';
+                decode += '    bitangent = czm_octDecode(' + attributeName + '.' + (containsSt && containsNormal ? 'z' : 'y') + ');\n';
             }
         }
 
@@ -629,8 +976,8 @@ define([
         modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
         modifiedVS = modifiedVS.replace(/attribute\s+vec2\s+st;/g, '');
         modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+tangent;/g, '');
-        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
-        modifiedVS = modifiedVS.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_compressed_main()');
+        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+bitangent;/g, '');
+        modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
         var compressedMain =
             'void main() \n' +
             '{ \n' +
@@ -639,6 +986,41 @@ define([
             '}';
 
         return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
+    }
+
+    function depthClampVS(vertexShaderSource) {
+        var modifiedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_depth_clamp_main');
+        // The varying should be surround by #ifdef GL_EXT_frag_depth as an optimization.
+        // It is not to workaround an issue with Edge:
+        //     https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/12120362/
+        modifiedVS +=
+            'varying float v_WindowZ;\n' +
+            'void main() {\n' +
+            '    czm_non_depth_clamp_main();\n' +
+            '    vec4 position = gl_Position;\n' +
+            '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
+            '    position.z = min(position.z, position.w);\n' +
+            '    gl_Position = position;' +
+            '}\n';
+        return modifiedVS;
+    }
+
+    function depthClampFS(fragmentShaderSource) {
+        var modifiedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_depth_clamp_main');
+        modifiedFS +=
+            'varying float v_WindowZ;\n' +
+            'void main() {\n' +
+            '    czm_non_depth_clamp_main();\n' +
+            '#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)\n' +
+            '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '#endif\n' +
+            '}\n';
+        modifiedFS =
+            '#ifdef GL_EXT_frag_depth\n' +
+            '#extension GL_EXT_frag_depth : enable\n' +
+            '#endif\n' +
+            modifiedFS;
+        return modifiedFS;
     }
 
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -665,27 +1047,6 @@ define([
         //>>includeEnd('debug');
     }
 
-    function createPickIds(context, primitive, instances) {
-        var pickColors = [];
-        var length = instances.length;
-
-        for (var i = 0; i < length; ++i) {
-            var pickObject = {
-                primitive : defaultValue(instances[i].pickPrimitive, primitive)
-            };
-
-            if (defined(instances[i].id)) {
-                pickObject.id = instances[i].id;
-            }
-
-            var pickId = context.createPickId(pickObject);
-            primitive._pickIds.push(pickId);
-            pickColors.push(pickId.color);
-        }
-
-        return pickColors;
-    }
-
     function getUniformFunction(uniforms, name) {
         return function() {
             return uniforms[name];
@@ -695,6 +1056,666 @@ define([
     var numberOfCreationWorkers = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
+
+    function loadAsynchronous(primitive, frameState) {
+        var instances;
+        var geometry;
+        var i;
+        var j;
+
+        var instanceIds = primitive._instanceIds;
+
+        if (primitive._state === PrimitiveState.READY) {
+            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            var length = primitive._numberOfInstances = instances.length;
+
+            var promises = [];
+            var subTasks = [];
+            for (i = 0; i < length; ++i) {
+                geometry = instances[i].geometry;
+                instanceIds.push(instances[i].id);
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(geometry._workerName)) {
+                    throw new DeveloperError('_workerName must be defined for asynchronous geometry.');
+                }
+                //>>includeEnd('debug');
+
+                subTasks.push({
+                    moduleName : geometry._workerName,
+                    geometry : geometry
+                });
+            }
+
+            if (!defined(createGeometryTaskProcessors)) {
+                createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
+                for (i = 0; i < numberOfCreationWorkers; i++) {
+                    createGeometryTaskProcessors[i] = new TaskProcessor('createGeometry', Number.POSITIVE_INFINITY);
+                }
+            }
+
+            var subTask;
+            subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
+
+            for (i = 0; i < subTasks.length; i++) {
+                var packedLength = 0;
+                var workerSubTasks = subTasks[i];
+                var workerSubTasksLength = workerSubTasks.length;
+                for (j = 0; j < workerSubTasksLength; ++j) {
+                    subTask = workerSubTasks[j];
+                    geometry = subTask.geometry;
+                    if (defined(geometry.constructor.pack)) {
+                        subTask.offset = packedLength;
+                        packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
+                    }
+                }
+
+                var subTaskTransferableObjects;
+
+                if (packedLength > 0) {
+                    var array = new Float64Array(packedLength);
+                    subTaskTransferableObjects = [array.buffer];
+
+                    for (j = 0; j < workerSubTasksLength; ++j) {
+                        subTask = workerSubTasks[j];
+                        geometry = subTask.geometry;
+                        if (defined(geometry.constructor.pack)) {
+                            geometry.constructor.pack(geometry, array, subTask.offset);
+                            subTask.geometry = array;
+                        }
+                    }
+                }
+
+                promises.push(createGeometryTaskProcessors[i].scheduleTask({
+                    subTasks : subTasks[i]
+                }, subTaskTransferableObjects));
+            }
+
+            primitive._state = PrimitiveState.CREATING;
+
+            when.all(promises, function(results) {
+                primitive._createGeometryResults = results;
+                primitive._state = PrimitiveState.CREATED;
+            }).otherwise(function(error) {
+                setReady(primitive, frameState, PrimitiveState.FAILED, error);
+            });
+        } else if (primitive._state === PrimitiveState.CREATED) {
+            var transferableObjects = [];
+            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+
+            var scene3DOnly = frameState.scene3DOnly;
+            var projection = frameState.mapProjection;
+
+            var promise = combineGeometryTaskProcessor.scheduleTask(PrimitivePipeline.packCombineGeometryParameters({
+                createGeometryResults : primitive._createGeometryResults,
+                instances : instances,
+                ellipsoid : projection.ellipsoid,
+                projection : projection,
+                elementIndexUintSupported : frameState.context.elementIndexUint,
+                scene3DOnly : scene3DOnly,
+                vertexCacheOptimize : primitive.vertexCacheOptimize,
+                compressVertices : primitive.compressVertices,
+                modelMatrix : primitive.modelMatrix,
+                createPickOffsets : primitive._createPickOffsets
+            }, transferableObjects), transferableObjects);
+
+            primitive._createGeometryResults = undefined;
+            primitive._state = PrimitiveState.COMBINING;
+
+            when(promise, function(packedResult) {
+                var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
+                primitive._geometries = result.geometries;
+                primitive._attributeLocations = result.attributeLocations;
+                primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
+                primitive._pickOffsets = result.pickOffsets;
+                primitive._instanceBoundingSpheres = result.boundingSpheres;
+                primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
+
+                if (defined(primitive._geometries) && primitive._geometries.length > 0) {
+                    primitive._state = PrimitiveState.COMBINED;
+                } else {
+                    setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+                }
+            }).otherwise(function(error) {
+                setReady(primitive, frameState, PrimitiveState.FAILED, error);
+            });
+        }
+    }
+
+    function loadSynchronous(primitive, frameState) {
+        var instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+        var length = primitive._numberOfInstances = instances.length;
+        var clonedInstances = new Array(length);
+        var instanceIds = primitive._instanceIds;
+
+        var instance;
+        var i;
+
+        var geometryIndex = 0;
+        for (i = 0; i < length; i++) {
+            instance = instances[i];
+            var geometry = instance.geometry;
+
+            var createdGeometry;
+            if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
+                createdGeometry = cloneGeometry(geometry);
+            } else {
+                createdGeometry = geometry.constructor.createGeometry(geometry);
+            }
+
+            clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
+            instanceIds.push(instance.id);
+        }
+
+        clonedInstances.length = geometryIndex;
+
+        var scene3DOnly = frameState.scene3DOnly;
+        var projection = frameState.mapProjection;
+
+        var result = PrimitivePipeline.combineGeometry({
+            instances : clonedInstances,
+            ellipsoid : projection.ellipsoid,
+            projection : projection,
+            elementIndexUintSupported : frameState.context.elementIndexUint,
+            scene3DOnly : scene3DOnly,
+            vertexCacheOptimize : primitive.vertexCacheOptimize,
+            compressVertices : primitive.compressVertices,
+            modelMatrix : primitive.modelMatrix,
+            createPickOffsets : primitive._createPickOffsets
+        });
+
+        primitive._geometries = result.geometries;
+        primitive._attributeLocations = result.attributeLocations;
+        primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
+        primitive._pickOffsets = result.pickOffsets;
+        primitive._instanceBoundingSpheres = result.boundingSpheres;
+        primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
+
+        if (defined(primitive._geometries) && primitive._geometries.length > 0) {
+            primitive._state = PrimitiveState.COMBINED;
+        } else {
+            setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
+        }
+    }
+
+    var scratchBoundingSphereCenterEncoded = new EncodedCartesian3();
+    var scratchBoundingSphereCartographic = new Cartographic();
+    var scratchBoundingSphereCenter2D = new Cartesian3();
+    var scratchBoundingSphere = new BoundingSphere();
+
+    function updateBatchTableBoundingSpheres(primitive, frameState) {
+        var hasDistanceDisplayCondition = defined(primitive._batchTableAttributeIndices.distanceDisplayCondition);
+        if (!hasDistanceDisplayCondition || primitive._batchTableBoundingSpheresUpdated) {
+            return;
+        }
+
+        var indices = primitive._batchTableBoundingSphereAttributeIndices;
+        var center3DHighIndex = indices.center3DHigh;
+        var center3DLowIndex = indices.center3DLow;
+        var center2DHighIndex = indices.center2DHigh;
+        var center2DLowIndex = indices.center2DLow;
+        var radiusIndex = indices.radius;
+
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        var batchTable = primitive._batchTable;
+        var boundingSpheres = primitive._instanceBoundingSpheres;
+        var length = boundingSpheres.length;
+
+        for (var i = 0; i < length; ++i) {
+            var boundingSphere = boundingSpheres[i];
+            if (!defined(boundingSphere)) {
+                continue;
+            }
+
+            var modelMatrix = primitive.modelMatrix;
+            if (defined(modelMatrix)) {
+                boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, scratchBoundingSphere);
+            }
+
+            var center = boundingSphere.center;
+            var radius = boundingSphere.radius;
+
+            var encodedCenter = EncodedCartesian3.fromCartesian(center, scratchBoundingSphereCenterEncoded);
+            batchTable.setBatchedAttribute(i, center3DHighIndex, encodedCenter.high);
+            batchTable.setBatchedAttribute(i, center3DLowIndex, encodedCenter.low);
+
+            var cartographic = ellipsoid.cartesianToCartographic(center, scratchBoundingSphereCartographic);
+            var center2D = projection.project(cartographic, scratchBoundingSphereCenter2D);
+            encodedCenter = EncodedCartesian3.fromCartesian(center2D, scratchBoundingSphereCenterEncoded);
+            batchTable.setBatchedAttribute(i, center2DHighIndex, encodedCenter.high);
+            batchTable.setBatchedAttribute(i, center2DLowIndex, encodedCenter.low);
+            batchTable.setBatchedAttribute(i, radiusIndex, radius);
+        }
+
+        primitive._batchTableBoundingSpheresUpdated = true;
+    }
+
+    function createVertexArray(primitive, frameState) {
+        var attributeLocations = primitive._attributeLocations;
+        var geometries = primitive._geometries;
+        var scene3DOnly = frameState.scene3DOnly;
+        var context = frameState.context;
+
+        var va = [];
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            var geometry = geometries[i];
+
+            va.push(VertexArray.fromGeometry({
+                context : context,
+                geometry : geometry,
+                attributeLocations : attributeLocations,
+                bufferUsage : BufferUsage.STATIC_DRAW,
+                interleave : primitive._interleave
+            }));
+
+            if (defined(primitive._createBoundingVolumeFunction)) {
+                primitive._createBoundingVolumeFunction(frameState, geometry);
+            } else {
+                primitive._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
+                primitive._boundingSphereWC.push(new BoundingSphere());
+
+                if (!scene3DOnly) {
+                    var center = geometry.boundingSphereCV.center;
+                    var x = center.x;
+                    var y = center.y;
+                    var z = center.z;
+                    center.x = z;
+                    center.y = x;
+                    center.z = y;
+
+                    primitive._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
+                    primitive._boundingSphere2D.push(new BoundingSphere());
+                    primitive._boundingSphereMorph.push(new BoundingSphere());
+                }
+            }
+        }
+
+        primitive._va = va;
+        primitive._primitiveType = geometries[0].primitiveType;
+
+        if (primitive.releaseGeometryInstances) {
+            primitive.geometryInstances = undefined;
+        }
+
+        primitive._geometries = undefined;
+        setReady(primitive, frameState, PrimitiveState.COMPLETE, undefined);
+    }
+
+    function createRenderStates(primitive, context, appearance, twoPasses) {
+        var renderState = appearance.getRenderState();
+        var rs;
+
+        if (twoPasses) {
+            rs = clone(renderState, false);
+            rs.cull = {
+                enabled : true,
+                face : CullFace.BACK
+            };
+            primitive._frontFaceRS = RenderState.fromCache(rs);
+
+            rs.cull.face = CullFace.FRONT;
+            primitive._backFaceRS = RenderState.fromCache(rs);
+        } else {
+            primitive._frontFaceRS = RenderState.fromCache(renderState);
+            primitive._backFaceRS = primitive._frontFaceRS;
+        }
+
+        rs = clone(renderState, false);
+        if (defined(primitive._depthFailAppearance)) {
+            rs.depthTest.enabled = false;
+        }
+
+        if (primitive.allowPicking) {
+            if (twoPasses) {
+                rs.cull = {
+                    enabled : false
+                };
+                primitive._pickRS = RenderState.fromCache(rs);
+            } else {
+                primitive._pickRS = RenderState.fromCache(rs);
+            }
+        } else {
+            rs.colorMask = {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
+            };
+
+            if (twoPasses) {
+                rs.cull = {
+                    enabled : false
+                };
+                primitive._pickRS = RenderState.fromCache(rs);
+            } else {
+                primitive._pickRS = RenderState.fromCache(rs);
+            }
+        }
+
+        if (defined(primitive._depthFailAppearance)) {
+            renderState = primitive._depthFailAppearance.getRenderState();
+            rs = clone(renderState, false);
+            rs.depthTest.func = DepthFunction.GREATER;
+            if (twoPasses) {
+                rs.cull = {
+                    enabled : true,
+                    face : CullFace.BACK
+                };
+                primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+
+                rs.cull.face = CullFace.FRONT;
+                primitive._backFaceDepthFailRS = RenderState.fromCache(rs);
+            } else {
+                primitive._frontFaceDepthFailRS = RenderState.fromCache(rs);
+                primitive._backFaceDepthFailRS = primitive._frontFaceRS;
+            }
+        }
+    }
+
+    function createShaderProgram(primitive, frameState, appearance) {
+        var context = frameState.context;
+
+        var attributeLocations = primitive._attributeLocations;
+
+        var vs = primitive._batchTable.getVertexShaderCallback()(appearance.vertexShaderSource);
+        vs = Primitive._appendShowToShader(primitive, vs);
+        vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
+        vs = Primitive._updateColorAttribute(primitive, vs, false);
+        vs = modifyForEncodedNormals(primitive, vs);
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
+        var fs = appearance.getFragmentShaderSource();
+
+        // Create pick program
+        if (primitive.allowPicking) {
+            var vsPick = ShaderSource.createPickVertexShaderSource(vs);
+            vsPick = Primitive._updatePickColorAttribute(vsPick);
+
+            primitive._pickSP = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._pickSP,
+                vertexShaderSource : vsPick,
+                fragmentShaderSource : ShaderSource.createPickFragmentShaderSource(fs, 'varying'),
+                attributeLocations : attributeLocations
+            });
+        } else {
+            primitive._pickSP = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+        validateShaderMatching(primitive._pickSP, attributeLocations);
+
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+        validateShaderMatching(primitive._sp, attributeLocations);
+
+        if (defined(primitive._depthFailAppearance)) {
+            vs = primitive._batchTable.getVertexShaderCallback()(primitive._depthFailAppearance.vertexShaderSource);
+            vs = Primitive._appendShowToShader(primitive, vs);
+            vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs, frameState.scene3DOnly);
+            vs = Primitive._updateColorAttribute(primitive, vs, true);
+            vs = modifyForEncodedNormals(primitive, vs);
+            vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
+            vs = depthClampVS(vs);
+
+            fs = depthClampFS(primitive._depthFailAppearance.getFragmentShaderSource());
+
+            primitive._spDepthFail = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : primitive._spDepthFail,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+            validateShaderMatching(primitive._spDepthFail, attributeLocations);
+        }
+    }
+
+    var modifiedModelViewScratch = new Matrix4();
+    var rtcScratch = new Cartesian3();
+
+    function getUniforms(primitive, appearance, material, frameState) {
+        // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
+        var materialUniformMap = defined(material) ? material._uniforms : undefined;
+        var appearanceUniformMap = {};
+        var appearanceUniforms = appearance.uniforms;
+        if (defined(appearanceUniforms)) {
+            // Convert to uniform map of functions for the renderer
+            for (var name in appearanceUniforms) {
+                if (appearanceUniforms.hasOwnProperty(name)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
+                        // Later, we could rename uniforms behind-the-scenes if needed.
+                        throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
+                    }
+                    //>>includeEnd('debug');
+
+                    appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
+                }
+            }
+        }
+        var uniforms = combine(appearanceUniformMap, materialUniformMap);
+        uniforms = primitive._batchTable.getUniformMapCallback()(uniforms);
+
+        if (defined(primitive.rtcCenter)) {
+            uniforms.u_modifiedModelView = function() {
+                var viewMatrix = frameState.context.uniformState.view;
+                Matrix4.multiply(viewMatrix, primitive._modelMatrix, modifiedModelViewScratch);
+                Matrix4.multiplyByPoint(modifiedModelViewScratch, primitive.rtcCenter, rtcScratch);
+                Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
+                return modifiedModelViewScratch;
+            };
+        }
+
+        return uniforms;
+    }
+
+    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+        var uniforms = getUniforms(primitive, appearance, material, frameState);
+
+        var depthFailUniforms;
+        if (defined(primitive._depthFailAppearance)) {
+            depthFailUniforms = getUniforms(primitive, primitive._depthFailAppearance, primitive._depthFailAppearance.material, frameState);
+        }
+
+        var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+
+        var multiplier = twoPasses ? 2 : 1;
+        multiplier *= defined(primitive._depthFailAppearance) ? 2 : 1;
+
+        colorCommands.length = primitive._va.length * multiplier;
+        pickCommands.length = primitive._va.length;
+
+        var length = colorCommands.length;
+        var m = 0;
+        var vaIndex = 0;
+        for (var i = 0; i < length; ++i) {
+            var colorCommand;
+
+            if (twoPasses) {
+                colorCommand = colorCommands[i];
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : primitive,
+                        primitiveType : primitive._primitiveType
+                    });
+                }
+                colorCommand.vertexArray = primitive._va[vaIndex];
+                colorCommand.renderState = primitive._backFaceRS;
+                colorCommand.shaderProgram = primitive._sp;
+                colorCommand.uniformMap = uniforms;
+                colorCommand.pass = pass;
+
+                ++i;
+            }
+
+            colorCommand = colorCommands[i];
+            if (!defined(colorCommand)) {
+                colorCommand = colorCommands[i] = new DrawCommand({
+                    owner : primitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+            colorCommand.vertexArray = primitive._va[vaIndex];
+            colorCommand.renderState = primitive._frontFaceRS;
+            colorCommand.shaderProgram = primitive._sp;
+            colorCommand.uniformMap = uniforms;
+            colorCommand.pass = pass;
+
+            if (defined(primitive._depthFailAppearance)) {
+                if (twoPasses) {
+                    ++i;
+
+                    colorCommand = colorCommands[i];
+                    if (!defined(colorCommand)) {
+                        colorCommand = colorCommands[i] = new DrawCommand({
+                            owner : primitive,
+                            primitiveType : primitive._primitiveType
+                        });
+                    }
+                    colorCommand.vertexArray = primitive._va[vaIndex];
+                    colorCommand.renderState = primitive._backFaceDepthFailRS;
+                    colorCommand.shaderProgram = primitive._spDepthFail;
+                    colorCommand.uniformMap = depthFailUniforms;
+                    colorCommand.pass = pass;
+                }
+
+                ++i;
+
+                colorCommand = colorCommands[i];
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : primitive,
+                        primitiveType : primitive._primitiveType
+                    });
+                }
+                colorCommand.vertexArray = primitive._va[vaIndex];
+                colorCommand.renderState = primitive._frontFaceDepthFailRS;
+                colorCommand.shaderProgram = primitive._spDepthFail;
+                colorCommand.uniformMap = depthFailUniforms;
+                colorCommand.pass = pass;
+            }
+
+            var pickCommand = pickCommands[m];
+            if (!defined(pickCommand)) {
+                pickCommand = pickCommands[m] = new DrawCommand({
+                    owner : primitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+            pickCommand.vertexArray = primitive._va[vaIndex];
+            pickCommand.renderState = primitive._pickRS;
+            pickCommand.shaderProgram = primitive._pickSP;
+            pickCommand.uniformMap = uniforms;
+            pickCommand.pass = pass;
+            ++m;
+
+            ++vaIndex;
+        }
+    }
+
+    Primitive._updateBoundingVolumes = function(primitive, frameState, modelMatrix) {
+        var i;
+        var length;
+        var boundingSphere;
+
+        // Update bounding volumes for primitives that are sized in pixels.
+        // The pixel size in meters varies based on the distance from the camera.
+        var pixelSize = primitive.appearance.pixelSize;
+        if (defined(pixelSize)) {
+            length = primitive._boundingSpheres.length;
+            for (i = 0; i < length; ++i) {
+                boundingSphere = primitive._boundingSpheres[i];
+                var boundingSphereWC = primitive._boundingSphereWC[i];
+                var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+                var sizeInMeters = pixelSizeInMeters * pixelSize;
+                boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
+            }
+        }
+
+        if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
+            Matrix4.clone(modelMatrix, primitive._modelMatrix);
+            length = primitive._boundingSpheres.length;
+            for (i = 0; i < length; ++i) {
+                boundingSphere = primitive._boundingSpheres[i];
+                if (defined(boundingSphere)) {
+                    primitive._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, primitive._boundingSphereWC[i]);
+                    if (!frameState.scene3DOnly) {
+                        primitive._boundingSphere2D[i] = BoundingSphere.clone(primitive._boundingSphereCV[i], primitive._boundingSphere2D[i]);
+                        primitive._boundingSphere2D[i].center.x = 0.0;
+                        primitive._boundingSphereMorph[i] = BoundingSphere.union(primitive._boundingSphereWC[i], primitive._boundingSphereCV[i]);
+                    }
+                }
+            }
+        }
+    };
+
+    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+        //>>includeStart('debug', pragmas.debug);
+        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
+            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
+
+        Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
+
+        var boundingSpheres;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSpheres = primitive._boundingSphereWC;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSpheres = primitive._boundingSphereCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(primitive._boundingSphere2D)) {
+            boundingSpheres = primitive._boundingSphere2D;
+        } else if (defined(primitive._boundingSphereMorph)) {
+            boundingSpheres = primitive._boundingSphereMorph;
+        }
+
+        var commandList = frameState.commandList;
+        var passes = frameState.passes;
+        if (passes.render) {
+            var castShadows = ShadowMode.castShadows(primitive.shadows);
+            var receiveShadows = ShadowMode.receiveShadows(primitive.shadows);
+            var colorLength = colorCommands.length;
+
+            var factor = twoPasses ? 2 : 1;
+            factor *= defined(primitive._depthFailAppearance) ? 2 : 1;
+
+            for (var j = 0; j < colorLength; ++j) {
+                var sphereIndex = Math.floor(j / factor);
+                var colorCommand = colorCommands[j];
+                colorCommand.modelMatrix = modelMatrix;
+                colorCommand.boundingVolume = boundingSpheres[sphereIndex];
+                colorCommand.cull = cull;
+                colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommand.castShadows = castShadows;
+                colorCommand.receiveShadows = receiveShadows;
+
+                commandList.push(colorCommand);
+            }
+        }
+
+        if (passes.pick) {
+            var pickLength = pickCommands.length;
+            for (var k = 0; k < pickLength; ++k) {
+                var pickCommand = pickCommands[k];
+                pickCommand.modelMatrix = modelMatrix;
+                pickCommand.boundingVolume = boundingSpheres[k];
+                pickCommand.cull = cull;
+
+                commandList.push(pickCommand);
+            }
+        }
+    }
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -706,8 +1727,10 @@ define([
      *
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     * @exception {DeveloperError} Primitive.modelMatrix is only supported in 3D mode.
+     * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
      */
-    Primitive.prototype.update = function(context, frameState, commandList) {
+    Primitive.prototype.update = function(frameState) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
             (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
@@ -720,279 +1743,38 @@ define([
             throw this._error;
         }
 
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
+            throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
+        }
+        //>>includeEnd('debug');
+
         if (this._state === PrimitiveState.FAILED) {
             return;
         }
 
-        var projection = frameState.mapProjection;
-        var colorCommand;
-        var pickCommand;
-        var geometry;
-        var attributes;
-        var attribute;
-        var length;
-        var i;
-        var j;
-        var index;
-        var promise;
-        var instance;
-        var instances;
-        var clonedInstances;
-        var geometries;
-        var allowPicking = this.allowPicking;
-        var instanceIds = this._instanceIds;
-        var scene3DOnly = frameState.scene3DOnly;
-        var that = this;
+        var context = frameState.context;
+        if (!defined(this._batchTable)) {
+            createBatchTable(this, context);
+        }
+        if (this._batchTable.attributes.length > 0) {
+            if (ContextLimits.maximumVertexTextureImageUnits === 0) {
+                throw new RuntimeError('Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.');
+            }
+            this._batchTable.update(frameState);
+        }
 
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
             if (this.asynchronous) {
-                if (this._state === PrimitiveState.READY) {
-                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-                    this._numberOfInstances = length = instances.length;
-
-                    var promises = [];
-                    var subTasks = [];
-                    for (i = 0; i < length; ++i) {
-                        geometry = instances[i].geometry;
-                        instanceIds.push(instances[i].id);
-
-                        //>>includeStart('debug', pragmas.debug);
-                        if (!defined(geometry._workerName)) {
-                            throw new DeveloperError('_workerName must be defined for asynchronous geometry.');
-                        }
-                        //>>includeEnd('debug');
-
-                        subTasks.push({
-                            moduleName : geometry._workerName,
-                            geometry : geometry
-                        });
-                    }
-
-                    if (!defined(createGeometryTaskProcessors)) {
-                        createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
-                        for (i = 0; i < numberOfCreationWorkers; i++) {
-                            createGeometryTaskProcessors[i] = new TaskProcessor('createGeometry', Number.POSITIVE_INFINITY);
-                        }
-                    }
-
-                    var subTask;
-                    subTasks = subdivideArray(subTasks, numberOfCreationWorkers);
-
-                    for (i = 0; i < subTasks.length; i++) {
-                        var packedLength = 0;
-                        var workerSubTasks = subTasks[i];
-                        var workerSubTasksLength = workerSubTasks.length;
-                        for (j = 0; j < workerSubTasksLength; ++j) {
-                            subTask = workerSubTasks[j];
-                            geometry = subTask.geometry;
-                            if (defined(geometry.constructor.pack)) {
-                                subTask.offset = packedLength;
-                                packedLength += defaultValue(geometry.constructor.packedLength, geometry.packedLength);
-                            }
-                        }
-
-                        var subTaskTransferableObjects;
-
-                        if (packedLength > 0) {
-                            var array = new Float64Array(packedLength);
-                            subTaskTransferableObjects = [array.buffer];
-
-                            for (j = 0; j < workerSubTasksLength; ++j) {
-                                subTask = workerSubTasks[j];
-                                geometry = subTask.geometry;
-                                if (defined(geometry.constructor.pack)) {
-                                    geometry.constructor.pack(geometry, array, subTask.offset);
-                                    subTask.geometry = array;
-                                }
-                            }
-                        }
-
-                        promises.push(createGeometryTaskProcessors[i].scheduleTask({
-                            subTasks : subTasks[i]
-                        }, subTaskTransferableObjects));
-                    }
-
-                    this._state = PrimitiveState.CREATING;
-
-                    when.all(promises, function(results) {
-                        that._createGeometryResults = results;
-                        that._state = PrimitiveState.CREATED;
-                    }).otherwise(function(error) {
-                        setReady(that, frameState, PrimitiveState.FAILED, error);
-                    });
-                } else if (this._state === PrimitiveState.CREATED) {
-                    var transferableObjects = [];
-                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-
-                    promise = combineGeometryTaskProcessor.scheduleTask(PrimitivePipeline.packCombineGeometryParameters({
-                        createGeometryResults : this._createGeometryResults,
-                        instances : instances,
-                        pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
-                        ellipsoid : projection.ellipsoid,
-                        projection : projection,
-                        elementIndexUintSupported : context.elementIndexUint,
-                        scene3DOnly : scene3DOnly,
-                        allowPicking : allowPicking,
-                        vertexCacheOptimize : this.vertexCacheOptimize,
-                        compressVertices : this.compressVertices,
-                        modelMatrix : this.modelMatrix
-                    }, transferableObjects), transferableObjects);
-
-                    this._createGeometryResults = undefined;
-                    this._state = PrimitiveState.COMBINING;
-
-                    when(promise, function(packedResult) {
-                        var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
-                        that._geometries = result.geometries;
-                        that._attributeLocations = result.attributeLocations;
-                        that._vaAttributes = result.vaAttributes;
-                        that._perInstanceAttributeLocations = result.perInstanceAttributeLocations;
-                        that.modelMatrix = Matrix4.clone(result.modelMatrix, that.modelMatrix);
-                        that._validModelMatrix = !Matrix4.equals(that.modelMatrix, Matrix4.IDENTITY);
-
-                        var validInstancesIndices = packedResult.validInstancesIndices;
-                        var invalidInstancesIndices = packedResult.invalidInstancesIndices;
-                        var instanceIds = that._instanceIds;
-                        var reorderedInstanceIds = new Array(instanceIds.length);
-
-                        var validLength = validInstancesIndices.length;
-                        for (var i = 0; i < validLength; ++i) {
-                            reorderedInstanceIds[i] = instanceIds[validInstancesIndices[i]];
-                        }
-
-                        var invalidLength = invalidInstancesIndices.length;
-                        for (var j = 0; j < invalidLength; ++j) {
-                            reorderedInstanceIds[validLength + j] = instanceIds[invalidInstancesIndices[j]];
-                        }
-
-                        that._instanceIds = reorderedInstanceIds;
-
-                        that._state = defined(that._geometries) ? PrimitiveState.COMBINED : PrimitiveState.FAILED;
-                    }).otherwise(function(error) {
-                        setReady(that, frameState, PrimitiveState.FAILED, error);
-                    });
-                }
+                loadAsynchronous(this, frameState);
             } else {
-                instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
-                this._numberOfInstances = length = instances.length;
-
-                geometries = new Array(length);
-                clonedInstances = new Array(length);
-
-                var invalidInstances = [];
-
-                var geometryIndex = 0;
-                for (i = 0; i < length; i++) {
-                    instance = instances[i];
-                    geometry = instance.geometry;
-
-                    var createdGeometry;
-                    if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
-                        createdGeometry = cloneGeometry(geometry);
-                    } else {
-                        createdGeometry = geometry.constructor.createGeometry(geometry);
-                    }
-
-                    if (defined(createdGeometry)) {
-                        geometries[geometryIndex] = createdGeometry;
-                        clonedInstances[geometryIndex++] = cloneInstance(instance, createdGeometry);
-                        instanceIds.push(instance.id);
-                    } else {
-                        invalidInstances.push(instance);
-                    }
-                }
-
-                geometries.length = geometryIndex;
-                clonedInstances.length = geometryIndex;
-
-                var result = PrimitivePipeline.combineGeometry({
-                    instances : clonedInstances,
-                    invalidInstances : invalidInstances,
-                    pickIds : allowPicking ? createPickIds(context, this, clonedInstances) : undefined,
-                    ellipsoid : projection.ellipsoid,
-                    projection : projection,
-                    elementIndexUintSupported : context.elementIndexUint,
-                    scene3DOnly : scene3DOnly,
-                    allowPicking : allowPicking,
-                    vertexCacheOptimize : this.vertexCacheOptimize,
-                    compressVertices : this.compressVertices,
-                    modelMatrix : this.modelMatrix
-                });
-
-                this._geometries = result.geometries;
-                this._attributeLocations = result.attributeLocations;
-                this._vaAttributes = result.vaAttributes;
-                this._perInstanceAttributeLocations = result.vaAttributeLocations;
-                this.modelMatrix = Matrix4.clone(result.modelMatrix, this.modelMatrix);
-                this._validModelMatrix = !Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY);
-
-                for (i = 0; i < invalidInstances.length; ++i) {
-                    instance = invalidInstances[i];
-                    instanceIds.push(instance.id);
-                }
-
-                if (defined(this._geometries)) {
-                    this._state = PrimitiveState.COMBINED;
-                } else {
-                    setReady(this, frameState, PrimitiveState.FAILED, undefined);
-                }
+                loadSynchronous(this, frameState);
             }
         }
 
-        var attributeLocations = this._attributeLocations;
-
         if (this._state === PrimitiveState.COMBINED) {
-            geometries = this._geometries;
-            var vaAttributes = this._vaAttributes;
-
-            var va = [];
-            length = geometries.length;
-            for (i = 0; i < length; ++i) {
-                geometry = geometries[i];
-
-                attributes = vaAttributes[i];
-                var vaLength = attributes.length;
-                for (j = 0; j < vaLength; ++j) {
-                    attribute = attributes[j];
-                    attribute.vertexBuffer = context.createVertexBuffer(attribute.values, BufferUsage.DYNAMIC_DRAW);
-                    delete attribute.values;
-                }
-
-                va.push(context.createVertexArrayFromGeometry({
-                    geometry : geometry,
-                    attributeLocations : attributeLocations,
-                    bufferUsage : BufferUsage.STATIC_DRAW,
-                    interleave : this._interleave,
-                    vertexArrayAttributes : attributes
-                }));
-
-                this._boundingSpheres.push(BoundingSphere.clone(geometry.boundingSphere));
-                this._boundingSphereWC.push(new BoundingSphere());
-
-                if (!scene3DOnly) {
-                    var center = geometry.boundingSphereCV.center;
-                    var x = center.x;
-                    var y = center.y;
-                    var z = center.z;
-                    center.x = z;
-                    center.y = x;
-                    center.z = y;
-
-                    this._boundingSphereCV.push(BoundingSphere.clone(geometry.boundingSphereCV));
-                    this._boundingSphere2D.push(new BoundingSphere());
-                    this._boundingSphereMorph.push(new BoundingSphere());
-                }
-            }
-
-            this._va = va;
-            this._primitiveType = geometries[0].primitiveType;
-
-            if (this.releaseGeometryInstances) {
-                this.geometryInstances = undefined;
-            }
-
-            this._geometries = undefined;
-            setReady(this, frameState, PrimitiveState.COMPLETE, undefined);
+            updateBatchTableBoundingSpheres(this, frameState);
+            createVertexArray(this, frameState);
         }
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
@@ -1015,6 +1797,19 @@ define([
             createSP = true;
         }
 
+        var depthFailAppearance = this.depthFailAppearance;
+        var depthFailMaterial = defined(depthFailAppearance) ? depthFailAppearance.material : undefined;
+
+        if (this._depthFailAppearance !== depthFailAppearance) {
+            this._depthFailAppearance = depthFailAppearance;
+            this._depthFailMaterial = depthFailMaterial;
+            createRS = true;
+            createSP = true;
+        } else if (this._depthFailMaterial !== depthFailMaterial) {
+            this._depthFailMaterial = depthFailMaterial;
+            createSP = true;
+        }
+
         var translucent = this._appearance.isTranslucent();
         if (this._translucent !== translucent) {
             this._translucent = translucent;
@@ -1028,271 +1823,65 @@ define([
         var twoPasses = appearance.closed && translucent;
 
         if (createRS) {
-            var renderState = appearance.getRenderState();
-            var rs;
-
-            if (twoPasses) {
-                rs = clone(renderState, false);
-                rs.cull = {
-                    enabled : true,
-                    face : CullFace.BACK
-                };
-                this._frontFaceRS = context.createRenderState(rs);
-
-                rs.cull.face = CullFace.FRONT;
-                this._backFaceRS = context.createRenderState(rs);
-            } else {
-                this._frontFaceRS = context.createRenderState(renderState);
-                this._backFaceRS = this._frontFaceRS;
-            }
-
-            if (allowPicking) {
-                if (twoPasses) {
-                    rs = clone(renderState, false);
-                    rs.cull = {
-                        enabled : false
-                    };
-                    this._pickRS = context.createRenderState(rs);
-                } else {
-                    this._pickRS = this._frontFaceRS;
-                }
-            } else {
-                rs = clone(renderState, false);
-                rs.colorMask = {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                };
-
-                if (twoPasses) {
-                    rs.cull = {
-                        enabled : false
-                    };
-                    this._pickRS = context.createRenderState(rs);
-                } else {
-                    this._pickRS = context.createRenderState(rs);
-                }
-            }
+            var rsFunc = defaultValue(this._createRenderStatesFunction, createRenderStates);
+            rsFunc(this, context, appearance, twoPasses);
         }
 
         if (createSP) {
-            var vs = createColumbusViewShader(this, appearance.vertexShaderSource, scene3DOnly);
-            vs = appendShow(this, vs);
-            vs = modifyForEncodedNormals(this, vs);
-            var fs = appearance.getFragmentShaderSource();
-
-            this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
-            validateShaderMatching(this._sp, attributeLocations);
-
-            if (allowPicking) {
-                var pickFS = new ShaderSource({
-                    sources : [fs],
-                    pickColorQualifier : 'varying'
-                });
-                this._pickSP = context.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
-            } else {
-                this._pickSP = context.createShaderProgram(vs, fs, attributeLocations);
-            }
-
-            validateShaderMatching(this._pickSP, attributeLocations);
+            var spFunc = defaultValue(this._createShaderProgramFunction, createShaderProgram);
+            spFunc(this, frameState, appearance);
         }
-
-        var colorCommands = this._colorCommands;
-        var pickCommands = this._pickCommands;
 
         if (createRS || createSP) {
-            // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
-            var materialUniformMap = defined(material) ? material._uniforms : undefined;
-            var appearanceUniformMap = {};
-            var appearanceUniforms = appearance.uniforms;
-            if (defined(appearanceUniforms)) {
-                // Convert to uniform map of functions for the renderer
-                for (var name in appearanceUniforms) {
-                    if (appearanceUniforms.hasOwnProperty(name)) {
-                        if (defined(materialUniformMap) && defined(materialUniformMap[name])) {
-                            // Later, we could rename uniforms behind-the-scenes if needed.
-                            throw new DeveloperError('Appearance and material have a uniform with the same name: ' + name);
-                        }
-
-                        appearanceUniformMap[name] = getUniformFunction(appearanceUniforms, name);
-                    }
-                }
-            }
-            var uniforms = combine(appearanceUniformMap, materialUniformMap);
-
-            var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
-
-            colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
-            pickCommands.length = this._va.length;
-
-            length = colorCommands.length;
-            var m = 0;
-            var vaIndex = 0;
-            for (i = 0; i < length; ++i) {
-                if (twoPasses) {
-                    colorCommand = colorCommands[i];
-                    if (!defined(colorCommand)) {
-                        colorCommand = colorCommands[i] = new DrawCommand({
-                            owner : this,
-                            primitiveType : this._primitiveType
-                        });
-                    }
-                    colorCommand.vertexArray = this._va[vaIndex];
-                    colorCommand.renderState = this._backFaceRS;
-                    colorCommand.shaderProgram = this._sp;
-                    colorCommand.uniformMap = uniforms;
-                    colorCommand.pass = pass;
-
-                    ++i;
-                }
-
-                colorCommand = colorCommands[i];
-                if (!defined(colorCommand)) {
-                    colorCommand = colorCommands[i] = new DrawCommand({
-                        owner : this,
-                        primitiveType : this._primitiveType
-                    });
-                }
-                colorCommand.vertexArray = this._va[vaIndex];
-                colorCommand.renderState = this._frontFaceRS;
-                colorCommand.shaderProgram = this._sp;
-                colorCommand.uniformMap = uniforms;
-                colorCommand.pass = pass;
-
-                pickCommand = pickCommands[m];
-                if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[m] = new DrawCommand({
-                        owner : this,
-                        primitiveType : this._primitiveType
-                    });
-                }
-                pickCommand.vertexArray = this._va[vaIndex];
-                pickCommand.renderState = this._pickRS;
-                pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = uniforms;
-                pickCommand.pass = pass;
-                ++m;
-
-                ++vaIndex;
-            }
+            var commandFunc = defaultValue(this._createCommandsFunction, createCommands);
+            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands, frameState);
         }
 
-        // Update per-instance attributes
-        if (this._dirtyAttributes.length > 0) {
-            attributes = this._dirtyAttributes;
-            length = attributes.length;
-            for (i = 0; i < length; ++i) {
-                attribute = attributes[i];
-                var value = attribute.value;
-                var indices = attribute.indices;
-                var indicesLength = indices.length;
-                for (j = 0; j < indicesLength; ++j) {
-                    index = indices[j];
-                    var offset = index.offset;
-                    var count = index.count;
-
-                    var vaAttribute = index.attribute;
-                    var componentDatatype = vaAttribute.componentDatatype;
-                    var componentsPerAttribute = vaAttribute.componentsPerAttribute;
-
-                    var typedArray = ComponentDatatype.createTypedArray(componentDatatype, count * componentsPerAttribute);
-                    for (var k = 0; k < count; ++k) {
-                        typedArray.set(value, k * componentsPerAttribute);
-                    }
-
-                    var offsetInBytes = offset * componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype);
-                    vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
-                }
-                attribute.dirty = false;
-            }
-
-            attributes.length = 0;
-        }
-
-        var modelMatrix;
-        if ((this._numberOfInstances > 1 && !this._validModelMatrix) || frameState.mode !== SceneMode.SCENE3D) {
-            modelMatrix = Matrix4.IDENTITY;
-        } else {
-            modelMatrix = this.modelMatrix;
-        }
-
-        if (!Matrix4.equals(modelMatrix, this._modelMatrix)) {
-            Matrix4.clone(modelMatrix, this._modelMatrix);
-            length = this._boundingSpheres.length;
-            for (i = 0; i < length; ++i) {
-                var boundingSphere = this._boundingSpheres[i];
-                if (defined(boundingSphere)) {
-                    this._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, this._boundingSphereWC[i]);
-                    if (!scene3DOnly) {
-                        this._boundingSphere2D[i] = BoundingSphere.clone(this._boundingSphereCV[i], this._boundingSphere2D[i]);
-                        this._boundingSphere2D[i].center.x = 0.0;
-                        this._boundingSphereMorph[i] = BoundingSphere.union(this._boundingSphereWC[i], this._boundingSphereCV[i]);
-                    }
-                }
-            }
-        }
-
-        var boundingSpheres;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            boundingSpheres = this._boundingSphereWC;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingSpheres = this._boundingSphereCV;
-        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
-            boundingSpheres = this._boundingSphere2D;
-        } else if (defined(this._boundingSphereMorph)) {
-            boundingSpheres = this._boundingSphereMorph;
-        }
-
-        var passes = frameState.passes;
-        if (passes.render) {
-            length = colorCommands.length;
-            for (i = 0; i < length; ++i) {
-                var sphereIndex = twoPasses ? Math.floor(i / 2) : i;
-                colorCommands[i].modelMatrix = modelMatrix;
-                colorCommands[i].boundingVolume = boundingSpheres[sphereIndex];
-                colorCommands[i].cull = this.cull;
-                colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-                commandList.push(colorCommands[i]);
-            }
-        }
-
-        if (passes.pick) {
-            length = pickCommands.length;
-            for (i = 0; i < length; ++i) {
-                pickCommands[i].modelMatrix = modelMatrix;
-                pickCommands[i].boundingVolume = boundingSpheres[i];
-                pickCommands[i].cull = this.cull;
-
-                commandList.push(pickCommands[i]);
-            }
-        }
+        var updateAndQueueCommandsFunc = defaultValue(this._updateAndQueueCommandsFunction, updateAndQueueCommands);
+        updateAndQueueCommandsFunc(this, frameState, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
     };
 
-    function createGetFunction(name, perInstanceAttributes) {
-        var attribute = perInstanceAttributes[name];
+    function createGetFunction(batchTable, instanceIndex, attributeIndex) {
         return function() {
-            if (defined(attribute) && defined(attribute.value)) {
-                return perInstanceAttributes[name].value;
+            var attributeValue = batchTable.getBatchedAttribute(instanceIndex, attributeIndex);
+            var attribute = batchTable.attributes[attributeIndex];
+            var componentsPerAttribute = attribute.componentsPerAttribute;
+            var value = ComponentDatatype.createTypedArray(attribute.componentDatatype, componentsPerAttribute);
+            if (defined(attributeValue.constructor.pack)) {
+                attributeValue.constructor.pack(attributeValue, value, 0);
+            } else {
+                value[0] = attributeValue;
             }
-            return attribute;
+            return value;
         };
     }
 
-    function createSetFunction(name, perInstanceAttributes, dirtyList) {
-        return function (value) {
+    function createSetFunction(batchTable, instanceIndex, attributeIndex) {
+        return function(value) {
             //>>includeStart('debug', pragmas.debug);
             if (!defined(value) || !defined(value.length) || value.length < 1 || value.length > 4) {
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
             //>>includeEnd('debug');
+            var attributeValue = getAttributeValue(value);
+            batchTable.setBatchedAttribute(instanceIndex, attributeIndex, attributeValue);
+        };
+    }
 
-            var attribute = perInstanceAttributes[name];
-            attribute.value = value;
-            if (!attribute.dirty && attribute.valid) {
-                dirtyList.push(attribute);
-                attribute.dirty = true;
+    function createBoundingSphereProperties(primitive, properties, index) {
+        properties.boundingSphere = {
+            get : function() {
+                var boundingSphere = primitive._instanceBoundingSpheres[index];
+                var modelMatrix = primitive.modelMatrix;
+                if (defined(modelMatrix) && defined(boundingSphere)) {
+                    boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix);
+                }
+                return boundingSphere;
+            }
+        };
+        properties.boundingSphereCV = {
+            get : function() {
+                return primitive._instanceBoundingSpheresCV[index];
             }
         };
     }
@@ -1300,7 +1889,7 @@ define([
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
-     * @param {Object} id The id of the {@link GeometryInstance}.
+     * @param {*} id The id of the {@link GeometryInstance}.
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
@@ -1309,13 +1898,14 @@ define([
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
+     * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required');
         }
-        if (!defined(this._perInstanceAttributeLocations)) {
+        if (!defined(this._batchTable)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
         //>>includeEnd('debug');
@@ -1335,32 +1925,44 @@ define([
         if (index === -1) {
             return undefined;
         }
+
         var attributes = this._perInstanceAttributeCache[index];
         if (defined(attributes)) {
             return attributes;
         }
 
-        var perInstanceAttributes = this._perInstanceAttributeLocations[index];
+        var batchTable = this._batchTable;
+        var perInstanceAttributeIndices = this._batchTableAttributeIndices;
         attributes = {};
         var properties = {};
-        var hasProperties = false;
 
-        for (var name in perInstanceAttributes) {
-            if (perInstanceAttributes.hasOwnProperty(name)) {
-                hasProperties = true;
+        for (var name in perInstanceAttributeIndices) {
+            if (perInstanceAttributeIndices.hasOwnProperty(name)) {
+                var attributeIndex = perInstanceAttributeIndices[name];
                 properties[name] = {
-                    get : createGetFunction(name, perInstanceAttributes)
+                    get : createGetFunction(batchTable, index, attributeIndex)
                 };
 
-                if (name !== 'boundingSphere' && name !== 'boundingSphereCV') {
-                    properties[name].set = createSetFunction(name, perInstanceAttributes, this._dirtyAttributes);
+                var createSetter = true;
+                var readOnlyAttributes = this._readOnlyInstanceAttributes;
+                if (createSetter && defined(readOnlyAttributes)) {
+                    length = readOnlyAttributes.length;
+                    for (var k = 0; k < length; ++k) {
+                        if (name === readOnlyAttributes[k]) {
+                            createSetter = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (createSetter) {
+                    properties[name].set = createSetFunction(batchTable, index, attributeIndex);
                 }
             }
         }
 
-        if (hasProperties) {
-            defineProperties(attributes, properties);
-        }
+        createBoundingSphereProperties(this, properties, index);
+        defineProperties(attributes, properties);
 
         this._lastPerInstanceAttributeIndex = index;
         this._perInstanceAttributeCache[index] = attributes;
@@ -1391,14 +1993,13 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Primitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     *
+     * @see Primitive#isDestroyed
      */
     Primitive.prototype.destroy = function() {
         var length;
@@ -1420,6 +2021,15 @@ define([
             pickIds[i].destroy();
         }
         this._pickIds = undefined;
+
+        this._batchTable = this._batchTable && this._batchTable.destroy();
+
+        //These objects may be fairly large and reference other large objects (like Entities)
+        //We explicitly set them to undefined here so that the memory can be freed
+        //even if a reference to the destroyed Primitive has been kept around.
+        this._instanceIds = undefined;
+        this._perInstanceAttributeCache = undefined;
+        this._attributeLocations = undefined;
 
         return destroyObject(this);
     };

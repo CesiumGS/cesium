@@ -1,13 +1,10 @@
-/*global define*/
 define([
         '../ThirdParty/when',
-        './defined',
-        './DeveloperError'
+        './Check'
     ], function(
         when,
-        defined,
-        DeveloperError) {
-    "use strict";
+        Check) {
+    'use strict';
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -19,20 +16,22 @@ define([
      * or another error occurs, the height is set to undefined.  As is typical of the
      * {@link Cartographic} type, the supplied height is a height above the reference ellipsoid
      * (such as {@link Ellipsoid.WGS84}) rather than an altitude above mean sea level.  In other
-     * words, it will not necessarily be 0.0 if sampled in the ocean.
+     * words, it will not necessarily be 0.0 if sampled in the ocean. This function needs the
+     * terrain level of detail as input, if you need to get the altitude of the terrain as precisely
+     * as possible (i.e. with maximum level of detail) use {@link sampleTerrainMostDetailed}.
      *
      * @exports sampleTerrain
      *
      * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
      * @param {Number} level The terrain level-of-detail from which to query terrain heights.
      * @param {Cartographic[]} positions The positions to update with terrain heights.
-     * @returns {Promise} A promise that resolves to the provided list of positions when terrain the query has completed.
+     * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
+     *
+     * @see sampleTerrainMostDetailed
      *
      * @example
      * // Query the terrain height of two Cartographic positions
-     * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//cesiumjs.org/smallterrain'
-     * });
+     * var terrainProvider = Cesium.createWorldTerrain();
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
      *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
@@ -43,35 +42,15 @@ define([
      *     // updatedPositions is just a reference to positions.
      * });
      */
-    var sampleTerrain = function(terrainProvider, level, positions) {
+    function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(terrainProvider)) {
-            throw new DeveloperError('terrainProvider is required.');
-        }
-        if (!defined(level)) {
-            throw new DeveloperError('level is required.');
-        }
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required.');
-        }
+        Check.typeOf.object('terrainProvider', terrainProvider);
+        Check.typeOf.number('level', level);
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
-        var deferred = when.defer();
-
-        function doSamplingWhenReady() {
-            if (terrainProvider.ready) {
-                when(doSampling(terrainProvider, level, positions), function(updatedPositions) {
-                    deferred.resolve(updatedPositions);
-                });
-            } else {
-                setTimeout(doSamplingWhenReady, 10);
-            }
-        }
-
-        doSamplingWhenReady();
-
-        return deferred.promise;
-    };
+        return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions); });
+    }
 
     function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;
@@ -107,8 +86,10 @@ define([
         var tilePromises = [];
         for (i = 0; i < tileRequests.length; ++i) {
             var tileRequest = tileRequests[i];
-            var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level, false);
-            var tilePromise = when(requestPromise, createInterpolateFunction(tileRequest), createMarkFailedFunction(tileRequest));
+            var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
+            var tilePromise = requestPromise
+                .then(createInterpolateFunction(tileRequest))
+                .otherwise(createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);
         }
 

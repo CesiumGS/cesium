@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
+
+function dataCallback(interval, index) {
+    var time;
+    if (index === 0) { // leading
+        time = Cesium.JulianDate.toIso8601(interval.stop);
+    } else {
+        time = Cesium.JulianDate.toIso8601(interval.start);
+    }
+
+    return {
+        Time: time
+    };
+}
+
+var times = Cesium.TimeIntervalCollection.fromIso8601({
+    iso8601: '2015-07-30/2017-06-16/P1D',
+    leadingInterval: true,
+    trailingInterval: true,
+    isStopIncluded: false, // We want stop time to be part of the trailing interval
+    dataCallback: dataCallback
+});
+
+// Add a WMTS imagery layer
+var provider = new Cesium.WebMapTileServiceImageryProvider({
+    url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
+    layer : 'AMSR2_Snow_Water_Equivalent',
+    style : 'default',
+    tileMatrixSetID : '2km',
+    maximumLevel : 5,
+    format : 'image/png',
+    clock: viewer.clock,
+    times: times,
+    credit : 'NASA Global Imagery Browse Services for EOSDIS'
+});
+var imageryLayers = viewer.imageryLayers;
+imageryLayers.addImageryProvider(provider);
+provider.readyPromise
+    .then(function() {
+        var start = Cesium.JulianDate.fromIso8601('2015-07-30');
+        var end = Cesium.JulianDate.fromIso8601('2017-06-17');
+
+        viewer.timeline.zoomTo(start, end);
+
+        var clock = viewer.clock;
+        clock.startTime = start;
+        clock.endTime = end;
+        clock.currentTime = start;
+        clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+        clock.multiplier = 86400;
+    });
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

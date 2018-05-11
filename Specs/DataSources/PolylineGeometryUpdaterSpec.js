@@ -1,11 +1,13 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PolylineGeometryUpdater',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
+        'Core/PolylinePipeline',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
@@ -20,17 +22,19 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/Globe',
-        'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         PolylineGeometryUpdater,
         BoundingSphere,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
+        PolylinePipeline,
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
@@ -45,12 +49,10 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         Globe,
-        PrimitiveCollection,
+        ShadowMode,
         createDynamicProperty,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
     var scene;
     beforeAll(function(){
@@ -59,7 +61,7 @@ defineSuite([
     });
 
     afterAll(function(){
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
@@ -90,10 +92,13 @@ defineSuite([
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(false);
         expect(updater.fillMaterialProperty).toBe(undefined);
+        expect(updater.depthFailMaterialProperty).toBe(undefined);
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -128,10 +133,13 @@ defineSuite([
         expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
+        expect(updater.depthFailMaterialProperty).toBe(undefined);
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -140,6 +148,13 @@ defineSuite([
         var updater = new PolylineGeometryUpdater(entity, scene);
         entity.polyline.material = new ColorMaterialProperty();
         expect(updater.fillMaterialProperty).toBe(entity.polyline.material);
+    });
+
+    it('Polyline depth fail material is correctly exposed.', function() {
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        entity.polyline.depthFailMaterial = new ColorMaterialProperty();
+        expect(updater.depthFailMaterialProperty).toBe(entity.polyline.depthFailMaterial);
     });
 
     it('A time-varying positions causes geometry to be dynamic', function() {
@@ -193,10 +208,12 @@ defineSuite([
         var polyline = entity.polyline;
         polyline.show = new ConstantProperty(options.show);
         polyline.material = options.material;
+        polyline.depthFailMaterial = options.depthFailMaterial;
 
         polyline.width = new ConstantProperty(options.width);
         polyline.followSurface = new ConstantProperty(options.followSurface);
         polyline.granularity = new ConstantProperty(options.granularity);
+        polyline.distanceDisplayCondition = options.distanceDisplayCondition;
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -215,13 +232,43 @@ defineSuite([
         } else {
             expect(attributes.color).toBeUndefined();
         }
+        if (options.depthFailMaterial && options.depthFailMaterial instanceof ColorMaterialProperty) {
+            expect(attributes.depthFailColor.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.depthFailMaterial.color.getValue(time)));
+        } else {
+            expect(attributes.depthFailColor).toBeUndefined();
+        }
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.show));
+        if (options.distanceDisplayCondition) {
+            expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+        }
     }
 
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
             show : true,
             material : new ColorMaterialProperty(Color.RED),
+            width : 3,
+            followSurface : false,
+            granularity : 1.0
+        });
+    });
+
+    it('Creates expected per-color geometry with color depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
+            width : 3,
+            followSurface : false,
+            granularity : 1.0
+        });
+    });
+
+    it('Creates expected per-color geometry with material depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            depthFailMaterial : new GridMaterialProperty(),
             width : 3,
             followSurface : false,
             granularity : 1.0
@@ -235,6 +282,39 @@ defineSuite([
             width : 4,
             followSurface : true,
             granularity : 0.5
+        });
+    });
+
+    it('Creates expected per-material geometry with color depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new GridMaterialProperty(),
+            depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
+            width : 4,
+            followSurface : true,
+            granularity : 0.5
+        });
+    });
+
+    it('Creates expected per-material geometry with color depth fail appearance', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new GridMaterialProperty(),
+            depthFailMaterial : new GridMaterialProperty(),
+            width : 4,
+            followSurface : true,
+            granularity : 0.5
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            width : 3,
+            followSurface : false,
+            granularity : 1.0,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 
@@ -274,12 +354,22 @@ defineSuite([
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(show.getValue(time2)));
     });
 
+    it('createFillGeometryInstance obeys Entity.show is false.', function() {
+        var entity = createBasicPolyline();
+        entity.show = false;
+        entity.polyline.fill = true;
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var instance = updater.createFillGeometryInstance(new JulianDate());
+        var attributes = instance.attributes;
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+    });
+
     it('dynamic updater sets properties', function() {
         var entity = new Entity();
         var polyline = new PolylineGraphics();
         entity.polyline = polyline;
 
-        var time1 = new JulianDate(0, 0);
+        var time = new JulianDate(0, 0);
         var time2 = new JulianDate(10, 0);
         var time3 = new JulianDate(20, 0);
 
@@ -336,23 +426,23 @@ defineSuite([
             0, 0,
             1, 0
         ]));
-        expect(listener.callCount).toEqual(1);
+        expect(listener.calls.count()).toEqual(1);
 
         entity.polyline.width = new ConstantProperty(82);
-        expect(listener.callCount).toEqual(2);
+        expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
-        expect(listener.callCount).toEqual(3);
+        expect(listener.calls.count()).toEqual(3);
 
         entity.polyline.positions = undefined;
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
 
         //Since there's no valid geometry, changing another property should not raise the event.
         entity.polyline.width = undefined;
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(listener.callCount).toEqual(4);
+        expect(listener.calls.count()).toEqual(4);
     });
 
     it('createFillGeometryInstance throws if object is not shown', function() {
@@ -434,7 +524,7 @@ defineSuite([
         dynamicUpdater.update(time);
 
         var result = new BoundingSphere(0);
-        var state = dynamicUpdater.getBoundingSphere(entity, result);
+        var state = dynamicUpdater.getBoundingSphere(result);
         expect(state).toBe(BoundingSphereState.DONE);
 
         var primitive = scene.primitives.get(0);
@@ -452,23 +542,8 @@ defineSuite([
         var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
 
         var result = new BoundingSphere();
-        var state = dynamicUpdater.getBoundingSphere(entity, result);
+        var state = dynamicUpdater.getBoundingSphere(result);
         expect(state).toBe(BoundingSphereState.FAILED);
-
-        updater.destroy();
-        scene.primitives.removeAll();
-    });
-
-    it('Compute dynamic geometry bounding sphere throws without entity.', function() {
-        var entity = createBasicPolyline();
-        entity.polyline.width = createDynamicProperty(1);
-        var updater = new PolylineGeometryUpdater(entity, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
-
-        var result = new BoundingSphere();
-        expect(function() {
-            dynamicUpdater.getBoundingSphere(undefined, result);
-        }).toThrowDeveloperError();
 
         updater.destroy();
         scene.primitives.removeAll();
@@ -481,10 +556,24 @@ defineSuite([
         var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
 
         expect(function() {
-            dynamicUpdater.getBoundingSphere(entity, undefined);
+            dynamicUpdater.getBoundingSphere(undefined);
         }).toThrowDeveloperError();
 
         updater.destroy();
         scene.primitives.removeAll();
     });
-});
+
+    it('followSurface true with undefined globe does not call generateCartesianArc', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        scene.globe = undefined;
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives);
+        spyOn(PolylinePipeline, 'generateCartesianArc').and.callThrough();
+        dynamicUpdater.update(time);
+        expect(PolylinePipeline.generateCartesianArc).not.toHaveBeenCalled();
+        updater.destroy();
+        scene.primitives.removeAll();
+        scene.globe = new Globe();
+    });
+}, 'WebGL');

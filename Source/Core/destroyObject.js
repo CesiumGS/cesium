@@ -1,11 +1,10 @@
-/*global define*/
 define([
         './defaultValue',
         './DeveloperError'
     ], function(
         defaultValue,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     function returnTrue() {
         return true;
@@ -28,7 +27,6 @@ define([
      * @param {String} [message] The message to include in the exception that is thrown if
      *                           a destroyed object's function is called.
      *
-     * @see DeveloperError
      *
      * @example
      * // How a texture would destroy itself.
@@ -36,12 +34,16 @@ define([
      *     _gl.deleteTexture(_texture);
      *     return Cesium.destroyObject(this);
      * };
+     *
+     * @see DeveloperError
      */
-    var destroyObject = function(object, message) {
+    function destroyObject(object, message) {
         message = defaultValue(message, 'This object was destroyed, i.e., destroy() was called.');
 
         function throwOnDestroyed() {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(message);
+            //>>includeEnd('debug');
         }
 
         for ( var key in object) {
@@ -53,7 +55,7 @@ define([
         object.isDestroyed = returnTrue;
 
         return undefined;
-    };
+    }
 
     return destroyObject;
 });

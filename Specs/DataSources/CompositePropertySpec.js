@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/CompositeProperty',
         'Core/Cartesian3',
@@ -13,8 +12,7 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         ConstantProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('default constructor has expected values', function() {
         var property = new CompositeProperty();
@@ -122,23 +120,23 @@ defineSuite([
 
         property.intervals.addInterval(interval1);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.addInterval(interval2);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.removeInterval(interval2);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         interval1.data.setValue(new Cartesian3());
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
     });
 
     it('does not raise definitionChanged for an overwritten interval', function() {
@@ -160,11 +158,11 @@ defineSuite([
 
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
-        expect(listener.callCount).toBe(2);
+        expect(listener.calls.count()).toBe(2);
 
-        //interval2 overwrites interval1, so callCount should not increase.
+        //interval2 overwrites interval1, so calls.count() should not increase.
         interval1.data.setValue(new Cartesian3());
-        expect(listener.callCount).toBe(2);
+        expect(listener.calls.count()).toBe(2);
     });
 
     it('getValue throws with no time parameter', function() {

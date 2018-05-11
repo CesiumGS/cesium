@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw a line on the globe with varying colors.">
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,12 +25,12 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 // Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
-       
+
 // Example 1: Draw a yellow polyline on the globe surface.
 var yellowPolyline = new Cesium.GeometryInstance({
     geometry : new Cesium.SimplePolylineGeometry({
@@ -66,7 +66,7 @@ var perSegmentPolyline = new Cesium.GeometryInstance({
 // Example 3: Draw a polyline with per vertex coloring.
 
 // For per vertex coloring, set the colorsPerVertex option
-// to true, and provide the colors options with an array of 
+// to true, and provide the colors options with an array of
 // colors where the length is equal to the number of positions.
 var perVertexPolyline = new Cesium.GeometryInstance({
     geometry : new Cesium.SimplePolylineGeometry({

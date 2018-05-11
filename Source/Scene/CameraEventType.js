@@ -1,15 +1,13 @@
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Enumerates the available input for interacting with the camera.
      *
-     * @namespace
-     * @alias CameraEventType
+     * @exports CameraEventType
      */
     var CameraEventType = {
         /**

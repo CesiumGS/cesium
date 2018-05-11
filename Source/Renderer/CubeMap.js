@@ -1,56 +1,186 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/PixelFormat',
+        './ContextLimits',
         './CubeMapFace',
         './MipmapHint',
         './PixelDatatype',
+        './Sampler',
         './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap'
+        './TextureMinificationFilter'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         CesiumMath,
+        PixelFormat,
+        ContextLimits,
         CubeMapFace,
         MipmapHint,
         PixelDatatype,
+        Sampler,
         TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
-    "use strict";
+        TextureMinificationFilter) {
+    'use strict';
 
-    /**
-     * @private
-     */
-    var CubeMap = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
+    function CubeMap(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('options.context', options.context);
+        //>>includeEnd('debug');
+
+        var context = options.context;
+        var source = options.source;
+        var width;
+        var height;
+
+        if (defined(source)) {
+            var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
+                throw new DeveloperError('options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
+            }
+            //>>includeEnd('debug');
+
+            width = faces[0].width;
+            height = faces[0].height;
+
+            //>>includeStart('debug', pragmas.debug);
+            for ( var i = 1; i < 6; ++i) {
+                if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
+                    throw new DeveloperError('Each face in options.source must have the same width and height.');
+                }
+            }
+            //>>includeEnd('debug');
+        } else {
+            width = options.width;
+            height = options.height;
+        }
+
+        var size = width;
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(width) || !defined(height)) {
+            throw new DeveloperError('options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
+        }
+
+        if (width !== height) {
+            throw new DeveloperError('Width must equal height.');
+        }
+
+        if (size <= 0) {
+            throw new DeveloperError('Width and height must be greater than zero.');
+        }
+
+        if (size > ContextLimits.maximumCubeMapSize) {
+            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + ContextLimits.maximumCubeMapSize + ').  Check maximumCubeMapSize.');
+        }
+
+        if (!PixelFormat.validate(pixelFormat)) {
+            throw new DeveloperError('Invalid options.pixelFormat.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
+        if (!PixelDatatype.validate(pixelDatatype)) {
+            throw new DeveloperError('Invalid options.pixelDatatype.');
+        }
+
+        if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
+            throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+        }
+        //>>includeEnd('debug');
+
+        var sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, size, size) * 6;
+
+        // Use premultiplied alpha for opaque textures should perform better on Chrome:
+        // http://media.tojicode.com/webglCamp4/#20
+        var preMultiplyAlpha = options.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
+        var flipY = defaultValue(options.flipY, true);
+
+        var gl = context._gl;
+        var textureTarget = gl.TEXTURE_CUBE_MAP;
+        var texture = gl.createTexture();
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(textureTarget, texture);
+
+        function createFace(target, sourceFace, preMultiplyAlpha, flipY) {
+            // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
+            var arrayBufferView = sourceFace.arrayBufferView;
+            if (arrayBufferView) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                if (flipY) {
+                    arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, size, size);
+                }
+                gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, arrayBufferView);
+            } else {
+                // Only valid for DOM-Element uploads
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
+                gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, sourceFace);
+            }
+        }
+
+        if (defined(source)) {
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ, preMultiplyAlpha, flipY);
+        } else {
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
+        }
+        gl.bindTexture(textureTarget, null);
+
         this._gl = gl;
-        this._textureFilterAnisotropic = textureFilterAnisotropic;
+        this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
         this._texture = texture;
         this._pixelFormat = pixelFormat;
         this._pixelDatatype = pixelDatatype;
         this._size = size;
+        this._hasMipmap = false;
+        this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
         this._sampler = undefined;
 
-        this._positiveX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._negativeX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._positiveY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._negativeY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
+        var initialized = defined(source);
+        this._positiveX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._negativeX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._positiveY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._negativeY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
 
-        this.sampler = undefined;
-    };
+        this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
+    }
 
     defineProperties(CubeMap.prototype, {
         positiveX : {
@@ -88,34 +218,19 @@ define([
                 return this._sampler;
             },
             set : function(sampler) {
-                var samplerDefined = true;
-                if (!defined(sampler)) {
-                    samplerDefined = false;
-                    var minFilter = TextureMinificationFilter.LINEAR;
-                    var magFilter = TextureMagnificationFilter.LINEAR;
-                    if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                        minFilter = TextureMinificationFilter.NEAREST;
-                        magFilter = TextureMagnificationFilter.NEAREST;
-                    }
+                var minificationFilter = sampler.minificationFilter;
+                var magnificationFilter = sampler.magnificationFilter;
 
-                    sampler = {
-                        wrapS : TextureWrap.CLAMP_TO_EDGE,
-                        wrapT : TextureWrap.CLAMP_TO_EDGE,
-                        minificationFilter : minFilter,
-                        magnificationFilter : magFilter,
-                        maximumAnisotropy : 1.0
-                    };
-                }
+                var mipmap =
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
+                // float textures only support nearest filtering, so override the sampler's settings
                 if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                    if (sampler.minificationFilter !== TextureMinificationFilter.NEAREST &&
-                            sampler.minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) {
-                        throw new DeveloperError('Only NEAREST and NEAREST_MIPMAP_NEAREST minification filters are supported for floating point textures.');
-                    }
-
-                    if (sampler.magnificationFilter !== TextureMagnificationFilter.NEAREST) {
-                        throw new DeveloperError('Only the NEAREST magnification filter is supported for floating point textures.');
-                    }
+                    minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
+                    magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
 
                 var gl = this._gl;
@@ -123,8 +238,8 @@ define([
 
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(target, this._texture);
-                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, sampler.minificationFilter);
-                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minificationFilter);
+                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magnificationFilter);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
                 if (defined(this._textureFilterAnisotropic)) {
@@ -132,13 +247,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = !samplerDefined ? undefined : {
-                    wrapS : sampler.wrapS,
-                    wrapT : sampler.wrapT,
-                    minificationFilter : sampler.minificationFilter,
-                    magnificationFilter : sampler.magnificationFilter,
-                    maximumAnisotropy : sampler.maximumAnisotropy
-                };
+                this._sampler = sampler;
             }
         },
         pixelFormat: {
@@ -156,9 +265,17 @@ define([
                 return this._size;
             }
         },
-        height: {
+        height : {
             get : function() {
                 return this._size;
+            }
+        },
+        sizeInBytes : {
+            get : function() {
+                if (this._hasMipmap) {
+                    return Math.floor(this._sizeInBytes * 4 / 3);
+                }
+                return this._sizeInBytes;
             }
         },
         preMultiplyAlpha : {
@@ -193,7 +310,7 @@ define([
      * // Generate mipmaps, and then set the sampler so mipmaps are used for
      * // minification when the cube map is sampled.
      * cubeMap.generateMipmap();
-     * cubeMap.sampler = context.createSampler({
+     * cubeMap.sampler = new Sampler({
      *   minificationFilter : Cesium.TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
      * });
      */
@@ -208,6 +325,8 @@ define([
             throw new DeveloperError('hint is invalid.');
         }
         //>>includeEnd('debug');
+
+        this._hasMipmap = true;
 
         var gl = this._gl;
         var target = this._textureTarget;

@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingRectangle',
         './BoundingSphere',
         './Cartesian2',
@@ -16,12 +16,14 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './oneTimeWarning',
         './PolygonPipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './VertexFormat',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -38,12 +40,13 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        oneTimeWarning,
         PolygonPipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         VertexFormat,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat) {
         var attributes = new GeometryAttributes();
@@ -92,7 +95,7 @@ define([
             indices[index++] = lr;
         }
 
-        if (vertexFormat.st || vertexFormat.tangent || vertexFormat.binormal) { // st required for tangent/binormal calculation
+        if (vertexFormat.st || vertexFormat.tangent || vertexFormat.bitangent) { // st required for tangent/bitangent calculation
             var st = new Float32Array(vertexCount * 2);
             var lengthSt = 1 / (length - 1);
             var heightSt = 1 / (boundingRectangle.height);
@@ -160,13 +163,19 @@ define([
             geometry = GeometryPipeline.computeNormal(geometry);
         }
 
-        if (vertexFormat.tangent || vertexFormat.binormal) {
-            geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+        if (vertexFormat.tangent || vertexFormat.bitangent) {
+            try {
+                geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
+            } catch (e) {
+                oneTimeWarning('polyline-volume-tangent-bitangent', 'Unable to compute tangents and bitangents for polyline volume geometry');
+                //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+            }
+
             if (!vertexFormat.tangent) {
                 geometry.attributes.tangent = undefined;
             }
-            if (!vertexFormat.binormal) {
-                geometry.attributes.binormal = undefined;
+            if (!vertexFormat.bitangent) {
+                geometry.attributes.bitangent = undefined;
             }
             if (!vertexFormat.st) {
                 geometry.attributes.st = undefined;
@@ -192,7 +201,7 @@ define([
      *
      * @see PolylineVolumeGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      *
      * @example
      * function computeCircle(radius) {
@@ -213,7 +222,7 @@ define([
      *   shapePositions : computeCircle(100000.0)
      * });
      */
-    var PolylineVolumeGeometry = function(options) {
+    function PolylineVolumeGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
         var shape = options.shapePositions;
@@ -243,15 +252,16 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 2;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {PolylineVolumeGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolylineVolumeGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -291,6 +301,8 @@ define([
 
         array[startingIndex++] = value._cornerType;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -310,6 +322,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {PolylineVolumeGeometry} [result] The object into which to store the result.
+     * @returns {PolylineVolumeGeometry} The modified result parameter or a new PolylineVolumeGeometry instance if one was not provided.
      */
     PolylineVolumeGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -373,7 +386,7 @@ define([
      */
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
-        var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeGeometry._ellipsoid);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         var shape2D = polylineVolumeGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 

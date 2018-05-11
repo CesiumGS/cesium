@@ -81,7 +81,7 @@ function addSignatureReturns(f) {
 function addSignatureTypes(f) {
     var types = helper.getSignatureTypes(f);
 
-    f.signature = (f.signature || '') + '<span class="type-signature">'+(types.length? ' :'+types.join('|') : '')+'</span>';
+    f.signature = (f.signature || '') + '<span class="type-signature">'+(types.length? ' : '+types.join('|') : '')+'</span>';
 }
 
 function addAttribs(f) {
@@ -404,6 +404,10 @@ exports.publish = function(taffyData, opts, tutorials) {
             members.forEach(function(member) {
                 member = member.id;
                 var memberLower = member.toLowerCase();
+                var firstChar = memberLower.charAt(0);
+                if (firstChar === '.' || firstChar === '~') {
+                    memberLower = memberLower.substring(1);
+                }
 
                 typesJson[memberLower] = typesJson[memberLower] || [];
                 typesJson[memberLower].push(filename + '#' + member);

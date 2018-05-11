@@ -1,15 +1,16 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Rectangle',
         './QuadtreeTileLoadState'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
+        Rectangle,
         QuadtreeTileLoadState) {
-    "use strict";
+    'use strict';
 
     /**
      * A single tile in a {@link QuadtreePrimitive}.
@@ -24,7 +25,7 @@ define([
      * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
      * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
      */
-    var QuadtreeTile = function QuadtreeTile(options) {
+    function QuadtreeTile(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -50,7 +51,11 @@ define([
         this._level = options.level;
         this._parent = options.parent;
         this._rectangle = this._tilingScheme.tileXYToRectangle(this._x, this._y, this._level);
-        this._children = undefined;
+
+        this._southwestChild = undefined;
+        this._southeastChild = undefined;
+        this._northwestChild = undefined;
+        this._northeastChild = undefined;
 
         // QuadtreeTileReplacementQueue gets/sets these private properties.
         this._replacementPrevious = undefined;
@@ -61,6 +66,12 @@ define([
         // distance - for example, by using the natural ordering of a quadtree.
         // QuadtreePrimitive gets/sets this private property.
         this._distance = 0.0;
+        this._priorityFunction = undefined;
+
+        this._customData = [];
+        this._frameUpdated = undefined;
+        this._frameRendered = undefined;
+        this._loadedCallbacks = {};
 
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
@@ -93,7 +104,7 @@ define([
          * @default undefined
          */
         this.data = undefined;
-    };
+    }
 
     /**
      * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
@@ -105,9 +116,11 @@ define([
      * tile in the northwest corner and followed by the tile (if any) to its east.
      */
     QuadtreeTile.createLevelZeroTiles = function(tilingScheme) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
+        //>>includeEnd('debug');
 
         var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
         var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
@@ -127,6 +140,48 @@ define([
         }
 
         return result;
+    };
+
+    QuadtreeTile.prototype._updateCustomData = function(frameNumber, added, removed) {
+        var customData = this.customData;
+
+        var i;
+        var data;
+        var rectangle;
+
+        if (defined(added) && defined(removed)) {
+            customData = customData.filter(function(value) {
+                return removed.indexOf(value) === -1;
+            });
+            this._customData = customData;
+
+            rectangle = this._rectangle;
+            for (i = 0; i < added.length; ++i) {
+                data = added[i];
+                if (Rectangle.contains(rectangle, data.positionCartographic)) {
+                    customData.push(data);
+                }
+            }
+
+            this._frameUpdated = frameNumber;
+        } else {
+            // interior or leaf tile, update from parent
+            var parent = this._parent;
+            if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
+                customData.length = 0;
+
+                rectangle = this._rectangle;
+                var parentCustomData = parent.customData;
+                for (i = 0; i < parentCustomData.length; ++i) {
+                    data = parentCustomData[i];
+                    if (Rectangle.contains(rectangle, data.positionCartographic)) {
+                        customData.push(data);
+                    }
+                }
+
+                this._frameUpdated = parent._frameUpdated;
+            }
+        }
     };
 
     defineProperties(QuadtreeTile.prototype, {
@@ -204,39 +259,98 @@ define([
          */
         children : {
             get : function() {
-                if (!defined(this._children)) {
-                    var tilingScheme = this.tilingScheme;
-                    var level = this.level + 1;
-                    var x = this.x * 2;
-                    var y = this.y * 2;
-                    this._children = [new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x,
-                        y : y,
-                        level : level,
-                        parent : this
-                    }), new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x + 1,
-                        y : y,
-                        level : level,
-                        parent : this
-                    }), new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x,
-                        y : y + 1,
-                        level : level,
-                        parent : this
-                    }), new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x + 1,
-                        y : y + 1,
-                        level : level,
-                        parent : this
-                    })];
-                }
+                return [this.northwestChild, this.northeastChild, this.southwestChild, this.southeastChild];
+            }
+        },
 
-                return this._children;
+        /**
+         * Gets the southwest child tile.
+         * @memberof QuadtreeTile.prototype
+         * @type {QuadtreeTile}
+         */
+        southwestChild : {
+            get : function() {
+                if (!defined(this._southwestChild)) {
+                    this._southwestChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2,
+                        y : this.y * 2 + 1,
+                        level : this.level + 1,
+                        parent : this
+                    });
+                }
+                return this._southwestChild;
+            }
+        },
+
+        /**
+         * Gets the southeast child tile.
+         * @memberof QuadtreeTile.prototype
+         * @type {QuadtreeTile}
+         */
+        southeastChild : {
+            get : function() {
+                if (!defined(this._southeastChild)) {
+                    this._southeastChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2 + 1,
+                        y : this.y * 2 + 1,
+                        level : this.level + 1,
+                        parent : this
+                    });
+                }
+                return this._southeastChild;
+            }
+        },
+
+        /**
+         * Gets the northwest child tile.
+         * @memberof QuadtreeTile.prototype
+         * @type {QuadtreeTile}
+         */
+        northwestChild : {
+            get : function() {
+                if (!defined(this._northwestChild)) {
+                    this._northwestChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2,
+                        y : this.y * 2,
+                        level : this.level + 1,
+                        parent : this
+                    });
+                }
+                return this._northwestChild;
+            }
+        },
+
+        /**
+         * Gets the northeast child tile.
+         * @memberof QuadtreeTile.prototype
+         * @type {QuadtreeTile}
+         */
+        northeastChild : {
+            get : function() {
+                if (!defined(this._northeastChild)) {
+                    this._northeastChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2 + 1,
+                        y : this.y * 2,
+                        level : this.level + 1,
+                        parent : this
+                    });
+                }
+                return this._northeastChild;
+            }
+        },
+
+        /**
+         * An array of objects associated with this tile.
+         * @memberof QuadtreeTile.prototype
+         * @type {Array}
+         */
+        customData : {
+            get : function() {
+                return this._customData;
             }
         },
 
@@ -281,7 +395,7 @@ define([
     });
 
     /**
-     * Frees the resources assocated with this tile and returns it to the <code>START</code>
+     * Frees the resources associated with this tile and returns it to the <code>START</code>
      * {@link QuadtreeTileLoadState}.  If the {@link QuadtreeTile#data} property is defined and it
      * has a <code>freeResources</code> method, the method will be invoked.
      *
@@ -296,13 +410,21 @@ define([
             this.data.freeResources();
         }
 
-        if (defined(this._children)) {
-            for (var i = 0, len = this._children.length; i < len; ++i) {
-                this._children[i].freeResources();
-            }
-            this._children = undefined;
-        }
+        freeTile(this._southwestChild);
+        this._southwestChild = undefined;
+        freeTile(this._southeastChild);
+        this._southeastChild = undefined;
+        freeTile(this._northwestChild);
+        this._northwestChild = undefined;
+        freeTile(this._northeastChild);
+        this._northeastChild = undefined;
     };
+
+    function freeTile(tile) {
+        if (defined(tile)) {
+            tile.freeResources();
+        }
+    }
 
     return QuadtreeTile;
 });

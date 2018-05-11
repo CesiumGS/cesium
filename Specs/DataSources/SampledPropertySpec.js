@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/SampledProperty',
         'Core/Cartesian3',
@@ -21,8 +20,7 @@ defineSuite([
         LinearApproximation,
         CesiumMath,
         Quaternion) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('constructor sets expected defaults', function() {
         var property = new SampledProperty(Cartesian3);
@@ -81,15 +79,15 @@ defineSuite([
 
         property.addSample(times[0], values[0]);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.addSample(times[1], values[1]);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.addSample(times[2], values[2]);
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         expect(property.getValue(times[0])).toEqual(values[0]);
         expect(property.getValue(times[1])).toEqual(values[1]);
@@ -114,10 +112,9 @@ defineSuite([
     });
 
     it('works with PackableForInterpolation', function() {
-        var CustomType = function(value) {
+        function CustomType(value) {
             this.x = value;
-        };
-
+        }
         CustomType.packedLength = 1;
 
         CustomType.packedInterpolationLength = 2;
@@ -222,6 +219,18 @@ defineSuite([
 
         expect(property.getValue(time)).toEqual(value);
         expect(property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))).toBeUndefined();
+    });
+
+    it('Allows empty options object without failing', function() {
+        var property = new SampledProperty(Number);
+
+        var interpolationAlgorithm = property.interpolationAlgorithm;
+        var interpolationDegree = property.interpolationDegree;
+
+        property.setInterpolationOptions({});
+
+        expect(property.interpolationAlgorithm).toEqual(interpolationAlgorithm);
+        expect(property.interpolationDegree).toEqual(interpolationDegree);
     });
 
     it('mergeNewSamples works with huge data sets.', function() {
@@ -443,6 +452,8 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
     });
 
+    var epoch = JulianDate.fromIso8601('2014-01-01T00:00:00');
+
     //The remaining tests were verified with STK Components available from http://www.agi.com.
     it('addSample works with multiple derivatives', function() {
         var results = [0, -3.39969163485071, 0.912945250727628, -6.17439797860995, 0.745113160479349, -1.63963048028446, -0.304810621102217, 4.83619040459681, -0.993888653923375, 169.448966391543];
@@ -464,7 +475,6 @@ defineSuite([
         }
     });
 
-    var epoch = JulianDate.fromIso8601('2014-01-01T00:00:00');
     var times = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
                  JulianDate.addSeconds(epoch, 60, new JulianDate()),
                  JulianDate.addSeconds(epoch, 120, new JulianDate()),
@@ -716,6 +726,14 @@ defineSuite([
         expect(property.getValue(time4)).toBeUndefined();
     });
 
+    it('getValue returns undefined for empty extrapolated property', function() {
+        var sampledPosition = new SampledProperty(Cartesian3);
+        sampledPosition.backwardExtrapolationType = ExtrapolationType.HOLD;
+        sampledPosition.forwardExtrapolationType = ExtrapolationType.HOLD;
+        var result = sampledPosition.getValue(JulianDate.now());
+        expect(result).toBeUndefined();
+    });
+
     it('raises definitionChanged when extrapolation options change', function() {
         var property = new SampledProperty(Number);
         var listener = jasmine.createSpy('listener');
@@ -723,19 +741,19 @@ defineSuite([
 
         property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.forwardExtrapolationDuration = 1.0;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.backwardExtrapolationType = ExtrapolationType.HOLD;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         property.backwardExtrapolationDuration = 1.0;
         expect(listener).toHaveBeenCalledWith(property);
-        listener.reset();
+        listener.calls.reset();
 
         //No events when reassigning to the same value.
         property.forwardExtrapolationType = ExtrapolationType.EXTRAPOLATE;

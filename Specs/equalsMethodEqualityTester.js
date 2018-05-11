@@ -1,9 +1,8 @@
-/*global define*/
 define([
         'Core/defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     return function(a, b) {
         var to_run;

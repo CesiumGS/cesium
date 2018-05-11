@@ -1,28 +1,24 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/CameraEventAggregator',
         'Core/Cartesian2',
         'Core/combine',
-        'Core/defined',
+        'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
         'Scene/CameraEventType',
         'Specs/createCanvas',
-        'Specs/destroyCanvas',
         'Specs/DomEventSimulator'
     ], function(
         CameraEventAggregator,
         Cartesian2,
         combine,
-        defined,
+        FeatureDetection,
         KeyboardEventModifier,
         CameraEventType,
         createCanvas,
-        destroyCanvas,
         DomEventSimulator) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
-    var usePointerEvents = defined(window.PointerEvent);
+    var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var canvas;
     var handler;
     var handler2;
@@ -32,7 +28,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyCanvas(canvas);
+        document.body.removeChild(canvas);
     });
 
     beforeEach(function() {
@@ -62,21 +58,21 @@ defineSuite([
 
     function simulateMouseUp(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerUp(document, combine(options, {
+            DomEventSimulator.firePointerUp(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
-            DomEventSimulator.fireMouseUp(document, options);
+            DomEventSimulator.fireMouseUp(canvas, options);
         }
     }
 
     function simulateMouseMove(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerMove(document, combine(options, {
+            DomEventSimulator.firePointerMove(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
-            DomEventSimulator.fireMouseMove(document, options);
+            DomEventSimulator.fireMouseMove(canvas, options);
         }
     }
 

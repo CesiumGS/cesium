@@ -1,14 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/HomeButton/HomeButton',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         HomeButton,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
     var scene;
     beforeAll(function() {
@@ -16,7 +12,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('constructor sets default values', function() {

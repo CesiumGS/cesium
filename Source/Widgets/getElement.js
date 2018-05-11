@@ -1,9 +1,8 @@
-/*global define*/
 define([
         '../Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * If element is a string, look up the element in the DOM by ID.  Otherwise return element.
@@ -12,7 +11,7 @@ define([
      *
      * @exception {DeveloperError} Element with id "id" does not exist in the document.
      */
-    var getElement = function(element) {
+    function getElement(element) {
         if (typeof element === 'string') {
             var foundElement = document.getElementById(element);
 
@@ -25,7 +24,7 @@ define([
             element = foundElement;
         }
         return element;
-    };
+    }
 
     return getElement;
 });

@@ -1,5 +1,48 @@
 language: node_js
 node_js:
-  - "0.10"
+  - "8"
+sudo: false
+before_script:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
 script:
-  - ant jsHint release -DnodePath=node
+  - echo 'deployPending' && echo -en 'travis_fold:start:script.deployPending\\r'
+  - npm run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
+  - npm run deploy-status -- --status pending --message 'Waiting for build'
+  - echo -en 'travis_fold:end:script.deployPending\\r'
+
+  - echo 'eslint' && echo -en 'travis_fold:start:script.eslint\\r'
+  - npm run eslint
+  - echo -en 'travis_fold:end:script.eslint\\r'
+
+  - echo 'test webgl-stub' && echo -en 'travis_fold:start:script.test\\r'
+  - npm run build
+  - npm run test -- --browsers Electron --webgl-stub --failTaskOnError --suppressPassed
+  - echo -en 'travis_fold:end:script.test\\r'
+
+  - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
+  - npm run clean
+  - npm run makeZipFile -- --concurrency 2
+  - npm pack
+  - echo -en 'travis_fold:end:script.makeZipFile\\r'
+
+  - echo 'buildApps' && echo -en 'travis_fold:start:script.buildApps\\r'
+  - npm run buildApps
+  - echo -en 'travis_fold:end:script.buildApps\\r'
+
+  - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
+  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+  - npm run deploy-status -- --status success --message Deployed
+  - echo -en 'travis_fold:end:script.deploy\\r'
+
+  - echo 'test webgl-stub release' && echo -en 'travis_fold:start:script test.release\\r'
+  - npm run test -- --browsers Electron --failTaskOnError --webgl-stub --release --suppressPassed
+  - echo -en 'travis_fold:end:script test.release\\r'
+
+  - echo 'test node' && echo -en 'travis_fold:start:script test.node\\r'
+  - node index.js
+  - echo -en 'travis_fold:end:script test.node\\r'
+
+  - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
+  - npm run cloc
+  - echo -en 'travis_fold:end:script.cloc\\r'

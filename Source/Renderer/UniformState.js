@@ -1,40 +1,52 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './Sampler'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Color,
+        defaultValue,
         defined,
         defineProperties,
         EncodedCartesian3,
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Simon1994PlanetaryPositions,
         Transforms,
-        SceneMode) {
-    "use strict";
+        SceneMode,
+        Sampler) {
+    'use strict';
 
     /**
      * @private
      */
-    var UniformState = function() {
+    function UniformState() {
+        /**
+         * @type {Texture}
+         */
+        this.globeDepthTexture = undefined;
+
         this._viewport = new BoundingRectangle();
         this._viewportCartesian4 = new Cartesian4();
         this._viewportDirty = false;
@@ -48,6 +60,8 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
+        this._frustumPlanes = new Cartesian4();
+        this._logFarDistance = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -73,9 +87,6 @@ define([
 
         this._inverseProjectionDirty = true;
         this._inverseProjection = new Matrix4();
-
-        this._inverseProjectionOITDirty = true;
-        this._inverseProjectionOIT = new Matrix4();
 
         this._modelViewDirty = true;
         this._modelView = new Matrix4();
@@ -132,6 +143,7 @@ define([
         this._sunDirectionEC = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
 
+        this._pass = undefined;
         this._mode = undefined;
         this._mapProjection = undefined;
         this._cameraDirection = new Cartesian3();
@@ -140,7 +152,22 @@ define([
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
-    };
+        this._orthographicIn3D = false;
+        this._backgroundColor = new Color();
+
+        this._brdfLut = new Sampler();
+        this._environmentMap = new Sampler();
+
+        this._fogDensity = undefined;
+
+        this._invertClassificationColor = undefined;
+
+        this._imagerySplitPosition = 0.0;
+        this._pixelSizePerMeter = undefined;
+        this._geometricToleranceOverMeter = undefined;
+
+        this._minimumDisableDepthTestDistance = undefined;
+    }
 
     defineProperties(UniformState.prototype, {
         /**
@@ -218,8 +245,6 @@ define([
                 this._inverseTransposeModelDirty = true;
                 this._modelViewDirty = true;
                 this._inverseModelViewDirty = true;
-                this._viewProjectionDirty = true;
-                this._inverseViewProjectionDirty = true;
                 this._modelViewRelativeToEyeDirty = true;
                 this._inverseModelViewDirty = true;
                 this._modelViewProjectionDirty = true;
@@ -254,7 +279,7 @@ define([
          * @memberof UniformState.prototype
          * @private
          */
-        inverseTranposeModel : {
+        inverseTransposeModel : {
             get : function() {
                 var m = this._inverseTransposeModel;
                 if (this._inverseTransposeModelDirty) {
@@ -287,15 +312,7 @@ define([
          */
         view3D : {
             get : function() {
-                if (this._view3DDirty) {
-                    if (this._mode === SceneMode.SCENE3D) {
-                        Matrix4.clone(this._view, this._view3D);
-                    } else {
-                        view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, this._frustum2DWidth, this._mode, this._mapProjection, this._view3D);
-                    }
-                    Matrix4.getRotation(this._view3D, this._viewRotation3D);
-                    this._view3DDirty = false;
-                }
+                updateView3D(this);
                 return this._view3D;
             }
         },
@@ -307,6 +324,7 @@ define([
          */
         viewRotation : {
             get : function() {
+                updateView3D(this);
                 return this._viewRotation;
             }
         },
@@ -317,7 +335,7 @@ define([
          */
         viewRotation3D : {
             get : function() {
-                var view3D = this.view3D;
+                updateView3D(this);
                 return this._viewRotation3D;
             }
         },
@@ -341,11 +359,7 @@ define([
          */
         inverseView3D : {
             get : function() {
-                if (this._inverseView3DDirty) {
-                    Matrix4.inverseTransformation(this.view3D, this._inverseView3D);
-                    Matrix4.getRotation(this._inverseView3D, this._inverseViewRotation3D);
-                    this._inverseView3DDirty = false;
-                }
+                updateInverseView3D(this);
                 return this._inverseView3D;
             }
         },
@@ -367,7 +381,7 @@ define([
          */
         inverseViewRotation3D : {
             get : function() {
-                var inverseView = this.inverseView3D;
+                updateInverseView3D(this);
                 return this._inverseViewRotation3D;
             }
         },
@@ -390,17 +404,6 @@ define([
             get : function() {
                 cleanInverseProjection(this);
                 return this._inverseProjection;
-            }
-        },
-
-        /**
-         * @memberof UniformState.prototype
-         * @private
-         */
-        inverseProjectionOIT : {
-            get : function() {
-                cleanInverseProjectionOIT(this);
-                return this._inverseProjectionOIT;
             }
         },
 
@@ -628,6 +631,29 @@ define([
         },
 
         /**
+         * The distances to the frustum planes. The top, bottom, left and right distances are
+         * the x, y, z, and w components, respectively.
+         * @memberof UniformState.prototype
+         * @type {Cartesian4}
+         */
+        frustumPlanes : {
+            get : function() {
+                return this._frustumPlanes;
+            }
+        },
+
+        /**
+         * The log of the current frustum's far distance. Used to compute the log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        logFarDistance : {
+            get : function() {
+                return this._logFarDistance;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -746,6 +772,119 @@ define([
             get : function() {
                 return this._resolutionScale;
             }
+        },
+
+        /**
+         * A scalar used to mix a color with the fog color based on the distance to the camera.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        fogDensity : {
+            get : function() {
+                return this._fogDensity;
+            }
+        },
+
+        /**
+         * A scalar that represents the geometric tolerance per meter
+         * @memberof UniformStat.prototype
+         * @type {Number}
+         */
+        geometricToleranceOverMeter: {
+            get: function() {
+                return this._geometricToleranceOverMeter;
+            }
+        },
+
+        /**
+         * @memberof UniformState.prototype
+         * @type {Pass}
+         */
+        pass : {
+            get : function() {
+                return this._pass;
+            }
+        },
+
+        /**
+         * The current background color
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        backgroundColor : {
+            get : function() {
+                return this._backgroundColor;
+            }
+        },
+
+        /**
+         * The look up texture used to find the BRDF for a material
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        brdfLut : {
+            get : function() {
+                return this._brdfLut;
+            }
+        },
+
+        /**
+         * The environment map of the scene
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        environmentMap : {
+            get : function() {
+                return this._environmentMap;
+            }
+        },
+
+        /**
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        imagerySplitPosition : {
+            get : function() {
+                return this._imagerySplitPosition;
+            }
+        },
+
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied.
+         *
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        minimumDisableDepthTestDistance : {
+            get : function() {
+                return this._minimumDisableDepthTestDistance;
+            }
+        },
+
+        /**
+         * The highlight color of unclassified 3D Tiles.
+         *
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        invertClassificationColor : {
+            get : function() {
+                return this._invertClassificationColor;
+            }
+        },
+
+        /**
+         * Whether or not the current projection is orthographic in 3D.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Boolean}
+         */
+        orthographicIn3D : {
+            get : function() {
+                return this._orthographicIn3D;
+            }
         }
     });
 
@@ -761,6 +900,7 @@ define([
         uniformState._inverseModelViewDirty = true;
         uniformState._inverseModelView3DDirty = true;
         uniformState._viewProjectionDirty = true;
+        uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
         uniformState._modelViewInfiniteProjectionDirty = true;
@@ -779,8 +919,8 @@ define([
         Matrix4.clone(matrix, uniformState._projection);
 
         uniformState._inverseProjectionDirty = true;
-        uniformState._inverseProjectionOITDirty = true;
         uniformState._viewProjectionDirty = true;
+        uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
     }
@@ -826,6 +966,25 @@ define([
     }
 
     /**
+     * Synchronizes the frustum's state with the camera state.  This is called
+     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+     * are set to the right value.
+     *
+     * @param {Object} camera The camera to synchronize with.
+     */
+    UniformState.prototype.updateCamera = function(camera) {
+        setView(this, camera.viewMatrix);
+        setInverseView(this, camera.inverseViewMatrix);
+        setCamera(this, camera);
+
+        this._entireFrustum.x = camera.frustum.near;
+        this._entireFrustum.y = camera.frustum.far;
+        this.updateFrustum(camera.frustum);
+
+        this._orthographicIn3D = this._mode !== SceneMode.SCENE2D && camera.frustum instanceof OrthographicFrustum;
+    };
+
+    /**
      * Synchronizes the frustum's state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
@@ -839,6 +998,21 @@ define([
         }
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
+
+        this._logFarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
+
+        if (defined(frustum._offCenterFrustum)) {
+            frustum = frustum._offCenterFrustum;
+        }
+
+        this._frustumPlanes.x = frustum.top;
+        this._frustumPlanes.y = frustum.bottom;
+        this._frustumPlanes.z = frustum.left;
+        this._frustumPlanes.w = frustum.right;
+    };
+
+    UniformState.prototype.updatePass = function(pass) {
+        this._pass = pass;
     };
 
     /**
@@ -848,18 +1022,15 @@ define([
      *
      * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(context, frameState) {
+    UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
-        var canvas = context._canvas;
+        var canvas = frameState.context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;
-
-        setView(this, camera.viewMatrix);
-        setInverseView(this, camera.inverseViewMatrix);
-        setCamera(this, camera);
+        this.updateCamera(camera);
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
@@ -873,12 +1044,38 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
-        this._entireFrustum.x = camera.frustum.near;
-        this._entireFrustum.y = camera.frustum.far;
-        this.updateFrustum(camera.frustum);
+        var brdfLutGenerator = frameState.brdfLutGenerator;
+        var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
+        this._brdfLut = brdfLut;
+
+        this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
+        this._fogDensity = frameState.fog.density;
+
+        this._invertClassificationColor = frameState.invertClassificationColor;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
+
+        // Convert the relative imagerySplitPosition to absolute pixel coordinates
+        this._imagerySplitPosition = frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
+        var fov = camera.frustum.fov;
+        var viewport = this._viewport;
+        var pixelSizePerMeter;
+        if (viewport.height > viewport.width) {
+            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.height;
+        } else {
+            pixelSizePerMeter = Math.tan(0.5 * fov) * 2.0 / viewport.width;
+        }
+
+        this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
+        Color.clone(frameState.backgroundColor, this._backgroundColor);
+
+        this._minimumDisableDepthTestDistance = frameState.minimumDisableDepthTestDistance;
+        this._minimumDisableDepthTestDistance *= this._minimumDisableDepthTestDistance;
+        if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
+            this._minimumDisableDepthTestDistance = -1.0;
+        }
     };
 
     function cleanViewport(uniformState) {
@@ -894,18 +1091,10 @@ define([
         if (uniformState._inverseProjectionDirty) {
             uniformState._inverseProjectionDirty = false;
 
-            Matrix4.inverse(uniformState._projection, uniformState._inverseProjection);
-        }
-    }
-
-    function cleanInverseProjectionOIT(uniformState) {
-        if (uniformState._inverseProjectionOITDirty) {
-            uniformState._inverseProjectionOITDirty = false;
-
-            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING) {
-                Matrix4.inverse(uniformState._projection, uniformState._inverseProjectionOIT);
+            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING && !uniformState._orthographicIn3D) {
+                Matrix4.inverse(uniformState._projection, uniformState._inverseProjection);
             } else {
-                Matrix4.clone(Matrix4.IDENTITY, uniformState._inverseProjectionOIT);
+                Matrix4.clone(Matrix4.ZERO, uniformState._inverseProjection);
             }
         }
     }
@@ -1142,6 +1331,26 @@ define([
         result[15] = 1.0;
 
         return result;
+    }
+
+    function updateView3D(that) {
+        if (that._view3DDirty) {
+            if (that._mode === SceneMode.SCENE3D) {
+                Matrix4.clone(that._view, that._view3D);
+            } else {
+                view2Dto3D(that._cameraPosition, that._cameraDirection, that._cameraRight, that._cameraUp, that._frustum2DWidth, that._mode, that._mapProjection, that._view3D);
+            }
+            Matrix4.getRotation(that._view3D, that._viewRotation3D);
+            that._view3DDirty = false;
+        }
+    }
+
+    function updateInverseView3D(that){
+        if (that._inverseView3DDirty) {
+            Matrix4.inverseTransformation(that.view3D, that._inverseView3D);
+            Matrix4.getRotation(that._inverseView3D, that._inverseViewRotation3D);
+            that._inverseView3DDirty = false;
+        }
     }
 
     return UniformState;

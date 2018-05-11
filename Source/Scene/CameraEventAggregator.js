@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/defined',
@@ -21,7 +20,7 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         CameraEventType) {
-    "use strict";
+    'use strict';
 
     function getKey(type, modifier) {
         var key = type;
@@ -71,7 +70,8 @@ define([
             aggregator._buttonsDown++;
             isDown[key] = true;
             pressTime[key] = new Date();
-            Cartesian2.clone(event.position, eventStartPosition[key]);
+            // Compute center position and store as start point.
+            Cartesian2.lerp(event.position1, event.position2, 0.5, eventStartPosition[key]);
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
@@ -251,11 +251,11 @@ define([
      * @alias CameraEventAggregator
      * @constructor
      *
-     * @param {Canvas} [element=document] The element to handle events for.
+     * @param {Canvas} [canvas=document] The element to handle events for.
      *
      * @see ScreenSpaceEventHandler
      */
-    var CameraEventAggregator = function(canvas) {
+    function CameraEventAggregator(canvas) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
@@ -296,7 +296,7 @@ define([
                 }
             }
         }
-    };
+    }
 
     defineProperties(CameraEventAggregator.prototype, {
         /**
@@ -494,14 +494,13 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CameraEventAggregator#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
+     *
+     * @see CameraEventAggregator#isDestroyed
      */
     CameraEventAggregator.prototype.destroy = function() {
         this._eventHandler = this._eventHandler && this._eventHandler.destroy();

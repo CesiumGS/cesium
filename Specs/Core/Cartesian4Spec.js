@@ -1,16 +1,16 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian4',
         'Core/Color',
         'Core/Math',
+        'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian4,
         Color,
         CesiumMath,
+        createPackableArraySpecs,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('construct with default values', function() {
         var cartesian = new Cartesian4();
@@ -85,7 +85,7 @@ defineSuite([
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var result = Cartesian4.clone(cartesian, new Cartesian4());
-        expect(cartesian).toNotBe(result);
+        expect(cartesian).not.toBe(result);
         expect(cartesian).toEqual(result);
     });
 
@@ -93,7 +93,7 @@ defineSuite([
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var result = new Cartesian4();
         var returnedResult = Cartesian4.clone(cartesian, result);
-        expect(cartesian).toNotBe(result);
+        expect(cartesian).not.toBe(result);
         expect(result).toBe(returnedResult);
         expect(cartesian).toEqual(result);
     });
@@ -438,6 +438,12 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian4.normalize(Cartesian4.ZERO, new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
@@ -453,6 +459,25 @@ defineSuite([
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var expectedResult = new Cartesian4(8.0, 15.0, 42.0, 72.0);
         var returnedResult = Cartesian4.multiplyComponents(left, right, left);
+        expect(left).toBe(returnedResult);
+        expect(left).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter', function() {
+        var left = new Cartesian4(2.0, 3.0, 6.0, 15.0);
+        var right = new Cartesian4(4.0, 5.0, 8.0, 2.0);
+        var result = new Cartesian4();
+        var expectedResult = new Cartesian4(0.5, 0.6, 0.75, 7.5);
+        var returnedResult = Cartesian4.divideComponents(left, right, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter that is an input parameter', function() {
+        var left = new Cartesian4(2.0, 3.0, 6.0, 15.0);
+        var right = new Cartesian4(4.0, 5.0, 8.0, 2.0);
+        var expectedResult = new Cartesian4(0.5, 0.6, 0.75, 7.5);
+        var returnedResult = Cartesian4.divideComponents(left, right, left);
         expect(left).toBe(returnedResult);
         expect(left).toEqual(expectedResult);
     });
@@ -649,28 +674,29 @@ defineSuite([
 
     it('equalsEpsilon', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 4.0), 0.0)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(2.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 3.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 4.0, 4.0), 1.0)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 5.0), 1.0)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(2.0, 2.0, 3.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 3.0, 3.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 4.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 5.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian4.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 4.0), 0.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(2.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 3.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 4.0, 4.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 5.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(2.0, 2.0, 3.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 3.0, 3.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 4.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 5.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
 
         cartesian = new Cartesian4(3000000.0, 4000000.0, 5000000.0, 6000000.0);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(3000000.0, 4000000.0, 5000000.0, 6000000.0), 0.0)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(3000000.2, 4000000.0, 5000000.0, 6000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(3000000.0, 4000000.2, 5000000.0, 6000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(3000000.0, 4000000.0, 5000000.2, 6000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(3000000.0, 4000000.0, 5000000.0, 6000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(3000000.2, 4000000.2, 5000000.2, 6000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(3000000.2, 4000000.2, 5000000.2, 6000000.2), CesiumMath.EPSILON9)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian4(3000000.0, 4000000.0, 5000000.0, 6000000.0), 0.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(3000000.2, 4000000.0, 5000000.0, 6000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(3000000.0, 4000000.2, 5000000.0, 6000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(3000000.0, 4000000.0, 5000000.2, 6000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(3000000.0, 4000000.0, 5000000.0, 6000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(3000000.2, 4000000.2, 5000000.2, 6000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian4(3000000.2, 4000000.2, 5000000.2, 6000000.2), CesiumMath.EPSILON9)).toEqual(false);
+        expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
+
         expect(Cartesian4.equalsEpsilon(undefined, cartesian, 1)).toEqual(false);
-        expect(Cartesian4.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {
@@ -729,6 +755,20 @@ defineSuite([
         var left = new Cartesian4(4.0, 5.0, 6.0, 7.0);
         expect(function() {
             Cartesian4.multiplyComponents(left, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no left parameter', function() {
+        var right = new Cartesian4(4.0, 5.0, 6.0, 7.0);
+        expect(function() {
+            Cartesian4.divideComponents(undefined, right);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no right parameter', function() {
+        var left = new Cartesian4(4.0, 5.0, 6.0, 7.0);
+        expect(function() {
+            Cartesian4.divideComponents(left, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -858,6 +898,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('divideComponents throws with no result', function() {
+        expect(function() {
+            Cartesian4.divideComponents(new Cartesian4(), new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
     it('add throws with no result', function() {
         expect(function() {
             Cartesian4.add(new Cartesian4(), new Cartesian4());
@@ -900,5 +946,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('packs and unpacks floating point values for representation as uint8 4-vectors', function() {
+        var float = 123.456;
+        var packedFloat = Cartesian4.packFloat(float);
+        expect(0 <= packedFloat.x && packedFloat.x <= 255).toBe(true);
+        expect(0 <= packedFloat.y && packedFloat.y <= 255).toBe(true);
+        expect(0 <= packedFloat.z && packedFloat.z <= 255).toBe(true);
+        expect(0 <= packedFloat.w && packedFloat.w <= 255).toBe(true);
+
+        var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+        expect(CesiumMath.equalsEpsilon(float, unpackedFloat, CesiumMath.EPSILON7)).toBe(true);
+
+        var packedZero = Cartesian4.packFloat(0);
+        expect(packedZero).toEqual(Cartesian4.ZERO);
+    });
+
     createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
+    createPackableArraySpecs(Cartesian4, [new Cartesian4(1, 2, 3, 4), new Cartesian4(5, 6, 7, 8)], [1, 2, 3, 4, 5, 6, 7, 8]);
 });

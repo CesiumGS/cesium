@@ -1,20 +1,16 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel',
         'Core/defined',
         'Core/getTimestamp',
         'Scene/FrameRateMonitor',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         PerformanceWatchdogViewModel,
         defined,
         getTimestamp,
         FrameRateMonitor,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
     var scene;
     beforeAll(function() {
@@ -22,7 +18,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     var viewModel;
@@ -36,9 +32,11 @@ defineSuite([
     });
 
     function spinWait(milliseconds) {
+        /*eslint-disable no-empty*/
         var endTime = getTimestamp() + milliseconds;
         while (getTimestamp() < endTime) {
         }
+        /*eslint-enable no-empty*/
     }
 
     it('throws when constructed without a scene', function() {

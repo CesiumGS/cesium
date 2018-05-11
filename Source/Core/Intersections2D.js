@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './defined',
@@ -7,13 +6,12 @@ define([
         Cartesian3,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains functions for operating on 2D triangles.
      *
-     * @namespace
-     * @alias Intersections2D
+     * @exports Intersections2D
      */
     var Intersections2D = {};
 
@@ -202,14 +200,13 @@ define([
                 result.push(2);
                 result.push(u12Ratio);
             }
-        } else if (numBehind === 3) {
-            // Completely behind threshold
-        } else {
+        } else if (numBehind !== 3) {
             // Completely in front of threshold
             result.push(0);
             result.push(1);
             result.push(2);
         }
+        // else Completely behind threshold
 
         return result;
     };
@@ -277,9 +274,8 @@ define([
             result.y = l2;
             result.z = l3;
             return result;
-        } else {
-            return new Cartesian3(l1, l2, l3);
         }
+        return new Cartesian3(l1, l2, l3);
     };
 
     return Intersections2D;

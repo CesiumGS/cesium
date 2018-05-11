@@ -39,7 +39,6 @@ THE SOFTWARE.
  * @author Ben Delarre / http://delarre.net
  */
 
-/*global define*/
 define(function() {
 
     // Date.now shim for (ahem) Internet Explo(d|r)er

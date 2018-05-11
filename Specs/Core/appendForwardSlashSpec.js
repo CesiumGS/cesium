@@ -1,10 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Core/appendForwardSlash'
     ], function(
         appendForwardSlash) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('Appends to a url', function() {
         expect(appendForwardSlash('http://cesiumjs.org')).toEqual('http://cesiumjs.org/');

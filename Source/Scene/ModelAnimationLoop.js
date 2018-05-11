@@ -1,15 +1,13 @@
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Determines if and how a glTF animation is looped.
      *
-     * @namespace
-     * @alias ModelAnimationLoop
+     * @exports ModelAnimationLoop
      *
      * @see ModelAnimationCollection#add
      */

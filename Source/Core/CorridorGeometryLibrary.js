@@ -1,9 +1,7 @@
-/*global define*/
 define([
         './Cartesian3',
         './CornerType',
         './defined',
-        './isArray',
         './Math',
         './Matrix3',
         './PolylinePipeline',
@@ -13,13 +11,12 @@ define([
         Cartesian3,
         CornerType,
         defined,
-        isArray,
         CesiumMath,
         Matrix3,
         PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -153,12 +150,8 @@ define([
         }
     };
 
-    function scaleToSurface(positions, ellipsoid) {
-        for (var i = 0; i < positions.length; i++) {
-            positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
-        }
-        return positions;
-    }
+    var scratchForwardProjection = new Cartesian3();
+    var scratchBackwardProjection = new Cartesian3();
 
     /**
      * @private
@@ -167,7 +160,6 @@ define([
         var granularity = params.granularity;
         var positions = params.positions;
         var ellipsoid = params.ellipsoid;
-        positions = scaleToSurface(positions, ellipsoid);
         var width = params.width / 2;
         var cornerType = params.cornerType;
         var saveAttributes = params.saveAttributes;
@@ -207,10 +199,21 @@ define([
             nextPosition = positions[i + 1];
             forward = Cartesian3.normalize(Cartesian3.subtract(nextPosition, position, forward), forward);
             cornerDirection = Cartesian3.normalize(Cartesian3.add(forward, backward, cornerDirection), cornerDirection);
-            var doCorner = !Cartesian3.equalsEpsilon(Cartesian3.negate(cornerDirection, scratch1), normal, CesiumMath.EPSILON2);
+
+            var forwardProjection = Cartesian3.multiplyByScalar(normal, Cartesian3.dot(forward, normal), scratchForwardProjection);
+            Cartesian3.subtract(forward, forwardProjection, forwardProjection);
+            Cartesian3.normalize(forwardProjection, forwardProjection);
+
+            var backwardProjection = Cartesian3.multiplyByScalar(normal, Cartesian3.dot(backward, normal), scratchBackwardProjection);
+            Cartesian3.subtract(backward, backwardProjection, backwardProjection);
+            Cartesian3.normalize(backwardProjection, backwardProjection);
+
+            var doCorner = !CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(forwardProjection, backwardProjection)), 1.0, CesiumMath.EPSILON7);
+
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, normal, cornerDirection);
                 cornerDirection = Cartesian3.cross(normal, cornerDirection, cornerDirection);
+                cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1)));
                 var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = Cartesian3.multiplyByScalar(cornerDirection, scalar, cornerDirection);
@@ -304,31 +307,6 @@ define([
             normals : calculatedNormals,
             endPositions : endPositions
         };
-    };
-
-    var scaleN = new Cartesian3();
-    var scaleP = new Cartesian3();
-    CorridorGeometryLibrary.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
-        var length = positions.length;
-        var newPositions = isArray(result) ? result : new Array(positions.length);
-        newPositions.length = positions.length;
-
-        var h = height;
-        for (var i = 0; i < length; i += 3) {
-            var p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, scaleP), scaleP);
-            var n = scaleN;
-            if (height !== 0.0) {
-                n = ellipsoid.geodeticSurfaceNormal(p, n);
-                n = Cartesian3.multiplyByScalar(n, h, n);
-                p = Cartesian3.add(p, n, p);
-            }
-
-            newPositions[i] = p.x;
-            newPositions[i + 1] = p.y;
-            newPositions[i + 2] = p.z;
-        }
-
-        return newPositions;
     };
 
     return CorridorGeometryLibrary;

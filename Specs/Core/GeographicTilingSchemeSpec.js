@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/GeographicTilingScheme',
         'Core/Cartesian2',
@@ -15,8 +14,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         TilingScheme) {
-    "use strict";
-    /*global describe,it,expect*/
+    'use strict';
 
     it('conforms to TilingScheme interface.', function() {
         expect(GeographicTilingScheme).toConformToInterface(TilingScheme);

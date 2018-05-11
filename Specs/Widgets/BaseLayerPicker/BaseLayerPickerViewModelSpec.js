@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         'Core/EllipsoidTerrainProvider',
@@ -9,13 +8,12 @@ defineSuite([
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         ProviderViewModel) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
-    var MockGlobe = function() {
+    function MockGlobe() {
         this.imageryLayers = new ImageryLayerCollection();
         this.terrainProvider = new EllipsoidTerrainProvider();
-    };
+    }
 
     var testProvider = {
         isReady : function() {
@@ -74,14 +72,94 @@ defineSuite([
             terrainProviderViewModels : terrainViewModels
         });
         expect(viewModel.globe).toBe(globe);
-        expect(viewModel.imageryProviderViewModels).toEqual(imageryViewModels);
-        expect(viewModel.terrainProviderViewModels).toEqual(terrainViewModels);
+        expect(viewModel.imageryProviderViewModels.length).toBe(0);
+        expect(viewModel.terrainProviderViewModels.length).toBe(0);
+    });
+
+    it('separates providers into categories', function() {
+        var imageryProviders = [
+            new ProviderViewModel({
+                name : 'name',
+                tooltip : 'tooltip',
+                iconUrl : 'url',
+                category: 'cat1',
+                creationFunction : function() {
+                    return testProvider;
+                }
+            }),
+            new ProviderViewModel({
+                name : 'name',
+                tooltip : 'tooltip',
+                iconUrl : 'url',
+                category: 'cat1',
+                creationFunction : function() {
+                    return testProvider;
+                }
+            }),
+            new ProviderViewModel({
+                name : 'name',
+                tooltip : 'tooltip',
+                iconUrl : 'url',
+                category: 'cat2',
+                creationFunction : function() {
+                    return testProvider;
+                }
+            })
+        ];
+        var terrainProviders = [
+            new ProviderViewModel({
+                name : 'name',
+                tooltip : 'tooltip',
+                iconUrl : 'url',
+                category: 'cat1',
+                creationFunction : function() {
+                    return testProvider;
+                }
+            }),
+            new ProviderViewModel({
+                name : 'name',
+                tooltip : 'tooltip',
+                iconUrl : 'url',
+                category: 'cat2',
+                creationFunction : function() {
+                    return testProvider;
+                }
+            }),
+            new ProviderViewModel({
+                name : 'name',
+                tooltip : 'tooltip',
+                iconUrl : 'url',
+                category: 'cat2',
+                creationFunction : function() {
+                    return testProvider;
+                }
+            })
+        ];
+
+        var viewModel = new BaseLayerPickerViewModel({
+            globe : new MockGlobe(),
+            imageryProviderViewModels : imageryProviders,
+            terrainProviderViewModels : terrainProviders
+        });
+
+        expect(viewModel._imageryProviders).toBeDefined();
+        expect(viewModel._imageryProviders().length).toBe(2);
+        expect(viewModel._imageryProviders()[0].providers.length).toBe(2);
+        expect(viewModel._imageryProviders()[0].name).toBe('cat1');
+        expect(viewModel._imageryProviders()[1].providers.length).toBe(1);
+        expect(viewModel._imageryProviders()[1].name).toBe('cat2');
+
+        expect(viewModel._terrainProviders ).toBeDefined();
+        expect(viewModel._terrainProviders().length).toBe(2);
+        expect(viewModel._terrainProviders()[0].providers.length).toBe(1);
+        expect(viewModel._terrainProviders()[0].name).toBe('cat1');
+        expect(viewModel._terrainProviders()[1].providers.length).toBe(2);
+        expect(viewModel._terrainProviders()[1].name).toBe('cat2');
     });
 
     it('selecting imagery closes the dropDown', function() {
         var imageryViewModels = [testProviderViewModel];
         var globe = new MockGlobe();
-        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
             globe : globe,
             imageryProviderViewModels : imageryViewModels
@@ -95,7 +173,6 @@ defineSuite([
     it('selecting terrain closes the dropDown', function() {
         var imageryViewModels = [testProviderViewModel];
         var globe = new MockGlobe();
-        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
             globe : globe,
             imageryProviderViewModels : imageryViewModels
@@ -110,7 +187,6 @@ defineSuite([
         var imageryViewModels = [testProviderViewModel];
         var terrainViewModels = [testProviderViewModel3];
         var globe = new MockGlobe();
-        var imageryLayers = globe.imageryLayers;
 
         var viewModel = new BaseLayerPickerViewModel({
             globe : globe,

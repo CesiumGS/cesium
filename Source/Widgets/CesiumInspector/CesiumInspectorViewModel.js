@@ -1,33 +1,36 @@
-/*global define*/
 define([
-        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Rectangle',
+        '../../Core/ScreenSpaceEventHandler',
+        '../../Core/ScreenSpaceEventType',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
-        Color,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         Rectangle,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
-    function frustumStatsToString(stats) {
+    function frustumStatisticsToString(statistics) {
         var str;
-        if (defined(stats)) {
+        if (defined(statistics)) {
             str = 'Command Statistics';
-            var com = stats.commandsInFrustums;
+            var com = statistics.commandsInFrustums;
             for (var n in com) {
                 if (com.hasOwnProperty(n)) {
                     var num = parseInt(n, 10);
@@ -48,13 +51,17 @@ define([
                     str += '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + com[n] + ' in frustum ' + s;
                 }
             }
-            str += '<br>Total: ' + stats.totalCommands;
+            str += '<br>Total: ' + statistics.totalCommands;
         }
 
         return str;
     }
 
-    var bc = new Color(0.15, 0.15, 0.15, 0.75);
+    function boundDepthFrustum(lower, upper, proposed) {
+        var bounded = Math.min(proposed, upper);
+        bounded = Math.max(bounded, lower);
+        return bounded;
+    }
 
     /**
      * The view model for {@link CesiumInspector}.
@@ -62,10 +69,9 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     *
-     * @exception {DeveloperError} scene is required.
+     * @param {PerformanceContainer} performanceContainer The instance to use for performance container.
      */
-    var CesiumInspectorViewModel = function(scene, performanceContainer) {
+    function CesiumInspectorViewModel(scene, performanceContainer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
@@ -78,6 +84,8 @@ define([
 
         var that = this;
         var canvas = scene.canvas;
+        var eventHandler = new ScreenSpaceEventHandler(canvas);
+        this._eventHandler = eventHandler;
         this._scene = scene;
         this._canvas = canvas;
         this._primitive = undefined;
@@ -97,11 +105,25 @@ define([
         this.frustums = false;
 
         /**
+         * Gets or sets the show frustum planes state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.frustumPlanes = false;
+
+        /**
          * Gets or sets the show performance display state.  This property is observable.
          * @type {Boolean}
          * @default false
          */
         this.performance = false;
+
+        /**
+         * Gets or sets the shader cache text.  This property is observable.
+         * @type {String}
+         * @default ''
+         */
+        this.shaderCacheText = '';
 
         /**
          * Gets or sets the show primitive bounding sphere state.  This property is observable.
@@ -146,6 +168,28 @@ define([
         this.wireframe = false;
 
         /**
+         * Gets or sets the show globe depth state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.globeDepth = false;
+
+        /**
+         * Gets or sets the show pick depth state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.pickDepth = false;
+
+        /**
+         * Gets or sets the index of the depth frustum to display.  This property is observable.
+         * @type {Number}
+         * @default 1
+         */
+        this.depthFrustum = 1;
+        this._numberOfFrustums = 1;
+
+        /**
          * Gets or sets the suspend updates state.  This property is observable.
          * @type {Boolean}
          * @default false
@@ -164,7 +208,7 @@ define([
          * @type {String}
          * @default ''
          */
-        this.frustumStatisticText = '';
+        this.frustumStatisticText = false;
 
         /**
          * Gets or sets the selected tile information text.  This property is observable.
@@ -192,7 +236,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.pickPimitiveActive = false;
+        this.pickPrimitiveActive = false;
 
         /**
          * Gets if the picking tile command is active.  This property is observable.
@@ -230,30 +274,67 @@ define([
         this.terrainVisible = false;
 
         /**
-         * Gets or sets if the text on the general section expand button.  This property is observable.
+         * Gets or sets the index of the depth frustum text.  This property is observable.
+         * @type {String}
+         * @default ''
+         */
+        this.depthFrustumText = '';
+
+        /**
+         * Gets the text on the general section expand button.  This property is computed.
          * @type {String}
          * @default '-'
          */
-        this.generalSwitchText = '-';
+        this.generalSwitchText = knockout.pureComputed(function() {
+            return that.generalVisible ? '-' : '+';
+        });
 
         /**
-         * Gets or sets if the text on the primitive section expand button.  This property is observable.
+         * Gets the text on the primitives section expand button.  This property is computed.
          * @type {String}
          * @default '+'
          */
-        this.primitivesSwitchText = '+';
+        this.primitivesSwitchText = knockout.pureComputed(function() {
+            return that.primitivesVisible ? '-' : '+';
+        });
 
         /**
-         * Gets or sets if the text on the terrain section expand button.  This property is observable.
+         * Gets the text on the terrain section expand button.  This property is computed.
          * @type {String}
          * @default '+'
          */
-        this.terrainSwitchText = '+';
+        this.terrainSwitchText = knockout.pureComputed(function() {
+            return that.terrainVisible ? '-' : '+';
+        });
 
-        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
-                              'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
-                              'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
-                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
+        knockout.track(this, [
+            'frustums',
+            'frustumPlanes',
+            'performance',
+            'shaderCacheText',
+            'primitiveBoundingSphere',
+            'primitiveReferenceFrame',
+            'filterPrimitive',
+            'tileBoundingSphere',
+            'filterTile',
+            'wireframe',
+            'globeDepth',
+            'pickDepth',
+            'depthFrustum',
+            'suspendUpdates',
+            'tileCoordinates',
+            'frustumStatisticText',
+            'tileText',
+            'hasPickedPrimitive',
+            'hasPickedTile',
+            'pickPrimitiveActive',
+            'pickTileActive',
+            'dropDownVisible',
+            'generalVisible',
+            'primitivesVisible',
+            'terrainVisible',
+            'depthFrustumText'
+        ]);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
@@ -261,44 +342,44 @@ define([
 
         this._toggleGeneral = createCommand(function() {
             that.generalVisible = !that.generalVisible;
-            that.generalSwitchText = that.generalVisible ? '-' : '+';
         });
 
         this._togglePrimitives = createCommand(function() {
             that.primitivesVisible = !that.primitivesVisible;
-            that.primitivesSwitchText = that.primitivesVisible ? '-' : '+';
         });
 
         this._toggleTerrain = createCommand(function() {
             that.terrainVisible = !that.terrainVisible;
-            that.terrainSwitchText = that.terrainVisible ? '-' : '+';
         });
 
-        this._showFrustums = createCommand(function() {
-            if (that.frustums) {
-                that._scene.debugShowFrustums = true;
-            } else {
-                that._scene.debugShowFrustums = false;
-            }
-            return true;
+        this._frustumsSubscription = knockout.getObservable(this, 'frustums').subscribe(function(val) {
+            that._scene.debugShowFrustums = val;
+            that._scene.requestRender();
         });
 
-        this._showPerformance = createCommand(function() {
-            if (that.performance) {
+        this._frustumPlanesSubscription = knockout.getObservable(this, 'frustumPlanes').subscribe(function(val) {
+            that._scene.debugShowFrustumPlanes = val;
+            that._scene.requestRender();
+        });
+
+        this._performanceSubscription = knockout.getObservable(this, 'performance').subscribe(function(val) {
+            if (val) {
                 that._performanceDisplay = new PerformanceDisplay({
-                    container : that._performanceContainer,
-                    backgroundColor : bc,
-                    font : '12px arial,sans-serif'
+                    container : that._performanceContainer
                 });
             } else {
                 that._performanceContainer.innerHTML = '';
             }
-            return true;
         });
 
         this._showPrimitiveBoundingSphere = createCommand(function() {
             that._primitive.debugShowBoundingVolume = that.primitiveBoundingSphere;
+            that._scene.requestRender();
             return true;
+        });
+
+        this._primitiveBoundingSphereSubscription = knockout.getObservable(this, 'primitiveBoundingSphere').subscribe(function() {
+            that._showPrimitiveBoundingSphere();
         });
 
         this._showPrimitiveReferenceFrame = createCommand(function() {
@@ -312,7 +393,12 @@ define([
                 that._scene.primitives.remove(that._modelMatrixPrimitive);
                 that._modelMatrixPrimitive = undefined;
             }
+            that._scene.requestRender();
             return true;
+        });
+
+        this._primitiveReferenceFrameSubscription = knockout.getObservable(this, 'primitiveReferenceFrame').subscribe(function() {
+            that._showPrimitiveReferenceFrame();
         });
 
         this._doFilterPrimitive = createCommand(function() {
@@ -331,17 +417,50 @@ define([
             return true;
         });
 
-        this._showWireframe = createCommand(function() {
-            globe._surface.tileProvider._debug.wireframe = that.wireframe;
+        this._filterPrimitiveSubscription = knockout.getObservable(this, 'filterPrimitive').subscribe(function() {
+            that._doFilterPrimitive();
+            that._scene.requestRender();
+        });
+
+        this._wireframeSubscription = knockout.getObservable(this, 'wireframe').subscribe(function(val) {
+            globe._surface.tileProvider._debug.wireframe = val;
+            that._scene.requestRender();
+        });
+
+        this._globeDepthSubscription = knockout.getObservable(this, 'globeDepth').subscribe(function(val) {
+            that._scene.debugShowGlobeDepth = val;
+            that._scene.requestRender();
+        });
+
+        this._pickDepthSubscription = knockout.getObservable(this, 'pickDepth').subscribe(function(val) {
+            that._scene.debugShowPickDepth = val;
+            that._scene.requestRender();
+        });
+
+        this._depthFrustumSubscription = knockout.getObservable(this, 'depthFrustum').subscribe(function(val) {
+            that._scene.debugShowDepthFrustum = val;
+            that._scene.requestRender();
+        });
+
+        this._incrementDepthFrustum = createCommand(function() {
+            var next = that.depthFrustum + 1;
+            that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that._scene.requestRender();
             return true;
         });
 
-        this._doSuspendUpdates = createCommand(function() {
-            globe._surface._debug.suspendLodUpdate = that.suspendUpdates;
-            if (!that.suspendUpdates) {
+        this._decrementDepthFrustum = createCommand(function() {
+            var next = that.depthFrustum - 1;
+            that.depthFrustum = boundDepthFrustum(1, that._numberOfFrustums, next);
+            that._scene.requestRender();
+            return true;
+        });
+
+        this._suspendUpdatesSubscription = knockout.getObservable(this, 'suspendUpdates').subscribe(function(val) {
+            globe._surface._debug.suspendLodUpdate = val;
+            if (!val) {
                 that.filterTile = false;
             }
-            return true;
         });
 
         var tileBoundariesLayer;
@@ -357,59 +476,77 @@ define([
             return true;
         });
 
+        this._tileCoordinatesSubscription = knockout.getObservable(this, 'tileCoordinates').subscribe(function() {
+            that._showTileCoordinates();
+            that._scene.requestRender();
+        });
+
+        this._tileBoundingSphereSubscription = knockout.getObservable(this, 'tileBoundingSphere').subscribe(function() {
+            that._showTileBoundingSphere();
+            that._scene.requestRender();
+        });
+
         this._showTileBoundingSphere = createCommand(function() {
             if (that.tileBoundingSphere) {
                 globe._surface.tileProvider._debug.boundingSphereTile = that._tile;
             } else {
                 globe._surface.tileProvider._debug.boundingSphereTile = undefined;
             }
+            that._scene.requestRender();
             return true;
         });
 
         this._doFilterTile = createCommand(function() {
             if (!that.filterTile) {
                 that.suspendUpdates = false;
-                that.doSuspendUpdates();
             } else {
                 that.suspendUpdates = true;
-                that.doSuspendUpdates();
 
                 globe._surface._tilesToRender = [];
 
-                if (defined(that._tile)) {
+                if (defined(that._tile) && that._tile.renderable) {
                     globe._surface._tilesToRender.push(that._tile);
                 }
             }
             return true;
         });
 
-        var pickPrimitive = function(e) {
-            that._canvas.removeEventListener('mousedown', pickPrimitive, false);
-            that.pickPrimitiveActive = false;
+        this._filterTileSubscription = knockout.getObservable(this, 'filterTile').subscribe(function() {
+            that.doFilterTile();
+            that._scene.requestRender();
+        });
+
+        function pickPrimitive(e) {
             var newPick = that._scene.pick({
-                x : e.clientX,
-                y : e.clientY
+                x : e.position.x,
+                y : e.position.y
             });
             if (defined(newPick)) {
                 that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
             }
-        };
+
+            that._scene.requestRender();
+            that.pickPrimitiveActive = false;
+        }
 
         this._pickPrimitive = createCommand(function() {
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
-            if (that.pickPrimitiveActive) {
-                that._canvas.addEventListener('mousedown', pickPrimitive, false);
+        });
+
+        this._pickPrimitiveActiveSubscription = knockout.getObservable(this, 'pickPrimitiveActive').subscribe(function(val) {
+            if (val) {
+                eventHandler.setInputAction(pickPrimitive, ScreenSpaceEventType.LEFT_CLICK);
             } else {
-                that._canvas.removeEventListener('mousedown', pickPrimitive, false);
+                eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
 
-        var selectTile = function(e) {
+        function selectTile(e) {
             var selectedTile;
             var ellipsoid = globe.ellipsoid;
             var cartesian = that._scene.camera.pickEllipsoid({
-                x : e.clientX,
-                y : e.clientY
+                x : e.position.x,
+                y : e.position.y
             }, ellipsoid);
 
             if (defined(cartesian)) {
@@ -432,20 +569,25 @@ define([
 
             that.tile = selectedTile;
 
-            that._canvas.removeEventListener('mousedown', selectTile, false);
             that.pickTileActive = false;
-        };
+        }
 
         this._pickTile = createCommand(function() {
             that.pickTileActive = !that.pickTileActive;
+        });
 
-            if (that.pickTileActive) {
-                that._canvas.addEventListener('mousedown', selectTile, false);
+        this._pickTileActiveSubscription = knockout.getObservable(this, 'pickTileActive').subscribe(function(val) {
+            if (val) {
+                eventHandler.setInputAction(selectTile, ScreenSpaceEventType.LEFT_CLICK);
             } else {
-                that._canvas.removeEventListener('mousedown', selectTile, false);
+                eventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             }
         });
-    };
+
+        this._removePostRenderEvent = scene.postRender.addEventListener(function() {
+            that._update();
+        });
+    }
 
     defineProperties(CesiumInspectorViewModel.prototype, {
         /**
@@ -481,30 +623,6 @@ define([
         toggleDropDown : {
             get : function() {
                 return this._toggleDropDown;
-            }
-        },
-
-        /**
-         * Gets the command to toggle {@link Scene.debugShowFrustums}
-         * @memberof CesiumInspectorViewModel.prototype
-         *
-         * @type {Command}
-         */
-        showFrustums : {
-            get : function() {
-                return this._showFrustums;
-            }
-        },
-
-        /**
-         * Gets the command to toggle the visibility of the performance display.
-         * @memberof CesiumInspectorViewModel.prototype
-         *
-         * @type {Command}
-         */
-        showPerformance : {
-            get : function() {
-                return this._showPerformance;
             }
         },
 
@@ -545,26 +663,26 @@ define([
         },
 
         /**
-         * Gets the command to toggle the view of the Globe as a wireframe
+         * Gets the command to increment the depth frustum index to be shown
          * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
          */
-        showWireframe : {
+        incrementDepthFrustum : {
             get : function() {
-                return this._showWireframe;
+                return this._incrementDepthFrustum;
             }
         },
 
         /**
-         * Gets the command to toggle whether to suspend tile updates
+         * Gets the command to decrement the depth frustum index to be shown
          * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
          */
-        doSuspendUpdates : {
+        decrementDepthFrustum : {
             get : function() {
-                return this._doSuspendUpdates;
+                return this._decrementDepthFrustum;
             }
         },
 
@@ -689,7 +807,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[0];
+                    that.tile = that.tile.northwestChild;
                 });
             }
         },
@@ -704,7 +822,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[1];
+                    that.tile = that.tile.northeastChild;
                 });
             }
         },
@@ -719,7 +837,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[2];
+                    that.tile = that.tile.southwestChild;
                 });
             }
         },
@@ -734,7 +852,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.children[3];
+                    that.tile = that.tile.southeastChild;
                 });
             }
         },
@@ -746,6 +864,9 @@ define([
          * @type {Command}
          */
         primitive : {
+            get : function() {
+                return this._primitive;
+            },
             set : function(newPrimitive) {
                 var oldPrimitive = this._primitive;
                 if (newPrimitive !== oldPrimitive) {
@@ -767,10 +888,6 @@ define([
                     this.showPrimitiveReferenceFrame();
                     this.doFilterPrimitive();
                 }
-            },
-
-            get : function() {
-                return this._primitive;
             }
         },
 
@@ -781,6 +898,9 @@ define([
          * @type {Command}
          */
         tile : {
+            get : function() {
+                return this._tile;
+            },
             set : function(newTile) {
                 if (defined(newTile)) {
                     this.hasPickedTile = true;
@@ -789,7 +909,12 @@ define([
                         this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
                         this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
                         this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
-                        this.tileText += '<br>Min: ' + newTile.data.minimumHeight + ' Max: ' + newTile.data.maximumHeight;
+                        var data = newTile.data;
+                        if (defined(data)) {
+                            this.tileText += '<br>Min: ' + data.minimumHeight + ' Max: ' + data.maximumHeight;
+                        } else {
+                            this.tileText += '<br>(Tile is not loaded)';
+                        }
                     }
                     this._tile = newTile;
                     this.showTileBoundingSphere();
@@ -798,30 +923,69 @@ define([
                     this.hasPickedTile = false;
                     this._tile = undefined;
                 }
-            },
-
-            get : function() {
-                return this._tile;
-            }
-        },
-
-        update : {
-            get : function() {
-                var that = this;
-                return function() {
-                    if (that.frustums) {
-                        that.frustumStatisticText = frustumStatsToString(that._scene.debugFrustumStatistics);
-                    }
-                    if (that.performance) {
-                        that._performanceDisplay.update();
-                    }
-                    if (that.primitiveReferenceFrame) {
-                        that._modelMatrixPrimitive.modelMatrix = that._primitive.modelMatrix;
-                    }
-                };
             }
         }
     });
+
+    /**
+     * Updates the view model
+     * @private
+     */
+    CesiumInspectorViewModel.prototype._update = function() {
+        if (this.frustums) {
+            this.frustumStatisticText = frustumStatisticsToString(this._scene.debugFrustumStatistics);
+        }
+
+        // Determine the number of frustums being used.
+        var numberOfFrustums = this._scene.numberOfFrustums;
+        this._numberOfFrustums = numberOfFrustums;
+        // Bound the frustum to be displayed.
+        this.depthFrustum = boundDepthFrustum(1, numberOfFrustums, this.depthFrustum);
+        // Update the displayed text.
+        this.depthFrustumText = this.depthFrustum + ' of ' + numberOfFrustums;
+
+        if (this.performance) {
+            this._performanceDisplay.update();
+        }
+        if (this.primitiveReferenceFrame) {
+            this._modelMatrixPrimitive.modelMatrix = this._primitive.modelMatrix;
+        }
+
+        this.shaderCacheText = 'Cached shaders: ' + this._scene.context.shaderCache.numberOfShaders;
+    };
+
+    /**
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    CesiumInspectorViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
+     * removing the widget from layout.
+     */
+    CesiumInspectorViewModel.prototype.destroy = function() {
+        this._eventHandler.destroy();
+        this._removePostRenderEvent();
+        this._frustumsSubscription.dispose();
+        this._frustumPlanesSubscription.dispose();
+        this._performanceSubscription.dispose();
+        this._primitiveBoundingSphereSubscription.dispose();
+        this._primitiveReferenceFrameSubscription.dispose();
+        this._filterPrimitiveSubscription.dispose();
+        this._wireframeSubscription.dispose();
+        this._globeDepthSubscription.dispose();
+        this._pickDepthSubscription.dispose();
+        this._depthFrustumSubscription.dispose();
+        this._suspendUpdatesSubscription.dispose();
+        this._tileCoordinatesSubscription.dispose();
+        this._tileBoundingSphereSubscription.dispose();
+        this._filterTileSubscription.dispose();
+        this._pickPrimitiveActiveSubscription.dispose();
+        this._pickTileActiveSubscription.dispose();
+        return destroyObject(this);
+    };
 
     return CesiumInspectorViewModel;
 });

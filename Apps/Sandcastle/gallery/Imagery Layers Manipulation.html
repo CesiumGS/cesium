@@ -2,18 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Layer imagery from multiple sources, including WMS servers, Bing Maps, ArcGIS Online, OpenStreetMaps, and more, and adjust the alpha of each independently.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -47,13 +49,13 @@
 <div id="toolbar">
 <table><tbody data-bind="foreach: layers">
     <tr data-bind="css: { up: $parent.upLayer === $data, down: $parent.downLayer === $data }">
-        <td><input type="checkbox" data-bind="checked: show"/></td>
+        <td><input type="checkbox" data-bind="checked: show"></td>
         <td>
             <span data-bind="text: name, visible: !$parent.isSelectableLayer($data)"></span>
             <select data-bind="visible: $parent.isSelectableLayer($data), options: $parent.baseLayers, optionsText: 'name', value: $parent.selectedLayer"></select>
         </td>
         <td>
-            <input type="range" min="0" max="1" step="0.01" data-bind="value: alpha, valueUpdate: 'input'"/>
+            <input type="range" min="0" max="1" step="0.01" data-bind="value: alpha, valueUpdate: 'input'">
         </td>
         <td><button type="button" class="cesium-button" data-bind="click: function() { $parent.raise($data, $index()); }, visible: $parent.canRaise($index())">&#9650;</button></td>
         <td><button type="button" class="cesium-button" data-bind="click: function() { $parent.lower($data, $index()); }, visible: $parent.canLower($index())">&#9660;</button></td>
@@ -62,7 +64,7 @@
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker : false
@@ -76,7 +78,7 @@ var viewModel = {
     downLayer : null,
     selectedLayer : null,
     isSelectableLayer : function(layer) {
-        return baseLayers.indexOf(layer) >= 0;
+        return this.baseLayers.indexOf(layer) >= 0;
     },
     raise : function(layer, index) {
         imageryLayers.raise(layer);
@@ -99,9 +101,9 @@ var viewModel = {
         return layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
     }
 };
-Cesium.knockout.track(viewModel);
-
 var baseLayers = viewModel.baseLayers;
+
+Cesium.knockout.track(viewModel);
 
 function setupLayers() {
     // Create all the base layers that this example will support.
@@ -114,33 +116,33 @@ function setupLayers() {
     addBaseLayerOption(
             'Bing Maps Road',
             new Cesium.BingMapsImageryProvider({
-                url: '//dev.virtualearth.net',
+                url : 'https://dev.virtualearth.net',
                 mapStyle: Cesium.BingMapsStyle.ROAD
             }));
     addBaseLayerOption(
             'ArcGIS World Street Maps',
             new Cesium.ArcGisMapServerImageryProvider({
-                url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
             }));
     addBaseLayerOption(
             'OpenStreetMaps',
-            new Cesium.OpenStreetMapImageryProvider());
+            Cesium.createOpenStreetMapImageryProvider());
     addBaseLayerOption(
             'MapQuest OpenStreetMaps',
-            new Cesium.OpenStreetMapImageryProvider({
-                url: '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
+            Cesium.createOpenStreetMapImageryProvider({
+                url : 'https://otile1-s.mqcdn.com/tiles/1.0.0/osm/'
             }));
     addBaseLayerOption(
             'Stamen Maps',
-            new Cesium.OpenStreetMapImageryProvider({
-                url: '//stamen-tiles.a.ssl.fastly.net/watercolor/',
+            Cesium.createOpenStreetMapImageryProvider({
+                url : 'https://stamen-tiles.a.ssl.fastly.net/watercolor/',
                 fileExtension: 'jpg',
                 credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
             }));
     addBaseLayerOption(
             'Natural Earth II (local)',
-            new Cesium.TileMapServiceImageryProvider({
-                url : require.toUrl('Assets/Textures/NaturalEarthII')
+            Cesium.createTileMapServiceImageryProvider({
+                url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
             }));
     addBaseLayerOption(
             'USGS Shaded Relief (via WMTS)',
@@ -151,37 +153,35 @@ function setupLayers() {
                 format : 'image/jpeg',
                 tileMatrixSetID : 'default028mm',
                 maximumLevel: 19,
-                credit : new Cesium.Credit('U. S. Geological Survey')
+                credit : 'U. S. Geological Survey'
             }));
 
     // Create the additional layers
     addAdditionalLayerOption(
             'United States GOES Infrared',
             new Cesium.WebMapServiceImageryProvider({
-                url : '//mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
+                url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
                 layers : 'goes_conus_ir',
                 credit : 'Infrared data courtesy Iowa Environmental Mesonet',
                 parameters : {
                     transparent : 'true',
                     format : 'image/png'
-                },
-                proxy : new Cesium.DefaultProxy('/proxy/')
+                }
             }));
     addAdditionalLayerOption(
             'United States Weather Radar',
             new Cesium.WebMapServiceImageryProvider({
-                url : '//mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
+                url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
                 layers : 'nexrad-n0r',
                 credit : 'Radar data courtesy Iowa Environmental Mesonet',
                 parameters : {
                     transparent : 'true',
                     format : 'image/png'
-                },
-                proxy : new Cesium.DefaultProxy('/proxy/')
+                }
             }));
     addAdditionalLayerOption(
             'TileMapService Image',
-            new Cesium.TileMapServiceImageryProvider({
+            Cesium.createTileMapServiceImageryProvider({
                 url : '../images/cesium_maptiler/Cesium_Logo_Color'
             }),
             0.2);

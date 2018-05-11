@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian2',
@@ -31,12 +30,12 @@ define([
         CesiumMath,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var scratchPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
+    var scratchBitangent = new Cartesian3();
     var scratchNormalST = new Cartesian3();
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -60,8 +59,6 @@ define([
      *
      * @see EllipsoidGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid.html|Cesium Sandcastle Ellipsoid Demo}
-     *
      * @example
      * var ellipsoid = new Cesium.EllipsoidGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
@@ -69,12 +66,12 @@ define([
      * });
      * var geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
      */
-    var EllipsoidGeometry = function(options) {
+    function EllipsoidGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = defaultValue(options.stackPartitions, 64);
-        var slicePartitions = defaultValue(options.slicePartitions, 64);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -91,7 +88,7 @@ define([
         this._slicePartitions = slicePartitions;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._workerName = 'createEllipsoidGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -101,11 +98,12 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {EllipsoidGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     EllipsoidGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -127,6 +125,8 @@ define([
 
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex]   = value._slicePartitions;
+
+        return array;
     };
 
     var scratchRadii = new Cartesian3();
@@ -144,6 +144,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {EllipsoidGeometry} [result] The object into which to store the result.
+     * @returns {EllipsoidGeometry} The modified result parameter or a new EllipsoidGeometry instance if one was not provided.
      */
     EllipsoidGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -181,10 +182,15 @@ define([
      * Computes the geometric representation of an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
+
+        if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
+            return;
+        }
+
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var vertexFormat = ellipsoidGeometry._vertexFormat;
 
@@ -197,12 +203,12 @@ define([
         var vertexCount = stackPartitions * slicePartitions;
         var positions = new Float64Array(vertexCount * 3);
 
-        var numIndices = 6 * (slicePartitions - 1) * (stackPartitions - 1);
+        var numIndices = 6 * (slicePartitions - 1) * (stackPartitions - 2);
         var indices = IndexDatatype.createTypedArray(vertexCount, numIndices);
 
         var normals = (vertexFormat.normal) ? new Float32Array(vertexCount * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(vertexCount * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(vertexCount * 3) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(vertexCount * 3) : undefined;
         var st = (vertexFormat.st) ? new Float32Array(vertexCount * 2) : undefined;
 
         var cosTheta = new Array(slicePartitions);
@@ -241,7 +247,7 @@ define([
 
         for (i = 0; i < slicePartitions; i++) {
             // duplicate first point for correct
-            // texture coordinates at the north pole.
+            // texture coordinates at the south pole.
             positions[index++] = 0.0;
             positions[index++] = 0.0;
             positions[index++] = -radii.z;
@@ -260,9 +266,9 @@ define([
         var stIndex = 0;
         var normalIndex = 0;
         var tangentIndex = 0;
-        var binormalIndex = 0;
+        var bitangentIndex = 0;
 
-        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
             for( i = 0; i < vertexCount; i++) {
                 var position = Cartesian3.fromArray(positions, i * 3, scratchPosition);
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
@@ -292,7 +298,7 @@ define([
                     normals[normalIndex++] = normal.z;
                 }
 
-                if (vertexFormat.tangent || vertexFormat.binormal) {
+                if (vertexFormat.tangent || vertexFormat.bitangent) {
                     var tangent = scratchTangent;
                     if (i < slicePartitions || i > vertexCount - slicePartitions - 1) {
                         Cartesian3.cross(Cartesian3.UNIT_X, normal, tangent);
@@ -308,13 +314,13 @@ define([
                         tangents[tangentIndex++] = tangent.z;
                     }
 
-                    if (vertexFormat.binormal) {
-                        var binormal = Cartesian3.cross(normal, tangent, scratchBinormal);
-                        Cartesian3.normalize(binormal, binormal);
+                    if (vertexFormat.bitangent) {
+                        var bitangent = Cartesian3.cross(normal, tangent, scratchBitangent);
+                        Cartesian3.normalize(bitangent, bitangent);
 
-                        binormals[binormalIndex++] = binormal.x;
-                        binormals[binormalIndex++] = binormal.y;
-                        binormals[binormalIndex++] = binormal.z;
+                        bitangents[bitangentIndex++] = bitangent.x;
+                        bitangents[bitangentIndex++] = bitangent.y;
+                        bitangents[bitangentIndex++] = bitangent.z;
                     }
                 }
             }
@@ -343,19 +349,27 @@ define([
                 });
             }
 
-            if (vertexFormat.binormal) {
-                attributes.binormal = new GeometryAttribute({
+            if (vertexFormat.bitangent) {
+                attributes.bitangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : binormals
+                    values : bitangents
                 });
             }
         }
 
         index = 0;
-        for (i = 0; i < stackPartitions; i++) {
-            var topOffset = i * slicePartitions;
-            var bottomOffset = (i + 1) * slicePartitions;
+        for (j = 0; j < slicePartitions - 1; j++) {
+            indices[index++] = slicePartitions + j;
+            indices[index++] = slicePartitions + j + 1;
+            indices[index++] = j + 1;
+        }
+
+        var topOffset;
+        var bottomOffset;
+        for (i = 1; i < stackPartitions - 2; i++) {
+            topOffset = i * slicePartitions;
+            bottomOffset = (i + 1) * slicePartitions;
 
             for (j = 0; j < slicePartitions - 1; j++) {
                 indices[index++] = bottomOffset + j;
@@ -368,12 +382,40 @@ define([
             }
         }
 
+        i = stackPartitions - 2;
+        topOffset = i * slicePartitions;
+        bottomOffset = (i + 1) * slicePartitions;
+
+        for (j = 0; j < slicePartitions - 1; j++) {
+            indices[index++] = bottomOffset + j;
+            indices[index++] = topOffset + j + 1;
+            indices[index++] = topOffset + j;
+        }
+
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
         });
+    };
+
+    var unitEllipsoidGeometry;
+
+    /**
+     * Returns the geometric representation of a unit ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    EllipsoidGeometry.getUnitEllipsoid = function() {
+        if (!defined(unitEllipsoidGeometry)) {
+            unitEllipsoidGeometry = EllipsoidGeometry.createGeometry((new EllipsoidGeometry({
+                radii : new Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
+            })));
+        }
+        return unitEllipsoidGeometry;
     };
 
     return EllipsoidGeometry;

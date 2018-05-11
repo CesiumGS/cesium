@@ -1,0 +1,16 @@
+.nihilo .dijitToolbar .dijitToolbarSeparator {
+	background: url('../../icons/images/editorIconsEnabled.png'); /* separator in editor icons sprite image - enabled state */
+}
+
+/**** ICONS *****/
+
+.nihilo .dijitEditorIcon {
+	background-image: url('../../icons/images/editorIconsEnabled.png'); /* editor icons sprite image - enabled state */
+	background-repeat: no-repeat;
+	width: 18px;
+	height: 18px;
+	text-align: center;
+}
+.nihilo .dijitDisabled .dijitEditorIcon {
+	background-image: url('../../icons/images/editorIconsDisabled.png'); /* editor icons sprite image - disabled state */
+}

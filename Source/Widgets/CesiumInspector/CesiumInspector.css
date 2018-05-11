@@ -1,7 +1,5 @@
 .cesium-cesiumInspector {
     border-radius: 5px;
-    -webkit-transition: width ease-in-out 0.25s;
-    -moz-transition: width ease-in-out 0.25s;
     transition: width ease-in-out 0.25s;
     background: rgba(48, 51, 54, 0.8);
     border: 1px solid #444;
@@ -11,6 +9,7 @@
     padding: 4px 12px;
     -moz-user-select: none;
     -webkit-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     overflow: hidden;
 }
@@ -25,7 +24,7 @@
     padding-bottom: 3px;
 }
 
-.cesium-cesiumInspector input:enabled, .cesium-cesiumInspector-button{
+.cesium-cesiumInspector input:enabled, .cesium-cesiumInspector-button {
     cursor: pointer;
 }
 
@@ -56,7 +55,7 @@
     width: 185px;
 }
 
-.cesium-cesiumInspector-frustumStats {
+.cesium-cesiumInspector-frustumStatistics {
     padding-left: 10px;
     padding: 5px;
     background-color: rgba(80, 80, 80, 0.75);
@@ -71,16 +70,17 @@
     cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     margin: 0 auto;
 }
 
 .cesium-cesiumInspector-pickButton:focus {
-     outline: none;
+    outline: none;
 }
 
 .cesium-cesiumInspector-pickButton:active, .cesium-cesiumInspector-pickButtonHighlight {
-    color: #000;  /* For text buttons */
+    color: #000; /* For text buttons */
     background: #adf;
     border-color: #fff;
     box-shadow: 0 0 8px #fff;
@@ -103,8 +103,6 @@
 
 .cesium-cesiumInspector-section {
     margin-bottom: 10px;
-    -webkit-transition: max-height 0.25s;
-    -moz-transition: max-height 0.25s;
     transition: max-height 0.25s;
 }
 

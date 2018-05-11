@@ -1,42 +1,39 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PerInstanceColorAppearance',
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         PerInstanceColorAppearance,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
-        ClearCommand,
         Appearance,
         Primitive,
-        createContext,
-        createFrameState,
-        destroyContext,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
-    var context;
-    var frameState;
+    var scene;
+    var rectangle;
     var primitive;
 
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
+        rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+        scene.camera.setView({ destination : rectangle });
+    });
 
-        var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+    afterAll(function() {
+        scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
@@ -49,15 +46,11 @@ defineSuite([
             }),
             asynchronous : false
         });
-
-        frameState.camera.viewRectangle(rectangle);
-        var us = context.uniformState;
-        us.update(context, frameState);
     });
 
-    afterAll(function() {
+    afterEach(function() {
+        scene.primitives.removeAll();
         primitive = primitive && primitive.destroy();
-        destroyContext(context);
     });
 
     it('constructor', function() {
@@ -77,11 +70,10 @@ defineSuite([
     it('renders', function() {
         primitive.appearance = new PerInstanceColorAppearance();
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders flat', function() {
@@ -91,11 +83,10 @@ defineSuite([
             closed : true
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

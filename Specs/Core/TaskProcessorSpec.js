@@ -1,29 +1,29 @@
-/*global defineSuite*/
 defineSuite([
         'Core/TaskProcessor',
         'require',
-        'Specs/waitsForPromise'
+        'Core/FeatureDetection',
+        'ThirdParty/when'
     ], function(
         TaskProcessor,
         require,
-        waitsForPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        FeatureDetection,
+        when) {
+    'use strict';
 
     var taskProcessor;
+
+    function absolutize(url) {
+        var a = document.createElement('a');
+        a.href = url;
+        a.href = a.href; // IE only absolutizes href on get, not set
+        return a.href;
+    }
 
     beforeEach(function() {
         TaskProcessor._workerModulePrefix = '../Specs/TestWorkers/';
 
-        function absolutize(url) {
-            var a = document.createElement('a');
-            a.href = url;
-            a.href = a.href; // IE only absolutizes href on get, not set
-            return a.href;
-        }
-
         TaskProcessor._loaderConfig = {
-            baseUrl : absolutize(require.toUrl('Specs/../Source'))
+            baseUrl : absolutize(require.toUrl('Source'))
         };
     });
 
@@ -45,9 +45,8 @@ defineSuite([
                 val : true
             }
         };
-        var promise = taskProcessor.scheduleTask(parameters);
 
-        waitsForPromise(promise, function(result) {
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result).toEqual(parameters);
         });
     });
@@ -69,7 +68,7 @@ defineSuite([
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        waitsForPromise(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
+        return when(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
             var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
             if (canTransferArrayBuffer) {
@@ -78,7 +77,7 @@ defineSuite([
             }
 
             // the worker should see the array with proper byte length
-            waitsForPromise(promise, function(result) {
+            return promise.then(function(result) {
                 expect(result).toEqual(byteLength);
             });
         });
@@ -92,10 +91,8 @@ defineSuite([
             byteLength : byteLength
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
         // the worker should see the array with proper byte length
-        waitsForPromise(promise, function(result) {
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(result.byteLength).toEqual(100);
         });
     });
@@ -108,9 +105,9 @@ defineSuite([
             message : message
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
-        waitsForPromise.toReject(promise, function(error) {
+        return taskProcessor.scheduleTask(parameters).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
             expect(error.message).toEqual(message);
         });
     });
@@ -123,10 +120,106 @@ defineSuite([
             message : message
         };
 
-        var promise = taskProcessor.scheduleTask(parameters);
-
-        waitsForPromise.toReject(promise, function(error) {
+        return taskProcessor.scheduleTask(parameters).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
             expect(error).toContain('postMessage failed');
         });
+    });
+
+    it('successful task raises the taskCompletedEvent', function() {
+        taskProcessor = new TaskProcessor('returnParameters');
+
+        var parameters = {
+            prop : 'blah',
+            obj : {
+                val : true
+            }
+        };
+        var eventRaised = false;
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function() {
+            eventRaised = true;
+        });
+
+        return taskProcessor.scheduleTask(parameters).then(function(result) {
+            expect(eventRaised).toBe(true);
+        }).always(function () {
+            removeListenerCallback();
+        });
+    });
+
+    it('unsuccessful task raises the taskCompletedEvent with error', function() {
+        taskProcessor = new TaskProcessor('returnNonCloneable');
+
+        var message = 'foo';
+        var parameters = {
+            message : message
+        };
+
+        var eventRaised = false;
+        var removeListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(function(error) {
+            eventRaised = true;
+            expect(error).toBeDefined();
+        });
+
+        return taskProcessor.scheduleTask(parameters).then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(eventRaised).toBe(true);
+
+        }).always(function () {
+            removeListenerCallback();
+        });
+    });
+
+    it('can load and compile web assembly module', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        var promise = taskProcessor.initWebAssemblyModule({
+            modulePath : 'TestWasm/testWasmWrapper',
+            wasmBinaryFile : binaryUrl,
+            fallbackModulePath : 'TestWasm/testWasmFallback'
+        });
+
+        return promise.then(function(result) {
+            expect(result).toBeDefined();
+            if (FeatureDetection.supportsWebAssembly()) {
+                expect(result.modulePath).toMatch(/TestWasm\/testWasmWrapper/);
+                expect(result.wasmBinary).toBeDefined();
+            }
+        });
+    });
+
+    it('uses a backup module if web assembly is not supported', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+
+        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
+
+        var promise = taskProcessor.initWebAssemblyModule({
+            modulePath : 'TestWasm/testWasmWrapper',
+            wasmBinaryFile : binaryUrl,
+            fallbackModulePath : 'TestWasm/testWasmFallback'
+        });
+
+        return promise.then(function(result) {
+            expect(result).toBeDefined();
+            expect(result.modulePath).toMatch(/TestWasm\/testWasmFallback/);
+            expect(result.wasmBinary).not.toBeDefined();
+        });
+    });
+
+    it('throws runtime error if web assembly is not supported and no backup is provided', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+
+        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
+
+        expect(function () {
+            taskProcessor.initWebAssemblyModule({
+                modulePath : 'TestWasm/testWasmWrapper',
+                wasmBinaryFile : binaryUrl
+            });
+        }).toThrowRuntimeError();
     });
 });

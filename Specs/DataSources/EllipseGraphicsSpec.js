@@ -1,20 +1,24 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/EllipseGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ClassificationType',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
         EllipseGraphics,
         Color,
+        DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        ClassificationType,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -31,7 +35,10 @@ defineSuite([
             fill : false,
             outline : false,
             outlineColor : Color.RED,
-            outlineWidth : 9
+            outlineWidth : 9,
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition(),
+            classificationType : ClassificationType.TERRAIN
         };
 
         var ellipse = new EllipseGraphics(options);
@@ -49,6 +56,9 @@ defineSuite([
         expect(ellipse.outline).toBeInstanceOf(ConstantProperty);
         expect(ellipse.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.shadows).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.classificationType).toBeInstanceOf(ConstantProperty);
 
         expect(ellipse.material.color.getValue()).toEqual(options.material);
         expect(ellipse.show.getValue()).toEqual(options.show);
@@ -64,6 +74,9 @@ defineSuite([
         expect(ellipse.outline.getValue()).toEqual(options.outline);
         expect(ellipse.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(ellipse.shadows.getValue()).toEqual(options.shadows);
+        expect(ellipse.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(ellipse.classificationType.getValue()).toEqual(options.classificationType);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -82,6 +95,9 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.numberOfVerticalLines = new ConstantProperty();
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
 
         var target = new EllipseGraphics();
         target.merge(source);
@@ -100,6 +116,9 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
+        expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.classificationType).toBe(source.classificationType);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -119,6 +138,9 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var numberOfVerticalLines = new ConstantProperty();
+        var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
+        var classificationType = new ConstantProperty();
 
         var target = new EllipseGraphics();
         target.material = material;
@@ -135,6 +157,9 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.numberOfVerticalLines = numberOfVerticalLines;
+        target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
+        target.classificationType = classificationType;
 
         target.merge(source);
 
@@ -152,6 +177,9 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.numberOfVerticalLines).toBe(numberOfVerticalLines);
+        expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.classificationType).toBe(classificationType);
     });
 
     it('clone works', function() {
@@ -170,6 +198,9 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.numberOfVerticalLines = new ConstantProperty();
+        source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -186,6 +217,9 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
+        expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.classificationType).toBe(source.classificationType);
     });
 
     it('merge throws if source undefined', function() {
@@ -211,5 +245,8 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'numberOfVerticalLines', 16, 32);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
+        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
     });
 });

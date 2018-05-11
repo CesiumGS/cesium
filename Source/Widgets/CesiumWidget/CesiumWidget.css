@@ -2,7 +2,7 @@
     position: relative;
 }
 
-.cesium-widget,.cesium-widget canvas {
+.cesium-widget, .cesium-widget canvas {
     width: 100%;
     height: 100%;
     touch-action: none;

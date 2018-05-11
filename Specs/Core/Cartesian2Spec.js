@@ -1,14 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian2',
         'Core/Math',
+        'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian2,
         CesiumMath,
+        createPackableArraySpecs,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('construct with default values', function() {
         var cartesian = new Cartesian2();
@@ -50,7 +50,7 @@ defineSuite([
         var cartesian = new Cartesian2(1.0, 2.0);
         var result = new Cartesian2();
         var returnedResult = Cartesian2.clone(cartesian, result);
-        expect(cartesian).toNotBe(result);
+        expect(cartesian).not.toBe(result);
         expect(result).toBe(returnedResult);
         expect(cartesian).toEqual(result);
     });
@@ -302,6 +302,12 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian2.normalize(Cartesian2.ZERO, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian2(2.0, 3.0);
         var right = new Cartesian2(4.0, 5.0);
@@ -317,6 +323,25 @@ defineSuite([
         var right = new Cartesian2(4.0, 5.0);
         var expectedResult = new Cartesian2(8.0, 15.0);
         var returnedResult = Cartesian2.multiplyComponents(left, right, left);
+        expect(left).toBe(returnedResult);
+        expect(left).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var result = new Cartesian2();
+        var expectedResult = new Cartesian2(0.5, 0.6);
+        var returnedResult = Cartesian2.divideComponents(left, right, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter that is an input parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var expectedResult = new Cartesian2(0.5, 0.6);
+        var returnedResult = Cartesian2.divideComponents(left, right, left);
         expect(left).toBe(returnedResult);
         expect(left).toEqual(expectedResult);
     });
@@ -524,21 +549,22 @@ defineSuite([
 
     it('equalsEpsilon', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 2.0), 0.0)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 2.0), 1.0)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(2.0, 2.0), 1.0)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 3.0), 1.0)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
-        expect(Cartesian2.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 2.0), 0.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 2.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(2.0, 2.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 3.0), 1.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
 
         cartesian = new Cartesian2(3000000.0, 4000000.0);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(3000000.0, 4000000.0), 0.0)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(3000000.0, 4000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(3000000.2, 4000000.0), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(3000000.2, 4000000.2), CesiumMath.EPSILON7)).toEqual(true);
-        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(3000000.2, 4000000.2), CesiumMath.EPSILON9)).toEqual(false);
+        expect(cartesian.equalsEpsilon(new Cartesian2(3000000.0, 4000000.0), 0.0)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(3000000.0, 4000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(3000000.2, 4000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(3000000.2, 4000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(cartesian.equalsEpsilon(new Cartesian2(3000000.2, 4000000.2), CesiumMath.EPSILON9)).toEqual(false);
+        expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
+
         expect(Cartesian2.equalsEpsilon(undefined, cartesian, 1)).toEqual(false);
-        expect(Cartesian2.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {
@@ -603,6 +629,20 @@ defineSuite([
         var left = new Cartesian2(4.0, 5.0);
         expect(function() {
             Cartesian2.multiplyComponents(left, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no left parameter', function() {
+        var right = new Cartesian2(4.0, 5.0);
+        expect(function() {
+            Cartesian2.divideComponents(undefined, right);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no right parameter', function() {
+        var left = new Cartesian2(4.0, 5.0);
+        expect(function() {
+            Cartesian2.divideComponents(left, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -753,6 +793,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('divideComponents throws with no result', function() {
+        expect(function() {
+            Cartesian2.divideComponents(new Cartesian2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
     it('add throws with no result', function() {
         expect(function() {
             Cartesian2.add(new Cartesian2(), new Cartesian2());
@@ -802,4 +848,5 @@ defineSuite([
     });
 
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
+    createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4]);
 });

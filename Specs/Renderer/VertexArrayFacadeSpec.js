@@ -1,18 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/VertexArrayFacade',
         'Core/ComponentDatatype',
         'Renderer/BufferUsage',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Specs/createContext'
     ], function(
         VertexArrayFacade,
         ComponentDatatype,
         BufferUsage,
-        createContext,
-        destroyContext) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createContext) {
+    'use strict';
 
     var context;
 
@@ -21,7 +17,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     it('creates a vertex array with static floats', function() {

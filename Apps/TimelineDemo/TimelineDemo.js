@@ -27,7 +27,7 @@ define([
         AnimationViewModel,
         ClockViewModel,
         Timeline) {
-    "use strict";
+    'use strict';
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
     var timeline, clock, endBeforeStart, containerElement, animationViewModel, animation;

@@ -1,13 +1,17 @@
 //#define SHOW_TILE_BOUNDARIES
-
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
+uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 
 #ifdef APPLY_ALPHA
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_SPLIT
+uniform float u_dayTextureSplit[TEXTURE_UNITS];
 #endif
 
 #ifdef APPLY_BRIGHTNESS
@@ -47,15 +51,36 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+#ifdef ENABLE_CLIPPING_PLANES
+uniform sampler2D u_clippingPlanes;
+uniform mat4 u_clippingPlanesMatrix;
+uniform vec4 u_clippingPlanesEdgeStyle;
+#endif
+
+#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+uniform float u_minimumBrightness;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
-varying vec2 v_textureCoordinates;
+varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
+#ifdef APPLY_MATERIAL
+varying float v_height;
+varying float v_slope;
+#endif
+
+#ifdef FOG
+varying float v_distance;
+varying vec3 v_rayleighColor;
+varying vec3 v_mieColor;
+#endif
+
 vec4 sampleAndBlend(
     vec4 previousColor,
-    sampler2D texture,
+    sampler2D textureToSample,
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
@@ -64,7 +89,8 @@ vec4 sampleAndBlend(
     float textureContrast,
     float textureHue,
     float textureSaturation,
-    float textureOneOverGamma)
+    float textureOneOverGamma,
+    float split)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -73,19 +99,31 @@ vec4 sampleAndBlend(
     //    tileTextureCoordinates.t > textureCoordinateRectangle.q
     // In other words, the alpha is zero if the fragment is outside the rectangle
     // covered by this texture.  Would an actual 'if' yield better performance?
-    vec2 alphaMultiplier = step(textureCoordinateRectangle.st, tileTextureCoordinates); 
+    vec2 alphaMultiplier = step(textureCoordinateRectangle.st, tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-    
+
     alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
-    
+
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 sample = texture2D(texture, textureCoordinates);
-    vec3 color = sample.rgb;
-    float alpha = sample.a;
-    
+    vec4 value = texture2D(textureToSample, textureCoordinates);
+    vec3 color = value.rgb;
+    float alpha = value.a;
+
+#ifdef APPLY_SPLIT
+    float splitPosition = czm_imagerySplitPosition;
+    // Split to the left
+    if (split < 0.0 && gl_FragCoord.x > splitPosition) {
+       alpha = 0.0;
+    }
+    // Split to the right
+    else if (split > 0.0 && gl_FragCoord.x < splitPosition) {
+       alpha = 0.0;
+    }
+#endif
+
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
 #endif
@@ -112,11 +150,15 @@ vec4 sampleAndBlend(
     return vec4(outColor, outAlpha);
 }
 
-vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates);
+vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue);
 
 void main()
 {
+#ifdef ENABLE_CLIPPING_PLANES
+    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
@@ -132,24 +174,22 @@ void main()
 #endif
 
 #if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
-    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
-#elif defined(ENABLE_VERTEX_LIGHTING)
-    vec3 normalMC = normalize(v_normalMC);														// normalized surface normal in model coordinates
-    vec3 normalEC = normalize(v_normalEC);                                                      // normalized surface normal in eye coordiantes
+    vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
+    vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
-    vec2 waterMaskTextureCoordinates = v_textureCoordinates * waterMaskScale + waterMaskTranslation;
+    vec2 waterMaskTextureCoordinates = v_textureCoordinates.xy * waterMaskScale + waterMaskTranslation;
+    waterMaskTextureCoordinates.y = 1.0 - waterMaskTextureCoordinates.y;
 
     float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
 
     if (mask > 0.0)
     {
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
-        
+
         vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
         vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
 
@@ -159,9 +199,19 @@ void main()
     }
 #endif
 
+#ifdef APPLY_MATERIAL
+    czm_materialInput materialInput;
+    materialInput.st = v_textureCoordinates.st;
+    materialInput.normalEC = normalize(v_normalEC);
+    materialInput.slope = v_slope;
+    materialInput.height = v_height;
+    czm_material material = czm_getMaterial(materialInput);
+    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+#endif
+
 #ifdef ENABLE_VERTEX_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 0.9 + 0.3, 0.0, 1.0);
-    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     float cameraDist = length(czm_view[3]);
@@ -169,9 +219,35 @@ void main()
     float fadeInDist = u_lightingFadeDistance.y;
     float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, t);
-    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
+    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
-    gl_FragColor = color;
+    vec4 finalColor = color;
+#endif
+
+#ifdef ENABLE_CLIPPING_PLANES
+    vec4 clippingPlanesEdgeColor = vec4(1.0);
+    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb;
+    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a;
+
+    if (clipDistance < clippingPlanesEdgeWidth)
+    {
+        finalColor = clippingPlanesEdgeColor;
+    }
+#endif
+
+#ifdef FOG
+    const float fExposure = 2.0;
+    vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
+    fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+    fogColor *= darken;
+#endif
+
+    gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
+#else
+    gl_FragColor = finalColor;
 #endif
 }
 
@@ -196,20 +272,20 @@ const float oceanFrequencyLowAltitude = 825000.0;
 const float oceanAnimationSpeedLowAltitude = 0.004;
 const float oceanOneOverAmplitudeLowAltitude = 1.0 / 2.0;
 const float oceanSpecularIntensity = 0.5;
- 
+
 // high altitude wave settings
 const float oceanFrequencyHighAltitude = 125000.0;
 const float oceanAnimationSpeedHighAltitude = 0.008;
 const float oceanOneOverAmplitudeHighAltitude = 1.0 / 2.0;
 
-vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue)
+vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float maskValue)
 {
     vec3 positionToEyeEC = -positionEyeCoordinates;
     float positionToEyeECLength = length(positionToEyeEC);
 
     // The double normalize below works around a bug in Firefox on Android devices.
     vec3 normalizedpositionToEyeEC = normalize(normalize(positionToEyeEC));
-    
+
     // Fade out the waves as the camera moves far from the surface.
     float waveIntensity = waveFade(70000.0, 1000000.0, positionToEyeECLength);
 
@@ -218,20 +294,20 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float time = czm_frameNumber * oceanAnimationSpeedHighAltitude;
     vec4 noise = czm_getWaterNoise(u_oceanNormalMap, textureCoordinates * oceanFrequencyHighAltitude, time, 0.0);
     vec3 normalTangentSpaceHighAltitude = vec3(noise.xy, noise.z * oceanOneOverAmplitudeHighAltitude);
-    
+
     // low altitude waves
     time = czm_frameNumber * oceanAnimationSpeedLowAltitude;
     noise = czm_getWaterNoise(u_oceanNormalMap, textureCoordinates * oceanFrequencyLowAltitude, time, 0.0);
     vec3 normalTangentSpaceLowAltitude = vec3(noise.xy, noise.z * oceanOneOverAmplitudeLowAltitude);
-    
+
     // blend the 2 wave layers based on distance to surface
     float highAltitudeFade = linearFade(0.0, 60000.0, positionToEyeECLength);
     float lowAltitudeFade = 1.0 - linearFade(20000.0, 60000.0, positionToEyeECLength);
-    vec3 normalTangentSpace = 
-    	(highAltitudeFade * normalTangentSpaceHighAltitude) + 
-    	(lowAltitudeFade * normalTangentSpaceLowAltitude);
+    vec3 normalTangentSpace =
+        (highAltitudeFade * normalTangentSpaceHighAltitude) +
+        (lowAltitudeFade * normalTangentSpaceLowAltitude);
     normalTangentSpace = normalize(normalTangentSpace);
-    
+
     // fade out the normal perturbation as we move farther from the water surface
     normalTangentSpace.xy *= waveIntensity;
     normalTangentSpace = normalize(normalTangentSpace);
@@ -240,13 +316,13 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 #endif
 
     vec3 normalEC = enuToEye * normalTangentSpace;
-    
+
     const vec3 waveHighlightColor = vec3(0.3, 0.45, 0.6);
-    
+
     // Use diffuse light to highlight the waves
-    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC);
+    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * maskValue;
     vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity;
-    
+
 #ifdef SHOW_OCEAN_WAVES
     // Where diffuse light is low or non-existent, use wave highlights based solely on
     // the wave bumpiness and no particular light direction.
@@ -258,10 +334,10 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
     float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
-    float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), specularMapValue);
+    float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
     float specular = specularIntensity * surfaceReflectance;
-    
-    return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a); 
+
+    return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a);
 }
 
 #endif // #ifdef SHOW_REFLECTIVE_OCEAN

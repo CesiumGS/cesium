@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -17,14 +16,14 @@ define([
         EllipsoidSurfaceAppearanceVS,
         Appearance,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}
      * and {@link RectangleGeometry}, which supports all materials like {@link MaterialAppearance}
      * with {@link MaterialAppearance.MaterialSupport.ALL}.  However, this appearance requires
      * fewer vertex attributes since the fragment shader can procedurally compute <code>normal</code>,
-     * <code>binormal</code>, and <code>tangent</code>.
+     * <code>tangent</code>, and <code>bitangent</code>.
      *
      * @alias EllipsoidSurfaceAppearance
      * @constructor
@@ -41,8 +40,6 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid%20Surface.html|Cesium Sandcastle Ellipsoid Surface Appearance Demo}
-     *
      * @example
      * var primitive = new Cesium.Primitive({
      *   geometryInstances : new Cesium.GeometryInstance({
@@ -56,7 +53,7 @@ define([
      *   })
      * });
      */
-    var EllipsoidSurfaceAppearance = function(options) {
+    function EllipsoidSurfaceAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -93,7 +90,7 @@ define([
         this._flat = defaultValue(options.flat, false);
         this._faceForward = defaultValue(options.faceForward, aboveGround);
         this._aboveGround = aboveGround;
-    };
+    }
 
     defineProperties(EllipsoidSurfaceAppearance.prototype, {
         /**
@@ -256,7 +253,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     EllipsoidSurfaceAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

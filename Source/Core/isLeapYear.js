@@ -1,9 +1,8 @@
-/*global define*/
 define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Determines if a given date is a leap year.

@@ -1,15 +1,18 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/loadImage',
-        '../ThirdParty/when'
+        '../Core/Resource',
+        '../ThirdParty/when',
+        './CubeMap'
     ], function(
+        Check,
         defined,
         DeveloperError,
-        loadImage,
-        when) {
-    "use strict";
+        Resource,
+        when,
+        CubeMap) {
+    'use strict';
 
     /**
      * Asynchronously loads six images and creates a cube map.  Returns a promise that
@@ -18,17 +21,12 @@ define([
      * @exports loadCubeMap
      *
      * @param {Context} context The context to use to create the cube map.
-     * @param {Object} urls The source of each image, or a promise for each URL.  See the example below.
-     * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
-     *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
-     *        Data URIs are never requested using CORS.
-     * @returns {Promise} a promise that will resolve to the requested {@link CubeMap} when loaded.
+     * @param {Object} urls The source URL of each image.  See the example below.
+     * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
      *
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * Cesium.loadCubeMap(context, {
@@ -44,13 +42,14 @@ define([
      *     // an error occurred
      * });
      *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
      * @private
      */
-    var loadCubeMap = function(context, urls, allowCrossOrigin) {
+    function loadCubeMap(context, urls) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
-        }
+        Check.defined('context', context);
         if ((!defined(urls)) ||
             (!defined(urls.positiveX)) ||
             (!defined(urls.negativeX)) ||
@@ -69,16 +68,17 @@ define([
         // ideally, we would do it in the primitive's update function.
 
         var facePromises = [
-            loadImage(urls.positiveX, allowCrossOrigin),
-            loadImage(urls.negativeX, allowCrossOrigin),
-            loadImage(urls.positiveY, allowCrossOrigin),
-            loadImage(urls.negativeY, allowCrossOrigin),
-            loadImage(urls.positiveZ, allowCrossOrigin),
-            loadImage(urls.negativeZ, allowCrossOrigin)
+            Resource.createIfNeeded(urls.positiveX).fetchImage(),
+            Resource.createIfNeeded(urls.negativeX).fetchImage(),
+            Resource.createIfNeeded(urls.positiveY).fetchImage(),
+            Resource.createIfNeeded(urls.negativeY).fetchImage(),
+            Resource.createIfNeeded(urls.positiveZ).fetchImage(),
+            Resource.createIfNeeded(urls.negativeZ).fetchImage()
         ];
 
         return when.all(facePromises, function(images) {
-            return context.createCubeMap({
+            return new CubeMap({
+                context : context,
                 source : {
                     positiveX : images[0],
                     negativeX : images[1],
@@ -89,7 +89,7 @@ define([
                 }
             });
         });
-    };
+    }
 
     return loadCubeMap;
 });

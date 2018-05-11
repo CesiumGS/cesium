@@ -1,17 +1,18 @@
-/*global define*/
 define([
+        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * A view model that represents each item in the {@link BaseLayerPicker}.
@@ -23,6 +24,7 @@ define([
      * @param {String} options.name The name of the layer.
      * @param {String} options.tooltip The tooltip to show when the item is moused over.
      * @param {String} options.iconUrl An icon representing the layer.
+     * @param {String} [options.category] A category for the layer.
      * @param {ProviderViewModel~CreationFunction|Command} options.creationFunction A function or Command
      *        that creates one or more providers which will be added to the globe when this item is selected.
      *
@@ -30,7 +32,7 @@ define([
      * @see ImageryProvider
      * @see TerrainProvider
      */
-    var ProviderViewModel = function(options) {
+    function ProviderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.name)) {
             throw new DeveloperError('options.name is required.');
@@ -71,20 +73,35 @@ define([
          */
         this.iconUrl = options.iconUrl;
 
+        this._category = defaultValue(options.category, 'Other');
+
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
-    };
+    }
 
     defineProperties(ProviderViewModel.prototype, {
         /**
          * Gets the Command that creates one or more providers which will be added to
          * the globe when this item is selected.
          * @memberof ProviderViewModel.prototype
-         *
+         * @memberof ProviderViewModel.prototype
          * @type {Command}
+         * @readonly
          */
         creationCommand : {
             get : function() {
                 return this._creationCommand;
+            }
+        },
+
+        /**
+         * Gets the category
+         * @type {String}
+         * @memberof ProviderViewModel.prototype
+         * @readonly
+         */
+        category : {
+            get: function() {
+                return this._category;
             }
         }
     });

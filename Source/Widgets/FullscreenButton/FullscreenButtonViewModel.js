@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defaultValue',
         '../../Core/defineProperties',
@@ -17,7 +16,7 @@ define([
         knockout,
         createCommand,
         getElement) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for {@link FullscreenButton}.
@@ -26,7 +25,7 @@ define([
      *
      * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
      */
-    var FullscreenButtonViewModel = function(fullscreenElement) {
+    function FullscreenButtonViewModel(fullscreenElement) {
         var that = this;
 
         var tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
@@ -87,7 +86,7 @@ define([
             tmpIsFullscreen(Fullscreen.fullscreen);
         };
         document.addEventListener(Fullscreen.changeEventName, this._callback);
-    };
+    }
 
     defineProperties(FullscreenButtonViewModel.prototype, {
         /**

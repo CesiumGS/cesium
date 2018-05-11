@@ -1,57 +1,45 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ViewportQuad',
         'Core/BoundingRectangle',
         'Core/Color',
-        'Renderer/ClearCommand',
+        'Core/Resource',
+        'Renderer/Texture',
         'Scene/Material',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext',
-        'Specs/render'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         ViewportQuad,
         BoundingRectangle,
         Color,
-        ClearCommand,
+        Resource,
+        Texture,
         Material,
-        createCamera,
-        createContext,
-        createFrameState,
-        destroyContext,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene,
+        pollToPromise) {
+    'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var viewportQuad;
-    var us;
     var testImage;
 
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState();
-        testImage = new Image();
-        testImage.src = './Data/Images/Red16x16.png';
+        scene = createScene();
+        return Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
+            testImage = image;
+        });
     });
 
     afterAll(function() {
-        destroyContext(context);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
         viewportQuad = new ViewportQuad();
         viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
-
-        us = context.uniformState;
-        us.update(context, createFrameState(createCamera()));
     });
 
     afterEach(function() {
-        viewportQuad = viewportQuad && viewportQuad.destroy();
-        us = undefined;
+        scene.primitives.removeAll();
     });
 
     it('constructs with a rectangle', function() {
@@ -71,58 +59,52 @@ defineSuite([
             new Color(1.0, 1.0, 1.0, 1.0));
     });
 
-    it('throws when rendered with without a rectangle', function() {
+    it('throws when rendered without a rectangle', function() {
         viewportQuad.rectangle = undefined;
+        scene.primitives.add(viewportQuad);
 
         expect(function() {
-            render(context, frameState, viewportQuad);
+            scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
 
-    it('throws when rendered with without a material', function() {
+    it('throws when rendered without a material', function() {
         viewportQuad.material = undefined;
+        scene.primitives.add(viewportQuad);
 
         expect(function() {
-            render(context, frameState, viewportQuad);
+            scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
 
     it('does not render when show is false', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
         viewportQuad.show = false;
-        render(context, frameState, viewportQuad);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.primitives.add(viewportQuad);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders material', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, viewportQuad);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.primitives.add(viewportQuad);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders user created texture', function() {
+        var texture = new Texture({
+            context : scene.context,
+            source : testImage
+        });
 
-        waitsFor( function() {
-            return testImage.complete;
-        }, 'Load test image for texture test.', 3000);
+        viewportQuad.material = Material.fromType(Material.ImageType);
+        viewportQuad.material.uniforms.image = texture;
 
-        runs( function() {
-            var texture = context.createTexture2D({
-                source : testImage
-            });
-
-            viewportQuad.material = Material.fromType(Material.ImageType);
-            viewportQuad.material.uniforms.image = texture;
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, viewportQuad);
-            expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        pollToPromise(function() {
+            return viewportQuad.material._loadedImages.length !== 0;
+        }).then(function() {
+            expect(scene).toRender([0, 0, 0, 255]);
+            scene.primitives.add(viewportQuad);
+            expect(scene).toRender([255, 0, 0, 255]);
         });
     });
 

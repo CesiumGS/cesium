@@ -1,10 +1,8 @@
-/*global define*/
 define([
         'DataSources/ColorMaterialProperty'
     ], function(
         ColorMaterialProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     function testMaterialDefinitionChanged(property, name, value1, value2) {
         var listener = jasmine.createSpy('listener');
@@ -13,14 +11,14 @@ define([
         var oldValue = property[name];
         property[name] = new ColorMaterialProperty(value1);
         expect(listener).toHaveBeenCalledWith(property, name, property[name], oldValue);
-        listener.reset();
+        listener.calls.reset();
 
         property[name].color.setValue(value2);
         expect(listener).toHaveBeenCalledWith(property, name, property[name], property[name]);
-        listener.reset();
+        listener.calls.reset();
 
         property[name] = property[name];
-        expect(listener.callCount).toEqual(0);
+        expect(listener.calls.count()).toEqual(0);
     }
 
     return testMaterialDefinitionChanged;

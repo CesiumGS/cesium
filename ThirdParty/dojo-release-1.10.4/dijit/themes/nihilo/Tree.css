@@ -1,0 +1,100 @@
+/* Tree */
+
+.nihilo .dijitTreeNode {
+    background : url('images/treeI.gif') no-repeat;
+    background-position : top left;
+    background-repeat : repeat-y;
+    zoom: 1;
+}
+
+/* left vertical line (grid) for all nodes */
+.nihilo .dijitTreeIsLast {
+    background: url('images/treeI_half.gif') no-repeat;
+}
+
+.nihilo .dijitTreeRowHover {
+	/* using a transparent png so that we can still see grid lines, which are (unfortunately) behind the dijitRowNode that we are hovering over */
+	background-image: url(images/treeHover.png);
+	background-repeat: repeat;
+	background-color: transparent !important;
+}
+
+.nihilo .dijitTreeLabel {
+	font-weight: normal;
+	margin-left: 3px;
+}
+
+.nihilo .dijitTreeIsRoot {
+    margin-left: 0;
+    background-image: none;
+}
+
+.nihilo .dijitTreeExpando {
+    width: 18px;
+    height: 18px;
+}
+
+.nihilo .dijitTreeRow {
+	/* so insert line shows up on IE when dropping after a target element */
+	padding-bottom: 2px;
+}
+
+.nihilo .dijitTreeContent {
+    min-height: 18px;
+    min-width: 18px;
+    padding-left:1px;
+}
+
+.nihilo .dijitTreeExpandoOpened {
+	background: url('images/spriteTree.gif') no-repeat -18px top;
+}
+
+.nihilo .dijitTreeExpandoClosed {
+	background-image: url('images/spriteTree.gif');
+}
+
+.nihilo .dijitTreeExpandoLeaf {
+	background: url('images/spriteTree.gif') no-repeat -36px top;
+}
+
+.nihilo .dijitTreeExpandoLoading {
+	background-image: url('images/treeExpand_loading.gif');
+}
+
+.nihilo .dijitTreeIcon {
+	width: 16px;
+	height: 16px;
+}
+
+.nihilo .dijitFolderOpened {
+	background: url('images/spriteDivIcons.gif') no-repeat -16px top;
+}
+
+.nihilo .dijitFolderClosed {
+	background: url('images/spriteDivIcons.gif') no-repeat top left;
+}
+
+.nihilo .dijitLeaf {
+	background: url('images/spriteDivIcons.gif') no-repeat -32px top;
+}
+
+/* Drag and Drop on TreeNodes
+ * Put insert line on dijitTreeContent node so it's aligned w/
+ * (ie, indented equally with) target element, even
+ * though dijitTreeRowNode is the actual "drag object"
+ */
+.nihilo .dijitTreeNode .dojoDndItemBefore,
+.nihilo .dijitTreeNode .dojoDndItemAfter {
+	border-bottom: none;
+	border-top: none;
+}
+
+.nihilo .dijitTreeNode .dojoDndItemBefore .dijitTreeContent {
+	/* copied from Common.css */
+	border-top: 2px solid #369;
+}
+
+.nihilo .dijitTreeNode .dojoDndItemAfter .dijitTreeContent {
+	/* copied from Common.css */
+	border-bottom: 2px solid #369;
+}

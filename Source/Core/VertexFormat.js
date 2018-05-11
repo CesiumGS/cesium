@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -9,7 +8,7 @@ define([
         defined,
         DeveloperError,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A vertex format defines what attributes make up a vertex.  A VertexFormat can be provided
@@ -31,7 +30,7 @@ define([
      * @see Geometry#attributes
      * @see Packable
      */
-    var VertexFormat = function(options) {
+    function VertexFormat(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -71,7 +70,7 @@ define([
         this.st = defaultValue(options.st, false);
 
         /**
-         * When <code>true</code>, the vertex has a binormal attribute (normalized), which is used for tangent-space effects like bump mapping.
+         * When <code>true</code>, the vertex has a bitangent attribute (normalized), which is used for tangent-space effects like bump mapping.
          * <p>
          * 32-bit floating-point.  3 components per attribute.
          * </p>
@@ -80,7 +79,7 @@ define([
          *
          * @default false
          */
-        this.binormal = defaultValue(options.binormal, false);
+        this.bitangent = defaultValue(options.bitangent, false);
 
         /**
          * When <code>true</code>, the vertex has a tangent attribute (normalized), which is used for tangent-space effects like bump mapping.
@@ -105,7 +104,7 @@ define([
          * @default false
          */
         this.color = defaultValue(options.color, false);
-    };
+    }
 
     /**
      * An immutable vertex format with only a position attribute.
@@ -182,7 +181,7 @@ define([
     }));
 
     /**
-     * An immutable vertex format with well-known attributes: position, normal, st, binormal, and tangent.
+     * An immutable vertex format with well-known attributes: position, normal, st, tangent, and bitangent.
      *
      * @type {VertexFormat}
      * @constant
@@ -190,15 +189,15 @@ define([
      * @see VertexFormat#position
      * @see VertexFormat#normal
      * @see VertexFormat#st
-     * @see VertexFormat#binormal
      * @see VertexFormat#tangent
+     * @see VertexFormat#bitangent
      */
     VertexFormat.ALL = freezeObject(new VertexFormat({
         position : true,
         normal : true,
         st : true,
-        binormal : true,
-        tangent  : true
+        tangent  : true,
+        bitangent : true
     }));
 
     /**
@@ -223,11 +222,12 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {VertexFormat} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     VertexFormat.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -244,9 +244,11 @@ define([
         array[startingIndex++] = value.position ? 1.0 : 0.0;
         array[startingIndex++] = value.normal ? 1.0 : 0.0;
         array[startingIndex++] = value.st ? 1.0 : 0.0;
-        array[startingIndex++] = value.binormal ? 1.0 : 0.0;
         array[startingIndex++] = value.tangent ? 1.0 : 0.0;
-        array[startingIndex++] = value.color ? 1.0 : 0.0;
+        array[startingIndex++] = value.bitangent ? 1.0 : 0.0;
+        array[startingIndex] = value.color ? 1.0 : 0.0;
+
+        return array;
     };
 
     /**
@@ -255,6 +257,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {VertexFormat} [result] The object into which to store the result.
+     * @returns {VertexFormat} The modified result parameter or a new VertexFormat instance if one was not provided.
      */
     VertexFormat.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -269,19 +272,19 @@ define([
             result = new VertexFormat();
         }
 
-        result.position = array[startingIndex++] === 1.0;
-        result.normal   = array[startingIndex++] === 1.0;
-        result.st       = array[startingIndex++] === 1.0;
-        result.binormal = array[startingIndex++] === 1.0;
-        result.tangent  = array[startingIndex++] === 1.0;
-        result.color    = array[startingIndex++] === 1.0;
+        result.position  = array[startingIndex++] === 1.0;
+        result.normal    = array[startingIndex++] === 1.0;
+        result.st        = array[startingIndex++] === 1.0;
+        result.tangent   = array[startingIndex++] === 1.0;
+        result.bitangent = array[startingIndex++] === 1.0;
+        result.color     = array[startingIndex] === 1.0;
         return result;
     };
 
     /**
      * Duplicates a VertexFormat instance.
      *
-     * @param {VertexFormat} cartesian The vertex format to duplicate.
+     * @param {VertexFormat} vertexFormat The vertex format to duplicate.
      * @param {VertexFormat} [result] The object onto which to store the result.
      * @returns {VertexFormat} The modified result parameter or a new VertexFormat instance if one was not provided. (Returns undefined if vertexFormat is undefined)
      */
@@ -296,8 +299,8 @@ define([
         result.position = vertexFormat.position;
         result.normal = vertexFormat.normal;
         result.st = vertexFormat.st;
-        result.binormal = vertexFormat.binormal;
         result.tangent = vertexFormat.tangent;
+        result.bitangent = vertexFormat.bitangent;
         result.color = vertexFormat.color;
         return result;
     };

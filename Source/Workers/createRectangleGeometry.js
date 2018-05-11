@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/Ellipsoid',
@@ -9,7 +8,7 @@ define([
         Ellipsoid,
         Rectangle,
         RectangleGeometry) {
-    "use strict";
+    'use strict';
 
     function createRectangleGeometry(rectangleGeometry, offset) {
         if (defined(offset)) {

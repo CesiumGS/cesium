@@ -1,22 +1,26 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/RectangleGraphics',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/Rectangle',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ClassificationType',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
         RectangleGraphics,
         Color,
+        DistanceDisplayCondition,
         Rectangle,
         ColorMaterialProperty,
         ConstantProperty,
+        ClassificationType,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -32,40 +36,43 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 10,
-            closeTop : false,
-            closeBottom : false
+            shadows : ShadowMode.DISABLED,
+            distanceDisplayCondition : new DistanceDisplayCondition(),
+            classificationType : ClassificationType.TERRAIN
         };
 
-        var ellipse = new RectangleGraphics(options);
-        expect(ellipse.material).toBeInstanceOf(ColorMaterialProperty);
-        expect(ellipse.show).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.coordinates).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.height).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.extrudedHeight).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.granularity).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.rotation).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.stRotation).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.fill).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.outline).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.outlineColor).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.closeTop).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.closeBottom).toBeInstanceOf(ConstantProperty);
+        var rectangle = new RectangleGraphics(options);
+        expect(rectangle.material).toBeInstanceOf(ColorMaterialProperty);
+        expect(rectangle.show).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.coordinates).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.height).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.extrudedHeight).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.granularity).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.rotation).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.stRotation).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.fill).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.outline).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.outlineColor).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.shadows).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(rectangle.classificationType).toBeInstanceOf(ConstantProperty);
 
-        expect(ellipse.material.color.getValue()).toEqual(options.material);
-        expect(ellipse.show.getValue()).toEqual(options.show);
-        expect(ellipse.coordinates.getValue()).toEqual(options.coordinates);
-        expect(ellipse.height.getValue()).toEqual(options.height);
-        expect(ellipse.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
-        expect(ellipse.granularity.getValue()).toEqual(options.granularity);
-        expect(ellipse.rotation.getValue()).toEqual(options.rotation);
-        expect(ellipse.stRotation.getValue()).toEqual(options.stRotation);
-        expect(ellipse.fill.getValue()).toEqual(options.fill);
-        expect(ellipse.outline.getValue()).toEqual(options.outline);
-        expect(ellipse.outlineColor.getValue()).toEqual(options.outlineColor);
-        expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
-        expect(ellipse.closeTop.getValue()).toEqual(options.closeTop);
-        expect(ellipse.closeBottom.getValue()).toEqual(options.closeBottom);
+        expect(rectangle.material.color.getValue()).toEqual(options.material);
+        expect(rectangle.show.getValue()).toEqual(options.show);
+        expect(rectangle.coordinates.getValue()).toEqual(options.coordinates);
+        expect(rectangle.height.getValue()).toEqual(options.height);
+        expect(rectangle.extrudedHeight.getValue()).toEqual(options.extrudedHeight);
+        expect(rectangle.granularity.getValue()).toEqual(options.granularity);
+        expect(rectangle.rotation.getValue()).toEqual(options.rotation);
+        expect(rectangle.stRotation.getValue()).toEqual(options.stRotation);
+        expect(rectangle.fill.getValue()).toEqual(options.fill);
+        expect(rectangle.outline.getValue()).toEqual(options.outline);
+        expect(rectangle.outlineColor.getValue()).toEqual(options.outlineColor);
+        expect(rectangle.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(rectangle.shadows.getValue()).toEqual(options.shadows);
+        expect(rectangle.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(rectangle.classificationType.getValue()).toEqual(options.classificationType);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -82,8 +89,9 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
-        source.closeTop = new ConstantProperty();
-        source.closeBottom = new ConstantProperty();
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
+        source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
 
         var target = new RectangleGraphics();
         target.merge(source);
@@ -100,8 +108,9 @@ defineSuite([
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
-        expect(target.closeTop).toBe(source.closeTop);
-        expect(target.closeBottom).toBe(source.closeBottom);
+        expect(target.shadows).toBe(source.shadows);
+        expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.classificationType).toBe(source.classificationType);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -119,8 +128,9 @@ defineSuite([
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
-        var closeTop = new ConstantProperty();
-        var closeBottom = new ConstantProperty();
+        var shadows = new ConstantProperty();
+        var distanceDisplayCondition = new ConstantProperty();
+        var classificationType = new ConstantProperty();
 
         var target = new RectangleGraphics();
         target.material = material;
@@ -135,8 +145,9 @@ defineSuite([
         target.outline = outline;
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
-        target.closeTop = closeTop;
-        target.closeBottom = closeBottom;
+        target.shadows = shadows;
+        target.distanceDisplayCondition = distanceDisplayCondition;
+        target.classificationType = classificationType;
 
         target.merge(source);
 
@@ -152,8 +163,9 @@ defineSuite([
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
-        expect(target.closeTop).toBe(closeTop);
-        expect(target.closeBottom).toBe(closeBottom);
+        expect(target.shadows).toBe(shadows);
+        expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.classificationType).toBe(classificationType);
     });
 
     it('clone works', function() {
@@ -170,8 +182,9 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
-        source.closeTop = new ConstantProperty();
-        source.closeBottom = new ConstantProperty();
+        source.shadows = new ConstantProperty();
+        source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -186,8 +199,9 @@ defineSuite([
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
-        expect(result.closeTop).toBe(source.closeTop);
-        expect(result.closeBottom).toBe(source.closeBottom);
+        expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.classificationType).toBe(source.classificationType);
     });
 
     it('merge throws if source undefined', function() {
@@ -211,7 +225,8 @@ defineSuite([
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
-        testDefinitionChanged(property, 'closeTop', false, true);
-        testDefinitionChanged(property, 'closeBottom', false, true);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
+        testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
+        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
     });
 });

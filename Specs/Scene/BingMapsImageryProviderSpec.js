@@ -1,11 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/jsonp',
-        'Core/loadImage',
-        'Core/loadWithXhr',
+        'Core/queryToObject',
+        'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/BingMapsStyle',
         'Scene/DiscardMissingTileImagePolicy',
@@ -13,14 +12,15 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/waitsForPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/Uri'
     ], function(
         BingMapsImageryProvider,
         DefaultProxy,
         defined,
-        jsonp,
-        loadImage,
-        loadWithXhr,
+        queryToObject,
+        RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
@@ -28,14 +28,18 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        waitsForPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        pollToPromise,
+        Uri) {
+    'use strict';
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
@@ -143,13 +147,21 @@ defineSuite([
     }
 
     function installFakeMetadataRequest(url, mapStyle, proxy) {
-        var expectedUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle + '?incl=ImageryProviders&key=';
-        if (defined(proxy)) {
-            expectedUrl = proxy.getURL(expectedUrl);
-        }
+        var expectedUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle;
 
-        jsonp.loadAndExecuteScript = function(url, functionName) {
-            expect(url).toStartWith(expectedUrl);
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
+            var uri = new Uri(url);
+            if (proxy) {
+                uri = new Uri(decodeURIComponent(uri.query));
+            }
+
+            var query = queryToObject(uri.query);
+            expect(query.jsonp).toBeDefined();
+            expect(query.incl).toEqual('ImageryProviders');
+            expect(query.key).toBeDefined();
+
+            uri.query = undefined;
+            expect(uri.toString()).toStartWith(expectedUrl);
 
             setTimeout(function() {
                 window[functionName](createFakeMetadataResponse(mapStyle));
@@ -157,29 +169,107 @@ defineSuite([
         };
     }
 
-    function installFakeImageRequest(expectedUrl) {
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+    function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else {
                 if (defined(expectedUrl)) {
-                    expect(url).toEqual(expectedUrl);
+                    var uri = new Uri(url);
+                    if (proxy) {
+                        uri = new Uri(decodeURIComponent(uri.query));
+                    }
+
+                    var query = queryToObject(uri.query);
+                    uri.query = undefined;
+                    expect(uri.toString()).toEqual(expectedUrl);
+                    for(var param in expectedParams) {
+                        if (expectedParams.hasOwnProperty(param)) {
+                            expect(query[param]).toEqual(expectedParams[param]);
+                        }
+                    }
                 }
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             }
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (defined(expectedUrl)) {
-                expect(url).toEqual(expectedUrl);
+                var uri = new Uri(url);
+                if (proxy) {
+                    uri = new Uri(decodeURIComponent(uri.query));
+                }
+
+                var query = queryToObject(uri.query);
+                uri.query = undefined;
+                expect(uri.toString()).toEqual(expectedUrl);
+                for(var param in expectedParams) {
+                    if (expectedParams.hasOwnProperty(param)) {
+                        expect(query[param]).toEqual(expectedParams[param]);
+                    }
+                }
             }
 
             // Just return any old image.
-            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
     }
+
+    it('resolves readyPromise', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var resource = new Resource({
+            url : url
+        });
+
+        var provider = new BingMapsImageryProvider({
+            url : resource,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var url = 'http://host.invalid';
+        var provider = new BingMapsImageryProvider({
+            url : url
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain(url);
+        });
+    });
 
     it('returns valid value for hasAlphaChannel', function() {
         var url = 'http://fake.fake.invalid';
@@ -193,11 +283,9 @@ defineSuite([
             mapStyle : mapStyle
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
         });
     });
@@ -211,18 +299,17 @@ defineSuite([
 
         var provider = new BingMapsImageryProvider({
             url : url,
-            mapStyle : mapStyle
+            mapStyle : mapStyle,
+            key: 'fake Key'
         });
 
-        expect(provider.url).toEqual(url);
+        expect(provider.url).toStartWith(url);
         expect(provider.key).toBeDefined();
         expect(provider.mapStyle).toEqual(mapStyle);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(20);
@@ -231,9 +318,12 @@ defineSuite([
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
             expect(provider.credit).toBeInstanceOf(Object);
 
-            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt=');
+            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg', {
+                g : '3031',
+                mkt : ''
+            });
 
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
@@ -256,52 +346,22 @@ defineSuite([
 
         expect(provider.culture).toEqual(culture);
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg?g=3031&mkt=ja-jp');
-
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
-                expect(image).toBeInstanceOf(Image);
+        }).then(function() {
+            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg', {
+                g: '3031',
+                mkt: 'ja-jp'
             });
-        });
-    });
 
-    it('routes requests through a proxy if one is specified', function() {
-        var url = 'http://foo.bar.invalid';
-        var mapStyle = BingMapsStyle.ROAD;
-
-        var proxy = new DefaultProxy('/proxy/');
-
-        installFakeMetadataRequest(url, mapStyle, proxy);
-        installFakeImageRequest();
-
-        var provider = new BingMapsImageryProvider({
-            url : url,
-            mapStyle : mapStyle,
-            proxy : proxy
-        });
-
-        expect(provider.url).toEqual(url);
-        expect(provider.proxy).toEqual(proxy);
-
-        waitsFor(function() {
-            return provider.ready;
-        }, 'imagery provider to become ready');
-
-        runs(function() {
-            installFakeImageRequest(proxy.getURL('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt='));
-
-            waitsForPromise(provider.requestImage(0, 0, 0), function(image) {
+            return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);
             });
         });
     });
 
     it('raises error on invalid url', function() {
-        var url = 'host.invalid';
+        var url = 'http://host.invalid';
         var provider = new BingMapsImageryProvider({
             url : url
         });
@@ -312,11 +372,9 @@ defineSuite([
             errorEventRaised = true;
         });
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready || errorEventRaised;
-        }, 'imagery provider to become ready or raise error event');
-
-        runs(function() {
+        }).then(function() {
             expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
@@ -343,15 +401,18 @@ defineSuite([
             if (tries < 3) {
                 error.retry = true;
             }
+            setTimeout(function() {
+                RequestScheduler.update();
+            }, 1);
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else if (tries === 2) {
                 // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -360,10 +421,10 @@ defineSuite([
             }
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -372,25 +433,21 @@ defineSuite([
             }
         };
 
-        waitsFor(function() {
+        return pollToPromise(function() {
             return provider.ready;
-        }, 'imagery provider to become ready');
-
-        var imagery;
-        runs(function() {
-            imagery = new Imagery(layer, 0, 0, 0);
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
-        });
+            RequestScheduler.update();
 
-        waitsFor(function() {
-            return imagery.state === ImageryState.RECEIVED;
-        }, 'image to load');
-
-        runs(function() {
-            expect(imagery.image).toBeInstanceOf(Image);
-            expect(tries).toEqual(2);
-            imagery.releaseReference();
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBeInstanceOf(Image);
+                expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
         });
     });
 });

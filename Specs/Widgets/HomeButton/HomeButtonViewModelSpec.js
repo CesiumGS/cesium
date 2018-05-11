@@ -1,18 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/HomeButton/HomeButtonViewModel',
         'Core/Ellipsoid',
         'Scene/Globe',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         HomeButtonViewModel,
         Ellipsoid,
         Globe,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
@@ -23,7 +19,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('constructor sets default values', function() {

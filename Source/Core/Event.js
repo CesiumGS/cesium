@@ -1,13 +1,12 @@
-/*global define*/
 define([
+        './Check',
         './defined',
-        './defineProperties',
-        './DeveloperError'
+        './defineProperties'
     ], function(
+        Check,
         defined,
-        defineProperties,
-        DeveloperError) {
-    "use strict";
+        defineProperties) {
+    'use strict';
 
     /**
      * A generic utility class for managing subscribers for a particular event.
@@ -29,18 +28,19 @@ define([
      * evt.raiseEvent('1', '2');
      * evt.removeEventListener(MyObject.prototype.myListener);
      */
-    var Event = function() {
+    function Event() {
         this._listeners = [];
         this._scopes = [];
         this._toRemove = [];
         this._insideRaiseEvent = false;
-    };
+    }
 
     defineProperties(Event.prototype, {
         /**
          * The number of listeners currently subscribed to the event.
          * @memberof Event.prototype
          * @type {Number}
+         * @readonly
          */
         numberOfListeners : {
             get : function() {
@@ -64,9 +64,7 @@ define([
      */
     Event.prototype.addEventListener = function(listener, scope) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof listener !== 'function') {
-            throw new DeveloperError('listener is required and must be a function.');
-        }
+        Check.typeOf.func('listener', listener);
         //>>includeEnd('debug');
 
         this._listeners.push(listener);
@@ -90,9 +88,7 @@ define([
      */
     Event.prototype.removeEventListener = function(listener, scope) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof listener !== 'function') {
-            throw new DeveloperError('listener is required and must be a function.');
-        }
+        Check.typeOf.func('listener', listener);
         //>>includeEnd('debug');
 
         var listeners = this._listeners;
@@ -124,6 +120,10 @@ define([
         return false;
     };
 
+    function compareNumber(a,b) {
+        return b - a;
+    }
+
     /**
      * Raises the event by calling each registered listener with all supplied arguments.
      *
@@ -150,12 +150,15 @@ define([
         //Actually remove items removed in removeEventListener.
         var toRemove = this._toRemove;
         length = toRemove.length;
-        for (i = 0; i < length; i++) {
-            var index = toRemove[i];
-            listeners.splice(index, 1);
-            scopes.splice(index, 1);
+        if (length > 0) {
+            toRemove.sort(compareNumber);
+            for (i = 0; i < length; i++) {
+                var index = toRemove[i];
+                listeners.splice(index, 1);
+                scopes.splice(index, 1);
+            }
+            toRemove.length = 0;
         }
-        toRemove.length = 0;
 
         this._insideRaiseEvent = false;
     };

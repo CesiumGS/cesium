@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="CZML Model - Node Transformations">
+    <meta name="cesium-sandcastle-labels" content="CZML">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var czml = [{
+    "id" : "document",
+    "name" : "CZML Model",
+    "version" : "1.0",
+    "clock": {
+        "interval": "2015-01-01T00:00:00Z/2015-01-01T00:00:20Z",
+        "currentTime": "2015-01-01T00:00:00Z",
+        "multiplier": 20
+    }
+}, {
+    "id" : "model",
+    "position" : {
+        "cartographicDegrees" : [-77, 37, 100000]
+    },
+    "viewFrom" : {
+        "cartesian" : [4.3, 0.1, 2.6]
+    },
+    "model": {
+        "gltf" : "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+        "runAnimations": false,
+        "nodeTransformations": {
+            "Skeleton_arm_joint_L__3_": {
+                "rotation": {
+                    "epoch": "2015-01-01T00:00:00Z",
+                    "unitQuaternion":[
+                        0,-0.7762877147481148, -0.16428915803853994, 0.3706585477262082, 0.482699386243276,
+                        10,-0.6840422631464792, -0.40211904424847345, 0.05175867757399086, 0.6063888981321548,
+                        20,-0.7762877147481148, -0.16428915803853994, 0.3706585477262082, 0.482699386243276
+                    ]
+                }
+            },
+            "Skeleton_arm_joint_R__2_": {
+                "rotation": {
+                    "unitQuaternion": [
+                        0.31933321618140015, 0.5055578277509731, -0.5903490075872426, 0.5421490838170975
+                    ]
+                }
+            }
+        }
+    }
+}];
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
+
+var dataSourcePromise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+
+dataSourcePromise.then(function(dataSource){
+    viewer.trackedEntity = dataSource.entities.getById('model');
+}).otherwise(function(error){
+    window.alert(error);
+});//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

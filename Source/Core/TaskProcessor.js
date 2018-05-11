@@ -1,27 +1,32 @@
-/*global define*/
 define([
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './buildModuleUrl',
         './defaultValue',
         './defined',
         './destroyObject',
         './DeveloperError',
+        './Event',
+        './FeatureDetection',
+        './getAbsoluteUri',
         './isCrossOriginUrl',
+        './Resource',
         './RuntimeError',
         'require'
     ], function(
-        Uri,
         when,
         buildModuleUrl,
         defaultValue,
         defined,
         destroyObject,
         DeveloperError,
+        Event,
+        FeatureDetection,
+        getAbsoluteUri,
         isCrossOriginUrl,
+        Resource,
         RuntimeError,
         require) {
-    "use strict";
+    'use strict';
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -64,6 +69,8 @@ define([
         return TaskProcessor._canTransferArrayBuffer;
     }
 
+    var taskCompletedEvent = new Event();
+
     function completeTask(processor, data) {
         --processor._activeTasks;
 
@@ -85,8 +92,10 @@ define([
                 error = new DeveloperError(data.error.message);
                 error.stack = data.error.stack;
             }
+            taskCompletedEvent.raiseEvent(error);
             deferred.reject(error);
         } else {
+            taskCompletedEvent.raiseEvent();
             deferred.resolve(data.result);
         }
 
@@ -138,9 +147,9 @@ define([
 
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
-        } else if (defined(require.toUrl)) {
-            var baseUrl = new Uri('..').resolve(new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'))).toString();
-            bootstrapMessage.loaderConfig.baseUrl = baseUrl;
+        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
+            bootstrapMessage.loaderConfig.baseUrl =
+                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {
             bootstrapMessage.loaderConfig.paths = {
                 'Workers' : buildModuleUrl('Workers')
@@ -154,6 +163,34 @@ define([
         };
 
         return worker;
+    }
+
+    function getWebAssemblyLoaderConfig(processor, wasmOptions) {
+        var config = {
+            modulePath : undefined,
+            wasmBinaryFile : undefined,
+            wasmBinary : undefined
+        };
+
+        // Web assembly not supported, use fallback js module if provided
+        if (!FeatureDetection.supportsWebAssembly()) {
+            if (!defined(wasmOptions.fallbackModulePath)) {
+                throw new RuntimeError('This browser does not support Web Assembly, and no backup module was provided for ' + processor._workerName);
+            }
+
+            config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
+            return when.resolve(config);
+        }
+
+        config.modulePath = buildModuleUrl(wasmOptions.modulePath);
+        config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
+
+        return Resource.fetchArrayBuffer({
+            url: config.wasmBinaryFile
+        }).then(function (arrayBuffer) {
+            config.wasmBinary = arrayBuffer;
+            return config;
+        });
     }
 
     /**
@@ -171,13 +208,13 @@ define([
      *                                        scheduleTask will not queue any more tasks, allowing
      *                                        work to be rescheduled in future frames.
      */
-    var TaskProcessor = function(workerName, maximumActiveTasks) {
+    function TaskProcessor(workerName, maximumActiveTasks) {
         this._workerName = workerName;
         this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
         this._activeTasks = 0;
         this._deferreds = {};
         this._nextID = 0;
-    };
+    }
 
     var emptyTransferableObjectArray = [];
 
@@ -187,10 +224,10 @@ define([
      * Otherwise, returns a promise that will resolve to the result posted back by the worker when
      * finished.
      *
-     * @param {*} parameters Any input data that will be posted to the worker.
+     * @param {Object} parameters Any input data that will be posted to the worker.
      * @param {Object[]} [transferableObjects] An array of objects contained in parameters that should be
      *                                      transferred to the worker instead of copied.
-     * @returns {Promise} Either a promise that will resolve to the result when available, or undefined
+     * @returns {Promise.<Object>|undefined} Either a promise that will resolve to the result when available, or undefined
      *                    if there are too many active tasks,
      *
      * @example
@@ -241,6 +278,48 @@ define([
     };
 
     /**
+     * Posts a message to a web worker with configuration to initialize loading
+     * and compiling a web assembly module asychronously, as well as an optional
+     * fallback JavaScript module to use if Web Assembly is not supported.
+     *
+     * @param {Object} [webAssemblyOptions] An object with the following properties:
+     * @param {String} [webAssemblyOptions.modulePath] The path of the web assembly JavaScript wrapper module.
+     * @param {String} [webAssemblyOptions.wasmBinaryFile] The path of the web assembly binary file.
+     * @param {String} [webAssemblyOptions.fallbackModulePath] The path of the fallback JavaScript module to use if web assembly is not supported.
+     * @returns {Promise.<Object>} A promise that resolves to the result when the web worker has loaded and compiled the web assembly module and is ready to process tasks.
+     */
+    TaskProcessor.prototype.initWebAssemblyModule = function (webAssemblyOptions) {
+        if (!defined(this._worker)) {
+            this._worker = createWorker(this);
+        }
+
+        var deferred = when.defer();
+        var processor = this;
+        var worker = this._worker;
+        getWebAssemblyLoaderConfig(this, webAssemblyOptions).then(function(wasmConfig) {
+            return when(canTransferArrayBuffer(), function(canTransferArrayBuffer) {
+                var transferableObjects;
+                var binary = wasmConfig.wasmBinary;
+                if (defined(binary) && canTransferArrayBuffer) {
+                    transferableObjects = [binary];
+                }
+
+                worker.onmessage = function(event) {
+                    worker.onmessage = function(event) {
+                        completeTask(processor, event.data);
+                    };
+
+                    deferred.resolve(event.data);
+                };
+
+                worker.postMessage({ webAssemblyConfig : wasmConfig }, transferableObjects);
+            });
+        });
+
+        return deferred;
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
@@ -259,8 +338,6 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {undefined}
      */
     TaskProcessor.prototype.destroy = function() {
         if (defined(this._worker)) {
@@ -268,6 +345,16 @@ define([
         }
         return destroyObject(this);
     };
+
+    /**
+     * An event that's raised when a task is completed successfully.  Event handlers are passed
+     * the error object is a task fails.
+     *
+     * @type {Event}
+     *
+     * @private
+     */
+    TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 
     // exposed for testing purposes
     TaskProcessor._defaultWorkerModulePrefix = 'Workers/';

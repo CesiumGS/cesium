@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -17,7 +16,7 @@ define([
         Event,
         getTimestamp,
         TimeConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * Monitors the frame rate (frames per second) in a {@link Scene} and raises an event if the frame rate is
@@ -42,7 +41,7 @@ define([
      *        the end of the warmup period.  If the frame rate averages less than this during any samplingWindow after the warmupPeriod, the
      *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
      */
-    var FrameRateMonitor = function(options) {
+    function FrameRateMonitor(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
@@ -99,19 +98,19 @@ define([
         this._pauseCount = 0;
 
         var that = this;
-        this._preRenderRemoveListener = this._scene.preRender.addEventListener(function(scene, time) {
+        this._preUpdateRemoveListener = this._scene.preUpdate.addEventListener(function(scene, time) {
             update(that, time);
         });
 
-        this._hiddenPropertyName = defined(document.hidden) ? 'hidden' :
-                                   defined(document.mozHidden) ? 'mozHidden' :
-                                   defined(document.msHidden) ? 'msHidden' :
-                                   defined(document.webkitHidden) ? 'webkitHidden' : undefined;
+        this._hiddenPropertyName = (document.hidden !== undefined) ? 'hidden' :
+                                   (document.mozHidden !== undefined) ? 'mozHidden' :
+                                   (document.msHidden !== undefined) ? 'msHidden' :
+                                   (document.webkitHidden !== undefined) ? 'webkitHidden' : undefined;
 
-        var visibilityChangeEventName = defined(document.hidden) ? 'visibilitychange' :
-            defined(document.mozHidden) ? 'mozvisibilitychange' :
-            defined(document.msHidden) ? 'msvisibilitychange' :
-            defined(document.webkitHidden) ? 'webkitvisibilitychange' : undefined;
+        var visibilityChangeEventName = (document.hidden !== undefined) ? 'visibilitychange' :
+            (document.mozHidden !== undefined) ? 'mozvisibilitychange' :
+            (document.msHidden !== undefined) ? 'msvisibilitychange' :
+            (document.webkitHidden !== undefined) ? 'webkitvisibilitychange' : undefined;
 
         function visibilityChangeListener() {
             visibilityChanged(that);
@@ -125,7 +124,7 @@ define([
                 document.removeEventListener(visibilityChangeEventName, visibilityChangeListener, false);
             };
         }
-    };
+    }
 
     /**
      * The default frame rate monitoring settings.  These settings are used when {@link FrameRateMonitor.fromScene}
@@ -133,6 +132,7 @@ define([
      * {@link FrameRateMonitor} constructor.
      *
      * @memberof FrameRateMonitor
+     * @type {Object}
      */
     FrameRateMonitor.defaultSettings = {
         samplingWindow : 5.0,
@@ -267,14 +267,12 @@ define([
      *
      * @memberof FrameRateMonitor
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see FrameRateMonitor#isDestroyed
      */
     FrameRateMonitor.prototype.destroy = function() {
-        this._preRenderRemoveListener();
+        this._preUpdateRemoveListener();
 
         if (defined(this._visibilityChangeRemoveListener)) {
             this._visibilityChangeRemoveListener();

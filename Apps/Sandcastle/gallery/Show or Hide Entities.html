@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Show or hide groups of entities.">
+    <meta name="cesium-sandcastle-labels" content="Beginner">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+//Set the random seed for reproducible random colors.
+Cesium.Math.setRandomNumberSeed(1234);
+
+var viewer = new Cesium.Viewer('cesiumContainer', { infoBox : false });
+var entities = viewer.entities;
+
+//Create Entity "folders" to allow us to turn on/off entities as a group.
+var spheres = entities.add(new Cesium.Entity());
+var boxes = entities.add(new Cesium.Entity());
+var ellipsoids = entities.add(new Cesium.Entity());
+
+//Create the entities and assign each entity's parent to the group to which it belongs.
+for (var i = 0; i < 5; ++i) {
+    var height = 100000.0 + (200000.0 * i);
+    entities.add({
+        parent : boxes,
+        position : Cesium.Cartesian3.fromDegrees(-106.0, 45.0, height),
+        box : {
+            dimensions : new Cesium.Cartesian3(90000.0, 90000.0, 90000.0),
+            material : Cesium.Color.fromRandom({alpha : 1.0})
+        }
+    });
+
+    entities.add({
+        parent : ellipsoids,
+        position : Cesium.Cartesian3.fromDegrees(-102.0, 45.0, height),
+        ellipsoid : {
+            radii : new Cesium.Cartesian3(45000.0, 45000.0, 90000.0),
+            material : Cesium.Color.fromRandom({alpha : 1.0})
+        }
+    });
+
+    entities.add({
+        parent : spheres,
+        position : Cesium.Cartesian3.fromDegrees(-98.0, 45.0, height),
+        ellipsoid : {
+            radii : new Cesium.Cartesian3(67500.0, 67500.0, 67500.0),
+            material : Cesium.Color.fromRandom({alpha : 1.0})
+        }
+    });
+}
+
+viewer.zoomTo(viewer.entities);
+
+Sandcastle.addToolbarButton('Toggle Boxes', function(){
+    boxes.show = !boxes.show;
+});
+
+Sandcastle.addToolbarButton('Toggle Ellipsoids', function(){
+    ellipsoids.show = !ellipsoids.show;
+});
+
+Sandcastle.addToolbarButton('Toggle Spheres', function(){
+    spheres.show = !spheres.show;
+});
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

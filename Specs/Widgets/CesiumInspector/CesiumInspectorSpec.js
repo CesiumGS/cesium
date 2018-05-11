@@ -1,18 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/CesiumInspector/CesiumInspector',
         'Core/Ellipsoid',
         'Scene/Globe',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Specs/createScene'
     ], function(
         CesiumInspector,
         Ellipsoid,
         Globe,
-        createScene,
-        destroyScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
     var scene;
     beforeAll(function() {
@@ -23,7 +19,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
     });
 
     it('can create and destroy', function() {
@@ -58,4 +54,4 @@ defineSuite([
             return new CesiumInspector(document.body);
         }).toThrowDeveloperError();
     });
-});
+}, 'WebGL');

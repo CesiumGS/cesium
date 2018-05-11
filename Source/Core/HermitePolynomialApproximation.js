@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -9,7 +8,7 @@ define([
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var factorial = CesiumMath.factorial;
 
@@ -58,8 +57,7 @@ define([
     /**
      * An {@link InterpolationAlgorithm} for performing Hermite interpolation.
      *
-     * @namespace
-     * @alias HermitePolynomialApproximation
+     * @exports HermitePolynomialApproximation
      */
     var HermitePolynomialApproximation = {
         type : 'Hermite'
@@ -70,7 +68,7 @@ define([
      *
      * @param {Number} degree The desired degree of interpolation.
      * @param {Number} [inputOrder=0]  The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
-     * @returns The number of required data points needed for the desired degree of interpolation.
+     * @returns {Number} The number of required data points needed for the desired degree of interpolation.
      * @exception {DeveloperError} degree must be 0 or greater.
      * @exception {DeveloperError} inputOrder must be 0 or greater.
      */
@@ -211,7 +209,8 @@ define([
         // in the range we're looking at. Even though this just holds information already
         // available in xTable this is a much more convenient format.
         var zIndices = new Array(length * (inputOrder + 1));
-        for (var i = 0; i < length; i++) {
+        var i;
+        for (i = 0; i < length; i++) {
             for (var j = 0; j < (inputOrder + 1); j++) {
                 zIndices[i * (inputOrder + 1) + j] = i;
             }

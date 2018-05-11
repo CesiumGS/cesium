@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/binarySearch',
         '../Core/defaultValue',
@@ -19,7 +18,7 @@ define([
         ExtrapolationType,
         JulianDate,
         LinearApproximation) {
-    "use strict";
+    'use strict';
 
     var PackableNumber = {
         packedLength : 1,
@@ -67,7 +66,7 @@ define([
     var timesSpliceArgs = [];
     var valuesSpliceArgs = [];
 
-    var mergeNewSamples = function(epoch, times, values, newData, packedLength) {
+    function mergeNewSamples(epoch, times, values, newData, packedLength) {
         var newDataIndex = 0;
         var i;
         var prevItem;
@@ -119,7 +118,7 @@ define([
                 newDataIndex++;
             }
         }
-    };
+    }
 
     /**
      * A {@link Property} whose value is interpolated for a given time from the
@@ -130,18 +129,17 @@ define([
      * @param {Number|Packable} type The type of property.
      * @param {Packable[]} [derivativeTypes] When supplied, indicates that samples will contain derivative information of the specified types.
      *
-     * @see SampledPositionProperty
      *
      * @example
      * //Create a linearly interpolated Cartesian2
      * var property = new Cesium.SampledProperty(Cesium.Cartesian2);
      *
      * //Populate it with data
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), new Cesium.Cartesian2(0, 0));
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-02T00:00:00.00Z`), new Cesium.Cartesian2(4, 7));
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:00.00Z'), new Cesium.Cartesian2(0, 0));
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-02T00:00:00.00Z'), new Cesium.Cartesian2(4, 7));
      *
      * //Retrieve an interpolated value
-     * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T12:00:00.00Z`));
+     * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T12:00:00.00Z'));
      *
      * @example
      * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
@@ -152,19 +150,21 @@ define([
      * });
      *
      * //Populate it with data
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), 1.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:01:00.00Z`), 6.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:00.00Z`), 12.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:03:30.00Z`), 5.0);
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:06:30.00Z`), 2.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:00.00Z'), 1.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:01:00.00Z'), 6.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:00.00Z'), 12.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:03:30.00Z'), 5.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:06:30.00Z'), 2.0);
      *
      * //Samples can be added in any order.
-     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:30.00Z`), 6.2);
+     * property.addSample(Cesium.JulianDate.fromIso8601('2012-08-01T00:00:30.00Z'), 6.2);
      *
      * //Retrieve an interpolated value
-     * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
+     * var result = property.getValue(Cesium.JulianDate.fromIso8601('2012-08-01T00:02:34.00Z'));
+     *
+     * @see SampledPositionProperty
      */
-    var SampledProperty = function(type, derivativeTypes) {
+    function SampledProperty(type, derivativeTypes) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -217,7 +217,7 @@ define([
         this._forwardExtrapolationDuration = 0;
         this._backwardExtrapolationType = ExtrapolationType.NONE;
         this._backwardExtrapolationDuration = 0;
-    };
+    }
 
     defineProperties(SampledProperty.prototype, {
         /**
@@ -250,7 +250,7 @@ define([
         /**
          * Gets the type of property.
          * @memberof SampledProperty.prototype
-         * @type {Object}
+         * @type {*}
          */
         type : {
             get : function() {
@@ -377,9 +377,14 @@ define([
         }
         //>>includeEnd('debug');
 
+        var times = this._times;
+        var timesLength = times.length;
+        if (timesLength === 0) {
+            return undefined;
+        }
+
         var timeout;
         var innerType = this._innerType;
-        var times = this._times;
         var values = this._values;
         var index = binarySearch(times, time, JulianDate.compare);
 
@@ -393,20 +398,20 @@ define([
                     return undefined;
                 }
                 if (this._backwardExtrapolationType === ExtrapolationType.HOLD) {
-                    return innerType.unpack(this._values, 0, result);
+                    return innerType.unpack(values, 0, result);
                 }
             }
 
-            if (index >= times.length) {
-                index = times.length - 1;
+            if (index >= timesLength) {
+                index = timesLength - 1;
                 var endTime = times[index];
                 timeout = this._forwardExtrapolationDuration;
                 if (this._forwardExtrapolationType === ExtrapolationType.NONE || (timeout !== 0 && JulianDate.secondsDifference(time, endTime) > timeout)) {
                     return undefined;
                 }
                 if (this._forwardExtrapolationType === ExtrapolationType.HOLD) {
-                    index = times.length - 1;
-                    return innerType.unpack(this._values, index * innerType.packedLength, result);
+                    index = timesLength - 1;
+                    return innerType.unpack(values, index * innerType.packedLength, result);
                 }
             }
 
@@ -418,7 +423,7 @@ define([
 
             if (this._updateTableLength) {
                 this._updateTableLength = false;
-                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, inputOrder), times.length);
+                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, inputOrder), timesLength);
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
                     xTable.length = numberOfPoints;
@@ -432,12 +437,10 @@ define([
             }
 
             var firstIndex = 0;
-            var lastIndex = times.length - 1;
+            var lastIndex = timesLength - 1;
             var pointsInCollection = lastIndex - firstIndex + 1;
 
-            if (pointsInCollection < degree + 1) {
-                // Use the entire range.
-            } else {
+            if (pointsInCollection >= degree + 1) {
                 var computedFirstIndex = index - ((degree / 2) | 0) - 1;
                 if (computedFirstIndex < firstIndex) {
                     computedFirstIndex = firstIndex;
@@ -491,7 +494,7 @@ define([
             }
             return innerType.unpackInterpolationResult(interpolationResult, values, firstIndex, lastIndex, result);
         }
-        return innerType.unpack(this._values, index * this._packedLength, result);
+        return innerType.unpack(values, index * this._packedLength, result);
     };
 
     /**
@@ -502,23 +505,21 @@ define([
      * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
      */
     SampledProperty.prototype.setInterpolationOptions = function(options) {
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
-            throw new DeveloperError('options is required.');
+            return;
         }
-        //>>includeEnd('debug');
 
         var valuesChanged = false;
 
         var interpolationAlgorithm = options.interpolationAlgorithm;
         var interpolationDegree = options.interpolationDegree;
 
-        if (this._interpolationAlgorithm !== interpolationAlgorithm) {
+        if (defined(interpolationAlgorithm) && this._interpolationAlgorithm !== interpolationAlgorithm) {
             this._interpolationAlgorithm = interpolationAlgorithm;
             valuesChanged = true;
         }
 
-        if (this._interpolationDegree !== interpolationDegree) {
+        if (defined(interpolationDegree) && this._interpolationDegree !== interpolationDegree) {
             this._interpolationDegree = interpolationDegree;
             valuesChanged = true;
         }

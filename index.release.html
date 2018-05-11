@@ -27,7 +27,7 @@ ul {
 </head>
 <body>
   <div>
-    <img src="logo.png" style='width: 50%; max-width: 300px' />
+    <img src="Apps/Sandcastle/images/Cesium_Logo_Color_Overlay.png" style='width: 400px' />
     <ul>
       <li><b>Local links</b>
         <dl>
@@ -46,8 +46,7 @@ ul {
           </dt>
           <dd>
             A simple Cesium reference application which allows you to browse the globe and select from a variety of imagery and terrain
-            layers as well as load CZML, GeoJSON, and other formats supported by Cesium. There is also a <a
-              href="Build/Apps/CesiumViewer/index.html">built version</a> ready to be deployed on your own web server.
+            layers as well as load CZML, GeoJSON, and other formats supported by Cesium.
           </dd>
           <dt>
             <a href="Apps/Sandcastle/index.html">Sandcastle</a>
@@ -62,6 +61,9 @@ ul {
           </dt>
           <dt>
             <a href="Specs/SpecRunner.html?webglValidation">Run with WebGL validation</a>
+          </dt>
+          <dt>
+            <a href="Specs/SpecRunner.html?webglStub">Run with WebGL stub</a>
           </dt>
           <dt>
             <a href="Specs/SpecRunner.html?category=none">Select a test to run</a>
@@ -104,7 +106,7 @@ ul {
   </div>
   <script type="text/javascript">
       if (window.location.protocol === 'file:') {
-          document.body.innerHTML = ""
+          document.body.innerHTML = '';
           document.write('<p><b>This file must be hosted in a web server.</br>');
           document.write('See our <a href="https://cesiumjs.org/2013/04/12/Cesium-up-and-running/">Getting Started</a> ');
           document.write('tutorial for a step-by-step guide.</b></p>');

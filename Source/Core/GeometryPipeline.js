@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AttributeCompression',
         './barycentricCoordinates',
@@ -15,7 +14,6 @@ define([
         './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
-        './GeometryInstance',
         './GeometryType',
         './IndexDatatype',
         './Intersect',
@@ -42,7 +40,6 @@ define([
         GeographicProjection,
         Geometry,
         GeometryAttribute,
-        GeometryInstance,
         GeometryType,
         IndexDatatype,
         Intersect,
@@ -53,13 +50,12 @@ define([
         Plane,
         PrimitiveType,
         Tipsify) {
-    "use strict";
+    'use strict';
 
     /**
      * Content pipeline functions for geometries.
      *
-     * @namespace
-     * @alias GeometryPipeline
+     * @exports GeometryPipeline
      *
      * @see Geometry
      */
@@ -161,8 +157,10 @@ define([
                 case PrimitiveType.TRIANGLE_FAN:
                     geometry.indices = triangleFanToLines(indices);
                     break;
+                //>>includeStart('debug', pragmas.debug);
                 default:
                     throw new DeveloperError('geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.');
+                //>>includeEnd('debug');
             }
 
             geometry.primitiveType = PrimitiveType.LINES;
@@ -174,17 +172,17 @@ define([
     /**
      * Creates a new {@link Geometry} with <code>LINES</code> representing the provided
      * attribute (<code>attributeName</code>) for the provided geometry.  This is used to
-     * visualize vector attributes like normals, binormals, and tangents.
+     * visualize vector attributes like normals, tangents, and bitangents.
      *
      * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
      * @param {String} [attributeName='normal'] The name of the attribute.
      * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
-     * @returns {Geometry} A new <code>Geometry<code> instance with line segments for the vector.
+     * @returns {Geometry} A new <code>Geometry</code> instance with line segments for the vector.
      *
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
      * @example
-     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0),
+     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'bitangent', 100000.0);
      */
     GeometryPipeline.createLineSegmentsForVectors = function(geometry, attributeName, length) {
         attributeName = defaultValue(attributeName, 'normal');
@@ -280,8 +278,11 @@ define([
             // From VertexFormat
             'normal',
             'st',
-            'binormal',
             'tangent',
+            'bitangent',
+
+            // For shadow volumes
+            'extrudeDirection',
 
             // From compressing texture coordinates and normals
             'compressedAttributes'
@@ -320,10 +321,11 @@ define([
      *
      * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
      *
-     * @see GeometryPipeline.reorderForPostVertexCache
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPreVertexCache(geometry);
+     *
+     * @see GeometryPipeline.reorderForPostVertexCache
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -381,8 +383,8 @@ define([
                     while (intoElementsIn < numVertices) {
                         var temp = indexCrossReferenceOldToNew[intoElementsIn];
                         if (temp !== -1) {
-                            for (i = 0; i < numComponents; i++) {
-                                elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+                            for (var j = 0; j < numComponents; j++) {
+                                elementsOut[numComponents * temp + j] = elementsIn[numComponents * intoElementsIn + j];
                             }
                         }
                         ++intoElementsIn;
@@ -406,12 +408,13 @@ define([
      *
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
-     * @see GeometryPipeline.reorderForPreVertexCache
-     * @see {@link http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
-     * by Sander, Nehab, and Barczak
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
+     *
+     * @see GeometryPipeline.reorderForPreVertexCache
+     * @see {@link http://gfx.cs.princ0eton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
+     * by Sander, Nehab, and Barczak
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         //>>includeStart('debug', pragmas.debug);
@@ -510,7 +513,7 @@ define([
         // If there's an index list and more than 64K attributes, it is possible that
         // some indices are outside the range of unsigned short [0, 64K - 1]
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        if (defined(geometry.indices) && (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES)) {
+        if (defined(geometry.indices) && (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES)) {
             var oldToNewIndex = [];
             var newIndices = [];
             var currentIndex = 0;
@@ -541,7 +544,7 @@ define([
                     newIndices.push(i);
                 }
 
-                if (currentIndex + indicesPerPrimitive > CesiumMath.SIXTY_FOUR_KILOBYTES) {
+                if (currentIndex + indicesPerPrimitive >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indices : newIndices,
@@ -634,9 +637,11 @@ define([
             var value = Cartesian3.fromArray(values3D, i, scratchProjectTo2DCartesian3);
 
             var lonLat = ellipsoid.cartesianToCartographic(value, scratchProjectTo2DCartographic);
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(lonLat)) {
                 throw new DeveloperError('Could not project point (' + value.x + ', ' + value.y + ', ' + value.z + ') to 2D.');
             }
+            //>>includeEnd('debug');
 
             var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
 
@@ -765,22 +770,16 @@ define([
     var normalMatrix = new Matrix3();
 
     /**
-     * Transforms a geometry instance to world coordinates.  This is used as a prerequisite
-     * to batch together several instances with {@link GeometryPipeline.combineInstances}.  This changes
+     * Transforms a geometry instance to world coordinates.  This changes
      * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
      * following attributes if they are present: <code>position</code>, <code>normal</code>,
-     * <code>binormal</code>, and <code>tangent</code>.
+     * <code>tangent</code>, and <code>bitangent</code>.
      *
      * @param {GeometryInstance} instance The geometry instance to modify.
      * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
      *
-     * @see GeometryPipeline.combineInstances
-     *
      * @example
-     * for (var i = 0; i < instances.length; ++i) {
-     *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
-     * }
-     * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+     * Cesium.GeometryPipeline.transformToWorldCoordinates(instance);
      */
     GeometryPipeline.transformToWorldCoordinates = function(instance) {
         //>>includeStart('debug', pragmas.debug);
@@ -804,16 +803,16 @@ define([
         transformPoint(modelMatrix, attributes.nextPosition);
 
         if ((defined(attributes.normal)) ||
-            (defined(attributes.binormal)) ||
-            (defined(attributes.tangent))) {
+            (defined(attributes.tangent)) ||
+            (defined(attributes.bitangent))) {
 
             Matrix4.inverse(modelMatrix, inverseTranspose);
             Matrix4.transpose(inverseTranspose, inverseTranspose);
             Matrix4.getRotation(inverseTranspose, normalMatrix);
 
             transformVector(normalMatrix, attributes.normal);
-            transformVector(normalMatrix, attributes.binormal);
             transformVector(normalMatrix, attributes.tangent);
+            transformVector(normalMatrix, attributes.bitangent);
         }
 
         var boundingSphere = instance.geometry.boundingSphere;
@@ -1015,13 +1014,14 @@ define([
      * @exception {DeveloperError} All instance geometries must have an indices or not have one.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      *
-     * @see GeometryPipeline.transformToWorldCoordinates
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
      *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
      * }
      * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+     *
+     * @see GeometryPipeline.transformToWorldCoordinates
      */
     GeometryPipeline.combineInstances = function(instances) {
         //>>includeStart('debug', pragmas.debug);
@@ -1037,7 +1037,7 @@ define([
             var instance = instances[i];
             if (defined(instance.geometry)) {
                 instanceGeometry.push(instance);
-            } else {
+            } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {
                 instanceSplitGeometry.push(instance);
             }
         }
@@ -1101,8 +1101,8 @@ define([
         var normalsPerVertex = new Array(numVertices);
         var normalsPerTriangle = new Array(numIndices / 3);
         var normalIndices = new Array(numIndices);
-
-        for ( var i = 0; i < numVertices; i++) {
+        var i;
+        for ( i = 0; i < numVertices; i++) {
             normalsPerVertex[i] = {
                 indexOffset : 0,
                 count : 0,
@@ -1170,20 +1170,28 @@ define([
         for (i = 0; i < numVertices; i++) {
             var i3 = i * 3;
             vertexNormalData = normalsPerVertex[i];
+            Cartesian3.clone(Cartesian3.ZERO, normal);
             if (vertexNormalData.count > 0) {
-                Cartesian3.clone(Cartesian3.ZERO, normal);
                 for (j = 0; j < vertexNormalData.count; j++) {
                     Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }
-                Cartesian3.normalize(normal, normal);
-                normalValues[i3] = normal.x;
-                normalValues[i3 + 1] = normal.y;
-                normalValues[i3 + 2] = normal.z;
-            } else {
-                normalValues[i3] = 0.0;
-                normalValues[i3 + 1] = 0.0;
-                normalValues[i3 + 2] = 1.0;
+
+                // We can run into an issue where a vertex is used with 2 primitives that have opposite winding order.
+                if (Cartesian3.equalsEpsilon(Cartesian3.ZERO, normal, CesiumMath.EPSILON10)) {
+                    Cartesian3.clone(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset]], normal);
+                }
             }
+
+            // We end up with a zero vector probably because of a degenerate triangle
+            if (Cartesian3.equalsEpsilon(Cartesian3.ZERO, normal, CesiumMath.EPSILON10)) {
+                // Default to (0,0,1)
+                normal.z = 1.0;
+            }
+
+            Cartesian3.normalize(normal, normal);
+            normalValues[i3] = normal.x;
+            normalValues[i3 + 1] = normal.y;
+            normalValues[i3 + 2] = normal.z;
         }
 
         geometry.attributes.normal = new GeometryAttribute({
@@ -1200,8 +1208,8 @@ define([
     var tScratch = new Cartesian3();
 
     /**
-     * Computes per-vertex binormals and tangents for a geometry containing <code>TRIANGLES</code>.
-     * The result is new <code>binormal</code> and <code>tangent</code> attributes added to the geometry.
+     * Computes per-vertex tangents and bitangents for a geometry containing <code>TRIANGLES</code>.
+     * The result is new <code>tangent</code> and <code>bitangent</code> attributes added to the geometry.
      * This assumes a counter-clockwise winding order.
      * <p>
      * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
@@ -1209,15 +1217,15 @@ define([
      * </p>
      *
      * @param {Geometry} geometry The geometry to modify.
-     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
+     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>tangent</code> and <code>bitangent</code> attributes.
      *
      * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
      * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
      * @example
-     * Cesium.GeometryPipeline.computeBinormalAndTangent(geometry);
+     * Cesium.GeometryPipeline.computeTangentAndBiTangent(geometry);
      */
-    GeometryPipeline.computeBinormalAndTangent = function(geometry) {
+    GeometryPipeline.computeTangentAndBitangent = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(geometry)) {
             throw new DeveloperError('geometry is required.');
@@ -1256,7 +1264,8 @@ define([
         var numIndices = indices.length;
         var tan1 = new Array(numVertices * 3);
 
-        for ( var i = 0; i < tan1.length; i++) {
+        var i;
+        for ( i = 0; i < tan1.length; i++) {
             tan1[i] = 0;
         }
 
@@ -1301,8 +1310,8 @@ define([
             tan1[i23 + 2] += sdirz;
         }
 
-        var binormalValues = new Float32Array(numVertices * 3);
         var tangentValues = new Float32Array(numVertices * 3);
+        var bitangentValues = new Float32Array(numVertices * 3);
 
         for (i = 0; i < numVertices; i++) {
             i03 = i * 3;
@@ -1321,9 +1330,9 @@ define([
 
             Cartesian3.normalize(Cartesian3.cross(n, t, t), t);
 
-            binormalValues[i03] = t.x;
-            binormalValues[i13] = t.y;
-            binormalValues[i23] = t.z;
+            bitangentValues[i03] = t.x;
+            bitangentValues[i13] = t.y;
+            bitangentValues[i23] = t.z;
         }
 
         geometry.attributes.tangent = new GeometryAttribute({
@@ -1332,10 +1341,10 @@ define([
             values : tangentValues
         });
 
-        geometry.attributes.binormal = new GeometryAttribute({
+        geometry.attributes.bitangent = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
-            values : binormalValues
+            values : bitangentValues
         });
 
         return geometry;
@@ -1345,7 +1354,7 @@ define([
     var toEncode1 = new Cartesian3();
     var toEncode2 = new Cartesian3();
     var toEncode3 = new Cartesian3();
-
+    var encodeResult2 = new Cartesian2();
     /**
      * Compresses and packs geometry normal attribute values to save memory.
      *
@@ -1362,73 +1371,109 @@ define([
         }
         //>>includeEnd('debug');
 
+        var extrudeAttribute = geometry.attributes.extrudeDirection;
+        var i;
+        var numVertices;
+        if (defined(extrudeAttribute)) {
+            //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
+            var extrudeDirections = extrudeAttribute.values;
+            numVertices = extrudeDirections.length / 3.0;
+            var compressedDirections = new Float32Array(numVertices * 2);
+
+            var i2 = 0;
+            for (i = 0; i < numVertices; ++i) {
+                Cartesian3.fromArray(extrudeDirections, i * 3.0, toEncode1);
+                if (Cartesian3.equals(toEncode1, Cartesian3.ZERO)) {
+                    i2 += 2;
+                    continue;
+                }
+                encodeResult2 = AttributeCompression.octEncodeInRange(toEncode1, 65535, encodeResult2);
+                compressedDirections[i2++] = encodeResult2.x;
+                compressedDirections[i2++] = encodeResult2.y;
+            }
+
+            geometry.attributes.compressedAttributes = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : compressedDirections
+            });
+            delete geometry.attributes.extrudeDirection;
+            return geometry;
+        }
+
         var normalAttribute = geometry.attributes.normal;
         var stAttribute = geometry.attributes.st;
-        if (!defined(normalAttribute) && !defined(stAttribute)) {
+
+        var hasNormal = defined(normalAttribute);
+        var hasSt = defined(stAttribute);
+        if (!hasNormal && !hasSt) {
             return geometry;
         }
 
         var tangentAttribute = geometry.attributes.tangent;
-        var binormalAttribute = geometry.attributes.binormal;
+        var bitangentAttribute = geometry.attributes.bitangent;
+
+        var hasTangent = defined(tangentAttribute);
+        var hasBitangent = defined(bitangentAttribute);
 
         var normals;
         var st;
         var tangents;
-        var binormals;
+        var bitangents;
 
-        if (defined(normalAttribute)) {
+        if (hasNormal) {
             normals = normalAttribute.values;
         }
-        if (defined(stAttribute)) {
+        if (hasSt) {
             st = stAttribute.values;
         }
-        if (defined(tangentAttribute)) {
+        if (hasTangent) {
             tangents = tangentAttribute.values;
         }
-        if (binormalAttribute) {
-            binormals = binormalAttribute.values;
+        if (hasBitangent) {
+            bitangents = bitangentAttribute.values;
         }
 
-        var length = defined(normals) ? normals.length : st.length;
-        var numComponents = defined(normals) ? 3.0 : 2.0;
-        var numVertices = length / numComponents;
+        var length = hasNormal ? normals.length : st.length;
+        var numComponents = hasNormal ? 3.0 : 2.0;
+        numVertices = length / numComponents;
 
         var compressedLength = numVertices;
-        var numCompressedComponents = defined(st) && defined(normals) ? 2.0 : 1.0;
-        numCompressedComponents += defined(tangents) || defined(binormals) ? 1.0 : 0.0;
+        var numCompressedComponents = hasSt && hasNormal ? 2.0 : 1.0;
+        numCompressedComponents += hasTangent || hasBitangent ? 1.0 : 0.0;
         compressedLength *= numCompressedComponents;
 
         var compressedAttributes = new Float32Array(compressedLength);
 
         var normalIndex = 0;
-        for (var i = 0; i < numVertices; ++i) {
-            if (defined(st)) {
+        for (i = 0; i < numVertices; ++i) {
+            if (hasSt) {
                 Cartesian2.fromArray(st, i * 2.0, scratchCartesian2);
                 compressedAttributes[normalIndex++] = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
             }
 
             var index = i * 3.0;
-            if (defined(normals) && defined(tangents) && defined(binormals)) {
+            if (hasNormal && defined(tangents) && defined(bitangents)) {
                 Cartesian3.fromArray(normals, index, toEncode1);
                 Cartesian3.fromArray(tangents, index, toEncode2);
-                Cartesian3.fromArray(binormals, index, toEncode3);
+                Cartesian3.fromArray(bitangents, index, toEncode3);
 
                 AttributeCompression.octPack(toEncode1, toEncode2, toEncode3, scratchCartesian2);
                 compressedAttributes[normalIndex++] = scratchCartesian2.x;
                 compressedAttributes[normalIndex++] = scratchCartesian2.y;
             } else {
-                if (defined(normals)) {
+                if (hasNormal) {
                     Cartesian3.fromArray(normals, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
-                if (defined(tangents)) {
+                if (hasTangent) {
                     Cartesian3.fromArray(tangents, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
 
-                if (defined(binormals)) {
-                    Cartesian3.fromArray(binormals, index, toEncode1);
+                if (hasBitangent) {
+                    Cartesian3.fromArray(bitangents, index, toEncode1);
                     compressedAttributes[normalIndex++] = AttributeCompression.octEncodeFloat(toEncode1);
                 }
             }
@@ -1440,17 +1485,17 @@ define([
             values : compressedAttributes
         });
 
-        if (defined(normals)) {
+        if (hasNormal) {
             delete geometry.attributes.normal;
         }
-        if (defined(st)) {
+        if (hasSt) {
             delete geometry.attributes.st;
         }
-        if (defined(tangents)) {
-            delete geometry.attributes.tangent;
+        if (hasBitangent) {
+            delete geometry.attributes.bitangent;
         }
-        if (defined(binormals)) {
-            delete geometry.attributes.binormal;
+        if (hasTangent) {
+            delete geometry.attributes.tangent;
         }
 
         return geometry;
@@ -1879,8 +1924,8 @@ define([
     var s1Scratch = new Cartesian2();
     var s2Scratch = new Cartesian2();
 
-    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex) {
-        if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
+    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex) {
+        if (!defined(normals) && !defined(tangents) && !defined(bitangents) && !defined(texCoords) && !defined(extrudeDirections)) {
             return;
         }
 
@@ -1905,20 +1950,27 @@ define([
             Cartesian3.pack(normal, currentAttributes.normal.values, insertedIndex * 3);
         }
 
-        if (defined(binormals)) {
-            var b0 = Cartesian3.fromArray(binormals, i0 * 3, p0Scratch);
-            var b1 = Cartesian3.fromArray(binormals, i1 * 3, p1Scratch);
-            var b2 = Cartesian3.fromArray(binormals, i2 * 3, p2Scratch);
+        if (defined(extrudeDirections)) {
+            var d0 = Cartesian3.fromArray(extrudeDirections, i0 * 3, p0Scratch);
+            var d1 = Cartesian3.fromArray(extrudeDirections, i1 * 3, p1Scratch);
+            var d2 = Cartesian3.fromArray(extrudeDirections, i2 * 3, p2Scratch);
 
-            Cartesian3.multiplyByScalar(b0, coords.x, b0);
-            Cartesian3.multiplyByScalar(b1, coords.y, b1);
-            Cartesian3.multiplyByScalar(b2, coords.z, b2);
+            Cartesian3.multiplyByScalar(d0, coords.x, d0);
+            Cartesian3.multiplyByScalar(d1, coords.y, d1);
+            Cartesian3.multiplyByScalar(d2, coords.z, d2);
 
-            var binormal = Cartesian3.add(b0, b1, b0);
-            Cartesian3.add(binormal, b2, binormal);
-            Cartesian3.normalize(binormal, binormal);
-
-            Cartesian3.pack(binormal, currentAttributes.binormal.values, insertedIndex * 3);
+            var direction;
+            if (!Cartesian3.equals(d0, Cartesian3.ZERO) || !Cartesian3.equals(d1, Cartesian3.ZERO) || !Cartesian3.equals(d2, Cartesian3.ZERO)) {
+                direction = Cartesian3.add(d0, d1, d0);
+                Cartesian3.add(direction, d2, direction);
+                Cartesian3.normalize(direction, direction);
+            } else {
+                direction = p0Scratch;
+                direction.x = 0;
+                direction.y = 0;
+                direction.z = 0;
+            }
+            Cartesian3.pack(direction, currentAttributes.extrudeDirection.values, insertedIndex * 3);
         }
 
         if (defined(tangents)) {
@@ -1935,6 +1987,22 @@ define([
             Cartesian3.normalize(tangent, tangent);
 
             Cartesian3.pack(tangent, currentAttributes.tangent.values, insertedIndex * 3);
+        }
+
+        if (defined(bitangents)) {
+            var b0 = Cartesian3.fromArray(bitangents, i0 * 3, p0Scratch);
+            var b1 = Cartesian3.fromArray(bitangents, i1 * 3, p1Scratch);
+            var b2 = Cartesian3.fromArray(bitangents, i2 * 3, p2Scratch);
+
+            Cartesian3.multiplyByScalar(b0, coords.x, b0);
+            Cartesian3.multiplyByScalar(b1, coords.y, b1);
+            Cartesian3.multiplyByScalar(b2, coords.z, b2);
+
+            var bitangent = Cartesian3.add(b0, b1, b0);
+            Cartesian3.add(bitangent, b2, bitangent);
+            Cartesian3.normalize(bitangent, bitangent);
+
+            Cartesian3.pack(bitangent, currentAttributes.bitangent.values, insertedIndex * 3);
         }
 
         if (defined(texCoords)) {
@@ -1981,9 +2049,10 @@ define([
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
         var normals = (defined(attributes.normal)) ? attributes.normal.values : undefined;
-        var binormals = (defined(attributes.binormal)) ? attributes.binormal.values : undefined;
+        var bitangents = (defined(attributes.bitangent)) ? attributes.bitangent.values : undefined;
         var tangents = (defined(attributes.tangent)) ? attributes.tangent.values : undefined;
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
+        var extrudeDirections = (defined(attributes.extrudeDirection)) ? attributes.extrudeDirection.values : undefined;
         var indices = geometry.indices;
 
         var eastGeometry = copyGeometryForSplit(geometry);
@@ -2037,7 +2106,7 @@ define([
                     }
 
                     insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, resultIndex < 3 ? i + resultIndex : -1, point);
-                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
                 }
             } else {
                 if (defined(result)) {
@@ -2057,13 +2126,13 @@ define([
                 }
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
-                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
-                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 2, p2);
-                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, binormals, tangents, texCoords, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
             }
         }
 
@@ -2085,7 +2154,6 @@ define([
         var westGeometry = copyGeometryForSplit(geometry);
 
         var i;
-        var index;
         var length = indices.length;
 
         var westGeometryIndexMap = [];
@@ -2179,7 +2247,6 @@ define([
     var cartesian2Scratch1 = new Cartesian2();
 
     var cartesian3Scratch0 = new Cartesian3();
-    var cartesian3Scratch1 = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
     var cartesian3Scratch3 = new Cartesian3();
     var cartesian3Scratch4 = new Cartesian3();
@@ -2187,7 +2254,46 @@ define([
     var cartesian3Scratch6 = new Cartesian3();
 
     var cartesian4Scratch0 = new Cartesian4();
-    var cartesian4Scratch1 = new Cartesian4();
+
+    function updateAdjacencyAfterSplit(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var prevPositions = attributes.prevPosition.values;
+        var nextPositions = attributes.nextPosition.values;
+
+        var length = positions.length;
+        for (var j = 0; j < length; j += 3) {
+            var position = Cartesian3.unpack(positions, j, cartesian3Scratch0);
+            if (position.x > 0.0) {
+                continue;
+            }
+
+            var prevPosition = Cartesian3.unpack(prevPositions, j, cartesian3Scratch2);
+            if ((position.y < 0.0 && prevPosition.y > 0.0) || (position.y > 0.0 && prevPosition.y < 0.0)) {
+                if (j - 3 > 0) {
+                    prevPositions[j] = positions[j - 3];
+                    prevPositions[j + 1] = positions[j - 2];
+                    prevPositions[j + 2] = positions[j - 1];
+                } else {
+                    Cartesian3.pack(position, prevPositions, j);
+                }
+            }
+
+            var nextPosition = Cartesian3.unpack(nextPositions, j, cartesian3Scratch3);
+            if ((position.y < 0.0 && nextPosition.y > 0.0) || (position.y > 0.0 && nextPosition.y < 0.0)) {
+                if (j + 3 < length) {
+                    nextPositions[j] = positions[j + 3];
+                    nextPositions[j + 1] = positions[j + 4];
+                    nextPositions[j + 2] = positions[j + 5];
+                } else {
+                    Cartesian3.pack(position, nextPositions, j);
+                }
+            }
+        }
+    }
+
+    var offsetScalar = 5.0 * CesiumMath.EPSILON9;
+    var coplanarOffset = CesiumMath.EPSILON6;
 
     function splitLongitudePolyline(instance) {
         var geometry = instance.geometry;
@@ -2196,7 +2302,6 @@ define([
         var prevPositions = attributes.prevPosition.values;
         var nextPositions = attributes.nextPosition.values;
         var expandAndWidths = attributes.expandAndWidth.values;
-        var indices = geometry.indices;
 
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
@@ -2208,26 +2313,42 @@ define([
         var j;
         var index;
 
+        var intersectionFound = false;
+
         var length = positions.length / 3;
         for (i = 0; i < length; i += 4) {
             var i0 = i;
-            var i1 = i + 1;
             var i2 = i + 2;
-            var i3 = i + 3;
 
             var p0 = Cartesian3.fromArray(positions, i0 * 3, cartesian3Scratch0);
-            var p1 = Cartesian3.fromArray(positions, i1 * 3, cartesian3Scratch1);
             var p2 = Cartesian3.fromArray(positions, i2 * 3, cartesian3Scratch2);
-            var p3 = Cartesian3.fromArray(positions, i3 * 3, cartesian3Scratch3);
 
-            if (Math.abs(p0.y) < CesiumMath.EPSILON6) {
-                p0.y = CesiumMath.EPSILON6 * (p2.y < 0.0 ? -1.0 : 1.0);
-                p1.y = p0.y;
+            // Offset points that are close to the 180 longitude and change the previous/next point
+            // to be the same offset point so it can be projected to 2D. There is special handling in the
+            // shader for when position == prevPosition || position == nextPosition.
+            if (Math.abs(p0.y) < coplanarOffset) {
+                p0.y = coplanarOffset * (p2.y < 0.0 ? -1.0 : 1.0);
+                positions[i * 3 + 1] = p0.y;
+                positions[(i + 1) * 3 + 1] = p0.y;
+
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; j += 3) {
+                    prevPositions[j] = positions[i * 3];
+                    prevPositions[j + 1] = positions[i * 3 + 1];
+                    prevPositions[j + 2] = positions[i * 3 + 2];
+                }
             }
 
-            if (Math.abs(p2.y) < CesiumMath.EPSILON6) {
-                p2.y = CesiumMath.EPSILON6 * (p0.y < 0.0 ? -1.0 : 1.0);
-                p3.y = p2.y;
+            // Do the same but for when the line crosses 180 longitude in the opposite direction.
+            if (Math.abs(p2.y) < coplanarOffset) {
+                p2.y = coplanarOffset * (p0.y < 0.0 ? -1.0 : 1.0);
+                positions[(i + 2) * 3 + 1] = p2.y;
+                positions[(i + 3) * 3 + 1] = p2.y;
+
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; j += 3) {
+                    nextPositions[j] = positions[(i + 2) * 3];
+                    nextPositions[j + 1] = positions[(i + 2) * 3 + 1];
+                    nextPositions[j + 2] = positions[(i + 2) * 3 + 2];
+                }
             }
 
             var p0Attributes = eastGeometry.attributes;
@@ -2237,8 +2358,10 @@ define([
 
             var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch4);
             if (defined(intersection)) {
+                intersectionFound = true;
+
                 // move point on the xz-plane slightly away from the plane
-                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, cartesian3Scratch5);
+                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, offsetScalar, cartesian3Scratch5);
                 if (p0.y < 0.0) {
                     Cartesian3.negate(offset, offset);
                     p0Attributes = westGeometry.attributes;
@@ -2248,33 +2371,33 @@ define([
                 }
 
                 var offsetPoint = Cartesian3.add(intersection, offset, cartesian3Scratch6);
-                p0Attributes.position.values.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+                p0Attributes.position.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                p0Attributes.prevPosition.values.push(prevPositions[i0 * 3], prevPositions[i0 * 3 + 1], prevPositions[i0 * 3 + 2]);
+                p0Attributes.prevPosition.values.push(prevPositions[i0 * 3 + 3], prevPositions[i0 * 3 + 4], prevPositions[i0 * 3 + 5]);
+                p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
                 Cartesian3.negate(offset, offset);
                 Cartesian3.add(intersection, offset, offsetPoint);
                 p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                 p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                p2Attributes.position.values.push(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
+                p2Attributes.position.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
 
-                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
-                    p0Attributes.prevPosition.values.push(prevPositions[j]);
-                }
-                p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                p2Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
-                    p2Attributes.prevPosition.values.push(prevPositions[j]);
-                }
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
-                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
-                    p0Attributes.nextPosition.values.push(nextPositions[j]);
-                }
-                p0Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
                 p2Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
-                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
-                    p2Attributes.nextPosition.values.push(nextPositions[j]);
-                }
+                p2Attributes.nextPosition.values.push(nextPositions[i2 * 3], nextPositions[i2 * 3 + 1], nextPositions[i2 * 3 + 2]);
+                p2Attributes.nextPosition.values.push(nextPositions[i2 * 3 + 3], nextPositions[i2 * 3 + 4], nextPositions[i2 * 3 + 5]);
 
                 var ew0 = Cartesian2.fromArray(expandAndWidths, i0 * 2, cartesian2Scratch0);
                 var width = Math.abs(ew0.y);
@@ -2346,9 +2469,9 @@ define([
                 }
 
                 currentAttributes.position.values.push(p0.x, p0.y, p0.z);
-                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
+                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
                 currentAttributes.position.values.push(p2.x, p2.y, p2.z);
-                currentAttributes.position.values.push(p3.x, p3.y, p3.z);
+                currentAttributes.position.values.push(p2.x, p2.y, p2.z);
 
                 for (j = i * 3; j < i * 3 + 4 * 3; ++j) {
                     currentAttributes.prevPosition.values.push(prevPositions[j]);
@@ -2372,6 +2495,11 @@ define([
                 currentIndices.push(index, index + 2, index + 1);
                 currentIndices.push(index + 1, index + 2, index + 3);
             }
+        }
+
+        if (intersectionFound) {
+            updateAdjacencyAfterSplit(westGeometry);
+            updateAdjacencyAfterSplit(eastGeometry);
         }
 
         updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
@@ -2402,7 +2530,7 @@ define([
         var boundingSphere = geometry.boundingSphere;
         if (defined(boundingSphere)) {
             var minX = boundingSphere.center.x - boundingSphere.radius;
-            if (minX > 0 || BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) !== Intersect.INTERSECTING) {
+            if (minX > 0 || BoundingSphere.intersectPlane(boundingSphere, Plane.ORIGIN_ZX_PLANE) !== Intersect.INTERSECTING) {
                 return instance;
             }
         }

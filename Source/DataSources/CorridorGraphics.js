@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -15,7 +14,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a corridor, which is a shape defined by a centerline and width that
@@ -29,8 +28,8 @@ define([
      * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
      * @param {Property} [options.width] A numeric Property specifying the distance between the edges of the corridor.
      * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the corridor.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the corridor extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the corridor relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the corridor's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the corridor.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the corridor is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the corridor.
@@ -38,11 +37,13 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      */
-    var CorridorGraphics = function(options) {
+    function CorridorGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -67,10 +68,16 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(CorridorGraphics.prototype, {
         /**
@@ -178,7 +185,31 @@ define([
          * @type {Property}
          * @default CornerType.ROUNDED
          */
-        cornerType : createPropertyDescriptor('cornerType')
+        cornerType : createPropertyDescriptor('cornerType'),
+
+        /**
+         * Get or sets the enum Property specifying whether the corridor
+         * casts or receives shadows from each light source.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         * @default ShadowMode.DISABLED
+         */
+        shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this corridor will be displayed.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.BOTH
+         */
+        classificationType : createPropertyDescriptor('classificationType')
     });
 
     /**
@@ -203,6 +234,9 @@ define([
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.cornerType = this.cornerType;
+        result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
         return result;
     };
 
@@ -231,6 +265,9 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.cornerType = defaultValue(this.cornerType, source.cornerType);
+        this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
     };
 
     return CorridorGraphics;

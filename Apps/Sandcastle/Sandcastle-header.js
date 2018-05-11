@@ -1,5 +1,5 @@
 (function() {
-    "use strict";
+    'use strict';
 
     var defaultAction;
     var bucket = window.location.href;
@@ -26,6 +26,30 @@
 
             document.body.className = document.body.className.replace(/(?:\s|^)sandcastle-loading(?:\s|$)/, ' ');
         },
+        addToggleButton : function(text, checked, onchange, toolbarID) {
+            window.Sandcastle.declare(onchange);
+            var input = document.createElement('input');
+            input.checked = checked;
+            input.type = 'checkbox';
+            input.style.pointerEvents = 'none';
+            var label = document.createElement('label');
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(text));
+            label.style.pointerEvents = 'none';
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'cesium-button';
+            button.appendChild(label);
+
+            button.onclick = function() {
+                window.Sandcastle.reset();
+                window.Sandcastle.highlight(onchange);
+                input.checked = !input.checked;
+                onchange(input.checked);
+            };
+
+            document.getElementById(toolbarID || 'toolbar').appendChild(button);
+        },
         addToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.declare(onclick);
             var button = document.createElement('button');
@@ -42,6 +66,10 @@
         addDefaultToolbarButton : function(text, onclick, toolbarID) {
             window.Sandcastle.addToolbarButton(text, onclick, toolbarID);
             defaultAction = onclick;
+        },
+        addDefaultToolbarMenu : function(options, toolbarID) {
+            window.Sandcastle.addToolbarMenu(options, toolbarID);
+            defaultAction = options[0].onselect;
         },
         addToolbarMenu : function(options, toolbarID) {
             var menu = document.createElement('select');

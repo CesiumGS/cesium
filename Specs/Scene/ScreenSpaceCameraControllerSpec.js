@@ -1,66 +1,90 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ScreenSpaceCameraController',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/combine',
-        'Core/defined',
         'Core/Ellipsoid',
+        'Core/FeatureDetection',
         'Core/GeographicProjection',
         'Core/IntersectionTests',
         'Core/KeyboardEventModifier',
         'Core/Math',
+        'Core/OrthographicFrustum',
+        'Core/OrthographicOffCenterFrustum',
         'Core/Ray',
         'Core/Transforms',
+        'Scene/Camera',
         'Scene/CameraEventType',
-        'Scene/OrthographicFrustum',
+        'Scene/MapMode2D',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createCanvas',
-        'Specs/destroyCanvas',
         'Specs/DomEventSimulator'
     ], function(
         ScreenSpaceCameraController,
         Cartesian2,
         Cartesian3,
         combine,
-        defined,
         Ellipsoid,
+        FeatureDetection,
         GeographicProjection,
         IntersectionTests,
         KeyboardEventModifier,
         CesiumMath,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         Ray,
         Transforms,
+        Camera,
         CameraEventType,
-        OrthographicFrustum,
+        MapMode2D,
         SceneMode,
         createCamera,
         createCanvas,
-        destroyCanvas,
         DomEventSimulator) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
-    var usePointerEvents = defined(window.PointerEvent);
+    var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var scene;
     var canvas;
     var camera;
     var controller;
 
-    var MockScene = function(canvas, camera, ellipsoid) {
+    function MockScene(canvas, camera, ellipsoid) {
         this.canvas = canvas;
         this.camera = camera;
         this.globe = undefined;
         this.mapProjection = new GeographicProjection(ellipsoid);
-    };
+        this.terrainExaggeration = 1.0;
+        this.screenSpaceCameraController = undefined;
+    }
 
+    function MockGlobe(ellipsoid) {
+        this.ellipsoid = ellipsoid;
+        this.getHeight = function(cartographic) {
+            return 0.0;
+        };
+        this.pick = function() {
+            return new Cartesian3(0.0, 0.0, 1.0);
+        };
+        this._surface = {
+            tileProvider : {
+                ready : true
+            },
+            _tileLoadQueueHigh : [],
+            _tileLoadQueueMedium : [],
+            _tileLoadQueueLow : [],
+            _debug : {
+                tilesWaitingForChildren : 0
+            }
+        };
+    }
     beforeAll(function() {
         canvas = createCanvas(1024, 768);
     });
 
     afterAll(function() {
-        destroyCanvas(canvas);
+        document.body.removeChild(canvas);
     });
 
     beforeEach(function() {
@@ -76,9 +100,13 @@ defineSuite([
 
         scene = new MockScene(canvas, camera, Ellipsoid.WGS84);
         controller = new ScreenSpaceCameraController(scene);
+
+        scene.screenSpaceCameraController = controller;
+        camera._scene = scene;
     });
 
     afterEach(function() {
+        scene.mapMode2D = MapMode2D.INFINITE_SCROLL;
         controller = controller && !controller.isDestroyed() && controller.destroy();
     });
 
@@ -100,7 +128,7 @@ defineSuite([
 
     function simulateMouseUp(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerUp(document, combine(options, {
+            DomEventSimulator.firePointerUp(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
@@ -110,7 +138,7 @@ defineSuite([
 
     function simulateMouseMove(options) {
         if (usePointerEvents) {
-            DomEventSimulator.firePointerMove(document, combine(options, {
+            DomEventSimulator.firePointerMove(canvas, combine(options, {
                 pointerType : 'mouse'
             }));
         } else {
@@ -123,7 +151,7 @@ defineSuite([
             DomEventSimulator.fireWheel(canvas, combine({
                 deltaY : -wheelDelta
             }));
-        } else if (defined(document.onmousewheel)) {
+        } else if (document.onmousewheel !== undefined) {
             DomEventSimulator.fireMouseWheel(canvas, combine({
                 wheelDelta : wheelDelta
             }));
@@ -152,8 +180,13 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         scene.mapProjection = new GeographicProjection(ellipsoid);
 
+        scene.frameState = {
+            mode : scene.mode,
+            mapProjection : scene.mapProjection
+        };
+
         var maxRadii = ellipsoid.maximumRadius;
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
@@ -174,6 +207,11 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         scene.mapProjection = new GeographicProjection(ellipsoid);
 
+        scene.frameState = {
+            mode : scene.mode,
+            mapProjection : scene.mapProjection
+        };
+
         var maxRadii = ellipsoid.maximumRadius;
         camera.position = new Cartesian3(0.0, 0.0, maxRadii);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
@@ -186,6 +224,11 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         scene.mapProjection = new GeographicProjection(ellipsoid);
+
+        scene.frameState = {
+            mode : scene.mode,
+            mapProjection : scene.mapProjection
+        };
     }
 
     it('constructor throws without a scene', function() {
@@ -284,8 +327,15 @@ defineSuite([
 
     it('zoom out in 2D', function() {
         setUp2D();
+
+        var frustum = camera.frustum;
+        frustum.right = 1000.0;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
+        frustum.bottom = -frustum.top;
+
         var position = Cartesian3.clone(camera.position);
-        var frustumDiff = camera.frustum.right - camera.frustum.left;
+        var frustumDiff = frustum.right - frustum.left;
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
@@ -312,8 +362,15 @@ defineSuite([
 
     it('zoom out in 2D with wheel', function() {
         setUp2D();
+
+        var frustum = camera.frustum;
+        frustum.right = 1000.0;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
+        frustum.bottom = -frustum.top;
+
         var position = Cartesian3.clone(camera.position);
-        var frustumDiff = camera.frustum.right - camera.frustum.left;
+        var frustumDiff = frustum.right - frustum.left;
 
         simulateMouseWheel(-120);
         updateController();
@@ -411,6 +468,8 @@ defineSuite([
 
     it('rotate counter-clockwise in 2D', function() {
         setUp2D();
+        scene.mapMode2D = MapMode2D.ROTATE;
+
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
@@ -428,6 +487,8 @@ defineSuite([
 
     it('rotate clockwise in 2D', function() {
         setUp2D();
+        scene.mapMode2D = MapMode2D.ROTATE;
+
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
@@ -445,6 +506,8 @@ defineSuite([
 
     it('rotates counter-clockwise with mouse position at bottom of the screen', function() {
         setUp2D();
+        scene.mapMode2D = MapMode2D.ROTATE;
+
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(3 * canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
@@ -458,21 +521,6 @@ defineSuite([
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON15);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON15);
-    });
-
-    it('adds an animation to correct position or zoom in 2D', function() {
-        setUp2D();
-        var position = Cartesian3.clone(camera.position);
-        var startPosition = new Cartesian2(0, canvas.clientHeight / 2);
-        var endPosition = new Cartesian2(canvas.clientWidth, canvas.clientHeight / 2);
-
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
-        updateController();
-        expect(position.x).toBeGreaterThan(camera.position.x);
-        expect(position.y).toEqual(camera.position.y);
-        expect(position.z).toEqual(camera.position.z);
-
-        expect(controller._tweens.length).toEqual(1);
     });
 
     it('translate right in Columbus view', function() {
@@ -536,7 +584,6 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
         updateController();
         expect(camera.position).toEqual(position);
-        expect(camera.direction).not.toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3()));
         expect(Cartesian3.cross(camera.direction, camera.up, new Cartesian3())).toEqualEpsilon(camera.right, CesiumMath.EPSILON12);
         expect(Cartesian3.cross(camera.up, camera.right, new Cartesian3())).toEqualEpsilon(camera.direction, CesiumMath.EPSILON12);
         expect(Cartesian3.cross(camera.right, camera.direction, new Cartesian3())).toEqualEpsilon(camera.up, CesiumMath.EPSILON12);
@@ -746,6 +793,27 @@ defineSuite([
         expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
     });
 
+    it('zoom in 3D to point 0,0', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(0, 0);
+        var endPosition = new Cartesian2(0, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+    });
+
     it('zoom out in 3D', function() {
         setUp3D();
         var position = Cartesian3.clone(camera.position);
@@ -781,19 +849,77 @@ defineSuite([
     it('zoom in 3D with wheel', function() {
         setUp3D();
         var position = Cartesian3.clone(camera.position);
+        var heading = camera.heading;
+        var pitch = camera.pitch;
+        var roll = camera.roll;
 
         simulateMouseWheel(120);
         updateController();
         expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+        expect(camera.heading).toBeCloseTo(heading, 10);
+        expect(camera.pitch).toBeCloseTo(pitch, 10);
+        expect(camera.roll).toBeCloseTo(roll, 10);
     });
 
     it('zoom out in 3D with wheel', function() {
         setUp3D();
         var position = Cartesian3.clone(camera.position);
+        var heading = camera.heading;
+        var pitch = camera.pitch;
+        var roll = camera.roll;
 
         simulateMouseWheel(-120);
         updateController();
         expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
+        expect(camera.heading).toBeCloseTo(heading, 10);
+        expect(camera.pitch).toBeCloseTo(pitch, 10);
+        expect(camera.roll).toBeCloseTo(roll, 10);
+    });
+
+    it('zoom in 3D with orthographic projection', function() {
+        setUp3D();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        expect(frustum.projectionMatrix).toBeDefined();
+
+        camera.setView({ destination : Camera.DEFAULT_VIEW_RECTANGLE });
+
+        var position = Cartesian3.clone(camera.position);
+        var frustumWidth = camera.frustum.width;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+        expect(frustumWidth).toBeGreaterThan(camera.frustum.width);
+    });
+
+    it('zoom out in 3D with orthographic projection', function() {
+        setUp3D();
+
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        expect(frustum.projectionMatrix).toBeDefined();
+
+        camera.setView({ destination : Camera.DEFAULT_VIEW_RECTANGLE });
+
+        var position = Cartesian3.clone(camera.position);
+        var frustumWidth = camera.frustum.width;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController();
+        expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
+        expect(frustumWidth).toBeLessThan(camera.frustum.width);
     });
 
     it('tilts in 3D', function() {
@@ -987,6 +1113,94 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, endPosition, startPosition, true);
         updateController();
         expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(Cartesian3.magnitude(position));
+    });
+
+    it('camera does not go below the terrain in 3D', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        expect(camera.positionCartographic.height).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON7);
+    });
+
+    it('camera does not go below the terrain in CV', function() {
+        setUpCV();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+        });
+
+        updateController();
+
+        expect(camera.position.z).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON7);
+    });
+
+    it('camera does go below the terrain in 3D when collision detection is disabled', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+        controller.enableCollisionDetection = false;
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
+        });
+
+        updateController();
+
+        expect(camera.positionCartographic.height).toBeLessThan(controller.minimumZoomDistance);
+    });
+
+    it('camera does go below the terrain in CV when collision detection is disabled', function() {
+        setUpCV();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+        controller.enableCollisionDetection = false;
+
+        updateController();
+
+        camera.setView({
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
+        });
+
+        updateController();
+
+        expect(camera.position.z).toBeLessThan(controller.minimumZoomDistance);
+    });
+
+    it('camera does not go below the terrain in 3D with the transform set', function() {
+        setUp3D();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        updateController();
+
+        expect(camera.positionCartographic.height).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
+    });
+
+    it('camera does not go below the terrain in CV with the transform set', function() {
+        setUpCV();
+        scene.globe = new MockGlobe(scene.mapProjection.ellipsoid);
+
+        updateController();
+
+        camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        updateController();
+
+        expect(camera.positionWC.x).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON8);
     });
 
     it('is destroyed', function() {

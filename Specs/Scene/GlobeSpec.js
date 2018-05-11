@@ -1,60 +1,47 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Globe',
         'Core/CesiumTerrainProvider',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/loadWithXhr',
         'Core/Rectangle',
-        'Renderer/ClearCommand',
+        'Core/Resource',
         'Scene/SingleTileImageryProvider',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext',
-        'Specs/render'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         Globe,
         CesiumTerrainProvider,
-        defined,
-        Ellipsoid,
-        loadWithXhr,
         Rectangle,
-        ClearCommand,
+        Resource,
         SingleTileImageryProvider,
-        createContext,
-        createFrameState,
-        destroyContext,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene,
+        pollToPromise) {
+    'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var globe;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
     });
 
     afterAll(function() {
-        destroyContext(context);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
-        frameState = createFrameState();
         globe = new Globe();
+        scene.globe = globe;
     });
 
     afterEach(function() {
-        globe.destroy();
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        scene.globe = undefined;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     function returnTileJson(path) {
-        var oldLoad = loadWithXhr.load;
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        var oldLoad = Resource._Implementations.loadWithXhr;
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
-                loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr(path, responseType, method, data, headers, deferred);
             } else {
                 return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
@@ -66,17 +53,16 @@ defineSuite([
     }
 
     /**
-     * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
-     * this in a "runs" function.
+     * Repeatedly calls render until the load queue is empty. Returns a promise that resolves
+     * when the load queue is empty.
      */
     function updateUntilDone(globe) {
         // update until the load queue is empty.
-        waitsFor(function() {
+        return pollToPromise(function() {
             globe._surface._debug.enableDebugOutput = true;
-            var commandList = [];
-            globe.update(context, frameState, commandList);
-            return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
-        }, 'updating to complete');
+            scene.render();
+            return globe.tilesLoaded;
+        });
     }
 
     it('renders with enableLighting', function() {
@@ -86,16 +72,13 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
-        updateUntilDone(globe);
-
-        runs(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        return updateUntilDone(globe).then(function() {
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
@@ -106,17 +89,94 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
-        updateUntilDone(globe);
-
-        runs(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        return updateUntilDone(globe).then(function() {
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
+    });
+
+    it('ImageryLayersUpdated event fires when layer is added, hidden, shown, moved, or removed', function() {
+        var timesEventRaised = 0;
+        globe.imageryLayersUpdatedEvent.addEventListener(function () {
+            ++timesEventRaised;
+        });
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        return updateUntilDone(globe).then(function() {
+            expect(timesEventRaised).toEqual(2);
+
+            layer.show = false;
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(3);
+
+            layer.show = true;
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(4);
+
+            layerCollection.raise(layer);
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(5);
+
+            layerCollection.remove(layer);
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(6);
+        });
+    });
+
+    it('terrainProviderChanged event fires', function() {
+        var terrainProvider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : true
+        });
+
+        var spyListener = jasmine.createSpy('listener');
+        globe.terrainProviderChanged.addEventListener(spyListener);
+
+        globe.terrainProvider = terrainProvider;
+
+        expect(spyListener).toHaveBeenCalledWith(terrainProvider);
+    });
+
+    it('tilesLoaded return true when tile load queue is empty', function() {
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueHigh.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueHigh.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueMedium.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueMedium.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueLow.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueLow.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+         var terrainProvider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : true
+        });
+
+        globe.terrainProvider = terrainProvider;
+        scene.render();
+        expect(globe.tilesLoaded).toBe(false);
     });
 
     it('renders terrain with enableLighting', function() {
@@ -126,8 +186,8 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
         };
 
         returnVertexNormalTileJson();
@@ -138,21 +198,13 @@ defineSuite([
         });
 
         globe.terrainProvider = terrainProvider;
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
-        waitsFor(function() {
-            return terrainProvider.ready;
-        });
+        return updateUntilDone(globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
-
-        updateUntilDone(globe);
-
-        runs(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, globe);
-            expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
         });
     });
 }, 'WebGL');

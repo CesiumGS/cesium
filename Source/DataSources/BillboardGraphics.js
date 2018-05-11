@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -13,13 +12,13 @@ define([
         DeveloperError,
         Event,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a two dimensional icon located at the position of the containing {@link Entity}.
      * <p>
      * <div align='center'>
-     * <img src='images/Billboard.png' width='400' height='300' /><br />
+     * <img src='Images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      * </p>
@@ -36,18 +35,22 @@ define([
      * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
      * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
      * @param {Property} [options.rotation=0] A numeric Property specifying the rotation about the alignedAxis.
-     * @param {Property} [options.alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the axis of rotation.
+     * @param {Property} [options.alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
      * @param {Property} [options.width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
      * @param {Property} [options.height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
      * @param {Property} [options.color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
-     * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image.
+     * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
+     * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
+     * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
-    var BillboardGraphics = function(options) {
+    function BillboardGraphics(options) {
         this._image = undefined;
         this._imageSubscription = undefined;
         this._imageSubRegion = undefined;
@@ -70,6 +73,8 @@ define([
         this._colorSubscription = undefined;
         this._eyeOffset = undefined;
         this._eyeOffsetSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._pixelOffset = undefined;
         this._pixelOffsetSubscription = undefined;
         this._show = undefined;
@@ -80,10 +85,16 @@ define([
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
         this._pixelOffsetScaleByDistanceSubscription = undefined;
+        this._sizeInMeters = undefined;
+        this._sizeInMetersSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
+        this._disableDepthTestDistance = undefined;
+        this._disableDepthTestDistanceSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(BillboardGraphics.prototype, {
         /**
@@ -108,7 +119,8 @@ define([
 
         /**
          * Gets or sets the Property specifying a {@link BoundingRectangle} that defines a
-         * sub-region of the <code>image</code> to use for the billboard, rather than the entire image.
+         * sub-region of the <code>image</code> to use for the billboard, rather than the entire image,
+         * measured in pixels from the bottom-left.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
@@ -119,7 +131,7 @@ define([
          * A scale greater than <code>1.0</code> enlarges the billboard while a scale less than <code>1.0</code> shrinks it.
          * <p>
          * <div align='center'>
-         * <img src='images/Billboard.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Billboard.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>, and <code>2.0</code>.
          * </div>
          * </p>
@@ -139,7 +151,7 @@ define([
         rotation : createPropertyDescriptor('rotation'),
 
         /**
-         * Gets or sets the {@link Cartesian3} Property specifying the axis of rotation
+         * Gets or sets the {@link Cartesian3} Property specifying the unit vector axis of rotation
          * in the fixed frame. When set to Cartesian3.ZERO the rotation is from the top of the screen.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
@@ -172,8 +184,8 @@ define([
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
-         * <td align='center'><code>alpha : 0.5</code><br/><img src='images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
+         * <td align='center'><code>alpha : 0.5</code><br/><img src='Images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          * </p>
@@ -196,8 +208,8 @@ define([
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>b.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code>
          * </div>
@@ -209,6 +221,14 @@ define([
         eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the {@link Cartesian2} Property specifying the billboard's pixel offset in screen space
          * from the origin of this billboard.  This is commonly used to align multiple billboards and labels at
          * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
@@ -216,8 +236,8 @@ define([
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='Images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The billboard's origin is indicated by the yellow point.
          * </div>
@@ -283,7 +303,30 @@ define([
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance'),
+
+        /**
+         * Gets or sets the boolean Property specifying if this billboard's size will be measured in meters.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        sizeInMeters : createPropertyDescriptor('sizeInMeters'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this billboard will be displayed.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         */
+        disableDepthTestDistance : createPropertyDescriptor('disableDepthTestDistance')
     });
 
     /**
@@ -298,6 +341,7 @@ define([
         }
         result.color = this._color;
         result.eyeOffset = this._eyeOffset;
+        result.heightReference = this._heightReference;
         result.horizontalOrigin = this._horizontalOrigin;
         result.image = this._image;
         result.imageSubRegion = this._imageSubRegion;
@@ -312,6 +356,9 @@ define([
         result.scaleByDistance = this._scaleByDistance;
         result.translucencyByDistance = this._translucencyByDistance;
         result.pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
+        result.sizeInMeters = this._sizeInMeters;
+        result.distanceDisplayCondition = this._distanceDisplayCondition;
+        result.disableDepthTestDistance = this._disableDepthTestDistance;
         return result;
     };
 
@@ -330,6 +377,7 @@ define([
 
         this.color = defaultValue(this._color, source.color);
         this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
+        this.heightReference = defaultValue(this._heightReference, source.heightReference);
         this.horizontalOrigin = defaultValue(this._horizontalOrigin, source.horizontalOrigin);
         this.image = defaultValue(this._image, source.image);
         this.imageSubRegion = defaultValue(this._imageSubRegion, source.imageSubRegion);
@@ -344,6 +392,9 @@ define([
         this.scaleByDistance = defaultValue(this._scaleByDistance, source.scaleByDistance);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.sizeInMeters = defaultValue(this._sizeInMeters, source.sizeInMeters);
+        this.distanceDisplayCondition = defaultValue(this._distanceDisplayCondition, source.distanceDisplayCondition);
+        this.disableDepthTestDistance = defaultValue(this._disableDepthTestDistance, source.disableDepthTestDistance);
     };
 
     return BillboardGraphics;

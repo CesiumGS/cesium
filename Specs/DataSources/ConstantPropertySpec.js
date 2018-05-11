@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/ConstantProperty',
         'Core/Cartesian3',
@@ -7,8 +6,7 @@ defineSuite([
         ConstantProperty,
         Cartesian3,
         JulianDate) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     var time = JulianDate.now();
 
@@ -16,6 +14,11 @@ defineSuite([
         var expected = 5;
         var property = new ConstantProperty(expected);
         expect(property.getValue(time)).toBe(expected);
+
+        expect(property.valueOf()).toBe(expected);
+        expect(property.toString()).toBe(expected.toString());
+        expect(0 + property).toBe(expected);
+        expect('0' + property).toBe('0' + expected);
     });
 
     it('works with objects', function() {
@@ -25,6 +28,9 @@ defineSuite([
         var result = property.getValue(time);
         expect(result).not.toBe(value);
         expect(result).toEqual(value);
+
+        expect(property.valueOf()).toEqual(value);
+        expect(property.toString()).toEqual(value.toString());
     });
 
     it('works with objects without clone', function() {
@@ -34,6 +40,9 @@ defineSuite([
         var result = property.getValue(time);
         expect(result).toBe(value);
         expect(result).toEqual(value);
+
+        expect(property.valueOf()).toEqual(value);
+        expect(property.toString()).toEqual(value.toString());
     });
 
     it('setValue raises definitionChanged event', function() {
@@ -49,7 +58,7 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(0, 0, 0));
-        expect(listener.callCount).toBe(0);
+        expect(listener.calls.count()).toBe(0);
     });
 
     it('works with objects with result parameter', function() {
@@ -65,6 +74,10 @@ defineSuite([
     it('works with undefined value', function() {
         var property = new ConstantProperty(undefined);
         expect(property.getValue()).toBeUndefined();
+
+        expect(property.valueOf()).toBeUndefined();
+        expect(0 + property).toBeNaN();
+        expect('0' + property).toBe('0' + 'undefined');
     });
 
     it('equals works for object types with "equals" function', function() {

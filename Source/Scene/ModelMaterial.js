@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,7 +6,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A model's material with modifiable parameters.  A glTF material
@@ -23,11 +22,11 @@ define([
      *
      * @see Model#getMaterial
      */
-    var ModelMaterial = function(model, material, id) {
+    function ModelMaterial(model, material, id) {
         this._name = material.name;
         this._id = id;
         this._uniformMap = model._uniformMaps[id];
-    };
+    }
 
     defineProperties(ModelMaterial.prototype, {
         /**
@@ -71,7 +70,7 @@ define([
      * number, Cartesian, or matrix.
      *
      * @param {String} name The name of the parameter.
-     * @param {Object} [value] The value to assign to the parameter.
+     * @param {*} [value] The value to assign to the parameter.
      *
      * @exception {DeveloperError} name must match a parameter name in the material's technique that is targetable and not optimized out.
      *
@@ -103,7 +102,7 @@ define([
      * number, Cartesian, or matrix.
      *
      * @param {String} name The name of the parameter.
-     * @returns {Object} The value of the parameter or <code>undefined</code> if the parameter does not exist.
+     * @returns {*} The value of the parameter or <code>undefined</code> if the parameter does not exist.
      */
     ModelMaterial.prototype.getValue = function(name) {
         //>>includeStart('debug', pragmas.debug);

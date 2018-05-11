@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/ComponentDatatype',
         'Core/Geometry',
@@ -9,8 +8,9 @@ defineSuite([
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
-        'Specs/createContext',
-        'Specs/destroyContext'
+        'Renderer/ShaderProgram',
+        'Renderer/VertexArray',
+        'Specs/createContext'
     ], 'Renderer/VertexArrayFactory', function(
         ComponentDatatype,
         Geometry,
@@ -21,10 +21,10 @@ defineSuite([
         BufferUsage,
         ClearCommand,
         DrawCommand,
-        createContext,
-        destroyContext) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        ShaderProgram,
+        VertexArray,
+        createContext) {
+    'use strict';
 
     var context;
     var va;
@@ -35,7 +35,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyContext(context);
+        context.destroyForSpecs();
     });
 
     afterEach(function() {
@@ -43,14 +43,23 @@ defineSuite([
         sp = sp && sp.destroy();
     });
 
-    it('creates with no arguments', function() {
-        va = context.createVertexArrayFromGeometry();
+    it('throws when there is no context', function() {
+        expect(function() {
+            return VertexArray.fromGeometry();
+        }).toThrowDeveloperError();
+    });
+
+    it('creates with no optional arguments', function() {
+        va = VertexArray.fromGeometry({
+            context : context
+        });
         expect(va.numberOfAttributes).toEqual(0);
         expect(va.indexBuffer).not.toBeDefined();
     });
 
     it('creates with no geometry', function() {
-        va = context.createVertexArrayFromGeometry({
+        va = VertexArray.fromGeometry({
+            context : context,
             interleave : true
         });
         expect(va.numberOfAttributes).toEqual(0);
@@ -69,7 +78,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
@@ -99,7 +109,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             interleave : true,
@@ -136,7 +147,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
@@ -178,7 +190,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             interleave : true
@@ -223,7 +236,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             interleave : true
@@ -274,7 +288,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -303,10 +318,16 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -314,7 +335,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('sorts interleaved attributes from large to small components (2)', function() {
@@ -336,7 +357,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -359,10 +381,15 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -372,7 +399,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context).toReadPixels([255, 0, 0, 255]);
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -382,7 +409,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context).toReadPixels([0, 255, 0, 255]);
     });
 
     it('sorts interleaved attributes from large to small components (3)', function() {
@@ -413,7 +440,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -439,10 +467,15 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -450,7 +483,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('creates a custom interleaved vertex', function() {
@@ -482,7 +515,8 @@ defineSuite([
         });
 
         var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             interleave : true
@@ -512,10 +546,15 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -525,7 +564,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context).toReadPixels([255, 0, 0, 255]);
 
         var vs2 =
             'attribute vec3 position; ' +
@@ -544,7 +583,12 @@ defineSuite([
             '  }' +
             '}';
         sp = sp.destroy();
-        sp = context.createShaderProgram(vs2, fs, attributeLocations);
+        sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs2,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -554,7 +598,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context).toReadPixels([0, 255, 0, 255]);
     });
 
     it('creates an index buffer', function() {
@@ -564,7 +608,8 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromGeometry({
+        var va = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry
         });
 
@@ -593,7 +638,8 @@ defineSuite([
         });
 
         expect(function() {
-            return context.createVertexArrayFromGeometry({
+            return VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 interleave : true
             });
@@ -618,7 +664,8 @@ defineSuite([
         });
 
         expect(function() {
-            return context.createVertexArrayFromGeometry({
+            return VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 attributeLocations : {
                     position : 0,

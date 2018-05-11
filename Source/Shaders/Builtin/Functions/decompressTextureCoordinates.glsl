@@ -10,7 +10,8 @@
  vec2 czm_decompressTextureCoordinates(float encoded)
  {
     float temp = encoded / 4096.0;
-    float stx = floor(temp) / 4096.0;
-    float sty = temp - floor(temp);
+    float xZeroTo4095 = floor(temp);
+    float stx = xZeroTo4095 / 4095.0;
+    float sty = (encoded - xZeroTo4095 * 4096.0) / 4095.0;
     return vec2(stx, sty);
  }

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/RectangleOutlineGeometry',
         'Core/Cartesian2',
@@ -19,8 +18,7 @@ defineSuite([
         Matrix2,
         Rectangle,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -60,9 +58,8 @@ defineSuite([
             granularity : 1.0
         }));
         var positions = m.attributes.position.values;
-        var length = positions.length;
 
-        expect(length).toEqual(8 * 3);
+        expect(positions.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
         var unrotatedNWCorner = Rectangle.northwest(rectangle);
@@ -107,8 +104,8 @@ defineSuite([
         }));
         var positions = m.attributes.position.values;
 
-        expect(positions.length).toEqual(8 * 3 * 2);
-        expect(m.indices.length).toEqual(8 * 2 * 2 + 4 * 2);
+        expect(positions.length).toEqual(16 * 3); // 8 top + 8 bottom
+        expect(m.indices.length).toEqual(20 * 2); // 8 top + 8 bottom + 4 edges
     });
 
     it('compute positions with rotation extruded', function() {
@@ -121,10 +118,9 @@ defineSuite([
             extrudedHeight : 2
         }));
         var positions = m.attributes.position.values;
-        var length = positions.length;
 
-        expect(length).toEqual(8 * 3 * 2);
-        expect(m.indices.length).toEqual(8 * 2 * 2 + 4 * 2);
+        expect(positions.length).toEqual(16 * 3);
+        expect(m.indices.length).toEqual(20 * 2);
 
         var unrotatedNWCorner = Rectangle.northwest(rectangle);
         var projection = new GeographicProjection();
@@ -137,13 +133,12 @@ defineSuite([
         expect(actual).toEqualEpsilon(rotatedNWCorner, CesiumMath.EPSILON6);
     });
 
-
     it('computes non-extruded rectangle if height is small', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
         var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
             rectangle : rectangle,
             granularity : 1.0,
-            extrudedHeight : 0.1
+            extrudedHeight : CesiumMath.EPSILON14
         }));
         var positions = m.attributes.position.values;
 
@@ -151,12 +146,45 @@ defineSuite([
         expect(m.indices.length).toEqual(8 * 2);
     });
 
-    var rectangle = new RectangleOutlineGeometry({
-        rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
-        granularity : 1.0,
-        ellipsoid : Ellipsoid.UNIT_SPHERE
+    it('undefined is returned if any side are of length zero', function() {
+        var rectangleOutline0 = new RectangleOutlineGeometry({
+            rectangle : Rectangle.fromDegrees(-80.0, 39.0, -80.0, 42.0)
+        });
+        var rectangleOutline1 = new RectangleOutlineGeometry({
+            rectangle : Rectangle.fromDegrees(-81.0, 42.0, -80.0, 42.0)
+        });
+        var rectangleOutline2 = new RectangleOutlineGeometry({
+            rectangle : Rectangle.fromDegrees(-80.0, 39.0, -80.0, 39.0)
+        });
+
+        var geometry0 = RectangleOutlineGeometry.createGeometry(rectangleOutline0);
+        var geometry1 = RectangleOutlineGeometry.createGeometry(rectangleOutline1);
+        var geometry2 = RectangleOutlineGeometry.createGeometry(rectangleOutline2);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
     });
-    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0];
-    createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance);
+
+    var rectangle = new RectangleOutlineGeometry({
+        rectangle : new Rectangle(0.1, 0.2, 0.3, 0.4),
+        ellipsoid : new Ellipsoid(5, 6, 7),
+        granularity : 8,
+        height : 9,
+        rotation : 10,
+        extrudedHeight : 11
+    });
+    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 11, 10, 9];
+    createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'extruded');
+
+    rectangle = new RectangleOutlineGeometry({
+        rectangle : new Rectangle(0.1, 0.2, 0.3, 0.4),
+        ellipsoid : new Ellipsoid(5, 6, 7),
+        granularity : 8,
+        height : 9,
+        rotation : 10
+    });
+    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9];
+    createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
 });

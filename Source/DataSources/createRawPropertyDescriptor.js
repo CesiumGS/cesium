@@ -1,9 +1,8 @@
-/*global define*/
 define([
         './createPropertyDescriptor'
     ], function(
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     function createRawProperty(value) {
         return value;

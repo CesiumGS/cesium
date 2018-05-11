@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -15,7 +14,7 @@ define([
         knockout,
         getElement,
         SelectionIndicatorViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * A widget for displaying an indicator on a selected object.
@@ -28,7 +27,7 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    var SelectionIndicator = function(container, scene) {
+    function SelectionIndicator(container, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -70,7 +69,7 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
         this._viewModel = viewModel;
 
         knockout.applyBindings(this._viewModel, this._element);
-    };
+    }
 
     defineProperties(SelectionIndicator.prototype, {
         /**

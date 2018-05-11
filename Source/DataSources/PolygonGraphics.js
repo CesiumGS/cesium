@@ -1,9 +1,7 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         './createMaterialPropertyDescriptor',
@@ -12,12 +10,11 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a polygon defined by an hierarchy of linear rings which make up the outer shape and any nested holes.
@@ -29,8 +26,8 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.hierarchy] A Property specifying the {@link PolygonHierarchy}.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polygon.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the polygon.
@@ -40,11 +37,15 @@ define([
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
+     * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
+     * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      */
-    var PolygonGraphics = function(options) {
+    function PolygonGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -67,12 +68,22 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
-        this._definitionChanged = new Event();
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._closeTop = undefined;
+        this._closeTopSubscription = undefined;
+        this._closeBottom = undefined;
+        this._closeBottomSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
+        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(PolygonGraphics.prototype, {
         /**
@@ -105,23 +116,6 @@ define([
         material : createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the positions that define the polygon.
-         * @memberof PolygonGraphics.prototype
-         * @type {Property}
-         * @deprecated
-         */
-        positions : {
-            get : function() {
-                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead. This property will be removed in Cesium 1.9.');
-                return this.hierarchy;
-            },
-            set : function(value) {
-                deprecationWarning('PolygonGraphics.positions', 'PolygonGraphics.positions was deprecated in Cesium 1.6, use PolygonGraphics.hierarchy instead. This property will be removed in Cesium 1.9.');
-                this.hierarchy = value;
-            }
-        },
-
-        /**
          * Gets or sets the Property specifying the {@link PolygonHierarchy}.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
@@ -130,7 +124,6 @@ define([
 
         /**
          * Gets or sets the numeric Property specifying the constant altitude of the polygon.
-         * This property is ignored when {@link PolygonGraphics#perPositionHeight} is true.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          * @default 0.0
@@ -201,7 +194,45 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        perPositionHeight : createPropertyDescriptor('perPositionHeight')
+        perPositionHeight : createPropertyDescriptor('perPositionHeight'),
+
+        /**
+         * Gets or sets a boolean specifying whether or not the top of an extruded polygon is included.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         */
+        closeTop : createPropertyDescriptor('closeTop'),
+
+        /**
+         * Gets or sets a boolean specifying whether or not the bottom of an extruded polygon is included.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         */
+        closeBottom : createPropertyDescriptor('closeBottom'),
+
+        /**
+         * Get or sets the enum Property specifying whether the polygon
+         * casts or receives shadows from each light source.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default ShadowMode.DISABLED
+         */
+        shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this polygon will be displayed.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.BOTH
+         */
+        classificationType : createPropertyDescriptor('classificationType')
     });
 
     /**
@@ -226,6 +257,11 @@ define([
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.perPositionHeight = this.perPositionHeight;
+        result.closeTop = this.closeTop;
+        result.closeBottom = this.closeBottom;
+        result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
         return result;
     };
 
@@ -254,6 +290,11 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
+        this.closeTop = defaultValue(this.closeTop, source.closeTop);
+        this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
+        this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
     };
 
     return PolygonGraphics;

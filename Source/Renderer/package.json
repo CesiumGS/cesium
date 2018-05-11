@@ -1,6 +1,0 @@
-{
-	"name": "Renderer",
-	"description": "Cesium Renderer",
-	"version": "0.6.0",
-	"dojoBuild": "Renderer.profile.js"
-}

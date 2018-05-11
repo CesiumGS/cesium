@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Construct and style polylines.">
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 function createPrimitives(scene) {
     var polylines = scene.primitives.add(new Cesium.PolylineCollection());
@@ -99,6 +99,26 @@ function createPrimitives(scene) {
         material : Cesium.Material.fromType(Cesium.Material.PolylineArrowType)
     });
     Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
+
+    //Polyline using the fade material
+    var fadingPolyline = polylines.add({
+        positions : Cesium.PolylinePipeline.generateCartesianArc({
+            positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
+                                                                   -125, 43, 500000])
+        }),
+        width : 5,
+        material : Cesium.Material.fromType(Cesium.Material.FadeType, {
+            repeat: false,
+            fadeInColor: Cesium.Color.CYAN,
+            fadeOutColor: Cesium.Color.CYAN.withAlpha(0),
+            time: new Cesium.Cartesian2(0.0, 0.0),
+            fadeDirection: {
+                x: true,
+                y: false
+            }
+        })
+    });
+    Sandcastle.declare(fadingPolyline); // For highlighting on mouseover in Sandcastle.
 }
 
 var viewer = new Cesium.Viewer('cesiumContainer');

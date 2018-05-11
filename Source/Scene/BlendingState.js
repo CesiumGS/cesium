@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/freezeObject',
         './BlendEquation',
@@ -7,7 +6,7 @@ define([
         freezeObject,
         BlendEquation,
         BlendFunction) {
-    "use strict";
+    'use strict';
 
     /**
      * The blending state combines {@link BlendEquation} and {@link BlendFunction} and the
@@ -17,8 +16,7 @@ define([
      * This is a helper when using custom render states with {@link Appearance#renderState}.
      * </p>
      *
-     * @namespace
-     * @alias BlendingState
+     * @exports BlendingState
      */
     var BlendingState = {
         /**

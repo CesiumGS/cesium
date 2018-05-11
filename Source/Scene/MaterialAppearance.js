@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -27,7 +26,7 @@ define([
         TexturedMaterialAppearanceVS,
         Appearance,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
@@ -48,7 +47,7 @@ define([
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Material.html|Cesium Sandcastle Material Appearance Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -65,7 +64,7 @@ define([
      *
      * });
      */
-    var MaterialAppearance = function(options) {
+    function MaterialAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -104,7 +103,7 @@ define([
         this._vertexFormat = materialSupport.vertexFormat;
         this._flat = defaultValue(options.flat, false);
         this._faceForward = defaultValue(options.faceForward, !closed);
-    };
+    }
 
     defineProperties(MaterialAppearance.prototype, {
         /**
@@ -254,7 +253,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     MaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
@@ -311,7 +310,7 @@ define([
         /**
          * All materials, including those that work in tangent space, are supported.
          * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
-         * <code>binormal</code>, and <code>tangent</code> vertex attributes.
+         * <code>tangent</code>, and <code>bitangent</code> vertex attributes.
          *
          * @constant
          */

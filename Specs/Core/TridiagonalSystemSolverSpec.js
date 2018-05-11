@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/TridiagonalSystemSolver',
         'Core/Cartesian3',
@@ -7,8 +6,7 @@ defineSuite([
         TridiagonalSystemSolver,
         Cartesian3,
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
    it('solve throws exception without lower diagonal', function() {
         expect(function() {

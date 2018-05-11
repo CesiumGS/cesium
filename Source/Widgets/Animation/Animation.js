@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Color',
         '../../Core/defined',
@@ -15,10 +14,10 @@ define([
         DeveloperError,
         getElement,
         subscribeAndEvaluate) {
-    "use strict";
+    'use strict';
 
-    var svgNS = "http://www.w3.org/2000/svg";
-    var xlinkNS = "http://www.w3.org/1999/xlink";
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var xlinkNS = 'http://www.w3.org/1999/xlink';
 
     var widgetForDrag;
 
@@ -206,7 +205,7 @@ define([
 
     //This is a private class for treating an SVG element like a button.
     //If we ever need a general purpose SVG button, we can make this generic.
-    var SvgButton = function(svgElement, viewModel) {
+    function SvgButton(svgElement, viewModel) {
         this._viewModel = viewModel;
         this.svgElement = svgElement;
         this._enabled = undefined;
@@ -231,7 +230,7 @@ define([
         subscribeAndEvaluate(viewModel, 'toggled', this.setToggled, this),//
         subscribeAndEvaluate(viewModel, 'tooltip', this.setTooltip, this),//
         subscribeAndEvaluate(viewModel.command, 'canExecute', this.setEnabled, this)];
-    };
+    }
 
     SvgButton.prototype.destroy = function() {
         this.svgElement.removeEventListener('click', this._clickFunction, true);
@@ -284,7 +283,7 @@ define([
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/AnimationWidget.png" width="211" height="142" alt="" style="border: none; border-radius: 5px;" />
+     * <img src="Images/AnimationWidget.png" width="211" height="142" alt="" />
      * <br />Animation widget
      * </span>
      * <br /><br />
@@ -312,8 +311,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @see AnimationViewModel
-     * @see Clock
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
@@ -329,8 +326,11 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
+     *
+     * @see AnimationViewModel
+     * @see Clock
      */
-    var Animation = function(container, viewModel) {
+    function Animation(container, viewModel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -504,9 +504,9 @@ define([
         container.appendChild(svg);
 
         var that = this;
-        var mouseCallback = function(e) {
+        function mouseCallback(e) {
             setShuttleRingFromMouseOrTouch(that, e);
-        };
+        }
         this._mouseCallback = mouseCallback;
 
         shuttleRingBackPanel.addEventListener('mousedown', mouseCallback, true);
@@ -517,6 +517,7 @@ define([
         document.addEventListener('touchmove', mouseCallback, true);
         document.addEventListener('mouseup', mouseCallback, true);
         document.addEventListener('touchend', mouseCallback, true);
+        document.addEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('touchstart', mouseCallback, true);
         this._knobOuter.addEventListener('mousedown', mouseCallback, true);
@@ -567,7 +568,7 @@ define([
 
         this.applyThemeChanges();
         this.resize();
-    };
+    }
 
     defineProperties(Animation.prototype, {
         /**
@@ -575,6 +576,7 @@ define([
          *
          * @memberof Animation.prototype
          * @type {Element}
+         * @readonly
          */
         container : {
             get : function() {
@@ -587,6 +589,7 @@ define([
          *
          * @memberof Animation.prototype
          * @type {AnimationViewModel}
+         * @readonly
          */
         viewModel : {
             get : function() {
@@ -607,6 +610,11 @@ define([
      * removing the widget from layout.
      */
     Animation.prototype.destroy = function() {
+        if (defined(this._observer)) {
+            this._observer.disconnect();
+            this._observer = undefined;
+        }
+
         var mouseCallback = this._mouseCallback;
         this._shuttleRingBackPanel.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingBackPanel.removeEventListener('touchstart', mouseCallback, true);
@@ -616,6 +624,7 @@ define([
         document.removeEventListener('touchmove', mouseCallback, true);
         document.removeEventListener('mouseup', mouseCallback, true);
         document.removeEventListener('touchend', mouseCallback, true);
+        document.removeEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('touchstart', mouseCallback, true);
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
@@ -693,6 +702,27 @@ define([
      * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {
+        // Since we rely on computed styles for themeing, we can't actually
+        // do anything if the container has not yet been added to the DOM.
+        // Set up an observer to be notified when it is added and apply
+        // the changes at that time.
+        if (!document.body.contains(this._container)) {
+            if (defined(this._observer)) {
+                //Already listening.
+                return;
+            }
+            var that = this;
+            that._observer = new MutationObserver(function() {
+                if (document.body.contains(that._container)) {
+                    that._observer.disconnect();
+                    that._observer = undefined;
+                    that.applyThemeChanges();
+                }
+            });
+            that._observer.observe(document, {childList : true, subtree : true});
+            return;
+        }
+
         var buttonNormalBackColor = getElementColor(this._themeNormal);
         var buttonHoverBackColor = getElementColor(this._themeHover);
         var buttonToggledBackColor = getElementColor(this._themeSelect);

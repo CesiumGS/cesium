@@ -1,6 +1,0 @@
-{
-	"name": "Shaders",
-	"description": "Cesium Shaders",
-	"version": "0.6.0",
-	"dojoBuild": "Shaders.profile.js"
-}

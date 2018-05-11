@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../../Core/defaultValue',
         '../../Core/JulianDate'
     ], function(
         defaultValue,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

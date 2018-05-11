@@ -1,0 +1,233 @@
+{
+  "accessors": {
+    "accessor_21": {
+      "bufferView": "bufferView_1",
+      "byteOffset": 0,
+      "byteStride": 0,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        23
+      ]
+    },
+    "accessor_23": {
+      "bufferView": "bufferView_0",
+      "byteOffset": 0,
+      "byteStride": 0,
+      "componentType": 5126,
+      "count": 24,
+      "max": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "min": [
+        -0.5,
+        -0.5,
+        -0.5
+      ],
+      "type": "VEC3"
+    },
+    "accessor_27": {
+      "bufferView": "bufferView_0",
+      "byteOffset": 576,
+      "byteStride": 0,
+      "componentType": 5121,
+      "count": 24,
+      "max": [
+        255,
+        255,
+        255
+      ],
+      "min": [
+        0,
+        0,
+        0
+      ],
+      "type": "VEC3",
+      "normalized": true
+    },
+    "accessor_normal_generated": {
+      "bufferView": "bufferView_0",
+      "byteOffset": 288,
+      "byteStride": 0,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3",
+      "min": [
+        -1,
+        -1,
+        -1
+      ],
+      "max": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  "animations": {},
+  "asset": {
+    "generator": "collada2gltf@027f74366341d569dea42e9a68b7104cc3892054",
+    "premultipliedAlpha": true,
+    "profile": {
+      "api": "WebGL",
+      "version": "1.0.2"
+    },
+    "version": "1.0"
+  },
+  "bufferViews": {
+    "bufferView_0": {
+      "buffer": "buffer_0",
+      "byteLength": 648,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    "bufferView_1": {
+      "buffer": "buffer_0",
+      "byteLength": 72,
+      "byteOffset": 648,
+      "target": 34963
+    }
+  },
+  "buffers": {
+    "buffer_0": {
+      "type": "arraybuffer",
+      "byteLength": 720,
+      "uri": "data:application/octet-stream;base64,AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAPwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAvwAAAD8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAC/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC//wAA/wAA/wAA/wAA/38A/38A/38A/38A//8A//8A//8A//8AAP8AAP8AAP8AAP8AAAD/AAD/AAD/AAD/SgCBSgCBSgCBSgCBAAABAAIAAwACAAEABAAFAAYABwAGAAUACAAJAAoACwAKAAkADAANAA4ADwAOAA0AEAARABIAEwASABEAFAAVABYAFwAWABUA"
+    }
+  },
+  "materials": {
+    "Effect-Red": {
+      "name": "Red",
+      "technique": "technique0",
+      "values": {}
+    }
+  },
+  "meshes": {
+    "Geometry-mesh002": {
+      "name": "Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": "accessor_23",
+            "COLOR": "accessor_27"
+          },
+          "indices": "accessor_21",
+          "material": "Effect-Red",
+          "mode": 4
+        }
+      ]
+    }
+  },
+  "nodes": {
+    "rootNode": {
+      "children": [],
+      "meshes": [
+        "Geometry-mesh002"
+      ],
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "programs": {
+    "program_0": {
+      "attributes": [
+        "a_position",
+        "a_color"
+      ],
+      "fragmentShader": "Box0FS",
+      "vertexShader": "Box0VS"
+    }
+  },
+  "scene": "defaultScene",
+  "scenes": {
+    "defaultScene": {
+      "nodes": [
+        "rootNode"
+      ]
+    }
+  },
+  "shaders": {
+    "Box0FS": {
+      "type": 35632,
+      "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0Ow0KDQp2YXJ5aW5nIHZlYzMgY29sb3JBdHRyaWJ1dGU7DQoNCnZvaWQgbWFpbih2b2lkKSB7DQp2ZWM0IGNvbG9yID0gdmVjNChjb2xvckF0dHJpYnV0ZSwgMS4pOw0KZ2xfRnJhZ0NvbG9yID0gY29sb3I7DQp9DQo="
+    },
+    "Box0VS": {
+      "type": 35633,
+      "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0Ow0KDQp2YXJ5aW5nIHZlYzMgY29sb3JBdHRyaWJ1dGU7DQoNCmF0dHJpYnV0ZSB2ZWMzIGFfcG9zaXRpb247DQphdHRyaWJ1dGUgdmVjMyBhX2NvbG9yOw0KDQp1bmlmb3JtIG1hdDQgdV9tb2RlbFZpZXdNYXRyaXg7DQp1bmlmb3JtIG1hdDQgdV9wcm9qZWN0aW9uTWF0cml4Ow0KDQp2b2lkIG1haW4odm9pZCkgew0KICAgIHZlYzQgcG9zID0gdV9tb2RlbFZpZXdNYXRyaXggKiB2ZWM0KGFfcG9zaXRpb24sMS4wKTsNCiAgICBnbF9Qb3NpdGlvbiA9IHVfcHJvamVjdGlvbk1hdHJpeCAqIHBvczsNCiAgICBjb2xvckF0dHJpYnV0ZSA9IGFfY29sb3I7DQp9DQo="
+    }
+  },
+  "skins": {},
+  "techniques": {
+    "technique0": {
+      "attributes": {
+        "a_position": "position",
+        "a_color": "color"
+      },
+      "parameters": {
+        "modelViewMatrix": {
+          "semantic": "MODELVIEW",
+          "type": 35676
+        },
+        "color": {
+          "semantic": "COLOR",
+          "type": 35665
+        },
+        "position": {
+          "semantic": "POSITION",
+          "type": 35665
+        },
+        "projectionMatrix": {
+          "semantic": "PROJECTION",
+          "type": 35676
+        }
+      },
+      "program": "program_0",
+      "states": {
+        "enable": [
+          2929,
+          2884
+        ],
+        "disable": []
+      },
+      "uniforms": {
+        "u_modelViewMatrix": "modelViewMatrix",
+        "u_projectionMatrix": "projectionMatrix"
+      }
+    }
+  },
+  "extensionsUsed": [],
+  "cameras": {},
+  "images": {},
+  "extensions": {
+    "KHR_materials_common": {
+      "lights": {
+        "extras": {}
+      },
+      "extras": {}
+    }
+  },
+  "samplers": {},
+  "textures": {}
+}

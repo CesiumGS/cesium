@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/DataSourceDisplay',
         'Core/BoundingSphere',
@@ -7,8 +6,8 @@ defineSuite([
         'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
         'DataSources/Entity',
+        'Scene/GroundPrimitive',
         'Specs/createScene',
-        'Specs/destroyScene',
         'Specs/MockDataSource'
     ], function(
         DataSourceDisplay,
@@ -18,11 +17,10 @@ defineSuite([
         BoundingSphereState,
         DataSourceCollection,
         Entity,
+        GroundPrimitive,
         createScene,
-        destroyScene,
         MockDataSource) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     var dataSourceCollection;
     var scene;
@@ -30,32 +28,39 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         dataSourceCollection = new DataSourceCollection();
+
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
-        destroyScene(scene);
+        scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     afterEach(function() {
         if (!display.isDestroyed()) {
             display.destroy();
         }
+        dataSourceCollection.removeAll();
     });
 
-    var MockVisualizer = function(scene, entityCollection) {
-        this.scene = scene;
-        this.entityCollection = entityCollection;
+    function MockVisualizer() {
         this.updatesCalled = 0;
         this.lastUpdateTime = undefined;
         this.destroyed = false;
 
         this.getBoundingSphereResult = undefined;
         this.getBoundingSphereState = undefined;
-    };
+    }
 
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
+        return true;
     };
 
     MockVisualizer.prototype.getBoundingSphere = function(entity, result) {
@@ -71,9 +76,9 @@ defineSuite([
         this.destroyed = true;
     };
 
-    var visualizersCallback = function() {
+    function visualizersCallback() {
         return [new MockVisualizer()];
-    };
+    }
 
     it('constructor sets expected values', function() {
         display = new DataSourceDisplay({
@@ -86,10 +91,6 @@ defineSuite([
         expect(display.dataSources).toBe(dataSourceCollection);
         expect(display.isDestroyed()).toEqual(false);
         expect(display.defaultDataSource).toBeDefined();
-
-        //deprecated
-        expect(display.getScene()).toBe(scene);
-        expect(display.getDataSources()).toBe(dataSourceCollection);
 
         display.destroy();
     });
@@ -115,6 +116,8 @@ defineSuite([
         var dataSource = new MockDataSource();
         dataSource.entities.add(entity);
         display.dataSources.add(dataSource);
+
+        display.update(Iso8601.MINIMUM_VALUE);
 
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, true, result);
@@ -146,6 +149,8 @@ defineSuite([
         var dataSource = new MockDataSource();
         dataSource.entities.add(entity);
         display.dataSources.add(dataSource);
+
+        display.update(Iso8601.MINIMUM_VALUE);
 
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, true, result);
@@ -189,6 +194,8 @@ defineSuite([
         var dataSource = new MockDataSource();
         dataSource.entities.add(entity);
         display.dataSources.add(dataSource);
+        display.update(Iso8601.MINIMUM_VALUE);
+
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, false, result);
         expect(state).toBe(BoundingSphereState.FAILED);
@@ -200,6 +207,8 @@ defineSuite([
             dataSourceCollection : dataSourceCollection,
             scene : scene
         });
+        display.update(Iso8601.MINIMUM_VALUE);
+
         var entity = new Entity();
         var result = new BoundingSphere();
         var state = display.getBoundingSphere(entity, false, result);
@@ -212,7 +221,6 @@ defineSuite([
             dataSourceCollection : dataSourceCollection,
             scene : scene
         });
-        var entity = new Entity();
         var result = new BoundingSphere();
         expect(function() {
             display.getBoundingSphere(undefined, false, result);
@@ -289,6 +297,27 @@ defineSuite([
         expect(source2Visualizer.updatesCalled).toEqual(1);
     });
 
+    it('ready is true when datasources are ready', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        expect(display.ready).toBe(false);
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(true);
+
+        spyOn(MockVisualizer.prototype, 'update').and.returnValue(false);
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(false);
+    });
+
     it('constructor throws if scene undefined', function() {
         expect(function(){
             return new DataSourceDisplay({
@@ -324,5 +353,197 @@ defineSuite([
         expect(function(){
             return display.update();
         }).toThrowDeveloperError();
+    });
+
+    it('verify update returns false till terrain heights are initialized', function() {
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
+
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(false);
+
+        return GroundPrimitive.initializeTerrainHeights().then(function() {
+            display.update(Iso8601.MINIMUM_VALUE);
+            expect(display.ready).toBe(true);
+        });
+    });
+
+    it('sets dataSource primitives on add', function() {
+        var source = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source);
+
+        expect(source._primitives).toBeDefined();
+        expect(source._groundPrimitives).toBeDefined();
+
+        expect(display._primitives.contains(source._primitives)).toBe(true);
+        expect(display._groundPrimitives.contains(source._groundPrimitives)).toBe(true);
+    });
+
+    it('cleans up primitives on dataSource removed', function() {
+        var source = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source);
+
+        expect(display._primitives.contains(source._primitives)).toBe(true);
+        expect(display._groundPrimitives.contains(source._groundPrimitives)).toBe(true);
+
+        dataSourceCollection.remove(source);
+
+        expect(display._primitives.length).toBe(1);
+        expect(display._groundPrimitives.length).toBe(1);
+    });
+
+    it('raises primitives on dataSource raise', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
+
+        dataSourceCollection.raise(source1);
+
+        expect(display._primitives.get(1)).toBe(source2._primitives);
+        expect(display._primitives.get(2)).toBe(source1._primitives);
+        expect(display._primitives.get(3)).toBe(source3._primitives);
+    });
+
+    it('lowers primitives on dataSource lower', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
+
+        dataSourceCollection.lower(source3);
+
+        expect(display._primitives.get(1)).toBe(source1._primitives);
+        expect(display._primitives.get(2)).toBe(source3._primitives);
+        expect(display._primitives.get(3)).toBe(source2._primitives);
+    });
+
+    it('raises primitives to top on dataSource raiseToTop', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
+
+        dataSourceCollection.raiseToTop(source1);
+
+        expect(display._primitives.get(1)).toBe(source2._primitives);
+        expect(display._primitives.get(2)).toBe(source3._primitives);
+        expect(display._primitives.get(3)).toBe(source1._primitives);
+    });
+
+    it('lowers primitives to bottom on dataSource lowerToBottom', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+        var source3 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        dataSourceCollection.add(source3);
+
+        dataSourceCollection.lowerToBottom(source3);
+
+        expect(display._primitives.get(1)).toBe(source3._primitives);
+        expect(display._primitives.get(2)).toBe(source1._primitives);
+        expect(display._primitives.get(3)).toBe(source2._primitives);
+    });
+
+    it('adds primitives to scene when dataSource is added to the collection', function() {
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        expect(scene.primitives.contains(display._primitives)).toBe(false);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(false);
+
+        dataSourceCollection.add(new MockDataSource());
+
+        expect(scene.primitives.contains(display._primitives)).toBe(true);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
+    });
+
+    it('adds primitives to scene if dataSourceCollection is not empty', function() {
+        dataSourceCollection.add(new MockDataSource());
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+
+        expect(scene.primitives.contains(display._primitives)).toBe(true);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
+    });
+
+    it('adds primitives to the scene when entities are added to the default dataSource', function() {
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        expect(scene.primitives.contains(display._primitives)).toBe(false);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(false);
+
+        display.defaultDataSource.entities.add(new Entity());
+
+        expect(scene.primitives.contains(display._primitives)).toBe(true);
+        expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
     });
 }, 'WebGL');

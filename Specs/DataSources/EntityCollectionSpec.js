@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/EntityCollection',
         'Core/Iso8601',
@@ -13,16 +12,14 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         Entity) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
-    var CollectionListener = function() {
+    function CollectionListener() {
         this.timesCalled = 0;
         this.added = undefined;
         this.removed = undefined;
         this.changed = undefined;
-    };
-
+    }
     CollectionListener.prototype.onCollectionChanged = function(collection, added, removed, changed) {
         this.timesCalled++;
         this.added = added.slice(0);
@@ -33,7 +30,7 @@ defineSuite([
     it('constructor has expected defaults', function() {
         var entityCollection = new EntityCollection();
         expect(entityCollection.id).toBeDefined();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
     });
 
     it('add/remove works', function() {
@@ -42,16 +39,42 @@ defineSuite([
         var entityCollection = new EntityCollection();
 
         entityCollection.add(entity);
-        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.values.length).toEqual(1);
 
         entityCollection.add(entity2);
-        expect(entityCollection.entities.length).toEqual(2);
+        expect(entityCollection.values.length).toEqual(2);
 
         entityCollection.remove(entity2);
-        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.values.length).toEqual(1);
 
         entityCollection.remove(entity);
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
+    });
+
+    it('add sets entityCollection on entity', function() {
+        var entity = new Entity();
+        var entityCollection = new EntityCollection();
+
+        entityCollection.add(entity);
+        expect(entity.entityCollection).toBe(entityCollection);
+    });
+
+    it('Entity.isShowing changes when collection show changes.', function() {
+        var entity = new Entity();
+        var entityCollection = new EntityCollection();
+
+        entityCollection.add(entity);
+
+        expect(entity.isShowing).toBe(true);
+
+        var listener = jasmine.createSpy('listener');
+        entity.definitionChanged.addEventListener(listener);
+
+        entityCollection.show = false;
+
+        expect(listener.calls.count()).toBe(1);
+        expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', false, true]);
+        expect(entity.isShowing).toBe(false);
     });
 
     it('add with template', function() {
@@ -61,7 +84,7 @@ defineSuite([
             id : '1'
         });
 
-        expect(entityCollection.entities.length).toEqual(1);
+        expect(entityCollection.values.length).toEqual(1);
         expect(entity.id).toBe('1');
         expect(entity.constructor).toBe(Entity);
     });
@@ -109,6 +132,53 @@ defineSuite([
         expect(listener.removed[0]).toBe(entity);
 
         entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+    });
+
+    it('raises expected events when reentrant', function() {
+        var entityCollection = new EntityCollection();
+
+        var entity = new Entity();
+        var entity2 = new Entity();
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
+
+        var entityToDelete = new Entity();
+        entityCollection.add(entityToDelete);
+
+        var entityToAdd = new Entity();
+
+        var inCallback = false;
+        var listener = jasmine.createSpy('listener').and.callFake(function(collection, added, removed, changed) {
+            //When we set the name to `newName` below, this code will modify entity2's name, thus triggering
+            //another event firing that occurs after all current subscribers have been notified of the
+            //event we are inside of.
+
+            //By checking that inCallback is false, we are making sure the entity2.name assignment
+            //is delayed until after the first round of events is fired.
+            expect(inCallback).toBe(false);
+            inCallback = true;
+            if (entity2.name !== 'Bob') {
+                entity2.name = 'Bob';
+            }
+            if (entityCollection.contains(entityToDelete)) {
+                entityCollection.removeById(entityToDelete.id);
+            }
+            if (!entityCollection.contains(entityToAdd)) {
+                entityCollection.add(entityToAdd);
+            }
+            inCallback = false;
+        });
+        entityCollection.collectionChanged.addEventListener(listener);
+
+        entity.name = 'newName';
+        expect(listener.calls.count()).toBe(2);
+        expect(listener.calls.argsFor(0)).toEqual([entityCollection, [], [], [entity]]);
+        expect(listener.calls.argsFor(1)).toEqual([entityCollection, [entityToAdd], [entityToDelete], [entity2]]);
+
+        expect(entity.name).toEqual('newName');
+        expect(entity2.name).toEqual('Bob');
+        expect(entityCollection.contains(entityToDelete)).toEqual(false);
+        expect(entityCollection.contains(entityToAdd)).toEqual(true);
     });
 
     it('suspended add/remove raises expected events', function() {
@@ -174,7 +244,7 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
         entityCollection.removeAll();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
     });
 
     it('removeAll raises expected events', function() {
@@ -260,21 +330,21 @@ defineSuite([
 
     it('getOrCreateEntity creates a new object if it does not exist.', function() {
         var entityCollection = new EntityCollection();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
         var testObject = entityCollection.getOrCreateEntity('test');
-        expect(entityCollection.entities.length).toEqual(1);
-        expect(entityCollection.entities[0]).toEqual(testObject);
+        expect(entityCollection.values.length).toEqual(1);
+        expect(entityCollection.values[0]).toEqual(testObject);
     });
 
     it('getOrCreateEntity does not create a new object if it already exists.', function() {
         var entityCollection = new EntityCollection();
-        expect(entityCollection.entities.length).toEqual(0);
+        expect(entityCollection.values.length).toEqual(0);
         var testObject = entityCollection.getOrCreateEntity('test');
-        expect(entityCollection.entities.length).toEqual(1);
-        expect(entityCollection.entities[0]).toEqual(testObject);
+        expect(entityCollection.values.length).toEqual(1);
+        expect(entityCollection.values[0]).toEqual(testObject);
         var testObject2 = entityCollection.getOrCreateEntity('test');
-        expect(entityCollection.entities.length).toEqual(1);
-        expect(entityCollection.entities[0]).toEqual(testObject);
+        expect(entityCollection.values.length).toEqual(1);
+        expect(entityCollection.values[0]).toEqual(testObject);
         expect(testObject2).toEqual(testObject);
     });
 

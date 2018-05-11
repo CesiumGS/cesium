@@ -1,19 +1,18 @@
-/*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './EllipseOutlineGeometry',
         './Ellipsoid'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         EllipseOutlineGeometry,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of the outline of a circle on the ellipsoid.
@@ -25,9 +24,9 @@ define([
      * @param {Cartesian3} options.center The circle's center point in the fixed frame.
      * @param {Number} options.radius The radius in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
-     * @param {Number} [options.height=0.0] The height above the ellipsoid.
+     * @param {Number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
-     * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
+     * @param {Number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
      * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom of an extruded circle.
      *
      * @exception {DeveloperError} radius must be greater than zero.
@@ -35,8 +34,6 @@ define([
      *
      * @see CircleOutlineGeometry.createGeometry
      * @see Packable
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle%20Outline.html|Cesium Sandcastle Circle Outline Demo}
      *
      * @example
      * // Create a circle.
@@ -46,17 +43,12 @@ define([
      * });
      * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
      */
-    var CircleOutlineGeometry = function(options) {
+    function CircleOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(radius)) {
-            throw new DeveloperError('radius is required.');
-        }
-        if (radius <= 0.0) {
-            throw new DeveloperError('radius must be greater than zero.');
-        }
+        Check.typeOf.number('radius', radius);
         //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
@@ -71,7 +63,7 @@ define([
         };
         this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -81,19 +73,18 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {CircleOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CircleOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
+        Check.typeOf.object('value', value);
         //>>includeEnd('debug');
-        EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
+        return EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
     var scratchEllipseGeometry = new EllipseOutlineGeometry({
@@ -119,6 +110,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CircleOutlineGeometry} [result] The object into which to store the result.
+     * @returns {CircleOutlineGeometry} The modified result parameter or a new CircleOutlineGeometry instance if one was not provided.
      */
     CircleOutlineGeometry.unpack = function(array, startingIndex, result) {
         var ellipseGeometry = EllipseOutlineGeometry.unpack(array, startingIndex, scratchEllipseGeometry);
@@ -144,7 +136,7 @@ define([
      * Computes the geometric representation of an outline of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {CircleOutlineGeometry} circleGeometry A description of the circle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CircleOutlineGeometry.createGeometry = function(circleGeometry) {
         return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);

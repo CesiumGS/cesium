@@ -1,15 +1,14 @@
-/*global define*/
 define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     /**
      * Tests an object to see if it is an array.
      * @exports isArray
      *
-     * @param {Object} value The value to test.
+     * @param {*} value The value to test.
      * @returns {Boolean} true if the value is an array, false otherwise.
      */
     var isArray = Array.isArray;

@@ -1,9 +1,9 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../../ThirdParty/knockout',
         '../getElement',
         './BaseLayerPickerViewModel'
@@ -12,14 +12,15 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         knockout,
         getElement,
         BaseLayerPickerViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/BaseLayerPicker.png" style="border: none; border-radius: 5px;" />
+     * <img src="Images/BaseLayerPicker.png" width="264" height="287" alt="" />
      * <br />BaseLayerPicker with its drop-panel open.
      * </span>
      * <br /><br />
@@ -33,7 +34,7 @@ define([
      * @alias BaseLayerPicker
      * @constructor
      *
-     * @param {Element} container The parent HTML container node for this widget.
+     * @param {Element|String} container The parent HTML container node or ID for this widget.
      * @param {Object} options Object with the following properties:
      * @param {Globe} options.globe The Globe to use.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
@@ -43,9 +44,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @see TerrainProvider
-     * @see ImageryProvider
-     * @see ImageryLayerCollection
      *
      * @example
      * // In HTML head, include a link to the BaseLayerPicker.css stylesheet,
@@ -59,25 +57,21 @@ define([
      *      name : 'Open\u00adStreet\u00adMap',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
-     *map of the world.\nhttp://www.openstreetmap.org',
+     * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return new Cesium.OpenStreetMapImageryProvider({
-     *              url : '//a.tile.openstreetmap.org/'
+     *          return Cesium.createOpenStreetMapImageryProvider({
+     *              url : 'https://a.tile.openstreetmap.org/'
      *          });
      *      }
      *  }));
      *
      *  imageryViewModels.push(new Cesium.ProviderViewModel({
-     *      name : 'Black Marble',
+     *      name : 'Earth at Night',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
-     *in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
+     * in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
-     *              url : '//cesiumjs.org/blackmarble',
-     *              maximumLevel : 8,
-     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
-     *          });
+     *          return new Cesium.IonImageryProvider({ assetId: 3812 });
      *      }
      *  }));
      *
@@ -86,7 +80,7 @@ define([
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
+     *          return Cesium.createTileMapServiceImageryProvider({
      *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
@@ -97,12 +91,16 @@ define([
      *
      * //Finally, create the baseLayerPicker widget using our view models.
      * var layers = cesiumWidget.imageryLayers;
-     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
+     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', {
+     *     globe : cesiumWidget.scene.globe,
+     *     imageryProviderViewModels : imageryViewModels
+     * });
      *
-     * //Use the first item in the list as the current selection.
-     * baseLayerPicker.viewModel.selectedItem = imageryViewModels[0];
+     * @see TerrainProvider
+     * @see ImageryProvider
+     * @see ImageryLayerCollection
      */
-    var BaseLayerPicker = function(container, options) {
+    function BaseLayerPicker(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -125,7 +123,7 @@ click: toggleDropDown');
         imgElement.setAttribute('draggable', 'false');
         imgElement.className = 'cesium-baseLayerPicker-selected';
         imgElement.setAttribute('data-bind', '\
-attr: { src: buttonImageUrl }');
+attr: { src: buttonImageUrl }, visible: !!buttonImageUrl');
         element.appendChild(imgElement);
 
         var dropPanel = document.createElement('div');
@@ -140,18 +138,32 @@ css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }');
         imageryTitle.innerHTML = 'Imagery';
         dropPanel.appendChild(imageryTitle);
 
+        var imagerySection = document.createElement('div');
+        imagerySection.className = 'cesium-baseLayerPicker-section';
+        imagerySection.setAttribute('data-bind', 'foreach: _imageryProviders');
+        dropPanel.appendChild(imagerySection);
+
+        var imageryCategories = document.createElement('div');
+        imageryCategories.className = 'cesium-baseLayerPicker-category';
+        imagerySection.appendChild(imageryCategories);
+
+        var categoryTitle = document.createElement('div');
+        categoryTitle.className = 'cesium-baseLayerPicker-categoryTitle';
+        categoryTitle.setAttribute('data-bind', 'text: name');
+        imageryCategories.appendChild(categoryTitle);
+
         var imageryChoices = document.createElement('div');
         imageryChoices.className = 'cesium-baseLayerPicker-choices';
-        imageryChoices.setAttribute('data-bind', 'foreach: imageryProviderViewModels');
-        dropPanel.appendChild(imageryChoices);
+        imageryChoices.setAttribute('data-bind', 'foreach: providers');
+        imageryCategories.appendChild(imageryChoices);
 
         var imageryProvider = document.createElement('div');
         imageryProvider.className = 'cesium-baseLayerPicker-item';
         imageryProvider.setAttribute('data-bind', '\
-css: { "cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedImagery },\
+css: { "cesium-baseLayerPicker-selectedItem" : $data === $parents[1].selectedImagery },\
 attr: { title: tooltip },\
 visible: creationCommand.canExecute,\
-click: function($data) { $parent.selectedImagery = $data; }');
+click: function($data) { $parents[1].selectedImagery = $data; }');
         imageryChoices.appendChild(imageryProvider);
 
         var providerIcon = document.createElement('img');
@@ -171,18 +183,32 @@ click: function($data) { $parent.selectedImagery = $data; }');
         terrainTitle.innerHTML = 'Terrain';
         dropPanel.appendChild(terrainTitle);
 
+        var terrainSection = document.createElement('div');
+        terrainSection.className = 'cesium-baseLayerPicker-section';
+        terrainSection.setAttribute('data-bind', 'foreach: _terrainProviders');
+        dropPanel.appendChild(terrainSection);
+
+        var terrainCategories = document.createElement('div');
+        terrainCategories.className = 'cesium-baseLayerPicker-category';
+        terrainSection.appendChild(terrainCategories);
+
+        var terrainCategoryTitle = document.createElement('div');
+        terrainCategoryTitle.className = 'cesium-baseLayerPicker-categoryTitle';
+        terrainCategoryTitle.setAttribute('data-bind', 'text: name');
+        terrainCategories.appendChild(terrainCategoryTitle);
+
         var terrainChoices = document.createElement('div');
         terrainChoices.className = 'cesium-baseLayerPicker-choices';
-        terrainChoices.setAttribute('data-bind', 'foreach: terrainProviderViewModels');
-        dropPanel.appendChild(terrainChoices);
+        terrainChoices.setAttribute('data-bind', 'foreach: providers');
+        terrainCategories.appendChild(terrainChoices);
 
         var terrainProvider = document.createElement('div');
         terrainProvider.className = 'cesium-baseLayerPicker-item';
         terrainProvider.setAttribute('data-bind', '\
-css: { "cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedTerrain },\
+css: { "cesium-baseLayerPicker-selectedItem" : $data === $parents[1].selectedTerrain },\
 attr: { title: tooltip },\
 visible: creationCommand.canExecute,\
-click: function($data) { $parent.selectedTerrain = $data; }');
+click: function($data) { $parents[1].selectedTerrain = $data; }');
         terrainChoices.appendChild(terrainProvider);
 
         var terrainProviderIcon = document.createElement('img');
@@ -210,9 +236,13 @@ click: function($data) { $parent.selectedTerrain = $data; }');
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropDown, true);
-        document.addEventListener('touchstart', this._closeDropDown, true);
-    };
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.addEventListener('pointerdown', this._closeDropDown, true);
+        } else {
+            document.addEventListener('mousedown', this._closeDropDown, true);
+            document.addEventListener('touchstart', this._closeDropDown, true);
+        }
+    }
 
     defineProperties(BaseLayerPicker.prototype, {
         /**
@@ -252,8 +282,13 @@ click: function($data) { $parent.selectedTerrain = $data; }');
      * removing the widget from layout.
      */
     BaseLayerPicker.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._closeDropDown, true);
-        document.removeEventListener('touchstart', this._closeDropDown, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            document.removeEventListener('pointerdown', this._closeDropDown, true);
+        } else {
+            document.removeEventListener('mousedown', this._closeDropDown, true);
+            document.removeEventListener('touchstart', this._closeDropDown, true);
+        }
+
         knockout.cleanNode(this._element);
         knockout.cleanNode(this._dropPanel);
         this._container.removeChild(this._element);

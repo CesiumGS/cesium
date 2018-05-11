@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -15,7 +14,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes an ellipse defined by a center point and semi-major and semi-minor axes.
@@ -29,8 +28,8 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.semiMajorAxis] The numeric Property specifying the semi-major axis.
      * @param {Property} [options.semiMinorAxis] The numeric Property specifying the semi-minor axis.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipse.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipse is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipse.
@@ -38,13 +37,15 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
-     * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse clockwise from north.
+     * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse counter-clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipse will be displayed.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
-    var EllipseGraphics = function(options) {
+    function EllipseGraphics(options) {
         this._semiMajorAxis = undefined;
         this._semiMajorAxisSubscription = undefined;
         this._semiMinorAxis = undefined;
@@ -73,10 +74,16 @@ define([
         this._outlineWidthSubscription = undefined;
         this._numberOfVerticalLines = undefined;
         this._numberOfVerticalLinesSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(EllipseGraphics.prototype, {
         /**
@@ -200,7 +207,31 @@ define([
          * @type {Property}
          * @default 16
          */
-        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines')
+        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
+
+        /**
+         * Get or sets the enum Property specifying whether the ellipse
+         * casts or receives shadows from each light source.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         * @default ShadowMode.DISABLED
+         */
+        shadows : createPropertyDescriptor('shadows'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this ellipse will be displayed.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.BOTH
+         */
+        classificationType : createPropertyDescriptor('classificationType')
     });
 
     /**
@@ -227,6 +258,9 @@ define([
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.numberOfVerticalLines = this.numberOfVerticalLines;
+        result.shadows = this.shadows;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
         return result;
     };
 
@@ -257,6 +291,9 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.numberOfVerticalLines = defaultValue(this.numberOfVerticalLines, source.numberOfVerticalLines);
+        this.shadows = defaultValue(this.shadows, source.shadows);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
     };
 
     return EllipseGraphics;

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/createTangentSpaceDebugPrimitive',
         'Core/Cartesian3',
@@ -13,9 +12,7 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
-
+    'use strict';
 
     it('computes all attributes', function() {
         var geometry = new EllipsoidGeometry({
@@ -32,6 +29,7 @@ defineSuite([
 
         expect(primitive.geometryInstances).toBeDefined();
         expect(primitive.appearance).toBeDefined();
+        expect(primitive.asynchronous).toBe(false);
 
         var instances = primitive.geometryInstances;
         expect(instances.length).toEqual(3);

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
@@ -9,16 +8,21 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/EllipsoidFS',
         '../Shaders/EllipsoidVS',
         './BlendingState',
         './CullFace',
         './Material',
-        './Pass',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -30,18 +34,23 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
         VertexFormat,
         BufferUsage,
         DrawCommand,
+        Pass,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
+        VertexArray,
         EllipsoidFS,
         EllipsoidVS,
         BlendingState,
         CullFace,
         Material,
-        Pass,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var attributeLocations = {
         position : 0
@@ -65,24 +74,9 @@ define([
      * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
-     *
-     * @example
-     * // 1. Create a sphere using the ellipsoid primitive
-     * primitives.add(new Cesium.EllipsoidPrimitive({
-     *   center : Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
-     *   radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
-     * }));
-     *
-     * @example
-     * // 2. Create a tall ellipsoid in an east-north-up reference frame
-     * var e = new Cesium.EllipsoidPrimitive();
-     * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-     *   Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0));
-     * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
-     * primitives.add(e);
+     * @private
      */
-    var EllipsoidPrimitive = function(options) {
+    function EllipsoidPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -109,11 +103,12 @@ define([
          * @type {Cartesian3}
          * @default undefined
          *
-         * @see EllipsoidPrimitive#modelMatrix
          *
          * @example
          * // A sphere with a radius of 2.0
          * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
+         *
+         * @see EllipsoidPrimitive#modelMatrix
          */
         this.radii = Cartesian3.clone(options.radii);
         this._radii = new Cartesian3();
@@ -156,14 +151,15 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          *
          * @example
          * // 1. Change the color of the default material to yellow
          * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Cesium.Material.fromType(Material.StripeType);
+         * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -199,6 +195,13 @@ define([
         this.onlySunLighting = defaultValue(options.onlySunLighting, false);
         this._onlySunLighting = false;
 
+        /**
+         * @private
+         */
+        this._depthTestEnabled = defaultValue(options.depthTestEnabled, true);
+
+        this._useLogDepth = false;
+
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -228,7 +231,7 @@ define([
                 return that._pickId.color;
             }
         };
-    };
+    }
 
     function getVertexArray(context) {
         var vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
@@ -242,7 +245,8 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
-        vertexArray = context.createVertexArrayFromGeometry({
+        vertexArray = VertexArray.fromGeometry({
+            context : context,
             geometry : geometry,
             attributeLocations : attributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW,
@@ -252,6 +256,11 @@ define([
         context.cache.ellipsoidPrimitive_vertexArray = vertexArray;
         return vertexArray;
     }
+
+    var logDepthExtension =
+        '#ifdef GL_EXT_frag_depth \n' +
+        '#extension GL_EXT_frag_depth : enable \n' +
+        '#endif \n\n';
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -263,7 +272,7 @@ define([
      *
      * @exception {DeveloperError} this.material must be defined.
      */
-    EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
+    EllipsoidPrimitive.prototype.update = function(frameState) {
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D) ||
             (!defined(this.center)) ||
@@ -277,6 +286,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var context = frameState.context;
         var translucent = this.material.isTranslucent();
         var translucencyChanged = this._translucent !== translucent;
 
@@ -287,7 +297,7 @@ define([
             // depth range, the hard-coded values in EllipsoidVS.glsl need
             // to be updated as well.
 
-            this._rs = context.createRenderState({
+            this._rs = RenderState.fromCache({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
                 // disappear if the viewer enters the bounding box.
                 cull : {
@@ -295,11 +305,10 @@ define([
                     face : CullFace.FRONT
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : this._depthTestEnabled
                 },
-                // Do not write depth since the depth for the bounding box is
-                // wrong; it is not the true depth of the ray casted ellipsoid.
-                // Only write depth when EXT_frag_depth is supported.
+                // Only write depth when EXT_frag_depth is supported since the depth for
+                // the bounding box is wrong; it is not the true depth of the ray casted ellipsoid.
                 depthMask : !translucent && context.fragmentDepth,
                 blending : translucent ? BlendingState.ALPHA_BLEND : undefined
             });
@@ -345,12 +354,20 @@ define([
         var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
         this._onlySunLighting = this.onlySunLighting;
 
+        var frustum = frameState.camera.frustum;
+        var useLogDepth = context.fragmentDepth && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepthChanged = this._useLogDepth !== useLogDepth;
+        this._useLogDepth = useLogDepth;
+
         var colorCommand = this._colorCommand;
         var vs;
         var fs;
 
         // Recompile shader when material, lighting, or translucency changes
-        if (materialChanged || lightingChanged || translucencyChanged) {
+        if (materialChanged || lightingChanged || translucencyChanged || useLogDepthChanged) {
+            vs = new ShaderSource({
+                sources : [EllipsoidVS]
+            });
             fs = new ShaderSource({
                 sources : [this.material.shaderSource, EllipsoidFS]
             });
@@ -360,8 +377,19 @@ define([
             if (!translucent && context.fragmentDepth) {
                 fs.defines.push('WRITE_DEPTH');
             }
+            if (this._useLogDepth) {
+                vs.defines.push('LOG_DEPTH', 'DISABLE_GL_POSITION_LOG_DEPTH');
+                fs.defines.push('LOG_DEPTH');
+                fs.sources.push(logDepthExtension);
+            }
 
-            this._sp = context.replaceShaderProgram(this._sp, EllipsoidVS, fs, attributeLocations);
+            this._sp = ShaderProgram.replaceCache({
+                context : context,
+                shaderProgram : this._sp,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
 
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
@@ -370,6 +398,7 @@ define([
             colorCommand.executeInClosestFrustum = translucent;
         }
 
+        var commandList = frameState.commandList;
         var passes = frameState.passes;
 
         if (passes.render) {
@@ -394,7 +423,10 @@ define([
             }
 
             // Recompile shader when material changes
-            if (materialChanged || lightingChanged || !defined(this._pickSP)) {
+            if (materialChanged || lightingChanged || !defined(this._pickSP) || useLogDepthChanged) {
+                vs = new ShaderSource({
+                    sources : [EllipsoidVS]
+                });
                 fs = new ShaderSource({
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
@@ -405,8 +437,19 @@ define([
                 if (!translucent && context.fragmentDepth) {
                     fs.defines.push('WRITE_DEPTH');
                 }
+                if (this._useLogDepth) {
+                    vs.defines.push('LOG_DEPTH');
+                    fs.defines.push('LOG_DEPTH');
+                    fs.sources.push(logDepthExtension);
+                }
 
-                this._pickSP = context.replaceShaderProgram(this._pickSP, EllipsoidVS, fs, attributeLocations);
+                this._pickSP = ShaderProgram.replaceCache({
+                    context : context,
+                    shaderProgram : this._pickSP,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
 
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
@@ -445,14 +488,13 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see EllipsoidPrimitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     *
+     * @see EllipsoidPrimitive#isDestroyed
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.destroy();

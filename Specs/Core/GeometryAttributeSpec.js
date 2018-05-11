@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/GeometryAttribute',
         'Core/ComponentDatatype'
     ], function(
         GeometryAttribute,
         ComponentDatatype) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('constructor', function() {
         var color = new GeometryAttribute({

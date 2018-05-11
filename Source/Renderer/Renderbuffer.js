@@ -1,16 +1,59 @@
-/*global define*/
 define([
+        '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        './ContextLimits',
+        './RenderbufferFormat'
     ], function(
+        Check,
+        defaultValue,
+        defined,
         defineProperties,
-        destroyObject) {
-    "use strict";
+        destroyObject,
+        DeveloperError,
+        ContextLimits,
+        RenderbufferFormat) {
+    'use strict';
 
     /**
      * @private
      */
-    function Renderbuffer(gl, format, width, height) {
+    function Renderbuffer(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('options.context', options.context);
+        //>>includeEnd('debug');
+
+        var context = options.context;
+        var gl = context._gl;
+        var maximumRenderbufferSize = ContextLimits.maximumRenderbufferSize;
+
+        var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
+        var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
+        var height = defined(options.height) ? options.height : gl.drawingBufferHeight;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!RenderbufferFormat.validate(format)) {
+            throw new DeveloperError('Invalid format.');
+        }
+
+        Check.typeOf.number.greaterThan('width', width, 0);
+
+        if (width > maximumRenderbufferSize) {
+            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
+        }
+
+        Check.typeOf.number.greaterThan('height', height, 0);
+
+        if (height > maximumRenderbufferSize) {
+            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
+        }
+        //>>includeEnd('debug');
+
         this._gl = gl;
         this._format = format;
         this._width = width;

@@ -1,0 +1,9 @@
+<?js
+var data = obj;
+var self = this;
+?>
+<?js if (data.meta && data.meta.sourceUrl) {?>
+<div class="source-link rightLinks">
+    <?js= self.linkto(data.meta.sourceUrl, meta.filename + ' ' + meta.lineno, null, 'L' + meta.lineno) ?>
+</div>
+<?js } ?>

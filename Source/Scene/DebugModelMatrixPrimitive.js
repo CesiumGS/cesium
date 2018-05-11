@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Color',
@@ -21,7 +20,7 @@ define([
         PolylineGeometry,
         PolylineColorAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
     /**
      * Draws the axes of a reference frame defined by a matrix that transforms to world
@@ -51,7 +50,7 @@ define([
      *   width : 10.0
      * }));
      */
-    var DebugModelMatrixPrimitive = function(options) {
+    function DebugModelMatrixPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -90,9 +89,9 @@ define([
         this._modelMatrix = new Matrix4();
 
         /**
-         * User-defined object returned when the primitive is picked.
+         * User-defined value returned when the primitive is picked.
          *
-         * @type {Object}
+         * @type {*}
          * @default undefined
          *
          * @see Scene#pick
@@ -101,12 +100,12 @@ define([
         this._id = undefined;
 
         this._primitive = undefined;
-    };
+    }
 
     /**
      * @private
      */
-    DebugModelMatrixPrimitive.prototype.update = function(context, frameState, commandList) {
+    DebugModelMatrixPrimitive.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -193,7 +192,7 @@ define([
             });
         }
 
-        this._primitive.update(context, frameState, commandList);
+        this._primitive.update(frameState);
     };
 
     /**
@@ -219,8 +218,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

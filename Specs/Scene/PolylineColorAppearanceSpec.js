@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PolylineColorAppearance',
         'Core/Cartesian3',
@@ -6,14 +5,9 @@ defineSuite([
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         PolylineColorAppearance,
         Cartesian3,
@@ -21,33 +15,26 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         PolylineGeometry,
-        ClearCommand,
         Appearance,
         Primitive,
-        createCamera,
-        createContext,
-        createFrameState,
-        destroyContext,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        createScene) {
+    'use strict';
 
-    var context;
-    var us;
-    var frameState;
+    var scene;
+    var primitive;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
     });
 
     afterAll(function() {
-        destroyContext(context);
+        scene.destroyForSpecs();
     });
 
-    beforeEach(function() {
-        frameState = createFrameState(createCamera());
-        us = context.uniformState;
-        us.update(context, frameState);
+    afterEach(function() {
+        scene.primitives.removeAll();
+        primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
     });
 
     it('constructor', function() {
@@ -63,12 +50,12 @@ defineSuite([
     });
 
     it('renders', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new PolylineGeometry({
                     positions : [
-                        new Cartesian3(0.0, -1.0, 0.0),
-                        new Cartesian3(0.0, 1.0, 0.0)
+                        new Cartesian3(0.0, -1000000.0, 0.0),
+                        new Cartesian3(0.0, 1000000.0, 0.0)
                     ],
                     width : 10.0,
                     vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
@@ -84,11 +71,10 @@ defineSuite([
             asynchronous : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

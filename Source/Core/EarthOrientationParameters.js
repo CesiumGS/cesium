@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './binarySearch',
@@ -8,7 +7,7 @@ define([
         './freezeObject',
         './JulianDate',
         './LeapSecond',
-        './loadJson',
+        './Resource',
         './RuntimeError',
         './TimeConstants',
         './TimeStandard'
@@ -21,11 +20,11 @@ define([
         freezeObject,
         JulianDate,
         LeapSecond,
-        loadJson,
+        Resource,
         RuntimeError,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     /**
      * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
@@ -37,7 +36,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url] The URL from which to obtain EOP data.  If neither this
+     * @param {Resource|String} [options.url] The URL from which to obtain EOP data.  If neither this
      *                 parameter nor options.data is specified, all EOP values are assumed
      *                 to be 0.0.  If options.data is specified, this parameter is
      *                 ignored.
@@ -53,11 +52,11 @@ define([
      * @example
      * // An example EOP data file, EOP.json:
      * {
-     *   "columnNames" : ["dateIso8601","xPoleWanderRadians","yPoleWanderRadians","ut1MinusUtcSeconds","lengthOfDayCorrectionSeconds","xCelestialPoleOffsetRadians","yCelestialPoleOffsetRadians","taiMinusUtcSeconds"],
+     *   "columnNames" : ["dateIso8601","modifiedJulianDateUtc","xPoleWanderRadians","yPoleWanderRadians","ut1MinusUtcSeconds","lengthOfDayCorrectionSeconds","xCelestialPoleOffsetRadians","yCelestialPoleOffsetRadians","taiMinusUtcSeconds"],
      *   "samples" : [
-     *      "2011-07-01T00:00:00Z",2.117957047295119e-7,2.111518721609984e-6,-0.2908948,-2.956e-4,3.393695767766752e-11,3.3452143996557983e-10,34.0,
-     *      "2011-07-02T00:00:00Z",2.193297093339541e-7,2.115460256837405e-6,-0.29065,-1.824e-4,-8.241832578862112e-11,5.623838700870617e-10,34.0,
-     *      "2011-07-03T00:00:00Z",2.262286080161428e-7,2.1191157519929706e-6,-0.2905572,1.9e-6,-3.490658503988659e-10,6.981317007977318e-10,34.0
+     *      "2011-07-01T00:00:00Z",55743.0,2.117957047295119e-7,2.111518721609984e-6,-0.2908948,-2.956e-4,3.393695767766752e-11,3.3452143996557983e-10,34.0,
+     *      "2011-07-02T00:00:00Z",55744.0,2.193297093339541e-7,2.115460256837405e-6,-0.29065,-1.824e-4,-8.241832578862112e-11,5.623838700870617e-10,34.0,
+     *      "2011-07-03T00:00:00Z",55745.0,2.262286080161428e-7,2.1191157519929706e-6,-0.2905572,1.9e-6,-3.490658503988659e-10,6.981317007977318e-10,34.0
      *   ]
      * }
      *
@@ -68,7 +67,7 @@ define([
      *
      * @private
      */
-    var EarthOrientationParameters = function EarthOrientationParameters(options) {
+    function EarthOrientationParameters(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._dates = undefined;
@@ -94,12 +93,14 @@ define([
             // Use supplied EOP data.
             onDataReady(this, options.data);
         } else if (defined(options.url)) {
+            var resource = Resource.createIfNeeded(options.url);
+
             // Download EOP data.
             var that = this;
-            this._downloadPromise = when(loadJson(options.url), function(eopData) {
+            this._downloadPromise = when(resource.fetchJson(), function(eopData) {
                 onDataReady(that, eopData);
             }, function() {
-                that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + options.url + '.';
+                that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + resource.url + '.';
             });
         } else {
             // Use all zeros for EOP data.
@@ -108,7 +109,7 @@ define([
                 'samples' : []
             });
         }
-    };
+    }
 
     /**
      * A default {@link EarthOrientationParameters} instance that returns zero for all EOP values.
@@ -135,7 +136,7 @@ define([
      * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
      * ready to use.
      *
-     * @returns {Promise} The promise.
+     * @returns {Promise.<undefined>} The promise.
      *
      * @see when
      */

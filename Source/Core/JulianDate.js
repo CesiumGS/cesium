@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/sprintf',
         './binarySearch',
@@ -21,7 +20,7 @@ define([
         LeapSecond,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     var gregorianDateScratch = new GregorianDate();
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -122,7 +121,7 @@ define([
 
         var a = ((month - 14) / 12) | 0;
         var b = year + 4800 + a;
-        var dayNumber = (((1461 * b) / 4) | 0) + (((367 * (month - 2 - 12 * a)) / 12) | 0) - (((3 * ((b + 100) / 100)) / 4) | 0) + day - 32075;
+        var dayNumber = (((1461 * b) / 4) | 0) + (((367 * (month - 2 - 12 * a)) / 12) | 0) - (((3 * (((b + 100) / 100) | 0)) / 4) | 0) + day - 32075;
 
         // JulianDates are noon-based
         hour = hour - 12;
@@ -170,11 +169,11 @@ define([
      * @alias JulianDate
      * @constructor
      *
-     * @param {Number} julianDayNumber The Julian Day Number representing the number of whole days.  Fractional days will also be handled correctly.
-     * @param {Number} secondsOfDay The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
+     * @param {Number} [julianDayNumber=0.0] The Julian Day Number representing the number of whole days.  Fractional days will also be handled correctly.
+     * @param {Number} [secondsOfDay=0.0] The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
      * @param {TimeStandard} [timeStandard=TimeStandard.UTC] The time standard in which the first two parameters are defined.
      */
-    var JulianDate = function(julianDayNumber, secondsOfDay, timeStandard) {
+    function JulianDate(julianDayNumber, secondsOfDay, timeStandard) {
         /**
          * Gets or sets the number of whole days.
          * @type {Number}
@@ -200,6 +199,31 @@ define([
         if (timeStandard === TimeStandard.UTC) {
             convertUtcToTai(this);
         }
+    }
+
+    /**
+     * Creates a new instance from a GregorianDate.
+     *
+     * @param {GregorianDate} date A GregorianDate.
+     * @param {JulianDate} [result] An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} date must be a valid GregorianDate.
+     */
+    JulianDate.fromGregorianDate = function(date, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!(date instanceof GregorianDate)) {
+            throw new DeveloperError('date must be a valid GregorianDate.');
+        }
+        //>>includeEnd('debug');
+
+        var components = computeJulianDateComponents(date.year, date.month, date.day, date.hour, date.minute, date.second, date.millisecond);
+        if (!defined(result)) {
+            return new JulianDate(components[0], components[1], TimeStandard.UTC);
+        }
+        setComponents(components[0], components[1], result);
+        convertUtcToTai(result);
+        return result;
     };
 
     /**
@@ -264,19 +288,23 @@ define([
         var time = tokens[1];
         var tmp;
         var inLeapYear;
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(date)) {
             throw new DeveloperError(iso8601ErrorMessage);
         }
 
         var dashCount;
+        //>>includeEnd('debug');
 
         //First match the date against possible regular expressions.
         tokens = date.match(matchCalendarDate);
         if (tokens !== null) {
+            //>>includeStart('debug', pragmas.debug);
             dashCount = date.split('-').length - 1;
             if (dashCount > 0 && dashCount !== 2) {
                 throw new DeveloperError(iso8601ErrorMessage);
             }
+            //>>includeEnd('debug');
             year = +tokens[1];
             month = +tokens[2];
             day = +tokens[3];
@@ -300,9 +328,11 @@ define([
                         inLeapYear = isLeapYear(year);
 
                         //This validation is only applicable for this format.
+                        //>>includeStart('debug', pragmas.debug);
                         if (dayOfYear < 1 || (inLeapYear && dayOfYear > 366) || (!inLeapYear && dayOfYear > 365)) {
                             throw new DeveloperError(iso8601ErrorMessage);
                         }
+                        //>>includeEnd('debug')
                     } else {
                         tokens = date.match(matchWeekDate);
                         if (tokens !== null) {
@@ -312,18 +342,22 @@ define([
                             var weekNumber = +tokens[2];
                             var dayOfWeek = +tokens[3] || 0;
 
+                            //>>includeStart('debug', pragmas.debug);
                             dashCount = date.split('-').length - 1;
                             if (dashCount > 0 &&
                                ((!defined(tokens[3]) && dashCount !== 1) ||
                                (defined(tokens[3]) && dashCount !== 2))) {
                                 throw new DeveloperError(iso8601ErrorMessage);
                             }
+                            //>>includeEnd('debug')
 
                             var january4 = new Date(Date.UTC(year, 0, 4));
                             dayOfYear = (weekNumber * 7) + dayOfWeek - january4.getUTCDay() - 3;
                         } else {
                             //None of our regular expressions succeeded in parsing the date properly.
+                            //>>includeStart('debug', pragmas.debug);
                             throw new DeveloperError(iso8601ErrorMessage);
+                            //>>includeEnd('debug')
                         }
                     }
                     //Split an ordinal date into month/day.
@@ -337,19 +371,24 @@ define([
 
         //Now that we have all of the date components, validate them to make sure nothing is out of range.
         inLeapYear = isLeapYear(year);
+        //>>includeStart('debug', pragmas.debug);
         if (month < 1 || month > 12 || day < 1 || ((month !== 2 || !inLeapYear) && day > daysInMonth[month - 1]) || (inLeapYear && month === 2 && day > daysInLeapFeburary)) {
             throw new DeveloperError(iso8601ErrorMessage);
         }
+        //>>includeEnd('debug')
 
-        //Not move onto the time string, which is much simpler.
+        //Now move onto the time string, which is much simpler.
+        //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
         var offsetIndex;
         if (defined(time)) {
             tokens = time.match(matchHoursMinutesSeconds);
             if (tokens !== null) {
+                //>>includeStart('debug', pragmas.debug);
                 dashCount = time.split(':').length - 1;
                 if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
                     throw new DeveloperError(iso8601ErrorMessage);
                 }
+                //>>includeEnd('debug')
 
                 hour = +tokens[1];
                 minute = +tokens[2];
@@ -359,10 +398,12 @@ define([
             } else {
                 tokens = time.match(matchHoursMinutes);
                 if (tokens !== null) {
+                    //>>includeStart('debug', pragmas.debug);
                     dashCount = time.split(':').length - 1;
-                    if (dashCount > 0 && dashCount !== 1) {
+                    if (dashCount > 2) {
                         throw new DeveloperError(iso8601ErrorMessage);
                     }
+                    //>>includeEnd('debug')
 
                     hour = +tokens[1];
                     minute = +tokens[2];
@@ -375,15 +416,19 @@ define([
                         minute = +(tokens[2] || 0) * 60.0;
                         offsetIndex = 3;
                     } else {
+                        //>>includeStart('debug', pragmas.debug);
                         throw new DeveloperError(iso8601ErrorMessage);
+                        //>>includeEnd('debug')
                     }
                 }
             }
 
             //Validate that all values are in proper range.  Minutes and hours have special cases at 60 and 24.
+            //>>includeStart('debug', pragmas.debug);
             if (minute >= 60 || second >= 61 || hour > 24 || (hour === 24 && (minute > 0 || second > 0 || millisecond > 0))) {
                 throw new DeveloperError(iso8601ErrorMessage);
             }
+            //>>includeEnd('debug');
 
             //Check the UTC offset value, if no value exists, use local time
             //a Z indicates UTC, + or - are offsets.
@@ -405,9 +450,6 @@ define([
                 minute = minute + new Date(Date.UTC(year, month - 1, day, hour, minute)).getTimezoneOffset();
                 break;
             }
-        } else {
-            //If no time is specified, it is considered the beginning of the day, local time.
-            minute = minute + new Date(year, month - 1, day).getTimezoneOffset();
         }
 
         //ISO8601 denotes a leap second by any time having a seconds component of 60 seconds.
@@ -614,23 +656,23 @@ define([
         }
         //>>includeEnd('debug');
 
-        var gDate = JulianDate.toGregorianDate(julianDate, gDate);
+        var gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
         var millisecondStr;
 
         if (!defined(precision) && gDate.millisecond !== 0) {
             //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
             millisecondStr = (gDate.millisecond * 0.01).toString().replace('.', '');
-            return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%sZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
+            return sprintf('%04d-%02d-%02dT%02d:%02d:%02d.%sZ', gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
         }
 
         //Precision is either 0 or milliseconds is 0 with undefined precision, in either case, leave off milliseconds entirely
         if (!defined(precision) || precision === 0) {
-            return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second);
+            return sprintf('%04d-%02d-%02dT%02d:%02d:%02dZ', gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second);
         }
 
         //Forces milliseconds into a number with at least 3 digits to whatever the specified precision is.
         millisecondStr = (gDate.millisecond * 0.01).toFixed(precision).replace('.', '').slice(0, precision);
-        return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%sZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
+        return sprintf('%04d-%02d-%02dT%02d:%02d:%02d.%sZ', gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
     };
 
     /**
@@ -1010,7 +1052,9 @@ define([
                                new LeapSecond(new JulianDate(2451179, 43232.0, TimeStandard.TAI), 32), // January 1, 1999 00:00:00 UTC
                                new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
                                new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
-                               new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
+                               new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35), // July 1, 2012 00:00:00 UTC
+                               new LeapSecond(new JulianDate(2457204, 43236.0, TimeStandard.TAI), 36), // July 1, 2015 00:00:00 UTC
+                               new LeapSecond(new JulianDate(2457754, 43237.0, TimeStandard.TAI), 37)  // January 1, 2017 00:00:00 UTC
                              ];
 
     return JulianDate;

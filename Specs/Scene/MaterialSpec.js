@@ -1,103 +1,118 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Material',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defaultValue',
+        'Core/defined',
         'Core/Ellipsoid',
-        'Core/Math',
-        'Renderer/ClearCommand',
-        'Scene/Polygon',
+        'Core/GeometryInstance',
+        'Core/Rectangle',
+        'Core/RectangleGeometry',
+        'Core/Resource',
+        'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/destroyContext',
-        'Specs/render'
+        'Scene/Primitive',
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         Material,
         Cartesian3,
         Color,
+        defaultValue,
+        defined,
         Ellipsoid,
-        CesiumMath,
-        ClearCommand,
-        Polygon,
+        GeometryInstance,
+        Rectangle,
+        RectangleGeometry,
+        Resource,
+        MaterialAppearance,
         PolylineCollection,
-        createCamera,
-        createContext,
-        createFrameState,
-        destroyContext,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+        Primitive,
+        createScene,
+        pollToPromise) {
+    'use strict';
 
-    var context;
-    var frameState;
+    var scene;
+
+    var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
     var polygon;
+    var backgroundColor = [0, 0, 255, 255];
     var polylines;
     var polyline;
-    var us;
 
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState();
+        scene = createScene();
+        Color.unpack(backgroundColor, 0, scene.backgroundColor);
+        scene.primitives.destroyPrimitives = false;
+        scene.camera.setView({destination : rectangle});
     });
 
     afterAll(function() {
-        destroyContext(context);
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
-        us = context.uniformState;
-        us.update(context, createFrameState(createCamera({
-            offset : new Cartesian3(1.02, 0.0, 0.0)
-        })));
+        var vertexFormat = MaterialAppearance.MaterialSupport.ALL.vertexFormat;
 
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.positions = Cartesian3.fromDegreesArray([
-            -50.0, -50.0,
-            50.0, -50.0,
-            50.0, 50.0,
-            -50.0, 50.0
-        ], ellipsoid);
-        polygon.asynchronous = false;
+        polygon = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    vertexFormat : vertexFormat,
+                    rectangle : rectangle
+                })
+            }),
+            asynchronous : false
+        });
+
+        polygon.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.ALL,
+            translucent : false,
+            closed : true
+        });
 
         polylines = new PolylineCollection();
         polyline = polylines.add({
             positions : Cartesian3.fromDegreesArray([
                 -50.0, 0.0,
                 50.0, 0.0
-            ], ellipsoid),
+            ], Ellipsoid.WGS84),
             width : 5.0
         });
     });
 
     afterEach(function() {
+        scene.primitives.removeAll();
         polygon = polygon && polygon.destroy();
         polylines = polylines && polylines.destroy();
-        us = undefined;
     });
 
-    function renderMaterial(material) {
-        polygon.material = material;
+    function renderMaterial(material, ignoreBackground, callback) {
+        ignoreBackground = defaultValue(ignoreBackground, false);
+        polygon.appearance.material = material;
+        if (!ignoreBackground) {
+            expect(scene).toRender(backgroundColor);
+        }
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polygon);
-        return context.readPixels();
+        scene.primitives.add(polygon);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual(backgroundColor);
+            if (defined(callback)) {
+                callback(rgba);
+            }
+        });
     }
 
     function renderPolylineMaterial(material) {
         polyline.material = material;
+        expect(scene).toRender(backgroundColor);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        return context.readPixels();
+        scene.primitives.add(polylines);
+        var result;
+        expect(scene).toRenderAndCall(function(rgba) {
+            result = rgba;
+            expect(rgba).not.toEqual(backgroundColor);
+        });
+        return result;
     }
 
     function verifyMaterial(type) {
@@ -107,8 +122,7 @@ defineSuite([
                 type : type
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     }
 
     function verifyPolylineMaterial(type) {
@@ -118,8 +132,7 @@ defineSuite([
                 type : type
             }
         });
-        var pixel = renderPolylineMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderPolylineMaterial(material);
     }
 
     it('draws Color built-in material', function() {
@@ -186,6 +199,10 @@ defineSuite([
         verifyPolylineMaterial('PolylineArrow');
     });
 
+    it('draws PolylineDash built-in material', function() {
+        verifyPolylineMaterial('PolylineDash');
+    });
+
     it('draws PolylineGlow built-in material', function() {
         verifyPolylineMaterial('PolylineGlow');
     });
@@ -249,10 +266,8 @@ defineSuite([
             }
         });
 
-        var pixel1 = renderMaterial(material1);
-        expect(pixel1).not.toEqual([0, 0, 0, 0]);
-        var pixel2 = renderMaterial(material2);
-        expect(pixel2).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material1);
+        renderMaterial(material2, true);
     });
 
     it('accesses material properties after construction', function() {
@@ -279,8 +294,7 @@ defineSuite([
         material.uniforms.value.x = 1.0;
         material.materials.first.uniforms.repeat.x = 2.0;
 
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('creates a material inside a material inside a material', function () {
@@ -306,8 +320,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('creates a material with an image uniform', function () {
@@ -320,8 +333,85 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
+    });
+
+    it('creates a material with an image resource uniform', function () {
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  new Resource('./Data/Images/Blue.png')
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
+    it('creates a material with an image canvas uniform', function() {
+        var canvas = document.createElement('canvas');
+        var context2D = canvas.getContext('2d');
+        context2D.width = 1;
+        context2D.height = 1;
+        context2D.fillStyle = 'rgb(0,0,255)';
+        context2D.fillRect(0, 0, 1, 1);
+
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image : canvas
+                }
+            }
+        });
+
+        renderMaterial(material);
+    });
+
+    it('creates a material with an ktx compressed image uniform', function () {
+        var compressedUrl;
+        var context = scene.context;
+        if (context.s3tc) {
+            compressedUrl = './Data/Images/Green4x4DXT1.ktx';
+        } else if (context.etc1) {
+            compressedUrl = './Data/Images/Green4x4ETC1.ktx';
+        } else if (context.pvrtc) {
+            compressedUrl = './Data/Images/Green4x4PVR.ktx';
+        } else {
+            return;
+        }
+
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  compressedUrl
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
+    it('creates a material with an crn compressed image uniform', function () {
+        var context = scene.context;
+        if (!context.s3tc) {
+            return;
+        }
+
+        var compressedUrl = './Data/Images/Green4x4.crn';
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  compressedUrl
+                }
+            }
+        });
+        renderMaterial(material);
     });
 
     it('creates a material with a cube map uniform', function() {
@@ -347,8 +437,7 @@ defineSuite([
                     '}\n'
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('does not crash if source uniform is formatted differently', function() {
@@ -374,8 +463,7 @@ defineSuite([
                     '}'
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('creates a material with a boolean uniform', function () {
@@ -390,8 +478,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('create a material with a matrix uniform', function () {
@@ -407,8 +494,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material1);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material1);
 
         var material2 = new Material({
             strict : true,
@@ -422,8 +508,7 @@ defineSuite([
                 }
             }
         });
-        pixel = renderMaterial(material2);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material2, true);
 
         var material3 = new Material({
             strict : true,
@@ -437,8 +522,7 @@ defineSuite([
                 }
             }
         });
-        pixel = renderMaterial(material3);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material3, true);
     });
 
     it('creates a material using unusual uniform and material names', function () {
@@ -462,14 +546,12 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('create a material using fromType', function () {
         var material = Material.fromType('Color');
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('create material using fromType and overide default uniforms', function() {
@@ -477,8 +559,9 @@ defineSuite([
             color : new Color(0.0, 1.0, 0.0, 1.0)
         });
 
-        var pixel = renderMaterial(material1);
-        expect(pixel).toEqual([0, 255, 0, 255]);
+        renderMaterial(material1, false, function(rgba) {
+            expect(rgba).toEqual([0, 255, 0, 255]);
+        });
     });
 
     it('create multiple materials from the same type', function() {
@@ -487,16 +570,17 @@ defineSuite([
         });
 
         var material2 = Material.fromType('Color', {
-            color : new Color(0.0, 0.0, 1.0, 1.0)
+            color : new Color(1.0, 0.0, 0.0, 1.0)
         });
 
         expect(material1.shaderSource).toEqual(material2.shaderSource);
 
-        var pixel = renderMaterial(material2);
-        expect(pixel).toEqual([0, 0, 255, 255]);
-
-        pixel = renderMaterial(material1);
-        expect(pixel).toEqual([0, 255, 0, 255]);
+        renderMaterial(material2, false, function(rgba) {
+            expect(rgba).toEqual([255, 0, 0, 255]);
+        });
+        renderMaterial(material1, true, function(rgba) {
+            expect(rgba).toEqual([0, 255, 0, 255]);
+        });
     });
 
     it('create material with sub-materials of the same type', function() {
@@ -522,8 +606,9 @@ defineSuite([
             }
         });
 
-        var pixel = renderMaterial(material);
-        expect(pixel).toEqual([0, 255, 255, 255]);
+        renderMaterial(material, false, function(rgba) {
+            expect(rgba).toEqual([0, 255, 255, 255]);
+        });
     });
 
     it('throws with source and components in same template', function () {
@@ -646,8 +731,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('throws with unused uniform', function() {
@@ -679,8 +763,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('throws with unused material', function() {
@@ -708,8 +791,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('throws with invalid type sent to fromType', function() {
@@ -721,10 +803,14 @@ defineSuite([
     it('destroys material with texture', function() {
         var material = Material.fromType(Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
-        material.destroy();
-        expect(material.isDestroyed()).toEqual(true);
+
+        pollToPromise(function() {
+            return material._loadedImages.length !== 0;
+        }).then(function() {
+            renderMaterial(material);
+            material.destroy();
+            expect(material.isDestroyed()).toEqual(true);
+        });
     });
 
     it('destroys sub-materials', function() {
@@ -750,12 +836,22 @@ defineSuite([
         });
         material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
 
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        pollToPromise(function() {
+            return material.materials.diffuseMap._loadedImages.length !== 0;
+        }).then(function() {
+            renderMaterial(material);
 
-        var diffuseMap = material.materials.diffuseMap;
-        material.destroy();
-        expect(material.isDestroyed()).toEqual(true);
-        expect(diffuseMap.isDestroyed()).toEqual(true);
+            var diffuseMap = material.materials.diffuseMap;
+            material.destroy();
+            expect(material.isDestroyed()).toEqual(true);
+            expect(diffuseMap.isDestroyed()).toEqual(true);
+        });
     });
+
+    it('does not destroy default material', function() {
+        var material = Material.fromType(Material.DiffuseMapType);
+        renderMaterial(material);
+        material.destroy();
+    });
+
 }, 'WebGL');

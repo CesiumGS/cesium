@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Exaggerate terrain.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        require.config({
+                           baseUrl : '../../../Source',
+                           waitSeconds : 60
+                       });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <div id="zoomButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainExaggeration : 2.0,
+    terrainProvider: Cesium.createWorldTerrain()
+});
+
+Sandcastle.addDefaultToolbarMenu([{
+    text : 'Mount Everest',
+    onselect : function() {
+        viewer.camera.setView({
+            destination : new Cesium.Cartesian3(277096.634865404, 5647834.481964232, 2985563.7039122293),
+            orientation : {
+                heading : 4.731089976107251,
+                pitch : -0.32003481981370063
+            }
+        });
+    }
+}, {
+    text : 'Half Dome',
+    onselect : function() {
+        viewer.camera.setView({
+            destination : new Cesium.Cartesian3(-2497565.707296549, -4393815.215148996, 3886033.5140598584),
+            orientation : {
+                heading : 1.6690385899673323,
+                pitch : -0.32086751043096884
+            }
+        });
+    }
+}, {
+    text : 'San Francisco Bay',
+    onselect : function() {
+        viewer.camera.setView({
+            destination : new Cesium.Cartesian3(-2696570.092794883, -4276051.411224011, 3887257.288168422),
+            orientation : {
+                heading : 5.193128432412409,
+                pitch : -0.3996479673257727
+            }
+        });
+        var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
+        var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}], 'zoomButtons');
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

@@ -1,10 +1,11 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -16,23 +17,34 @@ define([
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Plane',
+        '../Core/RuntimeError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
+        '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
+        './BatchTable',
         './BlendingState',
         './Material',
-        './Pass',
         './Polyline',
         './SceneMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         Color,
+        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -44,18 +56,27 @@ define([
         Intersect,
         CesiumMath,
         Matrix4,
+        Plane,
+        RuntimeError,
+        Buffer,
         BufferUsage,
+        ContextLimits,
         DrawCommand,
+        Pass,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
+        Texture,
+        VertexArray,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
+        BatchTable,
         BlendingState,
         Material,
-        Pass,
         Polyline,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var SHOW_INDEX = Polyline.SHOW_INDEX;
     var WIDTH_INDEX = Polyline.WIDTH_INDEX;
@@ -64,10 +85,11 @@ define([
     //POSITION_SIZE_INDEX is needed for when the polyline's position array changes size.
     //When it does, we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
+    var DISTANCE_DISPLAY_CONDITION = Polyline.DISTANCE_DISPLAY_CONDITION;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
 
     var attributeLocations = {
-        texCoordExpandWidthAndShow : 0,
+        texCoordExpandAndBatchIndex : 0,
         position3DHigh : 1,
         position3DLow : 2,
         position2DHigh : 3,
@@ -79,15 +101,14 @@ define([
         nextPosition3DHigh : 9,
         nextPosition3DLow : 10,
         nextPosition2DHigh : 11,
-        nextPosition2DLow : 12,
-        pickColor : 13
+        nextPosition2DLow : 12
     };
 
     /**
      * A renderable collection of polylines.
      * <br /><br />
      * <div align="center">
-     * <img src="images/Polyline.png" width="400" height="300" /><br />
+     * <img src="Images/Polyline.png" width="400" height="300" /><br />
      * Example polylines
      * </div>
      * <br /><br />
@@ -111,13 +132,12 @@ define([
      * @see PolylineCollection#remove
      * @see Polyline
      * @see LabelCollection
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // Create a polyline collection with two polylines
      * var polylines = new Cesium.PolylineCollection();
      * polylines.add({
-     *   position : Cesium.Cartesian3.fromDegreesArray([
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
      *     -75.10, 39.57,
      *     -77.02, 38.53,
      *     -80.50, 35.14,
@@ -134,7 +154,7 @@ define([
      *   width : 4
      * });
      */
-    var PolylineCollection = function(options) {
+    function PolylineCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -174,21 +194,30 @@ define([
         this._polylines = [];
         this._polylineBuckets = {};
 
-        // The buffer usage for each attribute is determined based on the usage of the attribute over time.
-        this._buffersUsage = [
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // SHOW_INDEX
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}, // WIDTH_INDEX
-                              {bufferUsage: BufferUsage.STATIC_DRAW, frameCount:0}  // POSITION_INDEX
-        ];
+        // The buffer usage is determined based on the usage of the attribute over time.
+        this._positionBufferUsage = { bufferUsage : BufferUsage.STATIC_DRAW, frameCount : 0 };
 
         this._mode = undefined;
 
         this._polylinesToUpdate = [];
         this._vertexArrays = [];
         this._positionBuffer = undefined;
-        this._pickColorBuffer = undefined;
-        this._texCoordExpandWidthAndShowBuffer = undefined;
-    };
+        this._texCoordExpandAndBatchIndexBuffer = undefined;
+
+        this._batchTable = undefined;
+        this._createBatchTable = false;
+
+        // Only used by Vector3DTilePoints
+        this._useHighlightColor = false;
+        this._highlightColor = Color.clone(Color.WHITE);
+
+        var that = this;
+        this._uniformMap = {
+            u_highlightColor : function() {
+                return that._highlightColor;
+            }
+        };
+    }
 
     defineProperties(PolylineCollection.prototype, {
         /**
@@ -219,25 +248,27 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#remove
-     * @see PolylineCollection#removeAll
-     * @see PolylineCollection#update
      *
      * @example
      * // Example 1:  Add a polyline, specifying all the default values.
      * var p = polylines.add({
      *   show : true,
-     *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53)]),
-     *     width : 1
+     *   positions : ellipsoid.cartographicArrayToCartesianArray([
+           Cesium.Cartographic.fromDegrees(-75.10, 39.57),
+           Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
+     *   width : 1
      * });
+     *
+     * @see PolylineCollection#remove
+     * @see PolylineCollection#removeAll
+     * @see PolylineCollection#update
      */
     PolylineCollection.prototype.add = function(polyline) {
         var p = new Polyline(polyline, this);
         p._index = this._polylines.length;
         this._polylines.push(p);
         this._createVertexArray = true;
+        this._createBatchTable = true;
         return p;
     };
 
@@ -255,20 +286,28 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#add
-     * @see PolylineCollection#removeAll
-     * @see PolylineCollection#update
-     * @see Polyline#show
      *
      * @example
      * var p = polylines.add(...);
      * polylines.remove(p);  // Returns true
+     *
+     * @see PolylineCollection#add
+     * @see PolylineCollection#removeAll
+     * @see PolylineCollection#update
+     * @see Polyline#show
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
             this._polylines[polyline._index] = undefined; // Removed later
+
+            var polylineUpdateIndex = this._polylinesToUpdate.indexOf(polyline);
+            if (polylineUpdateIndex !== -1) {
+                this._polylinesToUpdate.splice(polylineUpdateIndex, 1);
+            }
+
             this._polylinesRemoved = true;
             this._createVertexArray = true;
+            this._createBatchTable = true;
             if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
                 bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
@@ -289,14 +328,15 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#add
-     * @see PolylineCollection#remove
-     * @see PolylineCollection#update
      *
      * @example
      * polylines.add(...);
      * polylines.add(...);
      * polylines.removeAll();
+     *
+     * @see PolylineCollection#add
+     * @see PolylineCollection#remove
+     * @see PolylineCollection#update
      */
     PolylineCollection.prototype.removeAll = function() {
         releaseShaders(this);
@@ -312,7 +352,7 @@ define([
      * Determines if this collection contains the specified polyline.
      *
      * @param {Polyline} polyline The polyline to check for.
-     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
+     * @returns {Boolean} true if this collection contains the polyline, false otherwise.
      *
      * @see PolylineCollection#get
      */
@@ -357,10 +397,52 @@ define([
         return this._polylines[index];
     };
 
+    function createBatchTable(collection, context) {
+        if (defined(collection._batchTable)) {
+            collection._batchTable.destroy();
+        }
+
+        var attributes = [{
+            functionName : 'batchTable_getWidthAndShow',
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 2
+        }, {
+            functionName : 'batchTable_getPickColor',
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 4,
+            normalize : true
+        }, {
+            functionName : 'batchTable_getCenterHigh',
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3
+        }, {
+            functionName : 'batchTable_getCenterLowAndRadius',
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 4
+        }, {
+            functionName : 'batchTable_getDistanceDisplayCondition',
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 2
+        }];
+
+        collection._batchTable = new BatchTable(context, attributes, collection._polylines.length);
+    }
+
+    var scratchUpdatePolylineEncodedCartesian = new EncodedCartesian3();
+    var scratchUpdatePolylineCartesian4 = new Cartesian4();
+    var scratchNearFarCartesian2 = new Cartesian2();
+
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {RuntimeError} Vertex texture fetch support is required to render primitives with per-instance attributes. The maximum number of vertex texture image units must be greater than zero.
      */
-    PolylineCollection.prototype.update = function(context, frameState, commandList) {
+    PolylineCollection.prototype.update = function(frameState) {
         removePolylines(this);
 
         if (this._polylines.length === 0) {
@@ -369,9 +451,18 @@ define([
 
         updateMode(this, frameState);
 
+        var context = frameState.context;
         var projection = frameState.mapProjection;
         var polyline;
         var properties = this._propertiesChanged;
+
+        if (this._createBatchTable) {
+            if (ContextLimits.maximumVertexTextureImageUnits === 0) {
+                throw new RuntimeError('Vertex texture fetch support is required to render polylines. The maximum number of vertex texture image units must be greater than zero.');
+            }
+            createBatchTable(this, context);
+            this._createBatchTable = false;
+        }
 
         if (this._createVertexArray || computeNewBuffersUsage(this)) {
             createVertexArrays(this, context, projection);
@@ -387,7 +478,7 @@ define([
             }
 
             // if a polyline's positions size changes, we need to recreate the vertex arrays and vertex buffers because the indices will be different.
-            // if a polyline's material changes, we need to recreate the VAOs and VBOs because they will be batched differenty.
+            // if a polyline's material changes, we need to recreate the VAOs and VBOs because they will be batched differently.
             if (properties[POSITION_SIZE_INDEX] || properties[MATERIAL_INDEX]) {
                 createVertexArrays(this, context, projection);
             } else {
@@ -398,17 +489,46 @@ define([
                     properties = polyline._propertiesChanged;
                     var bucket = polyline._bucket;
                     var index = 0;
-                    for ( var x in polylineBuckets) {
+                    for (var x in polylineBuckets) {
                         if (polylineBuckets.hasOwnProperty(x)) {
                             if (polylineBuckets[x] === bucket) {
-                                if (properties[POSITION_INDEX] || properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
-                                    bucket.writeUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer, projection);
+                                if (properties[POSITION_INDEX]) {
+                                    bucket.writeUpdate(index, polyline, this._positionBuffer, projection);
                                 }
                                 break;
                             }
                             index += polylineBuckets[x].lengthOfPositions;
                         }
                     }
+
+                    if (properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
+                        this._batchTable.setBatchedAttribute(polyline._index, 0, new Cartesian2(polyline._width, polyline._show));
+                    }
+
+                    if (this._batchTable.attributes.length > 2) {
+                        if (properties[POSITION_INDEX] || properties[POSITION_SIZE_INDEX]) {
+                            var boundingSphere = frameState.mode === SceneMode.SCENE2D ? polyline._boundingVolume2D : polyline._boundingVolumeWC;
+                            var encodedCenter = EncodedCartesian3.fromCartesian(boundingSphere.center, scratchUpdatePolylineEncodedCartesian);
+                            var low = Cartesian4.fromElements(encodedCenter.low.x, encodedCenter.low.y, encodedCenter.low.z, boundingSphere.radius, scratchUpdatePolylineCartesian4);
+                            this._batchTable.setBatchedAttribute(polyline._index, 2, encodedCenter.high);
+                            this._batchTable.setBatchedAttribute(polyline._index, 3, low);
+                        }
+
+                        if (properties[DISTANCE_DISPLAY_CONDITION]) {
+                            var nearFarCartesian = scratchNearFarCartesian2;
+                            nearFarCartesian.x = 0.0;
+                            nearFarCartesian.y = Number.MAX_VALUE;
+
+                            var distanceDisplayCondition = polyline.distanceDisplayCondition;
+                            if (defined(distanceDisplayCondition)) {
+                                nearFarCartesian.x = distanceDisplayCondition.near;
+                                nearFarCartesian.y = distanceDisplayCondition.far;
+                            }
+
+                            this._batchTable.setBatchedAttribute(polyline._index, 4, nearFarCartesian);
+                        }
+                    }
+
                     polyline._clean();
                 }
             }
@@ -430,7 +550,7 @@ define([
         var useDepthTest = (frameState.morphTime !== 0.0);
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
-            this._opaqueRS = context.createRenderState({
+            this._opaqueRS = RenderState.fromCache({
                 depthMask : useDepthTest,
                 depthTest : {
                     enabled : useDepthTest
@@ -439,7 +559,7 @@ define([
         }
 
         if (!defined(this._translucentRS) || this._translucentRS.depthTest.enabled !== useDepthTest) {
-            this._translucentRS = context.createRenderState({
+            this._translucentRS = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,
                 depthTest : {
@@ -448,27 +568,35 @@ define([
             });
         }
 
+        this._batchTable.update(frameState);
+
         if (pass.render) {
             var colorList = this._colorCommands;
-            createCommandLists(this, context, frameState, colorList, commandList, modelMatrix, true);
+            createCommandLists(this, frameState, colorList, modelMatrix, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
-            createCommandLists(this, context, frameState, pickList, commandList, modelMatrix, false);
+            createCommandLists(this, frameState, pickList, modelMatrix, false);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, commandList, modelMatrix, renderPass) {
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, renderPass) {
+        var context = frameState.context;
+        var commandList = frameState.commandList;
+
         var commandsLength = commands.length;
         var commandIndex = 0;
         var cloneBoundingSphere = true;
 
         var vertexArrays = polylineCollection._vertexArrays;
         var debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
+
+        var batchTable = polylineCollection._batchTable;
+        var uniformCallback = batchTable.getUniformMapCallback();
 
         var length = vertexArrays.length;
         for ( var m = 0; m < length; ++m) {
@@ -488,6 +616,7 @@ define([
                 var currentMaterial;
                 var count = 0;
                 var command;
+                var uniformMap;
 
                 for (var s = 0; s < polylineLength; ++s) {
                     var polyline = polylines[s];
@@ -507,6 +636,8 @@ define([
 
                             ++commandIndex;
 
+                            uniformMap = combine(uniformCallback(currentMaterial._uniforms), polylineCollection._uniformMap);
+
                             command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                             command.modelMatrix = modelMatrix;
                             command.shaderProgram = sp;
@@ -515,7 +646,7 @@ define([
                             command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
                             command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
 
-                            command.uniformMap = currentMaterial._uniforms;
+                            command.uniformMap = uniformMap;
                             command.count = count;
                             command.offset = offset;
 
@@ -574,6 +705,8 @@ define([
 
                     ++commandIndex;
 
+                    uniformMap = combine(uniformCallback(currentMaterial._uniforms), polylineCollection._uniformMap);
+
                     command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                     command.modelMatrix = modelMatrix;
                     command.shaderProgram = sp;
@@ -582,7 +715,7 @@ define([
                     command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
                     command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
 
-                    command.uniformMap = currentMaterial._uniforms;
+                    command.uniformMap = uniformMap;
                     command.count = count;
                     command.offset = offset;
 
@@ -620,49 +753,43 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#isDestroyed
      *
      * @example
      * polylines = polylines && polylines.destroy();
+     *
+     * @see PolylineCollection#isDestroyed
      */
     PolylineCollection.prototype.destroy = function() {
         destroyVertexArrays(this);
         releaseShaders(this);
         destroyPolylines(this);
+        this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
 
     function computeNewBuffersUsage(collection) {
-        var buffersUsage = collection._buffersUsage;
         var usageChanged = false;
-
         var properties = collection._propertiesChanged;
-        //subtract 2 from NUMBER_OF_PROPERTIES because we don't care about POSITION_SIZE_INDEX or MATERIAL_INDEX property change.
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES - 2; ++k) {
-            var bufferUsage = buffersUsage[k];
-            if (properties[k]) {
-                if (bufferUsage.bufferUsage !== BufferUsage.STREAM_DRAW) {
-                    usageChanged = true;
-                    bufferUsage.bufferUsage = BufferUsage.STREAM_DRAW;
-                    bufferUsage.frameCount = 100;
-                } else {
-                    bufferUsage.frameCount = 100;
-                }
+        var bufferUsage = collection._positionBufferUsage;
+        if (properties[POSITION_INDEX]) {
+            if (bufferUsage.bufferUsage !== BufferUsage.STREAM_DRAW) {
+                usageChanged = true;
+                bufferUsage.bufferUsage = BufferUsage.STREAM_DRAW;
+                bufferUsage.frameCount = 100;
             } else {
-                if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
-                    if (bufferUsage.frameCount === 0) {
-                        usageChanged = true;
-                        bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
-                    } else {
-                        bufferUsage.frameCount--;
-                    }
-                }
+                bufferUsage.frameCount = 100;
+            }
+        } else if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
+            if (bufferUsage.frameCount === 0) {
+                usageChanged = true;
+                bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
+            } else {
+                bufferUsage.frameCount--;
             }
         }
+
         return usageChanged;
     }
 
@@ -678,6 +805,9 @@ define([
         var totalIndices = [[]];
         var indices = totalIndices[0];
 
+        var batchTable = collection._batchTable;
+        var useHighlightColor = collection._useHighlightColor;
+
         //used to determine the vertexBuffer offset if the indicesArray goes over 64k.
         //if it's the same polyline while it goes over 64k, the offset needs to backtrack componentsPerAttribute * componentDatatype bytes
         //so that the polyline looks contiguous.
@@ -692,7 +822,7 @@ define([
         for (x in polylineBuckets) {
             if (polylineBuckets.hasOwnProperty(x)) {
                 bucket = polylineBuckets[x];
-                bucket.updateShader(context);
+                bucket.updateShader(context, batchTable, useHighlightColor);
                 totalLength += bucket.lengthOfPositions;
             }
         }
@@ -701,17 +831,16 @@ define([
             var mode = collection._mode;
 
             var positionArray = new Float32Array(6 * totalLength * 3);
-            var pickColorArray = new Uint8Array(totalLength * 4);
-            var texCoordExpandWidthAndShowArray = new Float32Array(totalLength * 4);
+            var texCoordExpandAndBatchIndexArray = new Float32Array(totalLength * 4);
             var position3DArray;
 
             var positionIndex = 0;
             var colorIndex = 0;
-            var texCoordExpandWidthAndShowIndex = 0;
+            var texCoordExpandAndBatchIndexIndex = 0;
             for (x in polylineBuckets) {
                 if (polylineBuckets.hasOwnProperty(x)) {
                     bucket = polylineBuckets[x];
-                    bucket.write(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context, projection);
+                    bucket.write(positionArray, texCoordExpandAndBatchIndexArray, positionIndex, colorIndex, texCoordExpandAndBatchIndexIndex, batchTable, context, projection);
 
                     if (mode === SceneMode.MORPHING) {
                         if (!defined(position3DArray)) {
@@ -723,27 +852,35 @@ define([
                     var bucketLength = bucket.lengthOfPositions;
                     positionIndex += 6 * bucketLength * 3;
                     colorIndex += bucketLength * 4;
-                    texCoordExpandWidthAndShowIndex += bucketLength * 4;
+                    texCoordExpandAndBatchIndexIndex += bucketLength * 4;
                     offset = bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
             }
 
-            var positionBufferUsage = collection._buffersUsage[POSITION_INDEX].bufferUsage;
-            var showBufferUsage = collection._buffersUsage[SHOW_INDEX].bufferUsage;
-            var widthBufferUsage = collection._buffersUsage[WIDTH_INDEX].bufferUsage;
-            var texCoordExpandWidthAndShowBufferUsage = (showBufferUsage === BufferUsage.STREAM_DRAW || widthBufferUsage === BufferUsage.STREAM_DRAW) ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW;
+            var positionBufferUsage = collection._positionBufferUsage.bufferUsage;
+            var texCoordExpandAndBatchIndexBufferUsage = BufferUsage.STATIC_DRAW;
 
-            collection._positionBuffer = context.createVertexBuffer(positionArray, positionBufferUsage);
+            collection._positionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : positionArray,
+                usage : positionBufferUsage
+            });
             var position3DBuffer;
             if (defined(position3DArray)) {
-                position3DBuffer = context.createVertexBuffer(position3DArray, positionBufferUsage);
+                position3DBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : position3DArray,
+                    usage : positionBufferUsage
+                });
             }
-            collection._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
-            collection._texCoordExpandWidthAndShowBuffer = context.createVertexBuffer(texCoordExpandWidthAndShowArray, texCoordExpandWidthAndShowBufferUsage);
+            collection._texCoordExpandAndBatchIndexBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : texCoordExpandAndBatchIndexArray,
+                usage : texCoordExpandAndBatchIndexBufferUsage
+            });
 
-            var pickColorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
-            var texCoordExpandWidthAndShowSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
+            var texCoordExpandAndBatchIndexSizeInBytes = 4 * Float32Array.BYTES_PER_ELEMENT;
 
             var vbo = 0;
             var numberOfIndicesArrays = totalIndices.length;
@@ -752,7 +889,12 @@ define([
 
                 if (indices.length > 0) {
                     var indicesArray = new Uint16Array(indices);
-                    var indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+                    var indexBuffer = Buffer.createIndexBuffer({
+                        context : context,
+                        typedArray : indicesArray,
+                        usage : BufferUsage.STATIC_DRAW,
+                        indexDatatype : IndexDatatype.UNSIGNED_SHORT
+                    });
 
                     vbo += vertexBufferOffset[k];
 
@@ -762,8 +904,7 @@ define([
                     var prevPositionLowOffset = positionSizeInBytes + prevPositionHighOffset;
                     var nextPositionHighOffset = positionSizeInBytes + prevPositionLowOffset;
                     var nextPositionLowOffset = positionSizeInBytes + nextPositionHighOffset;
-                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * pickColorSizeInBytes;
-                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordExpandWidthAndShowSizeInBytes;
+                    var vertexTexCoordExpandAndBatchIndexBufferOffset = k * (texCoordExpandAndBatchIndexSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordExpandAndBatchIndexSizeInBytes;
 
                     var attributes = [{
                         index : attributeLocations.position3DHigh,
@@ -838,18 +979,11 @@ define([
                         offsetInBytes : nextPositionLowOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeLocations.texCoordExpandWidthAndShow,
+                        index : attributeLocations.texCoordExpandAndBatchIndex,
                         componentsPerAttribute : 4,
                         componentDatatype : ComponentDatatype.FLOAT,
-                        vertexBuffer : collection._texCoordExpandWidthAndShowBuffer,
-                        offsetInBytes : vertexTexCoordExpandWidthAndShowBufferOffset
-                    }, {
-                        index : attributeLocations.pickColor,
-                        componentsPerAttribute : 4,
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        vertexBuffer : collection._pickColorBuffer,
-                        offsetInBytes : vertexPickColorBufferOffset,
-                        normalize : true
+                        vertexBuffer : collection._texCoordExpandAndBatchIndexBuffer,
+                        offsetInBytes : vertexTexCoordExpandAndBatchIndexBufferOffset
                     }];
 
                     var buffer3D;
@@ -887,7 +1021,11 @@ define([
                     attributes[10][bufferProperty2D] = buffer2D;
                     attributes[11][bufferProperty2D] = buffer2D;
 
-                    var va = context.createVertexArray(attributes, indexBuffer);
+                    var va = new VertexArray({
+                        context : context,
+                        attributes : attributes,
+                        indexBuffer : indexBuffer
+                    });
                     collection._vertexArrays.push({
                         va : va,
                         buckets : vertexArrayBuckets[k]
@@ -895,6 +1033,14 @@ define([
                 }
             }
         }
+    }
+
+    function replacer(key, value) {
+        if (value instanceof Texture) {
+            return value.id;
+        }
+
+        return value;
     }
 
     var scratchUniformArray = [];
@@ -911,7 +1057,7 @@ define([
             index += 2;
         }
 
-        return material.type + ':' + JSON.stringify(scratchUniformArray);
+        return material.type + ':' + JSON.stringify(scratchUniformArray, replacer);
     }
 
     function sortPolylinesIntoBuckets(collection) {
@@ -1007,7 +1153,7 @@ define([
         this.bucket = bucket;
     }
 
-    var PolylineBucket = function(material, mode, modelMatrix) {
+    function PolylineBucket(material, mode, modelMatrix) {
         this.polylines = [];
         this.lengthOfPositions = 0;
         this.material = material;
@@ -1015,7 +1161,7 @@ define([
         this.pickShaderProgram = undefined;
         this.mode = mode;
         this.modelMatrix = modelMatrix;
-    };
+    }
 
     PolylineBucket.prototype.addPolyline = function(p) {
         var polylines = this.polylines;
@@ -1025,28 +1171,55 @@ define([
         p._bucket = this;
     };
 
-    PolylineBucket.prototype.updateShader = function(context) {
+    PolylineBucket.prototype.updateShader = function(context, batchTable, useHighlightColor) {
         if (defined(this.shaderProgram)) {
             return;
         }
 
-        var vs = new ShaderSource({
-            sources : [PolylineCommon, PolylineVS]
-        });
+        var defines = ['DISTANCE_DISPLAY_CONDITION'];
+        if (useHighlightColor) {
+            defines.push('VECTOR_TILE');
+        }
+
+        // Check for use of v_polylineAngle in material shader
+        if (this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
+            defines.push('POLYLINE_DASH');
+        }
+
         var fs = new ShaderSource({
+            defines : defines,
             sources : [this.material.shaderSource, PolylineFS]
         });
+
+        var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
+        var vs = new ShaderSource({
+            defines : defines,
+            sources : [PolylineCommon, vsSource]
+        });
+
         var fsPick = new ShaderSource({
             sources : fs.sources,
             pickColorQualifier : 'varying'
         });
-        this.shaderProgram = context.createShaderProgram(vs, fs, attributeLocations);
-        this.pickShaderProgram = context.createShaderProgram(vs, fsPick, attributeLocations);
+
+        this.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+
+        this.pickShaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fsPick,
+            attributeLocations : attributeLocations
+        });
     };
 
     function intersectsIDL(polyline) {
         return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
-            polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
+            polyline._boundingVolume.intersectPlane(Plane.ORIGIN_ZX_PLANE) === Intersect.INTERSECTING;
     }
 
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
@@ -1070,15 +1243,20 @@ define([
     var scratchWritePrevPosition = new Cartesian3();
     var scratchWriteNextPosition = new Cartesian3();
     var scratchWriteVector = new Cartesian3();
+    var scratchPickColorCartesian = new Cartesian4();
+    var scratchWidthShowCartesian = new Cartesian2();
 
-    PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context, projection) {
+    PolylineBucket.prototype.write = function(positionArray, texCoordExpandAndBatchIndexArray, positionIndex, colorIndex, texCoordExpandAndBatchIndexIndex, batchTable, context, projection) {
         var mode = this.mode;
+        var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
+
         var polylines = this.polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var width = polyline.width;
             var show = polyline.show && width > 0.0;
+            var polylineBatchIndex = polyline._index;
             var segments = this.getSegments(polyline, projection);
             var positions = segments.positions;
             var lengths = segments.lengths;
@@ -1103,14 +1281,8 @@ define([
                     position = positions[j - 1];
                 }
 
-                scratchWritePrevPosition.x = position.x;
-                scratchWritePrevPosition.y = position.y;
-                scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
-
-                position = positions[j];
-                scratchWritePosition.x = position.x;
-                scratchWritePosition.y = position.y;
-                scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWritePrevPosition);
+                Cartesian3.clone(positions[j], scratchWritePosition);
 
                 if (j === positionsLength - 1) {
                     if (polyline._loop) {
@@ -1124,9 +1296,7 @@ define([
                     position = positions[j + 1];
                 }
 
-                scratchWriteNextPosition.x = position.x;
-                scratchWriteNextPosition.y = position.y;
-                scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWriteNextPosition);
 
                 var segmentLength = lengths[segmentIndex];
                 if (j === count + segmentLength) {
@@ -1137,6 +1307,26 @@ define([
                 var segmentStart = j - count === 0;
                 var segmentEnd = j === count + lengths[segmentIndex] - 1;
 
+                if (mode === SceneMode.SCENE2D) {
+                    scratchWritePrevPosition.z = 0.0;
+                    scratchWritePosition.z = 0.0;
+                    scratchWriteNextPosition.z = 0.0;
+                }
+
+                if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+                    if ((segmentStart || segmentEnd) && maxLon - Math.abs(scratchWritePosition.x) < 1.0) {
+                        if ((scratchWritePosition.x < 0.0 && scratchWritePrevPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWritePrevPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWritePrevPosition);
+                        }
+
+                        if ((scratchWritePosition.x < 0.0 && scratchWriteNextPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWriteNextPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWriteNextPosition);
+                        }
+                    }
+                }
+
                 var startK = (segmentStart) ? 2 : 0;
                 var endK = (segmentEnd) ? 2 : 4;
 
@@ -1145,21 +1335,49 @@ define([
                     EncodedCartesian3.writeElements(scratchWritePrevPosition, positionArray, positionIndex + 6);
                     EncodedCartesian3.writeElements(scratchWriteNextPosition, positionArray, positionIndex + 12);
 
-                    pickColorArray[colorIndex] = Color.floatToByte(pickColor.red);
-                    pickColorArray[colorIndex + 1] = Color.floatToByte(pickColor.green);
-                    pickColorArray[colorIndex + 2] = Color.floatToByte(pickColor.blue);
-                    pickColorArray[colorIndex + 3] = Color.floatToByte(pickColor.alpha);
-
                     var direction = (k - 2 < 0) ? -1.0 : 1.0;
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = j / (positionsLength - 1); // s tex coord
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 1] = 2 * (k % 2) - 1;       // expand direction
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 2] = direction * width;
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 3] = show;
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex] = j / (positionsLength - 1); // s tex coord
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 1] = 2 * (k % 2) - 1;       // expand direction
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 2] = direction;
+                    texCoordExpandAndBatchIndexArray[texCoordExpandAndBatchIndexIndex + 3] = polylineBatchIndex;
 
                     positionIndex += 6 * 3;
-                    colorIndex += 4;
-                    texCoordExpandWidthAndShowIndex += 4;
+                    texCoordExpandAndBatchIndexIndex += 4;
                 }
+            }
+
+            var colorCartesian = scratchPickColorCartesian;
+            colorCartesian.x = Color.floatToByte(pickColor.red);
+            colorCartesian.y = Color.floatToByte(pickColor.green);
+            colorCartesian.z = Color.floatToByte(pickColor.blue);
+            colorCartesian.w = Color.floatToByte(pickColor.alpha);
+
+            var widthShowCartesian = scratchWidthShowCartesian;
+            widthShowCartesian.x = width;
+            widthShowCartesian.y = show ? 1.0 : 0.0;
+
+            var boundingSphere = mode === SceneMode.SCENE2D ? polyline._boundingVolume2D : polyline._boundingVolumeWC;
+            var encodedCenter = EncodedCartesian3.fromCartesian(boundingSphere.center, scratchUpdatePolylineEncodedCartesian);
+            var high = encodedCenter.high;
+            var low = Cartesian4.fromElements(encodedCenter.low.x, encodedCenter.low.y, encodedCenter.low.z, boundingSphere.radius, scratchUpdatePolylineCartesian4);
+
+            var nearFarCartesian = scratchNearFarCartesian2;
+            nearFarCartesian.x = 0.0;
+            nearFarCartesian.y = Number.MAX_VALUE;
+
+            var distanceDisplayCondition = polyline.distanceDisplayCondition;
+            if (defined(distanceDisplayCondition)) {
+                nearFarCartesian.x = distanceDisplayCondition.near;
+                nearFarCartesian.y = distanceDisplayCondition.far;
+            }
+
+            batchTable.setBatchedAttribute(polylineBatchIndex, 0, widthShowCartesian);
+            batchTable.setBatchedAttribute(polylineBatchIndex, 1, colorCartesian);
+
+            if (batchTable.attributes.length > 2) {
+                batchTable.setBatchedAttribute(polylineBatchIndex, 2, high);
+                batchTable.setBatchedAttribute(polylineBatchIndex, 3, low);
+                batchTable.setBatchedAttribute(polylineBatchIndex, 4, nearFarCartesian);
             }
         }
     };
@@ -1276,7 +1494,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
+                        if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1308,7 +1526,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
+                if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);
@@ -1387,40 +1605,32 @@ define([
     };
 
     var scratchPositionsArray;
-    var scratchTexCoordArray;
 
-    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer, projection) {
+    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, projection) {
         var mode = this.mode;
+        var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
+
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             index += this.getPolylineStartIndex(polyline);
 
             var positionArray = scratchPositionsArray;
-            var texCoordExpandWidthAndShowArray = scratchTexCoordArray;
-
             var positionsArrayLength = 6 * positionsLength * 3;
 
             if (!defined(positionArray) || positionArray.length < positionsArrayLength) {
                 positionArray = scratchPositionsArray = new Float32Array(positionsArrayLength);
-                texCoordExpandWidthAndShowArray = scratchTexCoordArray = new Float32Array(positionsLength * 4);
             } else if (positionArray.length > positionsArrayLength) {
                 positionArray = new Float32Array(positionArray.buffer, 0, positionsArrayLength);
-                texCoordExpandWidthAndShowArray = new Float32Array(texCoordExpandWidthAndShowArray.buffer, 0, positionsLength * 4);
             }
-
-            var positionIndex = 0;
-            var texCoordExpandWidthAndShowIndex = 0;
 
             var segments = this.getSegments(polyline, projection);
             var positions = segments.positions;
             var lengths = segments.lengths;
 
+            var positionIndex = 0;
             var segmentIndex = 0;
             var count = 0;
             var position;
-
-            var width = polyline.width;
-            var show = polyline.show && width > 0.0;
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
@@ -1436,14 +1646,8 @@ define([
                     position = positions[i - 1];
                 }
 
-                scratchWritePrevPosition.x = position.x;
-                scratchWritePrevPosition.y = position.y;
-                scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
-
-                position = positions[i];
-                scratchWritePosition.x = position.x;
-                scratchWritePosition.y = position.y;
-                scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWritePrevPosition);
+                Cartesian3.clone(positions[i], scratchWritePosition);
 
                 if (i === positionsLength - 1) {
                     if (polyline._loop) {
@@ -1457,9 +1661,7 @@ define([
                     position = positions[i + 1];
                 }
 
-                scratchWriteNextPosition.x = position.x;
-                scratchWriteNextPosition.y = position.y;
-                scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWriteNextPosition);
 
                 var segmentLength = lengths[segmentIndex];
                 if (i === count + segmentLength) {
@@ -1470,6 +1672,26 @@ define([
                 var segmentStart = i - count === 0;
                 var segmentEnd = i === count + lengths[segmentIndex] - 1;
 
+                if (mode === SceneMode.SCENE2D) {
+                    scratchWritePrevPosition.z = 0.0;
+                    scratchWritePosition.z = 0.0;
+                    scratchWriteNextPosition.z = 0.0;
+                }
+
+                if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+                    if ((segmentStart || segmentEnd) && maxLon - Math.abs(scratchWritePosition.x) < 1.0) {
+                        if ((scratchWritePosition.x < 0.0 && scratchWritePrevPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWritePrevPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWritePrevPosition);
+                        }
+
+                        if ((scratchWritePosition.x < 0.0 && scratchWriteNextPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWriteNextPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWriteNextPosition);
+                        }
+                    }
+                }
+
                 var startJ = (segmentStart) ? 2 : 0;
                 var endJ = (segmentEnd) ? 2 : 4;
 
@@ -1477,20 +1699,11 @@ define([
                     EncodedCartesian3.writeElements(scratchWritePosition, positionArray, positionIndex);
                     EncodedCartesian3.writeElements(scratchWritePrevPosition, positionArray, positionIndex + 6);
                     EncodedCartesian3.writeElements(scratchWriteNextPosition, positionArray, positionIndex + 12);
-
-                    var direction = (j - 2 < 0) ? -1.0 : 1.0;
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex] = i / (positionsLength - 1);  // s tex coord
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 1] = 2 * (j % 2) - 1;        // expand direction
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 2] = direction * width;
-                    texCoordExpandWidthAndShowArray[texCoordExpandWidthAndShowIndex + 3] = show;
-
                     positionIndex += 6 * 3;
-                    texCoordExpandWidthAndShowIndex += 4;
                 }
             }
 
             positionBuffer.copyFromArrayView(positionArray, 6 * 3 * Float32Array.BYTES_PER_ELEMENT * index);
-            texCoordExpandWidthAndShowBuffer.copyFromArrayView(texCoordExpandWidthAndShowArray, 4 * Float32Array.BYTES_PER_ELEMENT * index);
         }
     };
 

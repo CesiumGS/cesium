@@ -1,5 +1,5 @@
 /**
- * Returns the transpose of the matrix.  The input <code>matrix</code> can be 
+ * Returns the transpose of the matrix.  The input <code>matrix</code> can be
  * a <code>mat2</code>, <code>mat3</code>, or <code>mat4</code>.
  *
  * @name czm_transpose
@@ -15,7 +15,7 @@
  * mat3 czm_transpose(mat3 matrix);
  * mat4 czm_transpose(mat4 matrix);
  *
- * // Tranpose a 3x3 rotation matrix to find its inverse.
+ * // Transpose a 3x3 rotation matrix to find its inverse.
  * mat3 eastNorthUpToEye = czm_eastNorthUpToEyeCoordinates(
  *     positionMC, normalEC);
  * mat3 eyeToEastNorthUp = czm_transpose(eastNorthUpToEye);

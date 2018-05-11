@@ -1,0 +1,21 @@
+/* ContentPane */
+
+.tundra .dijitContentPane {
+	padding: 0;
+}
+
+/* nested layouts */
+.tundra .dijitTabContainerTop-dijitContentPane,
+.tundra .dijitTabContainerLeft-dijitContentPane,
+.tundra .dijitTabContainerBottom-dijitContentPane,
+.tundra .dijitTabContainerRight-dijitContentPane,
+.tundra .dijitAccordionContainer-dijitContentPane {
+	background-color: #fff;
+	padding: 5px;
+}
+
+.tundra .dijitSplitContainer-dijitContentPane,
+.tundra .dijitBorderContainer-dijitContentPane {
+	background-color: #fff;		/* override background-color setting on parent .dijitBorderContainer */
+	padding: 5px;
+}

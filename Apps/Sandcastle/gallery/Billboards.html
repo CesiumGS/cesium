@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Add billboard images, points, and markers to the scene.">
+    <meta name="description" content="Add billboard images and markers to the scene.">
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
@@ -75,6 +75,20 @@ function changeBillboardProperties() {
     var billboard = entity.billboard;
     billboard.scale = 3.0;
     billboard.color = Cesium.Color.WHITE.withAlpha(0.25);
+}
+
+function sizeBillboardInMeters() {
+    Sandcastle.declare(sizeBillboardInMeters);
+
+    var entity = viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+        billboard : {
+            image : '../images/Cesium_Logo_overlay.png',
+            sizeInMeters : true
+        }
+    });
+
+    viewer.zoomTo(entity);
 }
 
 function addMultipleBillboards() {
@@ -130,8 +144,8 @@ function fadeByDistance() {
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
     Cesium.when.all([
-         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
-         Cesium.loadImage('../images/facility.gif')
+         Cesium.Resource.fetchImage('../images/Cesium_Logo_overlay.png'),
+         Cesium.Resource.fetchImage('../images/facility.gif')
         ],
         function(images) {
             // As viewer zooms closer to facility billboard,
@@ -158,32 +172,6 @@ function offsetByDistance() {
                     translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
                 }
             });
-    });
-}
-
-function addPointBillboards() {
-    Sandcastle.declare(addPointBillboards);
-
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-        point : {
-            color : Cesium.Color.RED,
-            pixelSize : 8
-        }
-    });
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-80.50, 35.14),
-        point : {
-            color : Cesium.Color.BLUE,
-            pixelSize : 16
-        }
-    });
-    viewer.entities.add({
-        position : Cesium.Cartesian3.fromDegrees(-80.12, 25.46),
-        point : {
-            color : Cesium.Color.LIME,
-            pixelSize : 32
-        }
     });
 }
 
@@ -233,6 +221,25 @@ function addMarkerBillboards() {
     });
 }
 
+var terrainProvider;
+function disableDepthTest() {
+    Sandcastle.declare(disableDepthTest);
+
+    terrainProvider = viewer.terrainProvider;
+    viewer.terrainProvider = Cesium.createWorldTerrain();
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-122.1958, 46.1915),
+        billboard : {
+            image : '../images/facility.gif',
+            heightReference : Cesium.HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance : Number.POSITIVE_INFINITY
+        }
+    });
+    viewer.zoomTo(viewer.entities);
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Add billboard',
     onselect : function() {
@@ -250,6 +257,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         changeBillboardProperties();
         Sandcastle.highlight(changeBillboardProperties);
+    }
+}, {
+    text : 'Size billboard in meters',
+    onselect : function() {
+        sizeBillboardInMeters();
+        Sandcastle.highlight(sizeBillboardInMeters);
     }
 }, {
     text : 'Add multiple billboards',
@@ -276,24 +289,31 @@ Sandcastle.addToolbarMenu([{
         Sandcastle.highlight(offsetByDistance);
     }
 }, {
-    text : 'Add point billboards',
-    onselect : function() {
-        addPointBillboards();
-        Sandcastle.highlight(addPointBillboards);
-    }
-}, {
     text : 'Add marker billboards',
     onselect : function() {
         addMarkerBillboards();
         Sandcastle.highlight(addMarkerBillboards);
     }
+}, {
+    text : 'Disable the depth test when clamped to ground',
+    onselect : function() {
+        disableDepthTest();
+        Sandcastle.highlight(disableDepthTest);
+    }
 }]);
 
 Sandcastle.reset = function () {
+    viewer.camera.flyHome(0);
     viewer.entities.removeAll();
+
+    if (Cesium.defined(terrainProvider)) {
+        viewer.terrainProvider = terrainProvider;
+        terrainProvider = undefined;
+        viewer.scene.globe.depthTestAgainstTerrain = false;
+    }
 };
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

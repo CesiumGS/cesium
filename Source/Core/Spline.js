@@ -1,13 +1,16 @@
-/*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './Math'
     ], function(
+        Check,
         defaultValue,
         defined,
-        DeveloperError) {
-    "use strict";
+        DeveloperError,
+        CesiumMath) {
+    'use strict';
 
     /**
      * Creates a curve parameterized and evaluated by time. This type describes an interface
@@ -21,7 +24,7 @@ define([
      * @see LinearSpline
      * @see QuaternionSpline
      */
-    var Spline = function() {
+    function Spline() {
         /**
          * An array of times for the control points.
          * @type {Number[]}
@@ -37,7 +40,7 @@ define([
         this.points = undefined;
 
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Evaluates the curve at a given time.
@@ -116,6 +119,50 @@ define([
         }
 
         return i;
+    };
+
+    /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, wrapped around the animation period.
+     */
+    Spline.prototype.wrapTime = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('time', time);
+        //>>includeEnd('debug');
+
+        var times = this.times;
+        var timeEnd = times[times.length - 1];
+        var timeStart = times[0];
+        var timeStretch = timeEnd - timeStart;
+        var divs;
+        if (time < timeStart) {
+            divs = Math.floor((timeStart - time) / timeStretch) + 1;
+            time += divs * timeStretch;
+        }
+        if (time > timeEnd) {
+            divs = Math.floor((time - timeEnd) / timeStretch) + 1;
+            time -= divs * timeStretch;
+        }
+        return time;
+    };
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, clamped to the animation period.
+     */
+    Spline.prototype.clampTime = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('time', time);
+        //>>includeEnd('debug');
+
+        var times = this.times;
+        return CesiumMath.clamp(time, times[0], times[times.length - 1]);
     };
 
     return Spline;

@@ -1,12 +1,13 @@
+/*eslint-env node*/
+'use strict';
 (function() {
-    "use strict";
-    /*global console,require,__dirname,process*/
-    /*jshint es3:false*/
-
     var express = require('express');
     var compression = require('compression');
+    var fs = require('fs');
     var url = require('url');
     var request = require('request');
+
+    var gzipHeader = Buffer.from('1F8B08', 'hex');
 
     var yargs = require('yargs').options({
         'port' : {
@@ -37,14 +38,47 @@
 
     // eventually this mime type configuration will need to change
     // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
+    // *NOTE* Any changes you make here must be mirrored in web.config.
     var mime = express.static.mime;
     mime.define({
-        'application/json' : ['czml', 'json', 'geojson', 'topojson', 'gltf'],
+        'application/json' : ['czml', 'json', 'geojson', 'topojson'],
+        'application/wasm' : ['wasm'],
+        'image/crn' : ['crn'],
+        'image/ktx' : ['ktx'],
+        'model/gltf+json' : ['gltf'],
+        'model/gltf-binary' : ['bgltf', 'glb'],
+        'application/octet-stream' : ['b3dm', 'pnts', 'i3dm', 'cmpt', 'geom', 'vctr'],
         'text/plain' : ['glsl']
-    });
+    }, true);
 
     var app = express();
     app.use(compression());
+    app.use(function(req, res, next) {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+        next();
+    });
+
+    function checkGzipAndNext(req, res, next) {
+        var reqUrl = url.parse(req.url, true);
+        var filePath = reqUrl.pathname.substring(1);
+
+        var readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
+        readStream.on('error', function(err) {
+            next();
+        });
+
+        readStream.on('data', function(chunk) {
+            if (chunk.equals(gzipHeader)) {
+                res.header('Content-Encoding', 'gzip');
+            }
+            next();
+        });
+    }
+
+    var knownTilesetFormats = [/\.b3dm/, /\.pnts/, /\.i3dm/, /\.cmpt/, /\.glb/, /\.geom/, /\.vctr/, /tileset.*\.json$/];
+    app.get(knownTilesetFormats, checkGzipAndNext);
+
     app.use(express.static(__dirname));
 
     function getRemoteUrlFromParam(req) {
@@ -94,7 +128,7 @@
         }
 
         if (!remoteUrl) {
-            return res.send(400, 'No url specified.');
+            return res.status(400).send('No url specified.');
         }
 
         if (!remoteUrl.protocol) {
@@ -121,7 +155,7 @@
                 res.header(filterHeaders(req, response.headers));
             }
 
-            res.send(code, body);
+            res.status(code).send(body);
         });
     });
 
@@ -151,10 +185,18 @@
         console.log('Cesium development server stopped.');
     });
 
+    var isFirstSig = true;
     process.on('SIGINT', function() {
-        server.close(function() {
-            process.exit(0);
-        });
+        if (isFirstSig) {
+            console.log('Cesium development server shutting down.');
+            server.close(function() {
+              process.exit(0);
+            });
+            isFirstSig = false;
+        } else {
+            console.log('Cesium development server force kill.');
+            process.exit(1);
+        }
     });
 
 })();

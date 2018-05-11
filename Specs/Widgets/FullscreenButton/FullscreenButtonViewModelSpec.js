@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/FullscreenButton/FullscreenButtonViewModel',
         'Core/Fullscreen'
     ], function(
         FullscreenButtonViewModel,
         Fullscreen) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    'use strict';
 
     it('constructor sets default values', function() {
         var viewModel = new FullscreenButtonViewModel();
@@ -44,7 +42,7 @@ defineSuite([
     it('can get and set fullscreenElement', function() {
         var testElement = document.createElement('span');
         var viewModel = new FullscreenButtonViewModel();
-        expect(viewModel.fullscreenElement).toNotBe(testElement);
+        expect(viewModel.fullscreenElement).not.toBe(testElement);
         viewModel.fullscreenElement = testElement;
         expect(viewModel.fullscreenElement).toBe(testElement);
     });

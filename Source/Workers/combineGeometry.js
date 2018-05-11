@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Scene/PrimitivePipeline',
         './createTaskProcessorWorker'
     ], function(
         PrimitivePipeline,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     function combineGeometry(packedParameters, transferableObjects) {
         var parameters = PrimitivePipeline.unpackCombineGeometryParameters(packedParameters);
