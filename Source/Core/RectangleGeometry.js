@@ -891,7 +891,7 @@ define([
         var unrotatedTextureRectangle = computeRectangle(rotatedRectangle, unrotatedTextureRectangleScratch);
 
         // Assume a computed "east-north" texture coordinate system based on spherical or planar tricks, bounded by `boundingRectangle`.
-        // The "desired" texture coordinate system forms an oriented rectangle (un-oriented provided) around the geometry that completely and tightly bounds it.
+        // The "desired" texture coordinate system forms an oriented rectangle (un-oriented computed) around the geometry that completely and tightly bounds it.
         // We want to map from the "east-north" texture coordinate system into the "desired" system using a pair of lines (analagous planes in 2D)
         // Compute 3 corners of the "desired" texture coordinate system in "east-north" texture space by the following in cartographic space:
         // - rotate 3 of the corners in unrotatedTextureRectangle by stRotation around the center of the bounding rectangle
@@ -948,8 +948,9 @@ define([
             }
         },
         /**
-         * For remapping texture coordinates when rendering Ellipses as GroundPrimitives.
-         * This version permits skew in textures by computing offsets in cartographic space.
+         * For remapping texture coordinates when rendering RectangleGeometries as GroundPrimitives.
+         * This version permits skew in textures by computing offsets directly in cartographic space and
+         * more accurately approximates rendering RectangleGeometries with height as standard Primitives.
          * @see Geometry#_textureCoordinateRotationPoints
          * @private
          */

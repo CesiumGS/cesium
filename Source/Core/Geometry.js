@@ -228,12 +228,18 @@ define([
      * For remapping texture coordinates when rendering GroundPrimitives with materials.
      * GroundPrimitive texture coordinates are computed to align with the cartographic coordinate system on the globe.
      * However, EllipseGeometry, RectangleGeometry, and PolygonGeometry all bake rotations to per-vertex texture coordinates
-     * and use different algorithms to do so.
+     * using different strategies.
      *
      * This method is used by EllipseGeometry and PolygonGeometry to approximate the same visual effect.
-     * We encapsulate rotation and necessary scale by computing a "transformed" texture coordinate system and compute
-     * a set of points from which "cartographic" texture coordinates can be remapped to the "transformed" system
-     * using distances to lines in 2D.
+     * We encapsulate rotation and scale by computing a "transformed" texture coordinate system and computing
+     * a set of reference points from which "cartographic" texture coordinates can be remapped to the "transformed"
+     * system using distances to lines in 2D.
+     *
+     * This approximation becomes less accurate as the covered area increases, especially for GroundPrimitives near the poles,
+     * but is generally reasonable for polygons and ellipses around the size of USA states.
+     *
+     * RectangleGeometry has its own version of this method that computes remapping coordinates using cartographic space
+     * as an intermediary instead of local ENU, which is more accurate for large-area rectangles.
      *
      * @param {Cartesian3[]} positions Array of positions outlining the geometry
      * @param {Number} stRotation Texture coordinate rotation.

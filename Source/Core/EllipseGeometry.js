@@ -992,7 +992,7 @@ define([
             }
         },
         /**
-         * For remapping texture coordinates when rendering Ellipses as GroundPrimitives.
+         * For remapping texture coordinates when rendering EllipseGeometries as GroundPrimitives.
          * @private
          */
         textureCoordinateRotationPoints : {

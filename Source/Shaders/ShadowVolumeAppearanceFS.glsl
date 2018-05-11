@@ -109,9 +109,9 @@ void main(void)
 
 #else // PER_INSTANCE_COLOR
 
-// Material support.
-// USES_ is distinct from REQUIRES_, because some things are dependencies of each other or
-// dependencies for culling but might not actually be used by the material.
+    // Material support.
+    // USES_ is distinct from REQUIRES_, because some things are dependencies of each other or
+    // dependencies for culling but might not actually be used by the material.
 
     czm_materialInput materialInput;
 
@@ -128,6 +128,9 @@ void main(void)
 #endif
 
 #ifdef USES_ST
+    // Remap texture coordinates from computed (approximately aligned with cartographic space) to the desired
+    // texture coordinate system, which typically forms a tight oriented bounding box around the geometry.
+    // Shader is provided a set of reference points for remapping.
     materialInput.st.x = czm_lineDistance(v_uvMin, v_uMaxAndInverseDistance.xy, uv) * v_uMaxAndInverseDistance.z;
     materialInput.st.y = czm_lineDistance(v_uvMin, v_vMaxAndInverseDistance.xy, uv) * v_vMaxAndInverseDistance.z;
 #endif
