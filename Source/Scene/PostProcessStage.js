@@ -754,7 +754,21 @@ define([
             return;
         }
 
-        if (features.length === 0) {
+        var i;
+        var feature;
+
+        var textureLength = 0;
+        var length = features.length;
+        for (i = 0; i < length; ++i) {
+            feature = features[i];
+            if (defined(feature.pickIds)) {
+                textureLength += feature.pickIds.length;
+            } else if (defined(feature.pickId)) {
+                ++textureLength;
+            }
+        }
+
+        if (length === 0 || textureLength === 0) {
             // max pick id is reserved
             var empty = new Uint8Array(4);
             empty[0] = 255;
@@ -779,20 +793,6 @@ define([
                 })
             });
             return;
-        }
-
-        var i;
-        var feature;
-
-        var textureLength = 0;
-        var length = features.length;
-        for (i = 0; i < length; ++i) {
-            feature = features[i];
-            if (defined(feature.pickIds)) {
-                textureLength += feature.pickIds.length;
-            } else if (defined(feature.pickId)) {
-                ++textureLength;
-            }
         }
 
         var pickColor;

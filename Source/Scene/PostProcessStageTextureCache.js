@@ -55,9 +55,11 @@ define([
             stageDependencies[getLastStageName(previous)] = true;
         }
         var uniforms = stage.uniforms;
-        for (var name in uniforms) {
-            if (uniforms.hasOwnProperty(name)) {
-                var value = uniforms[name];
+        if (defined(uniforms)) {
+            var uniformNames = Object.getOwnPropertyNames(uniforms);
+            var uniformNamesLength = uniformNames.length;
+            for (var i = 0; i < uniformNamesLength; ++i) {
+                var value = uniforms[uniformNames[i]];
                 if (typeof value === 'string') {
                     var dependent = collection.getStageByName(value);
                     if (defined(dependent)) {

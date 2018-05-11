@@ -18,7 +18,6 @@ define([
         '../Shaders/PostProcessStages/FXAA',
         '../Shaders/PostProcessStages/GaussianBlur1D',
         '../Shaders/PostProcessStages/LensFlare',
-        '../Shaders/PostProcessStages/LinearDepth',
         '../Shaders/PostProcessStages/NightVision',
         '../Shaders/PostProcessStages/Silhouette',
         '../ThirdParty/Shaders/FXAA3_11',
@@ -45,7 +44,6 @@ define([
         FXAA,
         GaussianBlur1D,
         LensFlare,
-        LinearDepth,
         NightVision,
         Silhouette,
         FXAA3_11,
@@ -248,43 +246,13 @@ define([
     PostProcessStageLibrary.createEdgeDetectionStage = function() {
         // unique name generated on call so more than one effect can be added
         var name = createGuid();
-        var depth = new PostProcessStage({
-            name : 'czm_edge_detection_depth_' + name,
-            fragmentShader : LinearDepth
-        });
-        var edgeDetection = new PostProcessStage({
+        return new PostProcessStage({
             name : 'czm_edge_detection_' + name,
             fragmentShader : EdgeDetection,
             uniforms : {
                 length : 0.25,
                 color : Color.clone(Color.BLACK)
             }
-        });
-
-        var uniforms = {};
-        defineProperties(uniforms, {
-            length : {
-                get : function() {
-                    return edgeDetection.uniforms.length;
-                },
-                set : function(value) {
-                    edgeDetection.uniforms.length = value;
-                }
-            },
-            color : {
-                get : function() {
-                    return edgeDetection.uniforms.color;
-                },
-                set : function(value) {
-                    edgeDetection.uniforms.color = value;
-                }
-            }
-        });
-
-        return new PostProcessStageComposite({
-            name : 'czm_edge_detection_generate_' + name,
-            stages : [depth, edgeDetection],
-            uniforms : uniforms
         });
     };
 
