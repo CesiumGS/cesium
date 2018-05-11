@@ -306,7 +306,7 @@ define([
             fsDecl += 'uniform sampler2D edgeTexture' + i + '; \n';
             fsLoop +=
                 '        vec4 edge' + i + ' = texture2D(edgeTexture' + i + ', v_textureCoordinates); \n' +
-                '        if (edge' + i + '.a == 1.0) \n' +
+                '        if (edge' + i + '.a > 0.0) \n' +
                 '        { \n' +
                 '            color = edge' + i + '; \n' +
                 '            break; \n' +

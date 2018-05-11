@@ -47,6 +47,10 @@ silhouette.uniforms.color = Cesium.Color.LIME;
 var blackAndWhite = collection.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
 blackAndWhite.uniforms.gradations = 5.0;
 
+if (!silhouette.isSupported(viewer.scene)) {
+    console.log('This browser does not support the silhouette post process.');
+}
+
 var handler;
 function addMouseOver(stage) {
     handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
