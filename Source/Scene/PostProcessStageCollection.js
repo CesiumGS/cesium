@@ -82,6 +82,7 @@ define([
 
         this._stages = [];
         this._activeStages = [];
+        this._previousActiveStages = [];
 
         this._randomTexture = undefined; // For AO
 
@@ -469,7 +470,10 @@ define([
     PostProcessStageCollection.prototype.update = function(context, useLogDepth) {
         removeStages(this);
 
-        var activeStages = this._activeStages;
+        var previousActiveStages = this._activeStages;
+        var activeStages = this._activeStages = this._previousActiveStages;
+        this._previousActiveStages = previousActiveStages;
+
         var stages = this._stages;
         var length = activeStages.length = stages.length;
 
@@ -484,6 +488,16 @@ define([
         }
         activeStages.length = count;
 
+        var activeStagesChanged = count !== previousActiveStages.length;
+        if (!activeStagesChanged) {
+            for (i = 0; i < count; ++i) {
+                if (activeStages[i] !== previousActiveStages[i]) {
+                    activeStagesChanged = true;
+                    break;
+                }
+            }
+        }
+
         var ao = this._ao;
         var bloom = this._bloom;
         var fxaa = this._fxaa;
@@ -492,7 +506,7 @@ define([
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloomEnabled !== this._bloomEnabled || fxaaEnabled !== this._fxaaEnabled) {
+        if (activeStagesChanged || this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloomEnabled !== this._bloomEnabled || fxaaEnabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
             this._textureCache.updateDependencies();
