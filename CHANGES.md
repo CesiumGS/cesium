@@ -23,6 +23,7 @@ Change Log
 * Fixed incorrect 3D Tiles statistics when a tile fails during processing. [#6558](https://github.com/AnalyticalGraphicsInc/cesium/pull/6558)
 * Fixed race condition causing intermittent crash when changing geometry show value [#3061](https://github.com/AnalyticalGraphicsInc/cesium/issues/3061)
 * `ProviderViewModel`s with no category are displayed in an untitled group in `BaseLayerPicker` instead of being labeled as `'Other'` [#6574](https://github.com/AnalyticalGraphicsInc/cesium/pull/6574)
+* Added a workaround for clipping planes causing a picking shader compilation failure for gltf models and 3D Tilesets in Internet Explorer [#6575](https://github.com/AnalyticalGraphicsInc/cesium/issues/6575)
 
 ### 1.45 - 2018-05-01
 

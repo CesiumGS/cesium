@@ -1995,10 +1995,13 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
-        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
 
-        var pickFS, pickVS;
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -2008,8 +2011,13 @@ define([
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
             }
 
-            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            // Internet Explorer seems to have problems with discard after too many levels of indirection:
+            // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+            // In this case, log depth modifications are empty wrappers and can be omitted.
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
     }
@@ -2041,10 +2049,13 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
-        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
 
-        var pickFS, pickVS;
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -2058,8 +2069,13 @@ define([
                 pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
             }
 
-            pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-            pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            // Internet Explorer seems to have problems with discard after too many levels of indirection:
+            // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+            // In this case, log depth modifications are empty wrappers and can be omitted.
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
     }
