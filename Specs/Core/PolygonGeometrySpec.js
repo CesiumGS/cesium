@@ -307,7 +307,7 @@ defineSuite([
                                               -110.0, 35.0
                                           ]);
         for (i = 0; i < p.length; i++) {
-            expect(p[i]).toEqualEpsilon(pExpected[i], CesiumMath.EPSILON10);
+            expect(p[i]).toEqualEpsilon(pExpected[i], CesiumMath.EPSILON7);
         }
 
         var h1Expected = Cartesian3.fromDegreesArray([
@@ -317,7 +317,7 @@ defineSuite([
                                                -122.0, 39.0
                                            ]);
         for (i = 0; i < h1.length; i++) {
-            expect(h1[i]).toEqualEpsilon(h1Expected[i], CesiumMath.EPSILON10);
+            expect(h1[i]).toEqualEpsilon(h1Expected[i], CesiumMath.EPSILON7);
         }
 
         var h2Expected = Cartesian3.fromDegreesArray([
@@ -327,7 +327,7 @@ defineSuite([
                                                -114.0, 36.5
                                            ]);
         for (i = 0; i <h2.length; i++) {
-            expect(h2[i]).toEqualEpsilon(h2Expected[i], CesiumMath.EPSILON10);
+            expect(h2[i]).toEqualEpsilon(h2Expected[i], CesiumMath.EPSILON7);
         }
     });
 
@@ -475,7 +475,7 @@ defineSuite([
                                                          -1.0, 1.0
                                                      ]),
             height: 0,
-            extrudedHeight: CesiumMath.EPSILON10
+            extrudedHeight: CesiumMath.EPSILON7
          }));
 
         expect(p.attributes.position.values.length).toEqual(13 * 3);
@@ -647,7 +647,7 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
     });
 
-    it('computing unrotatedTextureRectangle property', function() {
+    it('computing textureCoordinateRotationPoints property', function() {
         var p = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             polygonHierarchy: {
@@ -658,16 +658,40 @@ defineSuite([
                     10.0, 10.0, 0
                 ])},
             granularity: CesiumMath.PI,
-            stRotation : CesiumMath.toRadians(45)
+            stRotation : CesiumMath.toRadians(90)
         });
 
-        var r = p.unrotatedTextureRectangle;
-        // Rotated should be a square
-        var expectedExtent = 10.0 * Math.sqrt(2.0);
-        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(expectedExtent, CesiumMath.EPSILON7);
-        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(-expectedExtent, CesiumMath.EPSILON7);
-        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(expectedExtent, CesiumMath.EPSILON7);
-        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-expectedExtent, CesiumMath.EPSILON7);
+        // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
+        var textureCoordinateRotationPoints = p.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+
+        p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -10.0, -10.0, 0,
+                    -10.0, 10.0, 0,
+                    10.0, -10.0, 0,
+                    10.0, 10.0, 0
+                ])},
+            granularity: CesiumMath.PI,
+            stRotation : CesiumMath.toRadians(0)
+        });
+
+        textureCoordinateRotationPoints = p.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
 
     var positions = Cartesian3.fromDegreesArray([

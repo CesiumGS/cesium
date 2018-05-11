@@ -10,7 +10,6 @@ define([
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
         '../Core/GeometryInstanceAttribute',
-        '../Core/Matrix2',
         '../Core/Matrix4',
         '../Core/Rectangle',
         '../Core/Transforms',
@@ -29,7 +28,6 @@ define([
         defineProperties,
         EncodedCartesian3,
         GeometryInstanceAttribute,
-        Matrix2,
         Matrix4,
         Rectangle,
         Transforms,
@@ -332,54 +330,17 @@ define([
         return Math.abs((point2.y - point1.y) * point.x - (point2.x - point1.x) * point.y + point2.x * point1.y - point2.y * point1.x) / Cartesian2.distance(point2, point1);
     }
 
-    var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2()];
-    var rotation2DScratch = new Matrix2();
-    var rectangleCenterScratch = new Cartographic();
+    var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2(), new Cartesian2()];
 
-    // boundingRectangle is a rectangle around the rotated geometry while unrotatedTextureRectangle is the bounding box around the unrotated geometry.
-    function addTextureCoordinateRotationAttributes(attributes, boundingRectangle, unrotatedTextureRectangle, textureCoordinateRotation) {
-        textureCoordinateRotation = defaultValue(textureCoordinateRotation, 0.0);
+    // textureCoordinateRotationPoints form 2 lines in the computed UV space that remap to desired texture coordinates.
+    // This allows simulation of baked texture coordinates for EllipseGeometry, RectangleGeometry, and PolygonGeometry.
+    function addTextureCoordinateRotationAttributes(attributes, textureCoordinateRotationPoints) {
         var points2D = points2DScratch;
 
-        // Assume a computed "east-north" texture coordinate system based on spherical or planar tricks, bounded by `boundingRectangle`.
-        // The "desired" texture coordinate system forms an oriented rectangle (un-oriented provided) around the geometry that completely and tightly bounds it.
-        // We want to map from the "east-north" texture coordinate system into the "desired" system using a pair of lines (analagous planes in 2D)
-        // Compute 3 corners of the "desired" texture coordinate system in "east-north" texture space by the following in cartographic space:
-        // - rotate 3 of the corners in unrotatedTextureRectangle by textureCoordinateRotation around the center of both rectangles (which should be the same)
-        // - apply the "east-north" system's normalization formula to the rotated cartographics, even though this is likely to produce values outside [0-1].
-        // This gives us a set of points in the "east-north" texture coordinate system that can be used to map "east-north" texture coordinates to "desired."
+        var minXYCorner = Cartesian2.unpack(textureCoordinateRotationPoints, 0, points2D[0]);
+        var maxYCorner = Cartesian2.unpack(textureCoordinateRotationPoints, 2, points2D[1]);
+        var maxXCorner = Cartesian2.unpack(textureCoordinateRotationPoints, 4, points2D[2]);
 
-        points2D[0].x = unrotatedTextureRectangle.west;
-        points2D[0].y = unrotatedTextureRectangle.south;
-
-        points2D[1].x = unrotatedTextureRectangle.west;
-        points2D[1].y = unrotatedTextureRectangle.north;
-
-        points2D[2].x = unrotatedTextureRectangle.east;
-        points2D[2].y = unrotatedTextureRectangle.south;
-
-        var toDesiredInComputed = Matrix2.fromRotation(textureCoordinateRotation, rotation2DScratch);
-        var boundingRectangleCenter = Rectangle.center(boundingRectangle, rectangleCenterScratch);
-
-        for (var i = 0; i < 3; ++i) {
-            var point2D = points2D[i];
-            point2D.x -= boundingRectangleCenter.longitude;
-            point2D.y -= boundingRectangleCenter.latitude;
-            Matrix2.multiplyByVector(toDesiredInComputed, point2D, point2D);
-            point2D.x += boundingRectangleCenter.longitude;
-            point2D.y += boundingRectangleCenter.latitude;
-
-            // Convert point into east-north texture coordinate space
-            point2D.x = (point2D.x - boundingRectangle.west) / boundingRectangle.width;
-            point2D.y = (point2D.y - boundingRectangle.south) / boundingRectangle.height;
-        }
-
-        // Encode these points in the batch table.
-        // These will be used to create lines in east-north texture coordinate space.
-        // Distance from an east-north texture coordinate to each line is a desired texture coordinate.
-        var minXYCorner = points2D[0];
-        var maxYCorner = points2D[1];
-        var maxXCorner = points2D[2];
         attributes.uMaxVmax = new GeometryInstanceAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 4,
@@ -463,6 +424,7 @@ define([
     var enuMatrixScratch = new Matrix4();
     var inverseEnuScratch = new Matrix4();
     var rectanglePointCartesianScratch = new Cartesian3();
+    var rectangleCenterScratch = new Cartographic();
     var pointsCartographicScratch = [
         new Cartographic(),
         new Cartographic(),
@@ -569,17 +531,16 @@ define([
      * @private
      *
      * @param {Rectangle} boundingRectangle Rectangle object that the points will approximately bound
-     * @param {Rectangle} unrotatedTextureRectangle TODO: doc
+     * @param {Rectangle} textureCoordinateRotationPoints TODO: doc
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
      * @param {Number} [height=0] The maximum height for the shadow volume.
-     * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
      * @returns {Object} An attributes dictionary containing planar texture coordinate attributes.
      */
-    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(boundingRectangle, unrotatedTextureRectangle, ellipsoid, projection, height, textureCoordinateRotation) {
+    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, projection, height) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('boundingRectangle', boundingRectangle);
-        Check.typeOf.object('unrotatedTextureRectangle', unrotatedTextureRectangle);
+        Check.defined('textureCoordinateRotationPoints', textureCoordinateRotationPoints);
         Check.typeOf.object('ellipsoid', ellipsoid);
         Check.typeOf.object('projection', projection);
         //>>includeEnd('debug');
@@ -590,7 +551,7 @@ define([
         computeRectangleBounds(boundingRectangle, ellipsoid, defaultValue(height, 0.0), corner, eastward, northward);
 
         var attributes = {};
-        addTextureCoordinateRotationAttributes(attributes, boundingRectangle, unrotatedTextureRectangle, textureCoordinateRotation);
+        addTextureCoordinateRotationAttributes(attributes, textureCoordinateRotationPoints);
 
         var encoded = EncodedCartesian3.fromCartesian(corner, encodeScratch);
         attributes.southWest_HIGH = new GeometryInstanceAttribute({
@@ -659,16 +620,15 @@ define([
      * @private
      *
      * @param {Rectangle} boundingRectangle Rectangle object that the spherical extents will approximately bound
-     * @param {Rectangle} unrotatedTextureRectangle TODO: doc
+     * @param {Rectangle} textureCoordinateRotationPoints TODO: doc
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
-     * @param {Number} [textureCoordinateRotation=0] Texture coordinate rotation
      * @returns {Object} An attributes dictionary containing spherical texture coordinate attributes.
      */
-    ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function(boundingRectangle, unrotatedTextureRectangle, ellipsoid, projection, textureCoordinateRotation) {
+    ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, projection) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('boundingRectangle', boundingRectangle);
-        Check.typeOf.object('unrotatedTextureRectangle', unrotatedTextureRectangle);
+        Check.defined('textureCoordinateRotationPoints', textureCoordinateRotationPoints);
         Check.typeOf.object('ellipsoid', ellipsoid);
         Check.typeOf.object('projection', projection);
         //>>includeEnd('debug');
@@ -696,7 +656,7 @@ define([
             })
         };
 
-        addTextureCoordinateRotationAttributes(attributes, boundingRectangle, unrotatedTextureRectangle, textureCoordinateRotation);
+        addTextureCoordinateRotationAttributes(attributes, textureCoordinateRotationPoints);
         add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes);
         return attributes;
     };

@@ -910,33 +910,15 @@ define([
         });
     };
 
-    var rectangleCenterScratch = new Cartographic();
-    var cartographicScratch = new Cartographic();
-    var rotationScratch = new Matrix2();
-    var cartesian2Scratch = new Cartesian2();
-    function computeRectangleRotatedPositions(originalRectangle, positions, ellipsoid, angle) {
-        var result = new Rectangle(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY);
-        var center = Rectangle.center(originalRectangle, rectangleCenterScratch);
-        var rotation = Matrix2.fromRotation(angle, rotationScratch);
-
-        var positionsLength = positions.length;
-        var cartesian2 = cartesian2Scratch;
-        for (var i = 0; i < positionsLength; i++) {
-            var cartographic = Cartographic.fromCartesian(positions[i], ellipsoid, cartographicScratch);
-            cartesian2.x = cartographic.longitude - center.longitude;
-            cartesian2.y = cartographic.latitude - center.latitude;
-
-            Matrix2.multiplyByVector(rotation, cartesian2, cartesian2);
-
-            cartesian2.x += center.longitude;
-            cartesian2.y += center.latitude;
-
-            result.west = Math.min(result.west, cartesian2.x);
-            result.east = Math.max(result.east, cartesian2.x);
-            result.south = Math.min(result.south, cartesian2.y);
-            result.north = Math.max(result.north, cartesian2.y);
+    function textureCoordinateRotationPoints(polygonGeometry) {
+        var stRotation = -polygonGeometry._stRotation;
+        if (stRotation === 0.0) {
+            return [0, 0, 0, 1, 1, 0];
         }
-        return result;
+        var ellipsoid = polygonGeometry._ellipsoid;
+        var positions = polygonGeometry._polygonHierarchy.positions;
+        var boundingRectangle = polygonGeometry.rectangle;
+        return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
     }
 
     defineProperties(PolygonGeometry.prototype, {
@@ -958,22 +940,15 @@ define([
             }
         },
         /**
-         * For stRotation on GroundPrimitives.
-         * Returns the rectangle part of an oriented rectangle that tightly bounds
-         * the oriented geometry in Cartographic space.
+         * For remapping texture coordinates when rendering Ellipses as GroundPrimitives.
          * @private
          */
-        unrotatedTextureRectangle : {
+        textureCoordinateRotationPoints : {
             get : function() {
-                if (!defined(this._unrotatedTextureRectangle)) {
-                    var positions = this._polygonHierarchy.positions;
-                    if (!defined(positions) || positions.length < 3) {
-                        this._unrotatedTextureRectangle = new Rectangle();
-                    } else {
-                        this._unrotatedTextureRectangle = computeRectangleRotatedPositions(this.rectangle, positions, this._ellipsoid, -this._stRotation);
-                    }
+                if (!defined(this._textureCoordinateRotationPoints)) {
+                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
                 }
-                return this._unrotatedTextureRectangle;
+                return this._textureCoordinateRotationPoints;
             }
         }
     });

@@ -675,27 +675,6 @@ define([
         return rectangle;
     }
 
-    var scratchEllipseGeometry = new EllipseGeometry({
-        center : Cartesian3.ZERO,
-        semiMajorAxis : 2,
-        semiMinorAxis : 1
-    });
-    function computeUnrotatedTextureRectangle(ellipseGeometry) {
-        var rotatedEllipse = scratchEllipseGeometry;
-        rotatedEllipse._center = Cartesian3.clone(ellipseGeometry._center, rotatedEllipse._center);
-        rotatedEllipse._semiMajorAxis = ellipseGeometry._semiMajorAxis;
-        rotatedEllipse._semiMinorAxis = ellipseGeometry._semiMinorAxis;
-        rotatedEllipse._ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid, rotatedEllipse._ellipsoid);
-        rotatedEllipse._granularity = ellipseGeometry._granularity;
-
-        // Rotate to align the texture coordinates with ENU
-        // Ellipse texture rotation is backwards, so + instead of -
-        rotatedEllipse._rotation = ellipseGeometry._rotation + ellipseGeometry._stRotation;
-        rotatedEllipse._rectangle = undefined;
-
-        return computeRectangle(rotatedEllipse);
-    }
-
     /**
      * A description of an ellipse on an ellipsoid. Ellipse geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -975,6 +954,31 @@ define([
         });
     };
 
+    function textureCoordinateRotationPoints(ellipseGeometry) {
+        var stRotation = -ellipseGeometry._stRotation;
+        if (stRotation === 0.0) {
+            return [0, 0, 0, 1, 1, 0];
+        }
+
+        var cep = EllipseGeometryLibrary.computeEllipsePositions({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            rotation : ellipseGeometry._rotation,
+            granularity : ellipseGeometry._granularity
+        }, false, true);
+        var positionsFlat = cep.outerPositions;
+        var positionsCount = positionsFlat.length / 3;
+        var positions = new Array(positionsCount);
+        for (var i = 0; i < positionsCount; ++i) {
+            positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
+        }
+
+        var ellipsoid = ellipseGeometry._ellipsoid;
+        var boundingRectangle = ellipseGeometry.rectangle;
+        return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
+    }
+
     defineProperties(EllipseGeometry.prototype, {
         /**
          * @private
@@ -988,17 +992,12 @@ define([
             }
         },
         /**
-         * For stRotation on GroundPrimitives.
-         * Returns the rectangle part of an oriented rectangle that tightly bounds
-         * the oriented geometry in Cartographic space.
+         * For remapping texture coordinates when rendering Ellipses as GroundPrimitives.
          * @private
          */
-        unrotatedTextureRectangle : {
+        textureCoordinateRotationPoints : {
             get : function() {
-                if (!defined(this._unrotatedTextureRectangle)) {
-                    this._unrotatedTextureRectangle = computeUnrotatedTextureRectangle(this);
-                }
-                return this._unrotatedTextureRectangle;
+                return textureCoordinateRotationPoints(this);
             }
         }
     });

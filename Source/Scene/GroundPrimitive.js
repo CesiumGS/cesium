@@ -11,13 +11,11 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/EllipseGeometry',
         '../Core/GeographicTilingScheme',
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
-        '../Core/PolygonGeometry',
         '../Core/Rectangle',
         '../Core/RectangleGeometry',
         '../Core/Resource',
@@ -42,13 +40,11 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        EllipseGeometry,
         GeographicTilingScheme,
         GeometryInstance,
         isArray,
         CesiumMath,
         OrientedBoundingBox,
-        PolygonGeometry,
         Rectangle,
         RectangleGeometry,
         Resource,
@@ -481,13 +477,6 @@ define([
         return rectangle;
     }
 
-    function getStRotation(geometry) {
-        if ((geometry instanceof PolygonGeometry) || (geometry instanceof EllipseGeometry)) {
-            return -geometry._stRotation;
-        }
-        return geometry._stRotation;
-    }
-
     var scratchDiagonalCartesianNE = new Cartesian3();
     var scratchDiagonalCartesianSW = new Cartesian3();
     var scratchDiagonalCartographic = new Cartographic();
@@ -844,13 +833,12 @@ define([
                     instanceType = geometry.constructor;
 
                     var boundingRectangle = getRectangle(frameState, geometry);
-                    var unrotatedTextureRectangle = geometry.unrotatedTextureRectangle;
-                    var texcoordRotation = getStRotation(geometry);
+                    var textureCoordinateRotationPoints = geometry.textureCoordinateRotationPoints;
 
                     if (usePlanarExtents) {
-                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, unrotatedTextureRectangle, ellipsoid, frameState.mapProjection, this._maxHeight, texcoordRotation);
+                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection, this._maxHeight);
                     } else {
-                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, unrotatedTextureRectangle, ellipsoid, frameState.mapProjection, texcoordRotation);
+                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection);
                     }
 
                     var instanceAttributes = instance.attributes;

@@ -264,20 +264,40 @@ defineSuite([
         expect(r.west).toEqualEpsilon(-CesiumMath.PI, CesiumMath.EPSILON7);
     });
 
-    it('computing unrotatedTextureRectangle property', function() {
+    it('computing textureCoordinateRotationPoints property', function() {
         var center = Cartesian3.fromDegrees(0, 0);
         var ellipse = new EllipseGeometry({
             center : center,
             semiMajorAxis : 2000.0,
             semiMinorAxis : 1000.0,
-            stRotation : CesiumMath.toRadians(45)
+            stRotation : CesiumMath.toRadians(90)
         });
 
-        var r = ellipse.unrotatedTextureRectangle;
-        expect(r.north).toEqualEpsilon(0.00024947054494468227 , CesiumMath.EPSILON7);
-        expect(r.south).toEqualEpsilon(-0.00024947054494468227, CesiumMath.EPSILON7);
-        expect(r.east).toEqualEpsilon(0.00024780049692545245, CesiumMath.EPSILON7);
-        expect(r.west).toEqualEpsilon(-0.00024780049692545245, CesiumMath.EPSILON7);
+        // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
+        var textureCoordinateRotationPoints = ellipse.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+
+        ellipse = new EllipseGeometry({
+            center : center,
+            semiMajorAxis : 2000.0,
+            semiMinorAxis : 1000.0,
+            stRotation : CesiumMath.toRadians(0)
+        });
+
+        textureCoordinateRotationPoints = ellipse.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
 
     var center = Cartesian3.fromDegrees(0,0);

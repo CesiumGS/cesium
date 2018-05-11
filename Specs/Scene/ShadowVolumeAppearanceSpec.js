@@ -43,8 +43,8 @@ defineSuite([
     var largeTestRectangle = Rectangle.fromDegrees(-45.0, -45.0, 45.0, 45.0);
     var smallTestRectangle = Rectangle.fromDegrees(-0.1, -0.1, 0.1, 0.1);
 
-    var largeRectangleAttributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(largeTestRectangle, largeTestRectangle, unitSphereEllipsoid, projection);
-    var smallRectangleAttributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, smallTestRectangle, unitSphereEllipsoid, projection);
+    var largeRectangleAttributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(largeTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection);
+    var smallRectangleAttributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection);
 
     var perInstanceColorMaterialAppearance = new PerInstanceColorAppearance();
     var flatPerInstanceColorMaterialAppearance = new PerInstanceColorAppearance({
@@ -169,7 +169,8 @@ defineSuite([
     });
 
     it('provides attributes for rotating texture coordinates', function() {
-        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, smallTestRectangle, unitSphereEllipsoid, projection, 0.0, CesiumMath.PI_OVER_TWO);
+        // 90 degree rotation of a square, so "max" in Y direction is (0,0), "max" in X direction is (1,1)
+        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, [1, 0, 0, 0, 1, 1], unitSphereEllipsoid, projection, 0.0);
 
         var uMaxVmax = attributes.uMaxVmax;
         var uvMinAndExtents = attributes.uvMinAndExtents;
@@ -181,14 +182,13 @@ defineSuite([
         expect(uvMinAndExtents.componentsPerAttribute).toEqual(4);
         expect(uvMinAndExtents.normalize).toEqual(false);
 
-        // 90 degree rotation of a square, so "max" in Y direction is (0,0), "max" in X direction is (1,1)
         var value = uMaxVmax.value;
         expect(value[0]).toEqual(0.0);
         expect(value[1]).toEqual(0.0);
         expect(value[2]).toEqual(1.0);
         expect(value[3]).toEqual(1.0);
 
-        // So "min" of texture coordinates is at (1,0) and extents are just 1s
+        // "min" of texture coordinates is at (1,0) and extents are just 1s
         value = uvMinAndExtents.value;
         expect(value[0]).toEqual(1.0);
         expect(value[1]).toEqual(0.0);

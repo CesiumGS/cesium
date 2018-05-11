@@ -17,6 +17,7 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './Matrix2',
         './Matrix3',
         './PolygonPipeline',
         './PrimitiveType',
@@ -43,6 +44,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        Matrix2,
         Matrix3,
         PolygonPipeline,
         PrimitiveType,
@@ -580,24 +582,6 @@ define([
         return Rectangle.fromCartesianArray(positions, rectangleGeometry._ellipsoid);
     }
 
-    var scratchRectangleGeometry = new RectangleGeometry({
-        rectangle : new Rectangle()
-    });
-    function computeUnrotatedTextureRectangle(rectangleGeometry) {
-        var rotatedRectangle = scratchRectangleGeometry;
-
-        rotatedRectangle._rectangle = Rectangle.clone(rectangleGeometry._rectangle, rotatedRectangle._rectangle);
-        rotatedRectangle._granularity = rectangleGeometry._granularity;
-        rotatedRectangle._ellipsoid = Ellipsoid.clone(rectangleGeometry._ellipsoid, rotatedRectangle._ellipsoid);
-        rotatedRectangle._surfaceHeight = rectangleGeometry._surfaceHeight;
-
-        // Rotate to align the texture coordinates with ENU
-        rotatedRectangle._rotation = rectangleGeometry._rotation - rectangleGeometry._stRotation;
-
-        var result = computeRectangle(rotatedRectangle);
-        return Rectangle.clone(result);
-    }
-
     /**
      * A description of a cartographic rectangle on an ellipsoid centered at the origin. Rectangle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -670,7 +654,7 @@ define([
         this._workerName = 'createRectangleGeometry';
         this._rotatedRectangle = undefined;
 
-        this._unrotatedTextureRectangle = undefined;
+        this._textureCoordinateRotationPoints = undefined;
     }
 
     /**
@@ -881,6 +865,76 @@ define([
         });
     };
 
+    var scratchRectangleGeometry = new RectangleGeometry({
+        rectangle : new Rectangle()
+    });
+    var unrotatedTextureRectangleScratch = new Rectangle();
+    var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2()];
+    var rotation2DScratch = new Matrix2();
+    var rectangleCenterScratch = new Cartographic();
+
+    function textureCoordinateRotationPoints(rectangleGeometry) {
+        if (rectangleGeometry._stRotation === 0.0) {
+            return [0, 0, 0, 1, 1, 0];
+        }
+        // Compute rectangle if rectangleGeometry was rotated so that the texture coordinate system lined up with ENU
+        var rotatedRectangle = scratchRectangleGeometry;
+
+        rotatedRectangle._rectangle = Rectangle.clone(rectangleGeometry._rectangle, rotatedRectangle._rectangle);
+        rotatedRectangle._granularity = rectangleGeometry._granularity;
+        rotatedRectangle._ellipsoid = Ellipsoid.clone(rectangleGeometry._ellipsoid, rotatedRectangle._ellipsoid);
+        rotatedRectangle._surfaceHeight = rectangleGeometry._surfaceHeight;
+
+        // Rotate to align the texture coordinates with ENU
+        rotatedRectangle._rotation = rectangleGeometry._rotation - rectangleGeometry._stRotation;
+
+        var unrotatedTextureRectangle = computeRectangle(rotatedRectangle, unrotatedTextureRectangleScratch);
+
+        // Assume a computed "east-north" texture coordinate system based on spherical or planar tricks, bounded by `boundingRectangle`.
+        // The "desired" texture coordinate system forms an oriented rectangle (un-oriented provided) around the geometry that completely and tightly bounds it.
+        // We want to map from the "east-north" texture coordinate system into the "desired" system using a pair of lines (analagous planes in 2D)
+        // Compute 3 corners of the "desired" texture coordinate system in "east-north" texture space by the following in cartographic space:
+        // - rotate 3 of the corners in unrotatedTextureRectangle by stRotation around the center of the bounding rectangle
+        // - apply the "east-north" system's normalization formula to the rotated cartographics, even though this is likely to produce values outside [0-1].
+        // This gives us a set of points in the "east-north" texture coordinate system that can be used to map "east-north" texture coordinates to "desired."
+
+        var points2D = points2DScratch;
+        points2D[0].x = unrotatedTextureRectangle.west;
+        points2D[0].y = unrotatedTextureRectangle.south;
+
+        points2D[1].x = unrotatedTextureRectangle.west;
+        points2D[1].y = unrotatedTextureRectangle.north;
+
+        points2D[2].x = unrotatedTextureRectangle.east;
+        points2D[2].y = unrotatedTextureRectangle.south;
+
+        var boundingRectangle = rectangleGeometry.rectangle;
+        var toDesiredInComputed = Matrix2.fromRotation(rectangleGeometry._stRotation, rotation2DScratch);
+        var boundingRectangleCenter = Rectangle.center(boundingRectangle, rectangleCenterScratch);
+
+        for (var i = 0; i < 3; ++i) {
+            var point2D = points2D[i];
+            point2D.x -= boundingRectangleCenter.longitude;
+            point2D.y -= boundingRectangleCenter.latitude;
+            Matrix2.multiplyByVector(toDesiredInComputed, point2D, point2D);
+            point2D.x += boundingRectangleCenter.longitude;
+            point2D.y += boundingRectangleCenter.latitude;
+
+            // Convert point into east-north texture coordinate space
+            point2D.x = (point2D.x - boundingRectangle.west) / boundingRectangle.width;
+            point2D.y = (point2D.y - boundingRectangle.south) / boundingRectangle.height;
+        }
+
+        var minXYCorner = points2D[0];
+        var maxYCorner = points2D[1];
+        var maxXCorner = points2D[2];
+        var result = new Array(6);
+        Cartesian2.pack(minXYCorner, result);
+        Cartesian2.pack(maxYCorner, result, 2);
+        Cartesian2.pack(maxXCorner, result, 4);
+        return result;
+    }
+
     defineProperties(RectangleGeometry.prototype, {
         /**
          * @private
@@ -894,17 +948,17 @@ define([
             }
         },
         /**
-         * For stRotation on GroundPrimitives.
-         * Returns the rectangle part of an oriented rectangle that tightly bounds
-         * the oriented geometry in Cartographic space.
+         * For remapping texture coordinates when rendering Ellipses as GroundPrimitives.
+         * This version permits skew in textures by computing offsets in cartographic space.
+         * @see Geometry#_textureCoordinateRotationPoints
          * @private
          */
-        unrotatedTextureRectangle : {
+        textureCoordinateRotationPoints : {
             get : function() {
-                if (!defined(this._unrotatedTextureRectangle)) {
-                    this._unrotatedTextureRectangle = computeUnrotatedTextureRectangle(this);
+                if (!defined(this._textureCoordinateRotationPoints)) {
+                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
                 }
-                return this._unrotatedTextureRectangle;
+                return this._textureCoordinateRotationPoints;
             }
         }
     });

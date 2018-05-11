@@ -186,17 +186,12 @@ define([
             }
         },
         /**
-         * For stRotation on GroundPrimitives.
-         * Returns the rectangle part of an oriented rectangle that tightly bounds
-         * the oriented geometry in Cartographic space.
-         *
-         * For circles the orientation doesn't matter, so just return the rectangle.
-         *
+         * For remapping texture coordinates when rendering Ellipses as GroundPrimitives.
          * @private
          */
-        unrotatedTextureRectangle : {
+        textureCoordinateRotationPoints : {
             get : function() {
-                return this._ellipseGeometry.rectangle;
+                return this._ellipseGeometry.textureCoordinateRotationPoints;
             }
         }
     });
