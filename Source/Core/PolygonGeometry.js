@@ -597,7 +597,7 @@ define([
         this._workerName = 'createPolygonGeometry';
 
         this._rectangle = undefined;
-        this._unrotatedTextureRectangle = undefined;
+        this._textureCoordinateRotationPoints = undefined;
 
         /**
          * The number of elements used to pack the object into an array.

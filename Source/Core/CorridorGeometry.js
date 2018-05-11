@@ -1047,17 +1047,15 @@ define([
             }
         },
         /**
-         * For stRotation on GroundPrimitives.
-         * Returns the rectangle part of an oriented rectangle that tightly bounds
-         * the oriented geometry in Cartographic space.
+         * For remapping texture coordinates when rendering CorridorGeometries as GroundPrimitives.
          *
-         * Corridors don't support geometry orientation or stRotation,
-         * so just return the rectangle.
+         * Corridors don't support stRotation,
+         * so just return the corners of the original system.
          * @private
          */
-        unrotatedTextureRectangle : {
+        textureCoordinateRotationPoints : {
             get : function() {
-                return this.rectangle;
+                return [0, 0, 0, 1, 1, 0];
             }
         }
     });

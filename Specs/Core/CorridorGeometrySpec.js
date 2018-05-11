@@ -281,7 +281,7 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
     });
 
-    it('computing unrotatedTextureRectangle property', function() {
+    it('computing textureCoordinateRotationPoints property', function() {
         var c = new CorridorGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             positions : Cartesian3.fromDegreesArray([
@@ -294,13 +294,15 @@ defineSuite([
             granularity : Math.PI / 6.0
         });
 
-        // Corridors don't support geometry orientation or stRotation, so expect this to equal the standard rectangle.
-        var unrotatedTextureRectangle = c.unrotatedTextureRectangle;
-        var rectangle = c.rectangle;
-        expect(unrotatedTextureRectangle.north).toEqual(rectangle.north);
-        expect(unrotatedTextureRectangle.south).toEqual(rectangle.south);
-        expect(unrotatedTextureRectangle.east).toEqual(rectangle.east);
-        expect(unrotatedTextureRectangle.west).toEqual(rectangle.west);
+        // Corridors don't support geometry orientation or stRotation, so expect this to equal the original coordinate system.
+        var textureCoordinateRotationPoints = c.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
 
     var positions = Cartesian3.fromDegreesArray([

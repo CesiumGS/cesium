@@ -67,7 +67,7 @@ defineSuite([
     });
 
     it('handles shared material being invalidated with geometry', function() {
-        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             // Don't fail if materials on GroundPrimitive not supported
             return;
         }
@@ -121,7 +121,7 @@ defineSuite([
     });
 
     it('updates with sampled distance display condition out of range', function() {
-        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             // Don't fail if materials on GroundPrimitive not supported
             return;
         }
@@ -171,7 +171,7 @@ defineSuite([
     });
 
     it('shows only one primitive while rebuilding primitive', function() {
-        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             // Don't fail if materials on GroundPrimitive not supported
             return;
         }
@@ -245,7 +245,7 @@ defineSuite([
     });
 
     it('batches overlapping entities with the same material separately', function() {
-        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             // Don't fail if materials on GroundPrimitive not supported
             return;
         }
@@ -290,7 +290,7 @@ defineSuite([
     });
 
     it('batches nonoverlapping entities that both use color materials', function() {
-        if (!GroundPrimitive.isSupported(scene) | !GroundPrimitive.supportsMaterials(scene)) {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             // Don't fail if materials on GroundPrimitive not supported
             return;
         }

@@ -755,7 +755,7 @@ define([
         this._workerName = 'createEllipseGeometry';
 
         this._rectangle = undefined;
-        this._unrotatedTextureRectangle = undefined;
+        this._textureCoordinateRotationPoints = undefined;
     }
 
     /**
@@ -997,7 +997,10 @@ define([
          */
         textureCoordinateRotationPoints : {
             get : function() {
-                return textureCoordinateRotationPoints(this);
+                if (!defined(this._textureCoordinateRotationPoints)) {
+                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
+                }
+                return this._textureCoordinateRotationPoints;
             }
         }
     });
