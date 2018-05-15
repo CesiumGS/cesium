@@ -3,7 +3,6 @@ define([
         'Core/JulianDate',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
-        'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
         'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection'
@@ -12,7 +11,6 @@ define([
         JulianDate,
         ColorMaterialProperty,
         ConstantProperty,
-        GridMaterialProperty,
         SampledProperty,
         GroundPrimitive,
         PrimitiveCollection) {
@@ -31,7 +29,7 @@ define([
             expect(updater.isDynamic).toBe(true);
         });
 
-        it('Checks that an entity without height and extrudedHeight and with a color material is on terrain', function() {
+        it('Checks that an entity without height and extrudedHeight is on terrain', function() {
             var entity = createEntity();
             var geometry = entity[geometryPropertyName];
             geometry.height = undefined;
@@ -62,17 +60,6 @@ define([
             var geometry = entity[geometryPropertyName];
             geometry.height = undefined;
             geometry.extrudedHeight = new ConstantProperty(1);
-
-            var updater = new Updater(entity, getScene());
-
-            expect(updater.onTerrain).toBe(false);
-        });
-
-        it('Checks that an entity with a non-color material isn\'t on terrain', function() {
-            var entity = createEntity();
-            var geometry = entity[geometryPropertyName];
-            geometry.height = undefined;
-            geometry.material = new GridMaterialProperty(Color.BLUE);
 
             var updater = new Updater(entity, getScene());
 
@@ -126,15 +113,6 @@ define([
             } else {
                 expect(updater.onTerrain).toBe(false);
             }
-        });
-
-        it('non-color material sets onTerrain to false', function() {
-            var entity = createEntity();
-            var geometry = entity[geometryPropertyName];
-            geometry.fill = true;
-            geometry.material = new GridMaterialProperty();
-            var updater = new Updater(entity, getScene());
-            expect(updater.onTerrain).toBe(false);
         });
 
         it('dynamic updater on terrain', function() {

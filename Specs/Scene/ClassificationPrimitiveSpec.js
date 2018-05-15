@@ -14,8 +14,10 @@ defineSuite([
         'Core/Transforms',
         'Renderer/Pass',
         'Scene/InvertClassification',
+        'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/ShadowVolumeAppearance',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -34,8 +36,10 @@ defineSuite([
         Transforms,
         Pass,
         InvertClassification,
+        MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowVolumeAppearance,
         createScene,
         pollToPromise) {
     'use strict';
@@ -90,6 +94,7 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+        scene.render(); // clear any afterRender commands
 
         rectangle = Rectangle.fromDegrees(-75.0, 25.0, -70.0, 30.0);
 
@@ -773,7 +778,7 @@ defineSuite([
         });
     });
 
-    it('update throws when batched instance colors are different', function() {
+    it('update throws when batched instance colors are different and no culling attributes are provided', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
@@ -889,6 +894,96 @@ defineSuite([
 
         expect(function() {
             verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
+        }).toThrowDeveloperError();
+    });
+
+    it('update throws when no batched instance colors are given for a PerInstanceColorAppearance', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        var neCarto = Rectangle.northeast(rectangle);
+        var nwCarto = Rectangle.northwest(rectangle);
+
+        var ne = ellipsoid.cartographicToCartesian(neCarto);
+        var nw = ellipsoid.cartographicToCartesian(nwCarto);
+
+        var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+        var distance = Cartesian3.magnitude(direction) * 0.25;
+        Cartesian3.normalize(direction, direction);
+        Cartesian3.multiplyByScalar(direction, distance, direction);
+
+        var center = Rectangle.center(rectangle);
+        var origin = ellipsoid.cartographicToCartesian(center);
+
+        var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+
+        var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+
+        var boxInstance1 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
+            }),
+            modelMatrix : modelMatrix,
+            id : 'box1'
+        });
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance1],
+            asynchronous : false,
+            appearance : new PerInstanceColorAppearance()
+        });
+
+        var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+
+        expect(function() {
+            verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
+        }).toThrowDeveloperError();
+    });
+
+    it('update throws when the given Appearance is incompatible with the geometry instance attributes', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance],
+            asynchronous : false,
+            appearance : new MaterialAppearance()
+        });
+
+        expect(function() {
+            verifyClassificationPrimitiveRender(primitive, [255, 255, 255, 255]);
+        }).toThrowDeveloperError();
+    });
+
+    it('update throws when an incompatible Appearance is set', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance],
+            asynchronous : false,
+            appearance : new PerInstanceColorAppearance()
+        });
+
+        scene.camera.setView({ destination : rectangle });
+        scene.groundPrimitives.add(depthPrimitive);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            expect(rgba[0]).toEqual(0);
+        });
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender([255, 255, 0, 255]);
+
+        // become incompatible
+        primitive.appearance = new MaterialAppearance();
+
+        expect(function() {
+            expect(scene).toRender([255, 255, 255, 255]);
         }).toThrowDeveloperError();
     });
 

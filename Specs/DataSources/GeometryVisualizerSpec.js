@@ -19,7 +19,6 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryColorBatch',
         'DataSources/StaticGeometryPerMaterialBatch',
-        'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
         'Scene/ClassificationType',
         'Scene/GroundPrimitive',
@@ -50,7 +49,6 @@ defineSuite([
         SampledProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
-        StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
         ClassificationType,
         GroundPrimitive,
@@ -140,6 +138,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new GridMaterialProperty();
+        ellipse.height = new ConstantProperty(1.0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -807,7 +806,8 @@ defineSuite([
                 semiMinorAxis : 1,
                 material : new GridMaterialProperty({
                     color : createDynamicProperty(Color.BLUE)
-                })
+                }),
+                height : 0.0
             }
         });
 
@@ -840,4 +840,236 @@ defineSuite([
             visualizer.destroy();
         });
     });
+
+    it('batches ground entities by identical color if ground entity materials are not supported', function() {
+        spyOn(GroundPrimitive, 'supportsMaterials').and.callFake(function() {
+            return false;
+        });
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, entities, scene.primitives, scene.groundPrimitives);
+
+        var blueColor = Color.BLUE.withAlpha(0.5);
+        entities.add({
+            position : new Cartesian3(1, 2, 3),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : blueColor
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : new Cartesian3(12, 34, 45),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : blueColor
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : new Cartesian3(123, 456, 789),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : Color.BLUE.withAlpha(0.6)
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(2);
+
+            entities.removeAll();
+            visualizer.destroy();
+        });
+    });
+
+    it('batches ground entities by identical color if ClassificationType is not TERRAIN', function() {
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, entities, scene.primitives, scene.groundPrimitives);
+
+        var blueColor = Color.BLUE.withAlpha(0.5);
+        entities.add({
+            position : new Cartesian3(1, 2, 3),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : blueColor,
+                classificationType : ClassificationType.BOTH
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : new Cartesian3(12, 34, 45),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : blueColor,
+                    classificationType : ClassificationType.BOTH
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : new Cartesian3(123, 456, 789),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : Color.BLUE.withAlpha(0.6),
+                    classificationType : ClassificationType.BOTH
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(2);
+
+            entities.removeAll();
+            visualizer.destroy();
+        });
+    });
+
+    it('batches ground entities classifying terrain by material if ground entity materials is supported', function() {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+            return;
+        }
+
+        var entities = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, entities, scene.primitives, scene.groundPrimitives);
+
+        var blueColor = Color.BLUE.withAlpha(0.5);
+        entities.add({
+            position : Cartesian3.fromDegrees(1, 2),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : blueColor,
+                classificationType : ClassificationType.TERRAIN
+            }
+        });
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : Cartesian3.fromDegrees(12, 34),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : blueColor,
+                    classificationType : ClassificationType.TERRAIN
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : Cartesian3.fromDegrees(45, 67),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : Color.BLUE.withAlpha(0.6),
+                    classificationType : ClassificationType.TERRAIN
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+
+            entities.add({
+                position : Cartesian3.fromDegrees(-1, -2),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : './Data/Images/White.png',
+                    classificationType : ClassificationType.TERRAIN
+                }
+            });
+
+            entities.add({
+                position : Cartesian3.fromDegrees(-12, -34),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    material : './Data/Images/White.png',
+                    classificationType : ClassificationType.BOTH // expect to render as ClassificationType.TERRAIN
+                }
+            });
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = visualizer.update(time);
+                scene.render(time);
+                return isUpdated;
+            });
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(2);
+
+            entities.removeAll();
+            visualizer.destroy();
+        });
+    });
+
 }, 'WebGL');
