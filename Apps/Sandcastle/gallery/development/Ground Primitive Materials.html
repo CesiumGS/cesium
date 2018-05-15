@@ -444,7 +444,8 @@ function createPrimitives(scene) {
         }),
         appearance : new Cesium.EllipsoidSurfaceAppearance({
             aboveGround : false
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     worldRectangle = scene.primitives.add(new Cesium.GroundPrimitive({
@@ -457,7 +458,8 @@ function createPrimitives(scene) {
         appearance : new Cesium.EllipsoidSurfaceAppearance({
             aboveGround : false
         }),
-        show : false
+        show : false,
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     var initialPosition = Cesium.Cartesian3.fromRadians(-2.1344873183780484, 0.8071380277370774, 5743.394497982162);

@@ -78,7 +78,8 @@ for (var x = 0; x < 10; ++x) {
             rectangle : {
                 coordinates : Cesium.Rectangle.fromDegrees(cornerLon, cornerLat,
                                                            cornerLon + 0.009, cornerLat + 0.009),
-                material : Cesium.Color.fromRandom().withAlpha(0.5)
+                material : Cesium.Color.fromRandom().withAlpha(0.5),
+                classificationType : Cesium.ClassificationType.TERRAIN
             }
         });
     }
@@ -95,7 +96,8 @@ viewer.entities.add({
     name : 'checkerboard rectangle',
     rectangle : {
         coordinates : Cesium.Rectangle.fromDegrees(-122.17778, 46.36169, -120.17778, 48.36169),
-        material : checkerboard
+        material : checkerboard,
+        classificationType : Cesium.ClassificationType.TERRAIN
     }
 });
 
@@ -107,7 +109,8 @@ viewer.entities.add({
         semiMinorAxis : 15000.0,
         semiMajorAxis : 30000.0,
         material : '../images/Cesium_Logo_Color.jpg',
-        stRotation : Cesium.Math.toRadians(45)
+        stRotation : Cesium.Math.toRadians(45),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }
 });
 

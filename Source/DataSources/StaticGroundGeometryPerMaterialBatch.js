@@ -6,6 +6,7 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/RectangleCollisionChecker',
+        '../Scene/ClassificationType',
         '../Scene/GroundPrimitive',
         '../Scene/ShadowVolumeAppearance',
         './BoundingSphereState',
@@ -20,6 +21,7 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         RectangleCollisionChecker,
+        ClassificationType,
         GroundPrimitive,
         ShadowVolumeAppearance,
         BoundingSphereState,
@@ -32,10 +34,9 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, classificationType, materialProperty, usingSphericalTextureCoordinates) {
+    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates) {
         this.primitives = primitives; // scene level primitive collection
         this.appearanceType = appearanceType;
-        this.classificationType = classificationType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
         this.createPrimitive = true;
@@ -155,7 +156,7 @@ define([
                         material : this.material
                         // translucent and closed properties overridden
                     }),
-                    classificationType : this.classificationType
+                    classificationType : ClassificationType.TERRAIN
                 });
 
                 primitives.add(primitive);
@@ -278,11 +279,10 @@ define([
     /**
      * @private
      */
-    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType, classificationType) {
+    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
-        this._classificationType = classificationType;
     }
 
     StaticGroundGeometryPerMaterialBatch.prototype.add = function(time, updater) {
@@ -304,7 +304,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._primitives, this._appearanceType, this._classificationType, updater.fillMaterialProperty, usingSphericalTextureCoordinates);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };

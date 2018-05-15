@@ -63,8 +63,9 @@ define([
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other.
-     * Only the {@link PerInstanceColorAppearance} is supported at this time when using ClassificationPrimitive directly.
-     * For full {@link Appearance} support use {@link GroundPrimitive} instead.
+     * Only {@link PerInstanceColorAppearance} with the same color across all instances is supported at this time when using
+     * ClassificationPrimitive directly.
+     * For full {@link Appearance} support when classifying terrain use {@link GroundPrimitive} instead.
      *
      * </p>
      * <p>

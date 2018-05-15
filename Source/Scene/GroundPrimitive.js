@@ -72,6 +72,9 @@ define([
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
      * and match most of them and add a new geometry or appearance independently of each other.
      *
+     * Only {@link PerInstanceColorAppearance} with the same color across all instances is supported at this time when
+     * classifying {@link ClassificationType}.CESIUM_3D_TILE and {@link ClassificationType}.BOTH.
+     *
      * Support for the WEBGL_depth_texture extension is required to use GeometryInstances with different PerInstanceColors
      * or materials besides PerInstanceColorAppearance.
      *
@@ -762,6 +765,12 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
+        if (this.classificationType !== ClassificationType.TERRAIN && !(this.appearance instanceof PerInstanceColorAppearance)) {
+            throw new DeveloperError('GroundPrimitives with Materials can only classify ClassificationType.TERRAIN at this time.');
+        }
+        //>>includeEnd('debug');
+
         var that = this;
         var primitiveOptions = this._classificationPrimitiveOptions;
 
@@ -809,7 +818,7 @@ define([
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
 
-            var useFragmentCulling = GroundPrimitive._supportsMaterials(frameState.context);
+            var useFragmentCulling = GroundPrimitive._supportsMaterials(frameState.context) && this.classificationType === ClassificationType.TERRAIN;
             this._useFragmentCulling = useFragmentCulling;
 
             if (useFragmentCulling) {
