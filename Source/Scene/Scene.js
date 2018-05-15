@@ -656,14 +656,6 @@ define([
         this.cameraEventWaitTime = 500.0;
 
         /**
-         * Set to true to copy the depth texture after rendering the globe. Makes czm_globeDepthTexture valid.
-         * @type {Boolean}
-         * @default false
-         * @private
-         */
-        this.copyGlobeDepth = false;
-
-        /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
          * performance improvements by rendering less geometry and dispatching less terrain requests.
          * @type {Fog}
@@ -2282,7 +2274,7 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
                 globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }
@@ -3011,7 +3003,8 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
+        // Globe depth needs is copied for Pick to support picking batched geometries in GroundPrimitives.
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);

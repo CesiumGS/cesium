@@ -480,6 +480,38 @@ defineSuite([
                 fail('should not resolve');
             }).otherwise(function(error) {
                 expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
+                var statistics = tileset.statistics;
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(0);
+                expect(statistics.numberOfTilesWithContentReady).toBe(0);
+            });
+        });
+    });
+
+    it('handles failed tile processing', function() {
+        viewRootOnly();
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetUrl
+        }));
+        return tileset.readyPromise.then(function(tileset) {
+            // Start spying after the tileset json has been loaded
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                deferred.resolve(Cesium3DTilesTester.generateBatchedTileBuffer({
+                    version : 0 // Invalid version
+                }));
+            });
+            scene.renderForSpecs(); // Request root
+            var root = tileset._root;
+            return root.contentReadyPromise.then(function() {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
+                var statistics = tileset.statistics;
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(0);
+                expect(statistics.numberOfTilesWithContentReady).toBe(0);
             });
         });
     });

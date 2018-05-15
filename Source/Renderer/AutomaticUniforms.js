@@ -1,9 +1,11 @@
 define([
         '../Core/Cartesian3',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/WebGLConstants'
     ], function(
         Cartesian3,
+        CesiumMath,
         Matrix4,
         WebGLConstants) {
     'use strict';
@@ -1136,18 +1138,48 @@ define([
         }),
 
         /**
-         * The log of the current frustums far plane. Used for computing the log depth.
+         * The log2 of the current frustums far plane. Used for computing the log depth.
          *
-         * @alias czm_logFarDistance
+         * @alias czm_log2FarDistance
          * @glslUniform
          *
          * @private
          */
-        czm_logFarDistance : new AutomaticUniform({
+        czm_log2FarDistance : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.logFarDistance;
+                return uniformState.log2FarDistance;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing log2 of the far distance + 1.0.
+         * This is used when reversing log depth computations.
+         *
+         * @alias czm_log2FarPlusOne
+         * @glslUniform
+         */
+        czm_log2FarPlusOne : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.log2FarPlusOne;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing log2 of the near distance.
+         * This is used when writing log depth in the fragment shader.
+         *
+         * @alias czm_log2NearDistance
+         * @glslUniform
+         */
+        czm_log2NearDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.log2NearDistance;
             }
         }),
 

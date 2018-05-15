@@ -2001,8 +2001,13 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
-        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
 
         if (!defined(model._uniformMapLoaded)) {
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
@@ -2038,8 +2043,10 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
-        drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-        drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
 
         if (!defined(model._uniformMapLoaded)) {
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
