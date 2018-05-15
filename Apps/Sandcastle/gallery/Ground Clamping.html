@@ -121,6 +121,30 @@ Sandcastle.addDefaultToolbarMenu([{
         viewer.zoomTo(e);
     }
 }, {
+    text : 'Draw Textured Polygon',
+    onselect : function() {
+        if (!Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(viewer.scene)) {
+            window.alert('Terrain Entity materials are not supported on this platform');
+            return;
+        }
+
+        var e = viewer.entities.add({
+            polygon : {
+                hierarchy : {
+                    positions : [new Cesium.Cartesian3(-2358138.847340281, -3744072.459541374, 4581158.5714175375),
+                                 new Cesium.Cartesian3(-2357231.4925370603, -3745103.7886602185, 4580702.9757762635),
+                                 new Cesium.Cartesian3(-2355912.902205431, -3744249.029778454, 4582402.154378103),
+                                 new Cesium.Cartesian3(-2357208.0209552636, -3743553.4420488174, 4581961.863286629)]
+                },
+                material : '../images/Cesium_Logo_Color.jpg',
+                classificationType : Cesium.ClassificationType.TERRAIN,
+                stRotation : Cesium.Math.toRadians(45)
+            }
+        });
+
+        viewer.zoomTo(e);
+    }
+}, {
     text : 'Draw Rectangle',
     onselect : function() {
         var e = viewer.entities.add({
