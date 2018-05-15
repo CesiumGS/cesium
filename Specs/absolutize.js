@@ -7,5 +7,6 @@ define(function() {
         a.href = a.href; // IE only absolutizes href on get, not set
         return a.href;
     }
+
     return absolutize;
 });
