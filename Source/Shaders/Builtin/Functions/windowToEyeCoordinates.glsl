@@ -83,7 +83,7 @@ vec4 czm_windowToEyeCoordinates(vec2 fragmentCoordinateXY, float depthOrLogDepth
     float unscaledDepth = pow(2.0, depthOrLogDepth * czm_log2FarPlusOne) - 1.0;
     vec4 windowCoord = vec4(fragmentCoordinateXY, far * (1.0 - near / unscaledDepth) / (far - near), 1.0);
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);
-    eyeCoordinate.w = 1.0 / unscaledDepth;\n // Better precision
+    eyeCoordinate.w = 1.0 / unscaledDepth; // Better precision
 #else
     vec4 windowCoord = vec4(fragmentCoordinateXY, depthOrLogDepth, 1.0);
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(windowCoord);
