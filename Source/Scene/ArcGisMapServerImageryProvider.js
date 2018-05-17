@@ -2,6 +2,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/combine',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -13,11 +14,13 @@ define([
         '../Core/loadJson',
         '../Core/loadJsonp',
         '../Core/Math',
+        '../Core/objectToQuery',
         '../Core/Rectangle',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './DiscardMissingTileImagePolicy',
         './ImageryLayerFeatureInfo',
@@ -26,6 +29,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        combine,
         Credit,
         defaultValue,
         defined,
@@ -37,11 +41,13 @@ define([
         loadJson,
         loadJsonp,
         CesiumMath,
+        objectToQuery,
         Rectangle,
         RuntimeError,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
+        Uri,
         when,
         DiscardMissingTileImagePolicy,
         ImageryLayerFeatureInfo,
@@ -93,6 +99,8 @@ define([
      *                                        a tiled server.
      * @param {Object} [options.mapServerData] This MapServer's metadata.  This can be supplied to prevent the imagery provider from making an extraneous
      *                                         request when the application already has the metadata.
+     * @param {Object} [options.parameters=ArcGisMapServerImageryProvider.DefaultParameters] Additional parameters
+     *                 to pass to the ArcGIS server in tile requests and feature picking.
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -135,6 +143,7 @@ define([
         this._useTiles = undefined;
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._layers = options.layers;
+        this._parameters = combine(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT), ArcGisMapServerImageryProvider.DefaultParameters);
 
         /**
          * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
@@ -256,27 +265,45 @@ define([
         }
     }
 
+    /**
+     * The default parameters to include in tile request URLs. By default, there are no parameters.
+     * @constant
+     */
+    ArcGisMapServerImageryProvider.DefaultParameters = {};
+
     function buildImageUrl(imageryProvider, x, y, level) {
         var url;
         if (imageryProvider._useTiles) {
             url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
+
+            if (Object.keys(imageryProvider.parameters).length > 0) {
+                url += '?' + objectToQuery(imageryProvider.parameters);
+            }
         } else {
             var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            var bbox = nativeRectangle.west + '%2C' + nativeRectangle.south + '%2C' + nativeRectangle.east + '%2C' + nativeRectangle.north;
 
-            url = imageryProvider._url + '/export?';
-            url += 'bbox=' + bbox;
+            var requestParameters = {};
+
+            requestParameters.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
+
             if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
-                url += '&bboxSR=4326&imageSR=4326';
+                requestParameters.bboxSR = '4326';
+                requestParameters.imageSR = '4326';
             } else {
-                url += '&bboxSR=3857&imageSR=3857';
+                requestParameters.bboxSR = '3857';
+                requestParameters.imageSR = '3857';
             }
-            url += '&size=' + imageryProvider._tileWidth + '%2C' + imageryProvider._tileHeight;
-            url += '&format=png&transparent=true&f=image';
+
+            requestParameters.size = imageryProvider._tileWidth + ',' + imageryProvider._tileHeight;
+            requestParameters.format = 'png';
+            requestParameters.transparent = 'true';
+            requestParameters.f = 'image';
 
             if (imageryProvider.layers) {
-                url += '&layers=show:' + imageryProvider.layers;
+                requestParameters.layers = 'show:' + imageryProvider.layers;
             }
+
+            url = imageryProvider._url + '/export?' + objectToQuery(combine(imageryProvider.parameters, requestParameters));
         }
 
         var token = imageryProvider._token;
@@ -568,6 +595,19 @@ define([
             get : function() {
                 return this._layers;
             }
+        },
+
+        /**
+         * Gets the additional parameters to pass to the ArcGIS server in tile requests and feature picking.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        parameters : {
+            get : function() {
+                return this._parameters;
+            }
         }
     });
 
@@ -655,20 +695,26 @@ define([
             sr = '3857';
         }
 
-        var url = this._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
-        url += '&geometry=' + horizontal + ',' + vertical;
-        url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
-        url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
-        url += '&sr=' + sr;
+        var requestParameters = {};
+        requestParameters.f = 'json';
+        requestParameters.tolerance = '2';
+        requestParameters.geometryType = 'esriGeometryPoint';
+        requestParameters.geometry = horizontal + ',' + vertical;
+        requestParameters.mapExtent = rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
+        requestParameters.imageDisplay = this._tileWidth + ',' + this._tileHeight + ',96';
+        requestParameters.sr = sr;
 
-        url += '&layers=visible';
+        var layers = 'visible';
         if (defined(this._layers)) {
-            url += ':' + this._layers;
+            layers += ':' + this._layers;
         }
+        requestParameters.layers = layers;
 
         if (defined(this._token)) {
-            url += '&token=' + this._token;
+            requestParameters.token = this._token;
         }
+
+        var url = this._url + '/identify?' + objectToQuery(combine(this.parameters, requestParameters));
 
         if (defined(this._proxy)) {
             url = this._proxy.getURL(url);
