@@ -141,7 +141,7 @@ define([
         this._readyPromise = when.defer();
 
         var metadataResource = this._resource.getDerivedResource({
-            url:'/REST/v1/Imagery/Metadata/' + this._mapStyle,
+            url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
             queryParameters: {
                 incl: 'ImageryProviders',
                 key: this._key
