@@ -166,6 +166,7 @@ defineSuite([
         expect(primitive.cull).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
+        expect(primitive.fragmentLogDepth).toEqual(false);
     });
 
     it('Constructs with options', function() {
@@ -187,7 +188,8 @@ defineSuite([
             allowPicking : false,
             cull : false,
             asynchronous : false,
-            debugShowBoundingVolume : true
+            debugShowBoundingVolume : true,
+            fragmentLogDepth : true
         });
 
         expect(primitive.geometryInstances).toEqual(geometryInstances);
@@ -203,6 +205,7 @@ defineSuite([
         expect(primitive.cull).toEqual(false);
         expect(primitive.asynchronous).toEqual(false);
         expect(primitive.debugShowBoundingVolume).toEqual(true);
+        expect(primitive.fragmentLogDepth).toEqual(true);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {

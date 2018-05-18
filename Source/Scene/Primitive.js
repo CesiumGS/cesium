@@ -119,6 +119,7 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Boolean} [options.fragmentLogDepth=false] Set to <code>true</code> when using geometry with large triangles and {@link Scene#logarithmicDepthBuffer} is <code>true</code>.
      * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
      *
      * @example
@@ -351,6 +352,7 @@ define([
         this._frontFaceRS = undefined;
         this._backFaceRS = undefined;
         this._sp = undefined;
+        this._fragmentLogDepth = defaultValue(options.fragmentLogDepth, false);
 
         this._depthFailAppearance = undefined;
         this._spDepthFail = undefined;
@@ -509,6 +511,22 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
+            }
+        },
+
+        /**
+         * When <code>true</code>, logarithmic depth is computed per-fragment instead of per vertex.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        fragmentLogDepth : {
+            get : function() {
+                return this._fragmentLogDepth;
             }
         }
     });
@@ -1428,6 +1446,8 @@ define([
         vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         var fs = appearance.getFragmentShaderSource();
 
+        var vertexShaderDefines = primitive.fragmentLogDepth ? ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'] : [];
+
         // Create pick program
         if (primitive.allowPicking) {
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
@@ -1436,14 +1456,20 @@ define([
             primitive._pickSP = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._pickSP,
-                vertexShaderSource : vsPick,
+                vertexShaderSource : new ShaderSource({
+                    sources : [vsPick],
+                    defines : vertexShaderDefines
+                }),
                 fragmentShaderSource : ShaderSource.createPickFragmentShaderSource(fs, 'varying'),
                 attributeLocations : attributeLocations
             });
         } else {
             primitive._pickSP = ShaderProgram.fromCache({
                 context : context,
-                vertexShaderSource : vs,
+                vertexShaderSource : new ShaderSource({
+                    sources : [vs],
+                    defines : vertexShaderDefines
+                }),
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
@@ -1453,7 +1479,10 @@ define([
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : primitive._sp,
-            vertexShaderSource : vs,
+            vertexShaderSource : new ShaderSource({
+                sources : [vs],
+                defines : vertexShaderDefines
+            }),
             fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
@@ -1473,7 +1502,10 @@ define([
             primitive._spDepthFail = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._spDepthFail,
-                vertexShaderSource : vs,
+                vertexShaderSource : new ShaderSource({
+                    sources : [vs],
+                    defines : vertexShaderDefines
+                }),
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });

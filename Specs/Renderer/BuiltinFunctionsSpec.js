@@ -2,6 +2,7 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/Math',
         'Core/EncodedCartesian3',
         'Specs/createCamera',
         'Specs/createContext',
@@ -10,6 +11,7 @@ defineSuite([
         BoundingRectangle,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         EncodedCartesian3,
         createCamera,
         createContext,
@@ -465,4 +467,25 @@ defineSuite([
             fragmentShader : fs
         }).contextToRender();
     });
+
+    it('has czm_fastApproximateAtan', function() {
+        var fsAtan =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_fastApproximateAtan(0.0) == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fsAtan
+        }).contextToRender();
+
+        var fsAtan2 =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_fastApproximateAtan(1.0, 0.0) == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fsAtan2
+        }).contextToRender();
+    });
+
 }, 'WebGL');
