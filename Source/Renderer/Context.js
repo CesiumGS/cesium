@@ -1061,11 +1061,11 @@ define([
     Context.prototype.readPixels = function(readState) {
         var gl = this._gl;
 
-        readState = readState || {};
-        var x = Math.max(readState.x || 0, 0);
-        var y = Math.max(readState.y || 0, 0);
-        var width = readState.width || gl.drawingBufferWidth;
-        var height = readState.height || gl.drawingBufferHeight;
+        readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
+        var x = Math.max(defaultValue(readState.x, 0), 0);
+        var y = Math.max(defaultValue(readState.y, 0), 0);
+        var width = defaultValue(readState.width, gl.drawingBufferWidth);
+        var height = defaultValue(readState.height, gl.drawingBufferHeight);
         var framebuffer = readState.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
