@@ -325,6 +325,8 @@ define([
         this._oit = oit;
         this._sceneFramebuffer = new SceneFramebuffer();
 
+        this._hdr = context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
+
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
             stencil : 0,
@@ -430,7 +432,8 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.sunBloom = true;
+        this.sunBloom = !this._hdr;
+        //this.sunBloom = true;
         this._sunBloom = undefined;
 
         /**
@@ -2933,7 +2936,7 @@ define([
         }
 
         var postProcess = scene.postProcessStages;
-        var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
+        var usePostProcess = environmentState.usePostProcess = !picking && (scene._hdr || postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
@@ -2941,7 +2944,7 @@ define([
             var camera = scene.camera;
             var useLogDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
 
-            postProcess.update(context, useLogDepth);
+            postProcess.update(context, useLogDepth, scene._hdr);
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;

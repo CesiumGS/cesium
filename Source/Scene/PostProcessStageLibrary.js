@@ -18,6 +18,7 @@ define([
         '../Shaders/PostProcessStages/LensFlare',
         '../Shaders/PostProcessStages/LinearDepth',
         '../Shaders/PostProcessStages/NightVision',
+        '../shaders/PostProcessStages/ReinhardTonemapping',
         '../Shaders/PostProcessStages/Silhouette',
         '../ThirdParty/Shaders/FXAA3_11',
         './PostProcessStage',
@@ -43,6 +44,7 @@ define([
         LensFlare,
         LinearDepth,
         NightVision,
+        ReinhardTonemapping,
         Silhouette,
         FXAA3_11,
         PostProcessStage,
@@ -556,6 +558,16 @@ define([
             name : 'czm_FXAA',
             fragmentShader : fxaaFS,
             sampleMode : PostProcessStageSampleMode.LINEAR
+        });
+    };
+
+    PostProcessStageLibrary.createReinhardTonemappingStage = function() {
+        return new PostProcessStage({
+            name : 'czm_reinhard',
+            fragmentShader : ReinhardTonemapping,
+            uniforms : {
+                exposure : 1.0
+            }
         });
     };
 

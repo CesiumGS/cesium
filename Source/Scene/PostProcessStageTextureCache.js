@@ -113,10 +113,12 @@ define([
         if (defined(collection.ambientOcclusion)) {
             var ao = collection.ambientOcclusion;
             var bloom = collection.bloom;
+            var tonemapping = collection._tonemapping;
             var fxaa = collection.fxaa;
 
             var previousName = getCompositeDependencies(collection, context, dependencies, ao, undefined);
             previousName = getCompositeDependencies(collection, context, dependencies, bloom, previousName);
+            previousName = getStageDependencies(collection, context, dependencies, tonemapping, previousName);
             previousName = getCompositeDependencies(collection, context, dependencies, collection, previousName);
             getStageDependencies(collection, context, dependencies, fxaa, previousName);
         } else {
@@ -256,8 +258,9 @@ define([
         var updateDependencies = this._updateDependencies;
         var aoEnabled = defined(collection.ambientOcclusion) && collection.ambientOcclusion.enabled && collection.ambientOcclusion._isSupported(context);
         var bloomEnabled = defined(collection.bloom) && collection.bloom.enabled && collection.bloom._isSupported(context);
+        var tonemappingEnabled = defined(collection._tonemapping) && collection._tonemapping.enabled && collection._tonemapping._isSupported(context);
         var fxaaEnabled = defined(collection.fxaa) && collection.fxaa.enabled && collection.fxaa._isSupported(context);
-        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || bloomEnabled || fxaaEnabled;
+        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || bloomEnabled || tonemappingEnabled || fxaaEnabled;
         if (updateDependencies || (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)) {
             releaseResources(this);
             this._framebuffers.length = 0;

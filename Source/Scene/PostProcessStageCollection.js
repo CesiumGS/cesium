@@ -56,15 +56,17 @@ define([
         var fxaa = PostProcessStageLibrary.createFXAAStage();
         var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
         var bloom = PostProcessStageLibrary.createBloomStage();
+        var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage();
 
         ao.enabled = false;
         bloom.enabled = false;
+        tonemapping.enabled = false;
 
         var textureCache = new PostProcessStageTextureCache(this);
 
         var stageNames = {};
         var stack = stackScratch;
-        stack.push(fxaa, ao, bloom);
+        stack.push(fxaa, ao, bloom, tonemapping);
         while (stack.length > 0) {
             var stage = stack.pop();
             stageNames[stage.name] = stage;
@@ -90,11 +92,13 @@ define([
 
         this._ao = ao;
         this._bloom = bloom;
+        this._tonemapping = tonemapping;
         this._fxaa = fxaa;
 
         this._lastLength = undefined;
         this._aoEnabled = undefined;
         this._bloomEnabled = undefined;
+        this._tonemappingEnabled = undefined;
         this._fxaaEnabled = undefined;
 
         this._stagesRemoved = false;
@@ -125,10 +129,12 @@ define([
                 var fxaa = this._fxaa;
                 var ao = this._ao;
                 var bloom = this._bloom;
+                var tonemapping = this._tonemapping;
 
                 readyAndEnabled = readyAndEnabled || (fxaa.ready && fxaa.enabled);
                 readyAndEnabled = readyAndEnabled || (ao.ready && ao.enabled);
                 readyAndEnabled = readyAndEnabled || (bloom.ready && bloom.enabled);
+                readyAndEnabled = readyAndEnabled || (tonemapping.ready && tonemapping.enabled);
 
                 return readyAndEnabled;
             }
@@ -263,6 +269,11 @@ define([
                     if (defined(stage) && stage.ready && stage.enabled) {
                         return this.getOutputTexture(stage.name);
                     }
+                }
+
+                var tonemapping = this._tonemapping;
+                if (tonemapping.enabled && tonemapping.ready) {
+                    return this.getOutputTexture(tonemapping.name);
                 }
 
                 var bloom = this._bloom;
@@ -438,7 +449,7 @@ define([
      *
      * @private
      */
-    PostProcessStageCollection.prototype.update = function(context, useLogDepth) {
+    PostProcessStageCollection.prototype.update = function(context, useLogDepth, useHDR) {
         removeStages(this);
 
         var activeStages = this._activeStages;
@@ -458,13 +469,18 @@ define([
 
         var ao = this._ao;
         var bloom = this._bloom;
+        var tonemapping = this._tonemapping;
         var fxaa = this._fxaa;
+
+        tonemapping.enabled = useHDR;
 
         var aoEnabled = ao.enabled && ao._isSupported(context);
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);
+        var tonemappingEnabled = tonemapping.enabled && tonemapping._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled || bloomEnabled !== this._bloomEnabled || fxaaEnabled !== this._fxaaEnabled) {
+        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled ||
+            bloomEnabled !== this._bloomEnabled || tonemappingEnabled !== this._tonemappingEnabled || fxaaEnabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
             this._textureCache.updateDependencies();
@@ -472,6 +488,7 @@ define([
             this._lastLength = count;
             this._aoEnabled = aoEnabled;
             this._bloomEnabled = bloomEnabled;
+            this._tonemappingEnabled = tonemappingEnabled;
             this._fxaaEnabled = fxaaEnabled;
             this._textureCacheDirty = false;
         }
@@ -511,6 +528,7 @@ define([
         fxaa.update(context, useLogDepth);
         ao.update(context, useLogDepth);
         bloom.update(context, useLogDepth);
+        tonemapping.update(context, useLogDepth);
 
         length = stages.length;
         for (i = 0; i < length; ++i) {
@@ -589,12 +607,14 @@ define([
         var fxaa = this._fxaa;
         var ao = this._ao;
         var bloom = this._bloom;
+        var tonemapping = this._tonemapping;
 
         var aoEnabled = ao.enabled && ao._isSupported(context);
         var bloomEnabled = bloom.enabled && bloom._isSupported(context);
+        var tonemappingEnabled = tonemapping.enabled && tonemapping._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (!fxaaEnabled && !aoEnabled && !bloomEnabled && length === 0) {
+        if (!fxaaEnabled && !aoEnabled && !bloomEnabled && !tonemappingEnabled && length === 0) {
             return;
         }
 
@@ -606,6 +626,10 @@ define([
         if (bloomEnabled && bloom.ready) {
             execute(bloom, context, initialTexture, depthTexture);
             initialTexture = getOutputTexture(bloom);
+        }
+        if (tonemappingEnabled && tonemapping.ready) {
+            execute(tonemapping, context, initialTexture, depthTexture);
+            initialTexture = getOutputTexture(tonemapping);
         }
 
         var lastTexture = initialTexture;
@@ -680,6 +704,7 @@ define([
         this._fxaa.destroy();
         this._ao.destroy();
         this._bloom.destroy();
+        this._tonemapping.destroy();
         this.removeAll();
         this._textureCache = this._textureCache && this._textureCache.destroy();
         return destroyObject(this);

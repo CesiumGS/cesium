@@ -41,6 +41,8 @@ define([
         this._depthStencilRenderbuffer = undefined;
         this._framebuffer = undefined;
 
+        this._useHDR = undefined;
+
         this._clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
             depth : 1.0,
@@ -60,12 +62,12 @@ define([
         post._depthStencilRenderbuffer = undefined;
     }
 
-    SceneFramebuffer.prototype.update = function(context) {
+    SceneFramebuffer.prototype.update = function(context, hdr) {
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
         var colorTexture = this._colorTexture;
-        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height;
+        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height || hdr !== this._useHDR;
         if (textureChanged) {
             this._colorTexture = this._colorTexture && this._colorTexture.destroy();
             this._depthStencilTexture = this._depthStencilTexture && this._depthStencilTexture.destroy();
@@ -76,7 +78,7 @@ define([
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                pixelDatatype : hdr ? PixelDatatype.HALF_FLOAT : PixelDatatype.UNSIGNED_BYTE,
                 sampler : new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
