@@ -1,7 +1,7 @@
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 attribute float batchId;
-attribute vec3 normal;
+attribute vec3 normal; // TODO: "rebuild" the normal in here from planes. This simplifies 2D.
 
 varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;

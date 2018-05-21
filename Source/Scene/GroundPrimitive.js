@@ -644,7 +644,7 @@ define([
             for (i = 0; i < colorLength; ++i) {
                 colorCommand = colorCommands[i];
 
-                // derive a separate appearance command for 2D if needed
+                // Use derived appearance command for 2D if needed
                 if (frameState.mode !== SceneMode.SCENE3D &&
                     colorCommand.shaderProgram === classificationPrimitive._spColor &&
                     classificationPrimitive._needs2DShader) {
@@ -690,7 +690,7 @@ define([
             for (var j = 0; j < pickLength; ++j) {
                 var pickCommand = pickCommands[j];
 
-                // derive a separate appearance command for 2D if needed
+                // Use derived pick command for 2D if needed
                 if (frameState.mode !== SceneMode.SCENE3D &&
                     pickCommand.shaderProgram === classificationPrimitive._spPick &&
                     classificationPrimitive._needs2DShader) {

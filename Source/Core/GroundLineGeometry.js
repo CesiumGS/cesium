@@ -294,17 +294,17 @@ define([
      * texture coordinate local to the line. This texture coordinate then needs to be mapped to the entire line,
      * which requires an additional set of attributes.
      *
-     * TODO: Attributes for 2D
-     *
      * @param {GroundLineGeometry} geometry GroundLineGeometry
+     * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
      * @param {Number} lengthSoFar Distance of the segment's start point along the line
      * @param {Number} segmentLength Length of the segment
      * @param {Number} totalLength Total length of the entire line
      * @returns {Object} An object containing GeometryInstanceAttributes for the input geometry
      */
-    GroundLineGeometry.getAttributes = function(geometry, lengthSoFar, segmentLength, totalLength) {
+    GroundLineGeometry.getAttributes = function(geometry, projection, lengthSoFar, segmentLength, totalLength) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('geometry', geometry);
+        Check.typeOf.object('projection', projection);
         Check.typeOf.number('lengthSoFar', lengthSoFar);
         Check.typeOf.number('segmentLength', segmentLength);
         Check.typeOf.number('totalLength', totalLength);

@@ -20,9 +20,7 @@ void main(void)
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, gl_FragCoord.xy / czm_viewport.zw));
 
     // Discard for sky
-    if (logDepthOrDepth == 0.0) {
-        discard;
-    }
+    bool shouldDiscard = logDepthOrDepth == 0.0;
 
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth);
     eyeCoordinate /= eyeCoordinate.w;
@@ -35,10 +33,20 @@ void main(void)
     float distanceFromStart = rayPlaneDistance(eyeCoordinate.xyz, -v_forwardDirectionEC, v_startPlaneEC.xyz, v_startPlaneEC.w);
     float distanceFromEnd = rayPlaneDistance(eyeCoordinate.xyz, v_forwardDirectionEC, v_endPlaneEC.xyz, v_endPlaneEC.w);
 
-    if (abs(width) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0) {
+    shouldDiscard = shouldDiscard || (abs(width) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0);
+
+    if (shouldDiscard) {
+#ifdef DEBUG_SHOW_VOLUME
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.5);
+        return;
+#else // DEBUG_SHOW_VOLUME
         discard;
+#endif // DEBUG_SHOW_VOLUME
     }
 
+#ifdef PICK
+    gl_FragColor.a = 1.0;
+#else // PICK
     // Use distances for planes aligned with segment to prevent skew in dashing
     distanceFromStart = rayPlaneDistance(eyeCoordinate.xyz, -v_forwardDirectionEC, v_forwardDirectionEC.xyz, v_alignedPlaneDistances.x);
     distanceFromEnd = rayPlaneDistance(eyeCoordinate.xyz, v_forwardDirectionEC, -v_forwardDirectionEC.xyz, v_alignedPlaneDistances.y);
@@ -60,5 +68,6 @@ void main(void)
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 
+#endif // PICK
     czm_writeDepthClampedToFarPlane();
 }
