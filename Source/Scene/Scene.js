@@ -2779,7 +2779,7 @@ define([
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
             environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
-            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState, scene._hdr) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;

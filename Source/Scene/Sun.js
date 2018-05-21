@@ -16,6 +16,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ComputeCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/Texture',
@@ -44,6 +45,7 @@ define([
         BufferUsage,
         ComputeCommand,
         DrawCommand,
+        PixelDatatype,
         RenderState,
         ShaderProgram,
         Texture,
@@ -138,7 +140,7 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(frameState, passState) {
+    Sun.prototype.update = function(frameState, passState, useHDR) {
         if (!this.show) {
             return undefined;
         }
@@ -177,7 +179,8 @@ define([
                 context : context,
                 width : size,
                 height : size,
-                pixelFormat : PixelFormat.RGBA
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : useHDR ? PixelDatatype.HALF_FLOAT : PixelFormat.UNSIGNED_BYTE
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
