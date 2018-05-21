@@ -544,6 +544,21 @@ var p = new Cartesian3(1.0, 2.0, 3.0);
 p.x = 'Cesium'; // Changes x to a string, slows down property access
 ```
 
+* In a constructor function, consider properties as write once; do not write to them multiple times or read them. Create a local if they need to be ready. For example:
+
+Instead of 
+```javascript
+this._x = 2;
+this._xSquared = this._x * this._x;
+``` 
+ 
+prefer
+```javascript
+var x = 2;
+this._x = x;
+this._xSquared = x * x;
+```
+
 ### `from` Constructors
 
 :art: Constructor functions should take the basic components of the class as parameters.  For example, `Cartesian3` takes `x`, `y`, and `z`.
