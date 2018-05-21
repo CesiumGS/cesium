@@ -546,18 +546,18 @@ p.x = 'Cesium'; // Changes x to a string, slows down property access
 
 * In a constructor function, consider properties as write once; do not write to them multiple times or read them. Create a local if they need to be ready. For example:
 
-Instead of 
-```javascript
-this._x = 2;
-this._xSquared = this._x * this._x;
-``` 
+  Instead of 
+  ```javascript
+  this._x = 2;
+  this._xSquared = this._x * this._x;
+  ``` 
  
-prefer
-```javascript
-var x = 2;
-this._x = x;
-this._xSquared = x * x;
-```
+  prefer
+  ```javascript
+  var x = 2;
+  this._x = x;
+  this._xSquared = x * x;
+  ```
 
 ### `from` Constructors
 
