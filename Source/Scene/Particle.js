@@ -135,6 +135,7 @@ define([
         },
         /**
          * The dimensions of the particle in pixels. This has been deprecated. Use {@link Particle#imageSize} instead.
+         * @memberof Particle.prototype
          * @type {Cartesian2}
          * @default new Cartesian(1.0, 1.0)
          * @deprecated

@@ -28,6 +28,7 @@ define([
          * Gets or sets the length of the array.
          * If the set length is greater than the length of the internal array, the internal array is resized.
          *
+         * @memberof ManagedArray.prototype
          * @type Number
          */
         length : {
@@ -45,6 +46,7 @@ define([
         /**
          * Gets the internal array.
          *
+         * @memberof ManagedArray.prototype
          * @type Array
          * @readonly
          */
