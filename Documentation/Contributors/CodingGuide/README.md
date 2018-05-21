@@ -507,10 +507,10 @@ Because result parameters aren't always required or returned, don't strictly rel
 ```js
 Cartesian3.add(v0, v1, result);
 Cartesian3.add(result, v2, result);
-``` 
+```
 is better written as
 ```js
-result = Cartesian3.add(v0, v1, result); 
+result = Cartesian3.add(v0, v1, result);
 result = Cartesian3.add(result, v2, result);
 ```
 
@@ -544,14 +544,14 @@ var p = new Cartesian3(1.0, 2.0, 3.0);
 p.x = 'Cesium'; // Changes x to a string, slows down property access
 ```
 
-* In a constructor function, consider properties as write once; do not write to them multiple times or read them. Create a local if they need to be ready. For example:
+* In a constructor function, consider properties as write once; do not write to them or read them multiple times. Create a local variable if they need to be ready. For example:
 
-  Instead of 
+  Instead of
   ```javascript
   this._x = 2;
   this._xSquared = this._x * this._x;
-  ``` 
- 
+  ```
+
   prefer
   ```javascript
   var x = 2;
