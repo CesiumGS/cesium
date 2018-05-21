@@ -124,7 +124,8 @@ define([
                     geometryInstances : this._geometryUpdater.createFillGeometryInstance(time),
                     appearance : appearance,
                     asynchronous : false,
-                    shadows : shadows
+                    shadows : shadows,
+                    classificationType : this._geometryUpdater.classificationTypeProperty.getValue(time)
                 }));
             } else {
                 options.vertexFormat = appearance.vertexFormat;
