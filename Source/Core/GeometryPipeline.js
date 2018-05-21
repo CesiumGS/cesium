@@ -1924,8 +1924,8 @@ define([
     var s1Scratch = new Cartesian2();
     var s2Scratch = new Cartesian2();
 
-    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex) {
-        if (!defined(normals) && !defined(tangents) && !defined(bitangents) && !defined(texCoords) && !defined(extrudeDirections)) {
+    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, applyOffsets, currentAttributes, insertedIndex) {
+        if (!defined(normals) && !defined(tangents) && !defined(bitangents) && !defined(texCoords) && !defined(extrudeDirections) && !defined(applyOffsets)) {
             return;
         }
 
@@ -1971,6 +1971,10 @@ define([
                 direction.z = 0;
             }
             Cartesian3.pack(direction, currentAttributes.extrudeDirection.values, insertedIndex * 3);
+        }
+
+        if (defined(applyOffsets)) {
+            currentAttributes.applyOffset.values[insertedIndex] = applyOffsets[i0];
         }
 
         if (defined(tangents)) {
@@ -2053,6 +2057,7 @@ define([
         var tangents = (defined(attributes.tangent)) ? attributes.tangent.values : undefined;
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var extrudeDirections = (defined(attributes.extrudeDirection)) ? attributes.extrudeDirection.values : undefined;
+        var applyOffsets = defined(attributes.applyOffset) ? attributes.applyOffset.values : undefined;
         var indices = geometry.indices;
 
         var eastGeometry = copyGeometryForSplit(geometry);
@@ -2106,7 +2111,7 @@ define([
                     }
 
                     insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, resultIndex < 3 ? i + resultIndex : -1, point);
-                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, applyOffsets, currentAttributes, insertedIndex);
                 }
             } else {
                 if (defined(result)) {
@@ -2126,13 +2131,13 @@ define([
                 }
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
-                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, tangents, bitangents, texCoords, extrudeDirections, applyOffsets, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
-                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, tangents, bitangents, texCoords, extrudeDirections, applyOffsets, currentAttributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 2, p2);
-                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, tangents, bitangents, texCoords, extrudeDirections, applyOffsets, currentAttributes, insertedIndex);
             }
         }
 
@@ -2148,6 +2153,7 @@ define([
         var geometry = instance.geometry;
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
+        var applyOffset = defined(attributes.applyOffset) ? attributes.applyOffset.values : undefined;
         var indices = geometry.indices;
 
         var eastGeometry = copyGeometryForSplit(geometry);
@@ -2173,6 +2179,8 @@ define([
 
             var p0 = Cartesian3.fromArray(positions, i0 * 3, p0Scratch);
             var p1 = Cartesian3.fromArray(positions, i1 * 3, p1Scratch);
+            var applyOffsetValue;
+            var insertIndex;
 
             if (Math.abs(p0.y) < CesiumMath.EPSILON6){
                 if (p0.y < 0.0) {
@@ -2213,13 +2221,31 @@ define([
                 }
 
                 var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
-                insertSplitPoint(p0Attributes, p0Indices, p0IndexMap, indices, i, p0);
-                insertSplitPoint(p0Attributes, p0Indices, p0IndexMap, indices, -1, offsetPoint);
+                if (defined(applyOffset)) {
+                    applyOffsetValue = applyOffset[i0];
+                }
+
+                insertIndex = insertSplitPoint(p0Attributes, p0Indices, p0IndexMap, indices, i, p0);
+                if (defined(applyOffset)) {
+                    p0Attributes.applyOffset.values[insertIndex] = applyOffsetValue;
+                }
+
+                insertIndex = insertSplitPoint(p0Attributes, p0Indices, p0IndexMap, indices, -1, offsetPoint);
+                if (defined(applyOffset)) {
+                    p0Attributes.applyOffset.values[insertIndex] = applyOffsetValue;
+                }
 
                 Cartesian3.negate(offset, offset);
                 Cartesian3.add(intersection, offset, offsetPoint);
-                insertSplitPoint(p1Attributes, p1Indices, p1IndexMap, indices, -1, offsetPoint);
-                insertSplitPoint(p1Attributes, p1Indices, p1IndexMap, indices, i + 1, p1);
+                insertIndex = insertSplitPoint(p1Attributes, p1Indices, p1IndexMap, indices, -1, offsetPoint);
+                if (defined(applyOffset)) {
+                    p1Attributes.applyOffset.values[insertIndex] = applyOffsetValue;
+                }
+
+                insertIndex = insertSplitPoint(p1Attributes, p1Indices, p1IndexMap, indices, i + 1, p1);
+                if (defined(applyOffset)) {
+                    p1Attributes.applyOffset.values[insertIndex] = applyOffsetValue;
+                }
             } else {
                 var currentAttributes;
                 var currentIndices;
@@ -2234,9 +2260,17 @@ define([
                     currentIndices = eastGeometry.indices;
                     currentIndexMap = eastGeometryIndexMap;
                 }
-
-                insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
-                insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
+                if (defined(applyOffset)) {
+                    applyOffsetValue = applyOffset[i0];
+                }
+                insertIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
+                if (defined(applyOffset)) {
+                    currentAttributes.applyOffset.values[insertIndex] = applyOffsetValue;
+                }
+                insertIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
+                if (defined(applyOffset)) {
+                    currentAttributes.applyOffset.values[insertIndex] = applyOffsetValue;
+                }
             }
         }
 

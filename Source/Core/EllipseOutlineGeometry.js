@@ -1,4 +1,5 @@
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
@@ -10,10 +11,12 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PrimitiveType'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
@@ -25,6 +28,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PrimitiveType) {
@@ -89,6 +93,22 @@ define([
         positions = attributes.position.values;
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var length = positions.length/3;
+
+        if (options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
+            var applyOffset = new Uint8Array(length);
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                applyOffset = arrayFill(applyOffset, 1, 0, length / 2);
+            } else {
+                applyOffset = arrayFill(applyOffset, 1);
+            }
+
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
+
         var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
         numberOfVerticalLines = CesiumMath.clamp(numberOfVerticalLines, 0, length/2);
 
@@ -194,6 +214,7 @@ define([
         this._granularity = granularity;
         this._extrudedHeight = Math.min(extrudedHeight, height);
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
+        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
         this._workerName = 'createEllipseOutlineGeometry';
     }
 
@@ -201,7 +222,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 7;
+    EllipseOutlineGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + 8;
 
     /**
      * Stores the provided instance into the provided array.
@@ -236,7 +257,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex]   = value._numberOfVerticalLines;
+        array[startingIndex++]   = value._numberOfVerticalLines;
+        array[startingIndex] = value._offsetAttribute;
 
         return array;
     };
@@ -252,7 +274,8 @@ define([
         height : undefined,
         granularity : undefined,
         extrudedHeight : undefined,
-        numberOfVerticalLines : undefined
+        numberOfVerticalLines : undefined,
+        offsetAttribute: undefined
     };
 
     /**
@@ -284,7 +307,8 @@ define([
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var numberOfVerticalLines = array[startingIndex];
+        var numberOfVerticalLines = array[startingIndex++];
+        var offsetAttribute = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.height = height;
@@ -294,6 +318,8 @@ define([
             scratchOptions.semiMajorAxis = semiMajorAxis;
             scratchOptions.semiMinorAxis = semiMinorAxis;
             scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
+            scratchOptions.offsetAttribute = offsetAttribute;
+
             return new EllipseOutlineGeometry(scratchOptions);
         }
 
@@ -306,6 +332,7 @@ define([
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
         result._numberOfVerticalLines = numberOfVerticalLines;
+        result._offsetAttribute = offsetAttribute;
 
         return result;
     };
@@ -339,9 +366,21 @@ define([
         var geometry;
         if (extrude) {
             options.extrudedHeight = extrudedHeight;
+            options.offsetAttribute = ellipseGeometry._offsetAttribute;
             geometry = computeExtrudedEllipse(options);
         } else {
             geometry = computeEllipse(options);
+
+            if (ellipseGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+                var length = geometry.attributes.position.values.length;
+                var applyOffset = new Uint8Array(length / 3);
+                arrayFill(applyOffset, 1);
+                geometry.attributes.applyOffset = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 1,
+                    values: applyOffset
+                });
+            }
         }
 
         return new Geometry({
