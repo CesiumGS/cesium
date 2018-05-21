@@ -201,10 +201,10 @@ define([
         element: {
             get: function() {
                 if (!defined(this._element)) {
-                    var html = this.html;
-                    html = xss(html);
+                    var html = xss(this._html);
 
                     var div = document.createElement('div');
+                    div._creditId = this._id;
                     div.style.display = 'inline';
                     div.innerHTML = html;
 
