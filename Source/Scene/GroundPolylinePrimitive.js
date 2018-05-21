@@ -265,7 +265,7 @@ define([
 
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
-        vs = modifyForEncodedNormals(primitive.compressVertices, vs);
+        //vs = modifyForEncodedNormals(primitive.compressVertices, vs);
         vs = Primitive._modifyShaderPosition(groundPolylinePrimitive, vs, frameState.scene3DOnly);
 
         // Tesselation on these volumes tends to be low,

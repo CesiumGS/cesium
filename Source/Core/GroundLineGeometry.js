@@ -201,8 +201,10 @@ define([
         return result;
     }
 
-    var startNormalLeftScratch = new Cartesian3();
-    var endNormalLeftScratch = new Cartesian3();
+    var startBottomScratch = new Cartesian3();
+    var endBottomScratch = new Cartesian3();
+    var endTopScratch = new Cartesian3();
+    var startTopScratch = new Cartesian3();
     /**
      *
      * @param {GroundLineGeometry} groundPolylineSegmentGeometry
@@ -216,29 +218,26 @@ define([
         var endNormal = groundPolylineSegmentGeometry._endNormal;
 
         var positions = new Float64Array(24); // 8 vertices
-        var normals = new Float32Array(24);
 
+        // Push out by 1.0 in the right direction
+        var startBottom = Cartesian3.add(groundPolylineSegmentGeometry._startBottom, startNormal, startBottomScratch);
+        var endBottom = Cartesian3.add(groundPolylineSegmentGeometry._endBottom, endNormal, endBottomScratch);
+        var endTop = Cartesian3.add(groundPolylineSegmentGeometry._endTop, endNormal, endTopScratch);
+        var startTop = Cartesian3.add(groundPolylineSegmentGeometry._startTop, startNormal, startTopScratch);
         Cartesian3.pack(startBottom, positions, 0);
         Cartesian3.pack(endBottom, positions, 1 * 3);
         Cartesian3.pack(endTop, positions, 2 * 3);
         Cartesian3.pack(startTop, positions, 3 * 3);
 
+        // Push out by 1.0 in the left direction
+        startBottom = Cartesian3.subtract(groundPolylineSegmentGeometry._startBottom, startNormal, startBottomScratch);
+        endBottom = Cartesian3.subtract(groundPolylineSegmentGeometry._endBottom, endNormal, endBottomScratch);
+        endTop = Cartesian3.subtract(groundPolylineSegmentGeometry._endTop, endNormal, endTopScratch);
+        startTop = Cartesian3.subtract(groundPolylineSegmentGeometry._startTop, startNormal, startTopScratch);
         Cartesian3.pack(startBottom, positions, 4 * 3);
         Cartesian3.pack(endBottom, positions, 5 * 3);
         Cartesian3.pack(endTop, positions, 6 * 3);
         Cartesian3.pack(startTop, positions, 7 * 3);
-
-        Cartesian3.pack(startNormal, normals, 0);
-        Cartesian3.pack(endNormal, normals, 1 * 3);
-        Cartesian3.pack(endNormal, normals, 2 * 3);
-        Cartesian3.pack(startNormal, normals, 3 * 3);
-
-        startNormal = Cartesian3.multiplyByScalar(startNormal, -1.0, startNormalLeftScratch);
-        endNormal = Cartesian3.multiplyByScalar(endNormal, -1.0, endNormalLeftScratch);
-        Cartesian3.pack(startNormal, normals, 4 * 3);
-        Cartesian3.pack(endNormal, normals, 5 * 3);
-        Cartesian3.pack(endNormal, normals, 6 * 3);
-        Cartesian3.pack(startNormal, normals, 7 * 3);
 
         var indices = [
             0, 1, 2, 0, 2, 3, // right
@@ -254,12 +253,6 @@ define([
                 componentsPerAttribute : 3,
                 normalize : false,
                 values : positions
-            }),
-            normal : new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                normalize : true,
-                values : normals
             })
         });
 
@@ -356,7 +349,7 @@ define([
         });
 
         // Normal planes need to miter, so cross startTop - startBottom with geometry normal at start
-        var startNormal = Cartesian3.cross(startCartesianRightNormal, startUp, normal1Scratch);
+        var startNormal = Cartesian3.cross(startUp, startCartesianRightNormal, normal1Scratch);
         startNormal = Cartesian3.normalize(startNormal, startNormal);
 
         var startNormal_and_forwardOffsetZ_attribute = new GeometryInstanceAttribute({
@@ -368,7 +361,7 @@ define([
 
         var endUp = Cartesian3.subtract(endTop, endBottom, normal2Scratch);
         endUp = Cartesian3.normalize(endUp, endUp);
-        var endNormal = Cartesian3.cross(endUp, endCartesianRightNormal, normal2Scratch);
+        var endNormal = Cartesian3.cross(endCartesianRightNormal, endUp, normal2Scratch);
         endNormal = Cartesian3.normalize(endNormal, endNormal);
 
         var endNormal_attribute = new GeometryInstanceAttribute({

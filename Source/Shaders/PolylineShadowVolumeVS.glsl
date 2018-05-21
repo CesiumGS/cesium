@@ -1,7 +1,6 @@
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 attribute float batchId;
-attribute vec3 normal; // TODO: "rebuild" the normal in here from planes. This simplifies 2D.
 
 varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
@@ -12,6 +11,16 @@ varying vec3 v_texcoordNormalization;
 varying float v_halfWidth;
 varying float v_width; // for materials
 varying float v_polylineAngle;
+
+float rayPlaneDistance(vec3 origin, vec3 direction, vec3 planeNormal, float planeDistance) { // TODO: move into its own function?
+    // We don't expect the ray to ever be parallel to the plane
+    return (-planeDistance - dot(planeNormal, origin)) / dot(planeNormal, direction);
+}
+
+vec3 branchFreeTernary(bool comparison, vec3 a, vec3 b) { // TODO: make branchFreeTernary generic for floats and vec3s
+    float useA = float(comparison);
+    return a * useA + b * (1.0 - useA);
+}
 
 void main()
 {
@@ -53,14 +62,31 @@ void main()
     // Position stuff
     vec4 positionRelativeToEye = czm_computePosition();
 
+    // Compute a normal along which to "push" the position out, extending the miter depending on view distance.
+    // Position has already been "pushed" by unit length along miter normal, and miter normals are encoded in the planes.
+    // Decode the normal to use at this specific vertex, push the position back, and then push to where it needs to be.
+
+    // Check distance to the end plane and start plane, pick the plane that is closer
+    vec4 positionEC = czm_modelViewRelativeToEye * positionRelativeToEye;
+    vec3 positionEC3 = positionEC.xyz / positionEC.w;
+    float absStartPlaneDistance = abs(czm_planeDistance(v_startPlaneEC, positionEC3));
+    float absEndPlaneDistance = abs(czm_planeDistance(v_endPlaneEC, positionEC3));
+    vec3 planeDirection = branchFreeTernary(absStartPlaneDistance < absEndPlaneDistance, v_startPlaneEC.xyz, v_endPlaneEC.xyz);
+    vec3 upOrDown = normalize(cross(v_rightPlaneEC.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
+    vec3 normalEC = normalize(cross(planeDirection, upOrDown));           // In practice, the opposite seems to work too.
+
+    // Check distance to the right plane to determine if the miter normal points "left" or "right"
+    normalEC *= sign(czm_planeDistance(v_rightPlaneEC, positionEC3));
+    positionEC3 -= normalEC;
+
     // A "perfect" implementation would push along normals according to the angle against forward.
-    // In practice, just extending the shadow volume a more than needed works for most cases,
+    // In practice, just extending the shadow volume more than needed works for most cases,
     // and for very sharp turns we compute attributes to "break" the miter anyway.
     float width = czm_batchTable_width(batchId);
     v_width = width;
     v_halfWidth = width * 0.5;
-    positionRelativeToEye.xyz += width * 2.0 * czm_metersPerPixel(positionRelativeToEye) * normal;
-    gl_Position = czm_depthClampFarPlane(czm_modelViewProjectionRelativeToEye * positionRelativeToEye);
+    positionEC3 += width * 2.0 * czm_metersPerPixel(positionRelativeToEye) * normalEC;;
+    gl_Position = czm_depthClampFarPlane(czm_projection * vec4(positionEC3, 1.0));
 
     // Approximate relative screen space direction of the line.
     // This doesn't work great if the view direction is roughly aligned with the line
