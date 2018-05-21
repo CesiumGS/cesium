@@ -34,7 +34,7 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates) {
+    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex) {
         this.primitives = primitives; // scene level primitive collection
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
@@ -51,6 +51,7 @@ define([
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
         this.usingSphericalTextureCoordinates = usingSphericalTextureCoordinates;
+        this.zIndex = zIndex;
         this.rectangleCollisionCheck = new RectangleCollisionChecker();
     }
 
@@ -159,7 +160,7 @@ define([
                     classificationType : ClassificationType.TERRAIN
                 });
 
-                primitives.add(primitive);
+                primitives.add(primitive, this.zIndex);
                 isUpdated = false;
             } else {
                 if (defined(primitive)) {
@@ -290,6 +291,7 @@ define([
         var length = items.length;
         var geometryInstance = updater.createFillGeometryInstance(time);
         var usingSphericalTextureCoordinates = ShadowVolumeAppearance.shouldUseSphericalCoordinates(geometryInstance.geometry.rectangle);
+        var zIndex = Property.getValueOrDefault(updater.zIndex, 0);
         // Check if the Entity represented by the updater can be placed in an existing batch. Requirements:
         // * compatible material (same material or same color)
         // * same type of texture coordinates (spherical vs. planar)
@@ -297,14 +299,15 @@ define([
         for (var i = 0; i < length; ++i) {
             var item = items[i];
             if (item.isMaterial(updater) &&
-                !item.overlapping(geometryInstance.geometry.rectangle) &&
-                item.usingSphericalTextureCoordinates === usingSphericalTextureCoordinates) {
+                item.usingSphericalTextureCoordinates === usingSphericalTextureCoordinates &&
+                item.zIndex === zIndex &&
+                !item.overlapping(geometryInstance.geometry.rectangle)) {
                 item.add(time, updater, geometryInstance);
                 return;
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };
