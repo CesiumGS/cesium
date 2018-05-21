@@ -124,6 +124,28 @@ defineSuite([
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 3)).height).toEqualEpsilon(0, CesiumMath.EPSILON6);
     });
 
+    it('uses correct value with extrudedHeight and perPositionHeight', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var maxHeight = 100.0;
+        var minHeight = 60.0;
+        var extrudedHeight = 50.0;
+        var positions = Cartesian3.fromDegreesArrayHeights([
+            -1.0, -1.0, maxHeight,
+            1.0, -1.0, minHeight,
+            1.0, 1.0, minHeight,
+            -1.0, 1.0, minHeight
+        ]);
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            perPositionHeight : true,
+            extrudedHeight: extrudedHeight
+        }));
+
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(maxHeight, CesiumMath.EPSILON6);
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 3)).height).toEqualEpsilon(minHeight, CesiumMath.EPSILON6);
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 24)).height).toEqualEpsilon(extrudedHeight, CesiumMath.EPSILON6);
+    });
+
     it('creates a polygon from hierarchy', function() {
         var hierarchy = {
             positions : Cartesian3.fromDegreesArray([
