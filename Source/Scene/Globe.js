@@ -133,7 +133,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.enableLighting = true;
+        this.enableLighting = true;  // TODO HDR
         //this.enableLighting = false;
 
         /**

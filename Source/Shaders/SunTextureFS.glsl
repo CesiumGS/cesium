@@ -17,7 +17,7 @@ vec4 addBurst(vec2 position, vec2 direction)
     return vec4(burst);
 }
 
-// TODO
+// TODO HDR
 #define HDR
 
 void main()

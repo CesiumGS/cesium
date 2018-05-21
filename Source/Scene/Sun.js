@@ -180,7 +180,8 @@ define([
                 width : size,
                 height : size,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : useHDR ? PixelDatatype.HALF_FLOAT : PixelFormat.UNSIGNED_BYTE
+                //pixelDatatype : useHDR ? PixelDatatype.HALF_FLOAT : PixelFormat.UNSIGNED_BYTE
+                pixelDatatype : useHDR ? PixelDatatype.FLOAT : PixelFormat.UNSIGNED_BYTE
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;

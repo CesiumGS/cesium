@@ -432,7 +432,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.sunBloom = !this._hdr;
+        this.sunBloom = !this._hdr; // TODO HDR
         //this.sunBloom = true;
         this._sunBloom = undefined;
 
@@ -2244,7 +2244,6 @@ define([
             }
 
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -2923,7 +2922,7 @@ define([
         // Globe depth needs is copied for Pick to support picking batched geometries in GroundPrimitives.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
-            scene._globeDepth.update(context, passState);
+            scene._globeDepth.update(context, passState, scene._hdr);
             scene._globeDepth.clear(context, passState, clearColor);
         }
 

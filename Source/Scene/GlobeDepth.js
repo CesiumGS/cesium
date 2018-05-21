@@ -117,7 +117,8 @@ define([
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : hdr ? PixelDatatype.HALF_FLOAT : PixelDatatype.UNSIGNED_BYTE,
+            //pixelDatatype : hdr ? PixelDatatype.HALF_FLOAT : PixelDatatype.UNSIGNED_BYTE,
+            pixelDatatype : hdr ? PixelDatatype.FLOAT : PixelDatatype.UNSIGNED_BYTE,
             sampler : new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,

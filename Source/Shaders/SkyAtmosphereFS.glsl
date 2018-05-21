@@ -47,6 +47,9 @@ varying vec3 v_mieColor;
 varying vec3 v_toCamera;
 varying vec3 v_positionEC;
 
+// TODO HDR
+#define HDR
+
 void main (void)
 {
     // Extra normalize added for Android
@@ -54,13 +57,15 @@ void main (void)
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
     float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
 
-    const float exposure = 2.0;
-
     vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
-    rgb = vec3(1.0) - exp(-exposure * rgb);
-    // Compute luminance before color correction to avoid strangely gray night skies
-    float l = czm_luminance(rgb);
 
+#ifndef HDR
+    const float exposure = 2.0;
+    rgb = vec3(1.0) - exp(-exposure * rgb);
+#endif
+
+// TODO HDR
+/*
 #ifdef COLOR_CORRECT
     // Convert rgb color to hsb
     vec3 hsb = czm_RGBToHSB(rgb);
@@ -70,10 +75,8 @@ void main (void)
     hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
     // Convert shifted hsb back to rgb
     rgb = czm_HSBToRGB(hsb);
-
-    // Check if correction decreased the luminance to 0
-    l = min(l, czm_luminance(rgb));
 #endif
+*/
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
     float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.x) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
@@ -82,5 +85,7 @@ void main (void)
     float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
-    gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
+    //gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
+
+    gl_FragColor = vec4(vec3(11.0), 1.0);
 }
