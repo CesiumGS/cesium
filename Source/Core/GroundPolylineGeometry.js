@@ -62,8 +62,6 @@ define([
 
         this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        this._lengthOnEllipsoid = undefined;
-
         this.width = defaultValue(options.width, 1.0);
     }
 
@@ -94,14 +92,6 @@ define([
             // TODO: doc, interpolation, etc.
             set: function(value) {
                 this._positions = defaultValue(value, []);
-            }
-        },
-        lengthOnEllipsoid : {
-            get : function() {
-                if (!defined(this._lengthOnEllipsoid)) {
-                    this._lengthOnEllipsoid = computeLengthOnEllipsoid(this._positions, this.loop, this.ellipsoid);
-                }
-                return this._lengthOnEllipsoid;
             }
         }
     });
@@ -265,34 +255,6 @@ define([
         }
 
         return result;
-    }
-
-    var segmentStartScratch = new Cartesian3();
-    var segmentEndScratch = new Cartesian3();
-    function computeLengthOnEllipsoid(cartographicPositions, loop, ellipsoid) {
-        var cartographicsLength = cartographicPositions.length;
-
-        var segmentStart = segmentStartScratch;
-        var segmentEnd = segmentEndScratch;
-        getPosition(ellipsoid, cartographicPositions[0], 0.0, segmentStart);
-        getPosition(ellipsoid, cartographicPositions[1], 0.0, segmentEnd);
-
-        var length = Cartesian3.distance(segmentStart, segmentEnd);
-
-        for (var i = 1; i < cartographicsLength - 1; i++) {
-            segmentStart = Cartesian3.clone(segmentEnd, segmentStart);
-            getPosition(ellipsoid, cartographicPositions[i + 1], 0.0, segmentEnd);
-
-            length += Cartesian3.distance(segmentStart, segmentEnd);
-        }
-
-        if (loop) {
-            getPosition(ellipsoid, cartographicPositions[cartographicsLength - 1], 0.0, segmentStart);
-            getPosition(ellipsoid, cartographicPositions[0], 0.0, segmentEnd);
-
-            length += Cartesian3.distance(segmentStart, segmentEnd);
-        }
-        return length;
     }
 
     return GroundPolylineGeometry;

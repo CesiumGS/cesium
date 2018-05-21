@@ -24,6 +24,36 @@ vec3 branchFreeTernary(bool comparison, vec3 a, vec3 b) { // TODO: make branchFr
 
 void main()
 {
+#ifdef COLUMBUS_VIEW_2D
+    vec4 entry = czm_batchTable_startHighLow2D(batchId);
+
+    vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, entry.xy), vec3(0.0, entry.zw))).xyz;
+
+    entry = czm_batchTable_offsetAndRight2D(batchId);
+    vec3 forwardDirectionEC = czm_normal * vec3(0.0, entry.xy);
+    vec3 ecEnd = forwardDirectionEC + ecStart;
+    forwardDirectionEC = normalize(forwardDirectionEC);
+
+    v_forwardDirectionEC = forwardDirectionEC;
+
+    // Right plane
+    v_rightPlaneEC.xyz = czm_normal * vec3(0.0, entry.zw);
+    v_rightPlaneEC.w = -dot(v_rightPlaneEC.xyz, ecStart);
+
+    entry = czm_batchTable_startEndNormals2D(batchId);
+
+    // start plane
+    v_startPlaneEC.xyz =  czm_normal * vec3(0.0, entry.xy);
+    v_startPlaneEC.w = -dot(v_startPlaneEC.xyz, ecStart);
+
+    // end plane
+    v_endPlaneEC.xyz =  czm_normal * vec3(0.0, entry.zw);
+    v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
+
+    v_texcoordNormalization = czm_batchTable_texcoordNormalization2D(batchId);
+
+#else // COLUMBUS_VIEW_2D
+
     vec4 entry1 = czm_batchTable_startHi_and_forwardOffsetX(batchId);
     vec4 entry2 = czm_batchTable_startLo_and_forwardOffsetY(batchId);
 
@@ -54,30 +84,28 @@ void main()
     v_startPlaneEC.xyz = ecStartNormal;
     v_startPlaneEC.w = -dot(ecStartNormal, ecStart);
 
-    v_alignedPlaneDistances.x = -dot(forwardDirectionEC, ecStart);
-    v_alignedPlaneDistances.y = -dot(-forwardDirectionEC, ecEnd);
-
     v_texcoordNormalization = czm_batchTable_texcoordNormalization(batchId);
 
-    // Position stuff
-    vec4 positionRelativeToEye = czm_computePosition();
+#endif // COLUMBUS_VIEW_2D
+
+    v_alignedPlaneDistances.x = -dot(forwardDirectionEC, ecStart);
+    v_alignedPlaneDistances.y = -dot(-forwardDirectionEC, ecEnd);
 
     // Compute a normal along which to "push" the position out, extending the miter depending on view distance.
     // Position has already been "pushed" by unit length along miter normal, and miter normals are encoded in the planes.
     // Decode the normal to use at this specific vertex, push the position back, and then push to where it needs to be.
+    vec4 positionRelativeToEye = czm_computePosition();
 
     // Check distance to the end plane and start plane, pick the plane that is closer
-    vec4 positionEC = czm_modelViewRelativeToEye * positionRelativeToEye;
-    vec3 positionEC3 = positionEC.xyz / positionEC.w;
-    float absStartPlaneDistance = abs(czm_planeDistance(v_startPlaneEC, positionEC3));
-    float absEndPlaneDistance = abs(czm_planeDistance(v_endPlaneEC, positionEC3));
+    vec4 positionEC = czm_modelViewRelativeToEye * positionRelativeToEye; // w = 1.0, see czm_computePosition
+    float absStartPlaneDistance = abs(czm_planeDistance(v_startPlaneEC, positionEC.xyz));
+    float absEndPlaneDistance = abs(czm_planeDistance(v_endPlaneEC, positionEC.xyz));
     vec3 planeDirection = branchFreeTernary(absStartPlaneDistance < absEndPlaneDistance, v_startPlaneEC.xyz, v_endPlaneEC.xyz);
     vec3 upOrDown = normalize(cross(v_rightPlaneEC.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
     vec3 normalEC = normalize(cross(planeDirection, upOrDown));           // In practice, the opposite seems to work too.
 
     // Check distance to the right plane to determine if the miter normal points "left" or "right"
-    normalEC *= sign(czm_planeDistance(v_rightPlaneEC, positionEC3));
-    positionEC3 -= normalEC;
+    normalEC *= sign(czm_planeDistance(v_rightPlaneEC, positionEC.xyz));
 
     // A "perfect" implementation would push along normals according to the angle against forward.
     // In practice, just extending the shadow volume more than needed works for most cases,
@@ -85,8 +113,8 @@ void main()
     float width = czm_batchTable_width(batchId);
     v_width = width;
     v_halfWidth = width * 0.5;
-    positionEC3 += width * 2.0 * czm_metersPerPixel(positionRelativeToEye) * normalEC;;
-    gl_Position = czm_depthClampFarPlane(czm_projection * vec4(positionEC3, 1.0));
+    positionEC.xyz += width * czm_metersPerPixel(positionEC) * normalEC;;
+    gl_Position = czm_depthClampFarPlane(czm_projection * positionEC);
 
     // Approximate relative screen space direction of the line.
     // This doesn't work great if the view direction is roughly aligned with the line

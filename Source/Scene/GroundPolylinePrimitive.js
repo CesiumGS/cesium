@@ -179,16 +179,33 @@ define([
         var bottomPositions = wallVertices.bottomPositions;
         var topPositions = wallVertices.topPositions;
 
-        var totalLength = groundPolylineGeometry.lengthOnEllipsoid;
-        var lengthSoFar = 0.0;
+        var totalLength = 0.0;
+        var totalLength2D = 0.0;
 
+        var i;
+        var groundPolylineSegmentGeometry;
         var verticesLength = rightFacingNormals.length;
+        var lineGeometries = new Array(verticesLength / 3);
+        var index = 0;
+        for (i = 0; i < verticesLength - 3; i += 3) {
+            groundPolylineSegmentGeometry = GroundLineGeometry.fromArrays(projection, i, rightFacingNormals, bottomPositions, topPositions);
+            totalLength += groundPolylineSegmentGeometry.segmentBottomLength;
+            totalLength2D += groundPolylineSegmentGeometry.segmentBottomLength2D;
+
+            lineGeometries[index++] = groundPolylineSegmentGeometry;
+        }
+
         var segmentIndicesStart = polylineSegmentInstances.length;
-        for (var i = 0; i < verticesLength - 3; i += 3) {
-            var groundPolylineSegmentGeometry = GroundLineGeometry.fromArrays(i, rightFacingNormals, bottomPositions, topPositions);
+        index = 0;
+        var lengthSoFar = 0.0;
+        var lengthSoFar2D = 0.0;
+        for (i = 0; i < verticesLength - 3; i += 3) {
+            groundPolylineSegmentGeometry = lineGeometries[index++];
             var segmentLength = groundPolylineSegmentGeometry.segmentBottomLength;
-            var attributes = GroundLineGeometry.getAttributes(groundPolylineSegmentGeometry, projection, lengthSoFar, segmentLength, totalLength);
+            var segmentLength2D = groundPolylineSegmentGeometry.segmentBottomLength2D;
+            var attributes = GroundLineGeometry.getAttributes(groundPolylineSegmentGeometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D);
             lengthSoFar += segmentLength;
+            lengthSoFar2D += segmentLength2D;
 
             attributes.width = new GeometryInstanceAttribute({
                 componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
@@ -231,30 +248,6 @@ define([
         //>>includeEnd('debug');
     }
 
-    function modifyForEncodedNormals(compressVertices, vertexShaderSource) {
-        if (!compressVertices) {
-            return vertexShaderSource;
-        }
-
-        var attributeName = 'compressedAttributes';
-        var attributeDecl = 'attribute float ' + attributeName + ';';
-
-        var globalDecl = 'vec3 normal;\n';
-        var decode = '    normal = czm_octDecode(' + attributeName + ');\n';
-
-        var modifiedVS = vertexShaderSource;
-        modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+normal;/g, '');
-        modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
-        var compressedMain =
-            'void main() \n' +
-            '{ \n' +
-            decode +
-            '    czm_non_compressed_main(); \n' +
-            '}';
-
-        return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
-    }
-
     function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
         var context = frameState.context;
         var primitive = groundPolylinePrimitive._primitive;
@@ -265,7 +258,6 @@ define([
 
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
-        //vs = modifyForEncodedNormals(primitive.compressVertices, vs);
         vs = Primitive._modifyShaderPosition(groundPolylinePrimitive, vs, frameState.scene3DOnly);
 
         // Tesselation on these volumes tends to be low,
@@ -333,13 +325,13 @@ define([
             validateShaderMatching(groundPolylinePrimitive._spPick, attributeLocations);
 
             // Derive 2D/CV
-            var pickProgram2D = context.shaderCache.getDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dColor');
+            var pickProgram2D = context.shaderCache.getDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dPick');
             if (!defined(pickProgram2D)) {
                 var vsPick2D = new ShaderSource({
                     defines : vsDefines.concat(['COLUMBUS_VIEW_2D']),
                     sources : [vsPick]
                 });
-                pickProgram2D = context.shaderCache.createDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dColor', {
+                pickProgram2D = context.shaderCache.createDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dPick', {
                     context : context,
                     shaderProgram : groundPolylinePrimitive._spPick2D,
                     vertexShaderSource : vsPick2D,
@@ -410,7 +402,7 @@ define([
             var derivedPickCommand = command.derivedCommands.pick2D;
             if (!defined(derivedPickCommand)) {
                 derivedPickCommand = DrawCommand.shallowClone(command);
-                command.derivedCommands.pick2D = derivedColorCommand;
+                command.derivedCommands.pick2D = derivedPickCommand;
             }
             derivedPickCommand.vertexArray = vertexArray;
             derivedPickCommand.renderState = groundPolylinePrimitive._renderState;
@@ -451,7 +443,7 @@ define([
                 var colorCommand = colorCommands[j];
                 // Use derived appearance command for 2D
                 if (frameState.mode !== SceneMode.SCENE3D &&
-                    colorCommand.shaderProgram === groundPolylinePrimitive._spPick) {
+                    colorCommand.shaderProgram === groundPolylinePrimitive._sp) {
                     colorCommand = colorCommand.derivedCommands.color2D;
                 }
                 colorCommand.modelMatrix = modelMatrix;

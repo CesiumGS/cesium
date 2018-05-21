@@ -1,5 +1,6 @@
 define([
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './Check',
@@ -18,6 +19,7 @@ define([
         './Quaternion'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         Check,
@@ -58,11 +60,24 @@ define([
         this._endTop = new Cartesian3();
         this._endNormal = new Cartesian3();
 
+        this._segmentBottomLength = 0.0;
+        this._segmentBottomLength2D = 0.0;
+
         this._workerName = 'createGroundLineGeometry';
-        this._segmentBottomLength = undefined;
     }
 
-    GroundLineGeometry.fromArrays = function(index, normalsArray, bottomPositionsArray, topPositionsArray) {
+    var pos1_2dScratch = new Cartesian3();
+    var pos2_2dScratch = new Cartesian3();
+    function computeDistance2D(projection, carto1, carto2) {
+        var ellipsoid = projection.ellipsoid;
+        var pos1_2d = projection.project(carto1, pos1_2dScratch);
+        var pos2_2d = projection.project(carto2, pos2_2dScratch);
+        return Cartesian3.distance(pos1_2d, pos2_2d);
+    }
+
+    var startCartographicScratch = new Cartographic();
+    var endCartographicScratch = new Cartographic();
+    GroundLineGeometry.fromArrays = function(projection, index, normalsArray, bottomPositionsArray, topPositionsArray) {
         var geometry = new GroundLineGeometry();
 
         Cartesian3.unpack(bottomPositionsArray, index, geometry._startBottom);
@@ -75,10 +90,21 @@ define([
 
         breakMiter(geometry);
 
+        geometry._segmentBottomLength = Cartesian3.distance(geometry._startBottom, geometry._endBottom);
+
+        var ellipsoid = projection.ellipsoid;
+        var startCartographic = ellipsoid.cartesianToCartographic(geometry._startBottom, startCartographicScratch);
+        var endCartographic = ellipsoid.cartesianToCartographic(geometry._endBottom, endCartographicScratch);
+        startCartographic.height = 0.0;
+        endCartographic.height = 0.0;
+
+        geometry._segmentBottomLength2D = computeDistance2D(projection, startCartographic, endCartographic);
+
+        // TODO: slide wall positions to match height and depth.
+        // Note that this has to happen after the length computations
+
         return geometry;
     }
-
-    // TODO: add function to lower the bottom or raise the top to a specific altitude
 
     function direction(end, start, result) {
         Cartesian3.subtract(end, start, result);
@@ -124,10 +150,12 @@ define([
         // TODO: doc
         segmentBottomLength : {
             get : function() {
-                if (!defined(this._segmentBottomLength)) {
-                    this._segmentBottomLength = Cartesian3.distance(this._startBottom, this._endBottom);
-                }
                 return this._segmentBottomLength;
+                }
+        },
+        segmentBottomLength2D : {
+            get : function() {
+                return this._segmentBottomLength2D;
             }
         }
     });
@@ -136,7 +164,7 @@ define([
      * The number of elements used to pack the object into an packArray.
      * @type {Number}
      */
-    GroundLineGeometry.packedLength = Cartesian3.packedLength * 6;
+    GroundLineGeometry.packedLength = Cartesian3.packedLength * 6 + 2;
 
     /**
      * Stores the provided instance into the provided packArray.
@@ -267,6 +295,90 @@ define([
         return Cartesian3.distance(this._startBottom, this._endBottom);
     }
 
+    var positionCartographicScratch = new Cartographic();
+    var normalEndpointScratch = new Cartesian3();
+    function projectNormal(projection, position, normal, projectedPosition, result) {
+        var normalEndpoint = Cartesian3.add(position, normal, normalEndpointScratch);
+
+        var ellipsoid = projection.ellipsoid;
+        var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, positionCartographicScratch);
+        normalEndpointCartographic.height = 0.0;
+        var normalEndpointProjected = projection.project(normalEndpointCartographic, result);
+        result = Cartesian3.subtract(result, projectedPosition, result);
+        result.z = 0.0;
+        result = Cartesian3.normalize(result, result);
+        return result;
+    }
+
+    var encodeScratch2D = new EncodedCartesian3();
+    var projectedStartPositionScratch = new Cartesian3();
+    var projectedEndPositionScratch = new Cartesian3();
+    var projectedStartNormalScratch = new Cartesian3();
+    var projectedEndNormalScratch = new Cartesian3();
+    var forwardOffset2DScratch = new Cartesian3();
+    var forwardNormal2DScratch = new Cartesian3();
+    function add2DAttributes(attributes, geometry, projection, lengthSoFar2D, segmentLength2D, totalLength2D) {
+        var startBottom = geometry._startBottom;
+        var endBottom = geometry._endBottom;
+        var ellipsoid = projection.ellipsoid;
+
+        // Project positions
+        var startCartographic = ellipsoid.cartesianToCartographic(startBottom, startCartographicScratch);
+        var endCartographic = ellipsoid.cartesianToCartographic(endBottom, endCartographicScratch);
+        startCartographic.height = 0.0;
+        endCartographic.height = 0.0;
+        var projectedStartPosition = projection.project(startCartographic, projectedStartPositionScratch);
+        var projectedEndPosition = projection.project(endCartographic, projectedEndPositionScratch);
+
+        // Project mitering normals
+        var projectedStartNormal = projectNormal(projection, startBottom, geometry._startNormal, projectedStartPosition, projectedStartNormalScratch);
+        var projectedEndNormal = projectNormal(projection, endBottom, geometry._endNormal, projectedEndPosition, projectedEndNormalScratch);
+
+        // Right direction is just forward direction rotated by -90 degrees around Z
+        var forwardOffset = Cartesian3.subtract(projectedEndPosition, projectedStartPosition, forwardOffset2DScratch);
+        var forwardDirection = Cartesian3.normalize(forwardOffset, forwardNormal2DScratch);
+        var right2D = [forwardDirection.y, -forwardDirection.x];
+
+        // Similarly with plane normals
+        var startPlane2D = [-projectedStartNormal.y, projectedStartNormal.x];
+        var endPlane2D = [projectedEndNormal.y, -projectedEndNormal.x];
+
+        var encodedStart = EncodedCartesian3.fromCartesian(projectedStartPosition, encodeScratch2D);
+
+        var startHighLow2D_attribute = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [encodedStart.high.x, encodedStart.high.y, encodedStart.low.x, encodedStart.low.y]
+        });
+
+        var startEndNormals2D_attribute = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : startPlane2D.concat(endPlane2D)
+        });
+
+        var offsetAndRight2D_attribute = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [forwardOffset.x, forwardOffset.y, right2D[0], right2D[1]]
+        });
+
+        var texcoordNormalization2D_attribute = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            normalize: false,
+            value : [lengthSoFar2D, segmentLength2D, totalLength2D]
+        });
+
+        attributes.startHighLow2D = startHighLow2D_attribute;
+        attributes.startEndNormals2D = startEndNormals2D_attribute;
+        attributes.offsetAndRight2D = offsetAndRight2D_attribute;
+        attributes.texcoordNormalization2D = texcoordNormalization2D_attribute;
+    }
+
     var encodeScratch = new EncodedCartesian3();
     var offsetScratch = new Cartesian3();
     var offsetScratch = new Cartesian3();
@@ -292,15 +404,21 @@ define([
      * @param {Number} lengthSoFar Distance of the segment's start point along the line
      * @param {Number} segmentLength Length of the segment
      * @param {Number} totalLength Total length of the entire line
+     * @param {Number} lengthSoFar2D Distance of the segment's start point along the line in 2D
+     * @param {Number} segmentLength2D Length of the segment in 2D
+     * @param {Number} totalLength2D Total length of the entire line in 2D
      * @returns {Object} An object containing GeometryInstanceAttributes for the input geometry
      */
-    GroundLineGeometry.getAttributes = function(geometry, projection, lengthSoFar, segmentLength, totalLength) {
+    GroundLineGeometry.getAttributes = function(geometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('geometry', geometry);
         Check.typeOf.object('projection', projection);
         Check.typeOf.number('lengthSoFar', lengthSoFar);
         Check.typeOf.number('segmentLength', segmentLength);
         Check.typeOf.number('totalLength', totalLength);
+        Check.typeOf.number('lengthSoFar2D', lengthSoFar2D);
+        Check.typeOf.number('segmentLength2D', segmentLength2D);
+        Check.typeOf.number('totalLength2D', totalLength2D);
         //>>includeEnd('debug');
 
         // Unpack values from geometry
@@ -334,7 +452,7 @@ define([
         var packArray = [0, 0, 0, forwardOffset.z];
         var forward = Cartesian3.normalize(forwardOffset, forwardOffset);
 
-        // Right vector is computed as cross of startTop - startBottom and direction to segment end end point
+        // Right vector is computed as cross of (startTop - startBottom) and direction to segment end point
         var startUp = Cartesian3.subtract(startTop, startBottom, normal1Scratch);
         startUp = Cartesian3.normalize(startUp, startUp);
 
@@ -348,7 +466,7 @@ define([
             value : Cartesian3.pack(right, [0, 0, 0])
         });
 
-        // Normal planes need to miter, so cross startTop - startBottom with geometry normal at start
+        // Normal planes need to miter, so cross (startTop - startBottom) with geometry normal at start
         var startNormal = Cartesian3.cross(startUp, startCartesianRightNormal, normal1Scratch);
         startNormal = Cartesian3.normalize(startNormal, startNormal);
 
@@ -379,7 +497,7 @@ define([
             value : [lengthSoFar, segmentLength, totalLength]
         });
 
-        return {
+        var attributes = {
             startHi_and_forwardOffsetX : startHi_and_forwardOffsetX_Attribute,
             startLo_and_forwardOffsetY : startLo_and_forwardOffsetY_Attribute,
             startNormal_and_forwardOffsetZ : startNormal_and_forwardOffsetZ_attribute,
@@ -387,6 +505,9 @@ define([
             rightNormal : rightNormal_attribute,
             texcoordNormalization : texcoordNormalization_attribute
         };
+
+        add2DAttributes(attributes, geometry, projection, lengthSoFar2D, segmentLength2D, totalLength2D)
+        return attributes;
     };
 
     return GroundLineGeometry;
