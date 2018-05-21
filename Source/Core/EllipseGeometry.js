@@ -812,6 +812,7 @@ define([
         this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
 
         this._rectangle = undefined;
+        this._textureCoordinateRotationPoints = undefined;
     };
 
     /**
@@ -1029,6 +1030,31 @@ define([
         });
     };
 
+    function textureCoordinateRotationPoints(ellipseGeometry) {
+        var stRotation = -ellipseGeometry._stRotation;
+        if (stRotation === 0.0) {
+            return [0, 0, 0, 1, 1, 0];
+        }
+
+        var cep = EllipseGeometryLibrary.computeEllipsePositions({
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            rotation : ellipseGeometry._rotation,
+            granularity : ellipseGeometry._granularity
+        }, false, true);
+        var positionsFlat = cep.outerPositions;
+        var positionsCount = positionsFlat.length / 3;
+        var positions = new Array(positionsCount);
+        for (var i = 0; i < positionsCount; ++i) {
+            positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
+        }
+
+        var ellipsoid = ellipseGeometry._ellipsoid;
+        var boundingRectangle = ellipseGeometry.rectangle;
+        return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
+    }
+
     defineProperties(EllipseGeometry.prototype, {
         /**
          * @private
@@ -1039,6 +1065,18 @@ define([
                     this._rectangle = computeRectangle(this);
                 }
                 return this._rectangle;
+            }
+        },
+        /**
+         * For remapping texture coordinates when rendering EllipseGeometries as GroundPrimitives.
+         * @private
+         */
+        textureCoordinateRotationPoints : {
+            get : function() {
+                if (!defined(this._textureCoordinateRotationPoints)) {
+                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
+                }
+                return this._textureCoordinateRotationPoints;
             }
         }
     });
