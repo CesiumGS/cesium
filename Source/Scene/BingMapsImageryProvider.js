@@ -105,8 +105,8 @@ define([
         //>>includeEnd('debug');
 
         this._key = BingMapsApi.getKey(options.key);
-        this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
         this._resource = Resource.createIfNeeded(options.url);
+        this._resource.appendForwardSlash();
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
         this._culture = defaultValue(options.culture, '');
@@ -142,7 +142,7 @@ define([
         this._readyPromise = when.defer();
 
         var metadataResource = this._resource.getDerivedResource({
-            url:'/REST/v1/Imagery/Metadata/' + this._mapStyle,
+            url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
             queryParameters: {
                 incl: 'ImageryProviders',
                 key: this._key
@@ -511,10 +511,6 @@ define([
 
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         var result = getRectangleAttribution(this._attributionList, level, rectangle);
-
-        if (defined(this._keyErrorCredit)) {
-            result.push(this._keyErrorCredit);
-        }
 
         return result;
     };

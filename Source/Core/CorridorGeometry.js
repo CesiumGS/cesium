@@ -975,7 +975,7 @@ define([
 
         var height = corridorGeometry._height;
         var extrudedHeight = corridorGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON2);
+        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {
@@ -1044,6 +1044,18 @@ define([
                     this._rectangle = computeRectangle(this._positions, this._ellipsoid, this._width, this._cornerType);
                 }
                 return this._rectangle;
+            }
+        },
+        /**
+         * For remapping texture coordinates when rendering CorridorGeometries as GroundPrimitives.
+         *
+         * Corridors don't support stRotation,
+         * so just return the corners of the original system.
+         * @private
+         */
+        textureCoordinateRotationPoints : {
+            get : function() {
+                return [0, 0, 0, 1, 1, 0];
             }
         }
     });

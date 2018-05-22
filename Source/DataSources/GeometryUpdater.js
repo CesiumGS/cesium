@@ -14,6 +14,7 @@ define([
         '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './Entity',
         './Property'
     ], function(
         Check,
@@ -31,6 +32,7 @@ define([
         ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
+        Entity,
         Property) {
     'use strict';
 
@@ -88,6 +90,7 @@ define([
         this._geometryPropertyName = geometryPropertyName;
         this._id = geometryPropertyName + '-' + entity.id;
         this._observedPropertyNames = options.observedPropertyNames;
+        this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
 
         this._onEntityPropertyChanged(entity, geometryPropertyName, entity[geometryPropertyName], undefined);
     }
@@ -401,8 +404,8 @@ define([
     /**
      * @param {Entity} entity
      * @param {String} propertyName
-     * @param {Object} newValue
-     * @param {Object} oldValue
+     * @param {*} newValue
+     * @param {*} oldValue
      * @private
      */
     GeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
@@ -460,7 +463,9 @@ define([
 
         this._fillEnabled = fillEnabled;
 
-        var onTerrain = this._isOnTerrain(entity, geometry);
+        var onTerrain = this._isOnTerrain(entity, geometry) &&
+            (this._supportsMaterialsforEntitiesOnTerrain || this._materialProperty instanceof ColorMaterialProperty);
+
         if (outlineEnabled && onTerrain) {
             oneTimeWarning(oneTimeWarning.geometryOutlines);
             outlineEnabled = false;

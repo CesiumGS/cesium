@@ -23,4 +23,6 @@ void main()
     // artifacts since some fragments can be alpha blended twice.  This is solved by only rendering
     // the ellipsoid in the closest frustum to the viewer.
     gl_Position.z = clamp(gl_Position.z, czm_depthRange.near, czm_depthRange.far);
+
+    czm_vertexLogDepth();
 }

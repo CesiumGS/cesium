@@ -100,32 +100,33 @@ define([
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
         var options = this._options;
         if (!defined(geometry.fill) || geometry.fill.getValue(time)) {
+            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
+            var isColorAppearance = fillMaterialProperty instanceof ColorMaterialProperty;
+            var appearance;
+            var closed = geometryUpdater._getIsClosed(options);
+            if (isColorAppearance) {
+                appearance = new PerInstanceColorAppearance({
+                    closed: closed
+                });
+            } else {
+                var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
+                this._material = material;
+                appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : closed
+                });
+            }
+
             if (onTerrain) {
                 options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
                 this._primitive = groundPrimitives.add(new GroundPrimitive({
                     geometryInstances : this._geometryUpdater.createFillGeometryInstance(time),
+                    appearance : appearance,
                     asynchronous : false,
                     shadows : shadows
                 }));
             } else {
-                var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
-                var isColorAppearance = fillMaterialProperty instanceof ColorMaterialProperty;
-                var appearance;
-                var closed = geometryUpdater._getIsClosed(options);
-                if (isColorAppearance) {
-                    appearance = new PerInstanceColorAppearance({
-                        closed: closed
-                    });
-                } else {
-                    var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
-                    this._material = material;
-                    appearance = new MaterialAppearance({
-                        material : material,
-                        translucent : material.isTranslucent(),
-                        closed : closed
-                    });
-                }
-
                 options.vertexFormat = appearance.vertexFormat;
 
                 var fillInstance = this._geometryUpdater.createFillGeometryInstance(time);

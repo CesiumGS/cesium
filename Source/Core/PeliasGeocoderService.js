@@ -38,6 +38,7 @@ define([
         //>>includeEnd('debug');
 
         this._url = Resource.createIfNeeded(url);
+        this._url.appendForwardSlash();
     }
 
     defineProperties(PeliasGeocoderService.prototype, {
@@ -59,7 +60,7 @@ define([
      *
      * @param {String} query The query to be sent to the geocoder service
      * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
-     * @returns {Promise<GeocoderResult[]>}
+     * @returns {Promise<GeocoderService~Result[]>}
      */
     PeliasGeocoderService.prototype.geocode = function(query, type) {
         //>>includeStart('debug', pragmas.debug);

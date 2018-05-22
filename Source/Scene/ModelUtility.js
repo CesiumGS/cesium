@@ -168,8 +168,12 @@ define([
     };
 
     function replaceAllButFirstInString(string, find, replace) {
-        var index = string.indexOf(find);
-        return string.replace(new RegExp(find, 'g'), function(match, offset) {
+        // Limit search to strings that are not a subset of other tokens.
+        find += '(?!\\w)';
+        find = new RegExp(find, 'g');
+
+        var index = string.search(find);
+        return string.replace(find, function(match, offset) {
             return index === offset ? match : replace;
         });
     }

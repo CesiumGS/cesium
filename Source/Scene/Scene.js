@@ -13,6 +13,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidGeometry',
@@ -46,7 +47,6 @@ define([
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -60,7 +60,6 @@ define([
         './Fog',
         './FrameState',
         './FrustumCommands',
-        './FXAA',
         './GlobeDepth',
         './InvertClassification',
         './JobScheduler',
@@ -69,8 +68,10 @@ define([
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
+        './PostProcessStageCollection',
         './Primitive',
         './PrimitiveCollection',
+        './SceneFramebuffer',
         './SceneMode',
         './SceneTransforms',
         './SceneTransitioner',
@@ -93,6 +94,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         EllipsoidGeometry,
@@ -126,7 +128,6 @@ define([
         Pass,
         PassState,
         PixelDatatype,
-        RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -140,7 +141,6 @@ define([
         Fog,
         FrameState,
         FrustumCommands,
-        FXAA,
         GlobeDepth,
         InvertClassification,
         JobScheduler,
@@ -149,8 +149,10 @@ define([
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
+        PostProcessStageCollection,
         Primitive,
         PrimitiveCollection,
+        SceneFramebuffer,
         SceneMode,
         SceneTransforms,
         SceneTransitioner,
@@ -291,6 +293,7 @@ define([
 
         this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
+        this._updateFrustums = false;
 
         this._tweens = new TweenCollection();
 
@@ -320,7 +323,7 @@ define([
         this._globeDepth = globeDepth;
         this._depthPlane = new DepthPlane();
         this._oit = oit;
-        this._fxaa = new FXAA();
+        this._sceneFramebuffer = new SceneFramebuffer();
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
@@ -610,15 +613,6 @@ define([
         this._debugFrustumPlanes = undefined;
 
         /**
-         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
-         * is unsupported.
-         *
-         * @type Boolean
-         * @default true
-         */
-        this.fxaa = true;
-
-        /**
          * When <code>true</code>, enables picking using the depth buffer.
          *
          * @type Boolean
@@ -627,12 +621,26 @@ define([
         this.useDepthPicking = true;
 
         /**
-         * When <code>true</code>, enables picking translucent geometry using the depth buffer.
-         * {@link Scene#useDepthPicking} must also be true to enable picking the depth buffer.
+         * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for this enabling to work.
+         *
          * <p>
-         * There is a decrease in performance when enabled. There are extra draw calls to write depth for
+         * Render must be called between picks.
+         * <br>There is a decrease in performance when enabled. There are extra draw calls to write depth for
          * translucent geometry.
          * </p>
+         *
+         * @example
+         * // picking the position of a translucent primitive
+         * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+         *      var pickedFeature = viewer.scene.pick(movement.position);
+         *      if (!Cesium.defined(pickedFeature)) {
+         *          // nothing picked
+         *          return;
+         *      }
+         *      viewer.scene.render();
+         *      var worldPosition = viewer.scene.pickPosition(movement.position));
+         * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+         *
          * @type {Boolean}
          * @default false
          */
@@ -645,14 +653,6 @@ define([
          * @private
          */
         this.cameraEventWaitTime = 500.0;
-
-        /**
-         * Set to true to copy the depth texture after rendering the globe. Makes czm_globeDepthTexture valid.
-         * @type {Boolean}
-         * @default false
-         * @private
-         */
-        this.copyGlobeDepth = false;
 
         /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
@@ -706,6 +706,12 @@ define([
          */
         this.eyeSeparation = undefined;
 
+        /**
+         * Post processing effects applied to the final render.
+         * @type {PostProcessStageCollection}
+         */
+        this.postProcessStages = new PostProcessStageCollection();
+
         this._brdfLutGenerator = new BrdfLutGenerator();
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -748,8 +754,8 @@ define([
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
             useOIT : false,
-            useFXAA : false,
-            useInvertClassification : false
+            useInvertClassification : false,
+            usePostProcess : false
         };
 
         this._useWebVR = false;
@@ -1405,6 +1411,8 @@ define([
         /**
          * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
          * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
          */
         logarithmicDepthBuffer : {
             get : function() {
@@ -1415,7 +1423,27 @@ define([
                 if (this._logDepthBuffer !== value) {
                     this._logDepthBuffer = value;
                     this._logDepthBufferDirty = true;
+                    this._updateFrustums = true;
                 }
+            }
+        },
+
+        /**
+         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
+         * is unsupported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         * @deprecated
+         */
+        fxaa : {
+            get : function() {
+                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
+                return this.postProcessStages.fxaa.enabled;
+            },
+            set : function(value) {
+                deprecationWarning('Scene.fxaa', 'The Scene.fxaa property has been deprecated. Use Scene.postProcessStages.fxaa.');
+                this.postProcessStages.fxaa.enabled = value;
             }
         },
 
@@ -1803,8 +1831,9 @@ define([
             numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
         }
 
-        if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
-               (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8))))))) {
+        if (scene._updateFrustums || (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
+               (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && (logDepth || !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))))) {
+            scene._updateFrustums = false;
             updateFrustums(near, far, farToNearRatio, numFrustums, logDepth, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
@@ -1912,7 +1941,95 @@ define([
                                       0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
 
+    function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
+        // Debug code to draw bounding volume for command.  Not optimized!
+        // Assumes bounding volume is a bounding sphere or box
+        var frameState = scene._frameState;
+        var context = frameState.context;
+        var boundingVolume = command.boundingVolume;
+
+        if (defined(scene._debugVolume)) {
+            scene._debugVolume.destroy();
+        }
+
+        var geometry;
+
+        var center = Cartesian3.clone(boundingVolume.center);
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
+            var projection = frameState.mapProjection;
+            var centerCartographic = projection.unproject(center);
+            center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
+        }
+
+        if (defined(boundingVolume.radius)) {
+            var radius = boundingVolume.radius;
+
+            geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+                radii : new Cartesian3(radius, radius, radius),
+                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+            })));
+
+            scene._debugVolume = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : geometry,
+                    modelMatrix : Matrix4.fromTranslation(center),
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    flat : true,
+                    translucent : false
+                }),
+                asynchronous : false
+            });
+        } else {
+            var halfAxes = boundingVolume.halfAxes;
+
+            geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                dimensions : new Cartesian3(2.0, 2.0, 2.0),
+                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+            })));
+
+            scene._debugVolume = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : geometry,
+                    modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    flat : true,
+                    translucent : false
+                }),
+                asynchronous : false
+            });
+        }
+
+        var savedCommandList = frameState.commandList;
+        var commandList = frameState.commandList = [];
+        scene._debugVolume.update(frameState);
+
+        var framebuffer;
+        if (defined(debugFramebuffer)) {
+            framebuffer = passState.framebuffer;
+            passState.framebuffer = debugFramebuffer;
+        }
+
+        commandList[0].execute(context, passState);
+
+        if (defined(framebuffer)) {
+            passState.framebuffer = framebuffer;
+        }
+
+        frameState.commandList = savedCommandList;
+    }
+
     function executeCommand(command, scene, context, passState, debugFramebuffer) {
+        var frameState = scene._frameState;
+
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
@@ -1922,8 +2039,9 @@ define([
             return;
         }
 
-        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
-        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
+        if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
+            debugShowBoundingVolume(command, scene, passState, debugFramebuffer);
+        }
 
         if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
             command = command.derivedCommands.logDepth.command;
@@ -1931,100 +2049,24 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+            return;
+        }
+
+        if (frameState.passes.depth && defined(command.derivedCommands.depth)) {
+            command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
+            return;
+        }
+
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
+
+        if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
-        } else if (scene.frameState.passes.depth && defined(command.derivedCommands.depth)) {
-            command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
-        }
-
-        if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
-            // Debug code to draw bounding volume for command.  Not optimized!
-            // Assumes bounding volume is a bounding sphere or box
-            var frameState = scene._frameState;
-            var boundingVolume = command.boundingVolume;
-
-            if (defined(scene._debugVolume)) {
-                scene._debugVolume.destroy();
-            }
-
-            var geometry;
-
-            var center = Cartesian3.clone(boundingVolume.center);
-            if (frameState.mode !== SceneMode.SCENE3D) {
-                center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
-                var projection = frameState.mapProjection;
-                var centerCartographic = projection.unproject(center);
-                center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
-            }
-
-            if (defined(boundingVolume.radius)) {
-                var radius = boundingVolume.radius;
-
-                geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                    radii : new Cartesian3(radius, radius, radius),
-                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-                })));
-
-                scene._debugVolume = new Primitive({
-                    geometryInstances : new GeometryInstance({
-                        geometry : geometry,
-                        modelMatrix : Matrix4.fromTranslation(center),
-                        attributes : {
-                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                        }
-                    }),
-                    appearance : new PerInstanceColorAppearance({
-                        flat : true,
-                        translucent : false
-                    }),
-                    asynchronous : false
-                });
-            } else {
-                var halfAxes = boundingVolume.halfAxes;
-
-                geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
-                    dimensions : new Cartesian3(2.0, 2.0, 2.0),
-                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-                })));
-
-                scene._debugVolume = new Primitive({
-                    geometryInstances : new GeometryInstance({
-                        geometry : geometry,
-                        modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
-                        attributes : {
-                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                        }
-                    }),
-                    appearance : new PerInstanceColorAppearance({
-                        flat : true,
-                        translucent : false
-                    }),
-                    asynchronous : false
-                });
-            }
-
-            var savedCommandList = frameState.commandList;
-            var commandList = frameState.commandList = [];
-            scene._debugVolume.update(frameState);
-
-            var framebuffer;
-            if (defined(debugFramebuffer)) {
-                framebuffer = passState.framebuffer;
-                passState.framebuffer = debugFramebuffer;
-            }
-
-            commandList[0].execute(context, passState);
-
-            if (defined(framebuffer)) {
-                passState.framebuffer = framebuffer;
-            }
-
-            frameState.commandList = savedCommandList;
         }
     }
 
@@ -2119,12 +2161,13 @@ define([
                     var framebuffer;
                     if (environmentState.useGlobeDepthFramebuffer) {
                         framebuffer = scene._globeDepth.framebuffer;
-                    } else if (environmentState.useFXAA) {
-                        framebuffer = scene._fxaa.getColorFramebuffer();
+                    } else if (environmentState.usePostProcess) {
+                        framebuffer = scene._sceneFramebuffer.getFramebuffer();
                     } else {
                         framebuffer = environmentState.originalFramebuffer;
                     }
-                    scene._sunPostProcess.execute(context, framebuffer);
+                    scene._sunPostProcess.execute(context);
+                    scene._sunPostProcess.copy(context, framebuffer);
                     passState.framebuffer = framebuffer;
                 }
             }
@@ -2199,7 +2242,7 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
                 globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }
@@ -2876,7 +2919,8 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
+        // Globe depth needs is copied for Pick to support picking batched geometries in GroundPrimitives.
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
             scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);
@@ -2890,19 +2934,28 @@ define([
             environmentState.useOIT = scene._oit.isSupported();
         }
 
-        // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
-        var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
-        if (useFXAA) {
-            scene._fxaa.update(context, passState);
-            scene._fxaa.clear(context, passState, clearColor);
+        var postProcess = scene.postProcessStages;
+        var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
+        if (usePostProcess) {
+            scene._sceneFramebuffer.update(context, passState);
+            scene._sceneFramebuffer.clear(context, passState, clearColor);
+
+            var camera = scene.camera;
+            var useLogDepth = scene._logDepthBuffer && !(camera.frustum instanceof OrthographicFrustum || camera.frustum instanceof OrthographicOffCenterFrustum);
+
+            postProcess.update(context, useLogDepth);
+            postProcess.clear(context);
+
+            usePostProcess = environmentState.usePostProcess = postProcess.ready;
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
+            scene._sunPostProcess.clear(context, passState, clearColor);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
-        } else if (useFXAA) {
-            passState.framebuffer = scene._fxaa.getColorFramebuffer();
+        } else if (usePostProcess) {
+            passState.framebuffer = scene._sceneFramebuffer.getFramebuffer();
         }
 
         if (defined(passState.framebuffer)) {
@@ -2915,19 +2968,21 @@ define([
             if (scene.frameState.invertClassificationColor.alpha === 1.0) {
                 if (environmentState.useGlobeDepthFramebuffer) {
                     depthFramebuffer = scene._globeDepth.framebuffer;
-                } else if (environmentState.useFXAA) {
-                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
                 }
             }
 
-            scene._invertClassification.previousFramebuffer = depthFramebuffer;
-            scene._invertClassification.update(context);
-            scene._invertClassification.clear(context, passState);
+            if (defined(depthFramebuffer) || context.depthTexture) {
+                scene._invertClassification.previousFramebuffer = depthFramebuffer;
+                scene._invertClassification.update(context);
+                scene._invertClassification.clear(context, passState);
 
-            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
-                var command = scene._invertClassification.unclassifiedCommand;
-                var derivedCommands = command.derivedCommands;
-                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+                if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                    var command = scene._invertClassification.unclassifiedCommand;
+                    var derivedCommands = command.derivedCommands;
+                    derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
+            } else {
+                environmentState.useInvertClassification = false;
             }
         }
     }
@@ -2937,26 +2992,33 @@ define([
         var environmentState = scene._environmentState;
 
         var useOIT = environmentState.useOIT;
-        var useFXAA = environmentState.useFXAA;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
+        var usePostProcess = environmentState.usePostProcess;
+
+        var defaultFramebuffer = environmentState.originalFramebuffer;
+        var globeFramebuffer = useGlobeDepthFramebuffer ? scene._globeDepth.framebuffer : undefined;
+        var sceneFramebuffer = scene._sceneFramebuffer.getFramebuffer();
 
         if (useOIT) {
-            passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
+            passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
             scene._oit.execute(context, passState);
         }
 
-        if (useFXAA) {
-            if (!useOIT && useGlobeDepthFramebuffer) {
-                passState.framebuffer = scene._fxaa.getColorFramebuffer();
-                scene._globeDepth.executeCopyColor(context, passState);
+        if (usePostProcess) {
+            var inputFramebuffer = sceneFramebuffer;
+            if (useGlobeDepthFramebuffer && !useOIT) {
+                inputFramebuffer = globeFramebuffer;
             }
 
-            passState.framebuffer = environmentState.originalFramebuffer;
-            scene._fxaa.execute(context, passState);
+            var postProcess = scene.postProcessStages;
+            var colorTexture = inputFramebuffer.getColorTexture(0);
+            var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
+            postProcess.execute(context, colorTexture, depthTexture);
+            postProcess.copy(context, defaultFramebuffer);
         }
 
-        if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
-            passState.framebuffer = environmentState.originalFramebuffer;
+        if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
+            passState.framebuffer = defaultFramebuffer;
             scene._globeDepth.executeCopyColor(context, passState);
         }
 
@@ -3100,6 +3162,8 @@ define([
         updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
+
+        passState.framebuffer = undefined;
         executeOverlayCommands(scene, passState);
 
         if (defined(scene.globe)) {
@@ -3789,7 +3853,9 @@ define([
         if (defined(this._oit)) {
             this._oit.destroy();
         }
-        this._fxaa.destroy();
+
+        this._sceneFramebuffer = this._sceneFramebuffer && this._sceneFramebuffer.destroy();
+        this.postProcessStages = this.postProcessStages && this.postProcessStages.destroy();
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();

@@ -1,5 +1,5 @@
 define([
-        '../../Core/BingMapsGeocoderService',
+        '../../Core/IonGeocoderService',
         '../../Core/CartographicGeocoderService',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -13,7 +13,7 @@ define([
         '../createCommand',
         '../getElement'
     ], function(
-        BingMapsGeocoderService,
+        IonGeocoderService,
         CartographicGeocoderService,
         defaultValue,
         defined,
@@ -52,7 +52,7 @@ define([
         } else {
             this._geocoderServices = [
                 new CartographicGeocoderService(),
-                new BingMapsGeocoderService({scene: options.scene})
+                new IonGeocoderService({ scene: options.scene })
             ];
         }
 

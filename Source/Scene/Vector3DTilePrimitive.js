@@ -18,7 +18,7 @@ define([
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeVS',
+        '../Shaders/VectorTileVS',
         './BlendingState',
         './Cesium3DTileFeature',
         './ClassificationType',
@@ -47,7 +47,7 @@ define([
         ShaderSource,
         VertexArray,
         ShadowVolumeFS,
-        ShadowVolumeVS,
+        VectorTileVS,
         BlendingState,
         Cesium3DTileFeature,
         ClassificationType,
@@ -297,11 +297,10 @@ define([
             return;
         }
 
-        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(ShadowVolumeVS);
+        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(VectorTileVS);
         var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false, undefined);
 
         var vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
             sources : [vsSource]
         });
         var fs = new ShaderSource({
@@ -317,8 +316,7 @@ define([
         });
 
         vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [ShadowVolumeVS]
+            sources : [VectorTileVS]
         });
         fs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -332,11 +330,10 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTable.getPickVertexShaderCallbackIgnoreShow('a_batchId')(ShadowVolumeVS);
+        vsSource = batchTable.getPickVertexShaderCallbackIgnoreShow('a_batchId')(VectorTileVS);
         fsSource = batchTable.getPickFragmentShaderCallbackIgnoreShow()(ShadowVolumeFS);
 
         var pickVS = new ShaderSource({
-            defines : ['VECTOR_TILE'],
             sources : [vsSource]
         });
         var pickFS = new ShaderSource({

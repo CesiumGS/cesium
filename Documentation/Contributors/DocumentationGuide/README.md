@@ -48,7 +48,7 @@ Consider one of the simplest functions in CesiumJS, `defined`:
 /**
  * @exports defined
  *
- * @param {Object} value The object.
+ * @param {*} value The object.
  * @returns {Boolean} Returns true if the object is defined, returns false otherwise.
  *
  * @example
@@ -361,8 +361,8 @@ Queue.prototype.sort = function(compareFunction) {
  * A function used to compare two items while sorting a queue.
  * @callback Queue~Comparator
  *
- * @param {Object} a An item in the array.
- * @param {Object} b An item in the array.
+ * @param {*} a An item in the array.
+ * @param {*} b An item in the array.
  * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
  *          a positive value if <code>a</code> is greater than <code>b</code>, or
  *          0 if <code>a</code> is equal to <code>b</code>.
