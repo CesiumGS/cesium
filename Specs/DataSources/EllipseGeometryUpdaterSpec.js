@@ -9,6 +9,7 @@ defineSuite([
         'DataSources/Entity',
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
+        'Scene/ClassificationType',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -26,6 +27,7 @@ defineSuite([
         Entity,
         SampledPositionProperty,
         SampledProperty,
+        ClassificationType,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -68,6 +70,7 @@ defineSuite([
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.classificationType = ClassificationType.BOTH; // default TERRAIN
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0, 0, 0));

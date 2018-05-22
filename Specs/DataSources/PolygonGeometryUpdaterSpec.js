@@ -10,6 +10,7 @@ defineSuite([
         'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
+        'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
@@ -29,6 +30,7 @@ defineSuite([
         PropertyArray,
         SampledPositionProperty,
         SampledProperty,
+        ClassificationType,
         GroundPrimitive,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
@@ -80,6 +82,7 @@ defineSuite([
             1, 1,
             0, 1
         ])));
+        polygon.classificationType = ClassificationType.BOTH; // default TERRAIN
         var entity = new Entity();
         entity.polygon = polygon;
         return entity;
