@@ -85,7 +85,5 @@ void main (void)
     float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
-    //gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
-
-    gl_FragColor = vec4(vec3(11.0), 1.0);
+    gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 }

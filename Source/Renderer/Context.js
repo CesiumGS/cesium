@@ -281,6 +281,10 @@ define([
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
+        // TODO HDR
+        this._textureFloatLinear = !!getExtension(gl, ['OES_texture_float_linear']);
+        this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
+
         this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
         this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
 

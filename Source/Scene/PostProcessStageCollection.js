@@ -59,7 +59,8 @@ define([
         var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage();
 
         ao.enabled = false;
-        bloom.enabled = false;
+        //bloom.enabled = false; // TODO HDR
+        bloom.enabled = true;
         tonemapping.enabled = false;
 
         // TODO HDR
