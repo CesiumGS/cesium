@@ -43,11 +43,10 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
+    var defaultClassificationType = new ConstantProperty(ClassificationType.TERRAIN);
 
     /**
-     * A {@link GeometryUpdater} for boxes.
-     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
+     * An abstract class for updating geometry entites.
      * @alias GeometryUpdater
      * @constructor
      *
@@ -91,8 +90,6 @@ define([
         this._id = geometryPropertyName + '-' + entity.id;
         this._observedPropertyNames = options.observedPropertyNames;
         this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
-
-        this._onEntityPropertyChanged(entity, geometryPropertyName, entity[geometryPropertyName], undefined);
     }
 
     defineProperties(GeometryUpdater.prototype, {
