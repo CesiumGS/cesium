@@ -171,7 +171,7 @@ define([
 
         var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
         var groundColorBatches = new Array(numberOfClassificationTypes);
-        var groundmaterialBatches = [];
+        var groundMaterialBatches = [];
         if (supportsMaterialsforEntitiesOnTerrain) {
             // Culling, phong shading only supported for ClassificationType.TERRAIN at the moment because
             // tileset depth information not yet available.
@@ -181,8 +181,8 @@ define([
                     groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
                 }
             }
-            groundmaterialBatches[0] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance);
-            this._groundTerrainMaterialBatch = groundmaterialBatches[0];
+            groundMaterialBatches[0] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance);
+            this._groundTerrainMaterialBatch = groundMaterialBatches[0];
         } else {
             for (i = 0; i < numberOfClassificationTypes; ++i) {
                 groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
@@ -193,7 +193,7 @@ define([
 
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, groundmaterialBatches, this._dynamicBatch);
+        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, groundMaterialBatches, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaterSets = new AssociativeArray();

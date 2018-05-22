@@ -40,7 +40,8 @@ defineSuite([
             closeBottom : true,
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
-            classificationType : ClassificationType.TERRAIN
+            classificationType : ClassificationType.TERRAIN,
+            zIndex: 22
         };
 
         var polygon = new PolygonGraphics(options);
@@ -61,6 +62,7 @@ defineSuite([
         expect(polygon.shadows).toBeInstanceOf(ConstantProperty);
         expect(polygon.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
         expect(polygon.classificationType).toBeInstanceOf(ConstantProperty);
+        expect(polygon.zIndex).toBeInstanceOf(ConstantProperty);
 
         expect(polygon.material.color.getValue()).toEqual(options.material);
         expect(polygon.show.getValue()).toEqual(options.show);
@@ -79,6 +81,7 @@ defineSuite([
         expect(polygon.shadows.getValue()).toEqual(options.shadows);
         expect(polygon.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
         expect(polygon.classificationType.getValue()).toEqual(options.classificationType);
+        expect(polygon.zIndex.getValue()).toEqual(22);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -100,6 +103,7 @@ defineSuite([
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
+        source.zIndex = new ConstantProperty(30);
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -121,6 +125,7 @@ defineSuite([
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(target.classificationType).toBe(source.classificationType);
+        expect(target.zIndex).toBe(source.zIndex);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -143,6 +148,7 @@ defineSuite([
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
         var classificationType = new ConstantProperty();
+        var zIndex = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.material = material;
@@ -162,6 +168,7 @@ defineSuite([
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
         target.classificationType = classificationType;
+        target.zIndex = zIndex;
 
         target.merge(source);
 
@@ -182,6 +189,7 @@ defineSuite([
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
         expect(target.classificationType).toBe(classificationType);
+        expect(target.zIndex).toBe(zIndex);
     });
 
     it('clone works', function() {
@@ -203,6 +211,7 @@ defineSuite([
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
         source.classificationType = new ConstantProperty();
+        source.zIndex = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -222,6 +231,7 @@ defineSuite([
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(result.classificationType).toBe(source.classificationType);
+        expect(result.zIndex).toBe(source.zIndex);
     });
 
     it('merge throws if source undefined', function() {
@@ -250,5 +260,6 @@ defineSuite([
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
+        testDefinitionChanged(property, 'zIndex', 54, 3);
     });
 });

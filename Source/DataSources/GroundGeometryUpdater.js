@@ -28,6 +28,7 @@ define([
     Property) {
     'use strict';
 
+    var defaultZIndex = new ConstantProperty(0);
     var defaultTerrainOffsetProperty = new ConstantProperty(0);
 
     /**
@@ -44,6 +45,7 @@ define([
     function GroundGeometryUpdater(options) {
         GeometryUpdater.call(this, options);
 
+        this._zIndex = 0;
         this._terrainOffsetProperty = defaultTerrainOffsetProperty;
     }
 
@@ -53,6 +55,18 @@ define([
     }
 
     defineProperties(GroundGeometryUpdater.prototype, {
+        /**
+         * Gets the zindex
+         * @type {Number}
+         * @memberof GroundGeometryUpdater.prototype
+         * @readonly
+         */
+        zIndex: {
+            get: function() {
+                return this._zIndex;
+            }
+        },
+
         terrainOffsetProperty: {
             get: function() {
                 return this._terrainOffsetProperty;
@@ -80,6 +94,11 @@ define([
         if (!defined(geometry)) {
             return;
         }
+        if (defined(geometry.zIndex) && (defined(geometry.height) || defined(geometry.extrudedHeight))) {
+            oneTimeWarning(oneTimeWarning.geometryZIndex);
+        }
+
+        this._zIndex = defaultValue(geometry.zIndex, defaultZIndex);
 
         if (!this._dynamic) {
             var heightProperty = geometry.height;

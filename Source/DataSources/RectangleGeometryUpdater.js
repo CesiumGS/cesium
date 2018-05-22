@@ -218,6 +218,7 @@ define([
                !Property.isConstant(rectangle.stRotation) || //
                !Property.isConstant(rectangle.rotation) || //
                !Property.isConstant(rectangle.outlineWidth) || //
+               !Property.isConstant(rectangle.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 

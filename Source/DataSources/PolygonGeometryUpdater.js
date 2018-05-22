@@ -228,6 +228,7 @@ define([
                !Property.isConstant(polygon.perPositionHeight) || //
                !Property.isConstant(polygon.closeTop) || //
                !Property.isConstant(polygon.closeBottom) || //
+               !Property.isConstant(polygon.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 

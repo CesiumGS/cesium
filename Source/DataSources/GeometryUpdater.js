@@ -43,7 +43,7 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
+    var defaultClassificationType = new ConstantProperty(ClassificationType.TERRAIN);
 
     /**
      * An abstract class for updating geometry entites.
