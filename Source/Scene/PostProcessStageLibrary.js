@@ -61,7 +61,7 @@ define([
      */
     var PostProcessStageLibrary = {};
 
-    function createBlur(name, pixelDatatype, forcePowerOfTwo) {
+    function createBlur(name, pixelDatatype, forcePowerOfTwo, textureScale) {
         var delta = 1.0;
         var sigma = 2.0;
         var stepSize = 1.0;
@@ -78,7 +78,8 @@ define([
             },
             sampleMode : PostProcessStageSampleMode.LINEAR,
             pixelDatatype : pixelDatatype,
-            forcePowerOfTwo : forcePowerOfTwo
+            forcePowerOfTwo : forcePowerOfTwo,
+            textureScale : textureScale
         });
         var blurY = new PostProcessStage({
             name : name + '_y_direction',
@@ -91,7 +92,8 @@ define([
             },
             sampleMode : PostProcessStageSampleMode.LINEAR,
             pixelDatatype : pixelDatatype,
-            forcePowerOfTwo : forcePowerOfTwo
+            forcePowerOfTwo : forcePowerOfTwo,
+            textureScale : textureScale
         });
 
         var uniforms = {};
@@ -412,19 +414,65 @@ define([
             '    } \n' +
             '} \n';
         var powerOfTwo = false;
+        var scale = 0.75;
         var brightPass = new PostProcessStage({
             fragmentShader : brightFS,
             forcePowerOfTwo : powerOfTwo,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            textureScale : scale
         });
-        var blur0 = createBlur('czm_bloom_blur0', PixelDatatype.FLOAT, powerOfTwo);
-        var blur1 = createBlur('czm_bloom_blur1', PixelDatatype.FLOAT, powerOfTwo);
-        var blur2 = createBlur('czm_bloom_blur2', PixelDatatype.FLOAT, powerOfTwo);
-        var blur3 = createBlur('czm_bloom_blur3', PixelDatatype.FLOAT, powerOfTwo);
-        var blur4 = createBlur('czm_bloom_blur4', PixelDatatype.FLOAT, powerOfTwo);
+        var blurFS =
+            'uniform sampler2D colorTexture; \n' +
+            'uniform vec2 colorTextureDimensions; \n' +
+            'uniform bool horizontal; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() { \n' +
+            'float weights[5]; \n' +
+            'weights[0] = 0.227027; \n' +
+            'weights[1] = 0.1945946; \n' +
+            'weights[2] = 0.1216216; \n' +
+            'weights[3] = 0.054054; \n' +
+            'weights[4] = 0.016216; \n' +
+            '    vec2 offset = 1.0 / colorTextureDimensions; \n' +
+            '    vec3 result = texture2D(colorTexture, v_textureCoordinates).rgb * weights[0]; \n' +
+            '    if(horizontal) { \n' +
+            '        for(int i = 1; i < 5; ++i) { \n' +
+            '            result += texture2D(colorTexture, v_textureCoordinates + vec2(offset.x * float(i), 0.0)).rgb * weights[i]; \n' +
+            '            result += texture2D(colorTexture, v_textureCoordinates - vec2(offset.x * float(i), 0.0)).rgb * weights[i]; \n' +
+            '        } \n' +
+            '    } else { \n' +
+            '        for(int i = 1; i < 5; ++i) { \n' +
+            '            result += texture2D(colorTexture, v_textureCoordinates + vec2(0.0, offset.y * float(i))).rgb * weights[i]; \n' +
+            '            result += texture2D(colorTexture, v_textureCoordinates - vec2(0.0, offset.y * float(i))).rgb * weights[i]; \n' +
+            '        } \n' +
+            '    } \n' +
+            '    gl_FragColor = vec4(result, 1.0); \n' +
+            '} \n';
+        var blurX = new PostProcessStage({
+            fragmentShader : blurFS,
+            uniforms : {
+                horizontal : true
+            },
+            forcePowerOfTwo : powerOfTwo,
+            pixelDatatype : PixelDatatype.FLOAT,
+            textureScale : scale
+        });
+        var blurY = new PostProcessStage({
+            fragmentShader : blurFS,
+            uniforms : {
+                horizontal : false
+            },
+            forcePowerOfTwo : powerOfTwo,
+            pixelDatatype : PixelDatatype.FLOAT,
+            textureScale : scale
+        });
+        var blur = new PostProcessStageComposite({
+            stages : [blurX, blurY, blurX, blurY, blurX, blurY, blurX, blurY, blurX, blurY]
+        });
+        //var blur = createBlur('czm_bloom_blur0', PixelDatatype.FLOAT, powerOfTwo, scale);
         var brightBlur = new PostProcessStageComposite({
             name : 'czm_brightness_blur',
-            stages : [brightPass, blur0, blur1, blur2, blur3, blur4]
+            stages : [brightPass, blur]
         });
 
         var addFS =

@@ -64,8 +64,6 @@ void main (void)
     rgb = vec3(1.0) - exp(-exposure * rgb);
 #endif
 
-// TODO HDR
-/*
 #ifdef COLOR_CORRECT
     // Convert rgb color to hsb
     vec3 hsb = czm_RGBToHSB(rgb);
@@ -76,7 +74,6 @@ void main (void)
     // Convert shifted hsb back to rgb
     rgb = czm_HSBToRGB(hsb);
 #endif
-*/
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
     float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.x) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
