@@ -4,11 +4,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
         '../Core/GroundPolylineGeometry',
-        '../Core/GroundLineGeometry',
+        '../Core/GroundLineSegmentGeometry',
         '../Core/isArray',
         '../Core/Matrix4',
         '../Shaders/PolylineShadowVolumeVS',
@@ -20,7 +21,7 @@ define([
         '../Renderer/ShaderSource',
         './GroundPrimitive',
         './Material',
-        './MaterialAppearance',
+        './PolylineMaterialAppearance',
         './Primitive',
         './SceneMode'
     ], function(
@@ -29,11 +30,12 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         GeometryInstance,
         GeometryInstanceAttribute,
         GroundPolylineGeometry,
-        GroundLineGeometry,
+        GroundLineSegmentGeometry,
         isArray,
         Matrix4,
         PolylineShadowVolumeVS,
@@ -45,7 +47,7 @@ define([
         ShaderSource,
         GroundPrimitive,
         Material,
-        MaterialAppearance,
+        PolylineMaterialAppearance,
         Primitive,
         SceneMode) {
     'use strict';
@@ -58,7 +60,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {GeometryInstance[]|GeometryInstance} [options.polylineGeometryInstances] GeometryInstances containing GroundPolylineGeometry
-     * @param {Material} [options.material] The Material used to render the polyline. Defaults to a white color.
+     * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color. Only {@link PolylineMaterialAppearance} is supported at this time.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to generated geometry or input <code>cartographics</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -72,13 +74,12 @@ define([
 
         this.polylineGeometryInstances = options.polylineGeometryInstances;
 
-        var material = options.material;
-        if (!defined(material)) {
-            material = Material.fromType('Color');
+        var appearance = options.appearance;
+        if (!defined(appearance)) {
+            appearance = new PolylineMaterialAppearance();
         }
 
-        this._material = material;
-        this._appearance = generatePolylineAppearance(material);
+        this.appearance = appearance;
 
         this.show = defaultValue(options.show, true);
 
@@ -119,7 +120,7 @@ define([
             asynchronous : this.asynchronous,
             _createShaderProgramFunction : undefined,
             _createCommandsFunction : undefined,
-            _updateAndQueueCommandsFunction : undefined,
+            _updateAndQueueCommandsFunction : undefined
         };
 
         this._primitive = undefined;
@@ -143,31 +144,6 @@ define([
         this._attributeSynchronizerCache = {};
     }
 
-    function generatePolylineAppearance(material, renderState) {
-        return new MaterialAppearance({
-            flat : true,
-            translucent : true,
-            closed : false,
-            materialSupport : MaterialAppearance.MaterialSupport.BASIC,
-            vertexShaderSource : PolylineShadowVolumeVS,
-            fragmentShaderSource : PolylineShadowVolumeFS,
-            material : material,
-            renderState : renderState
-        });
-    }
-
-    defineProperties(GroundPolylinePrimitive.prototype, {
-        material : {
-            get : function() {
-                return this._material;
-            },
-            set : function(value) {
-                this._material = value;
-                this._appearance = generatePolylineAppearance(value, this._renderState);
-            }
-        }
-    });
-
     function decompose(geometryInstance, projection, polylineSegmentInstances, idsToInstanceIndices) {
         var groundPolylineGeometry = geometryInstance.geometry;
         // TODO: check and throw using instanceof?
@@ -188,7 +164,7 @@ define([
         var lineGeometries = new Array(verticesLength / 3);
         var index = 0;
         for (i = 0; i < verticesLength - 3; i += 3) {
-            groundPolylineSegmentGeometry = GroundLineGeometry.fromArrays(projection, i, rightFacingNormals, bottomPositions, topPositions);
+            groundPolylineSegmentGeometry = GroundLineSegmentGeometry.fromArrays(projection, i, rightFacingNormals, bottomPositions, topPositions);
             totalLength += groundPolylineSegmentGeometry.segmentBottomLength;
             totalLength2D += groundPolylineSegmentGeometry.segmentBottomLength2D;
 
@@ -203,7 +179,7 @@ define([
             groundPolylineSegmentGeometry = lineGeometries[index++];
             var segmentLength = groundPolylineSegmentGeometry.segmentBottomLength;
             var segmentLength2D = groundPolylineSegmentGeometry.segmentBottomLength2D;
-            var attributes = GroundLineGeometry.getAttributes(groundPolylineSegmentGeometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D);
+            var attributes = GroundLineSegmentGeometry.getAttributes(groundPolylineSegmentGeometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D);
             lengthSoFar += segmentLength;
             lengthSoFar2D += segmentLength2D;
 
@@ -212,6 +188,13 @@ define([
                 componentsPerAttribute: 1,
                 normalize : false,
                 value : [groundPolylineGeometry.width]
+            });
+
+            attributes.show = new GeometryInstanceAttribute({
+                componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute: 1,
+                normalize : false,
+                value : [true]
             });
 
             polylineSegmentInstances.push(new GeometryInstance({
@@ -478,40 +461,24 @@ define([
             return;
         }
 
-        /*
-        if (!GroundPrimitive._initialized) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!this.asynchronous) {
-                throw new DeveloperError('For synchronous GroundPolylinePrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');
-            }
-            //>>includeEnd('debug');
-
-            GroundPrimitive.initializeTerrainHeights();
-            return;
-        }*/
-
         var i;
 
         var that = this;
         var primitiveOptions = this._primitiveOptions;
         if (!defined(this._primitive)) {
             // Decompose GeometryInstances into an array of GeometryInstances containing GroundPolylineSegmentGeometries.
-            // Compute the overall bounding volume
-            // TODO later: compute rectangle for getting min/max heights
-            var ellipsoid = frameState.mapProjection.ellipsoid;
-
+            // TODO: compute rectangle for getting min/max heights
             var polylineSegmentInstances = [];
             var geometryInstances = isArray(this.polylineGeometryInstances) ? this.polylineGeometryInstances : [this.polylineGeometryInstances];
             var geometryInstancesLength = geometryInstances.length;
             for (i = 0; i < geometryInstancesLength; ++i) {
                 var geometryInstance = geometryInstances[i];
-                var id = geometryInstance.id;
 
                 decompose(geometryInstance, frameState.mapProjection, polylineSegmentInstances, this._idsToInstanceIndices);
             }
 
             primitiveOptions.geometryInstances = polylineSegmentInstances;
-            primitiveOptions.appearance = this._appearance;
+            primitiveOptions.appearance = this.appearance;
 
             primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
                 createShaderProgram(that, frameState, appearance);
@@ -539,7 +506,7 @@ define([
                 }
             });
         }
-        this._primitive.appearance = this._appearance;
+        this._primitive.appearance = this.appearance;
         this._primitive.show = this.show;
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
@@ -568,44 +535,25 @@ define([
     };
 
     // An object that, on setting an attribute, will set all the instances' attributes.
+    var userAttributeNames = ['width', 'show'];
+    var userAttributeCount = userAttributeNames.length;
     function InstanceAttributeSynchronizer(batchTable, firstInstanceIndex, lastInstanceIndex, batchTableAttributeIndices) {
         var properties = {};
-        for (var name in batchTableAttributeIndices) {
-            if (batchTableAttributeIndices.hasOwnProperty(name)) {
-                var attributeIndex = batchTableAttributeIndices[name];
-                properties[name] = {
-                    get : createGetFunction(batchTable, firstInstanceIndex, attributeIndex),
-                    set : createSetFunction(batchTable, firstInstanceIndex, lastInstanceIndex, attributeIndex)
-                };
-
-                // TODO: make some of these read only
-            }
+        for (var i = 0; i < userAttributeCount; i++) {
+            var name = userAttributeNames[i];
+            var attributeIndex = batchTableAttributeIndices[name];
+            properties[name] = {
+                get : createGetFunction(batchTable, firstInstanceIndex, attributeIndex),
+                set : createSetFunction(batchTable, firstInstanceIndex, lastInstanceIndex, attributeIndex)
+            };
         }
         defineProperties(this, properties);
     }
 
-    function getAttributeValue(value) {
-        var componentsPerAttribute = value.length;
-        if (componentsPerAttribute === 1) {
-            return value[0];
-        } else if (componentsPerAttribute === 2) {
-            return Cartesian2.unpack(value, 0, scratchGetAttributeCartesian2);
-        } else if (componentsPerAttribute === 3) {
-            return Cartesian3.unpack(value, 0, scratchGetAttributeCartesian3);
-        } else if (componentsPerAttribute === 4) {
-            return Cartesian4.unpack(value, 0, scratchGetAttributeCartesian4);
-        }
-    }
-
     function createSetFunction(batchTable, firstInstanceIndex, lastInstanceIndex, attributeIndex) {
         return function(value) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(value) || !defined(value.length) || value.length < 1 || value.length > 4) {
-                throw new DeveloperError('value must be and array with length between 1 and 4.');
-            }
-            //>>includeEnd('debug');
             for (var i = firstInstanceIndex; i <= lastInstanceIndex; i++) {
-                var attributeValue = getAttributeValue(value);
+                var attributeValue = value[0];
                 batchTable.setBatchedAttribute(i, attributeIndex, attributeValue);
             }
         };

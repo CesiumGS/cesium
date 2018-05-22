@@ -117,9 +117,6 @@ void main()
     gl_Position = czm_depthClampFarPlane(czm_projection * positionEC);
 
     // Approximate relative screen space direction of the line.
-    // This doesn't work great if the view direction is roughly aligned with the line
-    // Directly copying what PolylineCommon.glsl does using ecStart and ecEnd is even worse.
-    // Might be worth just having this point in some direction if it's almost zero? herm no good... should probably go read that math later.
     vec2 approxLineDirection = normalize(vec2(forwardDirectionEC.x, -forwardDirectionEC.y));
     approxLineDirection.y = czm_branchFreeTernaryFloat(approxLineDirection.x == 0.0 && approxLineDirection.y == 0.0, -1.0, approxLineDirection.y);
     v_polylineAngle = czm_fastApproximateAtan(approxLineDirection.x, approxLineDirection.y);

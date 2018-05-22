@@ -44,14 +44,14 @@ define([
     /**
      * Description of the volume used to draw a line segment on terrain.
      *
-     * @alias GroundLineGeometry
+     * @alias GroundLineSegmentGeometry
      * @constructor
      *
      * @private
      *
-     * @see GroundLineGeometry#createGeometry
+     * @see GroundLineSegmentGeometry#createGeometry
      */
-    function GroundLineGeometry() {
+    function GroundLineSegmentGeometry() {
         this._startBottom = new Cartesian3();
         this._startTop = new Cartesian3();
         this._startNormal = new Cartesian3();
@@ -63,13 +63,12 @@ define([
         this._segmentBottomLength = 0.0;
         this._segmentBottomLength2D = 0.0;
 
-        this._workerName = 'createGroundLineGeometry';
+        this._workerName = 'createGroundLineSegmentGeometry';
     }
 
     var pos1_2dScratch = new Cartesian3();
     var pos2_2dScratch = new Cartesian3();
     function computeDistance2D(projection, carto1, carto2) {
-        var ellipsoid = projection.ellipsoid;
         var pos1_2d = projection.project(carto1, pos1_2dScratch);
         var pos2_2d = projection.project(carto2, pos2_2dScratch);
         return Cartesian3.distance(pos1_2d, pos2_2d);
@@ -77,8 +76,8 @@ define([
 
     var startCartographicScratch = new Cartographic();
     var endCartographicScratch = new Cartographic();
-    GroundLineGeometry.fromArrays = function(projection, index, normalsArray, bottomPositionsArray, topPositionsArray) {
-        var geometry = new GroundLineGeometry();
+    GroundLineSegmentGeometry.fromArrays = function(projection, index, normalsArray, bottomPositionsArray, topPositionsArray) {
+        var geometry = new GroundLineSegmentGeometry();
 
         Cartesian3.unpack(bottomPositionsArray, index, geometry._startBottom);
         Cartesian3.unpack(topPositionsArray, index, geometry._startTop);
@@ -104,7 +103,7 @@ define([
         // Note that this has to happen after the length computations
 
         return geometry;
-    }
+    };
 
     function direction(end, start, result) {
         Cartesian3.subtract(end, start, result);
@@ -136,7 +135,7 @@ define([
             Matrix3.multiplyByVector(rotationMatrix, geometry._startNormal, geometry._startNormal);
         }
 
-        dot = Cartesian3.dot(lineDirection, geometry._endNormal)
+        dot = Cartesian3.dot(lineDirection, geometry._endNormal);
         if (dot > MITER_BREAK_SMALL || dot < MITER_BREAK_LARGE) {
             vertexUp = direction(geometry._endTop, geometry._endBottom, vertexUpScratch);
             angle = dot < MITER_BREAK_LARGE ? CesiumMath.PI_OVER_TWO : -CesiumMath.PI_OVER_TWO;
@@ -146,7 +145,7 @@ define([
         }
     }
 
-    defineProperties(GroundLineGeometry.prototype, {
+    defineProperties(GroundLineSegmentGeometry.prototype, {
         // TODO: doc
         segmentBottomLength : {
             get : function() {
@@ -164,18 +163,18 @@ define([
      * The number of elements used to pack the object into an packArray.
      * @type {Number}
      */
-    GroundLineGeometry.packedLength = Cartesian3.packedLength * 6 + 2;
+    GroundLineSegmentGeometry.packedLength = Cartesian3.packedLength * 6 + 2;
 
     /**
      * Stores the provided instance into the provided packArray.
      *
-     * @param {GroundLineGeometry} value The value to pack.
+     * @param {GroundLineSegmentGeometry} value The value to pack.
      * @param {Number[]} packArray The packArray to pack into.
      * @param {Number} [startingIndex=0] The index into the packArray at which to start packing the elements.
      *
      * @returns {Number[]} The packArray that was packed into
      */
-    GroundLineGeometry.pack = function(value, packArray, startingIndex) {
+    GroundLineSegmentGeometry.pack = function(value, packArray, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('value', value);
         Check.defined('packArray', packArray);
@@ -196,23 +195,23 @@ define([
         Cartesian3.pack(value._endNormal, packArray, startingIndex);
 
         return packArray;
-    }
+    };
 
     /**
      * Retrieves an instance from a packed packArray.
      *
      * @param {Number[]} packArray The packed packArray.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {GroundLineGeometry} [result] The object into which to store the result.
-     * @returns {GroundLineGeometry} The modified result parameter or a new RectangleGeometry instance if one was not provided.
+     * @param {GroundLineSegmentGeometry} [result] The object into which to store the result.
+     * @returns {GroundLineSegmentGeometry} The modified result parameter or a new RectangleGeometry instance if one was not provided.
      */
-    GroundLineGeometry.unpack = function(packArray, startingIndex, result) {
+    GroundLineSegmentGeometry.unpack = function(packArray, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('packArray', packArray);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
-        result = defaultValue(result, new GroundLineGeometry());
+        result = defaultValue(result, new GroundLineSegmentGeometry());
 
         Cartesian3.unpack(packArray, startingIndex, result._startBottom);
         startingIndex += Cartesian3.packedLength;
@@ -227,7 +226,7 @@ define([
         Cartesian3.unpack(packArray, startingIndex, result._endNormal);
 
         return result;
-    }
+    };
 
     var startBottomScratch = new Cartesian3();
     var endBottomScratch = new Cartesian3();
@@ -235,9 +234,9 @@ define([
     var startTopScratch = new Cartesian3();
     /**
      *
-     * @param {GroundLineGeometry} groundPolylineSegmentGeometry
+     * @param {GroundLineSegmentGeometry} groundPolylineSegmentGeometry
      */
-    GroundLineGeometry.createGeometry = function(groundPolylineSegmentGeometry) {
+    GroundLineSegmentGeometry.createGeometry = function(groundPolylineSegmentGeometry) {
         var startBottom = groundPolylineSegmentGeometry._startBottom;
         var endBottom = groundPolylineSegmentGeometry._endBottom;
         var endTop = groundPolylineSegmentGeometry._endTop;
@@ -248,24 +247,24 @@ define([
         var positions = new Float64Array(24); // 8 vertices
 
         // Push out by 1.0 in the right direction
-        var startBottom = Cartesian3.add(groundPolylineSegmentGeometry._startBottom, startNormal, startBottomScratch);
-        var endBottom = Cartesian3.add(groundPolylineSegmentGeometry._endBottom, endNormal, endBottomScratch);
-        var endTop = Cartesian3.add(groundPolylineSegmentGeometry._endTop, endNormal, endTopScratch);
-        var startTop = Cartesian3.add(groundPolylineSegmentGeometry._startTop, startNormal, startTopScratch);
-        Cartesian3.pack(startBottom, positions, 0);
-        Cartesian3.pack(endBottom, positions, 1 * 3);
-        Cartesian3.pack(endTop, positions, 2 * 3);
-        Cartesian3.pack(startTop, positions, 3 * 3);
+        var pushedStartBottom = Cartesian3.add(startBottom, startNormal, startBottomScratch);
+        var pushedEndBottom = Cartesian3.add(endBottom, endNormal, endBottomScratch);
+        var pushedEndTop = Cartesian3.add(endTop, endNormal, endTopScratch);
+        var pushedStartTop = Cartesian3.add(startTop, startNormal, startTopScratch);
+        Cartesian3.pack(pushedStartBottom, positions, 0);
+        Cartesian3.pack(pushedEndBottom, positions, 1 * 3);
+        Cartesian3.pack(pushedEndTop, positions, 2 * 3);
+        Cartesian3.pack(pushedStartTop, positions, 3 * 3);
 
         // Push out by 1.0 in the left direction
-        startBottom = Cartesian3.subtract(groundPolylineSegmentGeometry._startBottom, startNormal, startBottomScratch);
-        endBottom = Cartesian3.subtract(groundPolylineSegmentGeometry._endBottom, endNormal, endBottomScratch);
-        endTop = Cartesian3.subtract(groundPolylineSegmentGeometry._endTop, endNormal, endTopScratch);
-        startTop = Cartesian3.subtract(groundPolylineSegmentGeometry._startTop, startNormal, startTopScratch);
-        Cartesian3.pack(startBottom, positions, 4 * 3);
-        Cartesian3.pack(endBottom, positions, 5 * 3);
-        Cartesian3.pack(endTop, positions, 6 * 3);
-        Cartesian3.pack(startTop, positions, 7 * 3);
+        pushedStartBottom = Cartesian3.subtract(startBottom, startNormal, startBottomScratch);
+        pushedEndBottom = Cartesian3.subtract(endBottom, endNormal, endBottomScratch);
+        pushedEndTop = Cartesian3.subtract(endTop, endNormal, endTopScratch);
+        pushedStartTop = Cartesian3.subtract(startTop, startNormal, startTopScratch);
+        Cartesian3.pack(pushedStartBottom, positions, 4 * 3);
+        Cartesian3.pack(pushedEndBottom, positions, 5 * 3);
+        Cartesian3.pack(pushedEndTop, positions, 6 * 3);
+        Cartesian3.pack(pushedStartTop, positions, 7 * 3);
 
         var indices = [
             0, 1, 2, 0, 2, 3, // right
@@ -289,11 +288,11 @@ define([
             indices : new Uint16Array(indices),
             boundingSphere : BoundingSphere.fromPoints([startBottom, endBottom, endTop, startTop])
         });
-    }
+    };
 
-    GroundLineGeometry.prototype.segmentLength = function() {
+    GroundLineSegmentGeometry.prototype.segmentLength = function() {
         return Cartesian3.distance(this._startBottom, this._endBottom);
-    }
+    };
 
     var positionCartographicScratch = new Cartographic();
     var normalEndpointScratch = new Cartesian3();
@@ -304,7 +303,7 @@ define([
         var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, positionCartographicScratch);
         normalEndpointCartographic.height = 0.0;
         var normalEndpointProjected = projection.project(normalEndpointCartographic, result);
-        result = Cartesian3.subtract(result, projectedPosition, result);
+        result = Cartesian3.subtract(normalEndpointProjected, projectedPosition, result);
         result.z = 0.0;
         result = Cartesian3.normalize(result, result);
         return result;
@@ -370,7 +369,7 @@ define([
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 3,
             normalize: false,
-            value : [lengthSoFar2D, segmentLength2D, totalLength2D]
+            value : [lengthSoFar2D, segmentLength2D, totalLength2D] // TODO: some floating point problems with this at huge distances!
         });
 
         attributes.startHighLow2D = startHighLow2D_attribute;
@@ -380,7 +379,6 @@ define([
     }
 
     var encodeScratch = new EncodedCartesian3();
-    var offsetScratch = new Cartesian3();
     var offsetScratch = new Cartesian3();
     var normal1Scratch = new Cartesian3();
     var normal2Scratch = new Cartesian3();
@@ -399,7 +397,7 @@ define([
      * texture coordinate local to the line. This texture coordinate then needs to be mapped to the entire line,
      * which requires an additional set of attributes.
      *
-     * @param {GroundLineGeometry} geometry GroundLineGeometry
+     * @param {GroundLineSegmentGeometry} geometry GroundLineSegmentGeometry
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
      * @param {Number} lengthSoFar Distance of the segment's start point along the line
      * @param {Number} segmentLength Length of the segment
@@ -409,7 +407,7 @@ define([
      * @param {Number} totalLength2D Total length of the entire line in 2D
      * @returns {Object} An object containing GeometryInstanceAttributes for the input geometry
      */
-    GroundLineGeometry.getAttributes = function(geometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D) {
+    GroundLineSegmentGeometry.getAttributes = function(geometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('geometry', geometry);
         Check.typeOf.object('projection', projection);
@@ -506,9 +504,9 @@ define([
             texcoordNormalization : texcoordNormalization_attribute
         };
 
-        add2DAttributes(attributes, geometry, projection, lengthSoFar2D, segmentLength2D, totalLength2D)
+        add2DAttributes(attributes, geometry, projection, lengthSoFar2D, segmentLength2D, totalLength2D);
         return attributes;
     };
 
-    return GroundLineGeometry;
+    return GroundLineSegmentGeometry;
 });
