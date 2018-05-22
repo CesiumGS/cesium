@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Demonstration of Polylines On Terrain via the Primitive API.">
+    <meta name="cesium-sandcastle-labels" content="Development">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table><tbody>
+        <tr>
+            <td>Width</td>
+            <td>
+                <input type="range" min="1.0" max="32.0" step="1.0" data-bind="value: lineWidth, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: lineWidth">
+            </td>
+        </tr>
+    </tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var worldTerrain = Cesium.createWorldTerrain({
+    requestWaterMask: true,
+    requestVertexNormals: true
+});
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: worldTerrain
+});
+
+var selectedId = 'polyline1';
+var polylineOnTerrainPrimitive;
+
+var lineWidth = 16.0;
+var viewModel = {
+    lineWidth : lineWidth
+};
+
+Cesium.knockout.track(viewModel);
+
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'lineWidth').subscribe(
+    function(newValue) {
+        lineWidth = parseFloat(viewModel.lineWidth);
+        if (Cesium.defined(selectedId)) {
+            var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
+            lineWidth = parseFloat(viewModel.lineWidth);
+            attributes.width = [lineWidth];
+        }
+    }
+);
+
+var scene = viewer.scene;
+
+var leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+leftHandler.setInputAction(function(movement) {
+    var pickedObject = viewer.scene.pick(movement.position);
+    if (Cesium.defined(pickedObject)) {
+        console.log(pickedObject.id);
+        selectedId = pickedObject.id;
+
+        // Sync line width in toolbar with selected
+        var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
+        viewModel.lineWidth = attributes.width[0];
+    } else {
+        selectedId = undefined;
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+var polylineCartographics = [
+    Cesium.Cartographic.fromDegrees(-112.1340164450331, 36.05494287836128),
+    Cesium.Cartographic.fromDegrees(-112.08821010582645, 36.097804071380715),
+    Cesium.Cartographic.fromDegrees(-112.13296079730024, 36.168769146801104),
+    Cesium.Cartographic.fromDegrees(-112.10828895143331, 36.20031318533197),
+    Cesium.Cartographic.fromDegrees(-112.138548165717, 36.1691100215289), // hairpins
+    Cesium.Cartographic.fromDegrees(-112.11482556496543, 36.20127524083297),
+    Cesium.Cartographic.fromDegrees(-112.15921333464016, 36.17876011207708),
+    Cesium.Cartographic.fromDegrees(-112.14700151155604, 36.21683132404626),
+    Cesium.Cartographic.fromDegrees(-112.20919883052926, 36.19475754001766)
+];
+
+var loopCartographics = [
+    Cesium.Cartographic.fromDegrees(-111.94500779274114, 36.27638678884143),
+    Cesium.Cartographic.fromDegrees(-111.90983004392696, 36.07985366173454),
+    Cesium.Cartographic.fromDegrees(-111.80360100637773, 36.13694878292542),
+    Cesium.Cartographic.fromDegrees(-111.85510122419183, 36.26029588763386),
+    Cesium.Cartographic.fromDegrees(-111.69141601804614, 36.05128770351902)
+];
+
+var instance1 = new Cesium.GeometryInstance({
+    geometry : new Cesium.GroundPolylineGeometry({
+        positions : polylineCartographics,
+        width : 16.0,
+        loop : false
+    }),
+    id : 'polyline1'
+});
+
+var instance2 = new Cesium.GeometryInstance({
+    geometry : new Cesium.GroundPolylineGeometry({
+        positions : loopCartographics,
+        width : 8.0,
+        loop : true
+    }),
+    id : 'polyline2'
+});
+
+polylineOnTerrainPrimitive = new Cesium.GroundPolylinePrimitive({
+    polylineGeometryInstances : [instance1, instance2],
+    debugShowShadowVolume : false
+});
+scene.primitives.add(polylineOnTerrainPrimitive);
+
+applyGlowMaterial();
+
+function applyColorMaterial() {
+    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('Color', {
+        color : new Cesium.Color(0.0, 1.0, 1.0, 1.0)
+    });
+}
+function applyGlowMaterial() {
+    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineGlow', {
+        innerWidth : 1.0
+    });
+}
+function applyArrow() {
+    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineArrow');
+}
+function applyDash() {
+    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineDash', {
+        color : Cesium.Color.YELLOW
+    });
+}
+function applyOutline() {
+    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineOutline');
+}
+
+Sandcastle.addToolbarButton('Toggle instance show', function() {
+    if (Cesium.defined(selectedId)) {
+        var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
+        attributes.show = [attributes.show[0] ? 0 : 1];
+    }
+});
+
+Sandcastle.addToolbarButton('Show all', function() {
+    if (Cesium.defined(selectedId)) {
+        var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes('polyline1');
+        attributes.show = [1];
+        attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes('polyline2');
+        attributes.show = [1];
+    }
+});
+
+function lookAt() {
+    viewer.camera.lookAt(Cesium.Cartographic.toCartesian(polylineCartographics[1]), new Cesium.Cartesian3(50000.0, 50000.0, 50000.0));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
+Sandcastle.addToolbarButton('reset view', function() {
+    lookAt();
+});
+
+lookAt();
+
+    Sandcastle.addToolbarMenu([{
+        text : 'Materials'
+    }, {
+        text : 'Color',
+        onselect : function() {
+            applyColorMaterial();
+            Sandcastle.highlight(applyColorMaterial);
+        }
+    }, {
+        text : 'Glow',
+        onselect : function() {
+            applyGlowMaterial();
+            Sandcastle.highlight(applyGlowMaterial);
+        }
+    }, {
+        text : 'Arrow',
+        onselect : function() {
+            applyArrow();
+            Sandcastle.highlight(applyArrow);
+        }
+    }, {
+        text : 'Dash',
+        onselect : function() {
+            applyDash();
+            Sandcastle.highlight(applyDash);
+        }
+    }, {
+        text : 'Outline',
+        onselect : function() {
+            applyOutline();
+            Sandcastle.highlight(applyOutline);
+        }
+    }]);
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
