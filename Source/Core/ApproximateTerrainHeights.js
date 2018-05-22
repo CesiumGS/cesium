@@ -1,31 +1,31 @@
 define([
-    './buildModuleUrl',
-    './defaultValue',
-    './defined',
-    './BoundingSphere',
-    './Cartesian2',
-    './Cartesian3',
-    './Cartographic',
-    './Check',
-    './DeveloperError',
-    './Ellipsoid',
-    './GeographicTilingScheme',
-    './Rectangle',
-    './Resource'
-], function(
-    buildModuleUrl,
-    defaultValue,
-    defined,
-    BoundingSphere,
-    Cartesian2,
-    Cartesian3,
-    Cartographic,
-    Check,
-    DeveloperError,
-    Ellipsoid,
-    GeographicTilingScheme,
-    Rectangle,
-    Resource) {
+        './buildModuleUrl',
+        './defaultValue',
+        './defined',
+        './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
+        './Cartographic',
+        './Check',
+        './DeveloperError',
+        './Ellipsoid',
+        './GeographicTilingScheme',
+        './Rectangle',
+        './Resource'
+    ], function(
+        buildModuleUrl,
+        defaultValue,
+        defined,
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Check,
+        DeveloperError,
+        Ellipsoid,
+        GeographicTilingScheme,
+        Rectangle,
+        Resource) {
     'use strict';
 
     var scratchDiagonalCartesianNE = new Cartesian3();
