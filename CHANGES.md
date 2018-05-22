@@ -17,7 +17,6 @@ Change Log
    * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
    * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
  * Added `Rectangle.equalsEpsilon` for comparing the equality of two rectangles [#6533](https://github.com/AnalyticalGraphicsInc/cesium/pull/6533)
- * Added to the Constructor Functions section in the Coding Guide to use local variables rather than reading/writing multiple times.[#6139](https://github.com/AnalyticalGraphicsInc/cesium/issues/6139)
 
 ##### Fixes :wrench:
 * Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
