@@ -106,8 +106,9 @@ define([
                 unsubscribe();
                 this.subscriptions.remove(id);
             }
+            return true;
         }
-        return this.createPrimitive;
+        return false;
     };
 
     Batch.prototype.update = function(time) {
