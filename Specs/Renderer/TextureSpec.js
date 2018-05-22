@@ -215,7 +215,6 @@ defineSuite([
 
     it('draws the expected half floating-point texture color', function() {
         if (context.halfFloatingPointTexture) {
-            context.throwOnWebGLError = true;
             var color = new Color(0.2, 0.4, 0.6, 1.0);
             var floats = new Uint16Array([12902, 13926, 14541, 15360]);
 
@@ -238,8 +237,6 @@ defineSuite([
                 fragmentShader : fs,
                 uniformMap : uniformMap
             }).contextToRender(color.toBytes());
-
-            context.throwOnWebGLError = false;
         }
     });
 
