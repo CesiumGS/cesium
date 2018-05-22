@@ -213,6 +213,33 @@ defineSuite([
         }
     });
 
+    it('draws the expected half floating-point texture color', function() {
+        if (context.halfFloatingPointTexture) {
+            var color = new Color(0.2, 0.4, 0.6, 1.0);
+            var floats = new Uint16Array([12902, 13926, 14541, 15360]);
+
+            texture = new Texture({
+                context : context,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.HALF_FLOAT,
+                source : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : floats
+                },
+                flipY : false
+            });
+
+            expect(texture.sizeInBytes).toEqual(8);
+
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap
+            }).contextToRender(color.toBytes());
+        }
+    });
+
     it('draws the expected DXT compressed texture color', function() {
         if (!context.s3tc) {
             return;
@@ -772,6 +799,20 @@ defineSuite([
         }
     });
 
+    it('throws when creating if pixelDatatype = HALF_FLOAT, and OES_texture_half_float is not supported', function() {
+        if (!context.halfFloatingPointTexture) {
+            expect(function() {
+                texture = new Texture({
+                    context : context,
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelDatatype.RGBA,
+                    pixelDatatype : PixelDatatype.HALF_FLOAT
+                });
+            }).toThrowDeveloperError();
+        }
+    });
+
     it('throws when creating compressed texture and the array buffer source is undefined', function() {
         expect(function() {
             texture = new Texture({
@@ -953,6 +994,22 @@ defineSuite([
                 height : 1,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            expect(function() {
+                texture.copyFromFramebuffer();
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when copying to a texture from the framebuffer with a HALF_FLOAT pixel data type', function() {
+        if (context.halfFloatingPointTexture) {
+            texture = new Texture({
+                context : context,
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.HALF_FLOAT
             });
 
             expect(function() {
