@@ -464,6 +464,7 @@ define([
             if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
                 // Dereference the clipping planes from the model if they are irrelevant - saves on shading
                 // Link/Dereference directly to avoid ownership checks.
+                model._clippingPlaneModelMatrix = this._tile.computedTransform;
                 model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
             }
         }
