@@ -64,6 +64,8 @@ define([
             geometryPropertyName : 'box',
             observedPropertyNames : ['availability', 'position', 'orientation', 'box']
         });
+
+        this._onEntityPropertyChanged(entity, 'box', entity.box, undefined);
     }
 
     if (defined(Object.create)) {

@@ -41,15 +41,15 @@ define([
      * @constructor
      * @private
      */
-    function DynamicGeometryUpdater(geometryUpdater, primitives, groundPrimitives) {
+    function DynamicGeometryUpdater(geometryUpdater, primitives, orderedGroundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('geometryUpdater', geometryUpdater);
         Check.defined('primitives', primitives);
-        Check.defined('groundPrimitives', groundPrimitives);
+        Check.defined('orderedGroundPrimitives', orderedGroundPrimitives);
         //>>includeEnd('debug');
 
         this._primitives = primitives;
-        this._groundPrimitives = groundPrimitives;
+        this._orderedGroundPrimitives = orderedGroundPrimitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
@@ -80,9 +80,9 @@ define([
         var onTerrain = geometryUpdater._onTerrain;
 
         var primitives = this._primitives;
-        var groundPrimitives = this._groundPrimitives;
+        var orderedGroundPrimitives = this._orderedGroundPrimitives;
         if (onTerrain) {
-            groundPrimitives.removeAndDestroy(this._primitive);
+            orderedGroundPrimitives.remove(this._primitive);
         } else {
             primitives.removeAndDestroy(this._primitive);
             primitives.removeAndDestroy(this._outlinePrimitive);
@@ -120,12 +120,12 @@ define([
 
             if (onTerrain) {
                 options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-                this._primitive = groundPrimitives.add(new GroundPrimitive({
+                this._primitive = orderedGroundPrimitives.add(new GroundPrimitive({
                     geometryInstances : this._geometryUpdater.createFillGeometryInstance(time),
                     appearance : appearance,
                     asynchronous : false,
                     shadows : shadows
-                }));
+                }), Property.getValueOrUndefined(this._geometryUpdater.zIndex, time));
             } else {
                 options.vertexFormat = appearance.vertexFormat;
 
@@ -230,9 +230,9 @@ define([
      */
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        var groundPrimitives = this._groundPrimitives;
+        var orderedGroundPrimitives = this._orderedGroundPrimitives;
         if (this._geometryUpdater._onTerrain) {
-            groundPrimitives.removeAndDestroy(this._primitive);
+            orderedGroundPrimitives.remove(this._primitive);
         } else {
             primitives.removeAndDestroy(this._primitive);
         }
