@@ -1,22 +1,35 @@
 define([
+    '../Core/Cartesian3',
+    '../Core/Check',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
+    '../Core/DeveloperError',
     '../Core/Iso8601',
     '../Core/oneTimeWarning',
+    '../Scene/HeightReference',
     './ConstantProperty',
-    './GeometryUpdater'
+    './GeometryUpdater',
+    './TerrainOffsetProperty',
+    './Property'
 ], function(
+    Cartesian3,
+    Check,
     defaultValue,
     defined,
     defineProperties,
+    DeveloperError,
     Iso8601,
     oneTimeWarning,
+    HeightReference,
     ConstantProperty,
-    GeometryUpdater) {
+    GeometryUpdater,
+    TerrainOffsetProperty,
+    Property) {
     'use strict';
 
     var defaultZIndex = new ConstantProperty(0);
+    var defaultTerrainOffsetProperty = new ConstantProperty(0);
 
     /**
      * An abstract class for updating ground geometry entities.
@@ -33,6 +46,7 @@ define([
         GeometryUpdater.call(this, options);
 
         this._zIndex = 0;
+        this._terrainOffsetProperty = defaultTerrainOffsetProperty;
     }
 
     if (defined(Object.create)) {
@@ -51,8 +65,24 @@ define([
             get: function() {
                 return this._zIndex;
             }
+        },
+
+        terrainOffsetProperty: {
+            get: function() {
+                return this._terrainOffsetProperty;
+            }
         }
     });
+
+    /**
+     * @param {Entity} entity
+     * @param {Object} geometry
+     * @param {JulianDate} time
+     * @param {Cartesian3} result
+     *
+     * @private
+     */
+    GroundGeometryUpdater.prototype._computeCenter = DeveloperError.throwInstantiationError;
 
     GroundGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
         GeometryUpdater.prototype._onEntityPropertyChanged.call(this, entity, propertyName, newValue, oldValue);
@@ -69,6 +99,25 @@ define([
         }
 
         this._zIndex = defaultValue(geometry.zIndex, defaultZIndex);
+
+        if (!this._dynamic) {
+            var heightProperty = geometry.height;
+            var extrudedHeightProperty = geometry.extrudedHeight;
+            var heightReference = HeightReference.NONE;
+            var extrudedHeightReference = HeightReference.NONE;
+            if (defined(heightProperty)) {
+                heightReference = Property.getValueOrDefault(heightProperty.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
+            }
+            if (defined(extrudedHeightProperty)) {
+                extrudedHeightReference = Property.getValueOrDefault(extrudedHeightProperty.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
+            }
+
+            if (heightReference !== HeightReference.NONE || extrudedHeightReference === HeightReference.RELATIVE_TO_GROUND) {
+                this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, new ConstantProperty(this._computeCenter(entity, geometry, Iso8601.MINIMUM_VALUE, new Cartesian3())));
+            } else {
+                this._terrainOffsetProperty = defaultTerrainOffsetProperty;
+            }
+        }
     };
 
     return GroundGeometryUpdater;

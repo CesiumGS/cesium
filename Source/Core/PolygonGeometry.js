@@ -1,4 +1,5 @@
 define([
+        './arrayFill',
         './BoundingRectangle',
         './BoundingSphere',
         './Cartesian2',
@@ -15,6 +16,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryInstance',
+        './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
@@ -27,6 +29,7 @@ define([
         './VertexFormat',
         './WindingOrder'
     ], function(
+        arrayFill,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -43,6 +46,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
+        GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
@@ -127,6 +131,11 @@ define([
         var vertexFormat = options.vertexFormat;
         var geometry = options.geometry;
         var shadowVolume = options.shadowVolume;
+        var flatPositions = geometry.attributes.position.values;
+        var length = flatPositions.length;
+        var wall = options.wall;
+        var top = options.top || wall;
+        var bottom = options.bottom || wall;
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent || shadowVolume) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
@@ -134,17 +143,11 @@ define([
             var tangentPlane = options.tangentPlane;
             var ellipsoid = options.ellipsoid;
             var stRotation = options.stRotation;
-            var wall = options.wall;
-            var top = options.top || wall;
-            var bottom = options.bottom || wall;
             var perPositionHeight = options.perPositionHeight;
 
             var origin = appendTextureCoordinatesOrigin;
             origin.x = boundingRectangle.x;
             origin.y = boundingRectangle.y;
-
-            var flatPositions = geometry.attributes.position.values;
-            var length = flatPositions.length;
 
             var textureCoordinates = vertexFormat.st ? new Float32Array(2 * (length / 3)) : undefined;
             var normals;
@@ -366,6 +369,28 @@ define([
                 });
             }
         }
+
+        if (options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
+            var size = flatPositions.length / 3;
+            var offsetAttribute = new Uint8Array(size);
+
+            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+                if ((top && bottom) || wall) {
+                    offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
+                } else if (top) {
+                    offsetAttribute = arrayFill(offsetAttribute, 1);
+                }
+            } else {
+                offsetAttribute = arrayFill(offsetAttribute, 1);
+            }
+
+            geometry.attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values : offsetAttribute
+            });
+        }
+
         return geometry;
     }
 
@@ -429,7 +454,6 @@ define([
             geos.topAndBottom = new GeometryInstance({
                 geometry : topGeo
             });
-
         }
 
         var outerRing = hierarchy.outerRing;
@@ -558,6 +582,36 @@ define([
      * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
     function PolygonGeometry(options) {
+        this._vertexFormat = undefined;
+        this._ellipsoid = undefined;
+        this._granularity = undefined;
+        this._stRotation = undefined;
+        this._height = undefined;
+        this._extrudedHeight = undefined;
+        this._extrude = undefined;
+        this._closeTop = undefined;
+        this._closeBottom = undefined;
+        this._polygonHierarchy = undefined;
+        this._perPositionHeight = undefined;
+        this._shadowVolume = undefined;
+        this._offsetAttribute = undefined;
+        this._workerName = 'createPolygonGeometry';
+
+        this._rectangle = undefined;
+
+        /**
+         * The number of elements used to pack the object into an array.
+         * @type {Number}
+         */
+        this.packedLength = undefined;
+
+        this.setOptions(options);
+    }
+
+    /**
+     * @private
+     */
+    PolygonGeometry.prototype.setOptions = function(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('options', options);
         Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
@@ -582,8 +636,8 @@ define([
             height = h;
         }
 
-        this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._ellipsoid = Ellipsoid.clone(ellipsoid);
+        this._vertexFormat = VertexFormat.clone(vertexFormat, this._vertexFormat);
+        this._ellipsoid = Ellipsoid.clone(ellipsoid, this._ellipsoid);
         this._granularity = granularity;
         this._stRotation = stRotation;
         this._height = height;
@@ -594,7 +648,7 @@ define([
         this._perPositionHeight = perPositionHeight;
         this._perPositionHeightExtrude = perPositionHeightExtrude;
         this._shadowVolume = defaultValue(options.shadowVolume, false);
-        this._workerName = 'createPolygonGeometry';
+        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
 
         this._rectangle = undefined;
         this._textureCoordinateRotationPoints = undefined;
@@ -603,8 +657,8 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 10;
-    }
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 11;
+    };
 
     /**
      * A description of a polygon from an array of positions. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
@@ -657,7 +711,8 @@ define([
             granularity : options.granularity,
             perPositionHeight : options.perPositionHeight,
             closeTop : options.closeTop,
-            closeBottom: options.closeBottom
+            closeBottom : options.closeBottom,
+            offsetAttribute : options.offsetAttribute
         };
         return new PolygonGeometry(newOptions);
     };
@@ -696,6 +751,7 @@ define([
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
         array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
+        array[startingIndex++] = value._offsetAttribute;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -742,6 +798,7 @@ define([
         var closeTop = array[startingIndex++] === 1.0;
         var closeBottom = array[startingIndex++] === 1.0;
         var shadowVolume = array[startingIndex++] === 1.0;
+        var offsetAttribute = array[startingIndex++];
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -760,6 +817,7 @@ define([
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
         result._shadowVolume = shadowVolume;
+        result._offsetAttribute = offsetAttribute;
         result.packedLength = packedLength;
         return result;
     };
@@ -798,7 +856,6 @@ define([
         outerPositions = hierarchy[0].outerRing;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
-        var geometry;
         var geometries = [];
 
         var height = polygonGeometry._height;
@@ -824,20 +881,20 @@ define([
             options.top = closeTop;
             options.bottom = closeBottom;
             options.shadowVolume = polygonGeometry._shadowVolume;
-
+            options.offsetAttribute = polygonGeometry._offsetAttribute;
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
+                var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
 
                 var topAndBottom;
                 if (closeTop && closeBottom) {
-                    topAndBottom = geometry.topAndBottom;
+                    topAndBottom = splitGeometry.topAndBottom;
                     options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
                 } else if (closeTop) {
-                    topAndBottom = geometry.topAndBottom;
+                    topAndBottom = splitGeometry.topAndBottom;
                     topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(topAndBottom.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                     options.geometry = topAndBottom.geometry;
                 } else if (closeBottom) {
-                    topAndBottom = geometry.topAndBottom;
+                    topAndBottom = splitGeometry.topAndBottom;
                     topAndBottom.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(topAndBottom.geometry.attributes.position.values, extrudedHeight, ellipsoid, true);
                     options.geometry = topAndBottom.geometry;
                 }
@@ -847,7 +904,7 @@ define([
                     geometries.push(topAndBottom);
                 }
 
-                var walls = geometry.walls;
+                var walls = splitGeometry.walls;
                 options.wall = true;
                 for ( var k = 0; k < walls.length; k++) {
                     var wall = walls[k];
@@ -858,17 +915,29 @@ define([
             }
         } else {
             for (i = 0; i < polygons.length; i++) {
-                geometry = new GeometryInstance({
+                var geometryInstance = new GeometryInstance({
                     geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat)
                 });
-                geometry.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
-                options.geometry = geometry.geometry;
-                geometry.geometry = computeAttributes(options);
-                geometries.push(geometry);
+                geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
+                options.geometry = geometryInstance.geometry;
+                geometryInstance.geometry = computeAttributes(options);
+
+                if (polygonGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+                    var length = geometryInstance.geometry.attributes.position.values.length;
+                    var applyOffset = new Uint8Array(length / 3);
+                    arrayFill(applyOffset, 1);
+                    geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 1,
+                        values: applyOffset
+                    });
+                }
+
+                geometries.push(geometryInstance);
             }
         }
 
-        geometry = GeometryPipeline.combineInstances(geometries)[0];
+        var geometry = GeometryPipeline.combineInstances(geometries)[0];
         geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
         geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
 

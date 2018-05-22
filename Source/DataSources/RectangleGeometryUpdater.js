@@ -1,46 +1,67 @@
 define([
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/Ellipsoid',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
+        '../Core/OffsetGeometryInstanceAttribute',
+        '../Core/Rectangle',
         '../Core/RectangleGeometry',
         '../Core/RectangleOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/GroundPrimitive',
+        '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
+        './GeometryHeightProperty',
         './GeometryUpdater',
         './GroundGeometryUpdater',
         './Property'
     ], function(
+        Cartesian3,
+        Cartographic,
         Check,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        Ellipsoid,
         GeometryInstance,
+        GeometryOffsetAttribute,
         Iso8601,
+        OffsetGeometryInstanceAttribute,
+        Rectangle,
         RectangleGeometry,
         RectangleOutlineGeometry,
         ShowGeometryInstanceAttribute,
         GroundPrimitive,
+        HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
+        GeometryHeightProperty,
         GeometryUpdater,
         GroundGeometryUpdater,
         Property) {
     'use strict';
 
     var scratchColor = new Color();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
+    var scratchRectangleGeometry = new RectangleGeometry({rectangle: new Rectangle()});
+    var scratchCenterRect = new Rectangle();
+    var scratchCarto = new Cartographic();
 
     function RectangleGeometryOptions(entity) {
         this.id = entity;
@@ -51,6 +72,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.rotation = undefined;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -105,6 +127,7 @@ define([
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
+        var offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -117,12 +140,14 @@ define([
             attributes = {
                 show : show,
                 distanceDisplayCondition : distanceDisplayConditionAttribute,
-                color : color
+                color : color,
+                offset : offset
             };
         } else {
             attributes = {
                 show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
+                offset : offset
             };
         }
 
@@ -154,6 +179,7 @@ define([
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
 
         return new GeometryInstance({
             id : entity,
@@ -161,9 +187,19 @@ define([
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition),
+                offset : offset
             }
         });
+    };
+
+    RectangleGeometryUpdater.prototype._computeCenter = function(entity, rectangle, time, result) {
+        var rect = Property.getValueOrUndefined(rectangle.coordinates, time, scratchCenterRect);
+        if (!defined(rect)) {
+            return;
+        }
+        var center = Rectangle.center(rect, scratchCarto);
+        return Cartographic.toCartesian(center, Ellipsoid.WGS84, result);
     };
 
     RectangleGeometryUpdater.prototype._isHidden = function(entity, rectangle) {
@@ -199,10 +235,18 @@ define([
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.rectangle = rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE, options.rectangle);
         options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.getHeightReference(Iso8601.MINIMUM_VALUE) === HeightReference.CLAMP_TO_GROUND) {
+            scratchRectangleGeometry.setOptions(options);
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchRectangleGeometry.rectangle);
+            options.offsetAttribute = GeometryOffsetAttribute.TOP;
+        } else {
+            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.offsetAttribute = GeometryOffsetAttribute.ALL;
+        }
     };
 
     RectangleGeometryUpdater.prototype._getIsClosed = function(options) {

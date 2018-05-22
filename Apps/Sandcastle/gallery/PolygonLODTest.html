@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Draw a polygon or extruded polygon on the globe surface.">
+    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    baseLayerPicker: false,
+    terrainProvider: Cesium.createWorldTerrain()
+});
+viewer.scene.globe.depthTestAgainstTerrain = true;
+
+var baseLon = 6.850615989890521;
+var baseLat = 45.89546589994886;
+function addEntity(i, j) {
+    var lon1 = baseLon + 0.0001*i;
+    var lon2 = baseLon + 0.0001*i + 0.0001;
+
+    var lat1 = baseLat + 0.0001*j;
+    var lat2 = baseLat + 0.0001*j + 0.0001;
+    var a = Cesium.Cartesian3.fromDegrees(lon1, lat1);
+    var b = Cesium.Cartesian3.fromDegrees(lon1, lat2);
+    var c = Cesium.Cartesian3.fromDegrees(lon2, lat2);
+    var d = Cesium.Cartesian3.fromDegrees(lon2, lat1);
+
+    var positions = [a, b, c, d];
+    viewer.entities.add({
+        polygon : {
+            hierarchy : positions,
+            material : Cesium.Color.fromRandom({alpha: 1}),
+            height : new Cesium.GeometryHeightProperty(10.0, Cesium.HeightReference.RELATIVE_TO_GROUND),
+            extrudedHeight : new Cesium.GeometryHeightProperty(0.0, Cesium.HeightReference.CLAMP_TO_GROUND)
+        }
+    });
+}
+
+for (var i = 0; i < 4; i++) {
+    for (var j = 0; j < 4; j++) {
+        addEntity(i, j);
+    }
+}
+
+Sandcastle.addToolbarButton('Zoom', function() {
+    viewer.scene.camera.flyTo({
+        destination: new Cesium.Cartesian3(4415716.090770245, 530458.0589739879, 4558358.470675762),
+        orientation: {
+            heading: 2.9422859539310506,
+            pitch: -0.26904591127394784,
+            roll: 0.0006888582061437276
+        }
+    });
+});//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

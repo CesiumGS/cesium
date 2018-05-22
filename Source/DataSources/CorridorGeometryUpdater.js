@@ -1,4 +1,5 @@
 define([
+        '../Core/Cartesian3',
         '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -8,17 +9,22 @@ define([
         '../Core/DeveloperError',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
+        '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/GroundPrimitive',
+        '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
+        './GeometryHeightProperty',
         './GeometryUpdater',
         './GroundGeometryUpdater',
         './Property'
     ], function(
+        Cartesian3,
         Check,
         Color,
         ColorGeometryInstanceAttribute,
@@ -28,19 +34,26 @@ define([
         DeveloperError,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
+        GeometryOffsetAttribute,
         Iso8601,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         GroundPrimitive,
+        HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
+        GeometryHeightProperty,
         GeometryUpdater,
         GroundGeometryUpdater,
         Property) {
     'use strict';
 
     var scratchColor = new Color();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
+    var scratchCorridorGeometry = new CorridorGeometry({positions: [], width: 1});
 
     function CorridorGeometryOptions(entity) {
         this.id = entity;
@@ -51,6 +64,7 @@ define([
         this.height = undefined;
         this.extrudedHeight = undefined;
         this.granularity = undefined;
+        this.offsetAttribute = undefined;
     }
 
     /**
@@ -104,6 +118,7 @@ define([
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         var distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time));
+        var offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -116,12 +131,14 @@ define([
             attributes = {
                 show : show,
                 distanceDisplayCondition : distanceDisplayCondition,
-                color : color
+                color : color,
+                offset : offset
             };
         } else {
             attributes = {
                 show : show,
-                distanceDisplayCondition : distanceDisplayCondition
+                distanceDisplayCondition : distanceDisplayCondition,
+                offset : offset
             };
         }
 
@@ -152,6 +169,7 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK, scratchColor);
+        var offset = OffsetGeometryInstanceAttribute.fromCartesian3(Property.getValueOrDefault(this._terrainOffsetProperty, time, defaultOffset, offsetScratch));
 
         return new GeometryInstance({
             id : entity,
@@ -159,9 +177,18 @@ define([
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
-                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time))
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(this._distanceDisplayConditionProperty.getValue(time)),
+                offset : offset
             }
         });
+    };
+
+    CorridorGeometryUpdater.prototype._computeCenter = function(entity, corridor, time, result) {
+        var positions = Property.getValueOrUndefined(corridor.positions, time);
+        if (!defined(positions) || positions.length === 0) {
+            return;
+        }
+        return Cartesian3.clone(positions[Math.floor(positions.length / 2.0)], result);
     };
 
     CorridorGeometryUpdater.prototype._isHidden = function(entity, corridor) {
@@ -203,10 +230,18 @@ define([
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.positions = corridor.positions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
         options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
         options.cornerType = defined(cornerType) ? cornerType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
+        if (extrudedHeight instanceof GeometryHeightProperty && extrudedHeight.getHeightReference(Iso8601.MINIMUM_VALUE) === HeightReference.CLAMP_TO_GROUND) {
+            scratchCorridorGeometry.setOptions(options);
+            options.extrudedHeight = GeometryHeightProperty.getMinimumTerrainValue(scratchCorridorGeometry.rectangle);
+            options.offsetAttribute = GeometryOffsetAttribute.TOP;
+        } else {
+            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.offsetAttribute = GeometryOffsetAttribute.ALL;
+        }
     };
 
     CorridorGeometryUpdater.DynamicGeometryUpdater = DynamicCorridorGeometryUpdater;
