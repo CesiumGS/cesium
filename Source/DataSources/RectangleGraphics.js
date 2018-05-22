@@ -212,7 +212,7 @@ define([
          * Gets or sets the {@link ClassificationType} Property specifying whether this rectangle will classify terrain, 3D Tiles, or both when on the ground.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
-         * @default ClassificationType.BOTH
+         * @default ClassificationType.TERRAIN
          */
         classificationType : createPropertyDescriptor('classificationType'),
 

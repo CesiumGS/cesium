@@ -542,7 +542,8 @@ defineSuite([
 
         primitive = new GroundPrimitive({
             geometryInstances : rectangleInstance,
-            asynchronous : false
+            asynchronous : false,
+            classificationType: ClassificationType.BOTH
         });
 
         scene.camera.setView({ destination : rectangle });
@@ -582,7 +583,8 @@ defineSuite([
 
         primitive = new GroundPrimitive({
             geometryInstances : rectangleInstance,
-            asynchronous : false
+            asynchronous : false,
+            classificationType: ClassificationType.BOTH
         });
 
         scene.camera.setView({ destination : rectangle });
