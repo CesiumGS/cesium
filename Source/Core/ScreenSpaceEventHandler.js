@@ -467,7 +467,7 @@ define([
             event.preventDefault();
         }
 
-        if (numberOfTouches === 2) {
+        if (numberOfTouches === 2 && !pinching) {
             // transitioning to pinch, trigger PINCH_START
             screenSpaceEventHandler._isPinching = true;
 
