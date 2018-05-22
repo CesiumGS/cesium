@@ -12,7 +12,6 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ClassificationType',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -33,7 +32,6 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
-        ClassificationType,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -84,7 +82,6 @@ defineSuite([
             0, 1
         ]));
         corridor.width = new ConstantProperty(1);
-        corridor.classificationType = ClassificationType.BOTH; // default TERRAIN
         var entity = new Entity();
         entity.corridor = corridor;
         return entity;

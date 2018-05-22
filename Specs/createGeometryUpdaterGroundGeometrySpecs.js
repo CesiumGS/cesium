@@ -159,6 +159,7 @@ define([
 
         it('dynamic updater on terrain propagates classification type', function() {
             var entity = createDynamicEntity();
+            entity[geometryPropertyName].classificationType = ClassificationType.BOTH;
 
             var updater = new Updater(entity, getScene());
             var primitives = new PrimitiveCollection();

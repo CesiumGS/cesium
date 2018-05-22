@@ -8,7 +8,6 @@ defineSuite([
         'DataSources/Entity',
         'DataSources/RectangleGraphics',
         'DataSources/SampledProperty',
-        'Scene/ClassificationType',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -25,7 +24,6 @@ defineSuite([
         Entity,
         RectangleGraphics,
         SampledProperty,
-        ClassificationType,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -63,7 +61,6 @@ defineSuite([
 
     function createBasicRectangleWithoutHeight() {
         var rectangle = new RectangleGraphics();
-        rectangle.classificationType = ClassificationType.BOTH; // default TERRAIN
         var entity = new Entity();
         entity.rectangle = rectangle;
         entity.rectangle.coordinates = new ConstantProperty(new Rectangle(0, 0, 1, 1));
