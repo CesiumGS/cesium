@@ -163,20 +163,6 @@ define([
         };
     }
 
-    function getAttributeTypeFromSemantic(draco, semantic) {
-        switch (semantic) {
-            case 'POSITION':
-                return draco.POSITION;
-            case 'NORMAL':
-                return draco.NORMAL;
-            case 'RGB':
-            case 'RGBA':
-                return draco.COLOR;
-            case 'BATCH_ID':
-                return draco.GENERIC;
-        }
-    }
-
     function decodePointCloud(parameters) {
         var dracoDecoder = new draco.Decoder();
 
@@ -203,17 +189,13 @@ define([
 
         var result = {};
 
-        var semantics = parameters.semantics;
-        var semanticsLength = semantics.length;
-        for (var i = 0; i < semanticsLength; ++i) {
-            var semantic = semantics[i];
-            var attributeType = getAttributeTypeFromSemantic(draco, semantic);
-            if (!defined(attributeType)) {
-                throw new RuntimeError('Error decoding draco point cloud: ' + semantic + ' is not a valid draco semantic');
+        var properties = parameters.properties;
+        for (var propertyName in properties) {
+            if (properties.hasOwnProperty(propertyName)) {
+                var attributeId = properties[propertyName];
+                var dracoAttribute = dracoDecoder.GetAttributeByUniqueId(dracoPointCloud, attributeId);
+                result[propertyName] = decodeAttribute(dracoPointCloud, dracoDecoder, dracoAttribute);
             }
-            var attributeId = dracoDecoder.GetAttributeId(dracoPointCloud, attributeType);
-            var dracoAttribute = dracoDecoder.GetAttribute(dracoPointCloud, attributeId);
-            result[semantic] = decodeAttribute(dracoPointCloud, dracoDecoder, dracoAttribute);
         }
 
         draco.destroy(dracoPointCloud);

@@ -125,7 +125,7 @@ define([
         this._pickId = undefined; // Only defined when batchTable is undefined
         this._isTranslucent = false;
         this._styleTranslucent = false;
-        this._constantColor = Color.clone(Color.WHITE);
+        this._constantColor = Color.clone(Color.DARKGRAY);
         this._rtcCenter = undefined;
         this._batchTable = undefined; // Used when feature table contains BATCH_ID semantic
 
@@ -368,131 +368,114 @@ define([
             content._rtcCenter = Cartesian3.unpack(rtcCenter);
         }
 
-        // Get the positions
         var positions;
-        var isQuantized = false;
-
-        if (defined(featureTableJson.POSITION)) {
-            positions = featureTable.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
-        } else if (defined(featureTableJson.POSITION_QUANTIZED)) {
-            positions = featureTable.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
-            isQuantized = true;
-
-            var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
-            if (!defined(quantizedVolumeScale)) {
-                throw new RuntimeError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
-            }
-            content._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
-
-            var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
-            if (!defined(quantizedVolumeOffset)) {
-                throw new RuntimeError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
-            }
-            content._quantizedVolumeOffset = Cartesian3.unpack(quantizedVolumeOffset);
-        }
-
-        // Get the colors
         var colors;
+        var normals;
+        var batchIds;
+
+        var hasPositions = false;
+        var hasColors = false;
+        var hasNormals = false;
+        var hasBatchIds = false;
+
+        var isQuantized = false;
         var isTranslucent = false;
         var isRGB565 = false;
-
-        if (defined(featureTableJson.RGBA)) {
-            colors = featureTable.getPropertyArray('RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
-            isTranslucent = true;
-        } else if (defined(featureTableJson.RGB)) {
-            colors = featureTable.getPropertyArray('RGB', ComponentDatatype.UNSIGNED_BYTE, 3);
-        } else if (defined(featureTableJson.RGB565)) {
-            colors = featureTable.getPropertyArray('RGB565', ComponentDatatype.UNSIGNED_SHORT, 1);
-            isRGB565 = true;
-        } else if (defined(featureTableJson.CONSTANT_RGBA)) {
-            var constantRGBA  = featureTable.getGlobalProperty('CONSTANT_RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
-            content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
-        } else {
-            // Use a default constant color
-            content._constantColor = Color.clone(Color.DARKGRAY, content._constantColor);
-        }
-
-        // Get the normals
-        var normals;
         var isOctEncoded16P = false;
-
-        if (defined(featureTableJson.NORMAL)) {
-            normals = featureTable.getPropertyArray('NORMAL', ComponentDatatype.FLOAT, 3);
-        } else if (defined(featureTableJson.NORMAL_OCT16P)) {
-            normals = featureTable.getPropertyArray('NORMAL_OCT16P', ComponentDatatype.UNSIGNED_BYTE, 2);
-            isOctEncoded16P = true;
-        }
-
-        // Get the batchIds and batch table. BATCH_ID does not need to be defined when the point cloud has per-point properties.
-        var batchIds;
-        if (defined(featureTableJson.BATCH_ID)) {
-            batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
-        }
-
-        var hasPositions = defined(positions);
-        var hasColors = defined(colors);
-        var hasNormals = defined(normals);
-        var hasBatchIds = defined(batchIds);
-
-        // Get the draco buffer and semantics
-        var draco = featureTableJson.DRACO;
-        var dracoBuffer;
-        var dracoSemantics;
         var isQuantizedDraco = false;
         var isOctEncodedDraco = false;
-        if (defined(draco)) {
-            dracoSemantics = draco.semantics;
-            var dracoByteOffset = draco.byteOffset;
-            var dracoByteLength = draco.byteLength;
-            if (!defined(dracoSemantics) || !defined(dracoByteOffset) || !defined(dracoByteLength)) {
-                throw new RuntimeError('DRACO.semantics, DRACO.byteOffset, and DRACO.byteLength must be defined');
-            }
 
-            var dracoHasPositions = (dracoSemantics.indexOf('POSITION') >= 0);
-            var dracoHasRGB = (dracoSemantics.indexOf('RGB') >= 0);
-            var dracoHasRGBA = (dracoSemantics.indexOf('RGBA') >= 0);
-            var dracoHasColors = (dracoHasRGB || dracoHasRGBA);
-            var dracoHasNormals = (dracoSemantics.indexOf('NORMAL') >= 0);
-            var dracoHasBatchIds = (dracoSemantics.indexOf('BATCH_ID') >= 0);
-            dracoBuffer = arraySlice(featureTableBinary, dracoByteOffset, dracoByteOffset + dracoByteLength);
+        var dracoBuffer;
+        var dracoFeatureTableProperties;
+        var dracoBatchTableProperties;
 
-            if (dracoHasPositions) {
-                isQuantized = false;
-                isQuantizedDraco = content._dequantizeInShader;
-                hasPositions = true;
-            }
-            if (dracoHasRGBA) {
-                isTranslucent = true;
-            } else if (dracoHasRGB) {
-                isTranslucent = false;
-            }
-            if (dracoHasColors) {
-                isRGB565 = false;
-                hasColors = true;
-            }
-            if (dracoHasNormals) {
-                isOctEncoded16P = false;
-                isOctEncodedDraco = content._dequantizeInShader;
-                hasNormals = true;
-            }
-            if (dracoHasBatchIds) {
-                hasBatchIds = true;
-            }
+        var featureTableDraco = defined(featureTableJson.extensions) ? featureTableJson.extensions['3DTILES_draco_point_compression'] : undefined;
+        var batchTableDraco = defined(batchTableJson.extensions) ? batchTableJson.extensions['3DTILES_draco_point_compression'] : undefined;
 
-            content._decodingState = DecodingState.NEEDS_DECODE;
+        if (defined(batchTableDraco)) {
+            dracoBatchTableProperties = batchTableDraco.properties;
         }
 
-        if (hasBatchIds) {
-            var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
-            if (!defined(batchLength)) {
-                throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
+        if (defined(featureTableDraco)) {
+            dracoFeatureTableProperties = featureTableDraco.properties;
+            var dracoByteOffset = featureTableDraco.byteOffset;
+            var dracoByteLength = featureTableDraco.byteLength;
+            if (!defined(dracoFeatureTableProperties) || !defined(dracoByteOffset) || !defined(dracoByteLength)) {
+                throw new RuntimeError('Draco properties, byteOffset, and byteLength must be defined');
+            }
+            dracoBuffer = arraySlice(featureTableBinary, dracoByteOffset, dracoByteOffset + dracoByteLength);
+            hasPositions = defined(dracoFeatureTableProperties.POSITION);
+            hasColors = defined(dracoFeatureTableProperties.RGB) || defined(dracoFeatureTableProperties.RGBA);
+            hasNormals = defined(dracoFeatureTableProperties.NORMAL);
+            hasBatchIds = defined(dracoFeatureTableProperties.BATCH_ID);
+            isTranslucent = defined(dracoFeatureTableProperties.RGBA);
+            isQuantizedDraco = content._dequantizeInShader;
+            isOctEncodedDraco = content._dequantizeInShader;
+            content._decodingState = DecodingState.NEEDS_DECODE;
+        } else {
+            if (defined(featureTableJson.POSITION)) {
+                positions = featureTable.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
+            } else if (defined(featureTableJson.POSITION_QUANTIZED)) {
+                positions = featureTable.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
+                isQuantized = true;
+
+                var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
+                if (!defined(quantizedVolumeScale)) {
+                    throw new RuntimeError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
+                }
+                content._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
+
+                var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
+                if (!defined(quantizedVolumeOffset)) {
+                    throw new RuntimeError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
+                }
+                content._quantizedVolumeOffset = Cartesian3.unpack(quantizedVolumeOffset);
             }
 
-            if (defined(batchTableBinary)) {
-                // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-                batchTableBinary = new Uint8Array(batchTableBinary);
+            if (defined(featureTableJson.RGBA)) {
+                colors = featureTable.getPropertyArray('RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
+                isTranslucent = true;
+            } else if (defined(featureTableJson.RGB)) {
+                colors = featureTable.getPropertyArray('RGB', ComponentDatatype.UNSIGNED_BYTE, 3);
+            } else if (defined(featureTableJson.RGB565)) {
+                colors = featureTable.getPropertyArray('RGB565', ComponentDatatype.UNSIGNED_SHORT, 1);
+                isRGB565 = true;
             }
-            content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
+
+            if (defined(featureTableJson.NORMAL)) {
+                normals = featureTable.getPropertyArray('NORMAL', ComponentDatatype.FLOAT, 3);
+            } else if (defined(featureTableJson.NORMAL_OCT16P)) {
+                normals = featureTable.getPropertyArray('NORMAL_OCT16P', ComponentDatatype.UNSIGNED_BYTE, 2);
+                isOctEncoded16P = true;
+            }
+
+            // Get the batchIds and batch table. BATCH_ID does not need to be defined when the point cloud has per-point properties.
+            if (defined(featureTableJson.BATCH_ID)) {
+                batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
+            }
+
+            if (hasBatchIds) {
+                var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
+                if (!defined(batchLength)) {
+                    throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
+                }
+
+                if (defined(batchTableBinary)) {
+                    // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+                    batchTableBinary = new Uint8Array(batchTableBinary);
+                }
+                content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
+            }
+
+            hasPositions = defined(positions);
+            hasColors = defined(colors);
+            hasNormals = defined(normals);
+            hasBatchIds = defined(batchIds);
+        }
+
+        if (defined(featureTableJson.CONSTANT_RGBA)) {
+            var constantRGBA = featureTable.getGlobalProperty('CONSTANT_RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
+            content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
         }
 
         if (!hasPositions) {
@@ -501,21 +484,8 @@ define([
 
         // If points are not batched and there are per-point properties, use these properties for styling purposes
         var styleableProperties;
-        if (!hasBatchIds && defined(batchTableBinary)) {
+        if (!hasBatchIds && !defined(batchTableDraco) && defined(batchTableBinary)) {
             styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(pointsLength, batchTableJson, batchTableBinary);
-
-            // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
-            for (var name in styleableProperties) {
-                if (styleableProperties.hasOwnProperty(name)) {
-                    var property = styleableProperties[name];
-                    var typedArray = property.typedArray;
-                    var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
-                    if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
-                        oneTimeWarning('Cast pnts property to floats', 'Point cloud property "' + name + '" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.');
-                        property.typedArray = new Float32Array(typedArray);
-                    }
-                }
-            }
         }
 
         content._parsedContent = {
@@ -526,7 +496,9 @@ define([
             styleableProperties : styleableProperties,
             draco : {
                 buffer : dracoBuffer,
-                semantics : dracoSemantics,
+                featureTableProperties : dracoFeatureTableProperties,
+                batchTableProperties : dracoBatchTableProperties,
+                properties : combine(dracoFeatureTableProperties, dracoBatchTableProperties),
                 dequantizeInShader : content._dequantizeInShader
             }
         };
@@ -548,6 +520,21 @@ define([
         // lead to underattenuation.
         var sphereVolume = content._tile.contentBoundingVolume.boundingSphere.volume();
         content._baseResolutionApproximation = CesiumMath.cbrt(sphereVolume / pointsLength);
+    }
+
+    function prepareStyleableProperties(styleableProperties) {
+        // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
+        for (var name in styleableProperties) {
+            if (styleableProperties.hasOwnProperty(name)) {
+                var property = styleableProperties[name];
+                var typedArray = property.typedArray;
+                var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
+                if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
+                    oneTimeWarning('Cast pnts property to floats', 'Point cloud property "' + name + '" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.');
+                    property.typedArray = new Float32Array(typedArray);
+                }
+            }
+        }
     }
 
     var scratchPointSizeAndTilesetTimeAndGeometricErrorAndDepthMultiplier = new Cartesian4();
@@ -589,6 +576,7 @@ define([
         content._styleableShaderAttributes = styleableShaderAttributes;
 
         if (hasStyleableProperties) {
+            prepareStyleableProperties(styleableProperties);
             var attributeLocation = numberOfAttributes;
 
             for (var name in styleableProperties) {
@@ -1382,19 +1370,31 @@ define([
                     var decodedRgba = defined(result.RGBA) ? result.RGBA.array : undefined;
                     var decodedNormals = defined(result.NORMAL) ? result.NORMAL.array : undefined;
                     var decodedBatchIds = defined(result.BATCH_ID) ? result.BATCH_ID.array : undefined;
-                    parsedContent.positions = defaultValue(decodedPositions, parsedContent.positions);
-                    parsedContent.colors = defaultValue(defaultValue(decodedRgba, decodedRgb), parsedContent.colors);
-                    parsedContent.normals = defaultValue(decodedNormals, parsedContent.normals);
-                    parsedContent.batchIds = defaultValue(decodedBatchIds, parsedContent.batchIds);
-                    if (content._isQuantizedDraco) {
+                    if (defined(decodedPositions) && content._isQuantizedDraco) {
                         var quantization = result.POSITION.data.quantization;
                         var scale = quantization.range / (1 << quantization.quantizationBits);
                         content._quantizedVolumeScale = Cartesian3.fromElements(scale, scale, scale);
                         content._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
                     }
-                    if (content._isOctEncodedDraco) {
+                    if (defined(decodedNormals) && content._isOctEncodedDraco) {
                         content._octEncodedRange = (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
                     }
+                    var styleableProperties = {};
+                    var batchTableProperties = draco.batchTableProperties;
+                    for (var name in batchTableProperties) {
+                        if (batchTableProperties.hasOwnProperty(name)) {
+                            var property = result[name];
+                            styleableProperties[name] = {
+                                typedArray : property.array,
+                                componentCount : property.data.componentsPerAttribute
+                            };
+                        }
+                    }
+                    parsedContent.positions = decodedPositions;
+                    parsedContent.colors = defaultValue(decodedRgba, decodedRgb);
+                    parsedContent.normals = decodedNormals;
+                    parsedContent.batchIds = decodedBatchIds;
+                    parsedContent.styleableProperties = styleableProperties;
                 }).otherwise(function(error) {
                     content._decodingState = DecodingState.FAILED;
                     content._readyPromise.reject(error);
