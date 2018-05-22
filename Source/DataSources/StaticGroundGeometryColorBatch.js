@@ -72,7 +72,9 @@ define([
                 this.subscriptions.remove(id);
                 this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
 
     var scratchArray = new Array(4);
