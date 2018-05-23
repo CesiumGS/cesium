@@ -391,7 +391,7 @@ define([
         var dracoBatchTableProperties;
 
         var featureTableDraco = defined(featureTableJson.extensions) ? featureTableJson.extensions['3DTILES_draco_point_compression'] : undefined;
-        var batchTableDraco = defined(batchTableJson.extensions) ? batchTableJson.extensions['3DTILES_draco_point_compression'] : undefined;
+        var batchTableDraco = (defined(batchTableJson) && defined(batchTableJson.extensions)) ? batchTableJson.extensions['3DTILES_draco_point_compression'] : undefined;
 
         if (defined(batchTableDraco)) {
             dracoBatchTableProperties = batchTableDraco.properties;
