@@ -123,7 +123,7 @@ define([
         if (width !== 0 && height !== 0) {
             var frustum = widget._scene.camera.frustum;
             if (defined(frustum.aspectRatio)) {
-                frustum.aspectRatio = width / height;
+                frustum.aspectRatio = widget._scene._useWebVR  ?  (width >> 1) / height  :  width / height;
             } else {
                 frustum.top = frustum.right * (height / width);
                 frustum.bottom = -frustum.top;
