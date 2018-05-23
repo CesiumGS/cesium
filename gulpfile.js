@@ -61,7 +61,6 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
                    '!Source/ThirdParty/Workers/**',
-                   '!Source/ThirdParty/draco-decoder-gltf.js',
                    '!Source/ThirdParty/pako_inflate.js',
                    '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
@@ -914,7 +913,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse, { nodir: true }).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1261,7 +1260,8 @@ function buildCesiumViewer() {
                       'Build/Cesium/Widgets/**',
                       '!Build/Cesium/Widgets/**/*.css'],
                 {
-                    base : 'Build/Cesium'
+                    base : 'Build/Cesium',
+                    nodir : true
                 }),
 
             gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {

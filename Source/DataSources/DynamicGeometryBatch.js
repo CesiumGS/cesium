@@ -1,42 +1,24 @@
 define([
         '../Core/AssociativeArray',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/Primitive',
-        './BoundingSphereState',
-        './ColorMaterialProperty',
-        './MaterialProperty',
-        './Property'
+        './BoundingSphereState'
     ], function(
         AssociativeArray,
-        Color,
-        ColorGeometryInstanceAttribute,
         defined,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        Primitive,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        MaterialProperty,
-        Property) {
+        BoundingSphereState) {
     'use strict';
 
     /**
      * @private
      */
-    function DynamicGeometryBatch(primitives, groundPrimitives) {
+    function DynamicGeometryBatch(primitives, orderedGroundPrimitives) {
         this._primitives = primitives;
-        this._groundPrimitives = groundPrimitives;
+        this._orderedGroundPrimitives = orderedGroundPrimitives;
         this._dynamicUpdaters = new AssociativeArray();
     }
 
     DynamicGeometryBatch.prototype.add = function(time, updater) {
-        this._dynamicUpdaters.set(updater.id, updater.createDynamicUpdater(this._primitives, this._groundPrimitives));
+        this._dynamicUpdaters.set(updater.id, updater.createDynamicUpdater(this._primitives, this._orderedGroundPrimitives));
     };
 
     DynamicGeometryBatch.prototype.remove = function(updater) {

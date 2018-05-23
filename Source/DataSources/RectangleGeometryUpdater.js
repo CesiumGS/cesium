@@ -16,6 +16,7 @@ define([
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './GroundGeometryUpdater',
         './Property'
     ], function(
         Check,
@@ -35,6 +36,7 @@ define([
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        GroundGeometryUpdater,
         Property) {
     'use strict';
 
@@ -61,17 +63,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function RectangleGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, {
+        GroundGeometryUpdater.call(this, {
             entity : entity,
             scene : scene,
             geometryOptions : new RectangleGeometryOptions(entity),
             geometryPropertyName : 'rectangle',
             observedPropertyNames : ['availability', 'rectangle']
         });
+
+        this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     }
 
     if (defined(Object.create)) {
-        RectangleGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        RectangleGeometryUpdater.prototype = Object.create(GroundGeometryUpdater.prototype);
         RectangleGeometryUpdater.prototype.constructor = RectangleGeometryUpdater;
     }
 
@@ -167,9 +171,7 @@ define([
     };
 
     RectangleGeometryUpdater.prototype._isOnTerrain = function(entity, rectangle) {
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-
-        return this._fillEnabled && !defined(rectangle.height) && !defined(rectangle.extrudedHeight) && isColorMaterial && GroundPrimitive.isSupported(this._scene);
+        return this._fillEnabled && !defined(rectangle.height) && !defined(rectangle.extrudedHeight) && GroundPrimitive.isSupported(this._scene);
     };
 
     RectangleGeometryUpdater.prototype._isDynamic = function(entity, rectangle) {
@@ -180,6 +182,7 @@ define([
                !Property.isConstant(rectangle.stRotation) || //
                !Property.isConstant(rectangle.rotation) || //
                !Property.isConstant(rectangle.outlineWidth) || //
+               !Property.isConstant(rectangle.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 

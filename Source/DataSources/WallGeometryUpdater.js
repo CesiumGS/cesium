@@ -64,6 +64,8 @@ define([
             geometryPropertyName : 'wall',
             observedPropertyNames : ['availability', 'wall']
         });
+
+        this._onEntityPropertyChanged(entity, 'wall', entity.wall, undefined);
     }
 
     if (defined(Object.create)) {

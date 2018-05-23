@@ -18,6 +18,7 @@ define([
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './GroundGeometryUpdater',
         './Property'
     ], function(
         Check,
@@ -39,6 +40,7 @@ define([
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        GroundGeometryUpdater,
         Property) {
     'use strict';
 
@@ -67,17 +69,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function PolygonGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, {
+        GroundGeometryUpdater.call(this, {
             entity : entity,
             scene : scene,
             geometryOptions : new PolygonGeometryOptions(entity),
             geometryPropertyName : 'polygon',
             observedPropertyNames : ['availability', 'polygon']
         });
+
+        this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     }
 
     if (defined(Object.create)) {
-        PolygonGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        PolygonGeometryUpdater.prototype = Object.create(GroundGeometryUpdater.prototype);
         PolygonGeometryUpdater.prototype.constructor = PolygonGeometryUpdater;
     }
 
@@ -173,10 +177,9 @@ define([
     };
 
     PolygonGeometryUpdater.prototype._isOnTerrain = function(entity, polygon) {
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
         var perPositionHeightProperty = polygon.perPositionHeight;
         var perPositionHeightEnabled = defined(perPositionHeightProperty) && (perPositionHeightProperty.isConstant ? perPositionHeightProperty.getValue(Iso8601.MINIMUM_VALUE) : true);
-        return this._fillEnabled && !defined(polygon.height) && !defined(polygon.extrudedHeight) && isColorMaterial &&
+        return this._fillEnabled && !defined(polygon.height) && !defined(polygon.extrudedHeight) &&
                !perPositionHeightEnabled && GroundPrimitive.isSupported(this._scene);
     };
 
@@ -190,6 +193,7 @@ define([
                !Property.isConstant(polygon.perPositionHeight) || //
                !Property.isConstant(polygon.closeTop) || //
                !Property.isConstant(polygon.closeBottom) || //
+               !Property.isConstant(polygon.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 

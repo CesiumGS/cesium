@@ -1,24 +1,21 @@
 defineSuite([
         'Core/TaskProcessor',
         'require',
-        'ThirdParty/when'
+        'Core/FeatureDetection',
+        'ThirdParty/when',
+        'Specs/absolutize'
     ], function(
         TaskProcessor,
         require,
-        when) {
+        FeatureDetection,
+        when,
+        absolutize) {
     'use strict';
 
     var taskProcessor;
 
     beforeEach(function() {
         TaskProcessor._workerModulePrefix = '../Specs/TestWorkers/';
-
-        function absolutize(url) {
-            var a = document.createElement('a');
-            a.href = url;
-            a.href = a.href; // IE only absolutizes href on get, not set
-            return a.href;
-        }
 
         TaskProcessor._loaderConfig = {
             baseUrl : absolutize(require.toUrl('Source'))
@@ -168,5 +165,56 @@ defineSuite([
         }).always(function () {
             removeListenerCallback();
         });
+    });
+
+    it('can load and compile web assembly module', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        var promise = taskProcessor.initWebAssemblyModule({
+            modulePath : 'TestWasm/testWasmWrapper',
+            wasmBinaryFile : binaryUrl,
+            fallbackModulePath : 'TestWasm/testWasmFallback'
+        });
+
+        return promise.then(function(result) {
+            expect(result).toBeDefined();
+            if (FeatureDetection.supportsWebAssembly()) {
+                expect(result.modulePath).toMatch(/TestWasm\/testWasmWrapper/);
+                expect(result.wasmBinary).toBeDefined();
+            }
+        });
+    });
+
+    it('uses a backup module if web assembly is not supported', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+
+        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
+
+        var promise = taskProcessor.initWebAssemblyModule({
+            modulePath : 'TestWasm/testWasmWrapper',
+            wasmBinaryFile : binaryUrl,
+            fallbackModulePath : 'TestWasm/testWasmFallback'
+        });
+
+        return promise.then(function(result) {
+            expect(result).toBeDefined();
+            expect(result.modulePath).toMatch(/TestWasm\/testWasmFallback/);
+            expect(result.wasmBinary).not.toBeDefined();
+        });
+    });
+
+    it('throws runtime error if web assembly is not supported and no backup is provided', function() {
+        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
+        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+
+        spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
+
+        expect(function () {
+            taskProcessor.initWebAssemblyModule({
+                modulePath : 'TestWasm/testWasmWrapper',
+                wasmBinaryFile : binaryUrl
+            });
+        }).toThrowRuntimeError();
     });
 });

@@ -14,6 +14,7 @@ define([
         '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './Entity',
         './Property'
     ], function(
         Check,
@@ -31,6 +32,7 @@ define([
         ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
+        Entity,
         Property) {
     'use strict';
 
@@ -41,11 +43,10 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
+    var defaultClassificationType = new ConstantProperty(ClassificationType.TERRAIN);
 
     /**
-     * A {@link GeometryUpdater} for boxes.
-     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
+     * An abstract class for updating geometry entites.
      * @alias GeometryUpdater
      * @constructor
      *
@@ -88,8 +89,7 @@ define([
         this._geometryPropertyName = geometryPropertyName;
         this._id = geometryPropertyName + '-' + entity.id;
         this._observedPropertyNames = options.observedPropertyNames;
-
-        this._onEntityPropertyChanged(entity, geometryPropertyName, entity[geometryPropertyName], undefined);
+        this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
     }
 
     defineProperties(GeometryUpdater.prototype, {
@@ -401,8 +401,8 @@ define([
     /**
      * @param {Entity} entity
      * @param {String} propertyName
-     * @param {Object} newValue
-     * @param {Object} oldValue
+     * @param {*} newValue
+     * @param {*} oldValue
      * @private
      */
     GeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
@@ -460,7 +460,9 @@ define([
 
         this._fillEnabled = fillEnabled;
 
-        var onTerrain = this._isOnTerrain(entity, geometry);
+        var onTerrain = this._isOnTerrain(entity, geometry) &&
+            (this._supportsMaterialsforEntitiesOnTerrain || this._materialProperty instanceof ColorMaterialProperty);
+
         if (outlineEnabled && onTerrain) {
             oneTimeWarning(oneTimeWarning.geometryOutlines);
             outlineEnabled = false;

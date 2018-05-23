@@ -1,27 +1,110 @@
 Change Log
 ==========
 
-### 1.45 - 2018-05-01
+### 1.46 - 2018-06-01
 
 ##### Breaking Changes :mega:
-* `Camera.distanceToBoundingSphere` now returns the signed distance to the bounding sphere. Positive values indicate that the bounding sphere is in the positive half-plane of the camera position and view direction while a negative value indicates it is in the negative half-plane.
+* Removed `Scene.copyGlobeDepth`. Globe depth will now be copied by default when supported. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+* The default `classificationType` for `GroundPrimitive`, `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics` is now `ClassificationType.TERRAIN`.  If you wish the geometry to color both terrain and 3D tiles, pass in the option `classificationType: Cesium.ClassificationType.BOTH`.
+
+##### Deprecated :hourglass_flowing_sand:
+* The `Scene.fxaa` property has been deprecated and will be removed in Cesium 1.47. Use `Scene.postProcessStages.fxaa.enabled`.
 
 ##### Additions :tada:
-* Added option `logDepthBuffer` to `Viewer`. With this option there is typically a single frustum using logarithmic depth rendered. This increases performance by issuing less draw calls to the GPU and helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
+* Added a post-processing framework. [#5615](https://github.com/AnalyticalGraphicsInc/cesium/pull/5615)
+   * Added `Scene.postProcessStages` which is a collection of post-process stages to be run in order.
+      * Has a built-in `ambientOcclusion` property which will apply screen space ambient occlusion to the scene and run before all stages.
+      * Has a built-in `bloom` property which applies a bloom filter to the scene before all other stages but after the ambient occlusion stage.
+      * Has a built-in `fxaa` property which applies Fast Approximate Anti-aliasing (FXAA) to the scene after all other stages.
+   * Added `PostProcessStageLibrary` which contains several built-in stages that can be added to the collection.
+   * Added `PostProcessStage` which takes a fragment shader that processes the color and depth texture from the stage run before it.
+   * Added `PostProcessStageComposite` for multi-stage post-processes like depth of field.
+   * Added a new Sandcastle label `Post Processing` to showcase the different built-in post-process stages.
+ * Added `Rectangle.equalsEpsilon` for comparing the equality of two rectangles [#6533](https://github.com/AnalyticalGraphicsInc/cesium/pull/6533)
+ * Added `zIndex` for ground geometry, including corridor, ellipse, polygon and rectangle entities. [#6362](https://github.com/AnalyticalGraphicsInc/cesium/pull/6362)
+* Added support for materials on terrain entities (entities with unspecified `height`) and `GroundPrimitives`. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+  * Only available for `ClassificationType.TERRAIN` at this time. Adding a material to a terrain `Entity` will cause it to behave as if it is `ClassificationType.TERRAIN`.
+  * Requires depth texture support (`WEBGL_depth_texture` or `WEBKIT_WEBGL_depth_texture`), so materials on terrain entities and `GroundPrimitives` are not supported in Internet Explorer.
+  * Best suited for notational patterns and not intended for precisely mapping textures to terrain - for that use case, use `SingleTileImageryProvider`.
+* Added `GroundPrimitive.supportsMaterials` and `Entity.supportsMaterialsforEntitiesOnTerrain`, both of which can be used to check if materials on terrain entities and `GroundPrimitives` is supported. [#6393](https://github.com/AnalyticalGraphicsInc/cesium/pull/6393)
+
+##### Fixes :wrench:
+* Fixed a bug causing custom TilingScheme classes to not be able to use a GeographicProjection. [#6524](https://github.com/AnalyticalGraphicsInc/cesium/pull/6524)
+* Fixed incorrect 3D Tiles statistics when a tile fails during processing. [#6558](https://github.com/AnalyticalGraphicsInc/cesium/pull/6558)
+* Fixed race condition causing intermittent crash when changing geometry show value [#3061](https://github.com/AnalyticalGraphicsInc/cesium/issues/3061)
+* `ProviderViewModel`s with no category are displayed in an untitled group in `BaseLayerPicker` instead of being labeled as `'Other'` [#6574](https://github.com/AnalyticalGraphicsInc/cesium/pull/6574)
+* Added a workaround for clipping planes causing a picking shader compilation failure for gltf models and 3D Tilesets in Internet Explorer [#6575](https://github.com/AnalyticalGraphicsInc/cesium/issues/6575)
+* Allowed Bing Maps servers with a subpath (instead of being at the root) to work correctly. [#6597](https://github.com/AnalyticalGraphicsInc/cesium/pull/6597)
+* Fixed polygon outline when using `perPositionHeight` and `extrudedHeight`. [#6595](https://github.com/AnalyticalGraphicsInc/cesium/issues/6595)
+* Fixed broken links in documentation of `createTileMapServiceImageryProvider`. [#5818](https://github.com/AnalyticalGraphicsInc/cesium/issues/5818)
+
+### 1.45 - 2018-05-01
+
+##### Major Announcements :loudspeaker:
+
+* We've launched Cesium ion! Read all about it in our [blog post](https://cesium.com/blog/2018/05/01/get-your-cesium-ion-community-account/).
+* Cesium now uses ion services by default for base imagery, terrain, and geocoding. A demo key is provided, but to use them in your own apps you must [sign up](https://cesium.com/ion/signup) for a free ion Commmunity account.
+
+##### Breaking Changes :mega:
+* `ClippingPlaneCollection` now uses `ClippingPlane` objects instead of `Plane` objects. [#6498](https://github.com/AnalyticalGraphicsInc/cesium/pull/6498)
+* Cesium no longer ships with a demo Bing Maps API key.
+* `BingMapsImageryProvider` is no longer the default base imagery layer. (Bing imagery itself is still the default, however it is provided through Cesium ion)
+* `BingMapsGeocoderService` is no longer the default geocoding service.
+* If you wish to continue to use your own Bing API key for imagery and geocoding, you can go back to the old default behavior by constructing the Viewer as follows:
+    ```javascript
+    Cesium.BingMapsApi.defaultKey = 'yourBingKey';
+    var viewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider : new Cesium.BingMapsImageryProvider({
+            url : 'https://dev.virtualearth.net'
+        }),
+        geocoder : [
+                new Cesium.CartographicGeocoderService(),
+                new Cesium.BingMapsGeocoderService()
+        ]
+    });
+    ```
+
+##### Deprecated :hourglass_flowing_sand:
+* `Particle.size`, `ParticleSystem.rate`, `ParticleSystem.lifeTime`, `ParticleSystem.life`, `ParticleSystem.minimumLife`, and `ParticleSystem.maximumLife` have been renamed to `Particle.imageSize`, `ParticleSystem.emissionRate`, `ParticleSystem.lifetime`, `ParticleSystem.particleLife`, `ParticleSystem.minimumParticleLife`, and `ParticleSystem.maximumParticleLife`. Use of the `size`, `rate`, `lifeTime`, `life`, `minimumLife`, and `maximumLife` parameters is deprecated and will be removed in Cesium 1.46.
+* `ParticleSystem.forces` array has been switched out for singular function `ParticleSystems.updateCallback`. Use of the `forces` parameter is deprecated and will be removed in Cesium 1.46.
+* Any width and height variables in `ParticleSystem` will no longer be individual components. `ParticleSystem.minimumWidth` and `ParticleSystem.minimumHeight` will now be `ParticleSystem.minimumImageSize`, `ParticleSystem.maximumWidth` and `ParticleSystem.maximumHeight` will now be `ParticleSystem.maximumImageSize`, and `ParticleSystem.width` and `ParticleSystem.height` will now be `ParticleSystem.imageSize`. Use of the `minimumWidth`, `minimumHeight`, `maximumWidth`, `maximumHeight`, `width`, and `height` parameters is deprecated and will be removed in Cesium 1.46.
+
+##### Additions :tada:
+* Added option `logarithmicDepthBuffer` to `Scene`. With this option there is typically a single frustum using logarithmic depth rendered. This increases performance by issuing less draw calls to the GPU and helps to avoid artifacts on the connection of two frustums. [#5851](https://github.com/AnalyticalGraphicsInc/cesium/pull/5851)
 * When a log depth buffer is supported, the frustum near and far planes default to `0.1` and `1e10` respectively.
+* Added `IonGeocoderService` and made it the default geocoding service for the `Geocoder` widget.
+* Added `createWorldImagery` which provides Bing Maps imagery via a Cesium ion account.
+* Added `PeliasGeocoderService`, which provides geocoding via a [Pelias](https://pelias.io) server.
+* Added the ability for `BaseLayerPicker` to group layers by category. `ProviderViewModel.category` was also added to support this feature.
 * Added `Math.log2` to compute the base 2 logarithm of a number.
+* Added `GeocodeType` enum and use it as an optional parameter to all `GeocoderService` instances to differentiate between autocomplete and search requests.
+* Added `initWebAssemblyModule` function to `TaskProcessor` to load a Web Assembly module in a web worker. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
+* Added `supportsWebAssembly` function to `FeatureDetection` to check if a browser supports loading Web Assembly modules. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
+* Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
+* Added ability to invoke `sampleTerrain` from node.js to enable offline terrain sampling
+* Added more ParticleSystem Sandcastle examples for rocket and comet tails and weather. [#6375](https://github.com/AnalyticalGraphicsInc/cesium/pull/6375)
+* Added color and scale attributes to the `ParticleSystem` class constructor. When defined the variables override startColor and endColor and startScale and endScale. [#6429](https://github.com/AnalyticalGraphicsInc/cesium/pull/6429)
 
 ##### Fixes :wrench:
 * Fixed bugs in `TimeIntervalCollection.removeInterval`. [#6418](https://github.com/AnalyticalGraphicsInc/cesium/pull/6418).
 * Fixed glTF support to handle meshes with and without tangent vectors, and with/without morph targets, sharing one material. [#6421](https://github.com/AnalyticalGraphicsInc/cesium/pull/6421)
 * Fixed glTF support to handle skinned meshes when no skin is supplied. [#6061](https://github.com/AnalyticalGraphicsInc/cesium/issues/6061)
+* Updated glTF 2.0 PBR shader to have brighter lighting. [#6430](https://github.com/AnalyticalGraphicsInc/cesium/pull/6430)
 * Allow loadWithXhr to work with string URLs in a web worker.
-* `GroundPrimitive`s and `ClassificationPrimitive`s will become ready when `show` is `false`. [#6428](https://github.com/AnalyticalGraphicsInc/cesium/pull/6428) 
+* Updated to Draco 1.3.0 and implemented faster loading of Draco compressed glTF assets in browsers that support Web Assembly. [#6420](https://github.com/AnalyticalGraphicsInc/cesium/pull/6420)
+* `GroundPrimitive`s and `ClassificationPrimitive`s will become ready when `show` is `false`. [#6428](https://github.com/AnalyticalGraphicsInc/cesium/pull/6428)
 * Fix Firefox WebGL console warnings. [#5912](https://github.com/AnalyticalGraphicsInc/cesium/issues/5912)
 * Fix parsing Cesium.js in older browsers that do not support all TypedArray types. [#6396](https://github.com/AnalyticalGraphicsInc/cesium/pull/6396)
-
-##### Additions :tada:
-* Improved `MapboxImageryProvider` performance by 300% via `tiles.mapbox.com` subdomain switching. [#6426](https://github.com/AnalyticalGraphicsInc/cesium/issues/6426)
+* Fixed a bug causing crashes when setting colors on un-pickable models. [$6442](https://github.com/AnalyticalGraphicsInc/cesium/issues/6442)
+* Fix flicker when adding, removing, or modifying entities. [#3945](https://github.com/AnalyticalGraphicsInc/cesium/issues/3945)
+* Fixed crash bug in PolylineCollection when a polyline was updated and removed at the same time. [#6455](https://github.com/AnalyticalGraphicsInc/cesium/pull/6455)
+* Fixed crash when animating a glTF model with a single keyframe. [#6422](https://github.com/AnalyticalGraphicsInc/cesium/pull/6422)
+* Fixed Imagery Layers Texture Filters Sandcastle example. [#6472](https://github.com/AnalyticalGraphicsInc/cesium/pull/6472).
+* Fixed a bug causing Cesium 3D Tilesets to not clip properly when tiles were unloaded and reloaded. [#6484](https://github.com/AnalyticalGraphicsInc/cesium/issues/6484)
+* Fixed `TimeInterval` so now it throws if `fromIso8601` is given an ISO 8601 string with improper formatting. [#6164](https://github.com/AnalyticalGraphicsInc/cesium/issues/6164)
+* Improved rendering of glTF models that don't contain normals with a temporary unlit shader workaround. [#6501](https://github.com/AnalyticalGraphicsInc/cesium/pull/6501)
+* Fixed rendering of glTF models with emissive-only materials. [#6501](https://github.com/AnalyticalGraphicsInc/cesium/pull/6501)
+* Fixed a bug in shader modification for glTF 1.0 quantized attributes and Draco quantized attributes. [#6523](https://github.com/AnalyticalGraphicsInc/cesium/pull/6523)
 
 ### 1.44 - 2018-04-02
 
