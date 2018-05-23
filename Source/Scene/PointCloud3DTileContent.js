@@ -455,23 +455,14 @@ define([
                 batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
             }
 
-            if (hasBatchIds) {
-                var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
-                if (!defined(batchLength)) {
-                    throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
-                }
-
-                if (defined(batchTableBinary)) {
-                    // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-                    batchTableBinary = new Uint8Array(batchTableBinary);
-                }
-                content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
-            }
-
             hasPositions = defined(positions);
             hasColors = defined(colors);
             hasNormals = defined(normals);
             hasBatchIds = defined(batchIds);
+        }
+
+        if (!hasPositions) {
+            throw new RuntimeError('Either POSITION or POSITION_QUANTIZED must be defined.');
         }
 
         if (defined(featureTableJson.CONSTANT_RGBA)) {
@@ -479,8 +470,17 @@ define([
             content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
         }
 
-        if (!hasPositions) {
-            throw new RuntimeError('Either POSITION or POSITION_QUANTIZED must be defined.');
+        if (hasBatchIds) {
+            var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
+            if (!defined(batchLength)) {
+                throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
+            }
+
+            if (defined(batchTableBinary)) {
+                // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+                batchTableBinary = new Uint8Array(batchTableBinary);
+            }
+            content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
         }
 
         // If points are not batched and there are per-point properties, use these properties for styling purposes
