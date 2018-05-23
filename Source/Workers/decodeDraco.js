@@ -40,8 +40,8 @@ define([
     }
 
     function decodeQuantizedDracoTypedArray(dracoGeometry, dracoDecoder, dracoAttribute, quantization, vertexArrayLength) {
-        var vertexArray = new Uint16Array(vertexArrayLength);
-        var attributeData = new draco.DracoUInt16Array();
+        var vertexArray;
+        var attributeData;
         if (quantization.quantizationBits <= 8) {
             attributeData = new draco.DracoUInt8Array();
             vertexArray = new Uint8Array(vertexArrayLength);

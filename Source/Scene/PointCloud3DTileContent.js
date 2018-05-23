@@ -143,6 +143,7 @@ define([
         this._dequantizeInShader = true;
         this._isQuantizedDraco = false;
         this._isOctEncodedDraco = false;
+        this._quantizedRange = 0.0;
         this._octEncodedRange = 0.0;
 
         // Use per-point normals to hide back-facing points.
@@ -561,6 +562,7 @@ define([
         var isQuantizedDraco = content._isQuantizedDraco;
         var isOctEncoded16P = content._isOctEncoded16P;
         var isOctEncodedDraco = content._isOctEncodedDraco;
+        var quantizedRange = content._quantizedRange;
         var octEncodedRange = content._octEncodedRange;
         var isRGB565 = content._isRGB565;
         var isTranslucent = content._isTranslucent;
@@ -570,6 +572,10 @@ define([
 
         var batchTable = content._batchTable;
         var hasBatchTable = defined(batchTable);
+
+        var componentsPerAttribute;
+        var componentDatatype;
+        var normalize;
 
         var styleableVertexAttributes = [];
         var styleableShaderAttributes = {};
@@ -583,8 +589,8 @@ define([
                 if (styleableProperties.hasOwnProperty(name)) {
                     var property = styleableProperties[name];
                     var typedArray = property.typedArray;
-                    var componentCount = property.componentCount;
-                    var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
+                    componentsPerAttribute = property.componentCount;
+                    componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
                     var vertexBuffer = Buffer.createVertexBuffer({
                         context : context,
@@ -597,7 +603,7 @@ define([
                     var vertexAttribute = {
                         index : attributeLocation,
                         vertexBuffer : vertexBuffer,
-                        componentsPerAttribute : componentCount,
+                        componentsPerAttribute : componentsPerAttribute,
                         componentDatatype : componentDatatype,
                         normalize : false,
                         offsetInBytes : 0,
@@ -607,7 +613,7 @@ define([
                     styleableVertexAttributes.push(vertexAttribute);
                     styleableShaderAttributes[name] = {
                         location : attributeLocation,
-                        componentCount : componentCount
+                        componentCount : componentsPerAttribute
                     };
                     ++attributeLocation;
                 }
@@ -719,37 +725,27 @@ define([
         }
 
         var attributes = [];
+
         if (isQuantized) {
-            attributes.push({
-                index : positionLocation,
-                vertexBuffer : positionsVertexBuffer,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
-                normalize : true, // Convert position to 0 to 1 before entering the shader
-                offsetInBytes : 0,
-                strideInBytes : 0
-            });
+            componentDatatype = ComponentDatatype.UNSIGNED_SHORT;
+            normalize = true; // Convert position to 0 to 1 before entering the shader
         } else if (isQuantizedDraco) {
-            attributes.push({
-                index : positionLocation,
-                vertexBuffer : positionsVertexBuffer,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
-                normalize : false, // Normalization is done in the shader based on quantizationBits
-                offsetInBytes : 0,
-                strideInBytes : 0
-            });
+            componentDatatype = (quantizedRange <= 255) ? ComponentDatatype.UNSIGNED_BYTE : ComponentDatatype.UNSIGNED_SHORT;
+            normalize = false; // Normalization is done in the shader based on quantizationBits
         } else {
-            attributes.push({
-                index : positionLocation,
-                vertexBuffer : positionsVertexBuffer,
-                componentsPerAttribute : 3,
-                componentDatatype : ComponentDatatype.FLOAT,
-                normalize : false,
-                offsetInBytes : 0,
-                strideInBytes : 0
-            });
+            componentDatatype = ComponentDatatype.FLOAT;
+            normalize = false;
         }
+
+        attributes.push({
+            index : positionLocation,
+            vertexBuffer : positionsVertexBuffer,
+            componentsPerAttribute : 3,
+            componentDatatype : componentDatatype,
+            normalize : normalize,
+            offsetInBytes : 0,
+            strideInBytes : 0
+        });
 
         if (hasColors) {
             if (isRGB565) {
@@ -777,23 +773,21 @@ define([
         }
 
         if (hasNormals) {
-            var componentsPerAttribute;
-            var datatype;
             if (isOctEncoded16P) {
                 componentsPerAttribute = 2;
-                datatype = ComponentDatatype.UNSIGNED_BYTE;
+                componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
             } else if (isOctEncodedDraco) {
                 componentsPerAttribute = 2;
-                datatype = (octEncodedRange <= 255) ? ComponentDatatype.UNSIGNED_BYTE : ComponentDatatype.UNSIGNED_SHORT;
+                componentDatatype = (octEncodedRange <= 255) ? ComponentDatatype.UNSIGNED_BYTE : ComponentDatatype.UNSIGNED_SHORT;
             } else {
                 componentsPerAttribute = 3;
-                datatype = ComponentDatatype.FLOAT;
+                componentDatatype = ComponentDatatype.FLOAT;
             }
             attributes.push({
                 index : normalLocation,
                 vertexBuffer : normalsVertexBuffer,
                 componentsPerAttribute : componentsPerAttribute,
-                componentDatatype : datatype,
+                componentDatatype : componentDatatype,
                 normalize : false,
                 offsetInBytes : 0,
                 strideInBytes : 0
@@ -1375,6 +1369,7 @@ define([
                         var scale = quantization.range / (1 << quantization.quantizationBits);
                         content._quantizedVolumeScale = Cartesian3.fromElements(scale, scale, scale);
                         content._quantizedVolumeOffset = Cartesian3.unpack(quantization.minValues);
+                        content._quantizedRange = (1 << quantization.quantizationBits) - 1.0;
                     }
                     if (defined(decodedNormals) && content._isOctEncodedDraco) {
                         content._octEncodedRange = (1 << result.NORMAL.data.quantization.quantizationBits) - 1.0;
