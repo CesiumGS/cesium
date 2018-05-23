@@ -194,6 +194,7 @@ define([
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
      * negative, or 0 if the value is 0.
      *
+     * @function
      * @param {Number} value The value to return the sign of.
      * @returns {Number} The sign of value.
      */
@@ -261,6 +262,7 @@ define([
      *   </ul>
      *</p>
      *
+     * @function
      * @param {Number} value The number whose hyperbolic sine is to be returned.
      * @returns {Number} The hyperbolic sine of <code>value</code>.
      */
@@ -284,6 +286,7 @@ define([
      *   </ul>
      *</p>
      *
+     * @function
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
      * @returns {Number} The hyperbolic cosine of <code>value</code>.
      */
@@ -833,6 +836,7 @@ define([
      * Finds the cube root of a number.
      * Returns NaN if <code>number</code> is not provided.
      *
+     * @function
      * @param {Number} [number] The number.
      * @returns {Number} The result.
      */
@@ -844,6 +848,7 @@ define([
     /**
      * Finds the base 2 logarithm of a number.
      *
+     * @function
      * @param {Number} number The number.
      * @returns {Number} The result.
      */

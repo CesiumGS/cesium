@@ -323,6 +323,7 @@ define([
     /**
      * Creates the geometry instance which represents the fill of the geometry.
      *
+     * @function
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
      *
@@ -333,6 +334,7 @@ define([
     /**
      * Creates the geometry instance which represents the outline of the geometry.
      *
+     * @function
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
      *
