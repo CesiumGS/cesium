@@ -47,9 +47,6 @@ varying vec3 v_mieColor;
 varying vec3 v_toCamera;
 varying vec3 v_positionEC;
 
-// TODO HDR
-#define HDR
-
 void main (void)
 {
     // Extra normalize added for Android
@@ -59,10 +56,8 @@ void main (void)
 
     vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
 
-#ifndef HDR
     const float exposure = 2.0;
     rgb = vec3(1.0) - exp(-exposure * rgb);
-#endif
 
 #ifdef COLOR_CORRECT
     // Convert rgb color to hsb

@@ -25,13 +25,19 @@ void main()
     vec2 position = v_textureCoordinates - vec2(0.5);
     float radius = length(position);
     float surface = step(radius, u_radiusTS);
-    vec4 color = vec4(1.0, 1.0, surface + 0.2, surface);
+
+#ifdef HDR
+    vec2 rg = vec2(1.5, 1.2);
+#else
+    vec2 rg = vec2(1.0);
+#endif
+
+    vec4 color = vec4(rg, surface + 0.2, surface);
 
     float glow = 1.0 - smoothstep(0.0, 0.55, radius);
     color.ba += mix(vec2(0.0), vec2(1.0), glow) * 0.75;
 
-    vec4 burst0 = vec4(0.0);
-    vec4 burst1 = vec4(0.0);
+    vec4 burst = vec4(0.0);
 
     // The following loop has been manually unrolled for speed, to
     // avoid sin() and cos().
@@ -44,26 +50,21 @@ void main()
     //    burst += 0.3 * addBurst(position, direction);
     //}
 
-    burst0 += addBurst(position, vec2(0.38942,  0.92106));  // angle == 0.4
-    burst0 += addBurst(position, vec2(0.99235,  0.12348));  // angle == 0.4 + 1.047
-    burst0 += addBurst(position, vec2(0.60327, -0.79754));  // angle == 0.4 + 1.047 * 2.0
+    burst += 0.4 * addBurst(position, vec2(0.38942,  0.92106));  // angle == 0.4
+    burst += 0.4 * addBurst(position, vec2(0.99235,  0.12348));  // angle == 0.4 + 1.047
+    burst += 0.4 * addBurst(position, vec2(0.60327, -0.79754));  // angle == 0.4 + 1.047 * 2.0
 
-    burst1 += addBurst(position, vec2(0.31457,  0.94924));  // angle == 0.4 - 0.08
-    burst1 += addBurst(position, vec2(0.97931,  0.20239));  // angle == 0.4 + 1.047 - 0.08
-    burst1 += addBurst(position, vec2(0.66507, -0.74678));  // angle == 0.4 + 1.047 * 2.0 - 0.08
+    burst += 0.3 * addBurst(position, vec2(0.31457,  0.94924));  // angle == 0.4 - 0.08
+    burst += 0.3 * addBurst(position, vec2(0.97931,  0.20239));  // angle == 0.4 + 1.047 - 0.08
+    burst += 0.3 * addBurst(position, vec2(0.66507, -0.74678));  // angle == 0.4 + 1.047 * 2.0 - 0.08
 
     // End of manual loop unrolling.
 
-#ifdef HDR
-    vec4 burst = burst0 + burst1;
-    color += burst;
+    color += clamp(burst, vec4(0.0), vec4(1.0)) * 0.15;
 
-    vec3 lightColor = vec3(1.5, 1.4, 1.2);
-    color.rgb *= lightColor;
+#ifdef HDR
     gl_FragColor = color;
 #else
-    vec4 burst = burst0 * 0.4 + burst1 * 0.3;
-    color += clamp(burst, vec4(0.0), vec4(1.0)) * 0.15;
     gl_FragColor = clamp(color, vec4(0.0), vec4(1.0));
 #endif
 }
