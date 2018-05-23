@@ -405,6 +405,7 @@ define([
     /**
      * Determines if GroundPrimitive rendering is supported.
      *
+     * @function
      * @param {Scene} scene The scene.
      * @returns {Boolean} <code>true</code> if GroundPrimitives are supported; otherwise, returns <code>false</code>
      */
