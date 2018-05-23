@@ -3012,8 +3012,7 @@ define([
             if (!defined(clippingPlanes)) {
                 return Matrix4.IDENTITY;
             }
-            var clippingPlanesModelMatrix = Matrix4.multiply(model._clippingPlaneModelMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
-            return Matrix4.multiply(model._modelViewMatrix, clippingPlanesModelMatrix, scratchClippingPlaneMatrix);
+            return Matrix4.multiply(model._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
         };
     }
 
@@ -4468,7 +4467,8 @@ define([
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+                var clippingPlanesModelMatrix = Matrix4.multiply(modelMatrix, this._clippingPlaneModelMatrix, this._modelViewMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlanesModelMatrix, this._modelViewMatrix);
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 

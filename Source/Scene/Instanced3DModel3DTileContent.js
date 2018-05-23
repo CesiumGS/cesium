@@ -462,9 +462,10 @@ define([
             // Update for clipping planes
             var tilesetClippingPlanes = this._tileset.clippingPlanes;
             if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+                // Apply root tile transforms to instanced model clipping planes
+                model._clippingPlaneModelMatrix = this._tileset._root.computedTransform;
                 // Dereference the clipping planes from the model if they are irrelevant - saves on shading
                 // Link/Dereference directly to avoid ownership checks.
-                model._clippingPlaneModelMatrix = this._tile.computedTransform;
                 model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
             }
         }
