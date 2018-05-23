@@ -9,6 +9,7 @@ define([
         '../Core/FeatureDetection',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
+        '../Core/Matrix4',
         '../Core/RequestType',
         '../Core/RuntimeError',
         '../Renderer/Pass',
@@ -29,6 +30,7 @@ define([
         FeatureDetection,
         getBaseUri,
         getStringFromTypedArray,
+        Matrix4,
         RequestType,
         RuntimeError,
         Pass,
@@ -439,6 +441,7 @@ define([
         this._batchTable.applyStyle(frameState, style);
     };
 
+    var scratchClippingPlaneMatrix = new Matrix4();
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var commandStart = frameState.commandList.length;
 
@@ -453,6 +456,8 @@ define([
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
+            // Apply inverse transform relative to root tile transform to the model clipping plane
+            this._model._clippingPlaneModelMatrix = Matrix4.multiply(Matrix4.inverse(this._tile.computedTransform, scratchClippingPlaneMatrix), this._tileset._root.computedTransform, scratchClippingPlaneMatrix);
             // Dereference the clipping planes from the model if they are irrelevant.
             // Link/Dereference directly to avoid ownership checks.
             // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.

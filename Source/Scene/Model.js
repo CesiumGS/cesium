@@ -537,6 +537,9 @@ define([
         this.clippingPlanes = options.clippingPlanes;
         // Used for checking if shaders need to be regenerated due to clipping plane changes.
         this._clippingPlanesState = 0;
+        // Tiles all reference the same clippingPlaneCollection, this additional transform is
+        // applied to account for additional child transforms.
+        this._clippingPlaneModelMatrix = Matrix4.IDENTITY;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -4464,7 +4467,8 @@ define([
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+                var clippingPlanesModelMatrix = Matrix4.multiply(modelMatrix, this._clippingPlaneModelMatrix, this._modelViewMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlanesModelMatrix, this._modelViewMatrix);
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
