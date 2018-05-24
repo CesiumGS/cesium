@@ -127,40 +127,6 @@ define([
             get : function() {
                 return this._normalizedAge;
             }
-        },
-        /**
-         * Gets and sets the width of {@link Particle#imageSize}
-         * @memberof Particle.prototype
-         * @type {Number}
-         */
-        width : {
-            get : function() {
-                return this.imageSize.x;
-            },
-            set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                Check.defined('value', value);
-                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
-                //>>includeEnd('debug');
-                this.imageSize.x = value;
-            }
-        },
-        /**
-         * Gets and sets the height of {@link Particle#imageSize}
-         * @memberof Particle.prototype
-         * @type {Number}
-         */
-        height : {
-            get : function() {
-                return this.imageSize.y;
-            },
-            set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                Check.defined('value', value);
-                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
-                //>>includeEnd('debug');
-                this.imageSize.y = value;
-            }
         }
     });
 
