@@ -43,7 +43,7 @@ define([
         server.appendForwardSlash();
 
         var defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
-        if (defined(defaultTokenCredit)) {
+        if (defined(defaultTokenCredit) && options.scene._frameState.creditDisplay) {
             options.scene._frameState.creditDisplay.addDefaultCredit(defaultTokenCredit);
         }
 

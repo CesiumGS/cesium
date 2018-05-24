@@ -243,6 +243,8 @@ define([
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
         var creditViewport = options.creditViewport;
+        var showCredit = defaultValue(options.showCredit, defaultValue.TRUE);
+        var creditDisplay;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
@@ -251,7 +253,7 @@ define([
         //>>includeEnd('debug');
         var hasCreditContainer = defined(creditContainer);
         var context = new Context(canvas, contextOptions);
-        if (!hasCreditContainer) {
+        if (showCredit && !hasCreditContainer) {
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
@@ -261,13 +263,16 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
-        if (!defined(creditViewport)) {
+        if (showCredit && !defined(creditViewport)) {
             creditViewport = canvas.parentNode;
+        }
+        if (showCredit) {
+            creditDisplay = new CreditDisplay(creditContainer, ' • ', creditViewport);
         }
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
+        this._frameState = new FrameState(context, creditDisplay, this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
         this._removeCreditContainer = !hasCreditContainer;
         this._creditContainer = creditContainer;
@@ -1348,7 +1353,9 @@ define([
                 //>>includeEnd('debug');
                 this._useWebVR = value;
                 if (this._useWebVR) {
-                    this._frameState.creditDisplay.container.style.visibility = 'hidden';
+                    if (this._frameState.creditDisplay) {
+                        this._frameState.creditDisplay.container.style.visibility = 'hidden';
+                    }
                     this._cameraVR = new Camera(this);
                     if (!defined(this._deviceOrientationCameraController)) {
                         this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
@@ -1356,7 +1363,9 @@ define([
 
                     this._aspectRatioVR = this._camera.frustum.aspectRatio;
                 } else {
-                    this._frameState.creditDisplay.container.style.visibility = 'visible';
+                    if (this._frameState.creditDisplay) {
+                        this._frameState.creditDisplay.container.style.visibility = 'visible';
+                    }
                     this._cameraVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
 
@@ -3070,7 +3079,9 @@ define([
             scene.globe.update(frameState);
         }
 
-        frameState.creditDisplay.update();
+        if (frameState.creditDisplay) {
+            frameState.creditDisplay.update();
+        }
     }
 
     function render(scene, time) {
@@ -3087,8 +3098,9 @@ define([
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;
 
-        frameState.creditDisplay.beginFrame();
-
+        if (frameState.creditDisplay) {
+            frameState.creditDisplay.beginFrame();
+        }
         scene.fog.update(frameState);
 
         us.update(frameState);
@@ -3125,7 +3137,9 @@ define([
             }
         }
 
-        frameState.creditDisplay.endFrame();
+        if (frameState.creditDisplay) {
+            frameState.creditDisplay.endFrame();
+        }
         context.endFrame();
     }
 
@@ -3807,7 +3821,9 @@ define([
         this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();
-        this._frameState.creditDisplay.destroy();
+        if (this._frameState.creditDisplay) {
+            this._frameState.creditDisplay.destroy();
+        }
         if (defined(this._performanceDisplay)){
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
