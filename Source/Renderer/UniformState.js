@@ -61,7 +61,9 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
-        this._logFarDistance = undefined;
+        this._log2FarDistance = undefined;
+        this._log2FarPlusOne = undefined;
+        this._log2NearDistance = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -643,13 +645,35 @@ define([
         },
 
         /**
-         * The log of the current frustum's far distance. Used to compute the log depth.
+         * The log2 of the current frustum's far distance. Used to compute the log depth.
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        logFarDistance : {
+        log2FarDistance : {
             get : function() {
-                return this._logFarDistance;
+                return this._log2FarDistance;
+            }
+        },
+
+        /**
+         * The log2 of 1 + the current frustum's far distance. Used to reverse log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2FarPlusOne : {
+            get : function() {
+                return this._log2FarPlusOne;
+            }
+        },
+
+        /**
+         * The log2 current frustum's near distance. Used when writing log depth in the fragment shader.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2NearDistance : {
+            get : function() {
+                return this._log2NearDistance;
             }
         },
 
@@ -999,7 +1023,9 @@ define([
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
-        this._logFarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
+        this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
+        this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
+        this._log2NearDistance = CesiumMath.log2(frustum.near);
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;

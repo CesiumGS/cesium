@@ -71,6 +71,8 @@ define([
             geometryPropertyName : 'plane',
             observedPropertyNames : ['availability', 'position', 'orientation', 'plane']
         });
+
+        this._onEntityPropertyChanged(entity, 'plane', entity.plane, undefined);
     }
 
     if (defined(Object.create)) {

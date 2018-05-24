@@ -207,7 +207,7 @@ define([
         if (!defined(globeDepth._copyColorCommand)) {
             globeDepth._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
-                    u_colorTexture : function() {
+                    colorTexture : function() {
                         return globeDepth._colorTexture;
                     }
                 },

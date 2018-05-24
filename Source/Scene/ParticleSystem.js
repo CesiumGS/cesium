@@ -176,6 +176,7 @@ define([
         },
         /**
          * An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
+         * @memberof ParticleSystem.prototype
          * @type {ParticleBurst[]}
          * @default undefined
          */

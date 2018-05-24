@@ -68,6 +68,8 @@ define([
             geometryPropertyName: 'cylinder',
             observedPropertyNames: ['availability', 'position', 'orientation', 'cylinder']
         });
+
+        this._onEntityPropertyChanged(entity, 'cylinder', entity.cylinder, undefined);
     }
 
     if (defined(Object.create)) {
