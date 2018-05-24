@@ -6,11 +6,16 @@ varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
 varying vec4 v_rightPlaneEC;
 varying vec3 v_forwardDirectionEC;
-varying vec2 v_alignedPlaneDistances;
 varying vec3 v_texcoordNormalization;
 varying float v_halfWidth;
 varying float v_width; // for materials
 varying float v_polylineAngle;
+
+#ifdef PER_INSTANCE_COLOR
+varying vec4 v_color;
+#else
+varying vec2 v_alignedPlaneDistances;
+#endif
 
 float rayPlaneDistance(vec3 origin, vec3 direction, vec3 planeNormal, float planeDistance) { // TODO: move into its own function?
     // We don't expect the ray to ever be parallel to the plane
@@ -88,8 +93,13 @@ void main()
 
 #endif // COLUMBUS_VIEW_2D
 
+#ifdef PER_INSTANCE_COLOR
+    v_color = czm_batchTable_color(batchId);
+#else // PER_INSTANCE_COLOR
+    // For computing texture coordinates
     v_alignedPlaneDistances.x = -dot(forwardDirectionEC, ecStart);
     v_alignedPlaneDistances.y = -dot(-forwardDirectionEC, ecEnd);
+#endif // PER_INSTANCE_COLOR
 
     // Compute a normal along which to "push" the position out, extending the miter depending on view distance.
     // Position has already been "pushed" by unit length along miter normal, and miter normals are encoded in the planes.
@@ -113,8 +123,9 @@ void main()
     float width = czm_batchTable_width(batchId);
     v_width = width;
     v_halfWidth = width * 0.5;
-    positionEC.xyz += width * czm_metersPerPixel(positionEC) * normalEC;;
-    gl_Position = czm_depthClampFarPlane(czm_projection * positionEC);
+    positionEC.xyz -= normalEC; // undo the unit length push
+    positionEC.xyz += width * max(0.0, czm_metersPerPixel(positionEC)) * normalEC; // prevent artifacts when czm_metersPerPixel is negative (behind camera)
+    gl_Position = czm_projection * positionEC;
 
     // Approximate relative screen space direction of the line.
     vec2 approxLineDirection = normalize(vec2(forwardDirectionEC.x, -forwardDirectionEC.y));

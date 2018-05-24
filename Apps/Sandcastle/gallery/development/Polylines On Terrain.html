@@ -113,7 +113,10 @@ var instance1 = new Cesium.GeometryInstance({
         width : 16.0,
         loop : false
     }),
-    id : 'polyline1'
+    id : 'polyline1',
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7))
+    }
 });
 
 var instance2 = new Cesium.GeometryInstance({
@@ -122,7 +125,10 @@ var instance2 = new Cesium.GeometryInstance({
         width : 8.0,
         loop : true
     }),
-    id : 'polyline2'
+    id : 'polyline2',
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#67ADDF').withAlpha(0.7))
+    }
 });
 
 polylineOnTerrainPrimitive = new Cesium.GroundPolylinePrimitive({
@@ -131,28 +137,39 @@ polylineOnTerrainPrimitive = new Cesium.GroundPolylinePrimitive({
 });
 scene.primitives.add(polylineOnTerrainPrimitive);
 
-applyGlowMaterial();
-
+function applyPerInstanceColor() {
+    polylineOnTerrainPrimitive.appearance = new Cesium.PolylineColorAppearance();
+}
 function applyColorMaterial() {
-    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('Color', {
-        color : new Cesium.Color(0.0, 1.0, 1.0, 1.0)
+    polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+        material : Cesium.Material.fromType('Color', {
+            color : new Cesium.Color(1.0, 0.0, 1.0, 1.0)
+        })
     });
 }
 function applyGlowMaterial() {
-    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineGlow', {
-        innerWidth : 1.0
+    polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+        material : Cesium.Material.fromType('PolylineGlow', {
+            innerWidth : 1.0
+        })
     });
 }
 function applyArrow() {
-    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineArrow');
+    polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+        material : Cesium.Material.fromType('PolylineArrow')
+    });
 }
 function applyDash() {
-    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineDash', {
-        color : Cesium.Color.YELLOW
+    polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+        material : Cesium.Material.fromType('PolylineDash', {
+            color : Cesium.Color.YELLOW
+        })
     });
 }
 function applyOutline() {
-    polylineOnTerrainPrimitive.appearance.material = Cesium.Material.fromType('PolylineOutline');
+    polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
+        material : Cesium.Material.fromType('PolylineOutline')
+    });
 }
 
 Sandcastle.addToolbarButton('Toggle instance show', function() {
@@ -180,41 +197,47 @@ Sandcastle.addToolbarButton('reset view', function() {
     lookAt();
 });
 
+applyPerInstanceColor();
+
 lookAt();
 
-    Sandcastle.addToolbarMenu([{
-        text : 'Materials'
-    }, {
-        text : 'Color',
-        onselect : function() {
-            applyColorMaterial();
-            Sandcastle.highlight(applyColorMaterial);
-        }
-    }, {
-        text : 'Glow',
-        onselect : function() {
-            applyGlowMaterial();
-            Sandcastle.highlight(applyGlowMaterial);
-        }
-    }, {
-        text : 'Arrow',
-        onselect : function() {
-            applyArrow();
-            Sandcastle.highlight(applyArrow);
-        }
-    }, {
-        text : 'Dash',
-        onselect : function() {
-            applyDash();
-            Sandcastle.highlight(applyDash);
-        }
-    }, {
-        text : 'Outline',
-        onselect : function() {
-            applyOutline();
-            Sandcastle.highlight(applyOutline);
-        }
-    }]);
+Sandcastle.addToolbarMenu([{
+    text : 'Per Instance Color',
+    onselect : function() {
+        applyPerInstanceColor();
+        Sandcastle.highlight(applyPerInstanceColor);
+    }
+}, {
+    text : 'Color',
+    onselect : function() {
+        applyColorMaterial();
+        Sandcastle.highlight(applyColorMaterial);
+    }
+}, {
+    text : 'Glow',
+    onselect : function() {
+        applyGlowMaterial();
+        Sandcastle.highlight(applyGlowMaterial);
+    }
+}, {
+    text : 'Arrow',
+    onselect : function() {
+        applyArrow();
+        Sandcastle.highlight(applyArrow);
+    }
+}, {
+    text : 'Dash',
+    onselect : function() {
+        applyDash();
+        Sandcastle.highlight(applyDash);
+    }
+}, {
+    text : 'Outline',
+    onselect : function() {
+        applyOutline();
+        Sandcastle.highlight(applyOutline);
+    }
+}]);
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

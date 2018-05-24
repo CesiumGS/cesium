@@ -21,6 +21,7 @@ define([
         '../Renderer/ShaderSource',
         './GroundPrimitive',
         './Material',
+        './PolylineColorAppearance',
         './PolylineMaterialAppearance',
         './Primitive',
         './SceneMode'
@@ -47,6 +48,7 @@ define([
         ShaderSource,
         GroundPrimitive,
         Material,
+        PolylineColorAppearance,
         PolylineMaterialAppearance,
         Primitive,
         SceneMode) {
@@ -60,7 +62,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {GeometryInstance[]|GeometryInstance} [options.polylineGeometryInstances] GeometryInstances containing GroundPolylineGeometry
-     * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color. Only {@link PolylineMaterialAppearance} is supported at this time.
+     * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color {@link Material} on a {@link PolylineMaterialAppearance}.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to generated geometry or input <code>cartographics</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -134,8 +136,8 @@ define([
         this._sp2D = undefined;
         this._spPick2D = undefined;
         this._renderState = RenderState.fromCache({
-            depthTest : {
-                enabled : false // Helps prevent problems when viewing very closely
+            cull : {
+                enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
             }
         });
 
@@ -182,6 +184,10 @@ define([
             var attributes = GroundLineSegmentGeometry.getAttributes(groundPolylineSegmentGeometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D);
             lengthSoFar += segmentLength;
             lengthSoFar2D += segmentLength2D;
+
+            if (defined(geometryInstance.attributes.color)) {
+                attributes.color = geometryInstance.attributes.color;
+            }
 
             attributes.width = new GeometryInstanceAttribute({
                 componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
@@ -234,6 +240,7 @@ define([
     function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
         var context = frameState.context;
         var primitive = groundPolylinePrimitive._primitive;
+        var isPolylineColorAppearance = appearance instanceof PolylineColorAppearance;
 
         var attributeLocations = primitive._attributeLocations;
 
@@ -247,8 +254,9 @@ define([
         // which causes problems when interpolating log depth from vertices.
         // So force computing and writing logarithmic depth in the fragment shader.
         // Re-enable at far distances to avoid z-fighting.
-        var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'];
-        var fsDefines =  groundPolylinePrimitive.debugShowShadowVolume ? ['DEBUG_SHOW_VOLUME'] : [];
+        var colorDefine = isPolylineColorAppearance ? 'PER_INSTANCE_COLOR' : '';
+        var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT', colorDefine];
+        var fsDefines =  groundPolylinePrimitive.debugShowShadowVolume ? ['DEBUG_SHOW_VOLUME', colorDefine] : [colorDefine];
 
         var vsColor3D = new ShaderSource({
             defines : vsDefines,
@@ -256,7 +264,7 @@ define([
         });
         var fsColor3D = new ShaderSource({
             defines : fsDefines,
-            sources : [appearance.material.shaderSource, PolylineShadowVolumeFS]
+            sources : [isPolylineColorAppearance ? '' : appearance.material.shaderSource, PolylineShadowVolumeFS]
         });
         groundPolylinePrimitive._sp = ShaderProgram.replaceCache({
             context : context,
@@ -332,9 +340,12 @@ define([
         colorCommands.length = length;
         pickCommands.length = length;
 
+        var isPolylineColorAppearance = appearance instanceof PolylineColorAppearance;
+
         var i;
         var command;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()(material._uniforms);
+        var materialUniforms = isPolylineColorAppearance ? {} : material._uniforms;
+        var uniformMap = primitive._batchTable.getUniformMapCallback()(materialUniforms);
         var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
         for (i = 0; i < length; i++) {
@@ -471,10 +482,17 @@ define([
             var polylineSegmentInstances = [];
             var geometryInstances = isArray(this.polylineGeometryInstances) ? this.polylineGeometryInstances : [this.polylineGeometryInstances];
             var geometryInstancesLength = geometryInstances.length;
-            for (i = 0; i < geometryInstancesLength; ++i) {
-                var geometryInstance = geometryInstances[i];
 
-                decompose(geometryInstance, frameState.mapProjection, polylineSegmentInstances, this._idsToInstanceIndices);
+            // If using PolylineColorAppearance, check if each instance has a color attribute.
+            if (this.appearance instanceof PolylineColorAppearance) {
+                for (i = 0; i < geometryInstancesLength; ++i) {
+                    if (!defined(geometryInstances[i].attributes.color)) {
+                        throw new DeveloperError('All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.');
+                    }
+                }
+            }
+            for (i = 0; i < geometryInstancesLength; ++i) {
+                decompose(geometryInstances[i], frameState.mapProjection, polylineSegmentInstances, this._idsToInstanceIndices);
             }
 
             primitiveOptions.geometryInstances = polylineSegmentInstances;
@@ -535,17 +553,19 @@ define([
     };
 
     // An object that, on setting an attribute, will set all the instances' attributes.
-    var userAttributeNames = ['width', 'show'];
+    var userAttributeNames = ['width', 'show', 'color']; // TODO: do we let Primitives swallow generic, user-specified attributes?
     var userAttributeCount = userAttributeNames.length;
     function InstanceAttributeSynchronizer(batchTable, firstInstanceIndex, lastInstanceIndex, batchTableAttributeIndices) {
         var properties = {};
         for (var i = 0; i < userAttributeCount; i++) {
             var name = userAttributeNames[i];
             var attributeIndex = batchTableAttributeIndices[name];
-            properties[name] = {
-                get : createGetFunction(batchTable, firstInstanceIndex, attributeIndex),
-                set : createSetFunction(batchTable, firstInstanceIndex, lastInstanceIndex, attributeIndex)
-            };
+            if (defined(attributeIndex)) {
+                properties[name] = {
+                    get : createGetFunction(batchTable, firstInstanceIndex, attributeIndex),
+                    set : createSetFunction(batchTable, firstInstanceIndex, lastInstanceIndex, attributeIndex)
+                };
+            }
         }
         defineProperties(this, properties);
     }

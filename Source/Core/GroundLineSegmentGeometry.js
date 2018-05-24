@@ -266,13 +266,14 @@ define([
         Cartesian3.pack(pushedEndTop, positions, 6 * 3);
         Cartesian3.pack(pushedStartTop, positions, 7 * 3);
 
+        // Winding order is reversed so the volume is inside-out
         var indices = [
-            0, 1, 2, 0, 2, 3, // right
-            0, 3, 7, 0, 7, 4, // start
-            0, 4, 5, 0, 5, 1, // bottom
-            5, 4, 7, 5, 7, 6, // left
-            5, 6, 2, 5, 2, 1, // end
-            3, 2, 6, 3, 6, 7 // top
+            0, 2, 1, 0, 3, 2, // right
+            0, 7, 3, 0, 4, 7, // start
+            0, 5, 4, 0, 1, 5, // bottom
+            5, 7, 4, 5, 6, 7, // left
+            5, 2, 6, 5, 1, 2, // end
+            3, 6, 2, 3, 7, 6 // top
         ];
         var geometryAttributes = new GeometryAttributes({
             position : new GeometryAttribute({

@@ -6,9 +6,14 @@ varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
 varying vec4 v_rightPlaneEC;
 varying vec3 v_forwardDirectionEC;
-varying vec2 v_alignedPlaneDistances;
 varying vec3 v_texcoordNormalization;
 varying float v_halfWidth;
+
+#ifdef PER_INSTANCE_COLOR
+varying vec4 v_color;
+#else
+varying vec2 v_alignedPlaneDistances;
+#endif
 
 float rayPlaneDistance(vec3 origin, vec3 direction, vec3 planeNormal, float planeDistance) {
     // We don't expect the ray to ever be parallel to the plane
@@ -47,6 +52,9 @@ void main(void)
 #ifdef PICK
     gl_FragColor.a = 1.0;
 #else // PICK
+#ifdef PER_INSTANCE_COLOR
+    gl_FragColor = v_color;
+#else // PER_INSTANCE_COLOR
     // Use distances for planes aligned with segment to prevent skew in dashing
     distanceFromStart = rayPlaneDistance(eyeCoordinate.xyz, -v_forwardDirectionEC, v_forwardDirectionEC.xyz, v_alignedPlaneDistances.x);
     distanceFromEnd = rayPlaneDistance(eyeCoordinate.xyz, v_forwardDirectionEC, -v_forwardDirectionEC.xyz, v_alignedPlaneDistances.y);
@@ -67,7 +75,7 @@ void main(void)
 
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+#endif // PER_INSTANCE_COLOR
 
 #endif // PICK
-    czm_writeDepthClampedToFarPlane();
 }
