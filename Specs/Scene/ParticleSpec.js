@@ -50,7 +50,7 @@ defineSuite([
         expect(p.imageSize).toEqual(options.imageSize);
     });
 
-    it('update without forces', function() {
+    it('update without update function', function() {
         var position = new Cartesian3(1.0, 2.0, 3.0);
         var velocity = Cartesian3.normalize(new Cartesian3(-1.0, 1.0, 1.0), new Cartesian3());
         var p = new Particle({
@@ -67,36 +67,6 @@ defineSuite([
         expect(p.velocity).toEqual(velocity);
         expect(p.age).toEqual(dt);
         expect(p.normalizedAge).toEqual(dt / p.life);
-        expect(p.update(dt)).toEqual(false);
-    });
-
-    it('update with forces', function() {
-        var times2 = function(particle, dt) {
-            Cartesian3.add(particle.position, Cartesian3.multiplyByScalar(particle.velocity, dt, new Cartesian3()), particle.position);
-        };
-        var increaseMass = function(particle, dt) {
-            particle.mass++;
-        };
-        var forces = [times2, increaseMass];
-
-        var position = new Cartesian3(1.0, 2.0, 3.0);
-        var velocity = Cartesian3.normalize(new Cartesian3(-1.0, 1.0, 1.0), new Cartesian3());
-        var p = new Particle({
-            life : 15.0,
-            position : position,
-            velocity : velocity
-        });
-
-        var dt = 10.0;
-        var expectedPosition = Cartesian3.add(p.position, Cartesian3.multiplyByScalar(p.velocity, 2.0 * dt, new Cartesian3()), new Cartesian3());
-        var expectedMass = p.mass + 1;
-
-        expect(p.update(dt, forces)).toEqual(true);
-        expect(p.position).toEqual(expectedPosition);
-        expect(p.velocity).toEqual(velocity);
-        expect(p.age).toEqual(dt);
-        expect(p.normalizedAge).toEqual(dt / p.life);
-        expect(p.mass).toEqual(expectedMass);
         expect(p.update(dt)).toEqual(false);
     });
 
