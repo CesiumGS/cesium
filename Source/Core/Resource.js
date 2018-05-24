@@ -1755,16 +1755,37 @@ define([
      */
     Resource._Implementations = {};
 
+    function responseToBlob(response) {
+        return response.blob();
+    }
+
+    function blobToImageBitmap(blob) {
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1335594
+        return FeatureDetection.isFirefox()
+            ? createImageBitmap(blob)
+            : createImageBitmap(blob, {
+                imageOrientation: 'flipY'
+            });
+    }
+
+    var createImageBitmapSupported = !!('createImageBitmap' in window);
     Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        if (createImageBitmapSupported) {
+            // TODO: not sure if we need to do anything with crossOrigin here:
+            fetch(url)
+                .then(responseToBlob)
+                .then(blobToImageBitmap)
+                .then(deferred.resolve)
+                .catch(deferred.reject);
+            return;
+        }
         var image = new Image();
 
         image.onload = function() {
             deferred.resolve(image);
         };
 
-        image.onerror = function(e) {
-            deferred.reject(e);
-        };
+        image.onerror = deferred.reject;
 
         if (crossOrigin) {
             if (TrustedServers.contains(url)) {
