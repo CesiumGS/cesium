@@ -216,6 +216,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
+     * @param {Boolean} [options.showCredit] Allows the loading of the credits HTML element. Default to true.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
      * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
@@ -247,6 +248,8 @@ define([
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
         var creditViewport = options.creditViewport;
+        var showCredit = defaultValue(options.showCredit, true);
+        var creditDisplay;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
@@ -255,7 +258,7 @@ define([
         //>>includeEnd('debug');
         var hasCreditContainer = defined(creditContainer);
         var context = new Context(canvas, contextOptions);
-        if (!hasCreditContainer) {
+        if (showCredit && !hasCreditContainer) {
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
@@ -265,13 +268,16 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
-        if (!defined(creditViewport)) {
+        if (showCredit && !defined(creditViewport)) {
             creditViewport = canvas.parentNode;
+        }
+        if (showCredit) {
+            creditDisplay = new CreditDisplay(creditContainer, ' • ', creditViewport);
         }
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
+        this._frameState = new FrameState(context, creditDisplay, this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
         this._removeCreditContainer = !hasCreditContainer;
         this._creditContainer = creditContainer;
@@ -1341,7 +1347,9 @@ define([
                 //>>includeEnd('debug');
                 this._useWebVR = value;
                 if (this._useWebVR) {
-                    this._frameState.creditDisplay.container.style.visibility = 'hidden';
+                    if (defined(this._frameState.creditDisplay)) {
+                        this._frameState.creditDisplay.container.style.visibility = 'hidden';
+                    }
                     this._cameraVR = new Camera(this);
                     if (!defined(this._deviceOrientationCameraController)) {
                         this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
@@ -1349,7 +1357,9 @@ define([
 
                     this._aspectRatioVR = this._camera.frustum.aspectRatio;
                 } else {
-                    this._frameState.creditDisplay.container.style.visibility = 'visible';
+                    if (defined(this._frameState.creditDisplay)) {
+                        this._frameState.creditDisplay.container.style.visibility = 'visible';
+                    }
                     this._cameraVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
 
@@ -3117,7 +3127,9 @@ define([
             scene.globe.update(frameState);
         }
 
-        frameState.creditDisplay.update();
+        if (defined(frameState.creditDisplay)) {
+            frameState.creditDisplay.update();
+        }
     }
 
     function render(scene, time) {
@@ -3134,8 +3146,9 @@ define([
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;
 
-        frameState.creditDisplay.beginFrame();
-
+        if (defined(frameState.creditDisplay)) {
+            frameState.creditDisplay.beginFrame();
+        }
         scene.fog.update(frameState);
 
         us.update(frameState);
@@ -3174,7 +3187,9 @@ define([
             }
         }
 
-        frameState.creditDisplay.endFrame();
+        if (defined(frameState.creditDisplay)) {
+            frameState.creditDisplay.endFrame();
+        }
         context.endFrame();
     }
 
@@ -3858,7 +3873,9 @@ define([
         this.postProcessStages = this.postProcessStages && this.postProcessStages.destroy();
 
         this._context = this._context && this._context.destroy();
-        this._frameState.creditDisplay.destroy();
+        if (defined(this._frameState.creditDisplay)) {
+            this._frameState.creditDisplay.destroy();
+        }
         if (defined(this._performanceDisplay)){
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
