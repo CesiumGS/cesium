@@ -1974,7 +1974,23 @@ define([
         }
 
         if (defined(applyOffsets)) {
-            currentAttributes.applyOffset.values[insertedIndex] = applyOffsets[i0];
+            var off0 = applyOffsets[i0];
+            var off1 = applyOffsets[i1];
+            var off2 = applyOffsets[i2];
+            var sum = off0 + off1 + off2;
+            if (sum === 3.0 || sum === 0.0) {
+                currentAttributes.applyOffset.values[insertedIndex] = off1;
+            } else if (CesiumMath.equalsEpsilon(coords.x, 1.0, CesiumMath.EPSILON10)) {
+                currentAttributes.applyOffset.values[insertedIndex] = off0;
+            } else if (CesiumMath.equalsEpsilon(coords.y, 1.0, CesiumMath.EPSILON10)) {
+                currentAttributes.applyOffset.values[insertedIndex] = off1;
+            } else if (CesiumMath.equalsEpsilon(coords.z, 1.0, CesiumMath.EPSILON10)) {
+                currentAttributes.applyOffset.values[insertedIndex] = off2;
+            } else if (CesiumMath.equalsEpsilon(coords.x, 0.0, CesiumMath.EPSILON10) === 0.0 && off0 === 0.0 || CesiumMath.equalsEpsilon(coords.y, 0.0, CesiumMath.EPSILON10) === 0.0 && off1 === 0.0 || CesiumMath.equalsEpsilon(coords.z, 0.0, CesiumMath.EPSILON10) === 0.0 && off2 === 0.0) {
+                currentAttributes.applyOffset.values[insertedIndex] = 1.0;
+            } else {
+                currentAttributes.applyOffset.values[insertedIndex] = 0.0;
+            }
         }
 
         if (defined(tangents)) {
