@@ -56,11 +56,14 @@ define([
         var fxaa = PostProcessStageLibrary.createFXAAStage();
         var ao = PostProcessStageLibrary.createAmbientOcclusionStage();
         var bloom = PostProcessStageLibrary.createBloomStage();
-        var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage();
+        //var tonemapping = PostProcessStageLibrary.createReinhardTonemappingStage();
+        //var tonemapping = PostProcessStageLibrary.createModifiedReinhardTonemappingStage();
+        //var tonemapping = PostProcessStageLibrary.createFilmicTonemappingStage();
+        var tonemapping = PostProcessStageLibrary.createACESTonemappingStage();
 
         ao.enabled = false;
-        //bloom.enabled = false; // TODO HDR
-        bloom.enabled = true;
+        bloom.enabled = false; // TODO HDR
+        //bloom.enabled = true;
         tonemapping.enabled = false;
 
         // TODO HDR

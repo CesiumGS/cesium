@@ -5,6 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Renderer/PixelDatatype',
+        '../Shaders/PostProcessStages/ACESTonemapping',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
         '../Shaders/PostProcessStages/AmbientOcclusionModulate',
         '../Shaders/PostProcessStages/BlackAndWhite',
@@ -15,10 +16,12 @@ define([
         '../Shaders/PostProcessStages/DepthOfField',
         '../Shaders/PostProcessStages/DepthView',
         '../Shaders/PostProcessStages/EdgeDetection',
+        '../Shaders/PostProcessStages/FilmicTonemapping',
         '../Shaders/PostProcessStages/FXAA',
         '../Shaders/PostProcessStages/GaussianBlur1D',
         '../Shaders/PostProcessStages/LensFlare',
         '../Shaders/PostProcessStages/LinearDepth',
+        '../Shaders/PostProcessStages/ModifiedReinhardTonemapping',
         '../Shaders/PostProcessStages/NightVision',
         '../shaders/PostProcessStages/ReinhardTonemapping',
         '../Shaders/PostProcessStages/Silhouette',
@@ -33,6 +36,7 @@ define([
         destroyObject,
         Ellipsoid,
         PixelDatatype,
+        ACESTonemapping,
         AmbientOcclusionGenerate,
         AmbientOcclusionModulate,
         BlackAndWhite,
@@ -43,10 +47,12 @@ define([
         DepthOfField,
         DepthView,
         EdgeDetection,
+        FilmicTonemapping,
         FXAA,
         GaussianBlur1D,
         LensFlare,
         LinearDepth,
+        ModifiedReinhardTonemapping,
         NightVision,
         ReinhardTonemapping,
         Silhouette,
@@ -745,12 +751,33 @@ define([
         });
     };
 
+    PostProcessStageLibrary.createACESTonemappingStage = function() {
+        return new PostProcessStage({
+            name : 'czm_aces',
+            fragmentShader : ACESTonemapping
+        });
+    };
+
+    PostProcessStageLibrary.createFilmicTonemappingStage = function() {
+        return new PostProcessStage({
+            name : 'czm_filmic',
+            fragmentShader : FilmicTonemapping
+        });
+    };
+
     PostProcessStageLibrary.createReinhardTonemappingStage = function() {
         return new PostProcessStage({
             name : 'czm_reinhard',
-            fragmentShader : ReinhardTonemapping,
+            fragmentShader : ReinhardTonemapping
+        });
+    };
+
+    PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function() {
+        return new PostProcessStage({
+            name : 'czm_modified_reinhard',
+            fragmentShader : ModifiedReinhardTonemapping,
             uniforms : {
-                exposure : 1.0
+                white : Color.WHITE
             }
         });
     };
