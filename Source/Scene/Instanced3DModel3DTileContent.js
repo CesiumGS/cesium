@@ -523,7 +523,7 @@ define([
 
             // If the model references a destroyed ClippingPlaneCollection due to the tileset's collection being replaced with a
             // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
-            if (defined(tilesetClippingPlanes) && defined(model._clippingPlanes) && model._clippingPlanes.isDestroyed()) {
+            if (defined(tilesetClippingPlanes) && defined(model._clippingPlanes) && model._clippingPlanes !== tilesetClippingPlanes) {
                 model._clippingPlanes = tilesetClippingPlanes;
             }
         }
