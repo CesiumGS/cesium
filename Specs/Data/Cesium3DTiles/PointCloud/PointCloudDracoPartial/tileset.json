@@ -2,6 +2,9 @@
   "asset": {
     "version": "0.0"
   },
+  "extensionsUsed": [
+    "3DTILES_draco_point_compression"
+  ],
   "geometricError": 17.32,
   "root": {
     "refine": "ADD",

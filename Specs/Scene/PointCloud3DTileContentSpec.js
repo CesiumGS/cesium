@@ -63,6 +63,7 @@ defineSuite([
     var pointCloudQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded';
     var pointCloudDracoUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDraco';
     var pointCloudDracoPartialUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDracoPartial';
+    var pointCloudDracoBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudDracoBatched';
     var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
@@ -241,22 +242,42 @@ defineSuite([
         });
     });
 
-    it('renders point cloud with draco encoded positions, normals, colors, and batch ids', function() {
+    it('renders point cloud with draco encoded positions, normals, colors, and batch table properties', function() {
         if (FeatureDetection.isInternetExplorer()) {
             // Draco decoding is not currently supported in IE
             return;
         }
         return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
+            // Test that Draco-encoded batch table properties are functioning correctly
+            tileset.style = new Cesium3DTileStyle({
+                color : 'vec4(Number(${secondaryColor}[0] < 1.0), 0.0, 0.0, 1.0)'
+            });
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Produces a red color
+                expect(rgba[0]).toBeGreaterThan(rgba[1]);
+                expect(rgba[0]).toBeGreaterThan(rgba[2]);
+
+            });
         });
     });
 
-    it('renders point cloud with draco encoded positions and uncompressed normals, colors, and batch ids', function() {
+    it('renders point cloud with draco encoded positions and uncompressed normals and colors', function() {
         if (FeatureDetection.isInternetExplorer()) {
             // Draco decoding is not currently supported in IE
             return;
         }
         return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoPartialUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
+        });
+    });
+
+    it('renders point cloud with draco encoded positions, colors, and batch ids', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Draco decoding is not currently supported in IE
+            return;
+        }
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoBatchedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
