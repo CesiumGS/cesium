@@ -251,7 +251,6 @@ defineSuite([
                 // Produces a red color
                 expect(rgba[0]).toBeGreaterThan(rgba[1]);
                 expect(rgba[0]).toBeGreaterThan(rgba[2]);
-
             });
         });
     });
