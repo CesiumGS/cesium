@@ -876,7 +876,7 @@ defineSuite([
             var content = tile.content;
 
             var noClipFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(noClipFS.includes('clip')).toBe(false);
+            expect(noClipFS.indexOf('clip') !== -1).toBe(false);
 
             var clippingPlanes = new ClippingPlaneCollection({
                 planes : [
@@ -889,16 +889,16 @@ defineSuite([
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
             var clipOneIntersectFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(clipOneIntersectFS.includes('= clip(')).toBe(true);
-            expect(clipOneIntersectFS.includes('float clip')).toBe(true);
+            expect(clipOneIntersectFS.indexOf('= clip(') !== -1).toBe(true);
+            expect(clipOneIntersectFS.indexOf('float clip') !== -1).toBe(true);
 
             clippingPlanes.unionClippingRegions = true;
 
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
             var clipOneUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(clipOneUnionFS.includes('= clip(')).toBe(true);
-            expect(clipOneUnionFS.includes('float clip')).toBe(true);
+            expect(clipOneUnionFS.indexOf('= clip(') !== -1).toBe(true);
+            expect(clipOneUnionFS.indexOf('float clip') !== -1).toBe(true);
             expect(clipOneUnionFS).not.toEqual(clipOneIntersectFS);
 
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 1.0));
@@ -906,8 +906,8 @@ defineSuite([
             clippingPlanes.update(scene.frameState);
             tile.update(tileset, scene.frameState);
             var clipTwoUnionFS = content._drawCommand.shaderProgram._fragmentShaderText;
-            expect(clipTwoUnionFS.includes('= clip(')).toBe(true);
-            expect(clipTwoUnionFS.includes('float clip')).toBe(true);
+            expect(clipTwoUnionFS.indexOf('= clip(') !== -1).toBe(true);
+            expect(clipTwoUnionFS.indexOf('float clip') !== -1).toBe(true);
             expect(clipTwoUnionFS).not.toEqual(clipOneIntersectFS);
             expect(clipTwoUnionFS).not.toEqual(clipOneUnionFS);
         });
