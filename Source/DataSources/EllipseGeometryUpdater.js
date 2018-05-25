@@ -16,6 +16,7 @@ define([
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './GroundGeometryUpdater',
         './Property'
     ], function(
         Check,
@@ -35,6 +36,7 @@ define([
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        GroundGeometryUpdater,
         Property) {
     'use strict';
 
@@ -64,17 +66,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function EllipseGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, {
+        GroundGeometryUpdater.call(this, {
             entity : entity,
             scene : scene,
             geometryOptions : new EllipseGeometryOptions(entity),
             geometryPropertyName : 'ellipse',
             observedPropertyNames : ['availability', 'position', 'ellipse']
         });
+
+        this._onEntityPropertyChanged(entity, 'ellipse', entity.ellipse, undefined);
     }
 
     if (defined(Object.create)) {
-        EllipseGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        EllipseGeometryUpdater.prototype = Object.create(GroundGeometryUpdater.prototype);
         EllipseGeometryUpdater.prototype.constructor = EllipseGeometryUpdater;
     }
 
@@ -172,9 +176,7 @@ define([
     };
 
     EllipseGeometryUpdater.prototype._isOnTerrain = function(entity, ellipse) {
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-
-        return this._fillEnabled && !defined(ellipse.height) && !defined(ellipse.extrudedHeight) && isColorMaterial && GroundPrimitive.isSupported(this._scene);
+        return this._fillEnabled && !defined(ellipse.height) && !defined(ellipse.extrudedHeight) && GroundPrimitive.isSupported(this._scene);
     };
 
     EllipseGeometryUpdater.prototype._isDynamic = function(entity, ellipse) {
@@ -188,6 +190,7 @@ define([
                !Property.isConstant(ellipse.stRotation) || //
                !Property.isConstant(ellipse.outlineWidth) || //
                !Property.isConstant(ellipse.numberOfVerticalLines) || //
+               !Property.isConstant(ellipse.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 

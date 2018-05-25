@@ -169,9 +169,6 @@ define([
 
         this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
-        /**
-         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
-         */
         this.featurePropertiesDirty = false;
 
         // Options for geometric error based attenuation
@@ -185,9 +182,6 @@ define([
     }
 
     defineProperties(PointCloud3DTileContent.prototype, {
-        /**
-         * @inheritdoc Cesium3DTileContent#featuresLength
-         */
         featuresLength : {
             get : function() {
                 if (defined(this._batchTable)) {
@@ -197,45 +191,30 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#pointsLength
-         */
         pointsLength : {
             get : function() {
                 return this._pointsLength;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#trianglesLength
-         */
         trianglesLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#geometryByteLength
-         */
         geometryByteLength : {
             get : function() {
                 return this._geometryByteLength;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#texturesByteLength
-         */
         texturesByteLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTableByteLength
-         */
         batchTableByteLength : {
             get : function() {
                 if (defined(this._batchTable)) {
@@ -245,54 +224,36 @@ define([
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#innerContents
-         */
         innerContents : {
             get : function() {
                 return undefined;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#readyPromise
-         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tileset
-         */
         tileset : {
             get : function() {
                 return this._tileset;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tile
-         */
         tile : {
             get : function() {
                 return this._tile;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#url
-         */
         url : {
             get : function() {
                 return this._resource.getUrlComponent(true);
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTable
-         */
         batchTable : {
             get : function() {
                 return this._batchTable;
@@ -1222,7 +1183,7 @@ define([
                   'uniform mat4 u_clippingPlanesMatrix; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
             fs += '\n';
-            fs += getClippingFunction(clippingPlanes);
+            fs += getClippingFunction(clippingPlanes, context);
             fs += '\n';
         }
 
@@ -1299,9 +1260,6 @@ define([
         }
     }
 
-    /**
-     * @inheritdoc Cesium3DTileContent#hasProperty
-     */
     PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
         if (defined(this._batchTable)) {
             return this._batchTable.hasProperty(batchId, name);
@@ -1335,16 +1293,10 @@ define([
         return this._features[batchId];
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyDebugSettings
-     */
     PointCloud3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : Color.WHITE;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyStyle
-     */
     PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
         if (defined(this._batchTable)) {
             this._batchTable.applyStyle(frameState, style);
@@ -1412,9 +1364,6 @@ define([
         return true;
     }
 
-    /**
-     * @inheritdoc Cesium3DTileContent#update
-     */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
         var context = frameState.context;
         var decoding = decodeDraco(this, context);
@@ -1527,16 +1476,10 @@ define([
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#isDestroyed
-     */
     PointCloud3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#destroy
-     */
     PointCloud3DTileContent.prototype.destroy = function() {
         var command = this._drawCommand;
         var pickCommand = this._pickCommand;

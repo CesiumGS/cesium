@@ -18,6 +18,7 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './Matrix2',
         './Matrix3',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
@@ -45,6 +46,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        Matrix2,
         Matrix3,
         PolygonGeometryLibrary,
         PolygonPipeline,
@@ -595,6 +597,7 @@ define([
         this._workerName = 'createPolygonGeometry';
 
         this._rectangle = undefined;
+        this._textureCoordinateRotationPoints = undefined;
 
         /**
          * The number of elements used to pack the object into an array.
@@ -907,6 +910,17 @@ define([
         });
     };
 
+    function textureCoordinateRotationPoints(polygonGeometry) {
+        var stRotation = -polygonGeometry._stRotation;
+        if (stRotation === 0.0) {
+            return [0, 0, 0, 1, 1, 0];
+        }
+        var ellipsoid = polygonGeometry._ellipsoid;
+        var positions = polygonGeometry._polygonHierarchy.positions;
+        var boundingRectangle = polygonGeometry.rectangle;
+        return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
+    }
+
     defineProperties(PolygonGeometry.prototype, {
         /**
          * @private
@@ -923,6 +937,18 @@ define([
                 }
 
                 return this._rectangle;
+            }
+        },
+        /**
+         * For remapping texture coordinates when rendering PolygonGeometries as GroundPrimitives.
+         * @private
+         */
+        textureCoordinateRotationPoints : {
+            get : function() {
+                if (!defined(this._textureCoordinateRotationPoints)) {
+                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
+                }
+                return this._textureCoordinateRotationPoints;
             }
         }
     });

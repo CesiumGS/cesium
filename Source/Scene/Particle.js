@@ -1,19 +1,19 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning'
+        '../Core/defineProperties'
     ], function(
         Cartesian2,
         Cartesian3,
+        Check,
         Color,
         defaultValue,
         defined,
-        defineProperties,
-        deprecationWarning) {
+        defineProperties) {
     'use strict';
 
     var defaultSize = new Cartesian2(1.0, 1.0);
@@ -34,7 +34,6 @@ define([
      * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
      * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
      * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
-     * @param {Cartesian2} [options.size=new Cartesian2(1.0, 1.0)] The dimensions of particles in pixels. This has been deprecated. Use imageSize instead.
      * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] The dimensions, width by height, to scale the particle image in pixels.
      */
     function Particle(options) {
@@ -100,10 +99,6 @@ define([
          * @default new Cartesian(1.0, 1.0)
          */
         this.imageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultSize));
-        if (defined(options.size)) {
-            deprecationWarning('size', 'size was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use imageSize instead.');
-            this.imageSize = Cartesian2.clone(defaultValue(options.size, defaultSize));
-        }
 
         this._age = 0.0;
         this._normalizedAge = 0.0;
@@ -132,22 +127,6 @@ define([
             get : function() {
                 return this._normalizedAge;
             }
-        },
-        /**
-         * The dimensions of the particle in pixels. This has been deprecated. Use {@link Particle#imageSize} instead.
-         * @type {Cartesian2}
-         * @default new Cartesian(1.0, 1.0)
-         * @deprecated
-         */
-         size : {
-             get : function() {
-                 deprecationWarning('size', 'size was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use imageSize instead.');
-                 return this.imageSize;
-             },
-             set : function(value) {
-                 deprecationWarning('size', 'size was deprecated in Cesium 1.45.  It will be removed in 1.46.  Use imageSize instead.');
-                 this.imageSize = value;
-             }
         }
     });
 
@@ -163,18 +142,7 @@ define([
 
         // Update any forces.
         if (defined(particleUpdateFunction)) {
-            if (typeof particleUpdateFunction === 'function') {
-                particleUpdateFunction(this, dt);
-            } else if (particleUpdateFunction instanceof Array) {
-                var length = particleUpdateFunction.length;
-                for (var i = 0; i < length; ++i) {
-                    var force = particleUpdateFunction[i];
-                    if (typeof force === 'function') {
-                        // Force is just a simple callback function.
-                        force(this, dt);
-                    }
-                }
-            }
+            particleUpdateFunction(this, dt);
         }
 
         // Age the particle

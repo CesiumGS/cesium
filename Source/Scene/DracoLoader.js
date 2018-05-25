@@ -3,7 +3,6 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/FeatureDetection',
-        '../Core/RuntimeError',
         '../Core/TaskProcessor',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/when'
@@ -12,7 +11,6 @@ define([
         ComponentDatatype,
         defined,
         FeatureDetection,
-        RuntimeError,
         TaskProcessor,
         ForEach,
         when) {
@@ -189,10 +187,6 @@ define([
             return when.resolve();
         }
 
-        if (FeatureDetection.isInternetExplorer()) {
-            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
-        }
-
         var loadResources = model._loadResources;
         if (loadResources.primitivesToDecode.length === 0) {
             // No more tasks to schedule
@@ -216,9 +210,6 @@ define([
      * @private
      */
     DracoLoader.decodePointCloud = function(parameters) {
-        if (FeatureDetection.isInternetExplorer()) {
-            return when.reject(new RuntimeError('Draco decoding is not currently supported in Internet Explorer.'));
-        }
         var decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
         if (!DracoLoader._taskProcessorReady) {
             // The task processor is not ready to schedule tasks

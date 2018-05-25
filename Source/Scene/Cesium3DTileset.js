@@ -809,6 +809,8 @@ define([
         /**
          * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {ClippingPlaneCollection}
          */
         clippingPlanes : {

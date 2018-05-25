@@ -4,7 +4,6 @@ defineSuite([
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/defined',
-        'Core/FeatureDetection',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
@@ -28,7 +27,6 @@ defineSuite([
         Color,
         ComponentDatatype,
         defined,
-        FeatureDetection,
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
@@ -243,10 +241,6 @@ defineSuite([
     });
 
     it('renders point cloud with draco encoded positions, normals, colors, and batch table properties', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Draco decoding is not currently supported in IE
-            return;
-        }
         return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
             // Test that Draco-encoded batch table properties are functioning correctly
@@ -263,30 +257,18 @@ defineSuite([
     });
 
     it('renders point cloud with draco encoded positions and uncompressed normals and colors', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Draco decoding is not currently supported in IE
-            return;
-        }
         return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoPartialUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with draco encoded positions, colors, and batch ids', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Draco decoding is not currently supported in IE
-            return;
-        }
         return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoBatchedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('error decoding a draco point cloud causes loading to fail', function() {
-        if (FeatureDetection.isInternetExplorer()) {
-            // Draco decoding is not currently supported in IE
-            return;
-        }
         return pollToPromise(function() {
             return DracoLoader._taskProcessorReady;
         }).then(function() {
@@ -299,18 +281,6 @@ defineSuite([
                 }).otherwise(function(error) {
                     expect(error.message).toBe('my error');
                 });
-            });
-        });
-    });
-
-    it('throws error if attempting to decode draco in Internet Explorer', function() {
-        spyOn(FeatureDetection, 'isInternetExplorer').and.returnValue(true);
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
-            var root = tileset._root;
-            return root.contentReadyPromise.then(function() {
-                fail('should not resolve');
-            }).otherwise(function(error) {
-                expect(error.message).toBe('Draco decoding is not currently supported in Internet Explorer.');
             });
         });
     });

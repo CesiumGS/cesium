@@ -178,12 +178,12 @@ defineSuite([
     });
 
     it('handles server-sent credits', function() {
-        var serverCredit = { text: 'Text', image: 'http://test.invalid/image', url: 'http://test.invalid/', collapsible: false };
+        var serverCredit = {html : '<a href="http://test.invalid/">Text</a>', collapsible : false};
         var provider = createTestProvider({
-            type: 'IMAGERY',
-            url: 'http://test.invalid/layer',
-            accessToken: 'not_really_a_refresh_token',
-            attributions: [serverCredit]
+            type : 'IMAGERY',
+            url : 'http://test.invalid/layer',
+            accessToken : 'not_really_a_refresh_token',
+            attributions : [serverCredit]
         });
 
         return provider.readyPromise
@@ -191,9 +191,7 @@ defineSuite([
                 var credits = provider.getTileCredits(0, 0, 0);
                 var credit = credits[0];
                 expect(credit).toBeInstanceOf(Credit);
-                expect(credit.text).toEqual(serverCredit.text);
-                expect(credit.link).toEqual(serverCredit.url);
-                expect(credit.imageUrl).toEqual(serverCredit.image);
+                expect(credit.html).toEqual(serverCredit.html);
                 expect(credit.showOnScreen).toEqual(!serverCredit.collapsible);
             });
     });
