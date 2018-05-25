@@ -1914,7 +1914,7 @@ define([
         var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
-        if (statistics.selected !== 0) {
+        if (statistics.selected !== 0 && defined(frameState.creditDisplay)) {
             var credits = this._credits;
             if (defined(credits)) {
                 var length = credits.length;

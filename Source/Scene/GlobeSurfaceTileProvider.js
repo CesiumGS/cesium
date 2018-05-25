@@ -354,6 +354,9 @@ define([
 
     function updateCredits(surface, frameState) {
         var creditDisplay = frameState.creditDisplay;
+        if (!defined(creditDisplay)) {
+          return;
+        }
         if (surface._terrainProvider.ready && defined(surface._terrainProvider.credit)) {
             creditDisplay.addCredit(surface._terrainProvider.credit);
         }
@@ -1117,7 +1120,7 @@ define([
         var creditDisplay = frameState.creditDisplay;
 
         var terrainData = surfaceTile.terrainData;
-        if (defined(terrainData) && defined(terrainData.credits)) {
+        if (defined(creditDisplay) && defined(terrainData) && defined(terrainData.credits)) {
             var tileCredits = terrainData.credits;
             for (var tileCreditIndex = 0,
                      tileCreditLength = tileCredits.length; tileCreditIndex < tileCreditLength; ++tileCreditIndex) {
@@ -1344,7 +1347,7 @@ define([
                 uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.splitDirection;
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
-                if (defined(imagery.credits)) {
+                if (defined(creditDisplay) && defined(imagery.credits)) {
                     var credits = imagery.credits;
                     for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
                         creditDisplay.addCredit(credits[creditIndex]);
