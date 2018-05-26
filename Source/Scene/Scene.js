@@ -1411,6 +1411,8 @@ define([
         /**
          * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
          * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
          */
         logarithmicDepthBuffer : {
             get : function() {

@@ -304,10 +304,16 @@ define([
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = defaultValue(options.extrudedHeight, height);
 
+        if (!perPositionHeightExtrude) {
+            var h = Math.max(height, extrudedHeight);
+            extrudedHeight = Math.min(height, extrudedHeight);
+            height = h;
+        }
+
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._granularity = granularity;
-        this._height = Math.max(height, extrudedHeight);
-        this._extrudedHeight = Math.min(extrudedHeight, height);
+        this._height = height;
+        this._extrudedHeight = extrudedHeight;
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._perPositionHeightExtrude = perPositionHeightExtrude;
