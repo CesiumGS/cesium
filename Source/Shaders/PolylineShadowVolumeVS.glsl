@@ -1,14 +1,27 @@
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
+
+attribute vec4 startHi_and_forwardOffsetX;
+attribute vec4 startLo_and_forwardOffsetY;
+attribute vec4 startNormal_and_forwardOffsetZ;
+attribute vec4 endNormal_andTextureCoordinateNormalizationX;
+attribute vec4 rightNormal_andTextureCoordinateNormalizationY;
+attribute vec4 startHiLo2D;
+attribute vec4 offsetAndRight2D;
+attribute vec4 startEndNormals2D;
+attribute vec2 texcoordNormalization2D;
+
 attribute float batchId;
 
 varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
 varying vec4 v_rightPlaneEC;
 varying vec3 v_forwardDirectionEC;
-varying vec3 v_texcoordNormalization;
+varying vec2 v_texcoordNormalization;
 varying float v_halfWidth;
-varying float v_width; // for materials
+
+// For materials
+varying float v_width;
 varying float v_polylineAngle;
 
 #ifdef PER_INSTANCE_COLOR
@@ -27,69 +40,54 @@ vec3 branchFreeTernary(bool comparison, vec3 a, vec3 b) { // TODO: make branchFr
     return a * useA + b * (1.0 - useA);
 }
 
+// TODO: morph?
+
 void main()
 {
 #ifdef COLUMBUS_VIEW_2D
-    vec4 entry = czm_batchTable_startHighLow2D(batchId);
+    vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, startHiLo2D.xy), vec3(0.0, startHiLo2D.zw))).xyz;
 
-    vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, entry.xy), vec3(0.0, entry.zw))).xyz;
-
-    entry = czm_batchTable_offsetAndRight2D(batchId);
-    vec3 forwardDirectionEC = czm_normal * vec3(0.0, entry.xy);
+    vec3 forwardDirectionEC = czm_normal * vec3(0.0, offsetAndRight2D.xy);
     vec3 ecEnd = forwardDirectionEC + ecStart;
     forwardDirectionEC = normalize(forwardDirectionEC);
 
     v_forwardDirectionEC = forwardDirectionEC;
 
     // Right plane
-    v_rightPlaneEC.xyz = czm_normal * vec3(0.0, entry.zw);
+    v_rightPlaneEC.xyz = czm_normal * vec3(0.0, offsetAndRight2D.zw);
     v_rightPlaneEC.w = -dot(v_rightPlaneEC.xyz, ecStart);
 
-    entry = czm_batchTable_startEndNormals2D(batchId);
-
     // start plane
-    v_startPlaneEC.xyz =  czm_normal * vec3(0.0, entry.xy);
+    v_startPlaneEC.xyz =  czm_normal * vec3(0.0, startEndNormals2D.xy);
     v_startPlaneEC.w = -dot(v_startPlaneEC.xyz, ecStart);
 
     // end plane
-    v_endPlaneEC.xyz =  czm_normal * vec3(0.0, entry.zw);
+    v_endPlaneEC.xyz =  czm_normal * vec3(0.0, startEndNormals2D.zw);
     v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
 
-    v_texcoordNormalization = czm_batchTable_texcoordNormalization2D(batchId);
+    v_texcoordNormalization = texcoordNormalization2D;
 
 #else // COLUMBUS_VIEW_2D
-
-    vec4 entry1 = czm_batchTable_startHi_and_forwardOffsetX(batchId);
-    vec4 entry2 = czm_batchTable_startLo_and_forwardOffsetY(batchId);
-
-    vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(entry1.xyz, entry2.xyz)).xyz;
-    vec3 offset = vec3(entry1.w, entry2.w, 0.0);
-
-    entry1 = czm_batchTable_startNormal_and_forwardOffsetZ(batchId);
-
-    offset.z = entry1.w;
-    offset = czm_normal * offset;
+    vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(startHi_and_forwardOffsetX.xyz, startLo_and_forwardOffsetY.xyz)).xyz;
+    vec3 offset = czm_normal * vec3(startHi_and_forwardOffsetX.w, startLo_and_forwardOffsetY.w, startNormal_and_forwardOffsetZ.w);
     vec3 ecEnd = ecStart + offset;
 
     vec3 forwardDirectionEC = normalize(offset);
     v_forwardDirectionEC = forwardDirectionEC;
 
+    // start plane
+    v_startPlaneEC.xyz = czm_normal * startNormal_and_forwardOffsetZ.xyz;
+    v_startPlaneEC.w = -dot(v_startPlaneEC.xyz, ecStart);
+
     // end plane
-    vec3 ecEndNormal = czm_normal * czm_batchTable_endNormal(batchId);
-    v_endPlaneEC.xyz = ecEndNormal;
-    v_endPlaneEC.w = -dot(ecEndNormal, ecEnd);
+    v_endPlaneEC.xyz = czm_normal * endNormal_andTextureCoordinateNormalizationX.xyz;
+    v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
 
     // Right plane
-    vec3 ecRight = czm_normal * czm_batchTable_rightNormal(batchId);
-    v_rightPlaneEC.xyz = ecRight;
-    v_rightPlaneEC.w = -dot(ecRight, ecStart);
+    v_rightPlaneEC.xyz = czm_normal * rightNormal_andTextureCoordinateNormalizationY.xyz;
+    v_rightPlaneEC.w = -dot(v_rightPlaneEC.xyz, ecStart);
 
-    // start plane
-    vec3 ecStartNormal = czm_normal * entry1.xyz;
-    v_startPlaneEC.xyz = ecStartNormal;
-    v_startPlaneEC.w = -dot(ecStartNormal, ecStart);
-
-    v_texcoordNormalization = czm_batchTable_texcoordNormalization(batchId);
+    v_texcoordNormalization = vec2(endNormal_andTextureCoordinateNormalizationX.w, rightNormal_andTextureCoordinateNormalizationY.w);
 
 #endif // COLUMBUS_VIEW_2D
 

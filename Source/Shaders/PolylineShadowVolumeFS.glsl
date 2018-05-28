@@ -6,7 +6,7 @@ varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
 varying vec4 v_rightPlaneEC;
 varying vec3 v_forwardDirectionEC;
-varying vec3 v_texcoordNormalization;
+varying vec2 v_texcoordNormalization;
 varying float v_halfWidth;
 
 #ifdef PER_INSTANCE_COLOR
@@ -64,7 +64,7 @@ void main(void)
     distanceFromEnd = max(0.0, distanceFromEnd);
 
     float s = distanceFromStart / (distanceFromStart + distanceFromEnd);
-    s = ((s * v_texcoordNormalization.y) + v_texcoordNormalization.x) / v_texcoordNormalization.z;
+    s = (s * v_texcoordNormalization.y) + v_texcoordNormalization.x;
     float t = (width + halfMaxWidth) / (2.0 * halfMaxWidth);
 
     czm_materialInput materialInput;

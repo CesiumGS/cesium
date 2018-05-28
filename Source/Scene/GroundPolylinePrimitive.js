@@ -9,7 +9,6 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
         '../Core/GroundPolylineGeometry',
-        '../Core/GroundLineSegmentGeometry',
         '../Core/isArray',
         '../Core/Matrix4',
         '../Shaders/PolylineShadowVolumeVS',
@@ -36,7 +35,6 @@ define([
         GeometryInstance,
         GeometryInstanceAttribute,
         GroundPolylineGeometry,
-        GroundLineSegmentGeometry,
         isArray,
         Matrix4,
         PolylineShadowVolumeVS,
@@ -140,76 +138,6 @@ define([
                 enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
             }
         });
-
-        // Map for synchronizing geometry instance attributes between polylines and line segments
-        this._idsToInstanceIndices = {};
-        this._attributeSynchronizerCache = {};
-    }
-
-    function decompose(geometryInstance, projection, polylineSegmentInstances, idsToInstanceIndices) {
-        var groundPolylineGeometry = geometryInstance.geometry;
-        // TODO: check and throw using instanceof?
-
-        var commonId = geometryInstance.id;
-
-        var wallVertices = GroundPolylineGeometry.createWallVertices(groundPolylineGeometry, GroundPrimitive._defaultMaxTerrainHeight);
-        var rightFacingNormals = wallVertices.rightFacingNormals;
-        var bottomPositions = wallVertices.bottomPositions;
-        var topPositions = wallVertices.topPositions;
-
-        var totalLength = 0.0;
-        var totalLength2D = 0.0;
-
-        var i;
-        var groundPolylineSegmentGeometry;
-        var verticesLength = rightFacingNormals.length;
-        var lineGeometries = new Array(verticesLength / 3);
-        var index = 0;
-        for (i = 0; i < verticesLength - 3; i += 3) {
-            groundPolylineSegmentGeometry = GroundLineSegmentGeometry.fromArrays(projection, i, rightFacingNormals, bottomPositions, topPositions);
-            totalLength += groundPolylineSegmentGeometry.segmentBottomLength;
-            totalLength2D += groundPolylineSegmentGeometry.segmentBottomLength2D;
-
-            lineGeometries[index++] = groundPolylineSegmentGeometry;
-        }
-
-        var segmentIndicesStart = polylineSegmentInstances.length;
-        index = 0;
-        var lengthSoFar = 0.0;
-        var lengthSoFar2D = 0.0;
-        for (i = 0; i < verticesLength - 3; i += 3) {
-            groundPolylineSegmentGeometry = lineGeometries[index++];
-            var segmentLength = groundPolylineSegmentGeometry.segmentBottomLength;
-            var segmentLength2D = groundPolylineSegmentGeometry.segmentBottomLength2D;
-            var attributes = GroundLineSegmentGeometry.getAttributes(groundPolylineSegmentGeometry, projection, lengthSoFar, segmentLength, totalLength, lengthSoFar2D, segmentLength2D, totalLength2D);
-            lengthSoFar += segmentLength;
-            lengthSoFar2D += segmentLength2D;
-
-            if (defined(geometryInstance.attributes.color)) {
-                attributes.color = geometryInstance.attributes.color;
-            }
-
-            attributes.width = new GeometryInstanceAttribute({
-                componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute: 1,
-                normalize : false,
-                value : [groundPolylineGeometry.width]
-            });
-
-            attributes.show = new GeometryInstanceAttribute({
-                componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute: 1,
-                normalize : false,
-                value : [true]
-            });
-
-            polylineSegmentInstances.push(new GeometryInstance({
-                geometry : groundPolylineSegmentGeometry,
-                attributes : attributes,
-                id : commonId
-            }));
-        }
-        idsToInstanceIndices[commonId] = [segmentIndicesStart, polylineSegmentInstances.length - 1];
     }
 
     // TODO: remove
@@ -477,9 +405,6 @@ define([
         var that = this;
         var primitiveOptions = this._primitiveOptions;
         if (!defined(this._primitive)) {
-            // Decompose GeometryInstances into an array of GeometryInstances containing GroundPolylineSegmentGeometries.
-            // TODO: compute rectangle for getting min/max heights
-            var polylineSegmentInstances = [];
             var geometryInstances = isArray(this.polylineGeometryInstances) ? this.polylineGeometryInstances : [this.polylineGeometryInstances];
             var geometryInstancesLength = geometryInstances.length;
 
@@ -491,11 +416,8 @@ define([
                     }
                 }
             }
-            for (i = 0; i < geometryInstancesLength; ++i) {
-                decompose(geometryInstances[i], frameState.mapProjection, polylineSegmentInstances, this._idsToInstanceIndices);
-            }
 
-            primitiveOptions.geometryInstances = polylineSegmentInstances;
+            primitiveOptions.geometryInstances = geometryInstances;
             primitiveOptions.appearance = this.appearance;
 
             primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
@@ -543,82 +465,11 @@ define([
         this._sp2D = undefined;
         this._spPick2D = undefined;
 
-        //These objects may be fairly large and reference other large objects (like Entities)
-        //We explicitly set them to undefined here so that the memory can be freed
-        //even if a reference to the destroyed GroundPolylinePrimitive has been kept around.
-        this._idsToInstanceIndices = undefined;
-        this._attributeSynchronizerCache = undefined;
-
         return destroyObject(this);
     };
 
-    // An object that, on setting an attribute, will set all the instances' attributes.
-    var userAttributeNames = ['width', 'show', 'color']; // TODO: do we let Primitives swallow generic, user-specified attributes?
-    var userAttributeCount = userAttributeNames.length;
-    function InstanceAttributeSynchronizer(batchTable, firstInstanceIndex, lastInstanceIndex, batchTableAttributeIndices) {
-        var properties = {};
-        for (var i = 0; i < userAttributeCount; i++) {
-            var name = userAttributeNames[i];
-            var attributeIndex = batchTableAttributeIndices[name];
-            if (defined(attributeIndex)) {
-                properties[name] = {
-                    get : createGetFunction(batchTable, firstInstanceIndex, attributeIndex),
-                    set : createSetFunction(batchTable, firstInstanceIndex, lastInstanceIndex, attributeIndex)
-                };
-            }
-        }
-        defineProperties(this, properties);
-    }
-
-    function createSetFunction(batchTable, firstInstanceIndex, lastInstanceIndex, attributeIndex) {
-        return function(value) {
-            for (var i = firstInstanceIndex; i <= lastInstanceIndex; i++) {
-                var attributeValue = value[0];
-                batchTable.setBatchedAttribute(i, attributeIndex, attributeValue);
-            }
-        };
-    }
-
-    function createGetFunction(batchTable, instanceIndex, attributeIndex) {
-        return function() {
-            var attributeValue = batchTable.getBatchedAttribute(instanceIndex, attributeIndex);
-            var attribute = batchTable.attributes[attributeIndex];
-            var componentsPerAttribute = attribute.componentsPerAttribute;
-            var value = ComponentDatatype.createTypedArray(attribute.componentDatatype, componentsPerAttribute);
-            if (defined(attributeValue.constructor.pack)) {
-                attributeValue.constructor.pack(attributeValue, value, 0);
-            } else {
-                value[0] = attributeValue;
-            }
-            return value;
-        };
-    }
-
     GroundPolylinePrimitive.prototype.getGeometryInstanceAttributes = function(id) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required');
-        }
-        if (!defined(this._primitive) || !defined(this._primitive._batchTable)) {
-            throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
-        }
-        //>>includeEnd('debug');
-
-        // All GeometryInstances generated by decomposing a GroundPolylineGeometry will have
-        // the same pick ID, so we have to map from their individual instance attributes to a
-        // master instance attribute and synchronize changes as they happen.
-
-        var instanceIndices = this._idsToInstanceIndices[id];
-        if (!defined(instanceIndices)) {
-            return undefined;
-        }
-        var attributeSynchronizer = this._attributeSynchronizerCache[id];
-        if (!defined(attributeSynchronizer)) {
-            attributeSynchronizer = new InstanceAttributeSynchronizer(this._primitive._batchTable,
-                instanceIndices[0], instanceIndices[1], this._primitive._batchTableAttributeIndices);
-            this._attributeSynchronizerCache[id] = attributeSynchronizer;
-        }
-        return attributeSynchronizer;
+        return this._primitive.getGeometryInstanceAttributes(id);
     };
 
     /**
