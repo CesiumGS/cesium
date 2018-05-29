@@ -396,7 +396,7 @@ defineSuite([
         model.show = false;
     });
 
-    it('Renders x-up model', function() {
+    it('renders x-up model', function() {
         return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to x-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
@@ -412,7 +412,7 @@ defineSuite([
         });
     });
 
-    it('Renders y-up model', function() {
+    it('renders y-up model', function() {
         return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to y-up.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
@@ -428,7 +428,7 @@ defineSuite([
         });
     });
 
-    it('Renders z-up model', function() {
+    it('renders z-up model', function() {
         return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be the identity.
             gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
@@ -439,6 +439,50 @@ defineSuite([
             }).then(function(m) {
                 verifyRender(m);
                 expect(m.upAxis).toBe(Axis.Z);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('renders x-forward model', function() {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
+            return loadModelJson(gltf, {
+                forwardAxis : Axis.X
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.X);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('renders z-forward model', function() {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
+            return loadModelJson(gltf, {
+                forwardAxis : Axis.Z
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.Z);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('detects glTF 1.0 models as x-forward', function() {
+        return Resource.fetchJson(boxEcefUrl).then(function(gltf) {
+            return loadModelJson(gltf).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.X);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('detects glTF 2.0 models as z-forward', function() {
+        return Resource.fetchJson(boxPbrUrl).then(function(gltf) {
+            return loadModelJson(gltf).then(function(m) {
+                verifyRender(m);
+                expect(m.forwardAxis).toBe(Axis.Z);
                 primitives.remove(m);
             });
         });
