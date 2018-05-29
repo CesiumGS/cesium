@@ -579,7 +579,7 @@ define([
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
-        this._forwardAxis = defaultValue(options.upAxis, Axis.Z);
+        this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
         /**
          * @private
