@@ -459,6 +459,12 @@ define([
             this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
         }
 
+        // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
+        // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
+        if (defined(tilesetClippingPlanes) && defined(this._model._clippingPlanes) && this._model._clippingPlanes !== tilesetClippingPlanes) {
+            this._model._clippingPlanes = tilesetClippingPlanes;
+        }
+
         this._model.update(frameState);
 
         // If any commands were pushed, add derived commands

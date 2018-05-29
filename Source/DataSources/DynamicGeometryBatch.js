@@ -11,14 +11,14 @@ define([
     /**
      * @private
      */
-    function DynamicGeometryBatch(primitives, groundPrimitives) {
+    function DynamicGeometryBatch(primitives, orderedGroundPrimitives) {
         this._primitives = primitives;
-        this._groundPrimitives = groundPrimitives;
+        this._orderedGroundPrimitives = orderedGroundPrimitives;
         this._dynamicUpdaters = new AssociativeArray();
     }
 
     DynamicGeometryBatch.prototype.add = function(time, updater) {
-        this._dynamicUpdaters.set(updater.id, updater.createDynamicUpdater(this._primitives, this._groundPrimitives));
+        this._dynamicUpdaters.set(updater.id, updater.createDynamicUpdater(this._primitives, this._orderedGroundPrimitives));
     };
 
     DynamicGeometryBatch.prototype.remove = function(updater) {

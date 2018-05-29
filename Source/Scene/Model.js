@@ -248,7 +248,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li>
      * </ul>
      * </p>
@@ -1096,7 +1096,7 @@ define([
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression} (Not supported in Internet Explorer)
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li>
      * </ul>
      * </p>
@@ -2043,7 +2043,7 @@ define([
             finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
         }
         if (addClippingPlaneCode) {
-            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection);
+            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
@@ -2066,7 +2066,7 @@ define([
             }
 
             if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
+                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection, context);
             }
 
             if (!FeatureDetection.isInternetExplorer()) {
@@ -3960,9 +3960,9 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection) {
+    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
+        shader += Model._getClippingFunction(clippingPlaneCollection, context) + '\n';
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +

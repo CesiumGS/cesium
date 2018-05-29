@@ -39,6 +39,7 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the rectangle casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this rectangle will be displayed.
+     * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry.  Only has an effect if the rectangle is constant and neither height or extrudedHeight are specified.
      *
      * @see Entity
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
@@ -74,6 +75,9 @@ define([
         this._distancedisplayConditionSubscription = undefined;
         this._classificationType = undefined;
         this._classificationTypeSubscription = undefined;
+        this._zIndex = undefined;
+        this._zIndexSubscription = undefined;
+
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -208,9 +212,17 @@ define([
          * Gets or sets the {@link ClassificationType} Property specifying whether this rectangle will classify terrain, 3D Tiles, or both when on the ground.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
-         * @default ClassificationType.BOTH
+         * @default ClassificationType.TERRAIN
          */
-        classificationType : createPropertyDescriptor('classificationType')
+        classificationType : createPropertyDescriptor('classificationType'),
+
+        /**
+         * Gets or sets the zIndex Property specifying the ordering of the rectangle.  Only has an effect if the rectangle is constant and neither height or extrudedHeight are specified.
+         * @memberof RectangleGraphics.prototype
+         * @type {ConstantProperty}
+         * @default 0
+         */
+        zIndex : createPropertyDescriptor('zIndex')
     });
 
     /**
@@ -238,6 +250,8 @@ define([
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.classificationType = this.classificationType;
+        result.zIndex = this.zIndex;
+
         return result;
     };
 
@@ -269,6 +283,7 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
+        this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
 
     return RectangleGraphics;
