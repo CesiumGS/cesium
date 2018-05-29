@@ -28,7 +28,11 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // A simple demo of 3D Tiles feature picking with hover and select behavior
 // Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
+
+viewer.scene.globe.depthTestAgainstTerrain = true;
 
 // Set the initial camera view to look at Manhattan
 var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
@@ -40,7 +44,7 @@ viewer.scene.camera.setView({
 });
 
 // Load the NYC buildings tileset
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3839) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(4693) });
 viewer.scene.primitives.add(tileset);
 
 // HTML overlay for showing feature name on mouseover
@@ -145,6 +149,10 @@ viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
                                  '<tr><th>BIN</th><td>' + pickedFeature.getProperty('BIN') + '</td></tr>' +
                                  '<tr><th>DOITT ID</th><td>' + pickedFeature.getProperty('DOITT_ID') + '</td></tr>' +
                                  '<tr><th>SOURCE ID</th><td>' + pickedFeature.getProperty('SOURCE_ID') + '</td></tr>' +
+                                 '<tr><th>Longitude</th><td>' + pickedFeature.getProperty('longitude') + '</td></tr>' +
+                                 '<tr><th>Latitude</th><td>' + pickedFeature.getProperty('latitude') + '</td></tr>' +
+                                 '<tr><th>Height</th><td>' + pickedFeature.getProperty('height') + '</td></tr>' +
+                                 '<tr><th>Terrain Height (Ellipsoid)</th><td>' + pickedFeature.getProperty('TerrainHeight') + '</td></tr>' +
                                  '</tbody></table>';
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 //Sandcastle_End

@@ -1087,7 +1087,7 @@ define([
                   'uniform mat4 u_clippingPlanesMatrix; \n' +
                   'uniform vec4 u_clippingPlanesEdgeStyle; \n';
             fs += '\n';
-            fs += getClippingFunction(clippingPlanes);
+            fs += getClippingFunction(clippingPlanes, context);
             fs += '\n';
         }
 
