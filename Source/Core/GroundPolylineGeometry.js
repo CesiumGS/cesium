@@ -399,7 +399,7 @@ define([
             cartographicsArray.push(startCartographic.longitude);
         }
 
-        return generateGeometryAttributes(projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray, loop);
+        return generateGeometryAttributes(groundPolylineGeometry, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray);
     };
 
     var positionCartographicScratch = new Cartographic();
@@ -417,13 +417,39 @@ define([
         return result;
     }
 
-    var cartographicScratch = new Cartographic();
+    var adjustHeightNormalScratch = new Cartesian3();
+    var adjustHeightOffsetScratch = new Cartesian3();
+    function adjustHeights(groundPolylineGeometry, bottom, top, minHeight, maxHeight, adjustHeightBottom, adjustHeightTop) {
+        // bottom and top should be at groundPolylineGeometry.minimumTerrainHeight and groundPolylineGeometry.maximumTerrainHeight, respectively
+        var adjustHeightNormal = Cartesian3.subtract(top, bottom, adjustHeightNormalScratch);
+        Cartesian3.normalize(adjustHeightNormal, adjustHeightNormal);
+
+        var distanceForBottom = minHeight - groundPolylineGeometry.minimumTerrainHeight;
+        var adjustHeightOffset = Cartesian3.multiplyByScalar(adjustHeightNormal, distanceForBottom, adjustHeightOffsetScratch);
+        Cartesian3.add(bottom, adjustHeightOffset, adjustHeightBottom);
+
+        var distanceForTop = maxHeight - groundPolylineGeometry.maximumTerrainHeight;
+        adjustHeightOffset = Cartesian3.multiplyByScalar(adjustHeightNormal, distanceForTop, adjustHeightOffsetScratch);
+        Cartesian3.add(top, adjustHeightOffset, adjustHeightTop);
+    }
+
+    var startCartographicScratch = new Cartographic();
+    var endCartographicScratch = new Cartographic();
+
     var segmentStartTopScratch = new Cartesian3();
     var segmentEndTopScratch = new Cartesian3();
     var segmentStartBottomScratch = new Cartesian3();
     var segmentEndBottomScratch = new Cartesian3();
     var segmentStartNormalScratch = new Cartesian3();
     var segmentEndNormalScratch = new Cartesian3();
+
+    var getHeightCartographics = [startCartographicScratch, endCartographicScratch];
+    var getHeightRectangleScratch = new Rectangle();
+
+    var adjustHeightStartTopScratch = new Cartesian3();
+    var adjustHeightEndTopScratch = new Cartesian3();
+    var adjustHeightStartBottomScratch = new Cartesian3();
+    var adjustHeightEndBottomScratch = new Cartesian3();
 
     var segmentStart2DScratch = new Cartesian3();
     var segmentEnd2DScratch = new Cartesian3();
@@ -452,9 +478,11 @@ define([
         3, 6, 2, 3, 7, 6 // top
     ];
     var REFERENCE_INDICES_LENGTH = REFERENCE_INDICES.length;
-    function generateGeometryAttributes(projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray, loop) {
+    function generateGeometryAttributes(groundPolylineGeometry, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray) {
         var i;
         var index;
+        var loop = groundPolylineGeometry.loop;
+        var ellipsoid = groundPolylineGeometry.ellipsoid;
 
         // Each segment will have 8 vertices
         var segmentCount = (bottomPositionsArray.length / 3) - 1;
@@ -482,7 +510,7 @@ define([
         var length2D = 0.0;
         var length3D = 0.0;
 
-        var cartographic = cartographicScratch;
+        var cartographic = startCartographicScratch;
         cartographic.latitude = cartographicsArray[0];
         cartographic.longitude = cartographicsArray[1];
         cartographic.height = 0.0;
@@ -533,9 +561,11 @@ define([
                 endGeometryNormal = Cartesian3.multiplyByScalar(endGeometryNormal, -1.0, endGeometryNormal);
             }
         }
-        cartographic.latitude = cartographicsArray[0];
-        cartographic.longitude = cartographicsArray[1];
-        var end2D = projection.project(cartographic, segmentEnd2DScratch);
+        var endCartographic = endCartographicScratch;
+        var startCartographic = startCartographicScratch;
+        endCartographic.latitude = cartographicsArray[0];
+        endCartographic.longitude = cartographicsArray[1];
+        var end2D = projection.project(endCartographic, segmentEnd2DScratch);
         var endGeometryNormal2D = projectNormal(projection, endBottom, endGeometryNormal, end2D, segmentEndNormal2DScratch);
 
         var lengthSoFar3D = 0.0;
@@ -549,10 +579,11 @@ define([
 
             var start2D = Cartesian3.clone(end2D, segmentStart2DScratch);
             var startGeometryNormal2D = Cartesian3.clone(endGeometryNormal2D, segmentStartNormal2DScratch);
+            startCartographic = Cartographic.clone(endCartographic, startCartographic);
 
             if (miterBroken) {
                 // If miter was broken for the previous segment's end vertex, flip for this segment's start vertex
-                // These "normals" are "right facing."
+                // These normals are "right facing."
                 startGeometryNormal = Cartesian3.multiplyByScalar(startGeometryNormal, -1.0, startGeometryNormal);
                 startGeometryNormal2D = Cartesian3.multiplyByScalar(startGeometryNormal2D, -1.0, startGeometryNormal2D);
             }
@@ -566,9 +597,9 @@ define([
 
             miterBroken = breakMiter(endGeometryNormal, startBottom, endBottom, endTop);
 
-            cartographic.latitude = cartographicsArray[cartographicsIndex];
-            cartographic.longitude = cartographicsArray[cartographicsIndex + 1];
-            end2D = projection.project(cartographic, segmentEnd2DScratch);
+            endCartographic.latitude = cartographicsArray[cartographicsIndex];
+            endCartographic.longitude = cartographicsArray[cartographicsIndex + 1];
+            end2D = projection.project(endCartographic, segmentEnd2DScratch);
             endGeometryNormal2D = projectNormal(projection, endBottom, endGeometryNormal, end2D, segmentEndNormal2DScratch);
 
             /****************************************
@@ -645,7 +676,6 @@ define([
                 rightNormal_andTextureCoordinateNormalizationY[wIndex] = texcoordNormalization3DY;
 
                 // 2D
-
                 startHiLo2D[vec4Index] = encodedStart2D.high.x;
                 startHiLo2D[vec4Index + 1] = encodedStart2D.high.y;
                 startHiLo2D[vec4Index + 2] = encodedStart2D.low.x;
@@ -671,38 +701,48 @@ define([
              * Encode which side of the line segment each position is on by
              * pushing it "away" by 1 meter along the geometry normal.
              *
-             * This helps when pushing the vertices out by varying amounts to
+             * Needed when pushing the vertices out by varying amounts to
              * help simulate constant screen-space line width.
              ****************************************************************/
+            // Adjust heights of positions in 3D
+            var adjustHeightStartBottom = adjustHeightStartBottomScratch;
+            var adjustHeightEndBottom = adjustHeightEndBottomScratch;
+            var adjustHeightStartTop = adjustHeightStartTopScratch;
+            var adjustHeightEndTop = adjustHeightEndTopScratch;
+
+            var getHeightsRectangle = Rectangle.fromCartographicArray(getHeightCartographics, getHeightRectangleScratch);
+            var minMaxHeights = ApproximateTerrainHeights.getApproximateTerrainHeights(getHeightsRectangle, ellipsoid);
+            var minHeight = minMaxHeights.minimumTerrainHeight;
+            var maxHeight = minMaxHeights.maximumTerrainHeight;
+
+            adjustHeights(groundPolylineGeometry, startBottom, startTop, minHeight, maxHeight, adjustHeightStartBottom, adjustHeightStartTop);
+            adjustHeights(groundPolylineGeometry, endBottom, endTop, minHeight, maxHeight, adjustHeightEndBottom, adjustHeightEndTop);
+
             // Push out by 1.0 in the "right" direction
-            var pushedStartBottom = Cartesian3.add(startBottom, startGeometryNormal, startBottom);
-            var pushedEndBottom = Cartesian3.add(endBottom, endGeometryNormal, endBottom);
-            var pushedEndTop = Cartesian3.add(endTop, endGeometryNormal, endTop);
-            var pushedStartTop = Cartesian3.add(startTop, startGeometryNormal, startTop);
+            var pushedStartBottom = Cartesian3.add(adjustHeightStartBottom, startGeometryNormal, adjustHeightStartBottom);
+            var pushedEndBottom = Cartesian3.add(adjustHeightEndBottom, endGeometryNormal, adjustHeightEndBottom);
+            var pushedEndTop = Cartesian3.add(adjustHeightEndTop, endGeometryNormal, adjustHeightEndTop);
+            var pushedStartTop = Cartesian3.add(adjustHeightStartTop, startGeometryNormal, adjustHeightStartTop);
             Cartesian3.pack(pushedStartBottom, positionsArray, vec3sWriteIndex);
             Cartesian3.pack(pushedEndBottom, positionsArray, vec3sWriteIndex + 3);
             Cartesian3.pack(pushedEndTop, positionsArray, vec3sWriteIndex + 6);
             Cartesian3.pack(pushedStartTop, positionsArray, vec3sWriteIndex + 9);
 
             // Return to center
-            pushedStartBottom = Cartesian3.subtract(startBottom, startGeometryNormal, startBottom);
-            pushedEndBottom = Cartesian3.subtract(endBottom, endGeometryNormal, endBottom);
-            pushedEndTop = Cartesian3.subtract(endTop, endGeometryNormal, endTop);
-            pushedStartTop = Cartesian3.subtract(startTop, startGeometryNormal, startTop);
+            pushedStartBottom = Cartesian3.subtract(adjustHeightStartBottom, startGeometryNormal, adjustHeightStartBottom);
+            pushedEndBottom = Cartesian3.subtract(adjustHeightEndBottom, endGeometryNormal, adjustHeightEndBottom);
+            pushedEndTop = Cartesian3.subtract(adjustHeightEndTop, endGeometryNormal, adjustHeightEndTop);
+            pushedStartTop = Cartesian3.subtract(adjustHeightStartTop, startGeometryNormal, adjustHeightStartTop);
 
             // Push out by 1.0 in the "left" direction
-            pushedStartBottom = Cartesian3.subtract(startBottom, startGeometryNormal, startBottom);
-            pushedEndBottom = Cartesian3.subtract(endBottom, endGeometryNormal, endBottom);
-            pushedEndTop = Cartesian3.subtract(endTop, endGeometryNormal, endTop);
-            pushedStartTop = Cartesian3.subtract(startTop, startGeometryNormal, startTop);
+            pushedStartBottom = Cartesian3.subtract(adjustHeightStartBottom, startGeometryNormal, adjustHeightStartBottom);
+            pushedEndBottom = Cartesian3.subtract(adjustHeightEndBottom, endGeometryNormal, adjustHeightEndBottom);
+            pushedEndTop = Cartesian3.subtract(adjustHeightEndTop, endGeometryNormal, adjustHeightEndTop);
+            pushedStartTop = Cartesian3.subtract(adjustHeightStartTop, startGeometryNormal, adjustHeightStartTop);
             Cartesian3.pack(pushedStartBottom, positionsArray, vec3sWriteIndex + 12);
             Cartesian3.pack(pushedEndBottom, positionsArray, vec3sWriteIndex + 15);
             Cartesian3.pack(pushedEndTop, positionsArray, vec3sWriteIndex + 18);
             Cartesian3.pack(pushedStartTop, positionsArray, vec3sWriteIndex + 21);
-
-            // Return next segment's start to center
-            pushedEndBottom = Cartesian3.add(endBottom, endGeometryNormal, endBottom);
-            pushedEndTop = Cartesian3.add(endTop, endGeometryNormal, endTop);
 
             cartographicsIndex += 2;
             index += 3;

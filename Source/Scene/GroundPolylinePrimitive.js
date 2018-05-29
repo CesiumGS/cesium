@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/Check',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -25,6 +26,7 @@ define([
         './Primitive',
         './SceneMode'
     ], function(
+        ApproximateTerrainHeights,
         Check,
         ComponentDatatype,
         defaultValue,
@@ -139,6 +141,37 @@ define([
             }
         });
     }
+
+    GroundPolylinePrimitive._initialized = false;
+    GroundPolylinePrimitive._initPromise = undefined;
+
+    GroundPolylinePrimitive.initializeTerrainHeights = function() {
+        var initPromise = GroundPolylinePrimitive._initPromise;
+        if (defined(initPromise)) {
+            return initPromise;
+        }
+
+        GroundPolylinePrimitive._initPromise = ApproximateTerrainHeights.initialize()
+            .then(function() {
+                GroundPolylinePrimitive._initialized = true;
+            });
+
+        return GroundPolylinePrimitive._initPromise;
+    };
+
+    GroundPolylinePrimitive._initializeTerrainHeightsWorker = function() {
+        var initPromise = GroundPolylinePrimitive._initPromise;
+        if (defined(initPromise)) {
+            return initPromise;
+        }
+
+        GroundPolylinePrimitive._initPromise = ApproximateTerrainHeights.initialize('../Assets/approximateTerrainHeights.json')
+            .then(function() {
+                GroundPolylinePrimitive._initialized = true;
+            });
+
+        return GroundPolylinePrimitive._initPromise;
+    };
 
     // TODO: remove
     function validateShaderMatching(shaderProgram, attributeLocations) {
@@ -397,6 +430,17 @@ define([
 
     GroundPolylinePrimitive.prototype.update = function(frameState) {
         if (!defined(this._primitive) && !defined(this.polylineGeometryInstances)) {
+            return;
+        }
+
+        if (!GroundPolylinePrimitive._initialized) {
+            //>>includeStart('debug', pragmas.debug);
+            if (!this.asynchronous) {
+                throw new DeveloperError('For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve.');
+            }
+            //>>includeEnd('debug');
+
+            GroundPolylinePrimitive.initializeTerrainHeights();
             return;
         }
 
