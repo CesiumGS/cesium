@@ -2229,6 +2229,7 @@ defineSuite([
 
     function checkVertexColors(model) {
         model.zoomTo();
+        scene.camera.rotateRight(CesiumMath.PI_OVER_TWO);
         scene.camera.moveUp(0.1);
         // Red
         scene.camera.moveLeft(0.5);
@@ -2485,7 +2486,8 @@ defineSuite([
 
     it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
         return loadModel(dracoCompressedModelWithAnimationUrl, {
-            dequantizeInShader : false
+            dequantizeInShader : false,
+            forwardAxis : Axis.X
         }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
@@ -2533,7 +2535,8 @@ defineSuite([
 
     it('loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes', function() {
         return loadModel(dracoCompressedModelWithAnimationUrl, {
-            dequantizeInShader : true
+            dequantizeInShader : true,
+            forwardAxis : Axis.X
         }).then(function(m) {
             verifyRender(m);
 
