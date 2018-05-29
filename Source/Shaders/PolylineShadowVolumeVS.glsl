@@ -17,8 +17,7 @@ varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
 varying vec4 v_rightPlaneEC;
 varying vec3 v_forwardDirectionEC;
-varying vec2 v_texcoordNormalization;
-varying float v_halfWidth;
+varying vec3 v_texcoordNormalization_and_halfWidth;
 
 // For materials
 varying float v_width;
@@ -29,16 +28,6 @@ varying vec4 v_color;
 #else
 varying vec2 v_alignedPlaneDistances;
 #endif
-
-float rayPlaneDistance(vec3 origin, vec3 direction, vec3 planeNormal, float planeDistance) { // TODO: move into its own function?
-    // We don't expect the ray to ever be parallel to the plane
-    return (-planeDistance - dot(planeNormal, origin)) / dot(planeNormal, direction);
-}
-
-vec3 branchFreeTernary(bool comparison, vec3 a, vec3 b) { // TODO: make branchFreeTernary generic for floats and vec3s
-    float useA = float(comparison);
-    return a * useA + b * (1.0 - useA);
-}
 
 // TODO: morph?
 
@@ -65,7 +54,7 @@ void main()
     v_endPlaneEC.xyz =  czm_normal * vec3(0.0, startEndNormals2D.zw);
     v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
 
-    v_texcoordNormalization = texcoordNormalization2D;
+    v_texcoordNormalization_and_halfWidth.xy = texcoordNormalization2D;
 
 #else // COLUMBUS_VIEW_2D
     vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(startHi_and_forwardOffsetX.xyz, startLo_and_forwardOffsetY.xyz)).xyz;
@@ -87,7 +76,7 @@ void main()
     v_rightPlaneEC.xyz = czm_normal * rightNormal_andTextureCoordinateNormalizationY.xyz;
     v_rightPlaneEC.w = -dot(v_rightPlaneEC.xyz, ecStart);
 
-    v_texcoordNormalization = vec2(endNormal_andTextureCoordinateNormalizationX.w, rightNormal_andTextureCoordinateNormalizationY.w);
+    v_texcoordNormalization_and_halfWidth.xy = vec2(endNormal_andTextureCoordinateNormalizationX.w, rightNormal_andTextureCoordinateNormalizationY.w);
 
 #endif // COLUMBUS_VIEW_2D
 
@@ -108,7 +97,7 @@ void main()
     vec4 positionEC = czm_modelViewRelativeToEye * positionRelativeToEye; // w = 1.0, see czm_computePosition
     float absStartPlaneDistance = abs(czm_planeDistance(v_startPlaneEC, positionEC.xyz));
     float absEndPlaneDistance = abs(czm_planeDistance(v_endPlaneEC, positionEC.xyz));
-    vec3 planeDirection = branchFreeTernary(absStartPlaneDistance < absEndPlaneDistance, v_startPlaneEC.xyz, v_endPlaneEC.xyz);
+    vec3 planeDirection = czm_branchFreeTernary(absStartPlaneDistance < absEndPlaneDistance, v_startPlaneEC.xyz, v_endPlaneEC.xyz);
     vec3 upOrDown = normalize(cross(v_rightPlaneEC.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
     vec3 normalEC = normalize(cross(planeDirection, upOrDown));           // In practice, the opposite seems to work too.
 
@@ -120,13 +109,13 @@ void main()
     // and for very sharp turns we compute attributes to "break" the miter anyway.
     float width = czm_batchTable_width(batchId);
     v_width = width;
-    v_halfWidth = width * 0.5;
+    v_texcoordNormalization_and_halfWidth.z = width * 0.5;
     positionEC.xyz -= normalEC; // undo the unit length push
     positionEC.xyz += width * max(0.0, czm_metersPerPixel(positionEC)) * normalEC; // prevent artifacts when czm_metersPerPixel is negative (behind camera)
     gl_Position = czm_projection * positionEC;
 
     // Approximate relative screen space direction of the line.
     vec2 approxLineDirection = normalize(vec2(forwardDirectionEC.x, -forwardDirectionEC.y));
-    approxLineDirection.y = czm_branchFreeTernaryFloat(approxLineDirection.x == 0.0 && approxLineDirection.y == 0.0, -1.0, approxLineDirection.y);
+    approxLineDirection.y = czm_branchFreeTernary(approxLineDirection.x == 0.0 && approxLineDirection.y == 0.0, -1.0, approxLineDirection.y);
     v_polylineAngle = czm_fastApproximateAtan(approxLineDirection.x, approxLineDirection.y);
 }

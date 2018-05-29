@@ -110,15 +110,11 @@ var loopCartographics = [
 var instance1 = new Cesium.GeometryInstance({
     geometry : new Cesium.GroundPolylineGeometry({
         positions : polylineCartographics,
-        loop : false
+        loop : false,
+        width : 16.0
     }),
     id : 'polyline1',
     attributes : {
-        width : new Cesium.GeometryInstanceAttribute({
-            componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 1.0,
-            value : [16.0]
-        }),
         show : new Cesium.ShowGeometryInstanceAttribute(),
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7))
     }
@@ -127,15 +123,11 @@ var instance1 = new Cesium.GeometryInstance({
 var instance2 = new Cesium.GeometryInstance({
     geometry : new Cesium.GroundPolylineGeometry({
         positions : loopCartographics,
-        loop : true
+        loop : true,
+        width : 8.0
     }),
     id : 'polyline2',
     attributes : {
-        width : new Cesium.GeometryInstanceAttribute({
-            componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 1.0,
-            value : [8.0]
-        }),
         show : new Cesium.ShowGeometryInstanceAttribute(),
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#67ADDF').withAlpha(0.7))
     }

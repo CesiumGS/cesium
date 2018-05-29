@@ -57,6 +57,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Options with the following properties:
+     * @param {Number} [options.width=1.0] The width in pixels.
      * @param {Cartographic[]} [options.positions] An array of {@link Cartographic} defining the polyline's points. Heights will be ignored.
      * @param {Number} [options.granularity=9999.0] The distance interval used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
@@ -69,6 +70,8 @@ define([
      */
     function GroundPolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
 
         this._positions = defaultValue(options.positions, []);
 

@@ -457,10 +457,37 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_branchFreeTernaryFloat', function() {
+    it('has czm_branchFreeTernary', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_branchFreeTernaryFloat(true, 1.0, 0.0));' +
+            '  gl_FragColor = vec4(czm_branchFreeTernary(true, 1.0, 0.0));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_branchFreeTernary(true, vec2(1.0), vec2(0.0)), 1.0, 1.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_branchFreeTernary(true, vec3(1.0), vec3(0.0)), 1.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  gl_FragColor = czm_branchFreeTernary(true, vec4(1.0), vec4(0.0));' +
             '}';
         expect({
             context : context,

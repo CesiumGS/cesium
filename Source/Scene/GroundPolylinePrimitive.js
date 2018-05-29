@@ -461,6 +461,19 @@ define([
                 }
             }
 
+            // Automatically create line width attributes
+            for (i = 0; i < geometryInstancesLength; ++i) {
+                var geometryInstance = geometryInstances[i];
+                var attributes = geometryInstance.attributes;
+                if (!defined(attributes.width)) {
+                    attributes.width = new GeometryInstanceAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 1.0,
+                        value : [geometryInstance.geometry.width]
+                    });
+                }
+            }
+
             primitiveOptions.geometryInstances = geometryInstances;
             primitiveOptions.appearance = this.appearance;
 

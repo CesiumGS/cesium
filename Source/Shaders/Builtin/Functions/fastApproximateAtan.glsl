@@ -48,8 +48,8 @@ float czm_fastApproximateAtan(float x, float y) {
     t = czm_fastApproximateAtan(opposite / adjacent);
 
     // Undo range reduction
-    t = czm_branchFreeTernaryFloat(abs(y) > abs(x), czm_piOverTwo - t, t);
-    t = czm_branchFreeTernaryFloat(x < 0.0, czm_pi - t, t);
-    t = czm_branchFreeTernaryFloat(y < 0.0, -t, t);
+    t = czm_branchFreeTernary(abs(y) > abs(x), czm_piOverTwo - t, t);
+    t = czm_branchFreeTernary(x < 0.0, czm_pi - t, t);
+    t = czm_branchFreeTernary(y < 0.0, -t, t);
     return t;
 }
