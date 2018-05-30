@@ -182,7 +182,7 @@ define([
      * Schedules decoding tasks available this frame.
      * @private
      */
-    DracoLoader.decode = function(model, context) {
+    DracoLoader.decodeModel = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
         }
