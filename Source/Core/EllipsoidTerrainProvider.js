@@ -160,11 +160,13 @@ define([
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         var width = 16;
         var height = 16;
-        return new HeightmapTerrainData({
-            buffer : new Uint8Array(width * height),
-            width : width,
-            height : height
-        });
+        return when.resolve(
+            new HeightmapTerrainData({
+                buffer : new Uint8Array(width * height),
+                width : width,
+                height : height
+            })
+        );
     };
 
     /**

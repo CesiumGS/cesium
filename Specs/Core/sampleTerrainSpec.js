@@ -2,12 +2,14 @@ defineSuite([
         'Core/sampleTerrain',
         'Core/Cartographic',
         'Core/CesiumTerrainProvider',
-        'Core/createWorldTerrain'
+        'Core/createWorldTerrain',
+        'Core/EllipsoidTerrainProvider'
     ], function(
         sampleTerrain,
         Cartographic,
         CesiumTerrainProvider,
-        createWorldTerrain) {
+        createWorldTerrain,
+        EllipsoidTerrainProvider) {
     'use strict';
 
     var worldTerrain = createWorldTerrain();
@@ -43,6 +45,21 @@ defineSuite([
             expect(positions[0].height).toBeLessThan(10000);
             expect(positions[1].height).toBeGreaterThan(5000);
             expect(positions[1].height).toBeLessThan(10000);
+        });
+    });
+
+    it('queries heights from Ellipsoid Terrain, and gets 0', function() {
+        var terrainProvider = new EllipsoidTerrainProvider();
+
+        var positions = [
+                         Cartographic.fromDegrees(86.925145, 27.988257),
+                         Cartographic.fromDegrees(87.0, 28.0)
+                     ];
+
+        return sampleTerrain(terrainProvider, 11, positions).then(function(passedPositions) {
+            expect(passedPositions).toBe(positions);
+            expect(positions[0].height).toEqual(0);
+            expect(positions[1].height).toEqual(0);
         });
     });
 
