@@ -5,6 +5,7 @@ define([
         './Cartographic',
         './Check',
         './ComponentDatatype',
+        './DeveloperError',
         './Math',
         './defaultValue',
         './defined',
@@ -27,6 +28,7 @@ define([
         Cartographic,
         Check,
         ComponentDatatype,
+        DeveloperError,
         CesiumMath,
         defaultValue,
         defined,
@@ -57,61 +59,78 @@ define([
      * @constructor
      *
      * @param {Object} [options] Options with the following properties:
-     * @param {Number} [options.width=1.0] The width in pixels.
+     * @param {Number} [options.width=1.0] The screen space width in pixels.
      * @param {Cartographic[]} [options.positions] An array of {@link Cartographic} defining the polyline's points. Heights will be ignored.
      * @param {Number} [options.granularity=9999.0] The distance interval used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] Ellipsoid for projecting cartographic coordinates to cartesian
-     * @param {Number} [options.maximumTerrainHeight]
-     * @param {Number} [options.minimumTerrainHeight]
-     * @param {MapProjection} [options.projection]
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] Ellipsoid for projecting cartographic coordinates to 3D.
+     * @param {MapProjection} [options.projection] Map Projection for projecting cartographic coordinates to 2D.
      *
      * @see GroundPolylinePrimitive
      */
     function GroundPolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        /**
+         * The screen space width in pixels.
+         * @type {Number}
+         */
         this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
 
-        this._positions = defaultValue(options.positions, []);
+        /**
+         * An array of {@link Cartographic} defining the polyline's points. Heights will be ignored.
+         * @type {Cartographic[]}
+         */
+        this.positions = defaultValue(options.positions, []);
 
         /**
          * The distance interval used for interpolating options.points. Zero indicates no interpolation.
-         * Default of 9999.0 allows sub-centimeter accuracy with 32 bit floating point.
+         * Default of 9999.0 allows centimeter accuracy with 32 bit floating point.
          * @type {Boolean}
          */
         this.granularity = defaultValue(options.granularity, 9999.0);
 
         /**
          * Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
+         * If the geometry has two positions this parameter will be ignored.
          * @type {Boolean}
          */
         this.loop = defaultValue(options.loop, false);
 
+        /**
+         * Ellipsoid for projecting cartographic coordinates to 3D.
+         * @type {Ellipsoid}
+         */
         this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        this.minimumTerrainHeight = defaultValue(options.minimumTerrainHeight, ApproximateTerrainHeights._defaultMinTerrainHeight);
-        this.maximumTerrainHeight = defaultValue(options.maximumTerrainHeight, ApproximateTerrainHeights._defaultMaxTerrainHeight);
-
+        // MapProjections can't be packed, so store the index to a known MapProjection.
         var projectionIndex = 0;
         if (defined(options.projection)) {
             for (var i = 0; i < PROJECTION_COUNT; i++) {
-                if (options.projection instanceof PROJECTIONS[i]) { // TODO: is this ok?
+                if (options.projection instanceof PROJECTIONS[i]) {
                     projectionIndex = i;
                     break;
                 }
             }
         }
-        this.projectionIndex = projectionIndex;
-
-        /**
-         * The number of elements used to pack the object into an array.
-         * @type {Number}
-         */
-        this.packedLength = 1.0 + this._positions.length * 2 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0 + 1.0 + 1.0;
-
+        this._projectionIndex = projectionIndex;
         this._workerName = 'createGroundPolylineGeometry';
     }
+
+    defineProperties(GroundPolylineGeometry.prototype, {
+        /**
+         * The number of elements used to pack the object into an array.
+         * @memberof GroundPolylineGeometry.prototype
+         * @type {Number}
+         * @readonly
+         * @private
+         */
+        packedLength: {
+            get: function() {
+                return 1.0 + this.positions.length * 2 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0;
+            }
+        }
+    });
 
     var cart3Scratch1 = new Cartesian3();
     var cart3Scratch2 = new Cartesian3();
@@ -173,28 +192,20 @@ define([
         return Cartographic.toCartesian(heightlessCartographicScratch, ellipsoid, result);
     }
 
-    defineProperties(GroundPolylineGeometry.prototype, {
-        /**
-         * Gets the interpolated Cartographic positions describing the Ground Polyline
-         * @memberof GroundPolylineGeometry.prototype
-         * @type {Cartographic[]}
-         */
-        positions: {
-            get: function() {
-                return this._positions;
-            },
-            // TODO: doc, packedLength, etc.
-            set: function(value) {
-                this._positions = defaultValue(value, []);
-            }
-        }
-    });
-
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {PolygonGeometry} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
+     */
     GroundPolylineGeometry.pack = function(value, packArray, startingIndex) {
         startingIndex = defaultValue(startingIndex, 0);
 
         // Pack position length, then all positions
-        var positions = value._positions;
+        var positions = value.positions;
         var positionsLength = positions.length;
 
         var index = startingIndex;
@@ -212,13 +223,18 @@ define([
         Ellipsoid.pack(value.ellipsoid, packArray, index);
         index += Ellipsoid.packedLength;
 
-        packArray[index++] = value.minimumTerrainHeight;
-        packArray[index++] = value.maximumTerrainHeight;
-        packArray[index++] = value.projectionIndex;
+        packArray[index++] = value._projectionIndex;
 
         return packArray;
     };
 
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {PolygonGeometry} [result] The object into which to store the result.
+     */
     GroundPolylineGeometry.unpack = function(packArray, startingIndex, result) {
         var index = defaultValue(startingIndex, 0);
         var positions = [];
@@ -237,8 +253,6 @@ define([
         var ellipsoid = Ellipsoid.unpack(packArray, index);
         index += Ellipsoid.packedLength;
 
-        var minimumTerrainHeight = packArray[index++];
-        var maximumTerrainHeight = packArray[index++];
         var projectionIndex = packArray[index++];
 
         if (!defined(result)) {
@@ -247,43 +261,67 @@ define([
                 granularity : granularity,
                 loop : loop,
                 ellipsoid : ellipsoid,
-                maximumTerrainHeight : maximumTerrainHeight,
-                minimumTerrainHeight : minimumTerrainHeight,
                 projection : new PROJECTIONS[projectionIndex](ellipsoid)
             });
         }
 
-        result._positions = positions;
+        result.positions = positions;
         result.granularity = granularity;
         result.loop = loop;
         result.ellipsoid = ellipsoid;
-        result.maximumTerrainHeight = maximumTerrainHeight;
-        result.minimumTerrainHeight = minimumTerrainHeight;
-        result.projectionIndex = projectionIndex;
+        result._projectionIndex = projectionIndex;
 
         return result;
     };
 
-    // If the end normal angle is too steep compared to the direction of the line segment,
-    // "break" the miter by rotating the normal 90 degrees around the "up" direction at the point
-    // For ultra precision we would want to project into a plane, but in practice this is sufficient.
-    var lineDirectionScratch = new Cartesian3();
-    var vertexUpScratch = new Cartesian3();
-    var matrix3Scratch = new Matrix3();
-    var quaternionScratch = new Quaternion();
-    function breakMiter(endGeometryNormal, startBottom, endBottom, endTop) {
-        var lineDirection = direction(endBottom, startBottom, lineDirectionScratch);
+    function direction(target, origin, result) {
+        Cartesian3.subtract(target, origin, result);
+        Cartesian3.normalize(result, result);
+        return result;
+    }
 
-        var dot = Cartesian3.dot(lineDirection, endGeometryNormal);
-        if (dot > MITER_BREAK_SMALL || dot < MITER_BREAK_LARGE) {
-            var vertexUp = direction(endTop, endBottom, vertexUpScratch);
-            var angle = dot < MITER_BREAK_LARGE ? CesiumMath.PI_OVER_TWO : -CesiumMath.PI_OVER_TWO;
-            var quaternion = Quaternion.fromAxisAngle(vertexUp, angle, quaternionScratch);
-            var rotationMatrix = Matrix3.fromQuaternion(quaternion, matrix3Scratch);
-            Matrix3.multiplyByVector(rotationMatrix, endGeometryNormal, endGeometryNormal);
-            return true;
+    // Inputs are cartesians
+    var toPreviousScratch = new Cartesian3();
+    var toNextScratch = new Cartesian3();
+    var forwardScratch = new Cartesian3();
+    var coplanarNormalScratch = new Cartesian3();
+    var coplanarPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
+    var vertexUpScratch = new Cartesian3();
+    var cosine90 = 0.0;
+    function computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, result) {
+        var up = direction(vertexTop, vertexBottom, vertexUpScratch);
+        var toPrevious = direction(previousBottom, vertexBottom, toPreviousScratch);
+        var toNext = direction(nextBottom, vertexBottom, toNextScratch);
+
+        // Check if points are coplanar in a right-side-pointing plane that contains "up."
+        // This is roughly equivalent to the points being colinear in cartographic space.
+        var coplanarNormal = Cartesian3.cross(up, toPrevious, coplanarNormalScratch);
+        coplanarNormal = Cartesian3.normalize(coplanarNormal, coplanarNormal);
+        var coplanarPlane = Plane.fromPointNormal(vertexBottom, coplanarNormal, coplanarPlaneScratch);
+        var nextBottomDistance = Plane.getPointDistance(coplanarPlane, nextBottom);
+        if (CesiumMath.equalsEpsilon(nextBottomDistance, 0.0, CesiumMath.EPSILON7)) {
+            // If the points are coplanar, point the normal in the direction of the plane
+            Cartesian3.clone(coplanarNormal, result);
+            return result;
         }
-        return false;
+
+        // Average directions to previous and to next
+        result = Cartesian3.add(toNext, toPrevious, result);
+        result = Cartesian3.multiplyByScalar(result, 0.5, result);
+        result = Cartesian3.normalize(result, result);
+
+        // Rotate this direction to be orthogonal to up
+        var forward = Cartesian3.cross(up, result, forwardScratch);
+        Cartesian3.normalize(forward, forward);
+        Cartesian3.cross(forward, up, result);
+        Cartesian3.normalize(result, result);
+
+        // Flip the normal if it isn't pointing roughly bound right (aka if forward is pointing more "backwards")
+        if (Cartesian3.dot(toNext, forward) < cosine90) {
+            result = Cartesian3.multiplyByScalar(result, -1.0, result);
+        }
+
+        return result;
     }
 
     var previousBottomScratch = new Cartesian3();
@@ -291,24 +329,42 @@ define([
     var vertexTopScratch = new Cartesian3();
     var nextBottomScratch = new Cartesian3();
     var vertexNormalScratch = new Cartesian3();
+    /**
+     * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
+     * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain.
+     *
+     * @param {GroundPolylineGeometry} groundPolylineGeometry
+     * @private
+     */
     GroundPolylineGeometry.createGeometry = function(groundPolylineGeometry) {
         var cartographics = groundPolylineGeometry.positions;
         var loop = groundPolylineGeometry.loop;
         var ellipsoid = groundPolylineGeometry.ellipsoid;
         var granularity = groundPolylineGeometry.granularity;
-        var projection = new PROJECTIONS[groundPolylineGeometry.projectionIndex](ellipsoid);
+        var projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](ellipsoid);
 
-        var maxHeight = groundPolylineGeometry.maximumTerrainHeight;
-        var minHeight = groundPolylineGeometry.minimumTerrainHeight;
+        var minHeight = ApproximateTerrainHeights._defaultMinTerrainHeight;
+        var maxHeight = ApproximateTerrainHeights._defaultMaxTerrainHeight;
 
         var cartographicsLength = cartographics.length;
 
-        // TODO: throw errors/negate loop if not enough points
+        //>>includeStart('debug', pragmas.debug);
+        if (cartographicsLength < 2) {
+            throw new DeveloperError('GroundPolylineGeometry must contain two or more cartographics');
+        }
+        //>>includeEnd('debug');
+        if (cartographicsLength === 2) {
+            loop = false;
+        }
 
         var index;
         var i;
 
-        /**** Build heap-side arrays of positions, cartographics, and normals from which to compute vertices ****/
+        /**** Build heap-side arrays of positions, interpolated cartographics, and normals from which to compute vertices ****/
+        // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
+        // of information about the wall. Also, this simplifies interpolation.
+        // Convention: "next" and "end" are locally forward to each segment of the wall,
+        // and we are computing normals pointing towards the local right side of the vertices in each segment.
         var cartographicsArray = [];
         var normalsArray = [];
         var bottomPositionsArray = [];
@@ -365,7 +421,7 @@ define([
             interpolateSegment(cartographics[i], cartographics[i + 1], minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
         }
 
-        // Last point - either loop or attach a "perpendicular" normal
+        // Last point - either loop or attach a normal "perpendicular" to the wall.
         var endCartographic = cartographics[cartographicsLength - 1];
         var preEndCartographic = cartographics[cartographicsLength - 2];
 
@@ -402,8 +458,29 @@ define([
             cartographicsArray.push(startCartographic.longitude);
         }
 
-        return generateGeometryAttributes(groundPolylineGeometry, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray);
+        return generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray);
     };
+
+    // If the end normal angle is too steep compared to the direction of the line segment,
+    // "break" the miter by rotating the normal 90 degrees around the "up" direction at the point
+    // For ultra precision we would want to project into a plane, but in practice this is sufficient.
+    var lineDirectionScratch = new Cartesian3();
+    var matrix3Scratch = new Matrix3();
+    var quaternionScratch = new Quaternion();
+    function breakMiter(endGeometryNormal, startBottom, endBottom, endTop) {
+        var lineDirection = direction(endBottom, startBottom, lineDirectionScratch);
+
+        var dot = Cartesian3.dot(lineDirection, endGeometryNormal);
+        if (dot > MITER_BREAK_SMALL || dot < MITER_BREAK_LARGE) {
+            var vertexUp = direction(endTop, endBottom, vertexUpScratch);
+            var angle = dot < MITER_BREAK_LARGE ? CesiumMath.PI_OVER_TWO : -CesiumMath.PI_OVER_TWO;
+            var quaternion = Quaternion.fromAxisAngle(vertexUp, angle, quaternionScratch);
+            var rotationMatrix = Matrix3.fromQuaternion(quaternion, matrix3Scratch);
+            Matrix3.multiplyByVector(rotationMatrix, endGeometryNormal, endGeometryNormal);
+            return true;
+        }
+        return false;
+    }
 
     var positionCartographicScratch = new Cartographic();
     var normalEndpointScratch = new Cartesian3();
@@ -422,16 +499,16 @@ define([
 
     var adjustHeightNormalScratch = new Cartesian3();
     var adjustHeightOffsetScratch = new Cartesian3();
-    function adjustHeights(groundPolylineGeometry, bottom, top, minHeight, maxHeight, adjustHeightBottom, adjustHeightTop) {
-        // bottom and top should be at groundPolylineGeometry.minimumTerrainHeight and groundPolylineGeometry.maximumTerrainHeight, respectively
+    function adjustHeights(bottom, top, minHeight, maxHeight, adjustHeightBottom, adjustHeightTop) {
+        // bottom and top should be at ApproximateTerrainHeights._defaultMinTerrainHeight and ApproximateTerrainHeights._defaultMaxTerrainHeight, respectively
         var adjustHeightNormal = Cartesian3.subtract(top, bottom, adjustHeightNormalScratch);
         Cartesian3.normalize(adjustHeightNormal, adjustHeightNormal);
 
-        var distanceForBottom = minHeight - groundPolylineGeometry.minimumTerrainHeight;
+        var distanceForBottom = minHeight - ApproximateTerrainHeights._defaultMinTerrainHeight;
         var adjustHeightOffset = Cartesian3.multiplyByScalar(adjustHeightNormal, distanceForBottom, adjustHeightOffsetScratch);
         Cartesian3.add(bottom, adjustHeightOffset, adjustHeightBottom);
 
-        var distanceForTop = maxHeight - groundPolylineGeometry.maximumTerrainHeight;
+        var distanceForTop = maxHeight - ApproximateTerrainHeights._defaultMaxTerrainHeight;
         adjustHeightOffset = Cartesian3.multiplyByScalar(adjustHeightNormal, distanceForTop, adjustHeightOffsetScratch);
         Cartesian3.add(top, adjustHeightOffset, adjustHeightTop);
     }
@@ -471,6 +548,8 @@ define([
     var forwardOffset2DScratch = new Cartesian3();
     var right2DScratch = new Cartesian3();
 
+    var scratchBoundingSpheres = [new BoundingSphere(), new BoundingSphere()];
+
     // Winding order is reversed so each segment's volume is inside-out
     var REFERENCE_INDICES = [
         0, 2, 1, 0, 3, 2, // right
@@ -481,11 +560,15 @@ define([
         3, 6, 2, 3, 7, 6 // top
     ];
     var REFERENCE_INDICES_LENGTH = REFERENCE_INDICES.length;
-    function generateGeometryAttributes(groundPolylineGeometry, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray) {
+
+    // Decompose the "wall" into a series of shadow volumes.
+    // Each shadow volume's vertices encode a description of the line it contains,
+    // including mitering planes at the end points, a plane along the line itself,
+    // and attributes for computing length-wise texture coordinates.
+    function generateGeometryAttributes(loop, projection, bottomPositionsArray, topPositionsArray, normalsArray, cartographicsArray) {
         var i;
         var index;
-        var loop = groundPolylineGeometry.loop;
-        var ellipsoid = groundPolylineGeometry.ellipsoid;
+        var ellipsoid = projection.ellipsoid;
 
         // Each segment will have 8 vertices
         var segmentCount = (bottomPositionsArray.length / 3) - 1;
@@ -574,7 +657,6 @@ define([
         var lengthSoFar3D = 0.0;
         var lengthSoFar2D = 0.0;
 
-        var boundingSphere = BoundingSphere.fromPoints([endBottom, endTop]);
         for (i = 0; i < segmentCount; i++) {
             var startBottom = Cartesian3.clone(endBottom, segmentStartBottomScratch);
             var startTop = Cartesian3.clone(endTop, segmentStartTopScratch);
@@ -595,9 +677,6 @@ define([
             endTop = Cartesian3.unpack(topPositionsArray, index, segmentEndTopScratch);
             endGeometryNormal = Cartesian3.unpack(normalsArray, index, segmentEndNormalScratch);
 
-            BoundingSphere.expand(boundingSphere, endBottom, boundingSphere);
-            BoundingSphere.expand(boundingSphere, endTop, boundingSphere);
-
             miterBroken = breakMiter(endGeometryNormal, startBottom, endBottom, endTop);
 
             endCartographic.latitude = cartographicsArray[cartographicsIndex];
@@ -606,7 +685,9 @@ define([
             endGeometryNormal2D = projectNormal(projection, endBottom, endGeometryNormal, end2D, segmentEndNormal2DScratch);
 
             /****************************************
-             * Geometry descriptors:
+             * Geometry descriptors of a "line on terrain,"
+             * as opposed to the "shadow volume used to draw
+             * the line on terrain":
              * - position of start + offset to end
              * - start, end, and right-facing planes
              * - encoded texture coordinate offsets
@@ -718,8 +799,8 @@ define([
             var minHeight = minMaxHeights.minimumTerrainHeight;
             var maxHeight = minMaxHeights.maximumTerrainHeight;
 
-            adjustHeights(groundPolylineGeometry, startBottom, startTop, minHeight, maxHeight, adjustHeightStartBottom, adjustHeightStartTop);
-            adjustHeights(groundPolylineGeometry, endBottom, endTop, minHeight, maxHeight, adjustHeightEndBottom, adjustHeightEndTop);
+            adjustHeights(startBottom, startTop, minHeight, maxHeight, adjustHeightStartBottom, adjustHeightStartTop);
+            adjustHeights(endBottom, endTop, minHeight, maxHeight, adjustHeightEndBottom, adjustHeightEndTop);
 
             // Push out by 1.0 in the "right" direction
             var pushedStartBottom = Cartesian3.add(adjustHeightStartBottom, startGeometryNormal, adjustHeightStartBottom);
@@ -769,6 +850,12 @@ define([
             index += REFERENCE_INDICES_LENGTH;
         }
 
+        // Generate bounding sphere
+        var boundingSpheres = scratchBoundingSpheres;
+        BoundingSphere.fromVertices(bottomPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[0]);
+        BoundingSphere.fromVertices(topPositionsArray, Cartesian3.ZERO, 3, boundingSpheres[1]);
+        var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
+
         return new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -777,15 +864,15 @@ define([
                     normalize : false,
                     values : positionsArray
                 }),
-                startHi_and_forwardOffsetX : getVec4Attribute(startHi_and_forwardOffsetX),
-                startLo_and_forwardOffsetY : getVec4Attribute(startLo_and_forwardOffsetY),
-                startNormal_and_forwardOffsetZ : getVec4Attribute(startNormal_and_forwardOffsetZ),
-                endNormal_andTextureCoordinateNormalizationX : getVec4Attribute(endNormal_andTextureCoordinateNormalizationX),
-                rightNormal_andTextureCoordinateNormalizationY : getVec4Attribute(rightNormal_andTextureCoordinateNormalizationY),
+                startHi_and_forwardOffsetX : getVec4GeometryAttribute(startHi_and_forwardOffsetX),
+                startLo_and_forwardOffsetY : getVec4GeometryAttribute(startLo_and_forwardOffsetY),
+                startNormal_and_forwardOffsetZ : getVec4GeometryAttribute(startNormal_and_forwardOffsetZ),
+                endNormal_andTextureCoordinateNormalizationX : getVec4GeometryAttribute(endNormal_andTextureCoordinateNormalizationX),
+                rightNormal_andTextureCoordinateNormalizationY : getVec4GeometryAttribute(rightNormal_andTextureCoordinateNormalizationY),
 
-                startHiLo2D : getVec4Attribute(startHiLo2D),
-                offsetAndRight2D : getVec4Attribute(offsetAndRight2D),
-                startEndNormals2D : getVec4Attribute(startEndNormals2D),
+                startHiLo2D : getVec4GeometryAttribute(startHiLo2D),
+                offsetAndRight2D : getVec4GeometryAttribute(offsetAndRight2D),
+                startEndNormals2D : getVec4GeometryAttribute(startEndNormals2D),
                 texcoordNormalization2D : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
@@ -798,64 +885,13 @@ define([
         });
     }
 
-    function getVec4Attribute(typedArray) {
+    function getVec4GeometryAttribute(typedArray) {
         return new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 4,
             normalize : false,
             values : typedArray
         });
-    }
-
-    function direction(target, origin, result) {
-        Cartesian3.subtract(target, origin, result);
-        Cartesian3.normalize(result, result);
-        return result;
-    }
-
-    // Inputs are cartesians
-    var toPreviousScratch = new Cartesian3();
-    var toNextScratch = new Cartesian3();
-    var forwardScratch = new Cartesian3();
-    var coplanarNormalScratch = new Cartesian3();
-    var coplanarPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
-    var cosine90 = 0.0;
-    function computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, result) {
-        // Convention: "next" is locally forward and we are computing a normal pointing towards the local right side of the vertices.
-
-        var up = direction(vertexTop, vertexBottom, vertexUpScratch);
-        var toPrevious = direction(previousBottom, vertexBottom, toPreviousScratch);
-        var toNext = direction(nextBottom, vertexBottom, toNextScratch);
-
-        // Check if points are coplanar in a right-side-pointing plane that contains "up."
-        // This is roughly equivalent to the points being colinear in cartographic space.
-        var coplanarNormal = Cartesian3.cross(up, toPrevious, coplanarNormalScratch);
-        coplanarNormal = Cartesian3.normalize(coplanarNormal, coplanarNormal);
-        var coplanarPlane = Plane.fromPointNormal(vertexBottom, coplanarNormal, coplanarPlaneScratch);
-        var nextBottomDistance = Plane.getPointDistance(coplanarPlane, nextBottom);
-        if (CesiumMath.equalsEpsilon(nextBottomDistance, 0.0, CesiumMath.EPSILON7)) {
-            // If the points are coplanar, point the normal in the direction of the plane
-            Cartesian3.clone(coplanarNormal, result);
-            return result;
-        }
-
-        // Average directions to previous and to next
-        result = Cartesian3.add(toNext, toPrevious, result);
-        result = Cartesian3.multiplyByScalar(result, 0.5, result);
-        result = Cartesian3.normalize(result, result);
-
-        // Rotate this direction to be orthogonal to up
-        var forward = Cartesian3.cross(up, result, forwardScratch);
-        Cartesian3.normalize(forward, forward);
-        Cartesian3.cross(forward, up, result);
-        Cartesian3.normalize(result, result);
-
-        // Flip the normal if it isn't pointing roughly bound right (aka if forward is pointing more "backwards")
-        if (Cartesian3.dot(toNext, forward) < cosine90) {
-            result = Cartesian3.multiplyByScalar(result, -1.0, result);
-        }
-
-        return result;
     }
 
     return GroundPolylineGeometry;

@@ -174,20 +174,24 @@ define([
                 }
             }
         }
-
+        /**
+         * The {@link Appearance} used to shade this primitive. Each geometry
+         * instance is shaded with the same appearance.  Some appearances, like
+         * {@link PerInstanceColorAppearance} allow giving each instance unique
+         * properties.
+         *
+         * @type Appearance
+         *
+         * @default undefined
+         */
         this.appearance = appearance;
 
         /**
-         * The geometry instance rendered with this primitive.  This may
+         * The geometry instances rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
          * is <code>true</code> when the primitive is constructed.
          * <p>
          * Changing this property after the primitive is rendered has no effect.
-         * </p>
-         * <p>
-         * Because of the rendering technique used, all geometry instances must be the same color.
-         * If there is an instance with a differing color, a <code>DeveloperError</code> will be thrown
-         * on the first attempt to render.
          * </p>
          *
          * @readonly
@@ -642,9 +646,9 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
+     * @exception {DeveloperError} For synchronous GroundPrimitive, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
-     * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
         if (!defined(this._primitive) && !defined(this.geometryInstances)) {
