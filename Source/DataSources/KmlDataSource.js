@@ -555,8 +555,6 @@ define([
         return resource;
     }
 
-    var colorOptions = {};
-
     function parseColorString(value, isRandom) {
         if (!defined(value) || /^\s*$/gm.test(value)) {
             return undefined;
@@ -574,6 +572,8 @@ define([
         if (!isRandom) {
             return new Color(red, green, blue, alpha);
         }
+
+        var colorOptions = {};
 
         if (red > 0) {
             colorOptions.maximumRed = red;
