@@ -1,15 +1,18 @@
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 
+#ifndef COLUMBUS_VIEW_2D
 attribute vec4 startHi_and_forwardOffsetX;
 attribute vec4 startLo_and_forwardOffsetY;
 attribute vec4 startNormal_and_forwardOffsetZ;
 attribute vec4 endNormal_andTextureCoordinateNormalizationX;
 attribute vec4 rightNormal_andTextureCoordinateNormalizationY;
+#else
 attribute vec4 startHiLo2D;
 attribute vec4 offsetAndRight2D;
 attribute vec4 startEndNormals2D;
 attribute vec2 texcoordNormalization2D;
+#endif
 
 attribute float batchId;
 
@@ -28,8 +31,6 @@ varying vec4 v_color;
 #else
 varying vec2 v_alignedPlaneDistances;
 #endif
-
-// TODO: morph?
 
 void main()
 {
