@@ -92,7 +92,9 @@ define([
     };
 
     /**
-     * Represents a point cloud.
+     * Represents the contents of a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md|Point Cloud}
+     * tile. Used internally by {@link PointCloud3DTileContent} and {@link PointCloudStream}.
      *
      * @alias PointCloud
      * @constructor
@@ -170,7 +172,7 @@ define([
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         this.time = 0.0; // For styling
-        this.shadows = ShadowMode.DISABLED;
+        this.shadows = ShadowMode.ENABLED;
         this.boundingVolume = undefined;
 
         this.clippingPlanes = undefined;
