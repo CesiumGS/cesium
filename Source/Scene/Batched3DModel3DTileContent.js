@@ -71,9 +71,6 @@ define([
         this._batchIdAttributeName = undefined;
         this._diffuseAttributeOrUniformName = {};
 
-        /**
-         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
-         */
         this.featurePropertiesDirty = false;
 
         initialize(this, arrayBuffer, byteOffset);
@@ -83,108 +80,72 @@ define([
     Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
 
     defineProperties(Batched3DModel3DTileContent.prototype, {
-        /**
-         * @inheritdoc Cesium3DTileContent#featuresLength
-         */
         featuresLength : {
             get : function() {
                 return this._batchTable.featuresLength;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#pointsLength
-         */
         pointsLength : {
             get : function() {
                 return 0;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#trianglesLength
-         */
         trianglesLength : {
             get : function() {
                 return this._model.trianglesLength;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#geometryByteLength
-         */
         geometryByteLength : {
             get : function() {
                 return this._model.geometryByteLength;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#texturesByteLength
-         */
         texturesByteLength : {
             get : function() {
                 return this._model.texturesByteLength;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTableByteLength
-         */
         batchTableByteLength : {
             get : function() {
                 return this._batchTable.memorySizeInBytes;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#innerContents
-         */
         innerContents : {
             get : function() {
                 return undefined;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#readyPromise
-         */
         readyPromise : {
             get : function() {
                 return this._model.readyPromise;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tileset
-         */
         tileset : {
             get : function() {
                 return this._tileset;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#tile
-         */
         tile : {
             get : function() {
                 return this._tile;
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#url
-         */
         url: {
             get: function() {
                 return this._resource.getUrlComponent(true);
             }
         },
 
-        /**
-         * @inheritdoc Cesium3DTileContent#batchTable
-         */
         batchTable : {
             get : function() {
                 return this._batchTable;
@@ -449,16 +410,10 @@ define([
         }
     }
 
-    /**
-     * @inheritdoc Cesium3DTileContent#hasProperty
-     */
     Batched3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
         return this._batchTable.hasProperty(batchId, name);
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#getFeature
-     */
     Batched3DModel3DTileContent.prototype.getFeature = function(batchId) {
         //>>includeStart('debug', pragmas.debug);
         var featuresLength = this.featuresLength;
@@ -471,9 +426,6 @@ define([
         return this._features[batchId];
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyDebugSettings
-     */
     Batched3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
         if (this.featuresLength === 0) {
@@ -483,16 +435,10 @@ define([
         }
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#applyStyle
-     */
     Batched3DModel3DTileContent.prototype.applyStyle = function(frameState, style) {
         this._batchTable.applyStyle(frameState, style);
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#update
-     */
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var commandStart = frameState.commandList.length;
 
@@ -513,6 +459,12 @@ define([
             this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
         }
 
+        // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
+        // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
+        if (defined(tilesetClippingPlanes) && defined(this._model._clippingPlanes) && this._model._clippingPlanes !== tilesetClippingPlanes) {
+            this._model._clippingPlanes = tilesetClippingPlanes;
+        }
+
         this._model.update(frameState);
 
         // If any commands were pushed, add derived commands
@@ -523,16 +475,10 @@ define([
         }
    };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#isDestroyed
-     */
     Batched3DModel3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc Cesium3DTileContent#destroy
-     */
     Batched3DModel3DTileContent.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
         this._batchTable = this._batchTable && this._batchTable.destroy();

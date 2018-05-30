@@ -1,5 +1,7 @@
 defineSuite([
         'DataSources/StaticGroundGeometryColorBatch',
+        'Core/defaultValue',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -18,6 +20,8 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         StaticGroundGeometryColorBatch,
+        defaultValue,
+        ApproximateTerrainHeights,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -50,13 +54,15 @@ defineSuite([
         // Leave ground primitive uninitialized
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
-    function computeKey(color) {
+    function computeKey(color, zIndex) {
         var ui8 = new Uint8Array(color);
         var ui32 = new Uint32Array(ui8.buffer);
-        return ui32[0];
+        zIndex = defaultValue(zIndex, 0);
+        return ui32[0] + ':' + zIndex;
     }
 
     it('updates color attribute after rebuilding primitive', function() {
@@ -168,5 +174,72 @@ defineSuite([
 
             batch.removeAllPrimitives();
         });
+    });
+
+    it('shows only one primitive while rebuilding primitive', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives, ClassificationType.BOTH);
+        function buildEntity() {
+            return new Entity({
+                position : new Cartesian3(1234, 5678, 9101112),
+                ellipse : {
+                    semiMajorAxis : 2,
+                    semiMinorAxis : 1,
+                    height : 0,
+                    outline : true,
+                    outlineColor : Color.RED.withAlpha(0.5)
+                }
+            });
+        }
+
+        function renderScene() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }
+
+        var entity1 = buildEntity();
+        var entity2 = buildEntity();
+
+        var updater1 = new EllipseGeometryUpdater(entity1, scene);
+        var updater2 = new EllipseGeometryUpdater(entity2, scene);
+
+        batch.add(time, updater1);
+        return pollToPromise(renderScene)
+            .then(function() {
+                expect(scene.groundPrimitives.length).toEqual(1);
+                var primitive = scene.groundPrimitives.get(0);
+                expect(primitive.show).toBeTruthy();
+            })
+            .then(function() {
+                batch.add(time, updater2);
+            })
+            .then(function() {
+                return pollToPromise(function() {
+                    renderScene();
+                    return scene.groundPrimitives.length === 2;
+                });
+            })
+            .then(function() {
+                var showCount = 0;
+                expect(scene.groundPrimitives.length).toEqual(2);
+                showCount += !!scene.groundPrimitives.get(0).show;
+                showCount += !!scene.groundPrimitives.get(1).show;
+                expect(showCount).toEqual(1);
+            })
+            .then(function() {
+                return pollToPromise(renderScene);
+            })
+            .then(function() {
+                expect(scene.groundPrimitives.length).toEqual(1);
+                var primitive = scene.groundPrimitives.get(0);
+                expect(primitive.show).toBeTruthy();
+
+                batch.removeAllPrimitives();
+            });
     });
 });

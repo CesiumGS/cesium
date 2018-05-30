@@ -1973,11 +1973,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     // When building programs for the first time, do not include modifiers for clipping planes and color
-    // since this is the version of the program that will be cached.
+    // since this is the version of the program that will be cached for use with other Models.
     function createProgram(id, model, context) {
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
@@ -1994,7 +1995,16 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
-        var pickFS, pickVS;
+        // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
+
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -2002,6 +2012,11 @@ define([
 
             if (!model._pickFragmentShaderLoaded) {
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+            }
+
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
             }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
@@ -2011,6 +2026,7 @@ define([
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var clippingPlaneCollection = model.clippingPlanes;
         var addClippingPlaneCode = isClippingEnabled(model);
@@ -2027,13 +2043,19 @@ define([
             finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
         }
         if (addClippingPlaneCode) {
-            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection);
+            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
-        var pickFS, pickVS;
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
+
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -2044,7 +2066,12 @@ define([
             }
 
             if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
+                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection, context);
+            }
+
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
             }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
@@ -3366,9 +3393,29 @@ define([
         var scene3DOnly = frameState.scene3DOnly;
 
         // Retain references to updated source shaders and programs for rebuilding as needed
-        model._sourcePrograms = model.gltf.programs;
-        model._sourceShaders = model.gltf.shaders;
+        var programs = model._sourcePrograms = model.gltf.programs;
+        var shaders = model._sourceShaders = model.gltf.shaders;
         model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
+
+        var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinates = model._toClipCoordinatesGLSL = {};
+        for (var id in programs) {
+            if (programs.hasOwnProperty(id)) {
+                var program = programs[id];
+                var shader = shaders[program.vertexShader].extras._pipeline.source;
+                if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
+                    var quantizedVS = quantizedVertexShaders[id];
+                    if (!defined(quantizedVS)) {
+                        quantizedVS = modifyShaderForQuantizedAttributes(shader, id, model);
+                        quantizedVertexShaders[id] = quantizedVS;
+                    }
+                    shader = quantizedVS;
+                }
+
+                shader = modifyShader(shader, id, model._vertexShaderLoaded);
+                toClipCoordinates[id] = ModelUtility.toClipCoordinatesGLSL(model.gltf, shader);
+            }
+        }
 
         ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {
@@ -3913,9 +3960,9 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection) {
+    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
+        shader += Model._getClippingFunction(clippingPlaneCollection, context) + '\n';
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +
@@ -4578,12 +4625,14 @@ define([
             var pickProgram = rendererPickPrograms[programId];
 
             nodeCommand.command.shaderProgram = renderProgram;
-            nodeCommand.pickCommand.shaderProgram = pickProgram;
             if (defined(nodeCommand.command2D)) {
                 nodeCommand.command2D.shaderProgram = renderProgram;
             }
-            if (defined(nodeCommand.pickCommand2D)) {
-                nodeCommand.pickCommand2D.shaderProgram = pickProgram;
+            if (model.allowPicking) {
+                nodeCommand.pickCommand.shaderProgram = pickProgram;
+                if (defined(nodeCommand.pickCommand2D)) {
+                    nodeCommand.pickCommand2D.shaderProgram = pickProgram;
+                }
             }
         }
 

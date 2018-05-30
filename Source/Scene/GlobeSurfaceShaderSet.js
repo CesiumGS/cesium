@@ -3,7 +3,6 @@ define([
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        './ClippingPlaneCollection',
         './getClippingFunction',
         './SceneMode'
     ], function(
@@ -11,7 +10,6 @@ define([
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
-        ClippingPlaneCollection,
         getClippingFunction,
         SceneMode) {
     'use strict';
@@ -125,7 +123,7 @@ define([
             var fs = this.baseFragmentShaderSource.clone();
 
             if (currentClippingShaderState !== 0) {
-                fs.sources.unshift(getClippingFunction(clippingPlanes)); // Need to go before GlobeFS
+                fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
             vs.defines.push(quantizationDefine);

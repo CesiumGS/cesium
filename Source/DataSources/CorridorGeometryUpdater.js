@@ -16,6 +16,7 @@ define([
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './GroundGeometryUpdater',
         './Property'
     ], function(
         Check,
@@ -35,6 +36,7 @@ define([
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        GroundGeometryUpdater,
         Property) {
     'use strict';
 
@@ -61,17 +63,19 @@ define([
      * @param {Scene} scene The scene where visualization is taking place.
      */
     function CorridorGeometryUpdater(entity, scene) {
-        GeometryUpdater.call(this, {
+        GroundGeometryUpdater.call(this, {
             entity : entity,
             scene : scene,
             geometryOptions : new CorridorGeometryOptions(entity),
             geometryPropertyName : 'corridor',
             observedPropertyNames : ['availability', 'corridor']
         });
+
+        this._onEntityPropertyChanged(entity, 'corridor', entity.corridor, undefined);
     }
 
     if (defined(Object.create)) {
-        CorridorGeometryUpdater.prototype = Object.create(GeometryUpdater.prototype);
+        CorridorGeometryUpdater.prototype = Object.create(GroundGeometryUpdater.prototype);
         CorridorGeometryUpdater.prototype.constructor = CorridorGeometryUpdater;
     }
 
@@ -165,10 +169,8 @@ define([
     };
 
     CorridorGeometryUpdater.prototype._isOnTerrain = function(entity, corridor) {
-        var isColorMaterial = this._materialProperty instanceof ColorMaterialProperty;
-
         return this._fillEnabled && !defined(corridor.height) && !defined(corridor.extrudedHeight) &&
-               isColorMaterial && GroundPrimitive.isSupported(this._scene);
+               GroundPrimitive.isSupported(this._scene);
     };
 
     CorridorGeometryUpdater.prototype._getIsClosed = function(options) {
@@ -185,6 +187,7 @@ define([
                !Property.isConstant(corridor.width) || //
                !Property.isConstant(corridor.outlineWidth) || //
                !Property.isConstant(corridor.cornerType) || //
+               !Property.isConstant(corridor.zIndex) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 

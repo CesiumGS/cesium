@@ -1,20 +1,16 @@
 define([
-        '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Ellipsoid',
         './createBillboardPointCallback'
     ], function(
-        Cartesian3,
         Cartographic,
         Color,
         defaultValue,
         defined,
         defineProperties,
-        Ellipsoid,
         createBillboardPointCallback) {
     'use strict';
 

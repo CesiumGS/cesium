@@ -280,8 +280,8 @@ defineSuite([
             // (24 * 8 * 4) + (36 * 2) = 840
             var geometryByteLength = 840;
 
-            // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-            var texturesByteLength = 262144;
+            // Texture is 211x211 RGB bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+            var texturesByteLength = 196608;
 
             // One RGBA byte pixel per feature
             var batchTexturesByteLength = content.featuresLength * 4;
@@ -331,6 +331,39 @@ defineSuite([
             tile.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeUndefined();
+        });
+    });
+
+    it('Links model to tileset clipping planes if tileset clipping planes are reassigned', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var model = tile.content._modelInstanceCollection._model;
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+
+            var newClippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = newClippingPlaneCollection;
+            newClippingPlaneCollection.update(scene.frameState);
+            expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
+
+            tile.update(tileset, scene.frameState);
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
         });
     });
 

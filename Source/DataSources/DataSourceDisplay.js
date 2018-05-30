@@ -5,9 +5,9 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
         '../Core/EventHelper',
         '../Scene/GroundPrimitive',
+        '../Scene/OrderedGroundPrimitiveCollection',
         '../Scene/PrimitiveCollection',
         './BillboardVisualizer',
         './BoundingSphereState',
@@ -25,9 +25,9 @@ define([
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
         EventHelper,
         GroundPrimitive,
+        OrderedGroundPrimitiveCollection,
         PrimitiveCollection,
         BillboardVisualizer,
         BoundingSphereState,
@@ -364,7 +364,7 @@ define([
         var displayGroundPrimitives = this._groundPrimitives;
 
         var primitives = displayPrimitives.add(new PrimitiveCollection());
-        var groundPrimitives = displayGroundPrimitives.add(new PrimitiveCollection());
+        var groundPrimitives = displayGroundPrimitives.add(new OrderedGroundPrimitiveCollection());
 
         dataSource._primitives = primitives;
         dataSource._groundPrimitives = groundPrimitives;
