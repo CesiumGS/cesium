@@ -37,7 +37,21 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
-var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/';
+
+// Default dev deployment configuration
+var s3Bucket = 'cesium-dev';
+var deployDirectory = 'cesium/' + process.env.TRAVIS_BRANCH;
+var deployCache = 'no-cache';
+var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/' + process.env.TRAVIS_BRANCH + '/';
+
+// Production deployment configuration
+var productionDeployment = (process.env.TRAVIS_BRANCH === 'cesiumjs.org');
+if (productionDeployment) {
+    s3Bucket = 'cesiumjs.org';
+    deployDirectory = 'Cesium';
+    deployCache = 'public, max-age=1800';
+    travisDeployUrl = 'https://cesiumjs.org/Cesium/';
+}
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -303,12 +317,11 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
-        .demand(['b', 'd']).argv;
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]').argv;
 
-    var uploadDirectory = argv.d;
-    var bucketName = argv.b;
-    var cacheControl = argv.c ? argv.c : 'max-age=3600';
+    var uploadDirectory = argv.d  ? argv.d : deployDirectory;
+    var bucketName = argv.b ? argv.d : s3Bucket;
+    var cacheControl = argv.c ? argv.c : deployCache;
 
     if (argv.confirm) {
         // skip prompt for travis
@@ -469,11 +482,11 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
             if (objectToDelete.length > 0) {
                 console.log('Cleaning up old files...');
                 return s3.deleteObjectsAsync({
-                                                 Bucket : bucketName,
-                                                 Delete : {
-                                                     Objects : objectToDelete
-                                                 }
-                                             })
+                        Bucket : bucketName,
+                        Delete : {
+                            Objects : objectToDelete
+                        }
+                    })
                     .then(function() {
                         console.log('Cleaned ' + existingBlobs.length + ' files.');
                     });
@@ -545,7 +558,7 @@ function listAll(s3, bucketName, prefix, files, marker) {
 
 gulp.task('deploy-set-version', function() {
     var buildVersion = yargs.argv.buildVersion;
-    if (buildVersion) {
+    if (!productionDeployment && buildVersion) {
         // NPM versions can only contain alphanumeric and hyphen characters
         packageJson.version += '-' + buildVersion.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
@@ -561,7 +574,7 @@ gulp.task('deploy-status', function() {
     var status = yargs.argv.status;
     var message = yargs.argv.message;
 
-    var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
+    var deployUrl = travisDeployUrl;
     var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
     var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
 
