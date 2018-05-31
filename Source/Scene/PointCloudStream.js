@@ -112,7 +112,8 @@ define([
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this.show = defaultValue(options.show, true);
-        this.index = 0;
+
+        this._packets = options.packets;
 
         this._pointCloudEyeDomeLighting = new PointCloudEyeDomeLighting();
         this._loadTimestamp = undefined;
@@ -160,6 +161,33 @@ define([
     };
 
     PointCloudStream.prototype.update = function(frameState) {
+        var time = frameState.time;
+        var packets = this._packets;
+        var firstPacket = packets[0];
+        var lastPacket = packets[packets.length - 1];
+        if (time < firstPacket.time || time > lastPacket.time) {
+            return;
+        }
+
+        // Find the current frame. See if it's loaded/ready. If it's ready, render it.
+        // If it's not ready we shouldn't necesarily load it
+
+
+        // If the current frame is not ready - try loading it.
+
+
+
+        // If the current frame is not ready, start preparing the next frame.
+        // Figure out how long it takes (can't rely on JulianData time - it might be paused)
+
+        // Find the packet associated with this time
+        if (time < this._packets[0].time) {
+
+        }
+
+
+
+
         if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
@@ -218,6 +246,9 @@ define([
 
         var commandList = frameState.commandList;
         var lengthBeforeUpdate = commandList.length;
+
+        // TODO : measure time required to fetch the data and update it
+        // TODO : synchronous draco faster?
 
         if (defined(frame)) {
             var frameTransform = this._frameTransforms[index];
