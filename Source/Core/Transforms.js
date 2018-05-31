@@ -765,6 +765,7 @@ define([
         }
 
         var up = Cartesian3.cross(right, velocity, upScratch);
+        Cartesian3.normalize(up, up);
         Cartesian3.cross(velocity, up, right);
         Cartesian3.negate(right, right);
 
