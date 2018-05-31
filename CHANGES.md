@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.47 - 2018-07-01
+
+##### Fixes :wrench:
+* Fixed a bug with custom vertex attributes on `Geometry` crossing the IDL causing crashes. Attributes will be barycentrically interpolated. [#6644](https://github.com/AnalyticalGraphicsInc/cesium/pull/6644)
+
 ### 1.46 - 2018-06-01
 
 ##### Breaking Changes :mega:

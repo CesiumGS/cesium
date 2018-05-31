@@ -1919,13 +1919,46 @@ define([
     var p0Scratch = new Cartesian3();
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
-    var barycentricScratch = new Cartesian3();
+    function interpolateAndPackCartesian3(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex, normalize) {
+        var p0 = Cartesian3.fromArray(sourceValues, i0 * 3, p0Scratch);
+        var p1 = Cartesian3.fromArray(sourceValues, i1 * 3, p1Scratch);
+        var p2 = Cartesian3.fromArray(sourceValues, i2 * 3, p2Scratch);
+
+        Cartesian3.multiplyByScalar(p0, coords.x, p0);
+        Cartesian3.multiplyByScalar(p1, coords.y, p1);
+        Cartesian3.multiplyByScalar(p2, coords.z, p2);
+
+        var value = Cartesian3.add(p0, p1, p0);
+        Cartesian3.add(value, p2, value);
+
+        if (normalize) {
+            Cartesian3.normalize(value, value);
+        }
+
+        Cartesian3.pack(value, currentValues, insertedIndex * 3);
+    }
+
     var s0Scratch = new Cartesian2();
     var s1Scratch = new Cartesian2();
     var s2Scratch = new Cartesian2();
+    function interpolateAndPackCartesian2(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex) {
+        var s0 = Cartesian2.fromArray(sourceValues, i0 * 2, s0Scratch);
+        var s1 = Cartesian2.fromArray(sourceValues, i1 * 2, s1Scratch);
+        var s2 = Cartesian2.fromArray(sourceValues, i2 * 2, s2Scratch);
 
-    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex) {
-        if (!defined(normals) && !defined(tangents) && !defined(bitangents) && !defined(texCoords) && !defined(extrudeDirections)) {
+        Cartesian2.multiplyByScalar(s0, coords.x, s0);
+        Cartesian2.multiplyByScalar(s1, coords.y, s1);
+        Cartesian2.multiplyByScalar(s2, coords.z, s2);
+
+        var value = Cartesian2.add(s0, s1, s0);
+        Cartesian2.add(value, s2, value);
+
+        Cartesian2.pack(value, currentValues, insertedIndex * 2);
+    }
+
+    var barycentricScratch = new Cartesian3();
+    function computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, customAttributeNames, customAttributesLength, allAttributes, insertedIndex) {
+        if (!defined(normals) && !defined(tangents) && !defined(bitangents) && !defined(texCoords) && !defined(extrudeDirections) && customAttributesLength === 0) {
             return;
         }
 
@@ -1935,19 +1968,7 @@ define([
         var coords = barycentricCoordinates(point, p0, p1, p2, barycentricScratch);
 
         if (defined(normals)) {
-            var n0 = Cartesian3.fromArray(normals, i0 * 3, p0Scratch);
-            var n1 = Cartesian3.fromArray(normals, i1 * 3, p1Scratch);
-            var n2 = Cartesian3.fromArray(normals, i2 * 3, p2Scratch);
-
-            Cartesian3.multiplyByScalar(n0, coords.x, n0);
-            Cartesian3.multiplyByScalar(n1, coords.y, n1);
-            Cartesian3.multiplyByScalar(n2, coords.z, n2);
-
-            var normal = Cartesian3.add(n0, n1, n0);
-            Cartesian3.add(normal, n2, normal);
-            Cartesian3.normalize(normal, normal);
-
-            Cartesian3.pack(normal, currentAttributes.normal.values, insertedIndex * 3);
+            interpolateAndPackCartesian3(i0, i1, i2, coords, normals, currentAttributes.normal.values, insertedIndex, true);
         }
 
         if (defined(extrudeDirections)) {
@@ -1974,50 +1995,55 @@ define([
         }
 
         if (defined(tangents)) {
-            var t0 = Cartesian3.fromArray(tangents, i0 * 3, p0Scratch);
-            var t1 = Cartesian3.fromArray(tangents, i1 * 3, p1Scratch);
-            var t2 = Cartesian3.fromArray(tangents, i2 * 3, p2Scratch);
-
-            Cartesian3.multiplyByScalar(t0, coords.x, t0);
-            Cartesian3.multiplyByScalar(t1, coords.y, t1);
-            Cartesian3.multiplyByScalar(t2, coords.z, t2);
-
-            var tangent = Cartesian3.add(t0, t1, t0);
-            Cartesian3.add(tangent, t2, tangent);
-            Cartesian3.normalize(tangent, tangent);
-
-            Cartesian3.pack(tangent, currentAttributes.tangent.values, insertedIndex * 3);
+            interpolateAndPackCartesian3(i0, i1, i2, coords, tangents, currentAttributes.tangent.values, insertedIndex, true);
         }
 
         if (defined(bitangents)) {
-            var b0 = Cartesian3.fromArray(bitangents, i0 * 3, p0Scratch);
-            var b1 = Cartesian3.fromArray(bitangents, i1 * 3, p1Scratch);
-            var b2 = Cartesian3.fromArray(bitangents, i2 * 3, p2Scratch);
-
-            Cartesian3.multiplyByScalar(b0, coords.x, b0);
-            Cartesian3.multiplyByScalar(b1, coords.y, b1);
-            Cartesian3.multiplyByScalar(b2, coords.z, b2);
-
-            var bitangent = Cartesian3.add(b0, b1, b0);
-            Cartesian3.add(bitangent, b2, bitangent);
-            Cartesian3.normalize(bitangent, bitangent);
-
-            Cartesian3.pack(bitangent, currentAttributes.bitangent.values, insertedIndex * 3);
+            interpolateAndPackCartesian3(i0, i1, i2, coords, bitangents, currentAttributes.bitangent.values, insertedIndex, true);
         }
 
         if (defined(texCoords)) {
-            var s0 = Cartesian2.fromArray(texCoords, i0 * 2, s0Scratch);
-            var s1 = Cartesian2.fromArray(texCoords, i1 * 2, s1Scratch);
-            var s2 = Cartesian2.fromArray(texCoords, i2 * 2, s2Scratch);
+            interpolateAndPackCartesian2(i0, i1, i2, coords, texCoords, currentAttributes.st.values, insertedIndex);
+        }
 
-            Cartesian2.multiplyByScalar(s0, coords.x, s0);
-            Cartesian2.multiplyByScalar(s1, coords.y, s1);
-            Cartesian2.multiplyByScalar(s2, coords.z, s2);
+        if (customAttributesLength > 0) {
+            for (var i = 0; i < customAttributesLength; i++) {
+                var attributeName = customAttributeNames[i];
+                genericInterpolate(i0, i1, i2, coords, insertedIndex, allAttributes[attributeName], currentAttributes[attributeName]);
+            }
+        }
+    }
 
-            var texCoord = Cartesian2.add(s0, s1, s0);
-            Cartesian2.add(texCoord, s2, texCoord);
+    var q0Scratch = new Cartesian4();
+    var q1Scratch = new Cartesian4();
+    var q2Scratch = new Cartesian4();
+    function genericInterpolate(i0, i1, i2, coords, insertedIndex, sourceAttribute, currentAttribute) {
+        var componentsPerAttribute = sourceAttribute.componentsPerAttribute;
+        var sourceValues = sourceAttribute.values;
+        var currentValues = currentAttribute.values;
+        switch(componentsPerAttribute) {
+            case 4:
+                var q0 = Cartesian4.fromArray(sourceValues, i0 * 4, q0Scratch);
+                var q1 = Cartesian4.fromArray(sourceValues, i1 * 4, q1Scratch);
+                var q2 = Cartesian4.fromArray(sourceValues, i2 * 4, q2Scratch);
 
-            Cartesian2.pack(texCoord, currentAttributes.st.values, insertedIndex * 2);
+                Cartesian4.multiplyByScalar(q0, coords.x, q0);
+                Cartesian4.multiplyByScalar(q1, coords.y, q1);
+                Cartesian4.multiplyByScalar(q2, coords.z, q2);
+
+                var value = Cartesian4.add(q0, q1, q0);
+                Cartesian4.add(value, q2, value);
+
+                Cartesian4.pack(value, currentValues, insertedIndex * 4);
+                break;
+            case 3:
+                interpolateAndPackCartesian3(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex, false);
+                break;
+            case 2:
+                interpolateAndPackCartesian2(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex);
+                break;
+            default:
+                currentValues[insertedIndex] = sourceValues[i0] * coords.x + sourceValues[i1] * coords.y + sourceValues[i2] * coords.z;
         }
     }
 
@@ -2044,6 +2070,14 @@ define([
         return insertIndex;
     }
 
+    var NAMED_ATTRIBUTES = {
+        position : true,
+        normal : true,
+        bitangent : true,
+        tangent : true,
+        st : true,
+        extrudeDirection : true
+    };
     function splitLongitudeTriangles(instance) {
         var geometry = instance.geometry;
         var attributes = geometry.attributes;
@@ -2054,6 +2088,16 @@ define([
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var extrudeDirections = (defined(attributes.extrudeDirection)) ? attributes.extrudeDirection.values : undefined;
         var indices = geometry.indices;
+
+        var customAttributeNames = [];
+        for (var attributeName in attributes) {
+            if (attributes.hasOwnProperty(attributeName)) {
+                if (!NAMED_ATTRIBUTES[attributeName] && defined(attributes[attributeName])) {
+                    customAttributeNames.push(attributeName);
+                }
+            }
+        }
+        var customAttributesLength = customAttributeNames.length;
 
         var eastGeometry = copyGeometryForSplit(geometry);
         var westGeometry = copyGeometryForSplit(geometry);
@@ -2106,7 +2150,7 @@ define([
                     }
 
                     insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, resultIndex < 3 ? i + resultIndex : -1, point);
-                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                    computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, customAttributeNames, customAttributesLength, attributes, insertedIndex);
                 }
             } else {
                 if (defined(result)) {
@@ -2126,13 +2170,13 @@ define([
                 }
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i, p0);
-                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p0, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, customAttributeNames, customAttributesLength, attributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 1, p1);
-                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p1, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, customAttributeNames, customAttributesLength, attributes, insertedIndex);
 
                 insertedIndex = insertSplitPoint(currentAttributes, currentIndices, currentIndexMap, indices, i + 2, p2);
-                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, insertedIndex);
+                computeTriangleAttributes(i0, i1, i2, p2, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, customAttributeNames, customAttributesLength, attributes, insertedIndex);
             }
         }
 
