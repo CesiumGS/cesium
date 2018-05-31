@@ -7,7 +7,6 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - echo 'deployPending' && echo -en 'travis_fold:start:script.deployPending\\r'
-  - npm run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm run deploy-status -- --status pending --message 'Waiting for build'
   - echo -en 'travis_fold:end:script.deployPending\\r'
 
@@ -31,7 +30,7 @@ script:
   - echo -en 'travis_fold:end:script.buildApps\\r'
 
   - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
-  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+  - npm run deploy-s3 -- -b cesiumjs.org -d Cesium -c 'public, max-age=1800' --confirm
   - npm run deploy-status -- --status success --message Deployed
   - echo -en 'travis_fold:end:script.deploy\\r'
 
