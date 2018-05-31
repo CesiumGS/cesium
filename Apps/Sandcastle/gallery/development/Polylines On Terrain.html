@@ -87,29 +87,29 @@ leftHandler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-var polylineCartographics = [
-    Cesium.Cartographic.fromDegrees(-112.1340164450331, 36.05494287836128),
-    Cesium.Cartographic.fromDegrees(-112.08821010582645, 36.097804071380715),
-    Cesium.Cartographic.fromDegrees(-112.13296079730024, 36.168769146801104),
-    Cesium.Cartographic.fromDegrees(-112.10828895143331, 36.20031318533197),
-    Cesium.Cartographic.fromDegrees(-112.138548165717, 36.1691100215289), // hairpins
-    Cesium.Cartographic.fromDegrees(-112.11482556496543, 36.20127524083297),
-    Cesium.Cartographic.fromDegrees(-112.15921333464016, 36.17876011207708),
-    Cesium.Cartographic.fromDegrees(-112.14700151155604, 36.21683132404626),
-    Cesium.Cartographic.fromDegrees(-112.20919883052926, 36.19475754001766)
-];
+var polylinePositions = Cesium.Cartesian3.fromDegreesArray([
+    -112.1340164450331, 36.05494287836128,
+    -112.08821010582645, 36.097804071380715,
+    -112.13296079730024, 36.168769146801104,
+    -112.10828895143331, 36.20031318533197,
+    -112.138548165717, 36.1691100215289, // hairpins
+    -112.11482556496543, 36.20127524083297,
+    -112.15921333464016, 36.17876011207708,
+    -112.14700151155604, 36.21683132404626,
+    -112.20919883052926, 36.19475754001766
+]);
 
-var loopCartographics = [
-    Cesium.Cartographic.fromDegrees(-111.94500779274114, 36.27638678884143),
-    Cesium.Cartographic.fromDegrees(-111.90983004392696, 36.07985366173454),
-    Cesium.Cartographic.fromDegrees(-111.80360100637773, 36.13694878292542),
-    Cesium.Cartographic.fromDegrees(-111.85510122419183, 36.26029588763386),
-    Cesium.Cartographic.fromDegrees(-111.69141601804614, 36.05128770351902)
-];
+var loopPositions = Cesium.Cartesian3.fromDegreesArray([
+    -111.94500779274114, 36.27638678884143,
+    -111.90983004392696, 36.07985366173454,
+    -111.80360100637773, 36.13694878292542,
+    -111.85510122419183, 36.26029588763386,
+    -111.69141601804614, 36.05128770351902
+]);
 
 var instance1 = new Cesium.GeometryInstance({
     geometry : new Cesium.GroundPolylineGeometry({
-        positions : polylineCartographics,
+        positions : polylinePositions,
         loop : false,
         width : 16.0
     }),
@@ -122,7 +122,7 @@ var instance1 = new Cesium.GeometryInstance({
 
 var instance2 = new Cesium.GeometryInstance({
     geometry : new Cesium.GroundPolylineGeometry({
-        positions : loopCartographics,
+        positions : loopPositions,
         loop : true,
         width : 8.0
     }),
@@ -191,7 +191,7 @@ Sandcastle.addToolbarButton('Show all', function() {
 });
 
 function lookAt() {
-    viewer.camera.lookAt(Cesium.Cartographic.toCartesian(polylineCartographics[1]), new Cesium.Cartesian3(50000.0, 50000.0, 50000.0));
+    viewer.camera.lookAt(polylinePositions[1], new Cesium.Cartesian3(50000.0, 50000.0, 50000.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
 

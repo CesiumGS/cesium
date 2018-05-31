@@ -60,11 +60,11 @@ define([
      *
      * @param {Object} [options] Options with the following properties:
      * @param {Number} [options.width=1.0] The screen space width in pixels.
-     * @param {Cartographic[]} [options.positions] An array of {@link Cartographic} defining the polyline's points. Heights will be ignored.
+     * @param {Cartesian3[]} [options.positions] An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
      * @param {Number} [options.granularity=9999.0] The distance interval used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] Ellipsoid for projecting cartographic coordinates to 3D.
-     * @param {MapProjection} [options.projection] Map Projection for projecting cartographic coordinates to 2D.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] Ellipsoid that input positions will be clamped to.
+     * @param {MapProjection} [options.projection] Map Projection for projecting coordinates to 2D.
      *
      * @see GroundPolylinePrimitive
      */
@@ -78,8 +78,8 @@ define([
         this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
 
         /**
-         * An array of {@link Cartographic} defining the polyline's points. Heights will be ignored.
-         * @type {Cartographic[]}
+         * An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
+         * @type {Cartesian3[]}
          */
         this.positions = defaultValue(options.positions, []);
 
@@ -127,7 +127,7 @@ define([
          */
         packedLength: {
             get: function() {
-                return 1.0 + this.positions.length * 2 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0;
+                return 1.0 + this.positions.length * 3 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0;
             }
         }
     });
@@ -212,9 +212,9 @@ define([
         packArray[index++] = positionsLength;
 
         for (var i = 0; i < positionsLength; ++i) {
-            var cartographic = positions[i];
-            packArray[index++] = cartographic.longitude;
-            packArray[index++] = cartographic.latitude;
+            var cartesian = positions[i];
+            Cartesian3.pack(cartesian, packArray, index);
+            index += 3;
         }
 
         packArray[index++] = value.granularity;
@@ -241,10 +241,8 @@ define([
 
         var positionsLength = packArray[index++];
         for (var i = 0; i < positionsLength; i++) {
-            var cartographic = new Cartographic();
-            cartographic.longitude = packArray[index++];
-            cartographic.latitude = packArray[index++];
-            positions.push(cartographic);
+            positions.push(Cartesian3.unpack(packArray, index));
+            index += 3;
         }
 
         var granularity = packArray[index++];
@@ -337,7 +335,6 @@ define([
      * @private
      */
     GroundPolylineGeometry.createGeometry = function(groundPolylineGeometry) {
-        var cartographics = groundPolylineGeometry.positions;
         var loop = groundPolylineGeometry.loop;
         var ellipsoid = groundPolylineGeometry.ellipsoid;
         var granularity = groundPolylineGeometry.granularity;
@@ -346,21 +343,30 @@ define([
         var minHeight = ApproximateTerrainHeights._defaultMinTerrainHeight;
         var maxHeight = ApproximateTerrainHeights._defaultMaxTerrainHeight;
 
-        var cartographicsLength = cartographics.length;
+        var index;
+        var i;
+
+        var positions = groundPolylineGeometry.positions;
+        var cartographicsLength = positions.length;
 
         //>>includeStart('debug', pragmas.debug);
         if (cartographicsLength < 2) {
-            throw new DeveloperError('GroundPolylineGeometry must contain two or more cartographics');
+            throw new DeveloperError('GroundPolylineGeometry must contain two or more positions');
         }
         //>>includeEnd('debug');
         if (cartographicsLength === 2) {
             loop = false;
         }
 
-        var index;
-        var i;
+        // Squash all cartesians to cartographic coordinates
+        var cartographics = new Array(cartographicsLength);
+        for (i = 0; i < cartographicsLength; i++) {
+            var cartographic = Cartographic.fromCartesian(positions[i], ellipsoid);
+            cartographic.height = 0.0;
+            cartographics[i] = cartographic;
+        }
 
-        /**** Build heap-side arrays of positions, interpolated cartographics, and normals from which to compute vertices ****/
+        /**** Build heap-side arrays for positions, interpolated cartographics, and normals from which to compute vertices ****/
         // We build a "wall" and then decompose it into separately connected component "volumes" because we need a lot
         // of information about the wall. Also, this simplifies interpolation.
         // Convention: "next" and "end" are locally forward to each segment of the wall,
