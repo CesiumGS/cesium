@@ -5,8 +5,8 @@ attribute vec3 position3DLow;
 attribute vec4 startHi_and_forwardOffsetX;
 attribute vec4 startLo_and_forwardOffsetY;
 attribute vec4 startNormal_and_forwardOffsetZ;
-attribute vec4 endNormal_andTextureCoordinateNormalizationX;
-attribute vec4 rightNormal_andTextureCoordinateNormalizationY;
+attribute vec4 endNormal_and_textureCoordinateNormalizationX;
+attribute vec4 rightNormal_and_textureCoordinateNormalizationY;
 #else
 attribute vec4 startHiLo2D;
 attribute vec4 offsetAndRight2D;
@@ -55,7 +55,7 @@ void main()
     v_endPlaneEC.xyz =  czm_normal * vec3(0.0, startEndNormals2D.zw);
     v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
 
-    v_texcoordNormalization_and_halfWidth.xy = texcoordNormalization2D;
+    v_texcoordNormalization_and_halfWidth.xy = vec2(abs(texcoordNormalization2D.x), texcoordNormalization2D.y);
 
 #else // COLUMBUS_VIEW_2D
     vec3 ecStart = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(startHi_and_forwardOffsetX.xyz, startLo_and_forwardOffsetY.xyz)).xyz;
@@ -70,14 +70,14 @@ void main()
     v_startPlaneEC.w = -dot(v_startPlaneEC.xyz, ecStart);
 
     // end plane
-    v_endPlaneEC.xyz = czm_normal * endNormal_andTextureCoordinateNormalizationX.xyz;
+    v_endPlaneEC.xyz = czm_normal * endNormal_and_textureCoordinateNormalizationX.xyz;
     v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
 
     // Right plane
-    v_rightPlaneEC.xyz = czm_normal * rightNormal_andTextureCoordinateNormalizationY.xyz;
+    v_rightPlaneEC.xyz = czm_normal * rightNormal_and_textureCoordinateNormalizationY.xyz;
     v_rightPlaneEC.w = -dot(v_rightPlaneEC.xyz, ecStart);
 
-    v_texcoordNormalization_and_halfWidth.xy = vec2(endNormal_andTextureCoordinateNormalizationX.w, rightNormal_andTextureCoordinateNormalizationY.w);
+    v_texcoordNormalization_and_halfWidth.xy = vec2(abs(endNormal_and_textureCoordinateNormalizationX.w), rightNormal_and_textureCoordinateNormalizationY.w);
 
 #endif // COLUMBUS_VIEW_2D
 
@@ -102,8 +102,12 @@ void main()
     vec3 upOrDown = normalize(cross(v_rightPlaneEC.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
     vec3 normalEC = normalize(cross(planeDirection, upOrDown));           // In practice, the opposite seems to work too.
 
-    // Check distance to the right plane to determine if the miter normal points "left" or "right"
-    normalEC *= sign(czm_planeDistance(v_rightPlaneEC, positionEC.xyz));
+    // Determine if this vertex is on the "left" or "right"
+#ifdef COLUMBUS_VIEW_2D
+    normalEC *= sign(texcoordNormalization2D.x);
+#else
+    normalEC *= sign(endNormal_and_textureCoordinateNormalizationX.w);
+#endif
 
     // A "perfect" implementation would push along normals according to the angle against forward.
     // In practice, just extending the shadow volume more than needed works for most cases,
@@ -111,7 +115,6 @@ void main()
     float width = czm_batchTable_width(batchId);
     v_width = width;
     v_texcoordNormalization_and_halfWidth.z = width * 0.5;
-    positionEC.xyz -= normalEC; // undo the unit length push
     positionEC.xyz += width * max(0.0, czm_metersPerPixel(positionEC)) * normalEC; // prevent artifacts when czm_metersPerPixel is negative (behind camera)
     gl_Position = czm_projection * positionEC;
 

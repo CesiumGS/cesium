@@ -4,8 +4,8 @@ attribute vec3 position3DLow;
 attribute vec4 startHi_and_forwardOffsetX;
 attribute vec4 startLo_and_forwardOffsetY;
 attribute vec4 startNormal_and_forwardOffsetZ;
-attribute vec4 endNormal_andTextureCoordinateNormalizationX;
-attribute vec4 rightNormal_andTextureCoordinateNormalizationY;
+attribute vec4 endNormal_and_textureCoordinateNormalizationX;
+attribute vec4 rightNormal_and_textureCoordinateNormalizationY;
 attribute vec4 startHiLo2D;
 attribute vec4 offsetAndRight2D;
 attribute vec4 startEndNormals2D;
@@ -51,7 +51,7 @@ void main()
     vec4 rightPlane2D;
     vec4 rightPlane3D;
     rightPlane2D.xyz = czm_normal * vec3(0.0, offsetAndRight2D.zw);
-    rightPlane3D.xyz = czm_normal * rightNormal_andTextureCoordinateNormalizationY.xyz;
+    rightPlane3D.xyz = czm_normal * rightNormal_and_textureCoordinateNormalizationY.xyz;
     rightPlane2D.w = -dot(rightPlane2D.xyz, ecPos2D);
     rightPlane3D.w = -dot(rightPlane3D.xyz, ecPos3D);
 
@@ -67,14 +67,16 @@ void main()
     vec4 endPlane2D;
     vec4 endPlane3D;
     endPlane2D.xyz = czm_normal * vec3(0.0, startEndNormals2D.zw);
-    endPlane3D.xyz = czm_normal * endNormal_andTextureCoordinateNormalizationX.xyz;
+    endPlane3D.xyz = czm_normal * endNormal_and_textureCoordinateNormalizationX.xyz;
     endPlane2D.w = -dot(endPlane2D.xyz, ecPos2D);
     endPlane3D.w = -dot(endPlane3D.xyz, ecPos3D);
 
     // Forward direction
     v_forwardDirectionEC = normalize(ecEnd - ecStart);
 
-    v_texcoordNormalization_and_halfWidth.xy = mix(texcoordNormalization2D, vec2(endNormal_andTextureCoordinateNormalizationX.w, rightNormal_andTextureCoordinateNormalizationY.w), czm_morphTime);
+    v_texcoordNormalization_and_halfWidth.xy = mix(
+        vec2(abs(texcoordNormalization2D.x), texcoordNormalization2D.y),
+        vec2(abs(endNormal_and_textureCoordinateNormalizationX.w), rightNormal_and_textureCoordinateNormalizationY.w), czm_morphTime);
 
 #ifdef PER_INSTANCE_COLOR
     v_color = czm_batchTable_color(batchId);
@@ -95,7 +97,7 @@ void main()
     // Decode the normal to use at this specific vertex, push the position back, and then push to where it needs to be.
     // Since this is morphing, compute both 3D and 2D positions and then blend.
 
-    // 3D
+    // ****** 3D ******
     // Check distance to the end plane and start plane, pick the plane that is closer
     vec4 positionEC3D = czm_modelViewRelativeToEye * czm_translateRelativeToEye(position3DHigh, position3DLow); // w = 1.0, see czm_computePosition
     float absStartPlaneDistance = abs(czm_planeDistance(startPlane3D, positionEC3D.xyz));
@@ -104,15 +106,14 @@ void main()
     vec3 upOrDown = normalize(cross(rightPlane3D.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
     vec3 normalEC = normalize(cross(planeDirection, upOrDown));         // In practice, the opposite seems to work too.
 
-    // Check distance to the right plane to determine if the miter normal points "left" or "right"
-    normalEC *= sign(czm_planeDistance(rightPlane3D, positionEC3D.xyz));
+    // Determine if this vertex is on the "left" or "right"
+    normalEC *= sign(endNormal_and_textureCoordinateNormalizationX.w);
 
     // A "perfect" implementation would push along normals according to the angle against forward.
     // In practice, just pushing the normal out by halfWidth is sufficient for morph views.
-    positionEC3D.xyz -= normalEC; // undo the unit length push
     positionEC3D.xyz += halfWidth * max(0.0, czm_metersPerPixel(positionEC3D)) * normalEC; // prevent artifacts when czm_metersPerPixel is negative (behind camera)
 
-    // 2D
+    // ****** 2D ******
     // Check distance to the end plane and start plane, pick the plane that is closer
     vec4 positionEC2D = czm_modelViewRelativeToEye * czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy); // w = 1.0, see czm_computePosition
     absStartPlaneDistance = abs(czm_planeDistance(startPlane2D, positionEC2D.xyz));
@@ -121,12 +122,11 @@ void main()
     upOrDown = normalize(cross(rightPlane2D.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
     normalEC = normalize(cross(planeDirection, upOrDown));         // In practice, the opposite seems to work too.
 
-    // Check distance to the right plane to determine if the miter normal points "left" or "right."
-    // Also use this check to determine this vertex's horizontal texture coordinate.
-    float leftOrRight = sign(czm_planeDistance(rightPlane2D, positionEC2D.xyz));
-    normalEC *= leftOrRight;
+    // Determine if this vertex is on the "left" or "right"
+    normalEC *= sign(texcoordNormalization2D.x);
 #ifndef PER_INSTANCE_COLOR
-    v_texcoordT = clamp(leftOrRight, 0.0, 1.0);
+    // Use vertex's sidedness to compute its texture coordinate.
+    v_texcoordT = clamp(sign(texcoordNormalization2D.x), 0.0, 1.0);
 #endif
 
     // A "perfect" implementation would push along normals according to the angle against forward.

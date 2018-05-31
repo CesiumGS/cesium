@@ -16,6 +16,7 @@ define([
         './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
+        './IntersectionTests',
         './Matrix3',
         './Plane',
         './Quaternion',
@@ -39,6 +40,7 @@ define([
         GeographicProjection,
         Geometry,
         GeometryAttribute,
+        IntersectionTests,
         Matrix3,
         Plane,
         Quaternion,
@@ -322,11 +324,14 @@ define([
         return result;
     }
 
+    var XZ_PLANE = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
+
     var previousBottomScratch = new Cartesian3();
     var vertexBottomScratch = new Cartesian3();
     var vertexTopScratch = new Cartesian3();
     var nextBottomScratch = new Cartesian3();
     var vertexNormalScratch = new Cartesian3();
+    var intersectionScratch = new Cartesian3();
     /**
      * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
      * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain.
@@ -347,21 +352,36 @@ define([
         var i;
 
         var positions = groundPolylineGeometry.positions;
-        var cartographicsLength = positions.length;
+        var positionsLength = positions.length;
 
         //>>includeStart('debug', pragmas.debug);
-        if (cartographicsLength < 2) {
+        if (positionsLength < 2) {
             throw new DeveloperError('GroundPolylineGeometry must contain two or more positions');
         }
         //>>includeEnd('debug');
-        if (cartographicsLength === 2) {
+        if (positionsLength === 2) {
             loop = false;
         }
+
+        // Split positions across the IDL and the Prime Meridian as well.
+        // Split across prime meridian because very large geometries crossing the Prime Meridian but not the IDL
+        // may get split by the plane of IDL + Prime Meridian.
+        var splitPositions = [positions[0]];
+        for (i = 0; i < positionsLength - 1; i++) {
+            var p0 = positions[i];
+            var p1 = positions[i + 1];
+            var intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
+            if (defined(intersection)) {
+                splitPositions.push(Cartesian3.clone(intersection));
+            }
+            splitPositions.push(p1);
+        }
+        var cartographicsLength = splitPositions.length;
 
         // Squash all cartesians to cartographic coordinates
         var cartographics = new Array(cartographicsLength);
         for (i = 0; i < cartographicsLength; i++) {
-            var cartographic = Cartographic.fromCartesian(positions[i], ellipsoid);
+            var cartographic = Cartographic.fromCartesian(splitPositions[i], ellipsoid);
             cartographic.height = 0.0;
             cartographics[i] = cartographic;
         }
@@ -519,6 +539,23 @@ define([
         Cartesian3.add(top, adjustHeightOffset, adjustHeightTop);
     }
 
+    var nudgeDirectionScratch = new Cartesian3();
+    function nudgeXZ(start, end) {
+        var startToXZdistance = Plane.getPointDistance(XZ_PLANE, start);
+        var endToXZdistance = Plane.getPointDistance(XZ_PLANE, end);
+        var offset = nudgeDirectionScratch;
+        // Same epsilon used in GeometryPipeline
+        if (CesiumMath.equalsEpsilon(startToXZdistance, 0.0, CesiumMath.EPSILON6)) {
+            offset = direction(end, start, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON6, offset);
+            Cartesian3.add(start, offset, start);
+        } else if (CesiumMath.equalsEpsilon(endToXZdistance, 0.0, CesiumMath.EPSILON6)) {
+            offset = direction(start, end, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON6, offset);
+            Cartesian3.add(end, offset, end);
+        }
+    }
+
     var startCartographicScratch = new Cartographic();
     var endCartographicScratch = new Cartographic();
 
@@ -588,8 +625,8 @@ define([
         var startHi_and_forwardOffsetX = new Float32Array(arraySizeVec4);
         var startLo_and_forwardOffsetY = new Float32Array(arraySizeVec4);
         var startNormal_and_forwardOffsetZ = new Float32Array(arraySizeVec4);
-        var endNormal_andTextureCoordinateNormalizationX = new Float32Array(arraySizeVec4);
-        var rightNormal_andTextureCoordinateNormalizationY = new Float32Array(arraySizeVec4);
+        var endNormal_and_textureCoordinateNormalizationX = new Float32Array(arraySizeVec4);
+        var rightNormal_and_textureCoordinateNormalizationY = new Float32Array(arraySizeVec4);
 
         var startHiLo2D = new Float32Array(arraySizeVec4);
         var offsetAndRight2D = new Float32Array(arraySizeVec4);
@@ -749,6 +786,9 @@ define([
                 var vec2Index = vec2sWriteIndex + j * 2;
                 var wIndex = vec4Index + 3;
 
+                // Encode sidedness of vertex in texture coordinate normalization X
+                var sidedness = j < 3 ? 1.0 : -1.0;
+
                 // 3D
                 Cartesian3.pack(encodedStart.high, startHi_and_forwardOffsetX, vec4Index);
                 startHi_and_forwardOffsetX[wIndex] = forwardOffset.x;
@@ -759,11 +799,11 @@ define([
                 Cartesian3.pack(startPlaneNormal, startNormal_and_forwardOffsetZ, vec4Index);
                 startNormal_and_forwardOffsetZ[wIndex] = forwardOffset.z;
 
-                Cartesian3.pack(endPlaneNormal, endNormal_andTextureCoordinateNormalizationX, vec4Index);
-                endNormal_andTextureCoordinateNormalizationX[wIndex] = texcoordNormalization3DX;
+                Cartesian3.pack(endPlaneNormal, endNormal_and_textureCoordinateNormalizationX, vec4Index);
+                endNormal_and_textureCoordinateNormalizationX[wIndex] = texcoordNormalization3DX * sidedness;
 
-                Cartesian3.pack(rightNormal, rightNormal_andTextureCoordinateNormalizationY, vec4Index);
-                rightNormal_andTextureCoordinateNormalizationY[wIndex] = texcoordNormalization3DY;
+                Cartesian3.pack(rightNormal, rightNormal_and_textureCoordinateNormalizationY, vec4Index);
+                rightNormal_and_textureCoordinateNormalizationY[wIndex] = texcoordNormalization3DY;
 
                 // 2D
                 startHiLo2D[vec4Index] = encodedStart2D.high.x;
@@ -781,7 +821,7 @@ define([
                 offsetAndRight2D[vec4Index + 2] = right2D.x;
                 offsetAndRight2D[vec4Index + 3] = right2D.y;
 
-                texcoordNormalization2D[vec2Index] = texcoordNormalization2DX;
+                texcoordNormalization2D[vec2Index] = texcoordNormalization2DX * sidedness;
                 texcoordNormalization2D[vec2Index + 1] = texcoordNormalization2DY;
             }
 
@@ -808,31 +848,19 @@ define([
             adjustHeights(startBottom, startTop, minHeight, maxHeight, adjustHeightStartBottom, adjustHeightStartTop);
             adjustHeights(endBottom, endTop, minHeight, maxHeight, adjustHeightEndBottom, adjustHeightEndTop);
 
-            // Push out by 1.0 in the "right" direction
-            var pushedStartBottom = Cartesian3.add(adjustHeightStartBottom, startGeometryNormal, adjustHeightStartBottom);
-            var pushedEndBottom = Cartesian3.add(adjustHeightEndBottom, endGeometryNormal, adjustHeightEndBottom);
-            var pushedEndTop = Cartesian3.add(adjustHeightEndTop, endGeometryNormal, adjustHeightEndTop);
-            var pushedStartTop = Cartesian3.add(adjustHeightStartTop, startGeometryNormal, adjustHeightStartTop);
-            Cartesian3.pack(pushedStartBottom, positionsArray, vec3sWriteIndex);
-            Cartesian3.pack(pushedEndBottom, positionsArray, vec3sWriteIndex + 3);
-            Cartesian3.pack(pushedEndTop, positionsArray, vec3sWriteIndex + 6);
-            Cartesian3.pack(pushedStartTop, positionsArray, vec3sWriteIndex + 9);
+            // If the segment is very close to the XZ plane, nudge the vertices slightly to avoid touching it.
+            nudgeXZ(adjustHeightStartBottom, adjustHeightEndBottom);
+            nudgeXZ(adjustHeightStartTop, adjustHeightEndTop);
 
-            // Return to center
-            pushedStartBottom = Cartesian3.subtract(adjustHeightStartBottom, startGeometryNormal, adjustHeightStartBottom);
-            pushedEndBottom = Cartesian3.subtract(adjustHeightEndBottom, endGeometryNormal, adjustHeightEndBottom);
-            pushedEndTop = Cartesian3.subtract(adjustHeightEndTop, endGeometryNormal, adjustHeightEndTop);
-            pushedStartTop = Cartesian3.subtract(adjustHeightStartTop, startGeometryNormal, adjustHeightStartTop);
+           Cartesian3.pack(adjustHeightStartBottom, positionsArray, vec3sWriteIndex);
+           Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 3);
+           Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 6);
+           Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 9);
 
-            // Push out by 1.0 in the "left" direction
-            pushedStartBottom = Cartesian3.subtract(adjustHeightStartBottom, startGeometryNormal, adjustHeightStartBottom);
-            pushedEndBottom = Cartesian3.subtract(adjustHeightEndBottom, endGeometryNormal, adjustHeightEndBottom);
-            pushedEndTop = Cartesian3.subtract(adjustHeightEndTop, endGeometryNormal, adjustHeightEndTop);
-            pushedStartTop = Cartesian3.subtract(adjustHeightStartTop, startGeometryNormal, adjustHeightStartTop);
-            Cartesian3.pack(pushedStartBottom, positionsArray, vec3sWriteIndex + 12);
-            Cartesian3.pack(pushedEndBottom, positionsArray, vec3sWriteIndex + 15);
-            Cartesian3.pack(pushedEndTop, positionsArray, vec3sWriteIndex + 18);
-            Cartesian3.pack(pushedStartTop, positionsArray, vec3sWriteIndex + 21);
+           Cartesian3.pack(adjustHeightStartBottom, positionsArray, vec3sWriteIndex + 12);
+           Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 15);
+           Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 18);
+           Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 21);
 
             cartographicsIndex += 2;
             index += 3;
@@ -873,8 +901,8 @@ define([
                 startHi_and_forwardOffsetX : getVec4GeometryAttribute(startHi_and_forwardOffsetX),
                 startLo_and_forwardOffsetY : getVec4GeometryAttribute(startLo_and_forwardOffsetY),
                 startNormal_and_forwardOffsetZ : getVec4GeometryAttribute(startNormal_and_forwardOffsetZ),
-                endNormal_andTextureCoordinateNormalizationX : getVec4GeometryAttribute(endNormal_andTextureCoordinateNormalizationX),
-                rightNormal_andTextureCoordinateNormalizationY : getVec4GeometryAttribute(rightNormal_andTextureCoordinateNormalizationY),
+                endNormal_and_textureCoordinateNormalizationX : getVec4GeometryAttribute(endNormal_and_textureCoordinateNormalizationX),
+                rightNormal_and_textureCoordinateNormalizationY : getVec4GeometryAttribute(rightNormal_and_textureCoordinateNormalizationY),
 
                 startHiLo2D : getVec4GeometryAttribute(startHiLo2D),
                 offsetAndRight2D : getVec4GeometryAttribute(offsetAndRight2D),
