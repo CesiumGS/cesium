@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.46.1 - 2018-06-01
+
+* This is an npm only release to fix the improperly published 1.46.0. There were no code changes.
+
 ### 1.46 - 2018-06-01
 
 ##### Highlights :sparkler:
