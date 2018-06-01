@@ -203,31 +203,35 @@ define([
      *
      * @returns {Number[]} The array that was packed into
      */
-    GroundPolylineGeometry.pack = function(value, packArray, startingIndex) {
-        startingIndex = defaultValue(startingIndex, 0);
+    GroundPolylineGeometry.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        var index = defaultValue(startingIndex, 0);
 
         // Pack position length, then all positions
         var positions = value.positions;
         var positionsLength = positions.length;
 
-        var index = startingIndex;
-        packArray[index++] = positionsLength;
+        array[index++] = positionsLength;
 
         for (var i = 0; i < positionsLength; ++i) {
             var cartesian = positions[i];
-            Cartesian3.pack(cartesian, packArray, index);
+            Cartesian3.pack(cartesian, array, index);
             index += 3;
         }
 
-        packArray[index++] = value.granularity;
-        packArray[index++] = value.loop ? 1.0 : 0.0;
+        array[index++] = value.granularity;
+        array[index++] = value.loop ? 1.0 : 0.0;
 
-        Ellipsoid.pack(value.ellipsoid, packArray, index);
+        Ellipsoid.pack(value.ellipsoid, array, index);
         index += Ellipsoid.packedLength;
 
-        packArray[index++] = value._projectionIndex;
+        array[index++] = value._projectionIndex;
 
-        return packArray;
+        return array;
     };
 
     /**
@@ -237,23 +241,27 @@ define([
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {PolygonGeometry} [result] The object into which to store the result.
      */
-    GroundPolylineGeometry.unpack = function(packArray, startingIndex, result) {
+    GroundPolylineGeometry.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
         var index = defaultValue(startingIndex, 0);
         var positions = [];
 
-        var positionsLength = packArray[index++];
+        var positionsLength = array[index++];
         for (var i = 0; i < positionsLength; i++) {
-            positions.push(Cartesian3.unpack(packArray, index));
+            positions.push(Cartesian3.unpack(array, index));
             index += 3;
         }
 
-        var granularity = packArray[index++];
-        var loop = packArray[index++] === 1.0 ? true : false;
+        var granularity = array[index++];
+        var loop = array[index++] === 1.0 ? true : false;
 
-        var ellipsoid = Ellipsoid.unpack(packArray, index);
+        var ellipsoid = Ellipsoid.unpack(array, index);
         index += Ellipsoid.packedLength;
 
-        var projectionIndex = packArray[index++];
+        var projectionIndex = array[index++];
 
         if (!defined(result)) {
             return new GroundPolylineGeometry({
@@ -530,7 +538,10 @@ define([
 
         var ellipsoid = projection.ellipsoid;
         var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, endPosCartographicScratch);
-        // If normal crosses the IDL, go the other way and flip the result
+        // If normal crosses the IDL, go the other way and flip the result.
+        // In practice this almost never happens because normals for points
+        // very close to the IDL get snapped directly north or directly south,
+        // but this is here in case something sneaks past the epsilon check.
         if (Math.abs(cartographic.longitude - normalEndpointCartographic.longitude) > CesiumMath.PI_OVER_TWO) {
             flipNormal = true;
             normalEndpoint = Cartesian3.subtract(position, normal, normalEndpointScratch);
