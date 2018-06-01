@@ -458,25 +458,35 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 return;
             }
 
-            var objectToDelete = [];
+            var objectsToDelete = [];
             existingBlobs.forEach(function(file) {
                 //Don't delete generate zip files.
                 if (!/\.(zip|tgz)$/.test(file)) {
-                    objectToDelete.push({Key : file});
+                    objectsToDelete.push({Key : file});
                 }
             });
 
-            if (objectToDelete.length > 0) {
-                console.log('Cleaning up old files...');
-                return s3.deleteObjectsAsync({
-                                                 Bucket : bucketName,
-                                                 Delete : {
-                                                     Objects : objectToDelete
-                                                 }
-                                             })
+            if (objectsToDelete.length > 0) {
+                console.log('Cleaning ' + objectsToDelete.length + ' files...');
+
+                // If more than 1000 files, we must issue multiple requests
+                var batches = [];
+                while (objectsToDelete.length > 1000) {
+                    batches.push(objectsToDelete.splice(0, 1000));
+                }
+                batches.push(objectsToDelete);
+
+                return Promise.map(batches, function(objects) {
+                    return s3.deleteObjectsAsync({
+                        Bucket : bucketName,
+                        Delete : {
+                            Objects : objects
+                        }
+                    })
                     .then(function() {
-                        console.log('Cleaned ' + existingBlobs.length + ' files.');
+                        console.log('Cleaned ' + objects.length + ' files.');
                     });
+                }, {concurrency : concurrency});
             }
         })
         .catch(function(error) {
