@@ -666,7 +666,7 @@ define(\'' + moduleId + '\', function() {\n\
         modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
     });
 
-    contents += '})();';
+    contents += '})();\n';
 
     var paths = '\
 define(function() {\n\
@@ -1069,7 +1069,7 @@ define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {
   };\n\
   ' + assignments.join('\n  ') + '\n\
   return Cesium;\n\
-});';
+});\n';
 
     fs.writeFileSync('Source/Cesium.js', contents);
 }
@@ -1082,7 +1082,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];';
+    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];\n';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
@@ -1152,7 +1152,7 @@ function createGalleryList() {
 // This file is automatically rebuilt by the Cesium build process.\n\
 var hello_world_index = ' + helloWorldIndex + ';\n\
 var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
-var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;');
+var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n';
 
     fs.writeFileSync(output, contents);
 }
@@ -1166,7 +1166,7 @@ function createJsHintOptions() {
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
-var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
+var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';\n';
 
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
 }
