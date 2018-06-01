@@ -486,7 +486,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                     .then(function() {
                         console.log('Cleaned ' + objects.length + ' files.');
                     });
-                });
+                }, {concurrency : concurrency});
             }
         })
         .catch(function(error) {
