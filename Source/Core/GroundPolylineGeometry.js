@@ -520,19 +520,21 @@ define([
         return false;
     }
 
-    var positionCartographicScratch = new Cartographic();
+    var endPosCartographicScratch = new Cartographic();
+    var normalStartpointScratch = new Cartesian3();
     var normalEndpointScratch = new Cartesian3();
-    function projectNormal(projection, position, positionLongitude, normal, projectedPosition, result) {
+    function projectNormal(projection, cartographic, normal, projectedPosition, result) {
+        var position = Cartographic.toCartesian(cartographic, projection.ellipsoid, normalStartpointScratch);
         var normalEndpoint = Cartesian3.add(position, normal, normalEndpointScratch);
         var flipNormal = false;
 
         var ellipsoid = projection.ellipsoid;
-        var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, positionCartographicScratch);
+        var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, endPosCartographicScratch);
         // If normal crosses the IDL, go the other way and flip the result
-        if (Math.abs(positionLongitude - normalEndpointCartographic.longitude) > CesiumMath.PI_OVER_TWO) {
+        if (Math.abs(cartographic.longitude - normalEndpointCartographic.longitude) > CesiumMath.PI_OVER_TWO) {
             flipNormal = true;
             normalEndpoint = Cartesian3.subtract(position, normal, normalEndpointScratch);
-            normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, positionCartographicScratch);
+            normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, endPosCartographicScratch);
         }
 
         normalEndpointCartographic.height = 0.0;
@@ -567,16 +569,31 @@ define([
         var startToXZdistance = Plane.getPointDistance(XZ_PLANE, start);
         var endToXZdistance = Plane.getPointDistance(XZ_PLANE, end);
         var offset = nudgeDirectionScratch;
-        // Same epsilon used in GeometryPipeline
-        if (CesiumMath.equalsEpsilon(startToXZdistance, 0.0, CesiumMath.EPSILON6)) {
+        // Larger epsilon than what's used in GeometryPipeline, less than a centimeter in world space
+        if (CesiumMath.equalsEpsilon(startToXZdistance, 0.0, CesiumMath.EPSILON4)) {
             offset = direction(end, start, offset);
-            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON6, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON4, offset);
             Cartesian3.add(start, offset, start);
-        } else if (CesiumMath.equalsEpsilon(endToXZdistance, 0.0, CesiumMath.EPSILON6)) {
+        } else if (CesiumMath.equalsEpsilon(endToXZdistance, 0.0, CesiumMath.EPSILON4)) {
             offset = direction(start, end, offset);
-            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON6, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON4, offset);
             Cartesian3.add(end, offset, end);
         }
+    }
+
+    function nudgeCartographic(start, end) {
+        var absStartLon = Math.abs(start.longitude);
+        var absEndLon = Math.abs(end.longitude);
+        if (CesiumMath.equalsEpsilon(absStartLon, CesiumMath.PI, CesiumMath.EPSILON7)) {
+            var endSign = Math.sign(end.longitude);
+            start.longitude = endSign * (absStartLon - CesiumMath.EPSILON7);
+            return 1;
+        } else if (CesiumMath.equalsEpsilon(absEndLon, CesiumMath.PI, CesiumMath.EPSILON7)) {
+            var startSign = Math.sign(start.longitude);
+            end.longitude = startSign * (absEndLon - CesiumMath.EPSILON7);
+            return 2;
+        }
+        return 0;
     }
 
     var startCartographicScratch = new Cartographic();
@@ -613,6 +630,8 @@ define([
     var encodeScratch2D = new EncodedCartesian3();
     var forwardOffset2DScratch = new Cartesian3();
     var right2DScratch = new Cartesian3();
+
+    var normalNudgeScratch = new Cartesian3();
 
     var scratchBoundingSpheres = [new BoundingSphere(), new BoundingSphere()];
 
@@ -662,21 +681,26 @@ define([
         var length2D = 0.0;
         var length3D = 0.0;
 
-        var cartographic = startCartographicScratch;
-        cartographic.latitude = cartographicsArray[0];
-        cartographic.longitude = cartographicsArray[1];
-        cartographic.height = 0.0;
+        var startCartographic = startCartographicScratch;
+        startCartographic.height = 0.0;
+        var endCartographic = endCartographicScratch;
+        endCartographic.height = 0.0;
 
         var segmentStartCartesian = segmentStartTopScratch;
-        var segmentEndCartesian = projection.project(cartographic, segmentEndTopScratch);
+        var segmentEndCartesian = segmentEndTopScratch;
 
-        index = 2;
+        index = 0;
         for (i = 1; i < cartographicsLength; i++) {
-            cartographic.latitude = cartographicsArray[index];
-            cartographic.longitude = cartographicsArray[index + 1];
+            // don't clone anything from previous segment b/c possible IDL touch
+            startCartographic.latitude = cartographicsArray[index];
+            startCartographic.longitude = cartographicsArray[index + 1];
+            endCartographic.latitude = cartographicsArray[index + 2];
+            endCartographic.longitude = cartographicsArray[index + 3];
 
-            segmentStartCartesian = Cartesian3.clone(segmentEndCartesian, segmentStartCartesian);
-            segmentEndCartesian = projection.project(cartographic, segmentEndCartesian);
+            nudgeCartographic(startCartographic, endCartographic);
+
+            segmentStartCartesian = projection.project(startCartographic, segmentStartCartesian);
+            segmentEndCartesian = projection.project(endCartographic, segmentEndCartesian);
             length2D += Cartesian3.distance(segmentStartCartesian, segmentEndCartesian);
             index += 2;
         }
@@ -696,7 +720,7 @@ define([
         /*** Generate segments ***/
         var j;
         index = 3;
-        var cartographicsIndex = 2;
+        var cartographicsIndex = 0;
         var vec2sWriteIndex = 0;
         var vec3sWriteIndex = 0;
         var vec4sWriteIndex = 0;
@@ -713,12 +737,6 @@ define([
                 endGeometryNormal = Cartesian3.multiplyByScalar(endGeometryNormal, -1.0, endGeometryNormal);
             }
         }
-        var endCartographic = endCartographicScratch;
-        var startCartographic = startCartographicScratch;
-        endCartographic.latitude = cartographicsArray[0];
-        endCartographic.longitude = cartographicsArray[1];
-        var end2D = projection.project(endCartographic, segmentEnd2DScratch);
-        var endGeometryNormal2D = projectNormal(projection, endBottom, endCartographic.longitude, endGeometryNormal, end2D, segmentEndNormal2DScratch);
 
         var lengthSoFar3D = 0.0;
         var lengthSoFar2D = 0.0;
@@ -728,15 +746,8 @@ define([
             var startTop = Cartesian3.clone(endTop, segmentStartTopScratch);
             var startGeometryNormal = Cartesian3.clone(endGeometryNormal, segmentStartNormalScratch);
 
-            var start2D = Cartesian3.clone(end2D, segmentStart2DScratch);
-            var startGeometryNormal2D = Cartesian3.clone(endGeometryNormal2D, segmentStartNormal2DScratch);
-            startCartographic = Cartographic.clone(endCartographic, startCartographic);
-
             if (miterBroken) {
-                // If miter was broken for the previous segment's end vertex, flip for this segment's start vertex
-                // These normals are "right facing."
                 startGeometryNormal = Cartesian3.multiplyByScalar(startGeometryNormal, -1.0, startGeometryNormal);
-                startGeometryNormal2D = Cartesian3.multiplyByScalar(startGeometryNormal2D, -1.0, startGeometryNormal2D);
             }
 
             endBottom = Cartesian3.unpack(bottomPositionsArray, index, segmentEndBottomScratch);
@@ -745,10 +756,36 @@ define([
 
             miterBroken = breakMiter(endGeometryNormal, startBottom, endBottom, endTop);
 
-            endCartographic.latitude = cartographicsArray[cartographicsIndex];
-            endCartographic.longitude = cartographicsArray[cartographicsIndex + 1];
-            end2D = projection.project(endCartographic, segmentEnd2DScratch);
-            endGeometryNormal2D = projectNormal(projection, endBottom, endCartographic.longitude, endGeometryNormal, end2D, segmentEndNormal2DScratch);
+            // 2D - don't clone anything from previous segment b/c possible IDL touch
+            startCartographic.latitude = cartographicsArray[cartographicsIndex];
+            startCartographic.longitude = cartographicsArray[cartographicsIndex + 1];
+            endCartographic.latitude = cartographicsArray[cartographicsIndex + 2];
+            endCartographic.longitude = cartographicsArray[cartographicsIndex + 3];
+
+            var nudgeResult = nudgeCartographic(startCartographic, endCartographic);
+            var start2D = projection.project(startCartographic, segmentStart2DScratch);
+            var end2D = projection.project(endCartographic, segmentEnd2DScratch);
+
+            var startGeometryNormal2D = segmentStartNormal2DScratch;
+            var endGeometryNormal2D = segmentEndNormal2DScratch;
+            if (nudgeResult === 0) {
+                startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
+                endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
+            } else if (nudgeResult === 1) {
+                // start is close to IDL
+                endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
+                startGeometryNormal2D.x = 0.0;
+                // If start longitude is negative and end longitude is less negative, "right" is unit -Y
+                // If start longitude is positive and end longitude is less positive, "right" is unit +Y
+                startGeometryNormal2D.y = Math.sign(startCartographic.longitude - Math.abs(endCartographic.longitude));
+                startGeometryNormal2D.z = 0.0;
+            } else {
+                // end is close to IDL
+                startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
+                endGeometryNormal2D.x = 0.0;
+                endGeometryNormal2D.y = Math.sign(endCartographic.longitude - Math.abs(startCartographic.longitude));
+                endGeometryNormal2D.z = 0.0;
+            }
 
             /****************************************
              * Geometry descriptors of a "line on terrain,"
@@ -871,6 +908,13 @@ define([
             adjustHeights(startBottom, startTop, minHeight, maxHeight, adjustHeightStartBottom, adjustHeightStartTop);
             adjustHeights(endBottom, endTop, minHeight, maxHeight, adjustHeightEndBottom, adjustHeightEndTop);
 
+            // Nudge the positions away from the "polyline" a little bit to prevent errors in GeometryPipeline
+            var normalNudge = Cartesian3.multiplyByScalar(rightNormal, CesiumMath.EPSILON5, normalNudgeScratch);
+            Cartesian3.add(adjustHeightStartBottom, normalNudge, adjustHeightStartBottom);
+            Cartesian3.add(adjustHeightEndBottom, normalNudge, adjustHeightEndBottom);
+            Cartesian3.add(adjustHeightStartTop, normalNudge, adjustHeightStartTop);
+            Cartesian3.add(adjustHeightEndTop, normalNudge, adjustHeightEndTop);
+
             // If the segment is very close to the XZ plane, nudge the vertices slightly to avoid touching it.
             nudgeXZ(adjustHeightStartBottom, adjustHeightEndBottom);
             nudgeXZ(adjustHeightStartTop, adjustHeightEndTop);
@@ -879,6 +923,17 @@ define([
            Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 3);
            Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 6);
            Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 9);
+
+           // Nudge in opposite direction
+           normalNudge = Cartesian3.multiplyByScalar(rightNormal, -2.0 * CesiumMath.EPSILON5, normalNudgeScratch);
+           Cartesian3.add(adjustHeightStartBottom, normalNudge, adjustHeightStartBottom);
+           Cartesian3.add(adjustHeightEndBottom, normalNudge, adjustHeightEndBottom);
+           Cartesian3.add(adjustHeightStartTop, normalNudge, adjustHeightStartTop);
+           Cartesian3.add(adjustHeightEndTop, normalNudge, adjustHeightEndTop);
+
+           // Check against XZ plane again
+           nudgeXZ(adjustHeightStartBottom, adjustHeightEndBottom);
+           nudgeXZ(adjustHeightStartTop, adjustHeightEndTop);
 
            Cartesian3.pack(adjustHeightStartBottom, positionsArray, vec3sWriteIndex + 12);
            Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 15);
@@ -893,7 +948,7 @@ define([
             vec4sWriteIndex += 32;
 
             lengthSoFar3D += segmentLength3D;
-            lengthSoFar2D = segmentLength2D;
+            lengthSoFar2D += segmentLength2D;
         }
 
         /*** Generate indices ***/
