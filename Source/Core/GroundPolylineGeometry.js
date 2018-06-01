@@ -366,15 +366,27 @@ define([
         // Split positions across the IDL and the Prime Meridian as well.
         // Split across prime meridian because very large geometries crossing the Prime Meridian but not the IDL
         // may get split by the plane of IDL + Prime Meridian.
+        var p0;
+        var p1;
+        var intersection;
         var splitPositions = [positions[0]];
         for (i = 0; i < positionsLength - 1; i++) {
-            var p0 = positions[i];
-            var p1 = positions[i + 1];
-            var intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
+            p0 = positions[i];
+            p1 = positions[i + 1];
+            intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
             if (defined(intersection)) {
                 splitPositions.push(Cartesian3.clone(intersection));
             }
             splitPositions.push(p1);
+        }
+        // Check if loop also crosses IDL/Prime Meridian
+        if (loop) {
+            p0 = positions[positionsLength - 1];
+            p1 = positions[0];
+            intersection = IntersectionTests.lineSegmentPlane(p0, p1, XZ_PLANE, intersectionScratch);
+            if (defined(intersection)) {
+                splitPositions.push(Cartesian3.clone(intersection));
+            }
         }
         var cartographicsLength = splitPositions.length;
 
@@ -510,16 +522,27 @@ define([
 
     var positionCartographicScratch = new Cartographic();
     var normalEndpointScratch = new Cartesian3();
-    function projectNormal(projection, position, normal, projectedPosition, result) {
+    function projectNormal(projection, position, positionLongitude, normal, projectedPosition, result) {
         var normalEndpoint = Cartesian3.add(position, normal, normalEndpointScratch);
+        var flipNormal = false;
 
         var ellipsoid = projection.ellipsoid;
         var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, positionCartographicScratch);
+        // If normal crosses the IDL, go the other way and flip the result
+        if (Math.abs(positionLongitude - normalEndpointCartographic.longitude) > CesiumMath.PI_OVER_TWO) {
+            flipNormal = true;
+            normalEndpoint = Cartesian3.subtract(position, normal, normalEndpointScratch);
+            normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, positionCartographicScratch);
+        }
+
         normalEndpointCartographic.height = 0.0;
         var normalEndpointProjected = projection.project(normalEndpointCartographic, result);
         result = Cartesian3.subtract(normalEndpointProjected, projectedPosition, result);
         result.z = 0.0;
         result = Cartesian3.normalize(result, result);
+        if (flipNormal) {
+            Cartesian3.multiplyByScalar(result, -1.0, result);
+        }
         return result;
     }
 
@@ -695,7 +718,7 @@ define([
         endCartographic.latitude = cartographicsArray[0];
         endCartographic.longitude = cartographicsArray[1];
         var end2D = projection.project(endCartographic, segmentEnd2DScratch);
-        var endGeometryNormal2D = projectNormal(projection, endBottom, endGeometryNormal, end2D, segmentEndNormal2DScratch);
+        var endGeometryNormal2D = projectNormal(projection, endBottom, endCartographic.longitude, endGeometryNormal, end2D, segmentEndNormal2DScratch);
 
         var lengthSoFar3D = 0.0;
         var lengthSoFar2D = 0.0;
@@ -725,7 +748,7 @@ define([
             endCartographic.latitude = cartographicsArray[cartographicsIndex];
             endCartographic.longitude = cartographicsArray[cartographicsIndex + 1];
             end2D = projection.project(endCartographic, segmentEnd2DScratch);
-            endGeometryNormal2D = projectNormal(projection, endBottom, endGeometryNormal, end2D, segmentEndNormal2DScratch);
+            endGeometryNormal2D = projectNormal(projection, endBottom, endCartographic.longitude, endGeometryNormal, end2D, segmentEndNormal2DScratch);
 
             /****************************************
              * Geometry descriptors of a "line on terrain,"
@@ -787,7 +810,7 @@ define([
                 var wIndex = vec4Index + 3;
 
                 // Encode sidedness of vertex in texture coordinate normalization X
-                var sidedness = j < 3 ? 1.0 : -1.0;
+                var sidedness = j < 4 ? 1.0 : -1.0;
 
                 // 3D
                 Cartesian3.pack(encodedStart.high, startHi_and_forwardOffsetX, vec4Index);
