@@ -384,7 +384,7 @@ defineSuite([
             content.clippingPlanesDirty = true;
             tile.update(tileset, scene.frameState);
 
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
         });
     });
 

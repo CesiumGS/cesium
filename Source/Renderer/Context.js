@@ -953,27 +953,22 @@ define([
         gl.clear(bitmask);
     };
 
-    function beginDraw(context, framebuffer, drawCommand, passState) {
-        var rs = defaultValue(drawCommand._renderState, context._defaultRenderState);
-
+    function beginDraw(context, framebuffer, passState, shaderProgram, renderState) {
         //>>includeStart('debug', pragmas.debug);
-        if (defined(framebuffer) && rs.depthTest) {
-            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment) {
+        if (defined(framebuffer) && renderState.depthTest) {
+            if (renderState.depthTest.enabled && !framebuffer.hasDepthAttachment) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
         //>>includeEnd('debug');
 
         bindFramebuffer(context, framebuffer);
-
-        applyRenderState(context, rs, passState, false);
-
-        var sp = drawCommand._shaderProgram;
-        sp._bind();
-        context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
+        applyRenderState(context, renderState, passState, false);
+        shaderProgram._bind();
+        context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, shaderProgram.maximumTextureUnitIndex);
     }
 
-    function continueDraw(context, drawCommand) {
+    function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         var primitiveType = drawCommand._primitiveType;
         var va = drawCommand._vertexArray;
         var offset = drawCommand._offset;
@@ -997,7 +992,7 @@ define([
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
-        drawCommand._shaderProgram._setUniforms(drawCommand._uniformMap, context._us, context.validateShaderProgram);
+        shaderProgram._setUniforms(uniformMap, context._us, context.validateShaderProgram);
 
         va._bind();
         var indexBuffer = va.indexBuffer;
@@ -1022,7 +1017,7 @@ define([
         va._unBind();
     }
 
-    Context.prototype.draw = function(drawCommand, passState) {
+    Context.prototype.draw = function(drawCommand, passState, shaderProgram, uniformMap) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('drawCommand', drawCommand);
         Check.defined('drawCommand.shaderProgram', drawCommand._shaderProgram);
@@ -1031,9 +1026,12 @@ define([
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
+        var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
+        shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
+        uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
 
-        beginDraw(this, framebuffer, drawCommand, passState);
-        continueDraw(this, drawCommand);
+        beginDraw(this, framebuffer, passState, shaderProgram, renderState);
+        continueDraw(this, drawCommand, shaderProgram, uniformMap);
     };
 
     Context.prototype.endFrame = function() {
