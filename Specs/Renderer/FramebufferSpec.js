@@ -242,24 +242,9 @@ defineSuite([
         cubeMap = cubeMap.destroy();
     });
 
-    it('draws to a color attachment', function() {
-        var colorTexture = new Texture({
-            context : context,
-            width : 1,
-            height : 1
-        });
-        framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [colorTexture]
-        });
-
-        // 1 of 4.  Clear default color buffer to black.
-        ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 255]);
-
-        // 2 of 4.  Render green point into color attachment.
+    function renderColorTexture(framebuffer, color, expectedColor) {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-        var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
+        var fs = 'uniform vec4 color; void main() { gl_FragColor = color; }';
         sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
@@ -282,30 +267,71 @@ defineSuite([
             }]
         });
 
+        var uniformMap = {
+            color : function() {
+                return color;
+            }
+        };
+
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
+            uniformMap : uniformMap,
             framebuffer : framebuffer
         });
         command.execute(context);
 
-        // 3 of 4.  Verify default color buffer is still black.
-        expect(context).toReadPixels([0, 0, 0, 255]);
-
-        // 4 of 4.  Render green to default color buffer by reading from previous color attachment
-        var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
-        var uniformMap = {
-            u_texture : function() {
-                return colorTexture;
-            }
-        };
-
         expect({
             context : context,
-            fragmentShader : fs2,
-            uniformMap : uniformMap
-        }).contextToRender([0, 255, 0, 255]);
+            framebuffer : framebuffer
+        }).toReadPixels(expectedColor);
+    }
+
+    it('draws to a color attachment', function() {
+        framebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [new Texture({
+                context : context,
+                width : 1,
+                height : 1
+            })]
+        });
+        renderColorTexture(framebuffer, new Color(0.0, 1.0, 0.0, 1.0), [0, 255, 0, 255]);
+    });
+
+    it('draws to a floating-point color attachment', function() {
+        if (!context.colorBufferFloat) {
+            return;
+        }
+
+        framebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [new Texture({
+                context : context,
+                width : 1,
+                height : 1,
+                pixelDatatype : PixelDatatype.FLOAT
+            })]
+        });
+        renderColorTexture(framebuffer, new Color(0.5, 1.5, 2.0, 1.0), [0.5, 1.5, 2.0, 1.0]);
+    });
+
+    it('draws to a half floating-point color attachment', function() {
+        if (!context.colorBufferHalfFloat) {
+            return;
+        }
+
+        framebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [new Texture({
+                context : context,
+                width : 1,
+                height : 1,
+                pixelDatatype : PixelDatatype.HALF_FLOAT
+            })]
+        });
+        renderColorTexture(framebuffer, new Color(0.5, 1.5, 2.0, 1.0), [14336, 15872, 16384, 15360]);
     });
 
     function renderDepthAttachment(framebuffer, texture) {
@@ -886,6 +912,40 @@ defineSuite([
 
         expect(function() {
             framebuffer.getColorRenderbuffer(ContextLimits.maximumColorAttachments + 1);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when a color attachment has a floating-point datatype but the EXT_color_buffer_float extension is not supported', function() {
+        if (context.colorBufferFloat) {
+            return;
+        }
+        expect(function() {
+            return new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
+                    width : 1,
+                    height : 1,
+                    pixelDatatype : PixelDatatype.FLOAT
+                })]
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when a color attachment has a half floating-point datatype but the EXT_color_buffer_half_float extension is not supported', function() {
+        if (context.colorBufferHalfFloat) {
+            return;
+        }
+        expect(function() {
+            return new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
+                    width : 1,
+                    height : 1,
+                    pixelDatatype : PixelDatatype.HALF_FLOAT
+                })]
+            });
         }).toThrowDeveloperError();
     });
 

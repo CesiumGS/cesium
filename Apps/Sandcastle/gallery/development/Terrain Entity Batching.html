@@ -108,7 +108,10 @@ viewer.entities.add({
     ellipse : {
         semiMinorAxis : 15000.0,
         semiMajorAxis : 30000.0,
-        material : '../images/Cesium_Logo_Color.jpg',
+        material : new Cesium.ImageMaterialProperty({
+            image : '../images/Cesium_Logo_Color.jpg',
+            repeat : new Cesium.Cartesian2(10, 10)
+        }),
         stRotation : Cesium.Math.toRadians(45),
         classificationType : Cesium.ClassificationType.TERRAIN
     }

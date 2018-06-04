@@ -334,6 +334,39 @@ defineSuite([
         });
     });
 
+    it('Links model to tileset clipping planes if tileset clipping planes are reassigned', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var model = tile.content._modelInstanceCollection._model;
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+
+            var newClippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = newClippingPlaneCollection;
+            newClippingPlaneCollection.update(scene.frameState);
+            expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
+
+            tile.update(tileset, scene.frameState);
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+        });
+    });
+
     it('rebuilds Model shaders when clipping planes change', function() {
         spyOn(Model, '_getClippingFunction').and.callThrough();
 
