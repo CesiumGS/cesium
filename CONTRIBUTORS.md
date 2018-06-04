@@ -46,7 +46,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Hannah Bollar](https://github.com/hanbollar)
    * [Luke San Antonio Bialecki](https://github.com/lukesanantonio)
    * [Josh Lawrence](https://github.com/loshjawrence)
-
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
