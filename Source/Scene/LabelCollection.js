@@ -579,7 +579,7 @@ define([
      * Creates and adds a label with the specified initial properties to the collection.
      * The added label is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[options] A template describing the label's properties as shown in Example 1.
+     * @param {Object} [options] A template describing the label's properties as shown in Example 1.
      * @returns {Label} The label that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer

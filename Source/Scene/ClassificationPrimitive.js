@@ -1,5 +1,6 @@
 define([
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -13,7 +14,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeVS',
+        '../Shaders/ShadowVolumeAppearanceVS',
         '../ThirdParty/when',
         './BlendingState',
         './ClassificationType',
@@ -21,10 +22,12 @@ define([
         './PerInstanceColorAppearance',
         './Primitive',
         './SceneMode',
+        './ShadowVolumeAppearance',
         './StencilFunction',
         './StencilOperation'
     ], function(
         ColorGeometryInstanceAttribute,
+        combine,
         defaultValue,
         defined,
         defineProperties,
@@ -38,7 +41,7 @@ define([
         ShaderProgram,
         ShaderSource,
         ShadowVolumeFS,
-        ShadowVolumeVS,
+        ShadowVolumeAppearanceVS,
         when,
         BlendingState,
         ClassificationType,
@@ -46,6 +49,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
+        ShadowVolumeAppearance,
         StencilFunction,
         StencilOperation) {
     'use strict';
@@ -53,14 +57,16 @@ define([
     var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
 
     /**
-     * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.  The geometry must be from a single {@link GeometryInstance}.
-     * Batching multiple geometries is not yet supported.
+     * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.
      * <p>
-     * A primitive combines the geometry instance with an {@link Appearance} that describes the full shading, including
+     * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
-     * and match most of them and add a new geometry or appearance independently of each other. Only the {@link PerInstanceColorAppearance}
-     * is supported at this time.
+     * and match most of them and add a new geometry or appearance independently of each other.
+     * Only {@link PerInstanceColorAppearance} with the same color across all instances is supported at this time when using
+     * ClassificationPrimitive directly.
+     * For full {@link Appearance} support when classifying terrain use {@link GroundPrimitive} instead.
+     *
      * </p>
      * <p>
      * For correct rendering, this feature requires the EXT_frag_depth WebGL extension. For hardware that do not support this extension, there
@@ -79,6 +85,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render. This can either be a single instance or an array of length one.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive. Defaults to PerInstanceColorAppearance when GeometryInstances have a color attribute.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -98,6 +105,7 @@ define([
      */
     function ClassificationPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var geometryInstances = options.geometryInstances;
 
         /**
          * The geometry instance rendered with this primitive.  This may
@@ -117,7 +125,7 @@ define([
          *
          * @default undefined
          */
-        this.geometryInstances = options.geometryInstances;
+        this.geometryInstances = geometryInstances;
         /**
          * Determines if the primitive will be shown.  This affects all geometry
          * instances in the primitive.
@@ -166,6 +174,10 @@ define([
         this._sp = undefined;
         this._spStencil = undefined;
         this._spPick = undefined;
+        this._spColor = undefined;
+
+        this._spPick2D = undefined; // only derived if necessary
+        this._spColor2D = undefined; // only derived if necessary
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
@@ -180,21 +192,26 @@ define([
         this._primitive = undefined;
         this._pickPrimitive = options._pickPrimitive;
 
-        var appearance = new PerInstanceColorAppearance({
-            flat : true
-        });
+        // Set in update
+        this._hasSphericalExtentsAttribute = false;
+        this._hasPlanarExtentsAttributes = false;
+        this._hasPerColorAttribute = false;
+
+        this.appearance = options.appearance;
 
         var readOnlyAttributes;
-        if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
+        if (defined(geometryInstances) && isArray(geometryInstances) && geometryInstances.length > 1) {
             readOnlyAttributes = ClassificationPrimitiveReadOnlyInstanceAttributes;
         }
 
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
 
+        this._usePickOffsets = false;
+
         this._primitiveOptions = {
             geometryInstances : undefined,
-            appearance : appearance,
+            appearance : undefined,
             vertexCacheOptimize : defaultValue(options.vertexCacheOptimize, false),
             interleave : defaultValue(options.interleave, false),
             releaseGeometryInstances : defaultValue(options.releaseGeometryInstances, true),
@@ -333,6 +350,21 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
+            }
+        },
+
+        /**
+         * Returns true if the ClassificationPrimitive needs a separate shader and commands for 2D.
+         * This is because texture coordinates on ClassificationPrimitives are computed differently,
+         * and are used for culling when multiple GeometryInstances are batched in one ClassificationPrimitive.
+         * @memberof ClassificationPrimitive.prototype
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        _needs2DShader : {
+            get : function() {
+                return this._hasPlanarExtentsAttributes || this._hasSphericalExtentsAttribute;
             }
         }
     });
@@ -509,18 +541,17 @@ define([
         }
     }
 
-    function createShaderProgram(classificationPrimitive, frameState, appearance) {
-        if (defined(classificationPrimitive._sp)) {
-            return;
-        }
-
+    function createShaderProgram(classificationPrimitive, frameState) {
         var context = frameState.context;
         var primitive = classificationPrimitive._primitive;
-        var vs = ShadowVolumeVS;
+        var vs = ShadowVolumeAppearanceVS;
         vs = classificationPrimitive._primitive._batchTable.getVertexShaderCallback()(vs);
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
         vs = Primitive._modifyShaderPosition(classificationPrimitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
+
+        var planarExtents = classificationPrimitive._hasPlanarExtentsAttributes;
+        var cullFragmentsUsingExtents = planarExtents || classificationPrimitive._hasSphericalExtentsAttribute;
 
         if (classificationPrimitive._extruded) {
             vs = modifyForEncodedNormals(primitive, vs);
@@ -542,6 +573,8 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
+        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance);
+
         classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : classificationPrimitive._spStencil,
@@ -555,23 +588,33 @@ define([
             vsPick = Primitive._appendShowToShader(primitive, vsPick);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
-            var pickVS = new ShaderSource({
-                defines : [extrudedDefine, disableGlPositionLogDepth],
-                sources : [vsPick]
-            });
-
-            var pickFS = new ShaderSource({
-                sources : [ShadowVolumeFS],
-                pickColorQualifier : 'varying'
-            });
+            var pickFS3D = shadowVolumeAppearance.createPickFragmentShader(false);
+            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, false);
 
             classificationPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : classificationPrimitive._spPick,
-                vertexShaderSource : pickVS,
-                fragmentShaderSource : pickFS,
+                vertexShaderSource : pickVS3D,
+                fragmentShaderSource : pickFS3D,
                 attributeLocations : attributeLocations
             });
+
+            // Derive a 2D pick shader if the primitive uses texture coordinate-based fragment culling,
+            // since texture coordinates are computed differently in 2D.
+            if (cullFragmentsUsingExtents) {
+                var pickProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spPick, '2dPick');
+                if (!defined(pickProgram2D)) {
+                    var pickFS2D = shadowVolumeAppearance.createPickFragmentShader(true);
+                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, true);
+
+                    pickProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spPick, '2dPick', {
+                        vertexShaderSource : pickVS2D,
+                        fragmentShaderSource : pickFS2D,
+                        attributeLocations : attributeLocations
+                    });
+                }
+                classificationPrimitive._spPick2D = pickProgram2D;
+            }
         } else {
             classificationPrimitive._spPick = ShaderProgram.fromCache({
                 context : context,
@@ -594,17 +637,49 @@ define([
             fragmentShaderSource : fsSource,
             attributeLocations : attributeLocations
         });
+
+        // Create a fragment shader that computes only required material hookups using screen space techniques
+        var fsColorSource = shadowVolumeAppearance.createFragmentShader(false);
+        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, false);
+
+        classificationPrimitive._spColor = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : classificationPrimitive._spColor,
+            vertexShaderSource : vsColorSource,
+            fragmentShaderSource : fsColorSource,
+            attributeLocations : attributeLocations
+        });
+
+        // Derive a 2D shader if the primitive uses texture coordinate-based fragment culling,
+        // since texture coordinates are computed differently in 2D.
+        // Any material that uses texture coordinates will also equip texture coordinate-based fragment culling.
+        if (cullFragmentsUsingExtents) {
+            var colorProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spColor, '2dColor');
+            if (!defined(colorProgram2D)) {
+                var fsColorSource2D = shadowVolumeAppearance.createFragmentShader(true);
+                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, true);
+
+                colorProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spColor, '2dColor', {
+                    vertexShaderSource : vsColorSource2D,
+                    fragmentShaderSource : fsColorSource2D,
+                    attributeLocations : attributeLocations
+                });
+            }
+            classificationPrimitive._spColor2D = colorProgram2D;
+        }
     }
 
     function createColorCommands(classificationPrimitive, colorCommands) {
         var primitive = classificationPrimitive._primitive;
-        var length = primitive._va.length * 3;
+        var length = primitive._va.length * 3; // each geometry (pack of vertex attributes) needs 3 commands: front/back stencils and fill
         colorCommands.length = length;
 
         var i;
         var command;
         var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
+
+        var needs2DShader = classificationPrimitive._needs2DShader;
 
         for (i = 0; i < length; i += 3) {
             var vertexArray = primitive._va[vaIndex++];
@@ -648,8 +723,28 @@ define([
 
             command.vertexArray = vertexArray;
             command.renderState = classificationPrimitive._rsColorPass;
-            command.shaderProgram = classificationPrimitive._sp;
+            command.shaderProgram = classificationPrimitive._spColor;
+
+            var appearance = classificationPrimitive.appearance;
+            var material = appearance.material;
+            if (defined(material)) {
+                uniformMap = combine(uniformMap, material._uniforms);
+            }
+
             command.uniformMap = uniformMap;
+
+            // derive for 2D if texture coordinates are ever computed
+            if (needs2DShader) {
+                var derivedColorCommand = command.derivedCommands.appearance2D;
+                if (!defined(derivedColorCommand)) {
+                    derivedColorCommand = DrawCommand.shallowClone(command);
+                    command.derivedCommands.appearance2D = derivedColorCommand;
+                }
+                derivedColorCommand.vertexArray = vertexArray;
+                derivedColorCommand.renderState = classificationPrimitive._rsColorPass;
+                derivedColorCommand.shaderProgram = classificationPrimitive._spColor2D;
+                derivedColorCommand.uniformMap = uniformMap;
+            }
         }
 
         var commandsIgnoreShow = classificationPrimitive._commandsIgnoreShow;
@@ -672,22 +767,35 @@ define([
     }
 
     function createPickCommands(classificationPrimitive, pickCommands) {
+        var usePickOffsets = classificationPrimitive._usePickOffsets;
+
         var primitive = classificationPrimitive._primitive;
-        var pickOffsets = primitive._pickOffsets;
-        var length = pickOffsets.length * 3;
+        var length = primitive._va.length * 3; // each geometry (pack of vertex attributes) needs 3 commands: front/back stencils and fill
+
+        // Fallback for batching same-color geometry instances
+        var pickOffsets;
+        var pickIndex = 0;
+        var pickOffset;
+        if (usePickOffsets) {
+            pickOffsets = primitive._pickOffsets;
+            length = pickOffsets.length * 3;
+        }
+
         pickCommands.length = length;
 
         var j;
         var command;
-        var pickIndex = 0;
+        var vaIndex = 0;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(classificationPrimitive._uniformMap);
 
-        for (j = 0; j < length; j += 3) {
-            var pickOffset = pickOffsets[pickIndex++];
+        var needs2DShader = classificationPrimitive._needs2DShader;
 
-            var offset = pickOffset.offset;
-            var count = pickOffset.count;
-            var vertexArray = primitive._va[pickOffset.index];
+        for (j = 0; j < length; j += 3) {
+            var vertexArray = primitive._va[vaIndex++];
+            if (usePickOffsets) {
+                pickOffset = pickOffsets[pickIndex++];
+                vertexArray = primitive._va[pickOffset.index];
+            }
 
             // stencil preload command
             command = pickCommands[j];
@@ -699,11 +807,13 @@ define([
             }
 
             command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
             command.renderState = classificationPrimitive._rsStencilPreloadPass;
-            command.shaderProgram = classificationPrimitive._spStencil;
+            command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            if (usePickOffsets) {
+                command.offset = pickOffset.offset;
+                command.count = pickOffset.count;
+            }
 
             // stencil depth command
             command = pickCommands[j + 1];
@@ -715,13 +825,15 @@ define([
             }
 
             command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
             command.renderState = classificationPrimitive._rsStencilDepthPass;
-            command.shaderProgram = classificationPrimitive._spStencil;
+            command.shaderProgram = classificationPrimitive._sp;
             command.uniformMap = uniformMap;
+            if (usePickOffsets) {
+                command.offset = pickOffset.offset;
+                command.count = pickOffset.count;
+            }
 
-            // color command
+            // pick color command
             command = pickCommands[j + 2];
             if (!defined(command)) {
                 command = pickCommands[j + 2] = new DrawCommand({
@@ -731,11 +843,26 @@ define([
             }
 
             command.vertexArray = vertexArray;
-            command.offset = offset;
-            command.count = count;
             command.renderState = classificationPrimitive._rsPickPass;
             command.shaderProgram = classificationPrimitive._spPick;
             command.uniformMap = uniformMap;
+            if (usePickOffsets) {
+                command.offset = pickOffset.offset;
+                command.count = pickOffset.count;
+            }
+
+            // derive for 2D if texture coordinates are ever computed
+            if (needs2DShader) {
+                var derivedPickCommand = command.derivedCommands.pick2D;
+                if (!defined(derivedPickCommand)) {
+                    derivedPickCommand = DrawCommand.shallowClone(command);
+                    command.derivedCommands.pick2D = derivedPickCommand;
+                }
+                derivedPickCommand.vertexArray = vertexArray;
+                derivedPickCommand.renderState = classificationPrimitive._rsPickPass;
+                derivedPickCommand.shaderProgram = classificationPrimitive._spPick2D;
+                derivedPickCommand.uniformMap = uniformMap;
+            }
         }
     }
 
@@ -843,6 +970,11 @@ define([
             return;
         }
 
+        var appearance = this.appearance;
+        if (defined(appearance) && defined(appearance.material)) {
+            appearance.material.update(frameState.context);
+        }
+
         var that = this;
         var primitiveOptions = this._primitiveOptions;
 
@@ -852,20 +984,65 @@ define([
 
             var i;
             var instance;
-            //>>includeStart('debug', pragmas.debug);
-            var color;
-            for (i = 0; i < length; ++i) {
+            var attributes;
+
+            var hasPerColorAttribute = false;
+            var allColorsSame = true;
+            var firstColor;
+            var hasSphericalExtentsAttribute = false;
+            var hasPlanarExtentsAttributes = false;
+
+            if (length > 0) {
+                attributes = instances[0].attributes;
+                // Not expecting these to be set by users, should only be set via GroundPrimitive.
+                // So don't check for mismatch.
+                hasSphericalExtentsAttribute = ShadowVolumeAppearance.hasAttributesForSphericalExtents(attributes);
+                hasPlanarExtentsAttributes = ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(attributes);
+                firstColor = attributes.color;
+            }
+
+            for (i = 0; i < length; i++) {
                 instance = instances[i];
-                var attributes = instance.attributes;
-                if (!defined(attributes) || !defined(attributes.color)) {
-                    throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                    throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                } else if (!defined(color)) {
-                    color = attributes.color;
+                var color = instance.attributes.color;
+                if (defined(color)) {
+                    hasPerColorAttribute = true;
                 }
+                //>>includeStart('debug', pragmas.debug);
+                else if (hasPerColorAttribute) {
+                    throw new DeveloperError('All GeometryInstances must have color attributes to use per-instance color.');
+                }
+                //>>includeEnd('debug');
+
+                allColorsSame = allColorsSame && defined(color) && ColorGeometryInstanceAttribute.equals(firstColor, color);
+            }
+
+            // If no attributes exist for computing spherical extents or fragment culling,
+            // throw if the colors aren't all the same.
+            if (!allColorsSame && !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes) {
+                throw new DeveloperError('All GeometryInstances must have the same color attribute except via GroundPrimitives');
+            }
+
+            // default to a color appearance
+            if (hasPerColorAttribute && !defined(appearance)) {
+                appearance = new PerInstanceColorAppearance({
+                    flat : true
+                });
+                this.appearance = appearance;
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
+                throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttributes on all GeometryInstances');
+            }
+            if (defined(appearance.material) && !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes) {
+                throw new DeveloperError('Materials on ClassificationPrimitives are not supported except via GroundPrimitives');
             }
             //>>includeEnd('debug');
+
+            this._usePickOffsets = !hasSphericalExtentsAttribute && !hasPlanarExtentsAttributes;
+            this._hasSphericalExtentsAttribute = hasSphericalExtentsAttribute;
+            this._hasPlanarExtentsAttributes = hasPlanarExtentsAttributes;
+            this._hasPerColorAttribute = hasPerColorAttribute;
 
             var geometryInstances = new Array(length);
             for (i = 0; i < length; ++i) {
@@ -879,6 +1056,7 @@ define([
                 });
             }
 
+            primitiveOptions.appearance = appearance;
             primitiveOptions.geometryInstances = geometryInstances;
 
             if (defined(this._createBoundingVolumeFunction)) {
@@ -935,6 +1113,19 @@ define([
             this._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(true));
             this._rsColorPass = RenderState.fromCache(getColorRenderState(true));
         }
+        // Update primitive appearance
+        if (this._primitive.appearance !== appearance) {
+            //>>includeStart('debug', pragmas.debug);
+            // Check if the appearance is supported by the geometry attributes
+            if (!this._hasSphericalExtentsAttribute && !this._hasPlanarExtentsAttributes && defined(appearance.material)) {
+                throw new DeveloperError('Materials on ClassificationPrimitives are not supported except via GroundPrimitive');
+            }
+            if (!this._hasPerColorAttribute && appearance instanceof PerInstanceColorAppearance) {
+                throw new DeveloperError('PerInstanceColorAppearance requires color GeometryInstanceAttribute');
+            }
+            //>>includeEnd('debug');
+            this._primitive.appearance = appearance;
+        }
 
         this._primitive.show = this.show;
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
@@ -944,7 +1135,7 @@ define([
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
-     * @param {Object} id The id of the {@link GeometryInstance}.
+     * @param {*} id The id of the {@link GeometryInstance}.
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
@@ -998,6 +1189,11 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
+        this._spColor = this._spColor && this._spColor.destroy();
+
+        // Derived programs, destroyed above if they existed.
+        this._spPick2D = undefined;
+        this._spColor2D = undefined;
         return destroyObject(this);
     };
 

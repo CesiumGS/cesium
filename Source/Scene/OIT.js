@@ -44,7 +44,7 @@ define([
         this._translucentMultipassSupport = false;
         this._translucentMRTSupport = false;
 
-        var extensionsSupported = context.floatingPointTexture && context.depthTexture;
+        var extensionsSupported = context.colorBufferFloat && context.depthTexture;
         this._translucentMRTSupport = context.drawBuffers && extensionsSupported;
         this._translucentMultipassSupport = !this._translucentMRTSupport && extensionsSupported;
 

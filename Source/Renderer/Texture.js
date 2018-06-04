@@ -89,6 +89,21 @@ define([
                         internalFormat = WebGLConstants.R32F;
                         break;
                 }
+            } else if (pixelDatatype === PixelDatatype.HALF_FLOAT) {
+                switch (pixelFormat) {
+                    case PixelFormat.RGBA:
+                        internalFormat = WebGLConstants.RGBA16F;
+                        break;
+                    case PixelFormat.RGB:
+                        internalFormat = WebGLConstants.RGB16F;
+                        break;
+                    case PixelFormat.RG:
+                        internalFormat = WebGLConstants.RG16F;
+                        break;
+                    case PixelFormat.R:
+                        internalFormat = WebGLConstants.R16F;
+                        break;
+                }
             }
         }
 
@@ -128,6 +143,10 @@ define([
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
             throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.');
+        }
+
+        if ((pixelDatatype === PixelDatatype.HALF_FLOAT) && !context.halfFloatingPointTexture) {
+            throw new DeveloperError('When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension. Check context.halfFloatingPointTexture.');
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
@@ -347,7 +366,7 @@ define([
          * The sampler to use when sampling this texture.
          * Create a sampler by calling {@link Sampler}.  If this
          * parameter is not specified, a default sampler is used.  The default sampler clamps texture
-         * coordinates in both directions, uses linear filtering for both magnification and minifcation,
+         * coordinates in both directions, uses linear filtering for both magnification and minification,
          * and uses a maximum anisotropy of 1.0.
          * @memberof Texture.prototype
          * @type {Object}
@@ -367,7 +386,7 @@ define([
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
                 // float textures only support nearest filtering, so override the sampler's settings
-                if (this._pixelDatatype === PixelDatatype.FLOAT) {
+                if (this._pixelDatatype === PixelDatatype.FLOAT || this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
                     minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
                     magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
@@ -563,6 +582,7 @@ define([
      *
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+     * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
      * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
@@ -586,6 +606,9 @@ define([
         }
         if (this._pixelDatatype === PixelDatatype.FLOAT) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');
+        }
+        if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+            throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.');
         }
         if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');

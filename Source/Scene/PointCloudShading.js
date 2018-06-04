@@ -18,6 +18,8 @@ define([
      * @param {Boolean} [options.eyeDomeLighting=true] When true, use eye dome lighting when drawing with point attenuation.
      * @param {Number} [options.eyeDomeLightingStrength=1.0] Increasing this value increases contrast on slopes and edges.
      * @param {Number} [options.eyeDomeLightingRadius=1.0] Increase the thickness of contours from eye dome lighting.
+     *
+     * @alias PointCloudShading
      * @constructor
      */
     function PointCloudShading(options) {

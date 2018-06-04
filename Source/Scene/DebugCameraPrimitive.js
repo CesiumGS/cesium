@@ -79,9 +79,9 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * User-defined object returned when the primitive is picked.
+         * User-defined value returned when the primitive is picked.
          *
-         * @type {Object}
+         * @type {*}
          * @default undefined
          *
          * @see Scene#pick

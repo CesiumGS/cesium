@@ -42,6 +42,9 @@ define([
         this._primitives = [];
         this._guid = createGuid();
 
+        // Used by the OrderedGroundPrimitiveCollection
+        this._zIndex = undefined;
+
         /**
          * Determines if primitives in this collection will be shown.
          *

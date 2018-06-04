@@ -15,7 +15,7 @@ define([
         /**
          * Aerial imagery.
          *
-         * @type {String}
+         * @type {Number}
          * @constant
          */
         AERIAL : 2,
@@ -23,7 +23,7 @@ define([
         /**
          * Aerial imagery with a road overlay.
          *
-         * @type {String}
+         * @type {Number}
          * @constant
          */
         AERIAL_WITH_LABELS : 3,
@@ -31,7 +31,7 @@ define([
         /**
          * Roads without additional imagery.
          *
-         * @type {String}
+         * @type {Number}
          * @constant
          */
         ROAD : 4
