@@ -54,6 +54,19 @@ define([
     var MITER_BREAK_SMALL = Math.cos(CesiumMath.toRadians(30));
     var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(150));
 
+    // Initial heights for constructing the wall.
+    // Keeping WALL_INITIAL_MIN_HEIGHT near the ellipsoid surface helps
+    // prevent precision problems with planes in the shader.
+    // Putting the start point of a plane at ApproximateTerrainHeights._defaultMinTerrainHeight,
+    // which is a highly conservative bound, usually puts the plane origin several thousands
+    // of meters away from the actual terrain, causing floating point problems when checking
+    // fragments on terrain against the plane.
+    // Ellipsoid height is generally much closer.
+    // The initial max height is arbitrary.
+    // Both heights are corrected using ApproximateTerrainHeights for computing the actual volume geometry.
+    var WALL_INITIAL_MIN_HEIGHT = 0.0;
+    var WALL_INITIAL_MAX_HEIGHT = 1000.0;
+
     /**
      * A description of a polyline on terrain. Only to be used with GroundPolylinePrimitive.
      *
@@ -353,8 +366,8 @@ define([
         var granularity = groundPolylineGeometry.granularity;
         var projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](ellipsoid);
 
-        var minHeight = ApproximateTerrainHeights._defaultMinTerrainHeight;
-        var maxHeight = ApproximateTerrainHeights._defaultMaxTerrainHeight;
+        var minHeight = WALL_INITIAL_MIN_HEIGHT;
+        var maxHeight = WALL_INITIAL_MAX_HEIGHT;
 
         var index;
         var i;
@@ -562,15 +575,15 @@ define([
     var adjustHeightNormalScratch = new Cartesian3();
     var adjustHeightOffsetScratch = new Cartesian3();
     function adjustHeights(bottom, top, minHeight, maxHeight, adjustHeightBottom, adjustHeightTop) {
-        // bottom and top should be at ApproximateTerrainHeights._defaultMinTerrainHeight and ApproximateTerrainHeights._defaultMaxTerrainHeight, respectively
+        // bottom and top should be at WALL_INITIAL_MIN_HEIGHT and WALL_INITIAL_MAX_HEIGHT, respectively
         var adjustHeightNormal = Cartesian3.subtract(top, bottom, adjustHeightNormalScratch);
         Cartesian3.normalize(adjustHeightNormal, adjustHeightNormal);
 
-        var distanceForBottom = minHeight - ApproximateTerrainHeights._defaultMinTerrainHeight;
+        var distanceForBottom = minHeight - WALL_INITIAL_MIN_HEIGHT;
         var adjustHeightOffset = Cartesian3.multiplyByScalar(adjustHeightNormal, distanceForBottom, adjustHeightOffsetScratch);
         Cartesian3.add(bottom, adjustHeightOffset, adjustHeightBottom);
 
-        var distanceForTop = maxHeight - ApproximateTerrainHeights._defaultMaxTerrainHeight;
+        var distanceForTop = maxHeight - WALL_INITIAL_MAX_HEIGHT;
         adjustHeightOffset = Cartesian3.multiplyByScalar(adjustHeightNormal, distanceForTop, adjustHeightOffsetScratch);
         Cartesian3.add(top, adjustHeightOffset, adjustHeightTop);
     }
