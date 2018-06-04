@@ -1,7 +1,8 @@
 /**
  * @private
  */
-float czm_alphaWeight(float a) {
+float czm_alphaWeight(float a)
+{
     float z = (gl_FragCoord.z - czm_viewportTransformation[3][2]) / czm_viewportTransformation[2][2];
 
     // See Weighted Blended Order-Independent Transparency for examples of different weighting functions:
