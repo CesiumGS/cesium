@@ -335,6 +335,23 @@ defineSuite([
         });
 
         geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        expect(geometry.indices.length).toEqual(6 * 36);
+        expect(geometry.attributes.position.values.length).toEqual(6 * 24);
+
+        // Near-IDL case
+        groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                179.999, 80.0,
+                -179.999, 80.0
+            ]),
+            granularity : 0.0 // no interpolative subdivision
+        });
+
+        geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        expect(geometry.indices.length).toEqual(72);
+        expect(geometry.attributes.position.values.length).toEqual(48);
     });
 
     it('throws errors if not enough positions have been provided', function() {
@@ -384,6 +401,17 @@ defineSuite([
         positions : positions,
         granularity : 1000.0,
         loop : true
+    });
+
+    it('projects normals that cross the IDL', function() {
+        var projection = new GeographicProjection();
+        var cartographic = new Cartographic(CesiumMath.PI - CesiumMath.EPSILON11, 0.0);
+        var normal = new Cartesian3(0.0, -1.0, 0.0);
+        var projectedPosition = projection.project(cartographic, new Cartesian3());
+        var result = new Cartesian3();
+
+        GroundPolylineGeometry._projectNormal(projection, cartographic, normal, projectedPosition, result);
+        expect(Cartesian3.equalsEpsilon(result, new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON7)).toBe(true);
     });
 
     var packedInstance = [positions.length];

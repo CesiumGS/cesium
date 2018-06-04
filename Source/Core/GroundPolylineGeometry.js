@@ -539,9 +539,9 @@ define([
         var ellipsoid = projection.ellipsoid;
         var normalEndpointCartographic = ellipsoid.cartesianToCartographic(normalEndpoint, endPosCartographicScratch);
         // If normal crosses the IDL, go the other way and flip the result.
-        // In practice this almost never happens because normals for points
-        // very close to the IDL get snapped directly north or directly south,
-        // but this is here in case something sneaks past the epsilon check.
+        // In practice this almost never happens because the cartographic start
+        // and end points of each segment are "nudged" to be on the same side
+        // of the IDL and slightly away from the IDL.
         if (Math.abs(cartographic.longitude - normalEndpointCartographic.longitude) > CesiumMath.PI_OVER_TWO) {
             flipNormal = true;
             normalEndpoint = Cartesian3.subtract(position, normal, normalEndpointScratch);
@@ -581,27 +581,30 @@ define([
         var endToXZdistance = Plane.getPointDistance(XZ_PLANE, end);
         var offset = nudgeDirectionScratch;
         // Larger epsilon than what's used in GeometryPipeline, less than a centimeter in world space
-        if (CesiumMath.equalsEpsilon(startToXZdistance, 0.0, CesiumMath.EPSILON4)) {
+        if (CesiumMath.equalsEpsilon(startToXZdistance, 0.0, CesiumMath.EPSILON3)) {
             offset = direction(end, start, offset);
-            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON4, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON3, offset);
             Cartesian3.add(start, offset, start);
-        } else if (CesiumMath.equalsEpsilon(endToXZdistance, 0.0, CesiumMath.EPSILON4)) {
+        } else if (CesiumMath.equalsEpsilon(endToXZdistance, 0.0, CesiumMath.EPSILON3)) {
             offset = direction(start, end, offset);
-            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON4, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON3, offset);
             Cartesian3.add(end, offset, end);
         }
     }
 
+    // "Nudge" cartographic coordinates so start and end are on the same side of the IDL.
+    // Nudge amounts are tiny, basically just an IDL flip.
+    // Only used for 2D/CV.
     function nudgeCartographic(start, end) {
         var absStartLon = Math.abs(start.longitude);
         var absEndLon = Math.abs(end.longitude);
-        if (CesiumMath.equalsEpsilon(absStartLon, CesiumMath.PI, CesiumMath.EPSILON7)) {
+        if (CesiumMath.equalsEpsilon(absStartLon, CesiumMath.PI, CesiumMath.EPSILON11)) {
             var endSign = Math.sign(end.longitude);
-            start.longitude = endSign * (absStartLon - CesiumMath.EPSILON7);
+            start.longitude = endSign * (absStartLon - CesiumMath.EPSILON11);
             return 1;
-        } else if (CesiumMath.equalsEpsilon(absEndLon, CesiumMath.PI, CesiumMath.EPSILON7)) {
+        } else if (CesiumMath.equalsEpsilon(absEndLon, CesiumMath.PI, CesiumMath.EPSILON11)) {
             var startSign = Math.sign(start.longitude);
-            end.longitude = startSign * (absEndLon - CesiumMath.EPSILON7);
+            end.longitude = startSign * (absEndLon - CesiumMath.EPSILON11);
             return 2;
         }
         return 0;
@@ -708,8 +711,6 @@ define([
             endCartographic.latitude = cartographicsArray[index + 2];
             endCartographic.longitude = cartographicsArray[index + 3];
 
-            nudgeCartographic(startCartographic, endCartographic);
-
             segmentStartCartesian = projection.project(startCartographic, segmentStartCartesian);
             segmentEndCartesian = projection.project(endCartographic, segmentEndCartesian);
             length2D += Cartesian3.distance(segmentStartCartesian, segmentEndCartesian);
@@ -776,14 +777,19 @@ define([
             var nudgeResult = nudgeCartographic(startCartographic, endCartographic);
             var start2D = projection.project(startCartographic, segmentStart2DScratch);
             var end2D = projection.project(endCartographic, segmentEnd2DScratch);
+            var direction2D = direction(end2D, start2D, forwardOffset2DScratch);
+            direction2D.y = Math.abs(direction2D.y);
 
             var startGeometryNormal2D = segmentStartNormal2DScratch;
             var endGeometryNormal2D = segmentEndNormal2DScratch;
-            if (nudgeResult === 0) {
+            if (nudgeResult === 0 || Cartesian3.dot(direction2D, Cartesian3.UNIT_Y) > MITER_BREAK_SMALL) {
+                // No nudge - project the original normal
+                // Or, if the line's angle relative to the IDL is very acute,
+                // in which case snapping will produce oddly shaped volumes.
                 startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
                 endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
             } else if (nudgeResult === 1) {
-                // start is close to IDL
+                // Start is close to IDL - snap start normal to align with IDL
                 endGeometryNormal2D = projectNormal(projection, endCartographic, endGeometryNormal, end2D, segmentEndNormal2DScratch);
                 startGeometryNormal2D.x = 0.0;
                 // If start longitude is negative and end longitude is less negative, "right" is unit -Y
@@ -791,7 +797,7 @@ define([
                 startGeometryNormal2D.y = Math.sign(startCartographic.longitude - Math.abs(endCartographic.longitude));
                 startGeometryNormal2D.z = 0.0;
             } else {
-                // end is close to IDL
+                // End is close to IDL - snap end normal to align with IDL
                 startGeometryNormal2D = projectNormal(projection, startCartographic, startGeometryNormal, start2D, segmentStartNormal2DScratch);
                 endGeometryNormal2D.x = 0.0;
                 endGeometryNormal2D.y = Math.sign(endCartographic.longitude - Math.abs(startCartographic.longitude));
@@ -1016,6 +1022,20 @@ define([
             values : typedArray
         });
     }
+
+    /**
+     * Approximates an ellipsoid-tangent vector in 2D by projecting the end point into 2D.
+     * Exposed for testing.
+     *
+     * @param {MapProjection} projection Map Projection for projecting coordinates to 2D.
+     * @param {Cartographic} cartographic The cartographic origin point of the normal.
+     *   Used to check if the normal crosses the IDL during projection.
+     * @param {Cartesian3} normal The normal in 3D.
+     * @param {Cartesian3} projectedPosition The projected origin point of the normal in 2D.
+     * @param {Cartesian3} result Result parameter on which to store the projected normal.
+     * @private
+     */
+    GroundPolylineGeometry._projectNormal = projectNormal;
 
     return GroundPolylineGeometry;
 });
