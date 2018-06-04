@@ -365,7 +365,7 @@ defineSuite([
 
         expect(function() {
             GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
-        }).toThrowError();
+        }).toThrowDeveloperError();
     });
 
     it('can unpack onto an existing instance', function() {
