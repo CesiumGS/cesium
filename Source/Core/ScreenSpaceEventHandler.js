@@ -401,6 +401,7 @@ define([
         var numberOfTouches = positions.length;
         var action;
         var clickAction;
+        var pinching = screenSpaceEventHandler._isPinching;
 
         if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown === MouseButton.LEFT) {
             // transitioning from single touch, trigger UP and might trigger CLICK
@@ -435,7 +436,7 @@ define([
             // Otherwise don't trigger CLICK, because we are adding more touches.
         }
 
-        if (numberOfTouches !== 2 && screenSpaceEventHandler._isPinching) {
+        if (numberOfTouches === 0 && pinching) {
             // transitioning from pinch, trigger PINCH_END
             screenSpaceEventHandler._isPinching = false;
 
@@ -446,7 +447,7 @@ define([
             }
         }
 
-        if (numberOfTouches === 1) {
+        if (numberOfTouches === 1 && !pinching) {
             // transitioning to single touch, trigger DOWN
             var position = positions.values[0];
             Cartesian2.clone(position, screenSpaceEventHandler._primaryPosition);
@@ -466,7 +467,7 @@ define([
             event.preventDefault();
         }
 
-        if (numberOfTouches === 2) {
+        if (numberOfTouches === 2 && !pinching) {
             // transitioning to pinch, trigger PINCH_START
             screenSpaceEventHandler._isPinching = true;
 
@@ -766,8 +767,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

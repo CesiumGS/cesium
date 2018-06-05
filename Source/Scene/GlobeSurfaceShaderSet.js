@@ -1,19 +1,17 @@
 define([
-        '../Core/ClippingPlaneCollection',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode',
-        './getClippingFunction'
+        './getClippingFunction',
+        './SceneMode'
     ], function(
-        ClippingPlaneCollection,
         defined,
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
-        SceneMode,
-        getClippingFunction) {
+        getClippingFunction,
+        SceneMode) {
     'use strict';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {
@@ -100,7 +98,7 @@ define([
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes)) {
-            currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState() : 0;
+            currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -125,7 +123,7 @@ define([
             var fs = this.baseFragmentShaderSource.clone();
 
             if (currentClippingShaderState !== 0) {
-                fs.sources.unshift(getClippingFunction(clippingPlanes)); // Need to go before GlobeFS
+                fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
             vs.defines.push(quantizationDefine);

@@ -2,7 +2,6 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
-        '../../Core/Credit',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -13,7 +12,7 @@ define([
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
-        '../../Scene/BingMapsImageryProvider',
+        '../../Scene/createWorldImagery',
         '../../Scene/Globe',
         '../../Scene/Moon',
         '../../Scene/Scene',
@@ -27,7 +26,6 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
-        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -38,7 +36,7 @@ define([
         formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
-        BingMapsImageryProvider,
+        createWorldImagery,
         Globe,
         Moon,
         Scene,
@@ -142,7 +140,7 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Object} [options] Object with the following properties:
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
-     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
+     * @param {ImageryProvider} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
      * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
@@ -317,9 +315,7 @@ define([
             //Set the base imagery layer
             var imageryProvider = (options.globe === false) ? false : options.imageryProvider;
             if (!defined(imageryProvider)) {
-                imageryProvider = new BingMapsImageryProvider({
-                    url : 'https://dev.virtualearth.net'
-                });
+                imageryProvider = createWorldImagery();
             }
 
             if (imageryProvider !== false) {

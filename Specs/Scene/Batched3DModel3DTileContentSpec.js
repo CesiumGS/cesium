@@ -1,27 +1,27 @@
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
-        'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Transforms',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
+        'Scene/Model',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene',
-        'Scene/Model'
+        'Specs/createScene'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
-        ClippingPlane,
-        ClippingPlaneCollection,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Transforms,
+        ClippingPlane,
+        ClippingPlaneCollection,
+        Model,
         Cesium3DTilesTester,
-        createScene,
-        Model) {
+        createScene) {
     'use strict';
 
     var scene;
@@ -316,6 +316,39 @@ defineSuite([
             tile.update(tileset, scene.frameState);
 
             expect(model.clippingPlanes).toBeUndefined();
+        });
+    });
+
+    it('Links model to tileset clipping planes if tileset clipping planes are reassigned', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var model = tile.content._model;
+
+            expect(model.clippingPlanes).toBeUndefined();
+
+            var clippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = clippingPlaneCollection;
+            clippingPlaneCollection.update(scene.frameState);
+            tile.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
+
+            var newClippingPlaneCollection = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset.clippingPlanes = newClippingPlaneCollection;
+            newClippingPlaneCollection.update(scene.frameState);
+            expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
+
+            tile.update(tileset, scene.frameState);
+            expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
         });
     });
 

@@ -6,7 +6,7 @@ define([
         '../Core/Event',
         './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
-], function(
+    ], function(
         defaultValue,
         defined,
         defineProperties,

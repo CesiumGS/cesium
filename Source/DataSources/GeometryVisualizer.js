@@ -2,23 +2,24 @@ define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
         '../Core/Check',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
         '../Core/Event',
         '../Core/EventHelper',
         '../Scene/ClassificationType',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/ShadowMode',
-        './BoxGeometryUpdater',
         './BoundingSphereState',
+        './BoxGeometryUpdater',
         './ColorMaterialProperty',
         './CorridorGeometryUpdater',
         './CylinderGeometryUpdater',
         './DynamicGeometryBatch',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
+        './Entity',
         './PlaneGeometryUpdater',
         './PolygonGeometryUpdater',
         './PolylineVolumeGeometryUpdater',
@@ -26,29 +27,31 @@ define([
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
         './StaticGroundGeometryColorBatch',
+        './StaticGroundGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch',
         './WallGeometryUpdater'
     ], function(
         AssociativeArray,
         BoundingSphere,
         Check,
+        defaultValue,
         defined,
         destroyObject,
-        DeveloperError,
         Event,
         EventHelper,
         ClassificationType,
         MaterialAppearance,
         PerInstanceColorAppearance,
         ShadowMode,
-        BoxGeometryUpdater,
         BoundingSphereState,
+        BoxGeometryUpdater,
         ColorMaterialProperty,
         CorridorGeometryUpdater,
         CylinderGeometryUpdater,
         DynamicGeometryBatch,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
+        Entity,
         PlaneGeometryUpdater,
         PolygonGeometryUpdater,
         PolylineVolumeGeometryUpdater,
@@ -56,6 +59,7 @@ define([
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
         StaticGroundGeometryColorBatch,
+        StaticGroundGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch,
         WallGeometryUpdater) {
     'use strict';
@@ -63,7 +67,7 @@ define([
     var emptyArray = [];
 
     var geometryUpdaters = [BoxGeometryUpdater, CylinderGeometryUpdater, CorridorGeometryUpdater, EllipseGeometryUpdater, EllipsoidGeometryUpdater, PlaneGeometryUpdater,
-                    PolygonGeometryUpdater, PolylineVolumeGeometryUpdater, RectangleGeometryUpdater, WallGeometryUpdater];
+                            PolygonGeometryUpdater, PolylineVolumeGeometryUpdater, RectangleGeometryUpdater, WallGeometryUpdater];
 
     function GeometryUpdaterSet(entity, scene) {
         this.entity = entity;
@@ -117,15 +121,18 @@ define([
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
+     * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
+     * @param {PrimitiveCollection} [groundPrimitives=scene.groundPrimitives] A collection to add ground primitives related to the entities
      */
-    function GeometryVisualizer(scene, entityCollection) {
+    function GeometryVisualizer(scene, entityCollection, primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
         Check.defined('entityCollection', entityCollection);
         //>>includeEnd('debug');
 
-        var primitives = scene.primitives;
-        var groundPrimitives = scene.groundPrimitives;
+        primitives = defaultValue(primitives, scene.primitives);
+        groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
+
         this._scene = scene;
         this._primitives = primitives;
         this._groundPrimitives = groundPrimitives;
@@ -141,6 +148,9 @@ define([
         this._openColorBatches = new Array(numberOfShadowModes);
         this._openMaterialBatches = new Array(numberOfShadowModes);
 
+        var supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(scene);
+        this._supportsMaterialsforEntitiesOnTerrain = supportsMaterialsforEntitiesOnTerrain;
+
         var i;
         for (i = 0; i < numberOfShadowModes; ++i) {
             this._outlineBatches[i] = new StaticOutlineGeometryBatch(primitives, scene, i);
@@ -152,15 +162,30 @@ define([
         }
 
         var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
-        this._groundColorBatches = new Array(numberOfClassificationTypes);
-
-        for (i = 0; i < numberOfClassificationTypes; ++i) {
-            this._groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+        var groundColorBatches = new Array(numberOfClassificationTypes);
+        var groundMaterialBatches = [];
+        if (supportsMaterialsforEntitiesOnTerrain) {
+            // Culling, phong shading only supported for ClassificationType.TERRAIN at the moment because
+            // tileset depth information not yet available.
+            groundColorBatches[ClassificationType.TERRAIN] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, PerInstanceColorAppearance);
+            for (i = 0; i < numberOfClassificationTypes; ++i) {
+                if (i !== ClassificationType.TERRAIN) {
+                    groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+                }
+            }
+            groundMaterialBatches[0] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, MaterialAppearance);
+            this._groundTerrainMaterialBatch = groundMaterialBatches[0];
+        } else {
+            for (i = 0; i < numberOfClassificationTypes; ++i) {
+                groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+            }
         }
+
+        this._groundColorBatches = groundColorBatches;
 
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, this._dynamicBatch);
+        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatches, groundMaterialBatches, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaterSets = new AssociativeArray();
@@ -372,7 +397,15 @@ define([
         if (updater.fillEnabled) {
             if (updater.onTerrain) {
                 var classificationType = updater.classificationTypeProperty.getValue(time);
-                this._groundColorBatches[classificationType].add(time, updater);
+                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                    this._groundColorBatches[classificationType].add(time, updater);
+                } else {
+                    // If unsupported, updater will not be on terrain.
+                    // If the updater has a material, ignore input ClassificationType for now and only classify terrain.
+                    // Culling, phong shading only supported for ClassificationType.TERRAIN at the moment because
+                    // tileset depth information not yet available.
+                    this._groundTerrainMaterialBatch.add(time, updater);
+                }
             } else if (updater.isClosed) {
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
                     this._closedColorBatches[shadows].add(time, updater);

@@ -1,33 +1,23 @@
 define([
-        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/objectToQuery',
-        '../Core/queryToObject',
         '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/Uri',
+        '../Core/WebMercatorProjection',
         './GetFeatureInfoFormat',
         './UrlTemplateImageryProvider'
     ], function(
-        combine,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
-        objectToQuery,
-        queryToObject,
         Resource,
-        WebMercatorTilingScheme,
-        Uri,
+        WebMercatorProjection,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
     'use strict';
@@ -103,14 +93,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('WebMapServiceImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
-
+        var resource = Resource.createIfNeeded(options.url);
         var pickFeatureResource = resource.clone();
 
         resource.setQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
@@ -135,10 +118,10 @@ define([
             // Use CRS with 1.3.0 and going forward.
             // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
             // bbox requests.
-            parameters.crs = defaultValue(options.crs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
+            parameters.crs = defaultValue(options.crs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'CRS:84');
         } else {
             // SRS for WMS 1.1.0 or 1.1.1.
-            parameters.srs = defaultValue(options.srs, options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+            parameters.srs = defaultValue(options.srs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'EPSG:4326');
         }
 
         resource.setQueryParameters(parameters, true);

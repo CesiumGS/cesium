@@ -16,8 +16,7 @@ define([
         '../Renderer/Sampler',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        './getUnpackFloatFunction'
+        '../Renderer/TextureMinificationFilter'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -36,8 +35,7 @@ define([
         Sampler,
         Texture,
         TextureMagnificationFilter,
-        TextureMinificationFilter,
-        getUnpackFloatFunction) {
+        TextureMinificationFilter) {
     'use strict';
 
     /**
@@ -373,7 +371,8 @@ define([
             sampler : new Sampler({
                 minificationFilter : TextureMinificationFilter.NEAREST,
                 magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            }),
+            flipY : false
         });
     }
 
@@ -458,16 +457,8 @@ define([
                '    float numberOfAttributes = float('+ stride + '); \n' +
                '    float xId = mod(batchId * numberOfAttributes, batchTextureDimensions.x); \n' +
                '    float yId = floor(batchId * numberOfAttributes / batchTextureDimensions.x); \n' +
-               '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
+               '    return vec2(centerX + (xId * stepX), centerY + (yId * stepY)); \n' +
                '} \n';
-    }
-
-    function getGlslUnpackFloat(batchTable) {
-        if (!batchTable._packFloats) {
-            return '';
-        }
-
-        return getUnpackFloatFunction('unpackFloat');
     }
 
     function getComponentType(componentsPerAttribute) {
@@ -506,10 +497,10 @@ define([
 
         if (batchTable._packFloats && attribute.componentDatatype !== PixelDatatype.UNSIGNED_BYTE) {
             glslFunction += 'vec4 textureValue; \n' +
-                            'textureValue.x = unpackFloat(texture2D(batchTexture, st)); \n' +
-                            'textureValue.y = unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x, 0.0))); \n' +
-                            'textureValue.z = unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 2.0, 0.0))); \n' +
-                            'textureValue.w = unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 3.0, 0.0))); \n';
+                            'textureValue.x = czm_unpackFloat(texture2D(batchTexture, st)); \n' +
+                            'textureValue.y = czm_unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x, 0.0))); \n' +
+                            'textureValue.z = czm_unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 2.0, 0.0))); \n' +
+                            'textureValue.w = czm_unpackFloat(texture2D(batchTexture, st + vec2(batchTextureStep.x * 3.0, 0.0))); \n';
 
         } else {
             glslFunction += '    vec4 textureValue = texture2D(batchTexture, st); \n';
@@ -544,7 +535,6 @@ define([
 
         var batchTableShader = 'uniform sampler2D batchTexture; \n';
         batchTableShader += getGlslComputeSt(this) + '\n';
-        batchTableShader += getGlslUnpackFloat(this) + '\n';
 
         var length = attributes.length;
         for (var i = 0; i < length; ++i) {
@@ -580,8 +570,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

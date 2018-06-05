@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
-        '../Core/ClippingPlaneCollection',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -13,10 +12,7 @@ define([
         '../Core/DoublyLinkedList',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/getBaseUri',
-        '../Core/getExtensionFromUri',
         '../Core/getMagic',
-        '../Core/isDataUri',
         '../Core/JulianDate',
         '../Core/ManagedArray',
         '../Core/Math',
@@ -29,14 +25,15 @@ define([
         './Axis',
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
+        './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
-        './ClassificationType',
+        './ClippingPlaneCollection',
         './LabelCollection',
-        './PointCloudShading',
         './PointCloudEyeDomeLighting',
+        './PointCloudShading',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -47,7 +44,6 @@ define([
         Cartesian3,
         Cartographic,
         Check,
-        ClippingPlaneCollection,
         defaultValue,
         defined,
         defineProperties,
@@ -57,10 +53,7 @@ define([
         DoublyLinkedList,
         Ellipsoid,
         Event,
-        getBaseUri,
-        getExtensionFromUri,
         getMagic,
-        isDataUri,
         JulianDate,
         ManagedArray,
         CesiumMath,
@@ -73,14 +66,15 @@ define([
         Axis,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
+        Cesium3DTileContentState,
         Cesium3DTileOptimizations,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
-        ClassificationType,
+        ClippingPlaneCollection,
         LabelCollection,
-        PointCloudShading,
         PointCloudEyeDomeLighting,
+        PointCloudShading,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -818,6 +812,8 @@ define([
         /**
          * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {ClippingPlaneCollection}
          */
         clippingPlanes : {
@@ -825,7 +821,7 @@ define([
                 return this._clippingPlanes;
             },
             set : function(value) {
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         },
 
@@ -1454,25 +1450,8 @@ define([
 
         ++statistics.numberOfPendingRequests;
 
-        var removeFunction = removeFromProcessingQueue(tileset, tile);
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
-        tile.contentReadyPromise.then(function() {
-            removeFunction();
-            tileset.tileLoad.raiseEvent(tile);
-        }).otherwise(function(error) {
-            removeFunction();
-            var url = tile._contentResource.url;
-            var message = defined(error.message) ? error.message : error.toString();
-            if (tileset.tileFailed.numberOfListeners > 0) {
-                tileset.tileFailed.raiseEvent({
-                    url : url,
-                    message : message
-                });
-            } else {
-                console.log('A 3D tile failed to load: ' + url);
-                console.log('Error: ' + message);
-            }
-        });
+        tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).otherwise(handleTileFailure(tileset, tile));
     }
 
     function requestTiles(tileset, outOfCore) {
@@ -1495,18 +1474,32 @@ define([
         };
     }
 
-    function removeFromProcessingQueue(tileset, tile) {
-        return function() {
-            var index = tileset._processingQueue.indexOf(tile);
-            if (index === -1) {
-                // Not in processing queue
-                // For example, when a url request fails and the ready promise is rejected
+    function handleTileFailure(tileset, tile) {
+        return function(error) {
+            if (tileset._processingQueue.indexOf(tile) >= 0) {
+                // Failed during processing
+                --tileset._statistics.numberOfTilesProcessing;
+            } else {
+                // Failed when making request
                 --tileset._statistics.numberOfPendingRequests;
-                return;
             }
 
-            // Remove from processing queue
-            tileset._processingQueue.splice(index, 1);
+            var url = tile._contentResource.url;
+            var message = defined(error.message) ? error.message : error.toString();
+            if (tileset.tileFailed.numberOfListeners > 0) {
+                tileset.tileFailed.raiseEvent({
+                    url : url,
+                    message : message
+                });
+            } else {
+                console.log('A 3D tile failed to load: ' + url);
+                console.log('Error: ' + message);
+            }
+        };
+    }
+
+    function handleTileSuccess(tileset, tile) {
+        return function() {
             --tileset._statistics.numberOfTilesProcessing;
 
             if (tile.hasRenderableContent) {
@@ -1520,16 +1513,36 @@ define([
                     tile.replacementNode = tileset._replacementList.add(tile);
                 }
             }
+
+            tileset.tileLoad.raiseEvent(tile);
         };
     }
 
+    function filterProcessingQueue(tileset) {
+        var tiles = tileset._processingQueue;
+        var length = tiles.length;
+
+        var removeCount = 0;
+        for (var i = 0; i < length; ++i) {
+            var tile = tiles[i];
+            if (tile._contentState !== Cesium3DTileContentState.PROCESSING) {
+                ++removeCount;
+                continue;
+            }
+            if (removeCount > 0) {
+                tiles[i - removeCount] = tile;
+            }
+        }
+        tiles.length -= removeCount;
+    }
+
     function processTiles(tileset, frameState) {
+        filterProcessingQueue(tileset);
         var tiles = tileset._processingQueue;
         var length = tiles.length;
 
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
-        // Traverse backwards in case a tile is removed as a result of calling process()
-        for (var i = length - 1; i >= 0; --i) {
+        for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
         }
     }
@@ -1947,8 +1960,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @example
@@ -1957,10 +1968,7 @@ define([
      * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
-        // Destroy debug labels
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
-
-        // Destroy clipping plane collection
         this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
         // Traverse the tree and destroy all tiles

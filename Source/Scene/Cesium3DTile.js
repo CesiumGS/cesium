@@ -13,7 +13,6 @@ define([
         '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Plane',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -47,7 +46,6 @@ define([
         JulianDate,
         Matrix3,
         Matrix4,
-        Plane,
         Rectangle,
         Request,
         RequestScheduler,
@@ -741,6 +739,8 @@ define([
         this.replacementNode = undefined;
 
         this.lastStyleTime = 0;
+        this.clippingPlanesDirty = (this._clippingPlanesState === 0);
+        this._clippingPlanesState = 0;
 
         this._debugColorizeTiles = false;
 
@@ -1073,7 +1073,7 @@ define([
         var clippingPlanes = tileset.clippingPlanes;
         var currentClippingPlanesState = 0;
         if (defined(clippingPlanes) && tile._isClipped && clippingPlanes.enabled) {
-            currentClippingPlanesState = clippingPlanes.clippingPlanesState();
+            currentClippingPlanesState = clippingPlanes.clippingPlanesState;
         }
         // If clippingPlaneState for tile changed, mark clippingPlanesDirty so content can update
         if (currentClippingPlanesState !== tile._clippingPlanesState) {

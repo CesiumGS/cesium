@@ -199,7 +199,8 @@ define([
                     enabled : true,
                     face : CullFace.FRONT
                 },
-                blending : BlendingState.ALPHA_BLEND
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : false
             });
 
             var vs = new ShaderSource({
@@ -297,8 +298,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

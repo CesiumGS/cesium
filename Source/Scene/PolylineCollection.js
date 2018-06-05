@@ -299,6 +299,12 @@ define([
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
             this._polylines[polyline._index] = undefined; // Removed later
+
+            var polylineUpdateIndex = this._polylinesToUpdate.indexOf(polyline);
+            if (polylineUpdateIndex !== -1) {
+                this._polylinesToUpdate.splice(polylineUpdateIndex, 1);
+            }
+
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             this._createBatchTable = true;
@@ -746,8 +752,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

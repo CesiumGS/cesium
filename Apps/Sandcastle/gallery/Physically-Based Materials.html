@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -51,7 +53,7 @@ viewer.scene.globe.enableLighting = true;
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var position = new Cesium.Cartesian3(-1371108.6511167218, -5508684.080096612, 2901825.449865087);
-var heading = Cesium.Math.toRadians(180);
+var heading = Cesium.Math.toRadians(90);
 var pitch = Cesium.Math.toRadians(2);
 var roll = Cesium.Math.toRadians(-6);
 var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
@@ -62,11 +64,12 @@ var entity = viewer.entities.add({
     position : position,
     orientation : orientation,
     model : {
-        uri : '../../SampleData/models/GroundVehiclePBR/GroundVehiclePBR.gltf',
+        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
         heightReference : Cesium.HeightReference.CLAMP_TO_GROUND,
         minimumPixelSize : 128,
         maximumScale : 20,
-        scale : 8.0
+        scale : 8.0,
+        runAnimations : false
     }
 });
 
@@ -142,7 +145,7 @@ Sandcastle.addToolbarMenu([{
     }
 }], 'toolbar');
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);

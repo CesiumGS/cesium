@@ -3,8 +3,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
-        'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/combine',
         'Core/defaultValue',
@@ -28,6 +26,8 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderSource',
         'Scene/Axis',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/ColorBlendMode',
         'Scene/DracoLoader',
         'Scene/HeightReference',
@@ -40,8 +40,6 @@ defineSuite([
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
-        ClippingPlane,
-        ClippingPlaneCollection,
         Color,
         combine,
         defaultValue,
@@ -65,6 +63,8 @@ defineSuite([
         RenderState,
         ShaderSource,
         Axis,
+        ClippingPlane,
+        ClippingPlaneCollection,
         ColorBlendMode,
         DracoLoader,
         HeightReference,
@@ -125,6 +125,7 @@ defineSuite([
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
     var vertexColorTestUrl = './Data/Models/PBR/VertexColorTest/VertexColorTest.gltf';
+    var emissiveUrl = './Data/Models/PBR/BoxEmissive/BoxEmissive.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
 
@@ -1605,6 +1606,34 @@ defineSuite([
         expect(animations.update()).toEqual(false);
     });
 
+    it('animates a single keyframe', function() {
+        return Resource.fetchJson(animBoxesUrl).then(function(gltf) {
+            gltf.accessors['animAccessor_0'].count = 1;
+            gltf.accessors['animAccessor_1'].count = 1;
+
+            return loadModelJson(gltf).then(function(m) {
+                m.show = true;
+                var node = m.getNode('inner_box');
+                var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+                var animations = m.activeAnimations;
+                animations.add({
+                    name : 'animation_0',
+                    startTime : time
+                });
+
+                expect(node.matrix).toEqual(Matrix4.IDENTITY);
+                var previousMatrix = Matrix4.clone(node.matrix);
+
+                for (var i = 1; i < 4; ++i) {
+                    var t = JulianDate.addSeconds(time, i, new JulianDate());
+                    scene.renderForSpecs(t);
+                    expect(node.matrix).toEqual(previousMatrix);
+                }
+                primitives.remove(m);
+            });
+        });
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('renders riggedFigure without animation', function() {
@@ -2243,11 +2272,26 @@ defineSuite([
         });
     });
 
-    it('load a glTF 2.0 with vertex colors', function() {
+    it('loads a glTF 2.0 with vertex colors', function() {
         return loadModel(vertexColorTestUrl).then(function(m) {
             m.show = true;
             checkVertexColors(m);
             primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with an emissive texture and no normals', function() {
+        return loadModel(emissiveUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+            expect(scene).toRenderAndCall(function(rgba) {
+                // Emissive texture is red
+                expect(rgba[0]).toBeGreaterThan(10);
+                expect(rgba[1]).toBeLessThan(10);
+                expect(rgba[2]).toBeLessThan(10);
+            });
+
+            primitives.remove(model);
         });
     });
 
@@ -2431,21 +2475,18 @@ defineSuite([
     });
 
     it('loads a glTF with KHR_draco_mesh_compression extension', function() {
-        return loadModel(dracoCompressedModelUrl).then(function(m) {
+        return loadModel(dracoCompressedModelUrl, {
+            dequantizeInShader : false
+        }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
     });
 
     it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
-        return loadModel(dracoCompressedModelWithAnimationUrl).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
-        });
-    });
-
-    it('loads a glTF with KHR_draco_mesh_compression extension with integer attributes', function() {
-        return loadModel(dracoCompressedModelWithAnimationUrl).then(function(m) {
+        return loadModel(dracoCompressedModelWithAnimationUrl, {
+            dequantizeInShader : false
+        }).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
@@ -2456,7 +2497,8 @@ defineSuite([
         spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
 
         var model = primitives.add(Model.fromGltf({
-            url : dracoCompressedModelUrl
+            url : dracoCompressedModelUrl,
+            dequantizeInShader : false
         }));
 
         return pollToPromise(function() {
@@ -2470,6 +2512,38 @@ defineSuite([
                 expect(e.message).toEqual('Failed to load model: ./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf\nmy error');
                 primitives.remove(model);
             });
+        });
+    });
+
+    it('loads a draco compressed glTF and dequantizes in the shader', function() {
+        return loadModel(dracoCompressedModelUrl, {
+            dequantizeInShader : true
+        }).then(function(m) {
+            verifyRender(m);
+
+            var atrributeData = m._decodedData['0.primitive.0'].attributes;
+            expect(atrributeData['POSITION'].quantization).toBeDefined();
+            expect(atrributeData['TEXCOORD_0'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization.octEncoded).toBe(true);
+
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a draco compressed glTF and dequantizes in the shader, skipping generic attributes', function() {
+        return loadModel(dracoCompressedModelWithAnimationUrl, {
+            dequantizeInShader : true
+        }).then(function(m) {
+            verifyRender(m);
+
+            var atrributeData = m._decodedData['0.primitive.0'].attributes;
+            expect(atrributeData['POSITION'].quantization).toBeDefined();
+            expect(atrributeData['TEXCOORD_0'].quantization).toBeDefined();
+            expect(atrributeData['NORMAL'].quantization).toBeDefined();
+            expect(atrributeData['JOINTS_0'].quantization).toBeUndefined();
+
+            primitives.remove(m);
         });
     });
 
@@ -2735,10 +2809,10 @@ defineSuite([
             model.zoomTo();
 
             var gl = scene.frameState.context._gl;
-            spyOn(gl, 'texSubImage2D').and.callThrough();
+            spyOn(gl, 'texImage2D').and.callThrough();
 
             scene.renderForSpecs();
-            var callsBeforeClipping = gl.texSubImage2D.calls.count();
+            var callsBeforeClipping = gl.texImage2D.calls.count();
 
             expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
 
@@ -2750,7 +2824,7 @@ defineSuite([
 
             model.update(scene.frameState);
             scene.renderForSpecs();
-            expect(gl.texSubImage2D.calls.count() - callsBeforeClipping * 2).toEqual(1);
+            expect(gl.texImage2D.calls.count() - callsBeforeClipping * 2).toEqual(2);
 
             primitives.remove(model);
         });

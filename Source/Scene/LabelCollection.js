@@ -450,7 +450,7 @@ define([
      * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
      * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
      * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
-     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
+     * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
      * many collections with only a few labels each.  Avoid having collections where some
@@ -552,7 +552,7 @@ define([
         /**
          * The label blending option. The default is used for rendering both opaque and translucent labels.
          * However, if either all of the labels are completely opaque or all are completely translucent,
-         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
          * performance by up to 2x.
          * @type {BlendOption}
          * @default BlendOption.OPAQUE_AND_TRANSLUCENT
@@ -579,7 +579,7 @@ define([
      * Creates and adds a label with the specified initial properties to the collection.
      * The added label is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[options] A template describing the label's properties as shown in Example 1.
+     * @param {Object} [options] A template describing the label's properties as shown in Example 1.
      * @returns {Label} The label that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -846,8 +846,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

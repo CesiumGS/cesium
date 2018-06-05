@@ -6,9 +6,9 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/Math',
         '../Core/Rectangle',
@@ -29,9 +29,9 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
+        GeographicProjection,
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
@@ -115,13 +115,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.proxy)) {
-            deprecationWarning('ArcGisMapServerImageryProvider.proxy', 'The options.proxy parameter has been deprecated. Specify options.url as a Resource instance and set the proxy property there.');
-        }
-
-        var resource = Resource.createIfNeeded(options.url, {
-            proxy: options.proxy
-        });
+        var resource = Resource.createIfNeeded(options.url);
         resource.appendForwardSlash();
 
         if (defined(options.token)) {
@@ -216,7 +210,7 @@ define([
             }
 
             if (defined(data.copyrightText) && data.copyrightText.length > 0) {
-                that._credit = new Credit({text: data.copyrightText});
+                that._credit = new Credit(data.copyrightText);
             }
 
             that._ready = true;
@@ -267,7 +261,7 @@ define([
                 f: 'image'
             };
 
-            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+            if (imageryProvider._tilingScheme.projection instanceof GeographicProjection) {
                 query.bboxSR = 4326;
                 query.imageSR = 4326;
             } else {
@@ -630,7 +624,7 @@ define([
         var horizontal;
         var vertical;
         var sr;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
+        if (this._tilingScheme.projection instanceof GeographicProjection) {
             horizontal = CesiumMath.toDegrees(longitude);
             vertical = CesiumMath.toDegrees(latitude);
             sr = '4326';

@@ -24,7 +24,6 @@ define([
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
-        './Material',
         './QuadtreePrimitive',
         './SceneMode',
         './ShadowMode'
@@ -54,7 +53,6 @@ define([
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
-        Material,
         QuadtreePrimitive,
         SceneMode,
         ShadowMode) {
@@ -693,8 +691,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

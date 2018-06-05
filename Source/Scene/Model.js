@@ -4,14 +4,12 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/ClippingPlaneCollection',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -30,9 +28,9 @@ define([
         '../Core/PixelFormat',
         '../Core/Plane',
         '../Core/PrimitiveType',
-        '../Core/Resource',
         '../Core/Quaternion',
         '../Core/Queue',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
@@ -62,8 +60,10 @@ define([
         './AttributeType',
         './Axis',
         './BlendingState',
+        './ClippingPlaneCollection',
         './ColorBlendMode',
         './DracoLoader',
+        './getClipAndStyleCode',
         './getClippingFunction',
         './HeightReference',
         './JobType',
@@ -82,14 +82,12 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        ClippingPlaneCollection,
         clone,
         Color,
         combine,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -108,9 +106,9 @@ define([
         PixelFormat,
         Plane,
         PrimitiveType,
-        Resource,
         Quaternion,
         Queue,
+        Resource,
         RuntimeError,
         Transforms,
         WebGLConstants,
@@ -140,8 +138,10 @@ define([
         AttributeType,
         Axis,
         BlendingState,
+        ClippingPlaneCollection,
         ColorBlendMode,
         DracoLoader,
+        getClipAndStyleCode,
         getClippingFunction,
         HeightReference,
         JobType,
@@ -239,7 +239,21 @@ define([
      * resources are created.
      * </p>
      * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * Cesium supports glTF assets with the following extensions:
+     * <ul>
+     * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li>
+     * </ul>
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
      * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
      * relative to a local origin.
      * </p>
@@ -272,6 +286,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -516,7 +531,7 @@ define([
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
-        this._colorShadingEnabled = isColorShadingEnabled(this);
+        this._colorShadingEnabled = false;
 
         this._clippingPlanes = undefined;
         this.clippingPlanes = options.clippingPlanes;
@@ -621,6 +636,8 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
+
+        this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
         this._decodedData = {};
 
         this._cachedGeometryByteLength = 0;
@@ -1027,7 +1044,7 @@ define([
                     return;
                 }
                 // Handle destroying, checking of unknown, checking for existing ownership
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         }
     });
@@ -1070,7 +1087,21 @@ define([
      * KHR_binary_glTF extension with a .glb extension.
      * </p>
      * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
+     * Cesium supports glTF assets with the following extensions:
+     * <ul>
+     * <li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li>
+     * </ul>
+     * </p>
+     * <p>
+     * For high-precision rendering, Cesium supports the {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/CESIUM_RTC/README.md|CESIUM_RTC} extension, which introduces the
      * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
      * relative to a local origin.
      * </p>
@@ -1100,6 +1131,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+     * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      *
      * @returns {Model} The newly created model.
      *
@@ -1141,23 +1173,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(options.headers)) {
-            deprecationWarning('Model.fromGltf.headers', 'The options.headers parameter has been deprecated. Specify options.url as a Resource instance and set the headers property there.');
-        }
-
         var url = options.url;
         options = clone(options);
 
         // Create resource for the model file
-        var modelResource = Resource.createIfNeeded(url, {
-            headers : options.headers
-        });
+        var modelResource = Resource.createIfNeeded(url);
 
         // Setup basePath to get dependent files
         var basePath = defaultValue(options.basePath, modelResource.clone());
-        var resource = Resource.createIfNeeded(basePath, {
-            headers : options.headers
-        });
+        var resource = Resource.createIfNeeded(basePath);
 
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
@@ -1668,7 +1692,7 @@ define([
 
         ForEach.mesh(model.gltf, function(mesh, id) {
             runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-            if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
+            if (defined(model.extensionsUsed.WEB3D_quantized_attributes) || model._dequantizeInShader) {
                 // Cache primitives according to their program
                 var primitives = mesh.primitives;
                 var primitivesLength = primitives.length;
@@ -1677,10 +1701,10 @@ define([
                     var programId = getProgramForPrimitive(model, primitive);
                     var programPrimitives = model._programPrimitives[programId];
                     if (!defined(programPrimitives)) {
-                        programPrimitives = [];
+                        programPrimitives = {};
                         model._programPrimitives[programId] = programPrimitives;
                     }
-                    programPrimitives.push(primitive);
+                    programPrimitives[id + '.primitive.' + i] = primitive;
                 }
             }
         });
@@ -1712,6 +1736,11 @@ define([
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
 
         var vertexBuffer = Buffer.createVertexBuffer({
             context : context,
@@ -1749,6 +1778,11 @@ define([
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
 
         var indexBuffer = Buffer.createIndexBuffer({
             context : context,
@@ -1842,15 +1876,32 @@ define([
     function modifyShaderForQuantizedAttributes(shader, programName, model) {
         var primitive;
         var primitives = model._programPrimitives[programName];
-        for (var i = 0; i < primitives.length; i++) {
-            primitive = primitives[i];
-            if (getProgramForPrimitive(model, primitive) === programName) {
-                break;
+
+        // If no primitives were cached for this program, there's no need to modify the shader
+        if (!defined(primitives)) {
+            return shader;
+        }
+
+        var primitiveId;
+        for (primitiveId in primitives) {
+            if (primitives.hasOwnProperty(primitiveId)) {
+                primitive = primitives[primitiveId];
+                if (getProgramForPrimitive(model, primitive) === programName) {
+                    break;
+                }
             }
         }
 
-        var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
-        model._quantizedUniforms[programName] = result.uniforms;
+        var result = shader;
+        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+            result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
+            model._quantizedUniforms[programName] = result.uniforms;
+        } else {
+            var decodedData = model._decodedData[primitiveId];
+            if (defined(decodedData)) {
+                result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+            }
+        }
 
         // This is not needed after the program is processed, free the memory
         model._programPrimitives[programName] = undefined;
@@ -1922,16 +1973,17 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     // When building programs for the first time, do not include modifiers for clipping planes and color
-    // since this is the version of the program that will be cached.
+    // since this is the version of the program that will be cached for use with other Models.
     function createProgram(id, model, context) {
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
             var quantizedVS = quantizedVertexShaders[id];
             if (!defined(quantizedVS)) {
                 quantizedVS = modifyShaderForQuantizedAttributes(vs, id, model);
@@ -1943,7 +1995,16 @@ define([
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
-        var pickFS, pickVS;
+        // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
+        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
+
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -1951,6 +2012,11 @@ define([
 
             if (!model._pickFragmentShaderLoaded) {
                 pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+            }
+
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
             }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
@@ -1960,6 +2026,7 @@ define([
         var program = model._sourcePrograms[id];
         var shaders = model._sourceShaders;
         var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
 
         var clippingPlaneCollection = model.clippingPlanes;
         var addClippingPlaneCode = isClippingEnabled(model);
@@ -1967,7 +2034,7 @@ define([
         var vs = shaders[program.vertexShader].extras._pipeline.source;
         var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+        if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
             vs = quantizedVertexShaders[id];
         }
 
@@ -1976,13 +2043,19 @@ define([
             finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
         }
         if (addClippingPlaneCode) {
-            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection);
+            finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
-        var pickFS, pickVS;
+        if (!FeatureDetection.isInternetExplorer()) {
+            drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
+            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+        }
+
+        var pickFS;
+        var pickVS;
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
@@ -1993,7 +2066,12 @@ define([
             }
 
             if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection);
+                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection, context);
+            }
+
+            if (!FeatureDetection.isInternetExplorer()) {
+                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
+                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
             }
         }
         createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
@@ -2564,7 +2642,7 @@ define([
                         var accessor = accessors[primitive.indices];
                         var bufferView = accessor.bufferView;
 
-                        // Used decoded draco buffer if available
+                        // Use buffer of previously decoded draco geometry
                         if (defined(decodedData)) {
                             bufferView = decodedData.bufferView;
                         }
@@ -2878,6 +2956,10 @@ define([
         }
     }
 
+    function createUniformsForDracoQuantizedAttributes(decodedData) {
+        return ModelUtility.createUniformsForDracoQuantizedAttributes(decodedData.attributes);
+    }
+
     function createUniformsForQuantizedAttributes(model, primitive) {
         var programId = getProgramForPrimitive(model, primitive);
         var quantizedUniforms = model._quantizedUniforms[programId];
@@ -3064,10 +3146,13 @@ define([
             }
 
             // Add uniforms for decoding quantized attributes if used
+            var quantizedUniformMap = {};
             if (model.extensionsUsed.WEB3D_quantized_attributes) {
-                var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
-                uniformMap = combine(uniformMap, quantizedUniformMap);
+                quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
+            } else if (model._dequantizeInShader && defined(decodedData)) {
+                quantizedUniformMap = createUniformsForDracoQuantizedAttributes(decodedData);
             }
+            uniformMap = combine(uniformMap, quantizedUniformMap);
 
             var rs = rendererRenderStates[material.technique];
 
@@ -3308,9 +3393,29 @@ define([
         var scene3DOnly = frameState.scene3DOnly;
 
         // Retain references to updated source shaders and programs for rebuilding as needed
-        model._sourcePrograms = model.gltf.programs;
-        model._sourceShaders = model.gltf.shaders;
+        var programs = model._sourcePrograms = model.gltf.programs;
+        var shaders = model._sourceShaders = model.gltf.shaders;
         model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
+
+        var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinates = model._toClipCoordinatesGLSL = {};
+        for (var id in programs) {
+            if (programs.hasOwnProperty(id)) {
+                var program = programs[id];
+                var shader = shaders[program.vertexShader].extras._pipeline.source;
+                if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
+                    var quantizedVS = quantizedVertexShaders[id];
+                    if (!defined(quantizedVS)) {
+                        quantizedVS = modifyShaderForQuantizedAttributes(shader, id, model);
+                        quantizedVertexShaders[id] = quantizedVS;
+                    }
+                    shader = quantizedVS;
+                }
+
+                shader = modifyShader(shader, id, model._vertexShaderLoaded);
+                toClipCoordinates[id] = ModelUtility.toClipCoordinatesGLSL(model.gltf, shader);
+            }
+        }
 
         ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {
@@ -3855,24 +3960,17 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection) {
+    function modifyShaderForClippingPlanes(shader, clippingPlaneCollection, context) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
-        shader += Model._getClippingFunction(clippingPlaneCollection) + '\n';
+        shader += Model._getClippingFunction(clippingPlaneCollection, context) + '\n';
         shader +=
             'uniform sampler2D gltf_clippingPlanes; \n' +
-            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'uniform mat4 gltf_clippingPlanesMatrix; \n' +
+            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    float clipDistance = clip(gl_FragCoord, gltf_clippingPlanes, gltf_clippingPlanesMatrix);' +
-            '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
-            '    clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
-            '    float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
-            '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
-            '    { \n' +
-            '        gl_FragColor = clippingPlanesEdgeColor;\n' +
-            '    } \n' +
+            getClipAndStyleCode('gltf_clippingPlanes', 'gltf_clippingPlanesMatrix', 'gltf_clippingPlanesEdgeStyle') +
             '} \n';
         return shader;
     }
@@ -4211,21 +4309,11 @@ define([
                     processModelMaterialsCommon(this.gltf, options);
                     processPbrMetallicRoughness(this.gltf, options);
 
-                    // Start draco decoding
-                    DracoLoader.parse(this);
+                    // Skip dequantizing in the shader if not encoded
+                    this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
 
-                    loadResources.initialized = true;
-                }
-
-                if (!loadResources.finishedDecoding()) {
-                    DracoLoader.decode(this, context)
-                        .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
-                }
-
-                if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
-
                     if (!this._loadRendererResourcesFromCache) {
                         parseBufferViews(this);
                         parseShaders(this);
@@ -4236,6 +4324,18 @@ define([
                     parseMeshes(this);
                     parseNodes(this);
 
+                    // Start draco decoding
+                    DracoLoader.parse(this);
+
+                    loadResources.initialized = true;
+                }
+
+                if (!loadResources.finishedDecoding()) {
+                    DracoLoader.decodeModel(this, context)
+                        .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
+                }
+
+                if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
 
@@ -4365,7 +4465,7 @@ define([
             var currentClippingPlanesState = 0;
             if (defined(clippingPlanes) && clippingPlanes.enabled) {
                 Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
-                currentClippingPlanesState = clippingPlanes.clippingPlanesState();
+                currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
             var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
@@ -4525,12 +4625,14 @@ define([
             var pickProgram = rendererPickPrograms[programId];
 
             nodeCommand.command.shaderProgram = renderProgram;
-            nodeCommand.pickCommand.shaderProgram = pickProgram;
             if (defined(nodeCommand.command2D)) {
                 nodeCommand.command2D.shaderProgram = renderProgram;
             }
-            if (defined(nodeCommand.pickCommand2D)) {
-                nodeCommand.pickCommand2D.shaderProgram = pickProgram;
+            if (model.allowPicking) {
+                nodeCommand.pickCommand.shaderProgram = pickProgram;
+                if (defined(nodeCommand.pickCommand2D)) {
+                    nodeCommand.pickCommand2D.shaderProgram = pickProgram;
+                }
             }
         }
 
@@ -4560,8 +4662,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

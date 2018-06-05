@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
@@ -22,7 +21,6 @@ define([
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
-        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
@@ -40,6 +38,7 @@ define([
         '../Scene/DepthFunction',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        './ClippingPlaneCollection',
         './GlobeSurfaceTile',
         './ImageryLayer',
         './QuadtreeTileLoadState',
@@ -51,7 +50,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        ClippingPlaneCollection,
         Color,
         ColorGeometryInstanceAttribute,
         combine,
@@ -69,7 +67,6 @@ define([
         Matrix4,
         OrientedBoundingBox,
         OrthographicFrustum,
-        Plane,
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
@@ -87,6 +84,7 @@ define([
         DepthFunction,
         PerInstanceColorAppearance,
         Primitive,
+        ClippingPlaneCollection,
         GlobeSurfaceTile,
         ImageryLayer,
         QuadtreeTileLoadState,
@@ -315,7 +313,7 @@ define([
                 return this._clippingPlanes;
             },
             set : function(value) {
-                ClippingPlaneCollection.setOwnership(value, this, '_clippingPlanes');
+                ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
         }
     });
@@ -672,8 +670,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

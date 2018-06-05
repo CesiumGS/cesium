@@ -4,8 +4,6 @@ define([
         '../Core/defined',
         '../Core/FeatureDetection',
         '../Core/TaskProcessor',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/when'
     ], function(
@@ -14,8 +12,6 @@ define([
         defined,
         FeatureDetection,
         TaskProcessor,
-        Buffer,
-        BufferUsage,
         ForEach,
         when) {
     'use strict';
@@ -25,62 +21,99 @@ define([
      */
     function DracoLoader() {}
 
-    // Maximum concurrency to use when deocding draco models
+    // Maximum concurrency to use when decoding draco models
     DracoLoader._maxDecodingConcurrency = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
 
     // Exposed for testing purposes
     DracoLoader._decoderTaskProcessor = undefined;
+    DracoLoader._taskProcessorReady = false;
     DracoLoader._getDecoderTaskProcessor = function () {
         if (!defined(DracoLoader._decoderTaskProcessor)) {
-            DracoLoader._decoderTaskProcessor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            var processor = new TaskProcessor('decodeDraco', DracoLoader._maxDecodingConcurrency);
+            processor.initWebAssemblyModule({
+                modulePath : 'ThirdParty/Workers/draco_wasm_wrapper.js',
+                wasmBinaryFile : 'ThirdParty/draco_decoder.wasm',
+                fallbackModulePath : 'ThirdParty/Workers/draco_decoder.js'
+            }).then(function () {
+                DracoLoader._taskProcessorReady = true;
+            });
+            DracoLoader._decoderTaskProcessor = processor;
         }
 
         return DracoLoader._decoderTaskProcessor;
     };
 
-    function hasExtension(model) {
+    /**
+     * Returns true if the model uses or requires KHR_draco_mesh_compression.
+     *
+     * @private
+     */
+    DracoLoader.hasExtension = function(model) {
         return (defined(model.extensionsRequired.KHR_draco_mesh_compression)
             || defined(model.extensionsUsed.KHR_draco_mesh_compression));
-    }
+    };
 
-    function addBufferToModelResources(model, buffer) {
-        var resourceBuffers = model._rendererResources.buffers;
-        var bufferViewId = Object.keys(resourceBuffers).length;
-        resourceBuffers[bufferViewId] = buffer;
-        model._geometryByteLength += buffer.sizeInBytes;
+    function addBufferToLoadResources(loadResources, typedArray) {
+        // Create a new id to differentiate from original glTF bufferViews
+        var bufferViewId = 'runtime.' + Object.keys(loadResources.createdBufferViews).length;
+
+        var loadResourceBuffers = loadResources.buffers;
+        var id = Object.keys(loadResourceBuffers).length;
+        loadResourceBuffers[id] = typedArray;
+        loadResources.createdBufferViews[bufferViewId] = {
+            buffer : id,
+            byteOffset : 0,
+            byteLength : typedArray.byteLength
+        };
 
         return bufferViewId;
     }
 
     function addNewVertexBuffer(typedArray, model, context) {
-        var vertexBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : typedArray,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        vertexBuffer.vertexArrayDestroyable = false;
-
-        return addBufferToModelResources(model, vertexBuffer);
+        var loadResources = model._loadResources;
+        var id = addBufferToLoadResources(loadResources, typedArray);
+        loadResources.vertexBuffersToCreate.enqueue(id);
+        return id;
     }
 
-    function addNewIndexBuffer(typedArray, model, context) {
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : typedArray,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : ComponentDatatype.fromTypedArray(typedArray)
+    function addNewIndexBuffer(indexArray, model, context) {
+        var typedArray = indexArray.typedArray;
+        var loadResources = model._loadResources;
+        var id = addBufferToLoadResources(loadResources, typedArray);
+        loadResources.indexBuffersToCreate.enqueue({
+            id : id,
+            componentType : ComponentDatatype.fromTypedArray(typedArray)
         });
-        indexBuffer.vertexArrayDestroyable = false;
 
-        var bufferViewId = addBufferToModelResources(model, indexBuffer);
         return {
-            bufferViewId: bufferViewId,
-            numberOfIndices : indexBuffer.numberOfIndices
+            bufferViewId : id,
+            numberOfIndices : indexArray.numberOfIndices
         };
     }
 
-    function addDecodededBuffers(primitive, model, context) {
-        return function (result) {
+    function scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context) {
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+
+        var taskData = loadResources.primitivesToDecode.peek();
+        if (!defined(taskData)) {
+            // All primitives are processing
+            return;
+        }
+
+        var promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
+        if (!defined(promise)) {
+            // Cannot schedule another task this frame
+            return;
+        }
+
+        loadResources.activeDecodingTasks++;
+        loadResources.primitivesToDecode.dequeue();
+        return promise.then(function (result) {
+            loadResources.activeDecodingTasks--;
+
             var decodedIndexBuffer = addNewIndexBuffer(result.indexArray, model, context);
 
             var attributes = {};
@@ -98,29 +131,12 @@ define([
                 }
             }
 
-            model._decodedData[primitive.mesh + '.primitive.' + primitive.primitive] = {
+            model._decodedData[taskData.mesh + '.primitive.' + taskData.primitive] = {
                 bufferView : decodedIndexBuffer.bufferViewId,
                 numberOfIndices : decodedIndexBuffer.numberOfIndices,
                 attributes : attributes
             };
-        };
-    }
-
-    function scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context) {
-        var taskData = loadResources.primitivesToDecode.peek();
-        if (!defined(taskData)) {
-            // All primitives are processing
-            return;
-        }
-
-        var promise = decoderTaskProcessor.scheduleTask(taskData, [taskData.array.buffer]);
-        if (!defined(promise)) {
-            // Cannot schedule another task this frame
-            return;
-        }
-
-        loadResources.primitivesToDecode.dequeue();
-        return promise.then(addDecodededBuffers(taskData, model, context));
+        });
     }
 
     /**
@@ -130,13 +146,12 @@ define([
      * @private
      */
     DracoLoader.parse = function(model) {
-        if (!hasExtension(model)) {
+        if (!DracoLoader.hasExtension(model)) {
             return;
         }
 
         var loadResources = model._loadResources;
-        loadResources.decoding = true;
-
+        var dequantizeInShader = model._dequantizeInShader;
         var gltf = model.gltf;
         ForEach.mesh(gltf, function(mesh, meshId) {
             ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
@@ -151,13 +166,13 @@ define([
 
                 var bufferView = gltf.bufferViews[compressionData.bufferView];
                 var typedArray = arraySlice(gltf.buffers[bufferView.buffer].extras._pipeline.source, bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength);
-
                 loadResources.primitivesToDecode.enqueue({
                     mesh : meshId,
                     primitive : primitiveId,
                     array : typedArray,
                     bufferView : bufferView,
-                    compressedAttributes : compressionData.attributes
+                    compressedAttributes : compressionData.attributes,
+                    dequantizeInShader : dequantizeInShader
                 });
             });
         });
@@ -167,8 +182,8 @@ define([
      * Schedules decoding tasks available this frame.
      * @private
      */
-    DracoLoader.decode = function(model, context) {
-        if (!hasExtension(model)) {
+    DracoLoader.decodeModel = function(model, context) {
+        if (!DracoLoader.hasExtension(model)) {
             return when.resolve();
         }
 
@@ -187,10 +202,20 @@ define([
             promise = scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context);
         }
 
-        return when.all(decodingPromises).then(function () {
-            // Done decoding when there are no more active tasks
-            loadResources.decoding = (decoderTaskProcessor._activeTasks !== 0);
-        });
+        return when.all(decodingPromises);
+    };
+
+    /**
+     * Decodes a compressed point cloud. Returns undefined if the task cannot be scheduled.
+     * @private
+     */
+    DracoLoader.decodePointCloud = function(parameters) {
+        var decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
+        if (!DracoLoader._taskProcessorReady) {
+            // The task processor is not ready to schedule tasks
+            return;
+        }
+        return decoderTaskProcessor.scheduleTask(parameters, [parameters.buffer.buffer]);
     };
 
     return DracoLoader;

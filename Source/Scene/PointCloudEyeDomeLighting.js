@@ -1,17 +1,11 @@
 define([
         '../Core/Cartesian3',
-        '../Core/clone',
         '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/FeatureDetection',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
-        '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
@@ -20,32 +14,20 @@ define([
         '../Renderer/RenderState',
         '../Renderer/Sampler',
         '../Renderer/ShaderSource',
-        '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../Scene/BlendEquation',
-        '../Scene/BlendFunction',
         '../Scene/BlendingState',
-        '../Scene/StencilFunction',
-        '../Scene/StencilOperation',
-        '../Shaders/PostProcessFilters/PointCloudEyeDomeLighting'
+        '../Shaders/PostProcessStages/PointCloudEyeDomeLighting'
     ], function(
         Cartesian3,
-        clone,
         Color,
-        combine,
-        ComponentDatatype,
         defined,
         destroyObject,
         FeatureDetection,
-        Geometry,
-        GeometryAttribute,
         PixelFormat,
         PrimitiveType,
-        BufferUsage,
         ClearCommand,
         DrawCommand,
         Framebuffer,
@@ -54,19 +36,12 @@ define([
         RenderState,
         Sampler,
         ShaderSource,
-        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        VertexArray,
-        BlendEquation,
-        BlendFunction,
         BlendingState,
-        StencilFunction,
-        StencilOperation,
-        PointCloudEyeDomeLightingShader
-    ) {
+        PointCloudEyeDomeLightingShader) {
     'use strict';
 
     /**
@@ -342,8 +317,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -22,9 +22,11 @@ define([
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
+    var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
-    function Batch(primitives, classificationType, color, key) {
+    function Batch(primitives, classificationType, color, key, zIndex) {
         this.primitives = primitives;
+        this.zIndex = zIndex;
         this.classificationType = classificationType;
         this.color = color;
         this.key = key;
@@ -68,8 +70,11 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
 
     var scratchArray = new Array(4);
@@ -110,11 +115,12 @@ define([
                 }
 
                 primitive = new GroundPrimitive({
+                    show : false,
                     asynchronous : true,
                     geometryInstances : geometries,
                     classificationType : this.classificationType
                 });
-                primitives.add(primitive);
+                primitives.add(primitive, this.zIndex);
                 isUpdated = false;
             } else {
                 if (defined(primitive)) {
@@ -133,6 +139,7 @@ define([
             this.createPrimitive = false;
             this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
+            primitive.show = true;
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
                 this.oldPrimitive = undefined;
@@ -152,12 +159,12 @@ define([
 
                 if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
                     var colorProperty = updater.fillMaterialProperty.color;
-                    colorProperty.getValue(time, colorScratch);
+                    var fillColor = Property.getValueOrDefault(colorProperty, time, Color.WHITE, colorScratch);
 
-                    if (!Color.equals(attributes._lastColor, colorScratch)) {
-                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
+                    if (!Color.equals(attributes._lastColor, fillColor)) {
+                        attributes._lastColor = Color.clone(fillColor, attributes._lastColor);
                         var color = this.color;
-                        var newColor = colorScratch.toBytes(scratchArray);
+                        var newColor = fillColor.toBytes(scratchArray);
                         if (color[0] !== newColor[0] || color[1] !== newColor[1] ||
                             color[2] !== newColor[2] || color[3] !== newColor[3]) {
                            this.itemsToRemove[removedCount++] = updater;
@@ -173,7 +180,7 @@ define([
 
                 var distanceDisplayConditionProperty = updater.distanceDisplayConditionProperty;
                 if (!Property.isConstant(distanceDisplayConditionProperty)) {
-                    var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time, distanceDisplayConditionScratch);
+                    var distanceDisplayCondition = Property.getValueOrDefault(distanceDisplayConditionProperty, time, defaultDistanceDisplayCondition, distanceDisplayConditionScratch);
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
@@ -261,13 +268,14 @@ define([
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         var batches = this._batches;
-        // instance.attributes.color.value is a Uint8Array, so just read it as a Uint32 and make that the key
-        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0];
+        // color and zIndex are batch breakers, so we'll use that for the key
+        var zIndex = Property.getValueOrDefault(updater.zIndex, 0);
+        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0] + ':' + zIndex;
         var batch;
         if (batches.contains(batchKey)) {
             batch = batches.get(batchKey);
         } else {
-            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, batchKey);
+            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, batchKey, zIndex);
             batches.set(batchKey, batch);
         }
         batch.add(updater, instance);

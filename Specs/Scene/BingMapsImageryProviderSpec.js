@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/BingMapsImageryProvider',
+        'Core/appendForwardSlash',
         'Core/DefaultProxy',
         'Core/defined',
         'Core/queryToObject',
@@ -16,6 +17,7 @@ defineSuite([
         'ThirdParty/Uri'
     ], function(
         BingMapsImageryProvider,
+        appendForwardSlash,
         DefaultProxy,
         defined,
         queryToObject,
@@ -147,7 +149,7 @@ defineSuite([
     }
 
     function installFakeMetadataRequest(url, mapStyle, proxy) {
-        var expectedUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle;
+        var expectedUri = new Uri('REST/v1/Imagery/Metadata/' + mapStyle).resolve(new Uri(appendForwardSlash(url)));
 
         Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
             var uri = new Uri(url);
@@ -161,7 +163,7 @@ defineSuite([
             expect(query.key).toBeDefined();
 
             uri.query = undefined;
-            expect(uri.toString()).toStartWith(expectedUrl);
+            expect(uri.toString()).toStartWith(expectedUri.toString());
 
             setTimeout(function() {
                 window[functionName](createFakeMetadataResponse(mapStyle));
@@ -219,6 +221,42 @@ defineSuite([
 
     it('resolves readyPromise', function() {
         var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with a path', function() {
+        var url = 'http://fake.fake.invalid/some/subdirectory';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with a path ending with a slash', function() {
+        var url = 'http://fake.fake.invalid/some/subdirectory/';
         var mapStyle = BingMapsStyle.ROAD;
 
         installFakeMetadataRequest(url, mapStyle);
@@ -299,7 +337,8 @@ defineSuite([
 
         var provider = new BingMapsImageryProvider({
             url : url,
-            mapStyle : mapStyle
+            mapStyle : mapStyle,
+            key: 'fake Key'
         });
 
         expect(provider.url).toStartWith(url);
@@ -352,38 +391,6 @@ defineSuite([
                 g: '3031',
                 mkt: 'ja-jp'
             });
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
-            });
-        });
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var url = 'http://foo.bar.invalid';
-        var mapStyle = BingMapsStyle.ROAD;
-
-        var proxy = new DefaultProxy('/proxy/');
-
-        installFakeMetadataRequest(url, mapStyle, true);
-        installFakeImageRequest();
-
-        var provider = new BingMapsImageryProvider({
-            url : url,
-            mapStyle : mapStyle,
-            proxy : proxy
-        });
-
-        expect(provider._resource._url).toEqual(url);
-        expect(provider.proxy).toEqual(proxy);
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg', {
-                g: '3031',
-                mkt: ''
-            }, true);
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(image).toBeInstanceOf(Image);

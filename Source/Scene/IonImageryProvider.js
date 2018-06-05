@@ -1,20 +1,16 @@
 define([
         '../Core/Check',
-        '../Core/clone',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/loadJson',
-        '../Core/Resource',
+        '../Core/IonResource',
         '../Core/RuntimeError',
         '../ThirdParty/when',
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
-        './Cesium3DTileset',
-        '../Core/IonResource',
         './createTileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
@@ -24,21 +20,17 @@ define([
         './WebMapTileServiceImageryProvider'
     ], function(
         Check,
-        clone,
         Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        loadJson,
-        Resource,
+        IonResource,
         RuntimeError,
         when,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
-        Cesium3DTileset,
-        IonResource,
         createTileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
@@ -185,18 +177,8 @@ define([
                     imageryProvider = factory(endpoint.options);
                 }
 
-                that._tileCredits = endpoint.attributions.map(function(attribution) {
-                    return new Credit({
-                        text: attribution.text,
-                        link: attribution.url,
-                        imageUrl: attribution.image,
-                        showOnScreen: defined(attribution.collapsible) && !attribution.collapsible
-                    });
-                });
+                that._tileCredits = IonResource.getCreditsFromEndpoint(endpoint, endpointResource);
 
-                return imageryProvider;
-            })
-            .then(function(imageryProvider) {
                 imageryProvider.errorEvent.addEventListener(function(tileProviderError) {
                     //Propagate the errorEvent but set the provider to this instance instead
                     //of the inner instance.

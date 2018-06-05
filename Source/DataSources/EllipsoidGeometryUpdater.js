@@ -1,6 +1,6 @@
 define([
-        '../Core/Check',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -23,8 +23,8 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
-        Check,
         Cartesian3,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -81,7 +81,7 @@ define([
             observedPropertyNames : ['availability', 'position', 'orientation', 'ellipsoid']
         });
 
-        this._isClosed = true;
+        this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
     }
 
     if (defined(Object.create)) {

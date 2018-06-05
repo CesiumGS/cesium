@@ -2,8 +2,6 @@ defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
-        'Core/ClippingPlane',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/Credit',
         'Core/defined',
@@ -16,6 +14,8 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/RenderState',
         'Scene/BlendingState',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
@@ -33,8 +33,6 @@ defineSuite([
         GlobeSurfaceTileProvider,
         Cartesian3,
         CesiumTerrainProvider,
-        ClippingPlane,
-        ClippingPlaneCollection,
         Color,
         Credit,
         defined,
@@ -47,6 +45,8 @@ defineSuite([
         ContextLimits,
         RenderState,
         BlendingState,
+        ClippingPlane,
+        ClippingPlaneCollection,
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
@@ -647,13 +647,13 @@ defineSuite([
     });
 
     it('adds terrain and imagery credits to the CreditDisplay', function() {
-        var imageryCredit = new Credit({text: 'imagery credit'});
+        var imageryCredit = new Credit('imagery credit');
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png',
             credit : imageryCredit
         }));
 
-        var terrainCredit = new Credit({text: 'terrain credit'});
+        var terrainCredit = new Credit('terrain credit');
         scene.terrainProvider = new CesiumTerrainProvider({
             url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain',
             credit : terrainCredit
@@ -662,8 +662,8 @@ defineSuite([
         return updateUntilDone(scene.globe).then(function() {
             var creditDisplay = scene.frameState.creditDisplay;
             creditDisplay.showLightbox();
-            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(imageryCredit);
-            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(terrainCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits.values).toContain(imageryCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits.values).toContain(terrainCredit);
             creditDisplay.hideLightbox();
         });
     });

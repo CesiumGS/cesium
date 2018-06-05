@@ -281,6 +281,30 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
     });
 
+    it('computing textureCoordinateRotationPoints property', function() {
+        var c = new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -67.655, 0.0,
+                -67.655, 15.0,
+                -67.655, 20.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 1,
+            granularity : Math.PI / 6.0
+        });
+
+        // Corridors don't support geometry orientation or stRotation, so expect this to equal the original coordinate system.
+        var textureCoordinateRotationPoints = c.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
          90.0, -30.0,
          90.0, -31.0
@@ -292,11 +316,10 @@ defineSuite([
         width : 30000.0,
         granularity : 0.1
     });
-    var rectangle = new Rectangle(1.568055205533759, -0.5410504013439219, 1.573537448056034, -0.5235971737132246);
+
     var packedInstance = [2, positions[0].x, positions[0].y, positions[0].z, positions[1].x, positions[1].y, positions[1].z];
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
     packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0);
     createPackableSpecs(CorridorGeometry, corridor, packedInstance);
 });
