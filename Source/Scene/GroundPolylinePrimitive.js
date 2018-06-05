@@ -140,6 +140,7 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        // Shadow volume is shown by removing a discard in the shader, so this isn't toggleable.
         this._debugShowShadowVolume = defaultValue(options.debugShowShadowVolume, false);
 
         this._primitiveOptions = {

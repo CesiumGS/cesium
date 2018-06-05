@@ -46,10 +46,17 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: worldTerrain
 });
 
-var selectedId = 'polyline1';
-var polylineOnTerrainPrimitive;
+if (!Cesium.GroundPolylinePrimitive.isSupported(viewer.scene)) {
+    throw new Cesium.RuntimeError('Polylines on terrain are not supported on this platform.');
+}
 
-var lineWidth = 16.0;
+var polylineIds = ['polyline1', 'polyline2'];
+var groundPrimitiveId = 'ground primitive';
+var selectedId = polylineIds[0];
+var polylineOnTerrainPrimitive;
+var groundPrimitiveOnTop = false;
+
+var lineWidth = 4.0;
 var viewModel = {
     lineWidth : lineWidth
 };
@@ -72,16 +79,37 @@ Cesium.knockout.getObservable(viewModel, 'lineWidth').subscribe(
 
 var scene = viewer.scene;
 
+// Add a Rectangle GroundPrimitive to demonstrate Z-indexing with GroundPrimitives
+var rectangleGroundPrimitive = scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.RectangleGeometry({
+            rectangle : Cesium.Rectangle.fromDegrees(-112.1340164450331, 36.05494287836128, -112.0840164450331, 36.10494287836128),
+            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        }),
+        id : groundPrimitiveId
+    }),
+    appearance : new Cesium.EllipsoidSurfaceAppearance({
+        aboveGround : false,
+        material : Cesium.Material.fromType('Color')
+    }),
+    classificationType : Cesium.ClassificationType.TERRAIN
+}));
+
 var leftHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 leftHandler.setInputAction(function(movement) {
     var pickedObject = viewer.scene.pick(movement.position);
     if (Cesium.defined(pickedObject)) {
         console.log(pickedObject.id);
-        selectedId = pickedObject.id;
+        // If picked the ground primitive, don't do anything
+        if (pickedObject.id === groundPrimitiveId) {
+            return;
+        } else {
+            selectedId = pickedObject.id;
 
-        // Sync line width in toolbar with selected
-        var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
-        viewModel.lineWidth = attributes.width[0];
+            // Sync line width in toolbar with selected
+            var attributes = polylineOnTerrainPrimitive.getGeometryInstanceAttributes(selectedId);
+            viewModel.lineWidth = attributes.width[0];
+        }
     } else {
         selectedId = undefined;
     }
@@ -107,37 +135,39 @@ var loopPositions = Cesium.Cartesian3.fromDegreesArray([
     -111.69141601804614, 36.05128770351902
 ]);
 
-var instance1 = new Cesium.GeometryInstance({
-    geometry : new Cesium.GroundPolylineGeometry({
-        positions : polylinePositions,
-        loop : false,
-        width : 16.0
-    }),
-    id : 'polyline1',
-    attributes : {
-        show : new Cesium.ShowGeometryInstanceAttribute(),
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7))
-    }
-});
+function createPolylines(debugShowShadowVolume) {
+    var instance1 = new Cesium.GeometryInstance({
+        geometry : new Cesium.GroundPolylineGeometry({
+            positions : polylinePositions,
+            loop : false,
+            width : 4.0
+        }),
+        id : polylineIds[0],
+        attributes : {
+            show : new Cesium.ShowGeometryInstanceAttribute(),
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7))
+        }
+    });
 
-var instance2 = new Cesium.GeometryInstance({
-    geometry : new Cesium.GroundPolylineGeometry({
-        positions : loopPositions,
-        loop : true,
-        width : 8.0
-    }),
-    id : 'polyline2',
-    attributes : {
-        show : new Cesium.ShowGeometryInstanceAttribute(),
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#67ADDF').withAlpha(0.7))
-    }
-});
+    var instance2 = new Cesium.GeometryInstance({
+        geometry : new Cesium.GroundPolylineGeometry({
+            positions : loopPositions,
+            loop : true,
+            width : 8.0
+        }),
+        id : polylineIds[1],
+        attributes : {
+            show : new Cesium.ShowGeometryInstanceAttribute(),
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#67ADDF').withAlpha(0.7))
+        }
+    });
 
-polylineOnTerrainPrimitive = new Cesium.GroundPolylinePrimitive({
-    geometryInstances : [instance1, instance2],
-    debugShowShadowVolume : false
-});
-scene.primitives.add(polylineOnTerrainPrimitive);
+    polylineOnTerrainPrimitive = new Cesium.GroundPolylinePrimitive({
+        geometryInstances : [instance1, instance2],
+        debugShowShadowVolume : debugShowShadowVolume
+    });
+    scene.groundPrimitives.add(polylineOnTerrainPrimitive);
+}
 
 function applyPerInstanceColor() {
     polylineOnTerrainPrimitive.appearance = new Cesium.PolylineColorAppearance();
@@ -145,7 +175,7 @@ function applyPerInstanceColor() {
 function applyColorMaterial() {
     polylineOnTerrainPrimitive.appearance = new Cesium.PolylineMaterialAppearance({
         material : Cesium.Material.fromType('Color', {
-            color : new Cesium.Color(1.0, 0.0, 1.0, 1.0)
+            color : new Cesium.Color(0.7, 0.0, 1.0, 1.0)
         })
     });
 }
@@ -190,6 +220,23 @@ Sandcastle.addToolbarButton('Show all', function() {
     }
 });
 
+Sandcastle.addToolbarButton('Toggle debugShowShadowVolume', function() {
+    var debugShowShadowVolume = !polylineOnTerrainPrimitive.debugShowShadowVolume;
+    var appearance = polylineOnTerrainPrimitive.appearance;
+    scene.groundPrimitives.remove(polylineOnTerrainPrimitive);
+    createPolylines(debugShowShadowVolume);
+    polylineOnTerrainPrimitive.appearance = appearance;
+});
+
+Sandcastle.addToolbarButton('Toggle z-index', function() {
+    if (groundPrimitiveOnTop) {
+        scene.groundPrimitives.raiseToTop(polylineOnTerrainPrimitive);
+    } else {
+        scene.groundPrimitives.lowerToBottom(polylineOnTerrainPrimitive);
+    }
+    groundPrimitiveOnTop = !groundPrimitiveOnTop;
+});
+
 function lookAt() {
     viewer.camera.lookAt(polylinePositions[1], new Cesium.Cartesian3(50000.0, 50000.0, 50000.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
@@ -199,6 +246,7 @@ Sandcastle.addToolbarButton('reset view', function() {
     lookAt();
 });
 
+createPolylines(false);
 applyPerInstanceColor();
 
 lookAt();
