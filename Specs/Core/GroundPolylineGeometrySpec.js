@@ -232,6 +232,33 @@ defineSuite([
 
         Cartesian3.normalize(approximateExpectedMiterNormal, approximateExpectedMiterNormal);
         expect(Cartesian3.equalsEpsilon(approximateExpectedMiterNormal, miteredStartNormal, CesiumMath.EPSILON2)).toBe(true);
+
+        // Break miter on loop end
+        groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                0.01, 0.0,
+                0.02, 0.0,
+                0.015, CesiumMath.EPSILON7
+            ]),
+            granularity : 0.0,
+            loop : true
+        });
+
+        geometry = GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+
+        startNormal_and_forwardOffsetZvalues = geometry.attributes.startNormal_and_forwardOffsetZ.values;
+        endNormal_and_textureCoordinateNormalizationXvalues = geometry.attributes.endNormal_and_textureCoordinateNormalizationX.values;
+
+        // Check normals at loop end
+        miteredStartNormal = Cartesian3.unpack(startNormal_and_forwardOffsetZvalues, 0);
+        miteredEndNormal = Cartesian3.unpack(endNormal_and_textureCoordinateNormalizationXvalues, 32 * 2);
+
+        expect(Cartesian3.equalsEpsilon(miteredStartNormal, miteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
+
+        approximateExpectedMiterNormal = new Cartesian3(0.0, 1.0, 0.0);
+
+        Cartesian3.normalize(approximateExpectedMiterNormal, approximateExpectedMiterNormal);
+        expect(Cartesian3.equalsEpsilon(approximateExpectedMiterNormal, miteredStartNormal, CesiumMath.EPSILON2)).toBe(true);
     });
 
     it('interpolates long polyline segments', function() {

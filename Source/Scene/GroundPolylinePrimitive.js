@@ -22,6 +22,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
+        './BlendingState',
         './CullFace',
         './Material',
         './PolylineColorAppearance',
@@ -52,6 +53,7 @@ define([
         ShaderProgram,
         ShaderSource,
         when,
+        BlendingState,
         CullFace,
         Material,
         PolylineColorAppearance,
@@ -67,7 +69,7 @@ define([
      * Only to be used with GeometryInstances containing GroundPolylineGeometries
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Array|GeometryInstance} [options.polylineGeometryInstances] GeometryInstances containing GroundPolylineGeometry
+     * @param {Array|GeometryInstance} [options.geometryInstances] GeometryInstances containing GroundPolylineGeometry
      * @param {Appearance} [options.appearance] The Appearance used to render the polyline. Defaults to a white color {@link Material} on a {@link PolylineMaterialAppearance}.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
@@ -98,7 +100,7 @@ define([
          *
          * @default undefined
          */
-        this.polylineGeometryInstances = options.polylineGeometryInstances;
+        this.geometryInstances = options.geometryInstances;
 
         var appearance = options.appearance;
         if (!defined(appearance)) {
@@ -171,7 +173,8 @@ define([
         this._renderState = RenderState.fromCache({
             cull : {
                 enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
-            }
+            },
+            blending : BlendingState.ALPHA_BLEND
         });
 
         this._renderStateMorph = RenderState.fromCache({
@@ -181,7 +184,8 @@ define([
             },
             depthTest : {
                 enabled : true
-            }
+            },
+            blending : BlendingState.ALPHA_BLEND
         });
     }
 
@@ -448,7 +452,7 @@ define([
         }
         groundPolylinePrimitive._spMorph = colorProgramMorph;
 
-        if (groundPolylinePrimitive.allowPicking) {
+        if (groundPolylinePrimitive._primitive.allowPicking) {
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
@@ -511,6 +515,13 @@ define([
                 });
             }
             groundPolylinePrimitive._spPickMorph = pickProgramMorph;
+        } else {
+            groundPolylinePrimitive._spPick = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vsColor3D,
+                fragmentShaderSource : fsColor3D,
+                attributeLocations : attributeLocations
+            });
         }
     }
 
@@ -526,7 +537,7 @@ define([
         var command;
         var materialUniforms = isPolylineColorAppearance ? {} : material._uniforms;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(materialUniforms);
-        var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+        var pass = Pass.TERRAIN_CLASSIFICATION;
 
         for (i = 0; i < length; i++) {
             var vertexArray = primitive._va[i];
@@ -686,7 +697,7 @@ define([
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
      */
     GroundPolylinePrimitive.prototype.update = function(frameState) {
-        if (!defined(this._primitive) && !defined(this.polylineGeometryInstances)) {
+        if (!defined(this._primitive) && !defined(this.geometryInstances)) {
             return;
         }
 
@@ -706,7 +717,7 @@ define([
         var that = this;
         var primitiveOptions = this._primitiveOptions;
         if (!defined(this._primitive)) {
-            var geometryInstances = isArray(this.polylineGeometryInstances) ? this.polylineGeometryInstances : [this.polylineGeometryInstances];
+            var geometryInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var geometryInstancesLength = geometryInstances.length;
 
             // If using PolylineColorAppearance, check if each instance has a color attribute.
@@ -749,7 +760,7 @@ define([
                 that._ready = true;
 
                 if (that.releaseGeometryInstances) {
-                    that.polylineGeometryInstances = undefined;
+                    that.geometryInstances = undefined;
                 }
 
                 var error = primitive._error;
