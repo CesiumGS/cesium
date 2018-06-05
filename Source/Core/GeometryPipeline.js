@@ -1916,46 +1916,38 @@ define([
         }
     }
 
+    function generateBarycentricInterpolateFunction(CartesianType, numberOfComponents) {
+        var v0Scratch = new CartesianType();
+        var v1Scratch = new CartesianType();
+        var v2Scratch = new CartesianType();
+
+        return function(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex, normalize) {
+            var v0 = CartesianType.fromArray(sourceValues, i0 * numberOfComponents, v0Scratch);
+            var v1 = CartesianType.fromArray(sourceValues, i1 * numberOfComponents, v1Scratch);
+            var v2 = CartesianType.fromArray(sourceValues, i2 * numberOfComponents, v2Scratch);
+
+            CartesianType.multiplyByScalar(v0, coords.x, v0);
+            CartesianType.multiplyByScalar(v1, coords.y, v1);
+            CartesianType.multiplyByScalar(v2, coords.z, v2);
+
+            var value = CartesianType.add(v0, v1, v0);
+            CartesianType.add(value, v2, value);
+
+            if (normalize) {
+                CartesianType.normalize(value, value);
+            }
+
+            CartesianType.pack(value, currentValues, insertedIndex * numberOfComponents);
+        };
+    }
+
+    var interpolateAndPackCartesian4 = generateBarycentricInterpolateFunction(Cartesian4, 4);
+    var interpolateAndPackCartesian3 = generateBarycentricInterpolateFunction(Cartesian3, 3);
+    var interpolateAndPackCartesian2 = generateBarycentricInterpolateFunction(Cartesian2, 2);
+
     var p0Scratch = new Cartesian3();
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
-    function interpolateAndPackCartesian3(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex, normalize) {
-        var p0 = Cartesian3.fromArray(sourceValues, i0 * 3, p0Scratch);
-        var p1 = Cartesian3.fromArray(sourceValues, i1 * 3, p1Scratch);
-        var p2 = Cartesian3.fromArray(sourceValues, i2 * 3, p2Scratch);
-
-        Cartesian3.multiplyByScalar(p0, coords.x, p0);
-        Cartesian3.multiplyByScalar(p1, coords.y, p1);
-        Cartesian3.multiplyByScalar(p2, coords.z, p2);
-
-        var value = Cartesian3.add(p0, p1, p0);
-        Cartesian3.add(value, p2, value);
-
-        if (normalize) {
-            Cartesian3.normalize(value, value);
-        }
-
-        Cartesian3.pack(value, currentValues, insertedIndex * 3);
-    }
-
-    var s0Scratch = new Cartesian2();
-    var s1Scratch = new Cartesian2();
-    var s2Scratch = new Cartesian2();
-    function interpolateAndPackCartesian2(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex) {
-        var s0 = Cartesian2.fromArray(sourceValues, i0 * 2, s0Scratch);
-        var s1 = Cartesian2.fromArray(sourceValues, i1 * 2, s1Scratch);
-        var s2 = Cartesian2.fromArray(sourceValues, i2 * 2, s2Scratch);
-
-        Cartesian2.multiplyByScalar(s0, coords.x, s0);
-        Cartesian2.multiplyByScalar(s1, coords.y, s1);
-        Cartesian2.multiplyByScalar(s2, coords.z, s2);
-
-        var value = Cartesian2.add(s0, s1, s0);
-        Cartesian2.add(value, s2, value);
-
-        Cartesian2.pack(value, currentValues, insertedIndex * 2);
-    }
-
     var barycentricScratch = new Cartesian3();
     function computeTriangleAttributes(i0, i1, i2, point, positions, normals, tangents, bitangents, texCoords, extrudeDirections, currentAttributes, customAttributeNames, customAttributesLength, allAttributes, insertedIndex) {
         if (!defined(normals) && !defined(tangents) && !defined(bitangents) && !defined(texCoords) && !defined(extrudeDirections) && customAttributesLength === 0) {
@@ -2014,33 +2006,19 @@ define([
         }
     }
 
-    var q0Scratch = new Cartesian4();
-    var q1Scratch = new Cartesian4();
-    var q2Scratch = new Cartesian4();
     function genericInterpolate(i0, i1, i2, coords, insertedIndex, sourceAttribute, currentAttribute) {
         var componentsPerAttribute = sourceAttribute.componentsPerAttribute;
         var sourceValues = sourceAttribute.values;
         var currentValues = currentAttribute.values;
         switch(componentsPerAttribute) {
             case 4:
-                var q0 = Cartesian4.fromArray(sourceValues, i0 * 4, q0Scratch);
-                var q1 = Cartesian4.fromArray(sourceValues, i1 * 4, q1Scratch);
-                var q2 = Cartesian4.fromArray(sourceValues, i2 * 4, q2Scratch);
-
-                Cartesian4.multiplyByScalar(q0, coords.x, q0);
-                Cartesian4.multiplyByScalar(q1, coords.y, q1);
-                Cartesian4.multiplyByScalar(q2, coords.z, q2);
-
-                var value = Cartesian4.add(q0, q1, q0);
-                Cartesian4.add(value, q2, value);
-
-                Cartesian4.pack(value, currentValues, insertedIndex * 4);
+                interpolateAndPackCartesian4(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex, false);
                 break;
             case 3:
                 interpolateAndPackCartesian3(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex, false);
                 break;
             case 2:
-                interpolateAndPackCartesian2(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex);
+                interpolateAndPackCartesian2(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex, false);
                 break;
             default:
                 currentValues[insertedIndex] = sourceValues[i0] * coords.x + sourceValues[i1] * coords.y + sourceValues[i2] * coords.z;
@@ -2091,10 +2069,8 @@ define([
 
         var customAttributeNames = [];
         for (var attributeName in attributes) {
-            if (attributes.hasOwnProperty(attributeName)) {
-                if (!NAMED_ATTRIBUTES[attributeName] && defined(attributes[attributeName])) {
-                    customAttributeNames.push(attributeName);
-                }
+            if (attributes.hasOwnProperty(attributeName) && !NAMED_ATTRIBUTES[attributeName] && defined(attributes[attributeName])) {
+                customAttributeNames.push(attributeName);
             }
         }
         var customAttributesLength = customAttributeNames.length;
