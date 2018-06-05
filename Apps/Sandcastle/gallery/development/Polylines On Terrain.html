@@ -101,9 +101,7 @@ leftHandler.setInputAction(function(movement) {
     if (Cesium.defined(pickedObject)) {
         console.log(pickedObject.id);
         // If picked the ground primitive, don't do anything
-        if (pickedObject.id === groundPrimitiveId) {
-            return;
-        } else {
+        if (pickedObject.id !== groundPrimitiveId) {
             selectedId = pickedObject.id;
 
             // Sync line width in toolbar with selected

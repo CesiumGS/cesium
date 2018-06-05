@@ -625,13 +625,7 @@ define([
     function updateAndQueueCommands(groundPolylinePrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume) {
         var primitive = groundPolylinePrimitive._primitive;
 
-        //>>includeStart('debug', pragmas.debug);
-        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
-            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-
-        Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
+        Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix); // Expected to be identity - GroundPrimitives don't support other model matrices
 
         var boundingSpheres;
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -720,11 +714,13 @@ define([
         if (!defined(this._primitive)) {
             var geometryInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var geometryInstancesLength = geometryInstances.length;
+            var attributes;
 
             // If using PolylineColorAppearance, check if each instance has a color attribute.
             if (this.appearance instanceof PolylineColorAppearance) {
                 for (i = 0; i < geometryInstancesLength; ++i) {
-                    if (!defined(geometryInstances[i].attributes.color)) {
+                    attributes = geometryInstances[i].attributes;
+                    if (!defined(attributes) || !defined(attributes.color)) {
                         throw new DeveloperError('All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.');
                     }
                 }
@@ -733,7 +729,7 @@ define([
             // Automatically create line width attributes
             for (i = 0; i < geometryInstancesLength; ++i) {
                 var geometryInstance = geometryInstances[i];
-                var attributes = geometryInstance.attributes;
+                attributes = geometryInstance.attributes;
                 if (!defined(attributes.width)) {
                     attributes.width = new GeometryInstanceAttribute({
                         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,

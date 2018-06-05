@@ -49,6 +49,7 @@ defineSuite([
 
     var depthColor;
     var polylineColor;
+    var polylineColorAttribute;
 
     var groundPolylineInstance;
     var groundPolylinePrimitive;
@@ -108,8 +109,8 @@ defineSuite([
         scene.morphTo3D(0);
         scene.render(); // clear any afterRender commands
 
-        var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
-        depthColor = depthColorAttribute.value;
+        var depthpolylineColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
+        depthColor = depthpolylineColorAttribute.value;
         var primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
@@ -118,7 +119,7 @@ defineSuite([
                 }),
                 id : 'depth rectangle',
                 attributes : {
-                    color : depthColorAttribute
+                    color : depthpolylineColorAttribute
                 }
             }),
             appearance : new PerInstanceColorAppearance({
@@ -131,8 +132,8 @@ defineSuite([
         // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
         depthRectanglePrimitive = new MockGlobePrimitive(primitive);
 
-        var colorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
-        polylineColor = colorAttribute.value;
+        polylineColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+        polylineColor = polylineColorAttribute.value;
         groundPolylineInstance = new GeometryInstance({
             geometry : new GroundPolylineGeometry({
                 positions : positions,
@@ -143,7 +144,7 @@ defineSuite([
             }),
             id : 'polyline on terrain',
             attributes : {
-                color : colorAttribute
+                color : polylineColorAttribute
             }
         });
     });
@@ -390,6 +391,40 @@ defineSuite([
 
         scene.morphTo2D(0);
         verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+    });
+
+    it('renders during morph when scene3DOnly is false', function() {
+        if (!GroundPolylinePrimitive.isSupported(scene)) {
+            return;
+        }
+
+        groundPolylinePrimitive = new GroundPolylinePrimitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new GroundPolylineGeometry({
+                    positions : Cartesian3.fromDegreesArray([
+                        -30, 0.0,
+                        30, 0.0
+                    ]),
+                    granularity : 0.0,
+                    width : 1000.0,
+                    loop : false,
+                    ellipsoid : ellipsoid
+                }),
+                attributes : {
+                    color : polylineColorAttribute
+                }
+            }),
+            asynchronous : false,
+            appearance : new PolylineColorAppearance()
+        });
+
+        // Morph to 2D first because 3D -> 2D/CV morph is difficult in single-pixel
+        scene.morphTo2D(0);
+        scene.render();
+
+        scene.morphToColumbusView(1);
+        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        scene.completeMorph();
     });
 
     it('renders batched instances', function() {
@@ -697,6 +732,45 @@ defineSuite([
         expect(scene).toPickAndCall(function(result) {
             expect(result.id).toEqual('polyline on terrain');
         });
+    });
+
+    it('picking in Morph', function() {
+        if (!GroundPolylinePrimitive.isSupported(scene)) {
+            return;
+        }
+
+        groundPolylinePrimitive = new GroundPolylinePrimitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new GroundPolylineGeometry({
+                    positions : Cartesian3.fromDegreesArray([
+                        -30, 0.0,
+                        30, 0.0
+                    ]),
+                    granularity : 0.0,
+                    width : 1000.0,
+                    loop : false,
+                    ellipsoid : ellipsoid
+                }),
+                attributes : {
+                    color : polylineColorAttribute
+                },
+                id : 'big polyline on terrain'
+            }),
+            asynchronous : false,
+            appearance : new PolylineColorAppearance()
+        });
+
+        // Morph to 2D first because 3D -> 2D/CV morph is difficult in single-pixel
+        scene.morphTo2D(0);
+        scene.render();
+
+        scene.morphToColumbusView(1);
+        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.id).toEqual('big polyline on terrain');
+        });
+        scene.completeMorph();
     });
 
     it('does not pick when allowPicking is false', function() {
