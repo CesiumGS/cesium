@@ -358,48 +358,6 @@ defineSuite([
         expectRenderPolylines(scene, [0, 0, 255, 255]);
     }
 
-    function verifyPickCombined(scene) {
-        var width = combinedRectangle.width;
-        var step = width / 3;
-
-        var west = combinedRectangle.west;
-        var north = combinedRectangle.north;
-        var south = combinedRectangle.south;
-
-        var polygonRect = new Rectangle(west, south, west + step, north);
-        var polylineRect = new Rectangle(west + step, south, west + step * 2, north);
-        var pointRect = new Rectangle(west + step * 2, south, west + step * 3, north);
-
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toPickAndCall(function(result) {
-            expect(result).toBeDefined();
-
-            result.color = Color.clone(Color.YELLOW, result.color);
-
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
-                expect(rgba[1]).toBeGreaterThan(0);
-                expect(rgba[2]).toEqual(0);
-                expect(rgba[3]).toEqual(255);
-            });
-
-            // Turn show off and on
-            result.show = false;
-            expect(scene).toRender([255, 0, 0, 255]);
-            result.show = true;
-            expect(scene).toRenderAndCall(function (rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
-                expect(rgba[1]).toBeGreaterThan(0);
-                expect(rgba[2]).toEqual(0);
-                expect(rgba[3]).toEqual(255);
-            });
-        });
-    }
-
     function expectRenderCombined(scene, color) {
         var width = combinedRectangle.width;
         var step = width / 3;
@@ -609,7 +567,6 @@ defineSuite([
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
-            verifyPickCombined(scene);
         });
     });
 
@@ -620,7 +577,6 @@ defineSuite([
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
-            verifyPickCombined(scene);
         });
     });
 
