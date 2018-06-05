@@ -12,6 +12,7 @@ define([
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/WebMercatorProjection'
     ], function(
         BoundingSphere,
@@ -27,6 +28,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         Matrix4,
+        OffsetGeometryInstanceAttribute,
         WebMercatorProjection) {
     'use strict';
 
@@ -45,6 +47,11 @@ define([
             var modelMatrix = instances[0].modelMatrix;
 
             for (i = 1; i < length; ++i) {
+                var offset = instances[i].attributes.offset;
+                if (defined(offset)) {
+                    toWorld = true;
+                    break;
+                }
                 if (!Matrix4.equals(modelMatrix, instances[i].modelMatrix)) {
                     toWorld = true;
                     break;
@@ -539,14 +546,20 @@ define([
 
     function packInstancesForCombine(instances, transferableObjects) {
         var length = instances.length;
-        var packedData = new Float64Array(1 + (length * 16));
+        var packedData = new Float64Array(1 + (length * 19));
         var count = 0;
         packedData[count++] = length;
         for (var i = 0; i < length; i++) {
             var instance = instances[i];
-
             Matrix4.pack(instance.modelMatrix, packedData, count);
             count += Matrix4.packedLength;
+            if (defined(instance.attributes) && defined(instance.attributes.offset)) {
+                var values = instance.attributes.offset.value;
+                packedData[count] = values[0];
+                packedData[count+1] = values[1];
+                packedData[count+2] = values[2];
+            }
+            count += 3;
         }
         transferableObjects.push(packedData.buffer);
 
@@ -561,10 +574,18 @@ define([
         var i = 1;
         while (i < packedInstances.length) {
             var modelMatrix = Matrix4.unpack(packedInstances, i);
+            var attributes;
             i += Matrix4.packedLength;
+            if (defined(packedInstances[i])) {
+                attributes = {
+                    offset: new OffsetGeometryInstanceAttribute(packedInstances[i], packedInstances[i+1], packedInstances[i+2])
+                };
+            }
+            i += 3;
 
             result[count++] = {
-                modelMatrix : modelMatrix
+                modelMatrix : modelMatrix,
+                attributes: attributes
             };
         }
 

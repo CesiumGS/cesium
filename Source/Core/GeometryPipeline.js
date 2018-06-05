@@ -768,6 +768,9 @@ define([
 
     var inverseTranspose = new Matrix4();
     var normalMatrix = new Matrix3();
+    var instanceOffsetScratch = new Cartesian3();
+    var offsetBoundingSphereScratch1 = new BoundingSphere();
+    var offsetBoundingSphereScratch2 = new BoundingSphere();
 
     /**
      * Transforms a geometry instance to world coordinates.  This changes
@@ -789,10 +792,28 @@ define([
         //>>includeEnd('debug');
 
         var modelMatrix = instance.modelMatrix;
+        var boundingSphere = instance.geometry.boundingSphere;
+        var hasBS = defined(boundingSphere);
+
+        if (hasBS && defined(instance.attributes.offset)) {
+            var offset = Cartesian3.fromArray(instance.attributes.offset.value, 0, instanceOffsetScratch);
+            var extend = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
+            if (extend) {
+                var origBS = BoundingSphere.clone(boundingSphere, offsetBoundingSphereScratch1);
+                var offsetBS = BoundingSphere.clone(boundingSphere, offsetBoundingSphereScratch2);
+                offsetBS.center = Cartesian3.add(offsetBS.center, offset, offsetBS.center);
+                boundingSphere = BoundingSphere.union(origBS, offsetBS, boundingSphere);
+            } else {
+                boundingSphere.center = Cartesian3.add(boundingSphere.center, offset, boundingSphere.center);
+            }
+        }
 
         if (Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
             // Already in world coordinates
             return instance;
+        }
+        if (hasBS) {
+            instance.geometry.boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
         }
 
         var attributes = instance.geometry.attributes;
@@ -813,12 +834,6 @@ define([
             transformVector(normalMatrix, attributes.normal);
             transformVector(normalMatrix, attributes.tangent);
             transformVector(normalMatrix, attributes.bitangent);
-        }
-
-        var boundingSphere = instance.geometry.boundingSphere;
-
-        if (defined(boundingSphere)) {
-            instance.geometry.boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
         }
 
         instance.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -1035,6 +1050,7 @@ define([
         var length = instances.length;
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
+
             if (defined(instance.geometry)) {
                 instanceGeometry.push(instance);
             } else if (defined(instance.westHemisphereGeometry) && defined(instance.eastHemisphereGeometry)) {

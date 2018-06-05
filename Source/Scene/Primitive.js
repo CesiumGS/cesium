@@ -18,8 +18,10 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
+        '../Core/Intersect',
         '../Core/isArray',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Core/RuntimeError',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
@@ -59,8 +61,10 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        Intersect,
         isArray,
         Matrix4,
+        Plane,
         RuntimeError,
         subdivideArray,
         TaskProcessor,
@@ -381,8 +385,10 @@ define([
 
         this._batchTable = undefined;
         this._batchTableAttributeIndices = undefined;
+        this._unmodifiedInstanceBoundingSpheres = undefined;
         this._instanceBoundingSpheres = undefined;
         this._instanceBoundingSpheresCV = undefined;
+        this._recomputeBoundingSpheres = false;
         this._batchTableBoundingSpheresUpdated = false;
         this._batchTableBoundingSphereAttributeIndices = undefined;
     }
@@ -606,19 +612,19 @@ define([
                 functionName : 'czm_batchTable_boundingSphereCenter3DHigh',
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3
-            },{
+            }, {
                 functionName : 'czm_batchTable_boundingSphereCenter3DLow',
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3
-            },{
+            }, {
                 functionName : 'czm_batchTable_boundingSphereCenter2DHigh',
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3
-            },{
+            }, {
                 functionName : 'czm_batchTable_boundingSphereCenter2DLow',
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3
-            },{
+            }, {
                 functionName : 'czm_batchTable_boundingSphereRadius',
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 1
@@ -727,6 +733,7 @@ define([
     function cloneInstance(instance, geometry) {
         return {
             geometry : geometry,
+            attributes: instance.attributes,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
             pickPrimitive : instance.pickPrimitive,
             id : instance.id
@@ -1251,6 +1258,74 @@ define([
         }
     }
 
+    var instanceOffsetScratch = new Cartesian3();
+
+    function recomputeBoundingSpheres(primitive, frameState) {
+        var offsetIndex = primitive._batchTableAttributeIndices.offset;
+        if (!primitive._recomputeBoundingSpheres || !defined(offsetIndex)) {
+            return;
+        }
+
+        var i;
+        var bs;
+        var boundingSpheres = primitive._unmodifiedInstanceBoundingSpheres;
+        var newBoundingSpheres = primitive._instanceBoundingSpheres;
+        for (i = 0; i < boundingSpheres.length; ++i) {
+            bs = boundingSpheres[i];
+            var newBS = newBoundingSpheres[i];
+            var offset = primitive._batchTable.getBatchedAttribute(i, offsetIndex, new Cartesian3());
+            newBS = bs.clone(newBS);
+            transformBoundingSphere(newBS, offset, true);
+        }
+        var combinedBS = [];
+        var combinedWestBS = [];
+        var combinedEastBS = [];
+
+        for (i = 0; i < newBoundingSpheres.length; ++i) {
+            bs = newBoundingSpheres[i];
+
+            var minX = bs.center.x - bs.radius;
+            if (minX > 0 || BoundingSphere.intersectPlane(bs, Plane.ORIGIN_ZX_PLANE) !== Intersect.INTERSECTING) {
+                combinedBS.push(bs);
+            } else {
+                combinedWestBS.push(bs);
+                combinedEastBS.push(bs);
+            }
+        }
+
+        var resultBS1 = combinedBS[0];
+        var resultBS2 = combinedEastBS[0];
+        var resultBS3 = combinedWestBS[0];
+
+        for (i = 1; i < combinedBS.length; i++) {
+            resultBS1 = BoundingSphere.union(resultBS1, combinedBS[i]);
+        }
+        for (i = 1; i < combinedEastBS.length; i++) {
+            resultBS2 = BoundingSphere.union(resultBS2, combinedEastBS[i]);
+        }
+        for (i = 1; i < combinedWestBS.length; i++) {
+            resultBS3 = BoundingSphere.union(resultBS3, combinedWestBS[i]);
+        }
+        var result = [];
+        if (defined(resultBS1)) {
+            result.push(resultBS1);
+        }
+        if (defined(resultBS2)) {
+            result.push(resultBS2);
+        }
+        if (defined(resultBS3)) {
+            result.push(resultBS3);
+        }
+
+        if (result.length !== primitive._boundingSpheres.length) {
+            throw new DeveloperError('whoops');
+        }
+
+        primitive._boundingSpheres = result;
+
+        primitive._recomputeBoundingSpheres = false;
+    }
+
     var scratchBoundingSphereCenterEncoded = new EncodedCartesian3();
     var scratchBoundingSphereCartographic = new Cartographic();
     var scratchBoundingSphereCenter2D = new Cartesian3();
@@ -1657,19 +1732,6 @@ define([
             }
         }
 
-        var offsetIndex = primitive._batchTableAttributeIndices.offset;
-        if (defined(offsetIndex)) {
-            length = primitive._boundingSpheres.length;
-            for (i = 0; i < length; ++i) {
-                boundingSphere = primitive._boundingSpheres[i];
-                var wc = primitive._boundingSphereWC[i];
-
-                //TODO: associate BS with instance.  Maybe be multiple BS for splitlongitude
-                var offset = primitive._batchTable.getBatchedAttribute(i, offsetIndex, new Cartesian3());
-                wc.center = Cartesian3.add(boundingSphere.center, offset, wc.center);
-            }
-        }
-
         if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
             Matrix4.clone(modelMatrix, primitive._modelMatrix);
             length = primitive._boundingSpheres.length;
@@ -1792,11 +1854,27 @@ define([
         }
 
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
+            if (!defined(this._unmodifiedInstanceBoundingSpheres)) {
+                var instances = this.geometryInstances;
+                if (!isArray(instances)) {
+                    instances = [instances];
+                }
+                var boundingSpheres = new Array(instances.length);
+                for (var i = 0; i < instances.length; i++) {
+                    boundingSpheres[i] = BoundingSphere.clone(instances[i].geometry.boundingSphere);
+                }
+                this._unmodifiedInstanceBoundingSpheres = boundingSpheres;
+            }
+
             if (this.asynchronous) {
                 loadAsynchronous(this, frameState);
             } else {
                 loadSynchronous(this, frameState);
             }
+        }
+
+        if (this._recomputeBoundingSpheres) {
+            recomputeBoundingSpheres(this, frameState);
         }
 
         if (this._state === PrimitiveState.COMBINED) {
@@ -1819,7 +1897,7 @@ define([
             this._material = material;
             createRS = true;
             createSP = true;
-        } else if (this._material !== material ) {
+        } else if (this._material !== material) {
             this._material = material;
             createSP = true;
         }
@@ -1868,6 +1946,21 @@ define([
         updateAndQueueCommandsFunc(this, frameState, this._colorCommands, this._pickCommands, this.modelMatrix, this.cull, this.debugShowBoundingVolume, twoPasses);
     };
 
+    var offsetBoundingSphereScratch1 = new BoundingSphere();
+    var offsetBoundingSphereScratch2 = new BoundingSphere();
+    function transformBoundingSphere(boundingSphere, offset, extend) {
+        if (extend) {
+            var origBS = BoundingSphere.clone(boundingSphere, offsetBoundingSphereScratch1);
+            var offsetBS = BoundingSphere.clone(boundingSphere, offsetBoundingSphereScratch2);
+            offsetBS.center = Cartesian3.add(offsetBS.center, offset, offsetBS.center);
+            boundingSphere = BoundingSphere.union(origBS, offsetBS, boundingSphere);
+        } else {
+            boundingSphere.center = Cartesian3.add(boundingSphere.center, offset, boundingSphere.center);
+        }
+
+        return boundingSphere;
+    }
+
     function createGetFunction(batchTable, instanceIndex, attributeIndex) {
         return function() {
             var attributeValue = batchTable.getBatchedAttribute(instanceIndex, attributeIndex);
@@ -1883,7 +1976,7 @@ define([
         };
     }
 
-    function createSetFunction(batchTable, instanceIndex, attributeIndex) {
+    function createSetFunction(batchTable, instanceIndex, attributeIndex, primitive, name) {
         return function(value) {
             //>>includeStart('debug', pragmas.debug);
             if (!defined(value) || !defined(value.length) || value.length < 1 || value.length > 4) {
@@ -1892,17 +1985,29 @@ define([
             //>>includeEnd('debug');
             var attributeValue = getAttributeValue(value);
             batchTable.setBatchedAttribute(instanceIndex, attributeIndex, attributeValue);
+            if (name === 'offset') {
+                primitive._recomputeBoundingSpheres = true;
+            }
         };
     }
+
+    var offsetScratch = new Cartesian3();
 
     function createBoundingSphereProperties(primitive, properties, index) {
         properties.boundingSphere = {
             get : function() {
                 var boundingSphere = primitive._instanceBoundingSpheres[index];
-                var modelMatrix = primitive.modelMatrix;
-                if (defined(modelMatrix) && defined(boundingSphere)) {
-                    boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix);
+                if (defined(boundingSphere)) {
+                    var modelMatrix = primitive.modelMatrix;
+                    var offset = properties.offset;
+                    if (defined(offset)) {
+                        boundingSphere.center = Cartesian3.add(Cartesian3.fromArray(offset, 0, offsetScratch), boundingSphere.center, boundingSphere.center);
+                    }
+                    if (defined(modelMatrix)) {
+                        boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix);
+                    }
                 }
+
                 return boundingSphere;
             }
         };
@@ -1984,7 +2089,7 @@ define([
                 }
 
                 if (createSetter) {
-                    properties[name].set = createSetFunction(batchTable, index, attributeIndex);
+                    properties[name].set = createSetFunction(batchTable, index, attributeIndex, this, name);
                 }
             }
         }
