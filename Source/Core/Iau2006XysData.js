@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './buildModuleUrl',
@@ -6,7 +5,7 @@ define([
         './defined',
         './Iau2006XysSample',
         './JulianDate',
-        './loadJson',
+        './Resource',
         './TimeStandard'
     ], function(
         when,
@@ -15,7 +14,7 @@ define([
         defined,
         Iau2006XysSample,
         JulianDate,
-        loadJson,
+        Resource,
         TimeStandard) {
     'use strict';
 
@@ -27,7 +26,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
+     * @param {Resource|String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
      *                 `{0}` will be replaced with the file index.
      * @param {Number} [options.interpolationOrder=9] The order of interpolation to perform on the XYS data.
      * @param {Number} [options.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
@@ -41,7 +40,7 @@ define([
     function Iau2006XysData(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._xysFileUrlTemplate = options.xysFileUrlTemplate;
+        this._xysFileUrlTemplate = Resource.createIfNeeded(options.xysFileUrlTemplate);
         this._interpolationOrder = defaultValue(options.interpolationOrder, 9);
         this._sampleZeroJulianEphemerisDate = defaultValue(options.sampleZeroJulianEphemerisDate, 2442396.5);
         this._sampleZeroDateTT = new JulianDate(this._sampleZeroJulianEphemerisDate, 0.0, TimeStandard.TAI);
@@ -239,12 +238,18 @@ define([
         var chunkUrl;
         var xysFileUrlTemplate = xysData._xysFileUrlTemplate;
         if (defined(xysFileUrlTemplate)) {
-            chunkUrl = xysFileUrlTemplate.replace('{0}', chunkIndex);
+            chunkUrl = xysFileUrlTemplate.getDerivedResource({
+                templateValues: {
+                    '0': chunkIndex
+                }
+            });
         } else {
-            chunkUrl = buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json');
+            chunkUrl = new Resource({
+                url : buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json')
+            });
         }
 
-        when(loadJson(chunkUrl), function(chunk) {
+        when(chunkUrl.fetchJson(), function(chunk) {
             xysData._chunkDownloadsInProgress[chunkIndex] = false;
 
             var samples = xysData._samples;

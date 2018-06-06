@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AxisAlignedBoundingBox',
         './Cartesian2',
@@ -10,7 +9,6 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './IntersectionTests',
-        './Matrix3',
         './Matrix4',
         './Plane',
         './Ray',
@@ -26,7 +24,6 @@ define([
         DeveloperError,
         Ellipsoid,
         IntersectionTests,
-        Matrix3,
         Matrix4,
         Plane,
         Ray,

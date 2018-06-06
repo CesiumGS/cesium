@@ -1,6 +1,6 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -10,7 +10,6 @@ define([
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
@@ -28,6 +27,7 @@ define([
         './Property'
     ], function(
         BoundingSphere,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -37,7 +37,6 @@ define([
         DeveloperError,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
-        Ellipsoid,
         Event,
         GeometryInstance,
         Iso8601,
@@ -58,6 +57,7 @@ define([
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};
 
+    var scratchColor = new Color();
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
@@ -101,30 +101,25 @@ define([
         this._materialProperty = undefined;
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
+        this._depthFailMaterialProperty = undefined;
         this._options = new GeometryOptions(entity);
+        this._id = 'polyline-' + entity.id;
+
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
 
-    defineProperties(PolylineGeometryUpdater, {
-        /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof PolylineGeometryUpdater
-         * @type {Appearance}
-         */
-        perInstanceColorAppearanceType : {
-            value : PolylineColorAppearance
-        },
-        /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof PolylineGeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            value : PolylineMaterialAppearance
-        }
-    });
-
     defineProperties(PolylineGeometryUpdater.prototype, {
+        /**
+         * Gets the unique ID associated with this updater
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {String}
+         * @readonly
+         */
+        id: {
+            get: function() {
+                return this._id;
+            }
+        },
         /**
          * Gets the entity associated with this geometry.
          * @memberof PolylineGeometryUpdater.prototype
@@ -174,6 +169,18 @@ define([
             }
         },
         /**
+         * Gets the material property used to fill the geometry when it fails the depth test.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {MaterialProperty}
+         * @readonly
+         */
+        depthFailMaterialProperty : {
+            get : function() {
+                return this._depthFailMaterialProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof PolylineGeometryUpdater.prototype
          *
@@ -207,7 +214,7 @@ define([
          * Gets the property specifying whether the geometry
          * casts or receives shadows from each light source.
          * @memberof PolylineGeometryUpdater.prototype
-         * 
+         *
          * @type {Property}
          * @readonly
          */
@@ -308,30 +315,36 @@ define([
         }
         //>>includeEnd('debug');
 
-        var color;
-        var attributes;
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time));
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
 
+        var attributes = {
+            show : show,
+            distanceDisplayCondition : distanceDisplayConditionAttribute
+        };
+
+        var currentColor;
         if (this._materialProperty instanceof ColorMaterialProperty) {
-            var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
-                currentColor = this._materialProperty.color.getValue(time);
+                currentColor = this._materialProperty.color.getValue(time, scratchColor);
             }
-            color = ColorGeometryInstanceAttribute.fromColor(currentColor);
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute,
-                color : color
-            };
-        } else {
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute
-            };
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
+            }
+            attributes.color = ColorGeometryInstanceAttribute.fromColor(currentColor);
+        }
+
+        if (defined(this._depthFailMaterialProperty) && this._depthFailMaterialProperty instanceof ColorMaterialProperty) {
+            if (defined(this._depthFailMaterialProperty.color) && (this._depthFailMaterialProperty.color.isConstant || isAvailable)) {
+                currentColor = this._depthFailMaterialProperty.color.getValue(time, scratchColor);
+            }
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
+            }
+            attributes.depthFailColor = ColorGeometryInstanceAttribute.fromColor(currentColor);
         }
 
         return new GeometryInstance({
@@ -404,6 +417,7 @@ define([
         var material = defaultValue(polyline.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
+        this._depthFailMaterialProperty = polyline.depthFailMaterial;
         this._showProperty = defaultValue(show, defaultShow);
         this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
         this._distanceDisplayConditionProperty = defaultValue(polyline.distanceDisplayCondition, defaultDistanceDisplayCondition);
@@ -433,7 +447,14 @@ define([
                 return;
             }
 
-            options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
+            var vertexFormat;
+            if (isColorMaterial && (!defined(this._depthFailMaterialProperty) || this._depthFailMaterialProperty instanceof ColorMaterialProperty)) {
+                vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
+            } else {
+                vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
+            }
+
+            options.vertexFormat = vertexFormat;
             options.positions = positions;
             options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -494,9 +515,8 @@ define([
         this._primitives = primitives;
         this._geometryUpdater = geometryUpdater;
         this._positions = [];
-
-        generateCartesianArcOptions.ellipsoid = geometryUpdater._scene.globe.ellipsoid;
     }
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
@@ -516,10 +536,12 @@ define([
         }
 
         var followSurface = Property.getValueOrDefault(polyline._followSurface, time, true);
-        if (followSurface) {
+        var globe = geometryUpdater._scene.globe;
+        if (followSurface && defined(globe)) {
+            generateCartesianArcOptions.ellipsoid = globe.ellipsoid;
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
-            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, this._geometryUpdater._scene.globe.ellipsoid);
+            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, globe.ellipsoid);
             positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
         }
 
@@ -530,14 +552,9 @@ define([
         line.distanceDisplayCondition = Property.getValueOrUndefined(polyline._distanceDisplayCondition, time, line.distanceDisplayCondition);
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var line = this._line;

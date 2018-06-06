@@ -1,8 +1,10 @@
 # Coding Guide
 
-Cesium is one of the largest JavaScript codebases in the world.  Since its start, we have maintained a high standard for code quality, which has made the codebase easier to work with for both new and experienced contributors.  We hope you find the codebase to be clean and consistent.
+CesiumJS is one of the largest JavaScript codebases in the world.  Since its start, we have maintained a high standard for code quality, which has made the codebase easier to work with for both new and experienced contributors.  We hope you find the codebase to be clean and consistent.
 
 In addition to describing typical coding conventions, this guide also covers best practices for design, maintainability, and performance.  It is the cumulative advice of many developers after years of production development, research, and experimentation.
+
+This guide applies to CesiumJS and all parts of the Cesium ecosystem written in JavaScript.
 
 :art: The color palette icon indicates a design tip.
 
@@ -14,6 +16,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 
 * [Naming](#naming)
 * [Formatting](#formatting)
+* [Linting](#linting)
 * [Units](#units)
 * [Basic Code Construction](#basic-code-construction)
 * [Functions](#functions)
@@ -34,6 +37,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 * [Design](#design)
    * [Deprecation and Breaking Changes](#deprecation-and-breaking-changes)
 * [Third-Party Libraries](#third-party-libraries)
+* [Widgets](#widgets)
 * [GLSL](#glsl)
    * [Naming](#naming-1)
    * [Formatting](#formatting-1)
@@ -131,6 +135,52 @@ function Model(options) {
 };
 ```
 * In JavaScript code, use single quotes, `'`, instead of double quotes, `"`.  In HTML, use double quotes.
+
+* Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
+
+## Linting
+
+For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/node.js).
+
+**General rules:**
+- [block-scoped-var](http://eslint.org/docs/rules/block-scoped-var)
+- [no-alert](http://eslint.org/docs/rules/no-alert)
+- [no-floating-decimal](http://eslint.org/docs/rules/no-floating-decimal)
+- [no-implicit-globals](http://eslint.org/docs/rules/no-implicit-globals)
+- [no-loop-func](http://eslint.org/docs/rules/no-loop-func)
+- [no-use-before-define](http://eslint.org/docs/rules/no-use-before-define) to prevent using variables and functions before they are defined.
+- [no-else-return](http://eslint.org/docs/rules/no-else-return)
+- [no-undef-init](http://eslint.org/docs/rules/no-undef-init)
+- [no-sequences](http://eslint.org/docs/rules/no-sequences)
+- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
+- [no-trailing-spaces](http://eslint.org/docs/rules/no-trailing-spaces)
+- [no-lonely-if](http://eslint.org/docs/rules/no-lonely-if)
+- [quotes](http://eslint.org/docs/rules/quotes) to enforce using single-quotes
+- [no-sequences](http://eslint.org/docs/rules/no-sequences)
+- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
+
+**Node-specific rules:**
+- [global-require](http://eslint.org/docs/rules/global-require)
+- [no-buffer-constructor](http://eslint.org/docs/rules/no-buffer-constructor)
+- [no-new-require](http://eslint.org/docs/rules/no-new-require)
+
+**[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
+ * When disabling linting for one line, use `//eslint-disable-line`:
+```js
+function exit(warningMessage) {
+    window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
+}
+```
+
+* When disabling linting for blocks of code, place `eslint-disable` comments on new lines and as close to the associated code as possible:
+```js
+/*eslint-disable no-empty*/
+try {
+    lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
+} catch(ex) {
+}
+/*eslint-enable no-empty*/
+```
 
 ## Units
 
@@ -236,7 +286,6 @@ if (defined(u)) {
 ```
 * Use Cesium's `freezeObject` function to create enums, e.g.,
 ```javascript
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
@@ -287,12 +336,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     updateTiles(this, frameState);
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -380,26 +429,40 @@ Some common sensible defaults are
 
 ### Throwing Exceptions
 
-* Throw Cesium's `DeveloperError` when the user has a coding error.  The most common errors are missing parameters and out-of-range parameters.  For example:
+Use the functions of Cesium's [Check](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
+
+* For example, to check that a parameter is defined and is an object:
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
-    if (!defined(cartesian)) {
-        throw new DeveloperError('cartesian is required.');
-    }
+    Check.typeOf.object('cartesian', cartesian);
     //>>includeEnd('debug');
 
     return Math.max(cartesian.x, cartesian.y, cartesian.z);
 };
 ```
+
+* For more complicated parameter checks, manually check the parameter and then throw a `DeveloperError`. Example:
+```javascript
+Cartesian3.unpackArray = function(array, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined('array', array);
+    Check.typeOf.number.greaterThanOrEquals('array.length', array.length, 3);
+    if (array.length % 3 !== 0) {
+        throw new DeveloperError('array length must be a multiple of 3.');
+    }
+    //>>includeEnd('debug');
+
+    // ...
+};
+```
+
 * To check for `DeveloperError`, surround code in `includeStart`/`includeEnd` comments, as shown above, so developer error checks can be optimized out of release builds.  Do not include required side effects inside `includeStart`/`includeEnd`, e.g.,
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
     var c = cartesian;
-    if (!defined(c)) {
-        throw new DeveloperError('cartesian is required.');
-    }
+    Check.typeOf.object('cartesian', cartesian);
     //>>includeEnd('debug');
 
     // Works in debug. Fails in release since c is optimized out!
@@ -439,6 +502,17 @@ Cartesian3.distance = function(left, right) {
 The code is not as clean, but the performance improvement is often dramatic.
 
 As described below, `from` constructors also use optional `result` parameters.
+
+Because result parameters aren't always required or returned, don't strictly rely on the result parameter you passed in to be modified.  For example:
+```js
+Cartesian3.add(v0, v1, result);
+Cartesian3.add(result, v2, result);
+``` 
+is better written as
+```js
+result = Cartesian3.add(v0, v1, result); 
+result = Cartesian3.add(result, v2, result);
+```
 
 ## Classes
 
@@ -509,11 +583,11 @@ Cartesian3.prototype.toString = function() {
 
 :art: Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
 ```javascript
-v0.add(v1, result);
+var v2 = v0.add(v1, result);
 ```
 Instead, this is written as
 ```javascript
-Cartesian3.add(v0, v1, result);
+var v2 = Cartesian3.add(v0, v1, result);
 ```
 The only exceptions are
 * `clone`
@@ -554,12 +628,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-Cesium3DTileset.prototype._processTiles(tiles3D, frameState) {
+Cesium3DTileset.prototype._processTiles(tileset, frameState) {
     var tiles = this._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -570,12 +644,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -655,13 +729,13 @@ Model.prototype.update = function(frameState) {
 
 It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example, `Cesium3DTileset.js`,
 ```javascript
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
@@ -670,16 +744,16 @@ is better written as
 ```javascript
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
 
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 ```
-even though it relies on implicitly hoisting the `loadTilesJson` function to the top of the file.
+even though it relies on implicitly hoisting the `loadTileset` function to the top of the file.
 
 ## Design
 
@@ -736,6 +810,8 @@ From release to release, we strive to keep the public Cesium API stable but also
 
 A `@private` API is considered a Cesium implementation detail and can be broken immediately without deprecation.
 
+An `@experimental` API is subject to breaking changes in future Cesium releases without deprecation. It allows for new experimental features, for instance implementing draft formats.
+
 A public identifier (class, function, property) should be deprecated before being removed.  To do so:
 
 * Decide on which future version the deprecated API should be removed.  This is on a case-by-case basis depending on how badly it impacts users and Cesium development.  Most deprecated APIs will removed in 1-3 releases.  This can be discussed in the pull request if needed.
@@ -759,6 +835,32 @@ function Foo() {
 * Be lightweight, tested, maintained, and reasonably widely used.
 * Not pollute the global namespace.
 * Provide enough value to justify adding a third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
+
+## Widgets
+
+Cesium includes a handful of standard widgets that are used in the Viewer, including animation and timeline controls, a base layer picker, and a geocoder.  These widgets are all built using [Knockout](http://knockoutjs.com/)) for automatic UI refreshing.  Knockout uses a Model View ViewModel (MVVM) design pattern.  You can learn more about this design pattern in [Understanding MVVM - A Guide For JavaScript Developers](https://addyosmani.com/blog/understanding-mvvm-a-guide-for-javascript-developers/)
+
+To learn about using the Knockout library, see the [Get started](http://knockoutjs.com/) section of their home page.  They also have a great [interactive tutorial](http://learn.knockoutjs.com/) with step by step instructions.
+
+Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax.  This lets us use knockout observables the same way we use other variables.  Call `knockout.track` to create the observables.  Here is an example from [BaseLayerPickerViewModel](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) that makes observables for `tooltip`, `showInstructions` and `_touch` properties.
+
+``` javascript
+knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
+```
+
+### Knockout subscriptions
+
+Use a knockout subscription only when you are unable to accomplish what you need to do with a standard binding.  For [example](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L588), the `Viewer` subscribes to `FullscreenButtonViewModel.isFullscreenEnabled` because it needs to change the width of the timeline widget when that value changes.  This cannot be done with binding because the value from `FullscreenButtonViewModel` is affecting a value not contained within that widget.
+
+Cesium includes a [`subscribeAndEvaluate`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/subscribeAndEvaluate.js) helper function for subscribing to knockout observable.
+
+When using a subscription, always be sure to [dispose the subscription](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L1413) when the viewmodel is no longer using it.  Otherwise the listener will continue to be notified for the lifetime of the observable.
+
+```
+fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
+// ...then later...
+fullscreenSubscription.dispose();
+```
 
 ## GLSL
 

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/arrayRemoveDuplicates',
         '../Core/BoundingSphere',
@@ -41,6 +40,7 @@ define([
      * @param {Cartesian3[]} [options.positions] The positions.
      * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this polyline will be displayed.
+     * @param {PolylineCollection} polylineCollection The renderable polyline collection.
      *
      * @see PolylineCollection
      *
@@ -88,7 +88,7 @@ define([
 
         this._actualLength = undefined;
 
-        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
+        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES); //eslint-disable-line no-use-before-define
         this._polylineCollection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
@@ -259,13 +259,11 @@ define([
                             }
                             positions.push(Cartesian3.clone(positions[0]));
                         }
-                    } else {
-                        if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
-                            if (positions.length - 1 === this._positions.length) {
-                                this._actualPositions = this._positions;
-                            } else {
-                                positions.pop();
-                            }
+                    } else if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                        if (positions.length - 1 === this._positions.length) {
+                            this._actualPositions = this._positions;
+                        } else {
+                            positions.pop();
                         }
                     }
 
@@ -276,9 +274,9 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined object returned when the polyline is picked.
+         * Gets or sets the user-defined value returned when the polyline is picked.
          * @memberof Polyline.prototype
-         * @type {Object}
+         * @type {*}
          */
         id : {
             get : function() {
@@ -289,6 +287,15 @@ define([
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
             }
         },
 
@@ -334,7 +341,7 @@ define([
             this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, modelMatrix, this._boundingVolumeWC);
         }
 
-        this._modelMatrix = modelMatrix;
+        this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
 
         if (this._segments.positions.length !== segmentPositionsLength) {
             // number of positions changed

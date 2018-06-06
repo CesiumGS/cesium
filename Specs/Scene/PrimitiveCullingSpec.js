@@ -1,70 +1,47 @@
-/*global defineSuite*/
 defineSuite([
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
-        'Core/Ellipsoid',
         'Core/GeometryInstance',
-        'Core/loadImage',
         'Core/Math',
-        'Core/Occluder',
-        'Core/PolygonGeometry',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/Resource',
         'Core/Transforms',
-        'Renderer/Sampler',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
         'Scene/BillboardCollection',
-        'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
         'Scene/HorizontalOrigin',
         'Scene/LabelCollection',
         'Scene/Material',
-        'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
-        'Scene/PrimitiveCollection',
         'Scene/SceneMode',
-        'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
         'Specs/createScene'
     ], 'Scene/PrimitiveCulling', function(
-        BoundingSphere,
-        Cartesian2,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
-        Ellipsoid,
         GeometryInstance,
-        loadImage,
         CesiumMath,
-        Occluder,
-        PolygonGeometry,
+        PerspectiveFrustum,
         Rectangle,
         RectangleGeometry,
+        Resource,
         Transforms,
-        Sampler,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
         BillboardCollection,
-        EllipsoidSurfaceAppearance,
         Globe,
         HorizontalOrigin,
         LabelCollection,
         Material,
-        OrthographicFrustum,
         PerInstanceColorAppearance,
         PolylineCollection,
         Primitive,
-        PrimitiveCollection,
         SceneMode,
-        TextureAtlas,
         VerticalOrigin,
         createScene) {
     'use strict';
@@ -78,13 +55,22 @@ defineSuite([
         scene = createScene();
         scene.primitives.destroyPrimitives = false;
 
-        return loadImage('./Data/Images/Green.png').then(function(image) {
+        return Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         });
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterEach(function() {
@@ -97,15 +83,15 @@ defineSuite([
             destination : rectangle
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         if (scene.mode !== SceneMode.SCENE2D) {
             // move the camera through the rectangle so that is behind the view frustum
             scene.camera.moveForward(100000000.0);
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
         }
     }
 
@@ -130,15 +116,15 @@ defineSuite([
             destination : rectangle
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
         scene.primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
 
         // create the globe; it should occlude the primitive
         scene.globe = new Globe();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.globe = undefined;
     }

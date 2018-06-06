@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -42,7 +41,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == 1.0); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec2 uniform', function() {
@@ -58,7 +61,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == vec2(0.25, 0.5)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec3 uniform (Cartesian3)', function() {
@@ -74,7 +81,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec3 uniform (Color)', function() {
@@ -90,7 +101,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == vec3(0.25, 0.5, 0.75)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec4 uniform (Cartesian4)', function() {
@@ -106,7 +121,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec4 uniform (Color)', function() {
@@ -122,7 +141,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == vec4(0.25, 0.5, 0.75, 1.0)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets int uniform', function() {
@@ -138,7 +161,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == 1); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets ivec2 uniform', function() {
@@ -154,7 +181,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == ivec2(1, 2)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets ivec3 uniform', function() {
@@ -170,7 +201,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == ivec3(1, 2, 3)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets ivec4 uniform', function() {
@@ -186,7 +221,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == ivec4(1, 2, 3, 4)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bool uniform', function() {
@@ -202,7 +241,11 @@ defineSuite([
             '  gl_FragColor = vec4(u); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bvec2 uniform', function() {
@@ -218,7 +261,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == bvec2(true, false)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bvec3 uniform', function() {
@@ -234,7 +281,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == bvec3(true, false, true)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bvec4 uniform', function() {
@@ -250,7 +301,11 @@ defineSuite([
             '  gl_FragColor = vec4(u == bvec4(true, false, true, false)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets mat2 uniform', function() {
@@ -271,7 +326,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets mat3 uniform', function() {
@@ -294,7 +353,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets mat4 uniform', function() {
@@ -319,7 +382,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets a struct uniform', function() {
@@ -343,7 +410,11 @@ defineSuite([
         //
         // '  gl_FragColor = vec4((u.f == 2.5) && (u.v == vec4(0.25, 0.5, 0.75, 1.0))); '
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets float uniform array', function() {
@@ -366,7 +437,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec2 uniform array', function() {
@@ -388,7 +463,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec3 uniform array', function() {
@@ -410,7 +489,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets vec4 uniform array', function() {
@@ -432,7 +515,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets int uniform array', function() {
@@ -455,7 +542,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets ivec2 uniform array', function() {
@@ -477,7 +568,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets ivec3 uniform array', function() {
@@ -499,7 +594,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets ivec4 uniform array', function() {
@@ -521,7 +620,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bool uniform array', function() {
@@ -544,7 +647,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bvec2 uniform array', function() {
@@ -566,7 +673,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bvec3 uniform array', function() {
@@ -588,7 +699,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets bvec4 uniform array', function() {
@@ -610,7 +725,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets mat2 uniform array', function() {
@@ -639,7 +758,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets mat3 uniform array', function() {
@@ -672,7 +795,11 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('sets mat4 uniform array', function() {
@@ -709,6 +836,10 @@ defineSuite([
             '  ); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 }, 'WebGL');

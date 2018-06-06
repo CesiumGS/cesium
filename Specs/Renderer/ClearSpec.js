@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
@@ -29,23 +28,23 @@ defineSuite([
 
     it('default clear', function() {
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
     });
 
     it('clears to white', function() {
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new ClearCommand({
             color : Color.WHITE
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('clears with a color mask', function() {
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new ClearCommand({
             color : Color.WHITE,
@@ -54,12 +53,12 @@ defineSuite([
                     red : true,
                     green : false,
                     blue : true,
-                    alpha : false
+                    alpha : true
                 }
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 255, 0]);
+        expect(context).toReadPixels([255, 0, 255, 255]);
     });
 
     it('clears with scissor test', function() {
@@ -68,7 +67,7 @@ defineSuite([
         });
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         command.color = Color.BLACK;
         command.renderState = RenderState.fromCache({
@@ -79,7 +78,7 @@ defineSuite([
         });
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         command.renderState = RenderState.fromCache({
             scissorTest : {
@@ -89,7 +88,7 @@ defineSuite([
         });
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
     });
 
     it('clears a framebuffer color attachment', function() {
@@ -109,9 +108,10 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels({
+        expect({
+            context : context,
             framebuffer : framebuffer
-        })).toEqual([0, 255, 0, 255]);
+        }).toReadPixels([0, 255, 0, 255]);
 
         framebuffer = framebuffer.destroy();
     });

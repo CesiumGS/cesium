@@ -54,7 +54,8 @@ function addPointAndModel() {
 
     var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 0.0);
     var heading = Cesium.Math.toRadians(135);
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, 0.0, 0.0);
+    var hpr = new Cesium.HeadingPitchRoll(heading, 0.0, 0.0);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
     viewer.entities.add({
         position : position,
@@ -65,7 +66,7 @@ function addPointAndModel() {
             distanceDisplayCondition : new Cesium.DistanceDisplayCondition(250.5)
         },
         model : {
-            uri : '../../SampleData/models/CesiumGround/Cesium_Ground.glb',
+            uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
             distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0.0, 250.5)
         }
     });

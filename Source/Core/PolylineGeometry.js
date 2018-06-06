@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
@@ -99,7 +98,7 @@ define([
      *
      * @see PolylineGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // A polyline with two connected line segments
@@ -124,8 +123,8 @@ define([
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-        if (width < 1.0) {
-            throw new DeveloperError('width must be greater than or equal to one.');
+        if (typeof width !== 'number') {
+            throw new DeveloperError('width must be a number');
         }
         if (defined(colors) && ((colorsPerVertex && colors.length < positions.length) || (!colorsPerVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
@@ -309,9 +308,11 @@ define([
         var k;
 
         var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
-
         var positionsLength = positions.length;
-        if (positionsLength < 2) {
+
+        // A width of a pixel or less is not a valid geometry, but in order to support external data
+        // that may have errors we treat this as an empty geometry.
+        if (positionsLength < 2 || width <= 0.0) {
             return undefined;
         }
 

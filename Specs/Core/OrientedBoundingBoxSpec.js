@@ -1,34 +1,31 @@
-/*global defineSuite*/
 defineSuite([
         'Core/OrientedBoundingBox',
-        'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Ellipsoid',
-        'Core/EllipsoidTangentPlane',
         'Core/Intersect',
         'Core/Math',
         'Core/Matrix3',
         'Core/Occluder',
         'Core/Plane',
         'Core/Quaternion',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Specs/createPackableSpecs'
     ], function(
         OrientedBoundingBox,
-        BoundingRectangle,
         BoundingSphere,
         Cartesian3,
         Cartesian4,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Intersect,
         CesiumMath,
         Matrix3,
         Occluder,
         Plane,
         Quaternion,
-        Rectangle) {
+        Rectangle,
+        createPackableSpecs) {
     'use strict';
 
     var positions = [
@@ -177,14 +174,12 @@ defineSuite([
 
     it('fromRectangle throws with invalid rectangles', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(1.0, -1.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, 1.0, -1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, -2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, 2.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 2.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-4.0, -2.0, 4.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 1.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, -2.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -1.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-4.0, -1.0, 4.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
     });
 
     it('fromRectangle throws with non-revolution ellipsoids', function() {
@@ -338,15 +333,17 @@ defineSuite([
             Matrix3.multiplyByVector(axes, tang, tang);
             Matrix3.multiplyByVector(axes, binorm, binorm);
             Cartesian3.cross(tang, binorm, n);
+            if (Cartesian3.magnitude(n) === 0) {
+                return undefined;
+            }
             Cartesian3.normalize(n, n);
 
             Cartesian3.add(p0, center, p0);
             var d = -Cartesian3.dot(p0, n);
             if (Math.abs(d) > 0.0001 && Cartesian3.magnitudeSquared(n) > 0.0001) {
                 return new Plane(n, d);
-            } else {
-                return undefined;
             }
+            return undefined;
         };
 
         var pl;
@@ -542,7 +539,7 @@ defineSuite([
 
         var d = Cartesian3.distance(cartesian, center) - scale.x;
         var expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from negative x direction
         Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
@@ -550,7 +547,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.x;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from positive y direction
         Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
@@ -558,7 +555,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.y;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from negative y direction
         Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
@@ -566,7 +563,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.y;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from positive z direction
         Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
@@ -574,7 +571,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.z;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from negative z direction
         Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
@@ -582,7 +579,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - scale.z;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
 
         // from corner point
         Cartesian3.add(xAxis, yAxis, cartesian);
@@ -593,7 +590,7 @@ defineSuite([
 
         d = Cartesian3.distance(cartesian, center) - cornerDistance;
         expected = d * d;
-        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON10);
     });
 
     it('distanceSquaredTo throws without box', function() {
@@ -771,4 +768,6 @@ defineSuite([
         expect(box.equals(new OrientedBoundingBox())).toEqual(true);
         expect(box.equals(undefined)).toEqual(false);
     });
+
+    createPackableSpecs(OrientedBoundingBox, new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY), [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
 });

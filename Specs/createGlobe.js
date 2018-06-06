@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/defaultValue',
         'Core/defineProperties',
@@ -18,11 +17,17 @@ define([
             callback : undefined,
             removedCallback : false,
             ellipsoid : ellipsoid,
+            beginFrame: function() {},
+            endFrame: function() {},
             update : function() {},
+            render : function() {},
             getHeight : function() {
                 return 0.0;
             },
             _surface : {},
+            tileLoadedEvent : new Event(),
+            imageryLayersUpdatedEvent : new Event(),
+            terrainProviderChanged : new Event(),
             destroy : function() {}
         };
 

@@ -1,19 +1,18 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Rectangle'
     ], function(
         BoundingSphere,
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Rectangle) {
     'use strict';
 
@@ -21,7 +20,7 @@ define([
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
      * an {@link Ellipsoid} and a camera position.  The ellipsoid is assumed to be located at the
      * origin of the coordinate system.  This class uses the algorithm described in the
-     * {@link http://cesiumjs.org/2013/04/25/Horizon-culling/|Horizon Culling} blog post.
+     * {@link https://cesium.com/blog/2013/04/25/Horizon-culling/|Horizon Culling} blog post.
      *
      * @alias EllipsoidalOccluder
      *
@@ -42,9 +41,7 @@ define([
      */
     function EllipsoidalOccluder(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('ellipsoid is required.');
-        }
+        Check.typeOf.object('ellipsoid', ellipsoid);
         //>>includeEnd('debug');
 
         this._ellipsoid = ellipsoid;
@@ -79,7 +76,7 @@ define([
                 return this._cameraPosition;
             },
             set : function(cameraPosition) {
-                // See http://cesiumjs.org/2013/04/25/Horizon-culling/
+                // See https://cesiumjs.org/2013/04/25/Horizon-culling/
                 var ellipsoid = this._ellipsoid;
                 var cv = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
                 var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
@@ -129,7 +126,7 @@ define([
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
-        // See http://cesiumjs.org/2013/04/25/Horizon-culling/
+        // See https://cesiumjs.org/2013/04/25/Horizon-culling/
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
@@ -159,12 +156,8 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPoint = function(directionToPoint, positions, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(directionToPoint)) {
-            throw new DeveloperError('directionToPoint is required');
-        }
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required');
-        }
+        Check.typeOf.object('directionToPoint', directionToPoint);
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -206,15 +199,9 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices = function(directionToPoint, vertices, stride, center, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(directionToPoint)) {
-            throw new DeveloperError('directionToPoint is required');
-        }
-        if (!defined(vertices)) {
-            throw new DeveloperError('vertices is required');
-        }
-        if (!defined(stride)) {
-            throw new DeveloperError('stride is required');
-        }
+        Check.typeOf.object('directionToPoint', directionToPoint);
+        Check.defined('vertices', vertices);
+        Check.typeOf.number('stride', stride);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -241,7 +228,7 @@ define([
     var subsampleScratch = [];
 
     /**
-     * Computes a point that can be used for horizon culling of an rectangle.  If the point is below
+     * Computes a point that can be used for horizon culling of a rectangle.  If the point is below
      * the horizon, the ellipsoid-conforming rectangle is guaranteed to be below the horizon as well.
      * The returned point is expressed in the ellipsoid-scaled space and is suitable for use with
      * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
@@ -254,9 +241,7 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle = function(rectangle, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         var positions = Rectangle.subsample(rectangle, ellipsoid, 0.0, subsampleScratch);
@@ -305,6 +290,10 @@ define([
     var directionToPointScratch = new Cartesian3();
 
     function computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint) {
+        if (Cartesian3.equals(directionToPoint, Cartesian3.ZERO)) {
+            return directionToPoint;
+        }
+
         ellipsoid.transformPositionToScaledSpace(directionToPoint, directionToPointScratch);
         return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
     }

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         './ImageryState'
@@ -50,7 +49,7 @@ define([
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
 
-        loadingImagery.processStateMachine(frameState, !this.useWebMercatorT);
+        loadingImagery.processStateMachine(frameState, !this.useWebMercatorT, tile._priorityFunction);
 
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
@@ -65,7 +64,7 @@ define([
         // Find some ancestor imagery we can use while this imagery is still loading.
         var ancestor = loadingImagery.parent;
         var closestAncestorThatNeedsLoading;
-        while (defined(ancestor) && ancestor.state !== ImageryState.READY) {
+        while (defined(ancestor) && (ancestor.state !== ImageryState.READY || (!this.useWebMercatorT && !defined(ancestor.texture)))) {
             if (ancestor.state !== ImageryState.FAILED && ancestor.state !== ImageryState.INVALID) {
                 // ancestor is still loading
                 closestAncestorThatNeedsLoading = closestAncestorThatNeedsLoading || ancestor;
@@ -92,12 +91,11 @@ define([
                 // Push the ancestor's load process along a bit.  This is necessary because some ancestor imagery
                 // tiles may not be attached directly to a terrain tile.  Such tiles will never load if
                 // we don't do it here.
-                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT);
+                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT, tile._priorityFunction);
                 return false; // not done loading
-            } else {
-                // This imagery tile is failed or invalid, and we have the "best available" substitute.
-                return true; // done loading
             }
+            // This imagery tile is failed or invalid, and we have the "best available" substitute.
+            return true; // done loading
         }
 
         return false; // not done loading

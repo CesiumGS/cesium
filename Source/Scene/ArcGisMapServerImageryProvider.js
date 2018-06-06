@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -11,10 +10,9 @@ define([
         '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
-        '../Core/loadJson',
-        '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
@@ -35,10 +33,9 @@ define([
         Event,
         GeographicProjection,
         GeographicTilingScheme,
-        loadJson,
-        loadJsonp,
         CesiumMath,
         Rectangle,
+        Resource,
         RuntimeError,
         TileProviderError,
         WebMercatorProjection,
@@ -57,7 +54,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the ArcGIS MapServer service.
+     * @param {Resource|String} options.url The URL of the ArcGIS MapServer service.
      * @param {String} [options.token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
@@ -70,8 +67,6 @@ define([
      *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
      *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
      *        parameter.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
@@ -94,7 +89,7 @@ define([
      *                                        a tiled server.
      *
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
@@ -107,7 +102,7 @@ define([
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
      *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
-     * 
+     *
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
@@ -120,10 +115,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        this._token = options.token;
+        var resource = Resource.createIfNeeded(options.url);
+        resource.appendForwardSlash();
+
+        if (defined(options.token)) {
+            resource.setQueryParameters({
+                token: options.token
+            });
+        }
+
+        this._resource = resource;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._proxy = options.proxy;
 
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
@@ -198,7 +200,7 @@ define([
                 // Install the default tile discard policy if none has been supplied.
                 if (!defined(that._tileDiscardPolicy)) {
                     that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                        missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
+                        missingImageUrl : buildImageResource(that, 0, 0, that._maximumLevel).url,
                         pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)],
                         disableCheckIfAllPixelsAreTransparent : true
                     });
@@ -217,24 +219,18 @@ define([
         }
 
         function metadataFailure(e) {
-            var message = 'An error occurred while accessing ' + that._url + '.';
+            var message = 'An error occurred while accessing ' + that._resource.url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
             that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
-            var parameters = {
-                f: 'json'
-            };
-
-            if (defined(that._token)) {
-                parameters.token = that._token;
-            }
-
-            var metadata = loadJsonp(that._url, {
-                parameters : parameters,
-                proxy : that._proxy
+            var resource = that._resource.getDerivedResource({
+                queryParameters: {
+                    f: 'json'
+                }
             });
+            var metadata = resource.fetchJsonp();
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -246,46 +242,44 @@ define([
         }
     }
 
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var url;
+    function buildImageResource(imageryProvider, x, y, level, request) {
+        var resource;
         if (imageryProvider._useTiles) {
-            url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
+            resource = imageryProvider._resource.getDerivedResource({
+                url: 'tile/' + level + '/' + y + '/' + x,
+                request: request
+            });
         } else {
             var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            var bbox = nativeRectangle.west + '%2C' + nativeRectangle.south + '%2C' + nativeRectangle.east + '%2C' + nativeRectangle.north;
+            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
 
-            url = imageryProvider._url + '/export?';
-            url += 'bbox=' + bbox;
-            if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
-                url += '&bboxSR=4326&imageSR=4326';
+            var query = {
+                bbox: bbox,
+                size: imageryProvider._tileWidth + ',' + imageryProvider._tileHeight,
+                format: 'png',
+                transparent: true,
+                f: 'image'
+            };
+
+            if (imageryProvider._tilingScheme.projection instanceof GeographicProjection) {
+                query.bboxSR = 4326;
+                query.imageSR = 4326;
             } else {
-                url += '&bboxSR=3857&imageSR=3857';
+                query.bboxSR = 3857;
+                query.imageSR = 3857;
             }
-            url += '&size=' + imageryProvider._tileWidth + '%2C' + imageryProvider._tileHeight;
-            url += '&format=png&transparent=true&f=image';
-
             if (imageryProvider.layers) {
-                url += '&layers=show:' + imageryProvider.layers;
+                query.layers = 'show:' + imageryProvider.layers;
             }
+
+            resource = imageryProvider._resource.getDerivedResource({
+                url: 'export',
+                request: request,
+                queryParameters: query
+            });
         }
 
-        var token = imageryProvider._token;
-        if (defined(token)) {
-            if (url.indexOf('?') === -1) {
-                url += '?';
-            }
-            if (url[url.length - 1] !== '?'){
-                url += '&';
-            }
-            url += 'token=' + token;
-        }
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
+        return resource;
     }
 
     defineProperties(ArcGisMapServerImageryProvider.prototype, {
@@ -297,7 +291,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource._url;
             }
         },
 
@@ -309,7 +303,7 @@ define([
          */
         token : {
             get : function() {
-                return this._token;
+                return this._resource.queryParameters.token;
             }
         },
 
@@ -321,7 +315,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._resource.proxy;
             }
         },
 
@@ -548,6 +542,8 @@ define([
 
         /**
          * Gets the comma-separated list of layer IDs to show.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         *
          * @type {String}
          */
         layers : {
@@ -556,7 +552,6 @@ define([
             }
         }
     });
-
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
@@ -579,6 +574,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -586,15 +582,14 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    ArcGisMapServerImageryProvider.prototype.requestImage = function(x, y, level) {
+    ArcGisMapServerImageryProvider.prototype.requestImage = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
 
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
     };
 
     /**
@@ -629,7 +624,7 @@ define([
         var horizontal;
         var vertical;
         var sr;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
+        if (this._tilingScheme.projection instanceof GeographicProjection) {
             horizontal = CesiumMath.toDegrees(longitude);
             vertical = CesiumMath.toDegrees(latitude);
             sr = '4326';
@@ -640,26 +635,28 @@ define([
             sr = '3857';
         }
 
-        var url = this._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
-        url += '&geometry=' + horizontal + ',' + vertical;
-        url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
-        url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
-        url += '&sr=' + sr;
-
-        url += '&layers=visible';
+        var layers = 'visible';
         if (defined(this._layers)) {
-            url += ':' + this._layers;
+            layers += ':' + this._layers;
         }
 
-        if (defined(this._token)) {
-            url += '&token=' + this._token;
-        }
+        var query = {
+            f: 'json',
+            tolerance: 2,
+            geometryType: 'esriGeometryPoint',
+            geometry: horizontal + ',' + vertical,
+            mapExtent: rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north,
+            imageDisplay: this._tileWidth + ',' + this._tileHeight + ',96',
+            sr: sr,
+            layers: layers
+        };
 
-        if (defined(this._proxy)) {
-            url = this._proxy.getURL(url);
-        }
+        var resource = this._resource.getDerivedResource({
+            url: 'identify',
+            queryParameters: query
+        });
 
-        return loadJson(url).then(function(json) {
+        return resource.fetchJson().then(function(json) {
             var result = [];
 
             var features = json.results;

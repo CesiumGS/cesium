@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ImageryLayerCollection',
         'Core/Cartesian3',
@@ -304,7 +303,7 @@ defineSuite([
             return pollToPromise(function() {
                 globe._surface._debug.enableDebugOutput = true;
                 scene.render();
-                return globe._surface.tileProvider.ready && globe._surface._tileLoadQueue.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
+                return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
             });
         }
 
@@ -544,9 +543,8 @@ defineSuite([
                     // At level 1, only the northwest quadrant has a valid tile.
                     if (level !== 1 || (x === 0 && y === 0)) {
                         return ImageryProvider.loadImage(this, 'Data/Images/Blue.png');
-                    } else {
-                        return when.reject();
                     }
+                    return when.reject();
                 }
             };
 

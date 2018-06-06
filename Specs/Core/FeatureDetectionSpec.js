@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/FeatureDetection'
     ], function(
@@ -19,6 +18,11 @@ defineSuite([
     it('detects typed array support', function() {
         var supportsTypedArrays = FeatureDetection.supportsTypedArrays();
         expect(typeof supportsTypedArrays).toEqual('boolean');
+    });
+
+    it('detects web assembly support', function() {
+        var supportsWebAssembly = FeatureDetection.supportsWebAssembly();
+        expect(typeof supportsWebAssembly).toEqual('boolean');
     });
 
     function checkVersionArray(array) {
@@ -77,6 +81,18 @@ defineSuite([
         }
     });
 
+    it('detects Edge', function() {
+        var isEdge = FeatureDetection.isEdge();
+        expect(typeof isEdge).toEqual('boolean');
+
+        if (isEdge) {
+            var edgeVersion = FeatureDetection.edgeVersion();
+            checkVersionArray(edgeVersion);
+
+            console.log('detected Edge ' + edgeVersion.join('.'));
+        }
+    });
+
     it('detects Firefox', function() {
         var isFirefox = FeatureDetection.isFirefox();
         expect(typeof isFirefox).toEqual('boolean');
@@ -98,5 +114,9 @@ defineSuite([
         } else {
             expect(FeatureDetection.imageRenderingValue()).not.toBeDefined();
         }
+    });
+
+    it('detects Node.js', function() {
+        expect(FeatureDetection.isNodeJs()).toBe(false);
     });
 });

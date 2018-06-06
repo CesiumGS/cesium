@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './freezeObject'
     ], function(
@@ -68,14 +67,6 @@ define([
         RIGHT_CLICK : 7,
 
         /**
-         * Represents a mouse right double click event.
-         *
-         * @type {Number}
-         * @constant
-         */
-        RIGHT_DOUBLE_CLICK : 8,
-
-        /**
          * Represents a mouse middle button down event.
          *
          * @type {Number}
@@ -98,14 +89,6 @@ define([
          * @constant
          */
         MIDDLE_CLICK : 12,
-
-        /**
-         * Represents a mouse middle double click event.
-         *
-         * @type {Number}
-         * @constant
-         */
-        MIDDLE_DOUBLE_CLICK : 13,
 
         /**
          * Represents a mouse move event.

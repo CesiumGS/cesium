@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -99,7 +98,7 @@ define([
         this._pauseCount = 0;
 
         var that = this;
-        this._preRenderRemoveListener = this._scene.preRender.addEventListener(function(scene, time) {
+        this._preUpdateRemoveListener = this._scene.preUpdate.addEventListener(function(scene, time) {
             update(that, time);
         });
 
@@ -268,14 +267,12 @@ define([
      *
      * @memberof FrameRateMonitor
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see FrameRateMonitor#isDestroyed
      */
     FrameRateMonitor.prototype.destroy = function() {
-        this._preRenderRemoveListener();
+        this._preUpdateRemoveListener();
 
         if (defined(this._visibilityChangeRemoveListener)) {
             this._visibilityChangeRemoveListener();

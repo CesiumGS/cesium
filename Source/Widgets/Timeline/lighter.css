@@ -1,7 +1,5 @@
 .cesium-lighter .cesium-timeline-bar {
-    background: -moz-linear-gradient(top, #eeeeee 0%, #ffffff 50%, #fafafa 100%); /* FF3.6+ */
-    background: -webkit-linear-gradient(top, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* Chrome10+,Safari5.1+ */
-    background: linear-gradient(to bottom, #eeeeee 0%,#ffffff 50%,#fafafa 100%); /* W3C */
+    background: linear-gradient(to bottom, #eeeeee 0%,#ffffff 50%,#fafafa 100%);
 }
 
 .cesium-lighter .cesium-timeline-ticLabel {

@@ -1,12 +1,12 @@
-/*global define*/
 define([
+        './Credit',
         './defined'
     ], function(
+        Credit,
         defined) {
     'use strict';
 
-    var MapboxApi = {
-    };
+    var MapboxApi = {};
 
     /**
      * The default Mapbox API access token to use if one is not provided to the
@@ -21,7 +21,9 @@ define([
      */
     MapboxApi.defaultAccessToken = undefined;
 
-    var printedMpaboxWarning = false;
+    var printedMapboxWarning = false;
+    var errorCredit;
+    var errorString = '<b>This application is using Cesium\'s default Mapbox access token.  Please create a new access token for the application as soon as possible and prior to deployment by visiting <a href=https://www.mapbox.com/account/apps/>https://www.mapbox.com/account/apps/</a>, and provide your token to Cesium by setting the Cesium.MapboxApi.defaultAccessToken property before constructing the CesiumWidget or any other object that uses the Mapbox API.</b>';
 
     MapboxApi.getAccessToken = function(providedToken) {
         if (defined(providedToken)) {
@@ -29,14 +31,26 @@ define([
         }
 
         if (!defined(MapboxApi.defaultAccessToken)) {
-            if (!printedMpaboxWarning) {
-                console.log('This application is using Cesium\'s default Mapbox access token.  Please create a new access token for the application as soon as possible and prior to deployment by visiting https://www.mapbox.com/account/apps/, and provide your token to Cesium by setting the Cesium.MapboxApi.defaultAccessToken property before constructing the CesiumWidget or any other object that uses the Mapbox API.');
-                printedMpaboxWarning = true;
+            if (!printedMapboxWarning) {
+                console.log(errorString);
+                printedMapboxWarning = true;
             }
-            return 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6IjA2YzBjOTM3YzFlYzljYmQ5NDAxZWI1Y2ZjNzZlM2E1In0.vDZL2SPFEpi_f7ziAIP_yw';
+            return 'pk.eyJ1IjoiYW5hbHl0aWNhbGdyYXBoaWNzIiwiYSI6ImNpd204Zm4wejAwNzYyeW5uNjYyZmFwdWEifQ.7i-VIZZWX8pd1bTfxIVj9g';
         }
 
         return MapboxApi.defaultAccessToken;
+    };
+
+    MapboxApi.getErrorCredit = function(providedToken) {
+        if (defined(providedToken) || defined(MapboxApi.defaultAccessToken)) {
+            return undefined;
+        }
+
+        if (!defined(errorCredit)) {
+            errorCredit = new Credit(errorString, true);
+        }
+
+        return errorCredit;
     };
 
     return MapboxApi;

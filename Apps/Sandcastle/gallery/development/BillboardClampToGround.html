@@ -32,12 +32,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-
-var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/world'
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
 });
-viewer.terrainProvider = cesiumTerrainProviderMeshes;
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var ellipsoid = viewer.scene.globe.ellipsoid;
@@ -60,7 +57,7 @@ for (var y = 0; y < gridHeight; ++y) {
         var longitude = Cesium.Math.lerp(e.west, e.east, x / (gridWidth - 1));
         var latitude = Cesium.Math.lerp(e.south, e.north, y / (gridHeight - 1));
         var position = new Cesium.Cartographic(longitude, latitude);
-        
+
         billboardCollection.add({
             position : ellipsoid.cartographicToCartesian(position),
             image : '../images/facility.gif',

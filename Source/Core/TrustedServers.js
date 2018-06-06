@@ -1,16 +1,13 @@
-/*global define*/
 define([
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    '../ThirdParty/Uri'
-], function(
-    defined,
-    defineProperties,
-    DeveloperError,
-    Uri) {
+        '../ThirdParty/Uri',
+        './defined',
+        './DeveloperError'
+    ], function(
+        Uri,
+        defined,
+        DeveloperError) {
     'use strict';
-    
+
     /**
      * A singleton that contains all of the servers that are trusted. Credentials will be sent with
      * any requests to these servers.
@@ -151,6 +148,6 @@ define([
     TrustedServers.clear = function() {
         _servers = {};
     };
-    
+
     return TrustedServers;
 });

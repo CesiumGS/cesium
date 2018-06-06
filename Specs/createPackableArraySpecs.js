@@ -1,10 +1,7 @@
-/*global define*/
 define([
-        'Core/defaultValue',
-        'Core/defined'
+        'Core/defaultValue'
     ], function(
-        defaultValue,
-        defined) {
+        defaultValue) {
     'use strict';
 
     function createPackableArraySpecs(packable, unpackedArray, packedArray, namePrefix) {

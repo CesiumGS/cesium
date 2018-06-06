@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AttributeCompression',
         './Cartesian2',
@@ -7,7 +6,6 @@ define([
         './defaultValue',
         './defined',
         './Math',
-        './Matrix3',
         './Matrix4',
         './TerrainQuantization'
     ], function(
@@ -18,7 +16,6 @@ define([
         defaultValue,
         defined,
         CesiumMath,
-        Matrix3,
         Matrix4,
         TerrainQuantization) {
     'use strict';
@@ -356,22 +353,20 @@ define([
                 offsetInBytes : numCompressed0 * sizeInBytes,
                 strideInBytes : stride
             }];
-        } else {
-            return [{
-                index : attributes.compressed0,
-                vertexBuffer : buffer,
-                componentDatatype : datatype,
-                componentsPerAttribute : numCompressed0
-            }];
         }
+        return [{
+            index : attributes.compressed0,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : numCompressed0
+        }];
     };
 
     TerrainEncoding.prototype.getAttributeLocations = function() {
         if (this.quantization === TerrainQuantization.NONE) {
             return attributesNone;
-        } else {
-            return attributes;
         }
+        return attributes;
     };
 
     TerrainEncoding.clone = function(encoding, result) {

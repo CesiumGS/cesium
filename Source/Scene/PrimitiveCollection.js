@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/createGuid',
         '../Core/defaultValue',
@@ -42,6 +41,9 @@ define([
 
         this._primitives = [];
         this._guid = createGuid();
+
+        // Used by the OrderedGroundPrimitiveCollection
+        this._zIndex = undefined;
 
         /**
          * Determines if primitives in this collection will be shown.
@@ -135,7 +137,7 @@ define([
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * scene.primitives.remove(p);  // Returns true
-     * 
+     *
      * @see PrimitiveCollection#destroyPrimitives
      */
     PrimitiveCollection.prototype.remove = function(primitive) {
@@ -337,7 +339,7 @@ define([
      *   var p = primitives.get(i);
      *   p.show = !p.show;
      * }
-     * 
+     *
      * @see PrimitiveCollection#length
      */
     PrimitiveCollection.prototype.get = function(index) {
@@ -393,14 +395,12 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
      * @example
      * primitives = primitives && primitives.destroy();
-     * 
+     *
      * @see PrimitiveCollection#isDestroyed
      */
     PrimitiveCollection.prototype.destroy = function() {

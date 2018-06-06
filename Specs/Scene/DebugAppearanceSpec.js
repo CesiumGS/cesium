@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/DebugAppearance',
         'Core/ComponentDatatype',
@@ -8,7 +7,6 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/VertexFormat',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
         'Specs/createScene'
@@ -21,7 +19,6 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         VertexFormat,
-        ClearCommand,
         Appearance,
         Primitive,
         createScene) {
@@ -65,7 +62,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('default construct with normal, binormal, or tangent attribute name', function() {
+    it('default construct with normal, bitangent, or tangent attribute name', function() {
         var a = new DebugAppearance({
             attributeName : 'normal',
             perInstanceAttribute : false
@@ -198,32 +195,32 @@ defineSuite([
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
-    it('renders binormal', function() {
+    it('renders bitangent', function() {
         var vertexFormat = new VertexFormat({
             position : true,
             normal : true,
-            binormal : true
+            bitangent : true
         });
         primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
-                attributeName : 'binormal',
+                attributeName : 'bitangent',
                 perInstanceAttribute : false
             }),
             asynchronous : false,
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders tangent', function() {
@@ -242,10 +239,10 @@ defineSuite([
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders st', function() {
@@ -263,10 +260,10 @@ defineSuite([
             compressVertices : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders float', function() {
@@ -288,10 +285,10 @@ defineSuite([
             asynchronous : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders vec2', function() {
@@ -313,10 +310,10 @@ defineSuite([
             asynchronous : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders vec3', function() {
@@ -338,10 +335,10 @@ defineSuite([
             asynchronous : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders vec4', function() {
@@ -362,10 +359,10 @@ defineSuite([
             }),
             asynchronous : false
         });
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

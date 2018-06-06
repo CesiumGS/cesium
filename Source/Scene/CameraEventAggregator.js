@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/defined',
@@ -71,6 +70,8 @@ define([
             aggregator._buttonsDown++;
             isDown[key] = true;
             pressTime[key] = new Date();
+            // Compute center position and store as start point.
+            Cartesian2.lerp(event.position1, event.position2, 0.5, eventStartPosition[key]);
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
@@ -250,7 +251,7 @@ define([
      * @alias CameraEventAggregator
      * @constructor
      *
-     * @param {Canvas} [element=document] The element to handle events for.
+     * @param {Canvas} [canvas=document] The element to handle events for.
      *
      * @see ScreenSpaceEventHandler
      */
@@ -417,7 +418,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (type === CameraEventType.WHEEL || type === CameraEventType.PINCH) {
+        if (type === CameraEventType.WHEEL) {
             return this._currentMousePosition;
         }
 
@@ -492,8 +493,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

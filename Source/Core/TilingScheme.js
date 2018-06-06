@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defineProperties',
         './DeveloperError'
@@ -21,7 +20,9 @@ define([
      * @see GeographicTilingScheme
      */
     function TilingScheme(options) {
+        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
+        //>>includeEnd('debug');
     }
 
     defineProperties(TilingScheme.prototype, {
@@ -42,7 +43,6 @@ define([
         rectangle : {
             get : DeveloperError.throwInstantiationError
         },
-
 
         /**
          * Gets the map projection used by the tiling scheme.
@@ -73,7 +73,7 @@ define([
     TilingScheme.prototype.getNumberOfYTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
-     * Transforms an rectangle specified in geodetic radians to the native coordinate system
+     * Transforms a rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      * @function
      *
@@ -86,7 +86,7 @@ define([
     TilingScheme.prototype.rectangleToNativeRectangle = DeveloperError.throwInstantiationError;
 
     /**
-     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
+     * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
      * of the tiling scheme.
      * @function
      *

@@ -1,10 +1,9 @@
-/*global defineSuite*/
 defineSuite([
-        'Scene/FrustumCommands',
-        'Scene/Pass'
+        'Renderer/Pass',
+        'Scene/FrustumCommands'
     ], function(
-        FrustumCommands,
-        Pass) {
+        Pass,
+        FrustumCommands) {
     'use strict';
 
     it('constructs without arguments', function() {

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
@@ -69,7 +68,7 @@ define([
      *     negativeZ : 'skybox_nz.png'
      *   }
      * });
-     * 
+     *
      * @see Scene#skyBox
      * @see Transforms.computeTemeToPseudoFixedMatrix
      */
@@ -113,6 +112,8 @@ define([
      * @exception {DeveloperError} this.sources properties must all be the same type.
      */
     SkyBox.prototype.update = function(frameState) {
+        var that = this;
+
         if (!this.show) {
             return undefined;
         }
@@ -170,8 +171,6 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
-            var that = this;
-
             command.uniformMap = {
                 u_cubeMap: function() {
                     return that._cubeMap;
@@ -232,14 +231,12 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
      * @example
      * skyBox = skyBox && skyBox.destroy();
-     * 
+     *
      * @see SkyBox#isDestroyed
      */
     SkyBox.prototype.destroy = function() {

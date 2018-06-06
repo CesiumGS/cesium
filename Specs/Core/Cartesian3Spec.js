@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -375,6 +374,12 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian3.normalize(Cartesian3.ZERO, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);
         var right = new Cartesian3(4.0, 5.0, 7.0);
@@ -390,6 +395,25 @@ defineSuite([
         var right = new Cartesian3(4.0, 5.0, 7.0);
         var expectedResult = new Cartesian3(8.0, 15.0, 42.0);
         var returnedResult = Cartesian3.multiplyComponents(left, right, left);
+        expect(left).toBe(returnedResult);
+        expect(left).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter', function() {
+        var left = new Cartesian3(2.0, 3.0, 6.0);
+        var right = new Cartesian3(4.0, 5.0, 8.0);
+        var result = new Cartesian3();
+        var expectedResult = new Cartesian3(0.5, 0.6, 0.75);
+        var returnedResult = Cartesian3.divideComponents(left, right, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter that is an input parameter', function() {
+        var left = new Cartesian3(2.0, 3.0, 6.0);
+        var right = new Cartesian3(4.0, 5.0, 8.0);
+        var expectedResult = new Cartesian3(0.5, 0.6, 0.75);
+        var returnedResult = Cartesian3.divideComponents(left, right, left);
         expect(left).toBe(returnedResult);
         expect(left).toEqual(expectedResult);
     });
@@ -733,6 +757,20 @@ defineSuite([
         var left = new Cartesian3(4.0, 5.0, 6.0);
         expect(function() {
             Cartesian3.multiplyComponents(left, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no left parameter', function() {
+        var right = new Cartesian3(4.0, 5.0, 6.0);
+        expect(function() {
+            Cartesian3.divideComponents(undefined, right);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no right parameter', function() {
+        var left = new Cartesian3(4.0, 5.0, 6.0);
+        expect(function() {
+            Cartesian3.divideComponents(left, undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1143,6 +1181,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('divideComponents throws with no result', function() {
+        expect(function() {
+            Cartesian3.divideComponents(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
     it('add throws with no result', function() {
         expect(function() {
             Cartesian3.add(new Cartesian3(), new Cartesian3());
@@ -1194,6 +1238,30 @@ defineSuite([
     it('mostOrthogonalAxis throws with no result', function() {
         expect(function() {
             Cartesian3.mostOrthogonalAxis(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('projects vector a onto vector b', function() {
+        var a = new Cartesian3(0.0, 1.0, 0.0);
+        var b = new Cartesian3(1.0, 0.0, 0.0);
+        var result = Cartesian3.projectVector(a, b, new Cartesian3());
+        expect(result).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+
+        a = new Cartesian3(1.0, 1.0, 0.0);
+        b = new Cartesian3(1.0, 0.0, 0.0);
+        result = Cartesian3.projectVector(a, b, new Cartesian3());
+        expect(result).toEqual(new Cartesian3(1.0, 0.0, 0.0));
+    });
+
+    it('projectVector throws when missing parameters', function() {
+        expect(function() {
+            return Cartesian3.projectVector(undefined, new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+        expect(function() {
+            return Cartesian3.projectVector(new Cartesian3(), undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+        expect(function() {
+            return Cartesian3.projectVector(new Cartesian3(), new Cartesian3(), undefined);
         }).toThrowDeveloperError();
     });
 

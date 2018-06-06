@@ -1,7 +1,6 @@
-/*global define*/
 define([
         '../Core/defaultValue',
-        './Pass'
+        '../Renderer/Pass'
     ], function(
         defaultValue,
         Pass) {

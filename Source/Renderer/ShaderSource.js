@@ -1,14 +1,15 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Renderer/modernizeShader',
         '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
+        modernizeShader,
         CzmBuiltins,
         AutomaticUniforms) {
     'use strict';
@@ -124,13 +125,15 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (badNodes.length !== 0) {
             var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
-            for (j = 0; j < badNodes.length; ++j) {
-                message = message + badNodes[j].name + '\n';
+            for (var k = 0; k < badNodes.length; ++k) {
+                message = message + badNodes[k].name + '\n';
             }
             throw new DeveloperError(message);
         }
+        //>>includeEnd('debug');
     }
 
     function getBuiltinsAndAutomaticUniforms(shaderSource) {
@@ -150,7 +153,7 @@ define([
         return builtinsSource.replace(root.glslSource, '');
     }
 
-    function combineShader(shaderSource, isFragmentShader) {
+    function combineShader(shaderSource, isFragmentShader, context) {
         var i;
         var length;
 
@@ -169,9 +172,12 @@ define([
         // Extract existing shader version from sources
         var version;
         combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function(match, group1) {
+            //>>includeStart('debug', pragmas.debug);
             if (defined(version) && version !== group1) {
                 throw new DeveloperError('inconsistent versions found: ' + version + ' and ' + group1);
             }
+            //>>includeEnd('debug');
+
             // Extract #version to put at the top
             version = group1;
 
@@ -179,6 +185,17 @@ define([
             // are not off by one.  There can be only one #version directive
             // and it must appear at the top of the source, only preceded by
             // whitespace and comments.
+            return '\n';
+        });
+
+        // Extract shader extensions from sources
+        var extensions = [];
+        combinedSources = combinedSources.replace(/#extension.*\n/gm, function(match) {
+            // Extract extension to put at the top
+            extensions.push(match);
+
+            // Replace original #extension directive with a new line so the line numbers
+            // are not off by one.
             return '\n';
         });
 
@@ -197,7 +214,12 @@ define([
         // #version must be first
         // defaults to #version 100 if not specified
         if (defined(version)) {
-            result = '#version ' + version;
+            result = '#version ' + version + '\n';
+        }
+
+        var extensionsLength = extensions.length;
+        for (i = 0; i < extensionsLength; i++) {
+            result += extensions[i];
         }
 
         if (isFragmentShader) {
@@ -220,6 +242,12 @@ define([
             }
         }
 
+        // GLSLModernizer inserts its own layout qualifiers
+        // at this position in the source
+        if (context.webgl2) {
+            result += '#define OUTPUT_DECLARATION\n\n';
+        }
+
         // append built-ins
         if (shaderSource.includeBuiltIns) {
             result += getBuiltinsAndAutomaticUniforms(combinedSources);
@@ -230,6 +258,11 @@ define([
 
         // append actual source
         result += combinedSources;
+
+        // modernize the source
+        if (context.webgl2) {
+            result = modernizeShader(result, isFragmentShader, true);
+        }
 
         return result;
     }
@@ -275,12 +308,12 @@ define([
         this.pickColorQualifier = pickColorQualifier;
         this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
     }
-    
+
     ShaderSource.prototype.clone = function() {
         return new ShaderSource({
             sources : this.sources,
             defines : this.defines,
-            pickColorQuantifier : this.pickColorQualifier,
+            pickColorQualifier : this.pickColorQualifier,
             includeBuiltIns : this.includeBuiltIns
         });
     };
@@ -293,19 +326,23 @@ define([
     /**
      * Create a single string containing the full, combined vertex shader with all dependencies and defines.
      *
+     * @param {Context} context The current rendering context
+     *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedVertexShader = function() {
-        return combineShader(this, false);
+    ShaderSource.prototype.createCombinedVertexShader = function(context) {
+        return combineShader(this, false, context);
     };
 
     /**
      * Create a single string containing the full, combined fragment shader with all dependencies and defines.
      *
+     * @param {Context} context The current rendering context
+     *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedFragmentShader = function() {
-        return combineShader(this, true);
+    ShaderSource.prototype.createCombinedFragmentShader = function(context) {
+        return combineShader(this, true, context);
     };
 
     /**

@@ -1,16 +1,11 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/SkyBox',
-        'Core/Cartesian3',
-        'Core/loadImage',
-        'Renderer/ClearCommand',
+        'Core/Resource',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         SkyBox,
-        Cartesian3,
-        loadImage,
-        ClearCommand,
+        Resource,
         SceneMode,
         createScene) {
     'use strict';
@@ -22,7 +17,7 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        return loadImage('./Data/Images/Blue.png').then(function(image) {
+        return Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
             loadedImage = image;
         });
     });
@@ -52,10 +47,10 @@ defineSuite([
             }
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.skyBox = skyBox;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('does not render when show is false', function() {
@@ -71,10 +66,10 @@ defineSuite([
             show : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.skyBox = skyBox;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('does not render in 2D', function() {
@@ -90,10 +85,10 @@ defineSuite([
         });
 
         scene.mode = SceneMode.SCENE2D;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.skyBox = skyBox;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('does not render without a render pass', function() {

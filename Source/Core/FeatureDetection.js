@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -8,6 +7,7 @@ define([
         defined,
         Fullscreen) {
     'use strict';
+    /*global CanvasPixelArray*/
 
     var theNavigator;
     if (typeof navigator !== 'undefined') {
@@ -29,11 +29,13 @@ define([
     function isChrome() {
         if (!defined(isChromeResult)) {
             isChromeResult = false;
-
-            var fields = (/ Chrome\/([\.0-9]+)/).exec(theNavigator.userAgent);
-            if (fields !== null) {
-                isChromeResult = true;
-                chromeVersionResult = extractVersion(fields[1]);
+            // Edge contains Chrome in the user agent too
+            if (!isEdge()) {
+                var fields = (/ Chrome\/([\.0-9]+)/).exec(theNavigator.userAgent);
+                if (fields !== null) {
+                    isChromeResult = true;
+                    chromeVersionResult = extractVersion(fields[1]);
+                }
             }
         }
 
@@ -50,8 +52,8 @@ define([
         if (!defined(isSafariResult)) {
             isSafariResult = false;
 
-            // Chrome contains Safari in the user agent too
-            if (!isChrome() && (/ Safari\/[\.0-9]+/).test(theNavigator.userAgent)) {
+            // Chrome and Edge contain Safari in the user agent too
+            if (!isChrome() && !isEdge() && (/ Safari\/[\.0-9]+/).test(theNavigator.userAgent)) {
                 var fields = (/ Version\/([\.0-9]+)/).exec(theNavigator.userAgent);
                 if (fields !== null) {
                     isSafariResult = true;
@@ -116,6 +118,24 @@ define([
         return isInternetExplorer() && internetExplorerVersionResult;
     }
 
+    var isEdgeResult;
+    var edgeVersionResult;
+    function isEdge() {
+        if (!defined(isEdgeResult)) {
+            isEdgeResult = false;
+            var fields = (/ Edge\/([\.0-9]+)/).exec(theNavigator.userAgent);
+            if (fields !== null) {
+                isEdgeResult = true;
+                edgeVersionResult = extractVersion(fields[1]);
+            }
+        }
+        return isEdgeResult;
+    }
+
+    function edgeVersion() {
+        return isEdge() && edgeVersionResult;
+    }
+
     var isFirefoxResult;
     var firefoxVersionResult;
     function isFirefox() {
@@ -139,9 +159,16 @@ define([
         return isWindowsResult;
     }
 
-
     function firefoxVersion() {
         return isFirefox() && firefoxVersionResult;
+    }
+
+    var isNodeJsResult;
+    function isNodeJs() {
+        if (!defined(isNodeJsResult)) {
+            isNodeJsResult = typeof process === 'object' && Object.prototype.toString.call(process) === '[object process]'; // eslint-disable-line
+        }
+        return isNodeJsResult;
     }
 
     var hasPointerEvents;
@@ -178,6 +205,19 @@ define([
         return supportsImageRenderingPixelated() ? imageRenderingValueResult : undefined;
     }
 
+    var typedArrayTypes = [];
+    if (typeof ArrayBuffer !== 'undefined') {
+        typedArrayTypes.push(Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array);
+
+        if (typeof Uint8ClampedArray !== 'undefined') {
+            typedArrayTypes.push(Uint8ClampedArray);
+        }
+
+        if (typeof CanvasPixelArray !== 'undefined') {
+            typedArrayTypes.push(CanvasPixelArray);
+        }
+    }
+
     /**
      * A set of functions to detect whether the current browser supports
      * various features.
@@ -193,13 +233,17 @@ define([
         webkitVersion : webkitVersion,
         isInternetExplorer : isInternetExplorer,
         internetExplorerVersion : internetExplorerVersion,
+        isEdge : isEdge,
+        edgeVersion : edgeVersion,
         isFirefox : isFirefox,
         firefoxVersion : firefoxVersion,
         isWindows : isWindows,
+        isNodeJs: isNodeJs,
         hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
-        imageRenderingValue: imageRenderingValue
+        imageRenderingValue: imageRenderingValue,
+        typedArrayTypes: typedArrayTypes
     };
 
     /**
@@ -234,6 +278,17 @@ define([
      */
     FeatureDetection.supportsWebWorkers = function() {
         return typeof Worker !== 'undefined';
+    };
+
+    /**
+     * Detects whether the current browser supports Web Assembly.
+     *
+     * @returns {Boolean} true if the browsers supports Web Assembly, false if not.
+     *
+     * @see {@link https://developer.mozilla.org/en-US/docs/WebAssembly}
+     */
+    FeatureDetection.supportsWebAssembly = function() {
+        return typeof WebAssembly !== 'undefined' && !FeatureDetection.isEdge();
     };
 
     return FeatureDetection;

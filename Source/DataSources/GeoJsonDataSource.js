@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Color',
@@ -9,9 +8,9 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
-        '../Core/loadJson',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Scene/HeightReference',
         '../Scene/VerticalOrigin',
@@ -38,9 +37,9 @@ define([
         DeveloperError,
         Event,
         getFilenameFromUri,
-        loadJson,
         PinBuilder,
         PolygonHierarchy,
+        Resource,
         RuntimeError,
         HeightReference,
         VerticalOrigin,
@@ -78,10 +77,6 @@ define([
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
     var defaultClampToGround = false;
-
-    var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
-    var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
-    var defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
 
     var sizes = {
         small : 24,
@@ -143,7 +138,7 @@ define([
             var i = 2;
             var finalId = id;
             while (defined(entityCollection.getById(finalId))) {
-                finalId = id + "_" + i;
+                finalId = id + '_' + i;
                 i++;
             }
             id = finalId;
@@ -152,7 +147,6 @@ define([
         var entity = entityCollection.getOrCreateEntity(id);
         var properties = geoJson.properties;
         if (defined(properties)) {
-            entity.addProperty('properties');
             entity.properties = properties;
 
             var nameProperty;
@@ -210,6 +204,30 @@ define([
         }
         return positions;
     }
+
+    var geoJsonObjectTypes = {
+        Feature : processFeature,
+        FeatureCollection : processFeatureCollection,
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon,
+        Topology : processTopology
+    };
+
+    var geometryTypes = {
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon,
+        Topology : processTopology
+    };
 
     // GeoJSON processing functions
     function processFeature(dataSource, feature, notUsed, crsFunction, options) {
@@ -285,7 +303,7 @@ define([
         billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
 
         // Clamp to ground if there isn't a height specified
-        if (coordinates.length === 2) {
+        if (coordinates.length === 2 && options.clampToGround) {
             billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
         }
 
@@ -462,30 +480,6 @@ define([
         }
     }
 
-    var geoJsonObjectTypes = {
-        Feature : processFeature,
-        FeatureCollection : processFeatureCollection,
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon,
-        Topology : processTopology
-    };
-
-    var geometryTypes = {
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon,
-        Topology : processTopology
-    };
-
     /**
      * A {@link DataSource} which processes both
      * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
@@ -498,8 +492,8 @@ define([
      * @param {String} [name] The name of this data source.  If undefined, a name will be taken from
      *                        the name of the GeoJSON file.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20and%20TopoJSON.html|Cesium Sandcastle GeoJSON and TopoJSON Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=GeoJSON%20simplestyle.html|Cesium Sandcastle GeoJSON simplestyle Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
@@ -525,7 +519,7 @@ define([
     /**
      * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
      *
-     * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+     * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
@@ -598,7 +592,6 @@ define([
             },
             set : function(value) {
                 defaultStroke = value;
-                defaultStrokeMaterialProperty.color.setValue(value);
             }
         },
         /**
@@ -613,7 +606,6 @@ define([
             },
             set : function(value) {
                 defaultStrokeWidth = value;
-                defaultStrokeWidthProperty.setValue(value);
             }
         },
         /**
@@ -628,7 +620,6 @@ define([
             },
             set : function(value) {
                 defaultFill = value;
-                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
             }
         },
         /**
@@ -692,13 +683,19 @@ define([
 
     defineProperties(GeoJsonDataSource.prototype, {
         /**
-         * Gets a human-readable name for this instance.
+         * Gets or sets a human-readable name for this instance.
          * @memberof GeoJsonDataSource.prototype
          * @type {String}
          */
         name : {
             get : function() {
                 return this._name;
+            },
+            set : function(value) {
+                if (this._name !== value) {
+                    this._name = value;
+                    this._changed.raiseEvent(this);
+                }
             }
         },
         /**
@@ -798,7 +795,7 @@ define([
     /**
      * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
      *
-     * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+     * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
      * @param {GeoJsonDataSource~describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
@@ -825,11 +822,12 @@ define([
         var promise = data;
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
-        if (typeof data === 'string') {
-            if (!defined(sourceUri)) {
-                sourceUri = data;
-            }
-            promise = loadJson(data);
+        if (typeof data === 'string' || (data instanceof Resource)) {
+            data = Resource.createIfNeeded(data);
+
+            promise = data.fetchJson();
+
+            sourceUri = defaultValue(sourceUri, data.getUrlComponent());
         }
 
         options = {

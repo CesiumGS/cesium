@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -43,8 +42,9 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipse will be displayed.
+     * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex of the Ellipse.  Used for ordering ground geometry.  Only has an effect if the ellipse is constant and neither height or exturdedHeight are specified.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
     function EllipseGraphics(options) {
         this._semiMajorAxis = undefined;
@@ -79,6 +79,10 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
+        this._zIndex = undefined;
+        this._zIndexSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -207,7 +211,7 @@ define([
          * @default 16
          */
         numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
-        
+
         /**
          * Get or sets the enum Property specifying whether the ellipse
          * casts or receives shadows from each light source.
@@ -222,7 +226,23 @@ define([
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof EllipseGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.TERRAIN
+         */
+        classificationType : createPropertyDescriptor('classificationType'),
+
+        /**
+         * Gets or sets the zIndex Property specifying the ellipse ordering.  Only has an effect if the ellipse is constant and neither height or extrudedHeight are specified
+         * @memberof EllipseGraphics.prototype
+         * @type {ConstantProperty}
+         * @default 0
+         */
+        zIndex : createPropertyDescriptor('zIndex')
     });
 
     /**
@@ -251,6 +271,8 @@ define([
         result.numberOfVerticalLines = this.numberOfVerticalLines;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
+        result.zIndex = this.zIndex;
         return result;
     };
 
@@ -283,6 +305,8 @@ define([
         this.numberOfVerticalLines = defaultValue(this.numberOfVerticalLines, source.numberOfVerticalLines);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
+        this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
 
     return EllipseGraphics;

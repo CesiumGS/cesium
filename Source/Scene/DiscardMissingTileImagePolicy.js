@@ -1,17 +1,16 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/getImagePixels',
-        '../Core/loadImageViaBlob',
+        '../Core/Resource',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         getImagePixels,
-        loadImageViaBlob,
+        Resource,
         when) {
     'use strict';
 
@@ -23,7 +22,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.missingImageUrl The URL of the known missing image.
+     * @param {Resource|String} options.missingImageUrl The URL of the known missing image.
      * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.
      * @param {Boolean} [options.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
@@ -33,6 +32,7 @@ define([
     function DiscardMissingTileImagePolicy(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.missingImageUrl)) {
             throw new DeveloperError('options.missingImageUrl is required.');
         }
@@ -40,11 +40,14 @@ define([
         if (!defined(options.pixelsToCheck)) {
             throw new DeveloperError('options.pixelsToCheck is required.');
         }
+        //>>includeEnd('debug');
 
         this._pixelsToCheck = options.pixelsToCheck;
         this._missingImagePixels = undefined;
         this._missingImageByteLength = undefined;
         this._isReady = false;
+
+        var resource = Resource.createIfNeeded(options.missingImageUrl);
 
         var that = this;
 
@@ -86,7 +89,7 @@ define([
             that._isReady = true;
         }
 
-        when(loadImageViaBlob(options.missingImageUrl), success, failure);
+        when(resource.fetchImage(true), success, failure);
     }
 
     /**
@@ -106,9 +109,11 @@ define([
      * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
      */
     DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function(image) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._isReady) {
             throw new DeveloperError('shouldDiscardImage must not be called before the discard policy is ready.');
         }
+        //>>includeEnd('debug');
 
         var pixelsToCheck = this._pixelsToCheck;
         var missingImagePixels = this._missingImagePixels;

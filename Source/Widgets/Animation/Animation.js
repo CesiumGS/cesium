@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Color',
         '../../Core/defined',
@@ -17,8 +16,8 @@ define([
         subscribeAndEvaluate) {
     'use strict';
 
-    var svgNS = "http://www.w3.org/2000/svg";
-    var xlinkNS = "http://www.w3.org/1999/xlink";
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var xlinkNS = 'http://www.w3.org/1999/xlink';
 
     var widgetForDrag;
 
@@ -284,7 +283,7 @@ define([
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/AnimationWidget.png" width="211" height="142" alt="" />
+     * <img src="Images/AnimationWidget.png" width="211" height="142" alt="" />
      * <br />Animation widget
      * </span>
      * <br /><br />
@@ -327,7 +326,7 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
-     * 
+     *
      * @see AnimationViewModel
      * @see Clock
      */
@@ -518,6 +517,7 @@ define([
         document.addEventListener('touchmove', mouseCallback, true);
         document.addEventListener('mouseup', mouseCallback, true);
         document.addEventListener('touchend', mouseCallback, true);
+        document.addEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('touchstart', mouseCallback, true);
         this._knobOuter.addEventListener('mousedown', mouseCallback, true);
@@ -610,6 +610,11 @@ define([
      * removing the widget from layout.
      */
     Animation.prototype.destroy = function() {
+        if (defined(this._observer)) {
+            this._observer.disconnect();
+            this._observer = undefined;
+        }
+
         var mouseCallback = this._mouseCallback;
         this._shuttleRingBackPanel.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingBackPanel.removeEventListener('touchstart', mouseCallback, true);
@@ -619,6 +624,7 @@ define([
         document.removeEventListener('touchmove', mouseCallback, true);
         document.removeEventListener('mouseup', mouseCallback, true);
         document.removeEventListener('touchend', mouseCallback, true);
+        document.removeEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('touchstart', mouseCallback, true);
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
@@ -696,6 +702,27 @@ define([
      * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {
+        // Since we rely on computed styles for themeing, we can't actually
+        // do anything if the container has not yet been added to the DOM.
+        // Set up an observer to be notified when it is added and apply
+        // the changes at that time.
+        if (!document.body.contains(this._container)) {
+            if (defined(this._observer)) {
+                //Already listening.
+                return;
+            }
+            var that = this;
+            that._observer = new MutationObserver(function() {
+                if (document.body.contains(that._container)) {
+                    that._observer.disconnect();
+                    that._observer = undefined;
+                    that.applyThemeChanges();
+                }
+            });
+            that._observer.observe(document, {childList : true, subtree : true});
+            return;
+        }
+
         var buttonNormalBackColor = getElementColor(this._themeNormal);
         var buttonHoverBackColor = getElementColor(this._themeHover);
         var buttonToggledBackColor = getElementColor(this._themeSelect);

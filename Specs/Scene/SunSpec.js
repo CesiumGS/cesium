@@ -1,22 +1,15 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Sun',
         'Core/BoundingSphere',
-        'Core/Cartesian3',
         'Core/Color',
-        'Core/Ellipsoid',
         'Core/Math',
-        'Core/Matrix4',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         Sun,
         BoundingSphere,
-        Cartesian3,
         Color,
-        Ellipsoid,
         CesiumMath,
-        Matrix4,
         SceneMode,
         createScene) {
     'use strict';
@@ -48,43 +41,43 @@ defineSuite([
     }
 
     it('draws in 3D', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.sun = new Sun();
         scene.sun.glowFactor = 100;
         scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
     it('draws in Columbus view', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.mode = SceneMode.COLUMBUS_VIEW;
         scene.sun = new Sun();
         scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
     it('does not render when show is false', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.sun = new Sun();
         scene.render();
         scene.sun.show = false;
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
     });
 
     it('does not render in 2D', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.mode = SceneMode.SCENE2D;
         scene.sun = new Sun();
         scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
     });
 
     it('does not render without a render pass', function() {
@@ -93,7 +86,7 @@ defineSuite([
 
         viewSun(scene.camera, scene.context.uniformState);
         scene.frameState.passes.render = false;
-        var command = scene.sun.update(scene);
+        var command = scene.sun.update(scene.frameState, scene._passState);
         expect(command).not.toBeDefined();
     });
 
@@ -106,13 +99,13 @@ defineSuite([
     });
 
     it('draws without lens flare', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        expect(scene).toRender(backgroundColor);
         scene.sun = new Sun();
         scene.sun.glowFactor = 0.0;
         scene.renderForSpecs();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        expect(scene).notToRender(backgroundColor);
     });
 
     it('isDestroyed', function() {

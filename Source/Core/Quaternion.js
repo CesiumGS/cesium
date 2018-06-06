@@ -1,18 +1,17 @@
-/*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './FeatureDetection',
         './freezeObject',
         './Math',
         './Matrix3'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         FeatureDetection,
         freezeObject,
         CesiumMath,
@@ -73,12 +72,8 @@ define([
      */
     Quaternion.fromAxisAngle = function(axis, angle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(axis)) {
-            throw new DeveloperError('axis is required.');
-        }
-        if (typeof angle !== 'number') {
-            throw new DeveloperError('angle is required and must be a number.');
-        }
+        Check.typeOf.object('axis', axis);
+        Check.typeOf.number('angle', angle);
         //>>includeEnd('debug');
 
         var halfAngle = angle / 2.0;
@@ -112,9 +107,7 @@ define([
      */
     Quaternion.fromRotationMatrix = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
+        Check.typeOf.object('matrix', matrix);
         //>>includeEnd('debug');
 
         var root;
@@ -176,36 +169,29 @@ define([
     };
 
     var scratchHPRQuaternion = new Quaternion();
+    var scratchHeadingQuaternion = new Quaternion();
+    var scratchPitchQuaternion = new Quaternion();
+    var scratchRollQuaternion = new Quaternion();
 
     /**
      * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
      * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
      * the positive x axis.
      *
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} roll The roll angle in radians.
+     * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      */
-    Quaternion.fromHeadingPitchRoll = function(heading, pitch, roll, result) {
+    Quaternion.fromHeadingPitchRoll = function(headingPitchRoll, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(heading)) {
-            throw new DeveloperError('heading is required.');
-        }
-        if (!defined(pitch)) {
-            throw new DeveloperError('pitch is required.');
-        }
-        if (!defined(roll)) {
-            throw new DeveloperError('roll is required.');
-        }
+        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        var rollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, roll, scratchHPRQuaternion);
-        var pitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -pitch, result);
-        result = Quaternion.multiply(pitchQuaternion, rollQuaternion, pitchQuaternion);
-        var headingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -heading, scratchHPRQuaternion);
-        return Quaternion.multiply(headingQuaternion, result, result);
+        scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
+        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -headingPitchRoll.pitch, result);
+        result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
+        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -headingPitchRoll.heading, scratchHPRQuaternion);
+        return Quaternion.multiply(scratchHeadingQuaternion, result, result);
     };
 
     var sampledQuaternionAxis = new Cartesian3();
@@ -231,13 +217,8 @@ define([
      */
     Quaternion.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -260,9 +241,7 @@ define([
      */
     Quaternion.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -318,7 +297,7 @@ define([
      *
      * @param {Number[]} array The array previously packed for interpolation.
      * @param {Number[]} sourceArray The original packed array.
-     * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
+     * @param {Number} [firstIndex=0] The firstIndex used to convert the array.
      * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
      * @param {Quaternion} [result] The object into which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
@@ -373,12 +352,8 @@ define([
      */
     Quaternion.conjugate = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = -quaternion.x;
@@ -396,9 +371,7 @@ define([
      */
     Quaternion.magnitudeSquared = function(quaternion) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
         //>>includeEnd('debug');
 
         return quaternion.x * quaternion.x + quaternion.y * quaternion.y + quaternion.z * quaternion.z + quaternion.w * quaternion.w;
@@ -423,9 +396,7 @@ define([
      */
     Quaternion.normalize = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var inverseMagnitude = 1.0 / Quaternion.magnitude(quaternion);
@@ -450,9 +421,7 @@ define([
      */
     Quaternion.inverse = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
@@ -470,15 +439,9 @@ define([
      */
     Quaternion.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x + right.x;
@@ -498,15 +461,9 @@ define([
      */
     Quaternion.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x - right.x;
@@ -525,12 +482,8 @@ define([
      */
     Quaternion.negate = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = -quaternion.x;
@@ -549,12 +502,8 @@ define([
      */
     Quaternion.dot = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         return left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w;
@@ -570,15 +519,9 @@ define([
      */
     Quaternion.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var leftX = left.x;
@@ -613,15 +556,9 @@ define([
      */
     Quaternion.multiplyByScalar = function(quaternion, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = quaternion.x * scalar;
@@ -641,15 +578,9 @@ define([
      */
     Quaternion.divideByScalar = function(quaternion, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = quaternion.x / scalar;
@@ -668,12 +599,8 @@ define([
      */
     Quaternion.computeAxis = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var w = quaternion.w;
@@ -698,9 +625,7 @@ define([
      */
     Quaternion.computeAngle = function(quaternion) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
         //>>includeEnd('debug');
 
         if (Math.abs(quaternion.w - 1.0) < CesiumMath.EPSILON6) {
@@ -721,18 +646,10 @@ define([
      */
     Quaternion.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(start)) {
-            throw new DeveloperError('start is required.');
-        }
-        if (!defined(end)) {
-            throw new DeveloperError('end is required.');
-        }
-        if (typeof t !== 'number') {
-            throw new DeveloperError('t is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('start', start);
+        Check.typeOf.object('end', end);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         lerpScratch = Quaternion.multiplyByScalar(end, t, lerpScratch);
@@ -756,18 +673,10 @@ define([
      */
     Quaternion.slerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(start)) {
-            throw new DeveloperError('start is required.');
-        }
-        if (!defined(end)) {
-            throw new DeveloperError('end is required.');
-        }
-        if (typeof t !== 'number') {
-            throw new DeveloperError('t is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('start', start);
+        Check.typeOf.object('end', end);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var dot = Quaternion.dot(start, end);
@@ -802,12 +711,8 @@ define([
      */
     Quaternion.log = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var theta = CesiumMath.acosClamped(quaternion.w);
@@ -829,12 +734,8 @@ define([
      */
     Quaternion.exp = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var theta = Cartesian3.magnitude(cartesian);
@@ -871,12 +772,10 @@ define([
      */
     Quaternion.computeInnerQuadrangle = function(q0, q1, q2, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(q0) || !defined(q1) || !defined(q2)) {
-            throw new DeveloperError('q0, q1, and q2 are required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('q0', q0);
+        Check.typeOf.object('q1', q1);
+        Check.typeOf.object('q2', q2);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var qInv = Quaternion.conjugate(q1, squadScratchQuaternion0);
@@ -920,15 +819,12 @@ define([
      */
     Quaternion.squad = function(q0, q1, s0, s1, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
-            throw new DeveloperError('q0, q1, s0, and s1 are required.');
-        }
-        if (typeof t !== 'number') {
-            throw new DeveloperError('t is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('q0', q0);
+        Check.typeOf.object('q1', q1);
+        Check.typeOf.object('s0', s0);
+        Check.typeOf.object('s1', s1);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var slerp0 = Quaternion.slerp(q0, q1, t, squadScratchQuaternion0);
@@ -967,18 +863,10 @@ define([
      */
     Quaternion.fastSlerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(start)) {
-            throw new DeveloperError('start is required.');
-        }
-        if (!defined(end)) {
-            throw new DeveloperError('end is required.');
-        }
-        if (typeof t !== 'number') {
-            throw new DeveloperError('t is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('start', start);
+        Check.typeOf.object('end', end);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var x = Quaternion.dot(start, end);
@@ -1029,15 +917,12 @@ define([
      */
     Quaternion.fastSquad = function(q0, q1, s0, s1, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
-            throw new DeveloperError('q0, q1, s0, and s1 are required.');
-        }
-        if (typeof t !== 'number') {
-            throw new DeveloperError('t is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('q0', q0);
+        Check.typeOf.object('q1', q1);
+        Check.typeOf.object('s0', s0);
+        Check.typeOf.object('s1', s1);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var slerp0 = Quaternion.fastSlerp(q0, q1, t, squadScratchQuaternion0);
@@ -1075,9 +960,7 @@ define([
      */
     Quaternion.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number.');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return (left === right) ||

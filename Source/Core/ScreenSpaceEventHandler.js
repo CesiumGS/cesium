@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AssociativeArray',
         './Cartesian2',
@@ -86,6 +85,7 @@ define([
             registerListener(screenSpaceEventHandler, 'pointerdown', element, handlePointerDown);
             registerListener(screenSpaceEventHandler, 'pointerup', element, handlePointerUp);
             registerListener(screenSpaceEventHandler, 'pointermove', element, handlePointerMove);
+            registerListener(screenSpaceEventHandler, 'pointercancel', element, handlePointerUp);
         } else {
             registerListener(screenSpaceEventHandler, 'mousedown', element, handleMouseDown);
             registerListener(screenSpaceEventHandler, 'mouseup', alternateElement, handleMouseUp);
@@ -93,6 +93,7 @@ define([
             registerListener(screenSpaceEventHandler, 'touchstart', element, handleTouchStart);
             registerListener(screenSpaceEventHandler, 'touchend', alternateElement, handleTouchEnd);
             registerListener(screenSpaceEventHandler, 'touchmove', alternateElement, handleTouchMove);
+            registerListener(screenSpaceEventHandler, 'touchcancel', alternateElement, handleTouchEnd);
         }
 
         registerListener(screenSpaceEventHandler, 'dblclick', element, handleDblClick);
@@ -268,10 +269,6 @@ define([
         var screenSpaceEventType;
         if (button === MouseButton.LEFT) {
             screenSpaceEventType = ScreenSpaceEventType.LEFT_DOUBLE_CLICK;
-        } else if (button === MouseButton.MIDDLE) {
-            screenSpaceEventType = ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK;
-        } else if (button === MouseButton.RIGHT) {
-            screenSpaceEventType = ScreenSpaceEventType.RIGHT_DOUBLE_CLICK;
         } else {
             return;
         }
@@ -404,6 +401,7 @@ define([
         var numberOfTouches = positions.length;
         var action;
         var clickAction;
+        var pinching = screenSpaceEventHandler._isPinching;
 
         if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown === MouseButton.LEFT) {
             // transitioning from single touch, trigger UP and might trigger CLICK
@@ -438,7 +436,7 @@ define([
             // Otherwise don't trigger CLICK, because we are adding more touches.
         }
 
-        if (numberOfTouches !== 2 && screenSpaceEventHandler._isPinching) {
+        if (numberOfTouches === 0 && pinching) {
             // transitioning from pinch, trigger PINCH_END
             screenSpaceEventHandler._isPinching = false;
 
@@ -449,7 +447,7 @@ define([
             }
         }
 
-        if (numberOfTouches === 1) {
+        if (numberOfTouches === 1 && !pinching) {
             // transitioning to single touch, trigger DOWN
             var position = positions.values[0];
             Cartesian2.clone(position, screenSpaceEventHandler._primaryPosition);
@@ -469,7 +467,7 @@ define([
             event.preventDefault();
         }
 
-        if (numberOfTouches === 2) {
+        if (numberOfTouches === 2 && !pinching) {
             // transitioning to pinch, trigger PINCH_START
             screenSpaceEventHandler._isPinching = true;
 
@@ -480,6 +478,10 @@ define([
                 Cartesian2.clone(positions.values[1], touch2StartEvent.position2);
 
                 action(touch2StartEvent);
+
+                // Touch-enabled devices, in particular iOS can have many default behaviours for
+                // "pinch" events, which can still be executed unless we prevent them here.
+                event.preventDefault();
             }
         }
     }
@@ -766,8 +768,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -785,6 +785,7 @@ define([
     /**
      * The amount of time, in milliseconds, that mouse events will be disabled after
      * receiving any touch events, such that any emulated mouse events will be ignored.
+     * @type {Number}
      * @default 800
      */
     ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;

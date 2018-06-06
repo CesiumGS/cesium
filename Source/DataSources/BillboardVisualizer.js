@@ -1,13 +1,10 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -16,7 +13,6 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
-        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -24,9 +20,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
-        defaultValue,
         defined,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -35,7 +29,6 @@ define([
         HorizontalOrigin,
         VerticalOrigin,
         BoundingSphereState,
-        EntityCluster,
         Property) {
     'use strict';
 
@@ -49,6 +42,7 @@ define([
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
     var defaultSizeInMeters = false;
+    var defaultDisableDepthTestDistance = 0.0;
 
     var position = new Cartesian3();
     var color = new Color();
@@ -83,13 +77,6 @@ define([
             throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
-
-        if (!defined(entityCluster.minimumClusterSize)) {
-            deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
-            entityCluster = new EntityCluster({
-                enabled : false
-            });
-        }
 
         entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
 
@@ -167,8 +154,9 @@ define([
             billboard.scaleByDistance = Property.getValueOrUndefined(billboardGraphics._scaleByDistance, time, scaleByDistance);
             billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
-            billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, defaultSizeInMeters);
+            billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, time, defaultSizeInMeters);
             billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+            billboard.disableDepthTestDistance = Property.getValueOrDefault(billboardGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
 
             var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
             if (defined(subRegion)) {
@@ -231,6 +219,10 @@ define([
      */
     BillboardVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
+        var entities = this._entityCollection.values;
+        for (var i = 0; i < entities.length; i++) {
+            this._cluster.removeBillboard(entities[i]);
+        }
         return destroyObject(this);
     };
 

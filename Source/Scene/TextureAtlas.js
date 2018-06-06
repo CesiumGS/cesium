@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -8,11 +7,10 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/loadImage',
         '../Core/PixelFormat',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Renderer/Framebuffer',
-        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../ThirdParty/when'
     ], function(
@@ -24,11 +22,10 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        loadImage,
         PixelFormat,
+        Resource,
         RuntimeError,
         Framebuffer,
-        RenderState,
         Texture,
         when) {
     'use strict';
@@ -171,18 +168,19 @@ define([
         var context = textureAtlas._context;
         var numImages = textureAtlas.numberOfImages;
         var scalingFactor = 2.0;
+        var borderWidthInPixels = textureAtlas._borderWidthInPixels;
         if (numImages > 0) {
             var oldAtlasWidth = textureAtlas._texture.width;
             var oldAtlasHeight = textureAtlas._texture.height;
-            var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + textureAtlas._borderWidthInPixels);
-            var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + textureAtlas._borderWidthInPixels);
+            var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + borderWidthInPixels);
+            var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + borderWidthInPixels);
             var widthRatio = oldAtlasWidth / atlasWidth;
             var heightRatio = oldAtlasHeight / atlasHeight;
 
             // Create new node structure, putting the old root node in the bottom left.
-            var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasWidth + textureAtlas._borderWidthInPixels, 0.0), new Cartesian2(atlasWidth, oldAtlasHeight));
+            var nodeBottomRight = new TextureAtlasNode(new Cartesian2(oldAtlasWidth + borderWidthInPixels, borderWidthInPixels), new Cartesian2(atlasWidth, oldAtlasHeight));
             var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, oldAtlasHeight), textureAtlas._root, nodeBottomRight);
-            var nodeTopHalf = new TextureAtlasNode(new Cartesian2(0.0, oldAtlasHeight + textureAtlas._borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
+            var nodeTopHalf = new TextureAtlasNode(new Cartesian2(borderWidthInPixels, oldAtlasHeight + borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
             var nodeMain = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, atlasHeight), nodeBottomHalf, nodeTopHalf);
 
             // Resize texture coordinates.
@@ -219,8 +217,8 @@ define([
             textureAtlas._root = nodeMain;
         } else {
             // First image exceeds initialSize
-            var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
-            var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
+            var initialWidth = scalingFactor * (image.width + 2 * borderWidthInPixels);
+            var initialHeight = scalingFactor * (image.height + 2 * borderWidthInPixels);
             if(initialWidth < textureAtlas._initialSize.x) {
                 initialWidth = textureAtlas._initialSize.x;
             }
@@ -234,7 +232,8 @@ define([
                 height : initialHeight,
                 pixelFormat : textureAtlas._pixelFormat
             });
-            textureAtlas._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialWidth, initialHeight));
+            textureAtlas._root = new TextureAtlasNode(new Cartesian2(borderWidthInPixels, borderWidthInPixels),
+                new Cartesian2(initialWidth, initialHeight));
         }
     }
 
@@ -328,7 +327,7 @@ define([
      * the existing index is used.
      *
      * @param {String} id An identifier to detect whether the image already exists in the atlas.
-     * @param {Image|Canvas|String|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
+     * @param {Image|Canvas|String|Resource|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
      *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
      * @returns {Promise.<Number>} A Promise for the image index.
      */
@@ -358,9 +357,10 @@ define([
                 throw new DeveloperError('image is required.');
             }
             //>>includeEnd('debug');
-        } else if (typeof image === 'string') {
-            // if image is a string, load it as an image
-            image = loadImage(image);
+        } else if ((typeof image === 'string') || (image instanceof Resource)) {
+            // Get a resource
+            var resource = Resource.createIfNeeded(image);
+            image = resource.fetchImage();
         }
 
         var that = this;
@@ -450,14 +450,12 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
      * @example
      * atlas = atlas && atlas.destroy();
-     * 
+     *
      * @see TextureAtlas#isDestroyed
      */
     TextureAtlas.prototype.destroy = function() {

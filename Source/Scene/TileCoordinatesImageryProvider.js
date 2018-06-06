@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/defaultValue',
@@ -240,12 +239,13 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    TileCoordinatesImageryProvider.prototype.requestImage = function(x, y, level) {
+    TileCoordinatesImageryProvider.prototype.requestImage = function(x, y, level, request) {
         var canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 256;
@@ -282,7 +282,7 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    TileCoordinatesImageryProvider.prototype.pickFeatures = function() {
+    TileCoordinatesImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
 

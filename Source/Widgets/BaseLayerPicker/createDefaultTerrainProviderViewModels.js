@@ -1,12 +1,11 @@
-/*global define*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Core/CesiumTerrainProvider',
+        '../../Core/createWorldTerrain',
         '../../Core/EllipsoidTerrainProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
-        CesiumTerrainProvider,
+        createWorldTerrain,
         EllipsoidTerrainProvider,
         ProviderViewModel) {
     'use strict';
@@ -20,21 +19,21 @@ define([
             name : 'WGS84 Ellipsoid',
             iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/Ellipsoid.png'),
             tooltip : 'WGS84 standard ellipsoid, also known as EPSG:4326',
+            category: 'Cesium ion',
             creationFunction : function() {
                 return new EllipsoidTerrainProvider();
             }
         }));
 
-
         providerViewModels.push(new ProviderViewModel({
-            name : 'STK World Terrain meshes',
-            iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/STK.png'),
-            tooltip : 'High-resolution, mesh-based terrain for the entire globe. Free for use on the Internet. Closed-network options are available.\nhttp://www.agi.com',
-            creationFunction : function() {
-                return new CesiumTerrainProvider({
-                    url : 'https://assets.agi.com/stk-terrain/world',
-                    requestWaterMask : true,
-                    requestVertexNormals : true
+            name : 'Cesium World Terrain',
+            iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/CesiumWorldTerrain.png'),
+            tooltip : 'High-resolution global terrain tileset curated from several datasources and hosted by Cesium ion',
+            category: 'Cesium ion',
+            creationFunction : function(){
+                return createWorldTerrain({
+                    requestWaterMask: true,
+                    requestVertexNormals: true
                 });
             }
         }));

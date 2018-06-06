@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Draw the intersection of a volume and a photgrammetry dataset.">
+    <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table><tbody>
+    <tr>
+        <td><button class="cesium-button" data-bind="click: highlightTrees">Highlight trees</button></td>
+    </tr>
+    <tr>
+        <td><button class="cesium-button" data-bind="click: highlightBuilding">Highlight building face</button></td>
+    </tr>
+    <tr>
+        <td>invert classification</td>
+        <td><input type="checkbox" data-bind="checked: inverted" /></td>
+    </tr>
+    <tr>
+        <td>inverted color alpha</td>
+        <td>
+            <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedAlpha, valueUpdate: 'input'">
+            <input type="text" size="3" data-bind="value: invertedAlpha">
+        </td>
+    </tr>
+</tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var camera = scene.camera;
+
+var center = new Cesium.Cartesian3(1216378.730451297, -4736275.917774027, 4081266.871000864);
+var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+var hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(2.619728786416368, 0.0, 0.0));
+var hpr = Cesium.Matrix4.fromRotationTranslation(hprRotation, new Cesium.Cartesian3(0.0, 0.0, -2.0));
+Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+
+var buildingHighlight = scene.primitives.add(new Cesium.ClassificationPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : Cesium.BoxGeometry.fromDimensions({
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            dimensions : new Cesium.Cartesian3(8.0, 5.0, 8.0)
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5)),
+            show : new Cesium.ShowGeometryInstanceAttribute(true)
+        },
+        id : 'volume'
+    }),
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
+}));
+
+center = new Cesium.Cartesian3(1216398.6054139996, -4736204.533089285, 4081338.6585485404);
+modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0));
+hpr = Cesium.Matrix4.fromRotationTranslation(hprRotation, new Cesium.Cartesian3(0.4, 0.0, -2.0));
+Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+
+var treeHighlight1 = scene.primitives.add(new Cesium.ClassificationPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.EllipsoidGeometry({
+            radii : new Cesium.Cartesian3(3.25, 5.0, 4.0)
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#F26419').withAlpha(0.5)),
+            show : new Cesium.ShowGeometryInstanceAttribute(true)
+        },
+        id : 'volume 1'
+    }),
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
+}));
+
+center = new Cesium.Cartesian3(1216394.3346955755, -4736207.431365568, 4081336.7768881875);
+modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0));
+hpr = Cesium.Matrix4.fromRotationTranslation(hprRotation, new Cesium.Cartesian3(-0.25, 0.0, -2.0));
+Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
+
+var treeHighlight2 = scene.primitives.add(new Cesium.ClassificationPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.EllipsoidGeometry({
+            radii : new Cesium.Cartesian3(3.25, 5.0, 4.0)
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#F03A47').withAlpha(0.5)),
+            show : new Cesium.ShowGeometryInstanceAttribute(true)
+        },
+        id : 'volume 2'
+    }),
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
+}));
+
+center = new Cesium.Cartesian3(1216388.1664430483, -4736210.034324032, 4081332.9324705894);
+modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+var translation = Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.0, 0.0, -2.0));
+Cesium.Matrix4.multiply(modelMatrix, translation, modelMatrix);
+
+var treeHighlight3 = scene.primitives.add(new Cesium.ClassificationPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.EllipsoidGeometry({
+            radii : new Cesium.Cartesian3(2.45, 2.45, 3.0)
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#004FFF').withAlpha(0.5)),
+            show : new Cesium.ShowGeometryInstanceAttribute(true)
+        },
+        id : 'volume 3'
+    }),
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
+}));
+
+center = new Cesium.Cartesian3(1216383.1478702603, -4736211.716097012, 4081329.551077661);
+modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+translation = Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.0, 0.0, -1.0));
+Cesium.Matrix4.multiply(modelMatrix, translation, modelMatrix);
+
+var treeHighlight4 = scene.primitives.add(new Cesium.ClassificationPrimitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.SphereGeometry({
+            radius : 2.0
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#55DDE0').withAlpha(0.5)),
+            show : new Cesium.ShowGeometryInstanceAttribute(true)
+        },
+        id : 'volume 4'
+    }),
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
+}));
+
+function highlightBuilding() {
+    camera.setView({
+        destination : new Cesium.Cartesian3(1216390.8470847877, -4736277.616363206, 4081242.6450737054),
+        orientation : {
+            heading : 5.761321440006161,
+            pitch : 0.2784799327743841
+        }
+    });
+}
+
+function highlightTrees() {
+    camera.setView({
+        destination : new Cesium.Cartesian3(1216424.420697336, -4736234.517874706, 4081307.8699144847),
+        orientation : {
+            heading : 5.785339046755887,
+            pitch : -0.2622665042613537
+        }
+    });
+}
+
+function invertClassification(checked) {
+    scene.invertClassification = checked;
+    scene.invertClassificationColor = new Cesium.Color(0.25, 0.25, 0.25, 1.0);
+
+    buildingHighlight.getGeometryInstanceAttributes('volume').show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+    treeHighlight1.getGeometryInstanceAttributes('volume 1').show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+    treeHighlight2.getGeometryInstanceAttributes('volume 2').show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+    treeHighlight3.getGeometryInstanceAttributes('volume 3').show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+    treeHighlight4.getGeometryInstanceAttributes('volume 4').show = Cesium.ShowGeometryInstanceAttribute.toValue(!checked);
+}
+
+function updateAlpha(value) {
+    scene.invertClassificationColor.alpha = parseFloat(value);
+}
+
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3836) });
+scene.primitives.add(tileset);
+
+var viewModel = {
+    inverted: viewer.scene.invertClassification,
+    invertedAlpha: viewer.scene.invertClassificationColor.alpha,
+    highlightBuilding: highlightBuilding,
+    highlightTrees: highlightTrees
+};
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(invertClassification);
+Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(updateAlpha);
+
+highlightTrees();
+
+var currentObjectId;
+var currentPrimitive;
+var currentColor;
+var currentShow;
+var attributes;
+
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+handler.setInputAction(function(movement) {
+    var pickedObject = scene.pick(movement.endPosition);
+    if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+        if (pickedObject.id === currentObjectId) {
+            return;
+        }
+
+        if (Cesium.defined(currentObjectId)) {
+            attributes = currentPrimitive.getGeometryInstanceAttributes(currentObjectId);
+            attributes.color = currentColor;
+            attributes.show = currentShow;
+            currentObjectId = undefined;
+            currentPrimitive = undefined;
+            currentColor = undefined;
+            currentShow = undefined;
+        }
+    }
+
+    if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.primitive) && Cesium.defined(pickedObject.id) && Cesium.defined(pickedObject.primitive.getGeometryInstanceAttributes)) {
+        currentObjectId = pickedObject.id;
+        currentPrimitive = pickedObject.primitive;
+        attributes = currentPrimitive.getGeometryInstanceAttributes(currentObjectId);
+        currentColor = attributes.color;
+        currentShow = attributes.show;
+        if (!scene.invertClassification) {
+            attributes.color = [255, 0, 255, 128];
+        }
+        attributes.show = [1];
+    } else if (Cesium.defined(currentObjectId)) {
+        attributes = currentPrimitive.getGeometryInstanceAttributes(currentObjectId);
+        attributes.color = currentColor;
+        attributes.show = currentShow;
+        currentObjectId = undefined;
+        currentPrimitive = undefined;
+        currentColor = undefined;
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

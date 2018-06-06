@@ -1,7 +1,5 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TileCoordinatesImageryProvider',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/WebMercatorTilingScheme',
@@ -10,7 +8,6 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         TileCoordinatesImageryProvider,
-        defined,
         Ellipsoid,
         GeographicTilingScheme,
         WebMercatorTilingScheme,

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian2',
@@ -36,7 +35,7 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
+    var scratchBitangent = new Cartesian3();
     var scratchNormalST = new Cartesian3();
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -71,8 +70,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = defaultValue(options.stackPartitions, 64);
-        var slicePartitions = defaultValue(options.slicePartitions, 64);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -209,7 +208,7 @@ define([
 
         var normals = (vertexFormat.normal) ? new Float32Array(vertexCount * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(vertexCount * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(vertexCount * 3) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(vertexCount * 3) : undefined;
         var st = (vertexFormat.st) ? new Float32Array(vertexCount * 2) : undefined;
 
         var cosTheta = new Array(slicePartitions);
@@ -267,9 +266,9 @@ define([
         var stIndex = 0;
         var normalIndex = 0;
         var tangentIndex = 0;
-        var binormalIndex = 0;
+        var bitangentIndex = 0;
 
-        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
             for( i = 0; i < vertexCount; i++) {
                 var position = Cartesian3.fromArray(positions, i * 3, scratchPosition);
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
@@ -299,7 +298,7 @@ define([
                     normals[normalIndex++] = normal.z;
                 }
 
-                if (vertexFormat.tangent || vertexFormat.binormal) {
+                if (vertexFormat.tangent || vertexFormat.bitangent) {
                     var tangent = scratchTangent;
                     if (i < slicePartitions || i > vertexCount - slicePartitions - 1) {
                         Cartesian3.cross(Cartesian3.UNIT_X, normal, tangent);
@@ -315,13 +314,13 @@ define([
                         tangents[tangentIndex++] = tangent.z;
                     }
 
-                    if (vertexFormat.binormal) {
-                        var binormal = Cartesian3.cross(normal, tangent, scratchBinormal);
-                        Cartesian3.normalize(binormal, binormal);
+                    if (vertexFormat.bitangent) {
+                        var bitangent = Cartesian3.cross(normal, tangent, scratchBitangent);
+                        Cartesian3.normalize(bitangent, bitangent);
 
-                        binormals[binormalIndex++] = binormal.x;
-                        binormals[binormalIndex++] = binormal.y;
-                        binormals[binormalIndex++] = binormal.z;
+                        bitangents[bitangentIndex++] = bitangent.x;
+                        bitangents[bitangentIndex++] = bitangent.y;
+                        bitangents[bitangentIndex++] = bitangent.z;
                     }
                 }
             }
@@ -350,11 +349,11 @@ define([
                 });
             }
 
-            if (vertexFormat.binormal) {
-                attributes.binormal = new GeometryAttribute({
+            if (vertexFormat.bitangent) {
+                attributes.bitangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : binormals
+                    values : bitangents
                 });
             }
         }
@@ -399,6 +398,24 @@ define([
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
         });
+    };
+
+    var unitEllipsoidGeometry;
+
+    /**
+     * Returns the geometric representation of a unit ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @private
+     */
+    EllipsoidGeometry.getUnitEllipsoid = function() {
+        if (!defined(unitEllipsoidGeometry)) {
+            unitEllipsoidGeometry = EllipsoidGeometry.createGeometry((new EllipsoidGeometry({
+                radii : new Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : VertexFormat.POSITION_ONLY
+            })));
+        }
+        return unitEllipsoidGeometry;
     };
 
     return EllipsoidGeometry;

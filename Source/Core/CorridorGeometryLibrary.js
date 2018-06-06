@@ -1,9 +1,7 @@
-/*global define*/
 define([
         './Cartesian3',
         './CornerType',
         './defined',
-        './isArray',
         './Math',
         './Matrix3',
         './PolylinePipeline',
@@ -13,7 +11,6 @@ define([
         Cartesian3,
         CornerType,
         defined,
-        isArray,
         CesiumMath,
         Matrix3,
         PolylinePipeline,
@@ -153,13 +150,6 @@ define([
         }
     };
 
-    function scaleToSurface(positions, ellipsoid) {
-        for (var i = 0; i < positions.length; i++) {
-            positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
-        }
-        return positions;
-    }
-
     var scratchForwardProjection = new Cartesian3();
     var scratchBackwardProjection = new Cartesian3();
 
@@ -170,7 +160,6 @@ define([
         var granularity = params.granularity;
         var positions = params.positions;
         var ellipsoid = params.ellipsoid;
-        positions = scaleToSurface(positions, ellipsoid);
         var width = params.width / 2;
         var cornerType = params.cornerType;
         var saveAttributes = params.saveAttributes;

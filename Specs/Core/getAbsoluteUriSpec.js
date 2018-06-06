@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/getAbsoluteUri',
         'Core/getBaseUri'
@@ -16,6 +15,16 @@ defineSuite([
 
         result = getAbsoluteUri('awesome.png');
         expect(result).toEqual(getBaseUri(document.location.href) + 'awesome.png');
+    });
+
+    it('document.baseURI is respected', function() {
+        var fakeDocument = {
+            baseURI : 'http://test.com/index.html',
+            location : document.location
+        };
+
+        var result = getAbsoluteUri._implementation('awesome.png', undefined, fakeDocument);
+        expect(result).toEqual('http://test.com/awesome.png');
     });
 
     it('throws with undefined parameter', function() {

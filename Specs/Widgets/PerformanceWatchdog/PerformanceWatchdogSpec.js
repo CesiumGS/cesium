@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/PerformanceWatchdog/PerformanceWatchdog',
         'Specs/createScene'
@@ -25,7 +24,7 @@ defineSuite([
             container : 'testContainer',
             scene : scene
         });
-        expect(widget.container).toBe(container);
+        expect(widget.container.id).toEqual(container.id);
         expect(widget.isDestroyed()).toEqual(false);
 
         widget.destroy();

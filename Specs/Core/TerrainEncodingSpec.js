@@ -1,11 +1,9 @@
-/*global defineSuite*/
 defineSuite([
         'Core/TerrainEncoding',
         'Core/AttributeCompression',
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Math',
         'Core/Matrix4',
         'Core/TerrainQuantization',
         'Core/Transforms'
@@ -15,7 +13,6 @@ defineSuite([
         AxisAlignedBoundingBox,
         Cartesian2,
         Cartesian3,
-        CesiumMath,
         Matrix4,
         TerrainQuantization,
         Transforms) {

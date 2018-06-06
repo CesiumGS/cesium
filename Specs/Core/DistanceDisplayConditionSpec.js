@@ -1,12 +1,9 @@
-/*global defineSuite*/
 defineSuite([
         'Core/DistanceDisplayCondition',
-        'Core/Cartesian3',
-        'Core/Matrix4'
+        'Specs/createPackableSpecs'
     ], function(
         DistanceDisplayCondition,
-        Cartesian3,
-        Matrix4) {
+        createPackableSpecs) {
     'use strict';
 
     it('default constructs', function() {
@@ -92,4 +89,6 @@ defineSuite([
         var returnedResult = dc.clone(dc);
         expect(dc).toBe(returnedResult);
     });
+
+    createPackableSpecs(DistanceDisplayCondition, new DistanceDisplayCondition(1, 2), [1, 2]);
 });

@@ -1,23 +1,16 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Globe',
         'Core/CesiumTerrainProvider',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/loadWithXhr',
         'Core/Rectangle',
-        'Renderer/ClearCommand',
+        'Core/Resource',
         'Scene/SingleTileImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
         Globe,
         CesiumTerrainProvider,
-        defined,
-        Ellipsoid,
-        loadWithXhr,
         Rectangle,
-        ClearCommand,
+        Resource,
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {
@@ -41,14 +34,14 @@ defineSuite([
 
     afterEach(function() {
         scene.globe = undefined;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     function returnTileJson(path) {
-        var oldLoad = loadWithXhr.load;
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        var oldLoad = Resource._Implementations.loadWithXhr;
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
-                loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr(path, responseType, method, data, headers, deferred);
             } else {
                 return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
@@ -68,7 +61,7 @@ defineSuite([
         return pollToPromise(function() {
             globe._surface._debug.enableDebugOutput = true;
             scene.render();
-            return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
+            return globe.tilesLoaded;
         });
     }
 
@@ -83,9 +76,9 @@ defineSuite([
 
         return updateUntilDone(globe).then(function() {
             scene.globe.show = false;
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             scene.globe.show = true;
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         });
     });
 
@@ -100,9 +93,44 @@ defineSuite([
 
         return updateUntilDone(globe).then(function() {
             scene.globe.show = false;
-            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            expect(scene).toRender([0, 0, 0, 255]);
             scene.globe.show = true;
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('ImageryLayersUpdated event fires when layer is added, hidden, shown, moved, or removed', function() {
+        var timesEventRaised = 0;
+        globe.imageryLayersUpdatedEvent.addEventListener(function () {
+            ++timesEventRaised;
+        });
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        return updateUntilDone(globe).then(function() {
+            expect(timesEventRaised).toEqual(2);
+
+            layer.show = false;
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(3);
+
+            layer.show = true;
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(4);
+
+            layerCollection.raise(layer);
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(5);
+
+            layerCollection.remove(layer);
+            return updateUntilDone(globe);
+        }).then(function () {
+            expect(timesEventRaised).toEqual(6);
         });
     });
 
@@ -120,6 +148,37 @@ defineSuite([
         expect(spyListener).toHaveBeenCalledWith(terrainProvider);
     });
 
+    it('tilesLoaded return true when tile load queue is empty', function() {
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueHigh.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueHigh.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueMedium.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueMedium.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+        globe._surface._tileLoadQueueLow.length = 2;
+        expect(globe.tilesLoaded).toBe(false);
+
+        globe._surface._tileLoadQueueLow.length = 0;
+        expect(globe.tilesLoaded).toBe(true);
+
+         var terrainProvider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : true
+        });
+
+        globe.terrainProvider = terrainProvider;
+        scene.render();
+        expect(globe.tilesLoaded).toBe(false);
+    });
+
     it('renders terrain with enableLighting', function() {
         globe.enableLighting = true;
 
@@ -127,8 +186,8 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
         };
 
         returnVertexNormalTileJson();
@@ -139,18 +198,13 @@ defineSuite([
         });
 
         globe.terrainProvider = terrainProvider;
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
-        return pollToPromise(function() {
-            return terrainProvider.ready;
-        }).then(function() {
-            scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+        return updateUntilDone(globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
 
-            return updateUntilDone(globe).then(function() {
-                scene.globe.show = false;
-                expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-                scene.globe.show = true;
-                expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-            });
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
         });
     });
 }, 'WebGL');

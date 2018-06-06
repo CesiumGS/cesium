@@ -1,18 +1,12 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
+        '../Core/Check',
         '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
         '../Core/PrimitiveType',
         '../Shaders/ViewportQuadVS',
-        './BufferUsage',
         './ClearCommand',
         './DrawCommand',
         './Framebuffer',
@@ -20,18 +14,13 @@ define([
         './ShaderProgram'
     ], function(
         BoundingRectangle,
+        Check,
         Color,
-        ComponentDatatype,
-        defaultValue,
         defined,
-        defineProperties,
         destroyObject,
         DeveloperError,
-        Geometry,
-        GeometryAttribute,
         PrimitiveType,
         ViewportQuadVS,
-        BufferUsage,
         ClearCommand,
         DrawCommand,
         Framebuffer,
@@ -88,9 +77,7 @@ define([
 
     ComputeEngine.prototype.execute = function(computeCommand) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(computeCommand)) {
-            throw new DeveloperError('computeCommand is required.');
-        }
+        Check.defined('computeCommand', computeCommand);
         //>>includeEnd('debug');
 
         // This may modify the command's resources, so do error checking afterwards
@@ -103,9 +90,7 @@ define([
             throw new DeveloperError('computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required.');
         }
 
-        if (!defined(computeCommand.outputTexture)) {
-            throw new DeveloperError('computeCommand.outputTexture is required.');
-        }
+        Check.defined('computeCommand.outputTexture', computeCommand.outputTexture);
         //>>includeEnd('debug');
 
         var outputTexture = computeCommand.outputTexture;

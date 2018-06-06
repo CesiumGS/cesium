@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -6,6 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Math',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -14,6 +14,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        CesiumMath,
         when) {
     'use strict';
 
@@ -26,6 +27,7 @@ define([
         this._dataSources = [];
         this._dataSourceAdded = new Event();
         this._dataSourceRemoved = new Event();
+        this._dataSourceMoved = new Event();
     }
 
     defineProperties(DataSourceCollection.prototype, {
@@ -64,6 +66,19 @@ define([
         dataSourceRemoved : {
             get : function() {
                 return this._dataSourceRemoved;
+            }
+        },
+
+        /**
+         * An event that is raised when a data source changes position in the collection.  Event handlers are passed the data source
+         * that was moved, its new index after the move, and its old index prior to the move.
+         * @memberof DataSourceCollection.prototype
+         * @type {Event}
+         * @readonly
+         */
+        dataSourceMoved : {
+            get : function() {
+                return this._dataSourceMoved;
             }
         }
     });
@@ -166,6 +181,7 @@ define([
      * Gets a data source by index from the collection.
      *
      * @param {Number} index the index to retrieve.
+     * @returns {DataSource} The data source at the specified index.
      */
     DataSourceCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -175,6 +191,105 @@ define([
         //>>includeEnd('debug');
 
         return this._dataSources[index];
+    };
+
+    function getIndex(dataSources, dataSource) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(dataSource)) {
+            throw new DeveloperError('dataSource is required.');
+        }
+        //>>includeEnd('debug');
+
+        var index = dataSources.indexOf(dataSource);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (index === -1) {
+            throw new DeveloperError('dataSource is not in this collection.');
+        }
+        //>>includeEnd('debug');
+
+        return index;
+    }
+
+    function swapDataSources(collection, i, j) {
+        var arr = collection._dataSources;
+        var length = arr.length - 1;
+        i = CesiumMath.clamp(i, 0, length);
+        j = CesiumMath.clamp(j, 0, length);
+
+        if (i === j) {
+            return;
+        }
+
+        var temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+
+        collection.dataSourceMoved.raiseEvent(temp, j, i);
+    }
+
+    /**
+     * Raises a data source up one position in the collection.
+     *
+     * @param {DataSource} dataSource The data source to move.
+     *
+     * @exception {DeveloperError} dataSource is not in this collection.
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    DataSourceCollection.prototype.raise = function(dataSource) {
+        var index = getIndex(this._dataSources, dataSource);
+        swapDataSources(this, index, index + 1);
+    };
+
+    /**
+     * Lowers a data source down one position in the collection.
+     *
+     * @param {DataSource} dataSource The data source to move.
+     *
+     * @exception {DeveloperError} dataSource is not in this collection.
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    DataSourceCollection.prototype.lower = function(dataSource) {
+        var index = getIndex(this._dataSources, dataSource);
+        swapDataSources(this, index, index - 1);
+    };
+
+    /**
+     * Raises a data source to the top of the collection.
+     *
+     * @param {DataSource} dataSource The data source to move.
+     *
+     * @exception {DeveloperError} dataSource is not in this collection.
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    DataSourceCollection.prototype.raiseToTop = function(dataSource) {
+        var index = getIndex(this._dataSources, dataSource);
+        if (index === this._dataSources.length - 1) {
+            return;
+        }
+        this._dataSources.splice(index, 1);
+        this._dataSources.push(dataSource);
+
+        this.dataSourceMoved.raiseEvent(dataSource, this._dataSources.length - 1, index);
+    };
+
+    /**
+     * Lowers a data source to the bottom of the collection.
+     *
+     * @param {DataSource} dataSource The data source to move.
+     *
+     * @exception {DeveloperError} dataSource is not in this collection.
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    DataSourceCollection.prototype.lowerToBottom = function(dataSource) {
+        var index = getIndex(this._dataSources, dataSource);
+        if (index === 0) {
+            return;
+        }
+        this._dataSources.splice(index, 1);
+        this._dataSources.splice(0, 0, dataSource);
+
+        this.dataSourceMoved.raiseEvent(dataSource, 0, index);
     };
 
     /**
@@ -197,14 +312,12 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
      * @example
      * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
-     * 
+     *
      * @see DataSourceCollection#isDestroyed
      */
     DataSourceCollection.prototype.destroy = function() {

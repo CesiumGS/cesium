@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartographic',
         'Core/Cartesian3',
@@ -26,6 +25,16 @@ defineSuite([
         expect(c.longitude).toEqual(1);
         expect(c.latitude).toEqual(2);
         expect(c.height).toEqual(3);
+    });
+
+    it('toCartesian conversion from Cartographic input to Cartesian3 output', function(){
+        var lon = CesiumMath.toRadians(150);
+        var lat = CesiumMath.toRadians(-40);
+        var height = 100000;
+        var ellipsoid = Ellipsoid.WGS84;
+        var actual = Cartographic.toCartesian(new Cartographic(lon, lat, height));
+        var expected = ellipsoid.cartographicToCartesian(new Cartographic(lon, lat, height));
+        expect(actual).toEqual(expected);
     });
 
     it('fromRadians works without a result parameter', function() {
@@ -109,6 +118,22 @@ defineSuite([
         expect(function() {
             Cartographic.fromCartesian();
         }).toThrowDeveloperError();
+    });
+
+    it('fromCartesian works with a value that is above the ellipsoid surface', function() {
+        var cartographic1 = Cartographic.fromDegrees(35.766989, 33.333602, 3000);
+        var cartesian1 = Cartesian3.fromRadians(cartographic1.longitude, cartographic1.latitude, cartographic1.height);
+        var cartographic2 = Cartographic.fromCartesian(cartesian1);
+
+        expect(cartographic2).toEqualEpsilon(cartographic1, CesiumMath.EPSILON8);
+    });
+
+    it('fromCartesian works with a value that is bellow the ellipsoid surface', function() {
+        var cartographic1 = Cartographic.fromDegrees(35.766989, 33.333602, -3000);
+        var cartesian1 = Cartesian3.fromRadians(cartographic1.longitude, cartographic1.latitude, cartographic1.height);
+        var cartographic2 = Cartographic.fromCartesian(cartesian1);
+
+        expect(cartographic2).toEqualEpsilon(cartographic1, CesiumMath.EPSILON8);
     });
 
     it('clone without a result parameter', function() {

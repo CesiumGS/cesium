@@ -1,13 +1,9 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PrimitiveCollection',
-        'Core/Cartesian3',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/defined',
         'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Scene/HorizontalOrigin',
@@ -18,13 +14,10 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PrimitiveCollection,
-        Cartesian3,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         GeometryInstance,
-        CesiumMath,
-        Matrix4,
         Rectangle,
         RectangleGeometry,
         HorizontalOrigin,
@@ -96,14 +89,14 @@ defineSuite([
         scene.primitives.removeAll();
         scene.camera.setView({ destination : rectangle });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitives);
 
         if (defined(color)) {
-            expect(scene.renderForSpecs()).toEqual(color);
+            expect(scene).toRender(color);
         } else {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            expect(scene).notToRender([0, 0, 0, 255]);
         }
     }
 
@@ -299,8 +292,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(l);
+        expect(scene).toPickPrimitive(l);
     });
 
     it('does not pick', function() {
@@ -311,8 +303,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives, [0, 0, 0, 255]);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('picks child composites', function() {
@@ -325,8 +316,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(l);
+        expect(scene).toPickPrimitive(l);
     });
 
     it('picks a primitive added with render order (0)', function() {
@@ -338,8 +328,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p1);
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with render order (1)', function() {
@@ -351,8 +340,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p0);
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with raise (0)', function() {
@@ -365,8 +353,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p1);
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with raise (1)', function() {
@@ -379,8 +366,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p0);
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with raiseToTop (0)', function() {
@@ -393,8 +379,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p1);
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with raiseToTop (1)', function() {
@@ -407,8 +392,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p0);
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with lower (0)', function() {
@@ -421,8 +405,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p0);
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with lower (1)', function() {
@@ -435,8 +418,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p1);
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('picks a primitive added with lowerToBottom (0)', function() {
@@ -449,8 +431,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p0);
+        expect(scene).toPickPrimitive(p0);
     });
 
     it('picks a primitive added with lowerToBottom (1)', function() {
@@ -463,8 +444,7 @@ defineSuite([
 
         verifyPrimitivesRender(primitives);
 
-        var pickedObject = scene.pickForSpecs();
-        expect(pickedObject.primitive).toEqual(p1);
+        expect(scene).toPickPrimitive(p1);
     });
 
     it('is not destroyed when first constructed', function() {

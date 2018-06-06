@@ -1,14 +1,11 @@
-/*global define*/
 define([
         '../Core/Cartographic',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './ImageryLayerFeatureInfo'
     ], function(
         Cartographic,
-        defaultValue,
         defined,
         DeveloperError,
         RuntimeError,
@@ -241,7 +238,9 @@ define([
                 break;
             }
         }
-
+        if (!defined(layer)) {
+            throw new RuntimeError('Unable to find first child of the feature info xml document');
+        }
         var featureMembers = layer.childNodes;
         for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
             var featureMember = featureMembers[featureIndex];

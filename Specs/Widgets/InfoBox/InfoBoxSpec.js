@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/InfoBox/InfoBox',
         'Core/defined',
@@ -61,7 +60,7 @@ defineSuite([
 
     it('constructor works with string id container', function() {
         infoBox = new InfoBox('testContainer');
-        expect(infoBox.container).toBe(testContainer);
+        expect(infoBox.container.id).toBe(testContainer.id);
     });
 
     it('throws if container is undefined', function() {

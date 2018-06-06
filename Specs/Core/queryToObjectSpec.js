@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/queryToObject'
     ], function(
@@ -36,6 +35,16 @@ defineSuite([
 
         expect(obj).toEqual({
             key : ['a', 'b']
+        });
+    });
+
+    it('can use ; instead of &', function() {
+        var str = 'key=a;key=b;key2=c';
+        var obj = queryToObject(str);
+
+        expect(obj).toEqual({
+            key : ['a', 'b'],
+            key2 : 'c'
         });
     });
 

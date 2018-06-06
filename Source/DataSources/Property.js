@@ -1,16 +1,13 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Iso8601'
+        '../Core/DeveloperError'
     ], function(
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
-        Iso8601) {
+        DeveloperError) {
     'use strict';
 
     /**

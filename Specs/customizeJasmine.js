@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Source/ThirdParty/when',
         'Specs/addDefaultMatchers',
@@ -9,7 +8,7 @@ define([
         equalsMethodEqualityTester) {
     "use strict";
 
-    return function (env, includedCategory, excludedCategory, webglValidation, release) {
+    return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
         function defineSuite(deps, name, suite, categories, focus) {
             /*global define,describe,fdescribe*/
             if (typeof suite === 'object' || typeof suite === 'string') {
@@ -42,6 +41,8 @@ define([
                 }
             });
         }
+
+        window.specsUsingRelease = release;
 
         window.fdefineSuite = function(deps, name, suite, categories) {
             defineSuite(deps, name, suite, categories, true);
@@ -135,6 +136,10 @@ define([
 
         if (webglValidation) {
             window.webglValidation = true;
+        }
+
+        if (webglStub) {
+            window.webglStub = true;
         }
 
         //env.catchExceptions(true);

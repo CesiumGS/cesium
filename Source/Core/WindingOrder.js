@@ -1,10 +1,9 @@
-/*global define*/
 define([
-        '../Renderer/WebGLConstants',
-        './freezeObject'
+        './freezeObject',
+        './WebGLConstants'
     ], function(
-        WebGLConstants,
-        freezeObject) {
+        freezeObject,
+        WebGLConstants) {
     'use strict';
 
     /**

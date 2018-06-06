@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/ScreenSpaceEventHandler',
         'Core/Cartesian2',
@@ -57,7 +56,7 @@ defineSuite([
         return cloningSpy;
     }
 
-    var eventsToStop = 'pointerdown pointerup pointermove mousedown mouseup mousemove touchstart touchend touchmove dblclick wheel mousewheel DOMMouseScroll'.split(' ');
+    var eventsToStop = 'pointerdown pointerup pointermove pointercancel mousedown mouseup mousemove touchstart touchend touchmove touchcancel dblclick wheel mousewheel DOMMouseScroll'.split(' ');
 
     function stop(event) {
         event.stopPropagation();
@@ -387,9 +386,9 @@ defineSuite([
             expect(action).not.toHaveBeenCalled();
         }
 
-        var possibleButtons = [MouseButton.LEFT, MouseButton.MIDDLE, MouseButton.RIGHT];
+        var possibleButtons = [MouseButton.LEFT];
         var possibleModifiers = [undefined, KeyboardEventModifier.SHIFT, KeyboardEventModifier.CTRL, KeyboardEventModifier.ALT];
-        var possibleEventTypes = [ScreenSpaceEventType.LEFT_DOUBLE_CLICK, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, ScreenSpaceEventType.RIGHT_DOUBLE_CLICK];
+        var possibleEventTypes = [ScreenSpaceEventType.LEFT_DOUBLE_CLICK];
         createAllMouseSpecCombinations(testMouseDoubleClickEvent, possibleButtons, possibleModifiers, possibleEventTypes);
     });
 
@@ -735,6 +734,122 @@ defineSuite([
         expect(action).not.toHaveBeenCalled();
     });
 
+    it('treats touch end as touch cancel', function() {
+        var eventType = ScreenSpaceEventType.LEFT_UP;
+
+        var action = createCloningSpy('action');
+        handler.setInputAction(action, eventType);
+
+        expect(handler.getInputAction(eventType)).toEqual(action);
+
+        // start, then end
+        function simulateInput() {
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchEndPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                DomEventSimulator.firePointerCancel(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchEndPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                DomEventSimulator.fireTouchCancel(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchEndPosition)]
+                });
+            }
+        }
+
+        simulateInput();
+
+        expect(action.calls.count()).toEqual(1);
+        expect(action).toHaveBeenCalledWith({
+            position : new Cartesian2(1, 2)
+        });
+
+        action.calls.reset();
+
+        // start, move, then end
+        function simulateInput2() {
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchMovePosition = {
+                clientX : 10,
+                clientY : 11
+            };
+            var touchEndPosition = {
+                clientX : 10,
+                clientY : 11
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                DomEventSimulator.firePointerMove(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchMovePosition));
+                DomEventSimulator.firePointerCancel(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchEndPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                DomEventSimulator.fireTouchMove(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchMovePosition)]
+                });
+                DomEventSimulator.fireTouchCancel(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchEndPosition)]
+                });
+            }
+        }
+
+        simulateInput2();
+
+        expect(action.calls.count()).toEqual(1);
+        expect(action).toHaveBeenCalledWith({
+            position : new Cartesian2(10, 11)
+        });
+
+        // should not be fired after removal
+        action.calls.reset();
+
+        handler.removeInputAction(eventType);
+
+        simulateInput();
+        simulateInput2();
+
+        expect(action).not.toHaveBeenCalled();
+    });
+
     it('handles touch pinch start', function() {
         var eventType = ScreenSpaceEventType.PINCH_START;
 
@@ -922,6 +1037,113 @@ defineSuite([
         expect(action).not.toHaveBeenCalled();
     });
 
+    it('handles touch pinch release', function() {
+        var leftDownEventType = ScreenSpaceEventType.LEFT_DOWN;
+        var leftDownAction = createCloningSpy('LEFT_DOWN');
+        handler.setInputAction(leftDownAction, leftDownEventType);
+
+        var pinchStartEventType = ScreenSpaceEventType.PINCH_START;
+        var pinchStartAction = createCloningSpy('PINCH_START');
+        handler.setInputAction(pinchStartAction, pinchStartEventType);
+
+        var pinchEndEventType = ScreenSpaceEventType.PINCH_END;
+        var pinchEndAction = createCloningSpy('PINCH_END');
+        handler.setInputAction(pinchEndAction, pinchEndEventType);
+
+        var touch1Position = {
+            clientX : 1,
+            clientY : 2
+        };
+        var touch2Position = {
+            clientX : 4,
+            clientY : 3
+        };
+        if (usePointerEvents) {
+            DomEventSimulator.firePointerDown(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch1Position
+            ));
+            DomEventSimulator.firePointerDown(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 2
+                },
+                touch2Position
+            ));
+
+            // Releasing one of two fingers should not trigger
+            // PINCH_END or LEFT_DOWN:
+            leftDownAction.calls.reset();
+            DomEventSimulator.firePointerUp(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch1Position
+            ));
+            expect(pinchEndAction).not.toHaveBeenCalled();
+            expect(leftDownAction).not.toHaveBeenCalled();
+            pinchEndAction.calls.reset();
+
+            // Putting another finger down should not trigger
+            // PINCH_START:
+            pinchStartAction.calls.reset();
+            DomEventSimulator.firePointerDown(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch2Position
+            ));
+            expect(pinchStartAction).not.toHaveBeenCalled();
+
+            // Releasing both fingers should trigger PINCH_END:
+            DomEventSimulator.firePointerUp(element, combine(
+                {
+                    pointerType : 'touch',
+                    pointerId : 1
+                },
+                touch2Position
+            ));
+            DomEventSimulator.firePointerUp(element, combine({
+                pointerType : 'touch',
+                pointerId : 2
+            }, touch2Position));
+            expect(pinchEndAction).toHaveBeenCalled();
+        } else {
+            DomEventSimulator.fireTouchStart(element, {
+                changedTouches : [
+                    combine({ identifier : 0 }, touch1Position),
+                    combine({ identifier : 1 }, touch2Position)
+                ]
+            });
+            leftDownAction.calls.reset();
+
+            // Releasing one of two fingers should not trigger
+            // PINCH_END or LEFT_DOWN:
+            DomEventSimulator.fireTouchEnd(element, {
+                changedTouches : [
+                    combine({ identifier : 0 }, touch1Position)
+                ]
+            });
+
+            expect(pinchEndAction).not.toHaveBeenCalled();
+            expect(leftDownAction).not.toHaveBeenCalled();
+
+            // Releasing both fingers should trigger PINCH_END:
+            pinchEndAction.calls.reset();
+            DomEventSimulator.fireTouchEnd(element, {
+                changedTouches : [
+                    combine({ identifier : 1 }, touch2Position)
+                ]
+            });
+            expect(pinchEndAction).toHaveBeenCalled();
+        }
+    });
+
     it('handles touch click', function() {
         var eventType = ScreenSpaceEventType.LEFT_CLICK;
 
@@ -957,6 +1179,65 @@ defineSuite([
                     }, touchStartPosition)]
                 });
                 DomEventSimulator.fireTouchEnd(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchEndPosition)]
+                });
+            }
+        }
+
+        simulateInput();
+
+        expect(action.calls.count()).toEqual(1);
+        expect(action).toHaveBeenCalledWith({
+            position : new Cartesian2(1, 2)
+        });
+
+        // should not be fired after removal
+        action.calls.reset();
+
+        handler.removeInputAction(eventType);
+
+        simulateInput();
+
+        expect(action).not.toHaveBeenCalled();
+    });
+
+    it('treats touch cancel as touch end for touch clicks', function() {
+        var eventType = ScreenSpaceEventType.LEFT_CLICK;
+
+        var action = createCloningSpy('action');
+        handler.setInputAction(action, eventType);
+
+        expect(handler.getInputAction(eventType)).toEqual(action);
+
+        // start, then end
+        function simulateInput() {
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchEndPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                DomEventSimulator.firePointerCancel(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchEndPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                DomEventSimulator.fireTouchCancel(element, {
                     changedTouches : [combine({
                         identifier : 0
                     }, touchEndPosition)]

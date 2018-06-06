@@ -2,10 +2,7 @@ varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_innerPercent;
 varying float v_pixelDistance;
-
-#ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
-#endif
 
 void main()
 {
@@ -18,14 +15,29 @@ void main()
 
     vec4 color = mix(v_outlineColor, v_color, innerAlpha);
     color.a *= wholeAlpha;
-    if (color.a < 0.005)
+
+// Fully transparent parts of the billboard are not pickable.
+#if !defined(OPAQUE) && !defined(TRANSLUCENT)
+    if (color.a < 0.005)   // matches 0/255 and 1/255
     {
         discard;
     }
-
-#ifdef RENDER_FOR_PICK
-    gl_FragColor = v_pickColor;
 #else
-    gl_FragColor = color;
+// The billboard is rendered twice. The opaque pass discards translucent fragments
+// and the translucent pass discards opaque fragments.
+#ifdef OPAQUE
+    if (color.a < 0.995)   // matches < 254/255
+    {
+        discard;
+    }
+#else
+    if (color.a >= 0.995)  // matches 254/255 and 255/255
+    {
+        discard;
+    }
 #endif
+#endif
+
+    gl_FragColor = color;
+    czm_writeLogDepth();
 }

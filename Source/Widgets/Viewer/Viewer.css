@@ -95,3 +95,14 @@
     display: inline-block;
     margin: 0 3px;
 }
+
+.cesium-viewer-cesium3DTilesInspectorContainer {
+    display: block;
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    max-height: 100%;
+    padding-bottom: 70px;
+    box-sizing: border-box;
+    overflow: auto;
+}

@@ -1,31 +1,30 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
         './Intersect',
         './Interval',
+        './Math',
         './Matrix3',
         './Matrix4',
-        './Plane',
         './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         Ellipsoid,
         GeographicProjection,
         Intersect,
         Interval,
+        CesiumMath,
         Matrix3,
         Matrix4,
-        Plane,
         Rectangle) {
     'use strict';
 
@@ -69,13 +68,14 @@ define([
     var fromPointsMinBoxPt = new Cartesian3();
     var fromPointsMaxBoxPt = new Cartesian3();
     var fromPointsNaiveCenterScratch = new Cartesian3();
+    var volumeConstant = (4.0 / 3.0) * CesiumMath.PI;
 
     /**
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
      * The bounding sphere is computed by running two algorithms, a naive algorithm and
      * Ritter's algorithm. The smaller of the two spheres is used to ensure a tight fit.
      *
-     * @param {Cartesian3[]} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
+     * @param {Cartesian3[]} [positions] An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
@@ -103,7 +103,8 @@ define([
         var zMax = Cartesian3.clone(currentPos, fromPointsZMax);
 
         var numPositions = positions.length;
-        for (var i = 1; i < numPositions; i++) {
+        var i;
+        for (i = 1; i < numPositions; i++) {
             Cartesian3.clone(positions[i], currentPos);
 
             var x = currentPos.x;
@@ -223,9 +224,9 @@ define([
     var fromRectangle2DNortheast = new Cartographic();
 
     /**
-     * Computes a bounding sphere from an rectangle projected in 2D.
+     * Computes a bounding sphere from a rectangle projected in 2D.
      *
-     * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
+     * @param {Rectangle} [rectangle] The rectangle around which to create a bounding sphere.
      * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
@@ -235,10 +236,10 @@ define([
     };
 
     /**
-     * Computes a bounding sphere from an rectangle projected in 2D.  The bounding sphere accounts for the
+     * Computes a bounding sphere from a rectangle projected in 2D.  The bounding sphere accounts for the
      * object's minimum and maximum heights over the rectangle.
      *
-     * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
+     * @param {Rectangle} [rectangle] The rectangle around which to create a bounding sphere.
      * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
      * @param {Number} [minimumHeight=0.0] The minimum height over the rectangle.
      * @param {Number} [maximumHeight=0.0] The maximum height over the rectangle.
@@ -281,10 +282,10 @@ define([
     var fromRectangle3DScratch = [];
 
     /**
-     * Computes a bounding sphere from an rectangle in 3D. The bounding sphere is created using a subsample of points
+     * Computes a bounding sphere from a rectangle in 3D. The bounding sphere is created using a subsample of points
      * on the ellipsoid and contained in the rectangle. It may not be accurate for all rectangles on all types of ellipsoids.
      *
-     * @param {Rectangle} rectangle The valid rectangle used to create a bounding sphere.
+     * @param {Rectangle} [rectangle] The valid rectangle used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
      * @param {Number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
      * @param {BoundingSphere} [result] The object onto which to store the result.
@@ -294,11 +295,17 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
-        var positions;
-        if (defined(rectangle)) {
-            positions = Rectangle.subsample(rectangle, ellipsoid, surfaceHeight, fromRectangle3DScratch);
+        if (!defined(result)) {
+            result = new BoundingSphere();
         }
 
+        if (!defined(rectangle)) {
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
+            result.radius = 0.0;
+            return result;
+        }
+
+        var positions = Rectangle.subsample(rectangle, ellipsoid, surfaceHeight, fromRectangle3DScratch);
         return BoundingSphere.fromPoints(positions, result);
     };
 
@@ -308,7 +315,7 @@ define([
      * algorithms, a naive algorithm and Ritter's algorithm. The smaller of the two spheres is used to
      * ensure a tight fit.
      *
-     * @param {Number[]} positions An array of points that the bounding sphere will enclose.  Each point
+     * @param {Number[]} [positions] An array of points that the bounding sphere will enclose.  Each point
      *        is formed from three elements in the array in the order X, Y, Z.
      * @param {Cartesian3} [center=Cartesian3.ZERO] The position to which the positions are relative, which need not be the
      *        origin of the coordinate system.  This is useful when the positions are to be used for
@@ -350,9 +357,7 @@ define([
         stride = defaultValue(stride, 3);
 
         //>>includeStart('debug', pragmas.debug);
-        if (stride < 3) {
-            throw new DeveloperError('stride must be 3 or greater.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('stride', stride, 3);
         //>>includeEnd('debug');
 
         var currentPos = fromPointsCurrentPos;
@@ -369,7 +374,8 @@ define([
         var zMax = Cartesian3.clone(currentPos, fromPointsZMax);
 
         var numElements = positions.length;
-        for (var i = 0; i < numElements; i += stride) {
+        var i;
+        for (i = 0; i < numElements; i += stride) {
             var x = positions[i] + center.x;
             var y = positions[i + 1] + center.y;
             var z = positions[i + 2] + center.z;
@@ -492,9 +498,9 @@ define([
      * algorithms, a naive algorithm and Ritter's algorithm. The smaller of the two spheres is used to
      * ensure a tight fit.
      *
-     * @param {Number[]} positionsHigh An array of high bits of the encoded cartesians that the bounding sphere will enclose.  Each point
+     * @param {Number[]} [positionsHigh] An array of high bits of the encoded cartesians that the bounding sphere will enclose.  Each point
      *        is formed from three elements in the array in the order X, Y, Z.
-     * @param {Number[]} positionsLow An array of low bits of the encoded cartesians that the bounding sphere will enclose.  Each point
+     * @param {Number[]} [positionsLow] An array of low bits of the encoded cartesians that the bounding sphere will enclose.  Each point
      *        is formed from three elements in the array in the order X, Y, Z.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
@@ -526,7 +532,8 @@ define([
         var zMax = Cartesian3.clone(currentPos, fromPointsZMax);
 
         var numElements = positionsHigh.length;
-        for (var i = 0; i < numElements; i += 3) {
+        var i;
+        for (i = 0; i < numElements; i += 3) {
             var x = positionsHigh[i] + positionsLow[i];
             var y = positionsHigh[i + 1] + positionsLow[i + 1];
             var z = positionsHigh[i + 2] + positionsLow[i + 2];
@@ -658,9 +665,8 @@ define([
      */
     BoundingSphere.fromCornerPoints = function(corner, oppositeCorner, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(corner) || !defined(oppositeCorner)) {
-            throw new DeveloperError('corner and oppositeCorner are required.');
-        }
+        Check.typeOf.object('corner', corner);
+        Check.typeOf.object('oppositeCorner', oppositeCorner);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -686,9 +692,7 @@ define([
      */
     BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('ellipsoid is required.');
-        }
+        Check.typeOf.object('ellipsoid', ellipsoid);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -705,7 +709,7 @@ define([
     /**
      * Computes a tight-fitting bounding sphere enclosing the provided array of bounding spheres.
      *
-     * @param {BoundingSphere[]} boundingSpheres The array of bounding spheres.
+     * @param {BoundingSphere[]} [boundingSpheres] The array of bounding spheres.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
@@ -730,7 +734,8 @@ define([
         }
 
         var positions = [];
-        for (var i = 0; i < length; i++) {
+        var i;
+        for (i = 0; i < length; i++) {
             positions.push(boundingSpheres[i].center);
         }
 
@@ -759,6 +764,10 @@ define([
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromOrientedBoundingBox = function(orientedBoundingBox, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('orientedBoundingBox', orientedBoundingBox);
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             result = new BoundingSphere();
         }
@@ -768,12 +777,11 @@ define([
         var v = Matrix3.getColumn(halfAxes, 1, fromOrientedBoundingBoxScratchV);
         var w = Matrix3.getColumn(halfAxes, 2, fromOrientedBoundingBoxScratchW);
 
-        var uHalf = Cartesian3.magnitude(u);
-        var vHalf = Cartesian3.magnitude(v);
-        var wHalf = Cartesian3.magnitude(w);
+        Cartesian3.add(u, v, u);
+        Cartesian3.add(u, w, u);
 
         result.center = Cartesian3.clone(orientedBoundingBox.center, result.center);
-        result.radius = Math.max(uHalf, vHalf, wHalf);
+        result.radius = Cartesian3.magnitude(u);
 
         return result;
     };
@@ -816,13 +824,8 @@ define([
      */
     BoundingSphere.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -846,9 +849,7 @@ define([
      */
     BoundingSphere.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -877,13 +878,8 @@ define([
      */
     BoundingSphere.union = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-
-        if (!defined(right)) {
-            throw new DeveloperError('right is required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -934,13 +930,8 @@ define([
      */
     BoundingSphere.expand = function(sphere, point, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(point)) {
-            throw new DeveloperError('point is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('point', point);
         //>>includeEnd('debug');
 
         result = BoundingSphere.clone(sphere, result);
@@ -965,13 +956,8 @@ define([
      */
     BoundingSphere.intersectPlane = function(sphere, plane) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('plane', plane);
         //>>includeEnd('debug');
 
         var center = sphere.center;
@@ -999,13 +985,8 @@ define([
      */
     BoundingSphere.transform = function(sphere, transform, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(transform)) {
-            throw new DeveloperError('transform is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('transform', transform);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -1035,12 +1016,8 @@ define([
      */
     BoundingSphere.distanceSquaredTo = function(sphere, cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         var diff = Cartesian3.subtract(sphere.center, cartesian, distanceSquaredToScratch);
@@ -1064,13 +1041,8 @@ define([
      */
     BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(transform)) {
-            throw new DeveloperError('transform is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('transform', transform);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -1099,17 +1071,9 @@ define([
      */
     BoundingSphere.computePlaneDistances = function(sphere, position, direction, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-
-        if (!defined(direction)) {
-            throw new DeveloperError('direction is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('position', position);
+        Check.typeOf.object('direction', direction);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -1146,9 +1110,7 @@ define([
      */
     BoundingSphere.projectTo2D = function(sphere, projection, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
         //>>includeEnd('debug');
 
         projection = defaultValue(projection, projectTo2DProjection);
@@ -1245,12 +1207,8 @@ define([
      */
     BoundingSphere.isOccluded = function(sphere, occluder) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-        if (!defined(occluder)) {
-            throw new DeveloperError('occluder is required.');
-        }
+        Check.typeOf.object('sphere', sphere);
+        Check.typeOf.object('occluder', occluder);
         //>>includeEnd('debug');
         return !occluder.isBoundingSphereVisible(sphere);
     };
@@ -1345,6 +1303,15 @@ define([
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
+    };
+
+    /**
+     * Computes the radius of the BoundingSphere.
+     * @returns {Number} The radius of the BoundingSphere.
+     */
+    BoundingSphere.prototype.volume = function() {
+        var radius = this.radius;
+        return volumeConstant * radius * radius * radius;
     };
 
     return BoundingSphere;

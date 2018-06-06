@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AttributeCompression',
         '../Core/AxisAlignedBoundingBox',
@@ -10,7 +9,6 @@ define([
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
         '../Core/Math',
-        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/TerrainEncoding',
@@ -28,7 +26,6 @@ define([
         Ellipsoid,
         IndexDatatype,
         CesiumMath,
-        Matrix3,
         Matrix4,
         OrientedBoundingBox,
         TerrainEncoding,
@@ -99,6 +96,11 @@ define([
         maximum.y = Number.NEGATIVE_INFINITY;
         maximum.z = Number.NEGATIVE_INFINITY;
 
+        var minLongitude = Number.POSITIVE_INFINITY;
+        var maxLongitude = Number.NEGATIVE_INFINITY;
+        var minLatitude = Number.POSITIVE_INFINITY;
+        var maxLatitude = Number.NEGATIVE_INFINITY;
+
         for (var i = 0; i < quantizedVertexCount; ++i) {
             var u = uBuffer[i] / maxShort;
             var v = vBuffer[i] / maxShort;
@@ -107,6 +109,11 @@ define([
             cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
             cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
             cartographicScratch.height = height;
+
+            minLongitude = Math.min(cartographicScratch.longitude, minLongitude);
+            maxLongitude = Math.max(cartographicScratch.longitude, maxLongitude);
+            minLatitude = Math.min(cartographicScratch.latitude, minLatitude);
+            maxLatitude = Math.max(cartographicScratch.latitude, maxLatitude);
 
             var position = ellipsoid.cartographicToCartesian(cartographicScratch);
 
@@ -176,16 +183,28 @@ define([
         var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
         indexBuffer.set(parameters.indices, 0);
 
+        var percentage = 0.0001;
+        var lonOffset = (maxLongitude - minLongitude) * percentage;
+        var latOffset = (maxLatitude - minLatitude) * percentage;
+        var westLongitudeOffset = -lonOffset;
+        var westLatitudeOffset = 0.0;
+        var eastLongitudeOffset = lonOffset;
+        var eastLatitudeOffset = 0.0;
+        var northLongitudeOffset = 0.0;
+        var northLatitudeOffset = latOffset;
+        var southLongitudeOffset = 0.0;
+        var southLatitudeOffset = -latOffset;
+
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, westLongitudeOffset, westLatitudeOffset);
         vertexBufferIndex += parameters.westIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, southLongitudeOffset, southLatitudeOffset);
         vertexBufferIndex += parameters.southIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, eastLongitudeOffset, eastLatitudeOffset);
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
-        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight);
+        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, northLongitudeOffset, northLatitudeOffset);
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
@@ -236,7 +255,7 @@ define([
         return hMin;
     }
 
-    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, exaggeration, southMercatorY, oneOverMercatorHeight) {
+    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, exaggeration, southMercatorY, oneOverMercatorHeight, longitudeOffset, latitudeOffset) {
         var start, end, increment;
         if (isWestOrNorthEdge) {
             start = edgeVertices.length - 1;
@@ -268,8 +287,8 @@ define([
             var h = heights[index];
             var uv = uvs[index];
 
-            cartographicScratch.longitude = CesiumMath.lerp(west, east, uv.x);
-            cartographicScratch.latitude = CesiumMath.lerp(south, north, uv.y);
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, uv.x) + longitudeOffset;
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, uv.y) + latitudeOffset;
             cartographicScratch.height = h - skirtLength;
 
             var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);

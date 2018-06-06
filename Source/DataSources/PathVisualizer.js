@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/Cartesian3',
@@ -228,25 +227,20 @@ define([
     }
 
     function reallySubSample(property, start, stop, updateTime, referenceFrame, maximumStep, index, result) {
-        var innerProperty = property;
-
-        while (innerProperty instanceof ReferenceProperty || innerProperty instanceof ScaledPositionProperty) {
-            if (innerProperty instanceof ReferenceProperty) {
-                innerProperty = innerProperty.resolvedProperty;
-            }
-            if (innerProperty instanceof ScaledPositionProperty) {
-                innerProperty = innerProperty._value;
-            }
+        //Unwrap any references until we have the actual property.
+        while (property instanceof ReferenceProperty) {
+            property = property.resolvedProperty;
         }
 
-        if (innerProperty instanceof SampledPositionProperty) {
-            var times = innerProperty._property._times;
+        if (property instanceof SampledPositionProperty) {
+            var times = property._property._times;
             index = subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, index, result);
-        } else if (innerProperty instanceof CompositePositionProperty) {
+        } else if (property instanceof CompositePositionProperty) {
             index = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
-        } else if (innerProperty instanceof TimeIntervalCollectionPositionProperty) {
+        } else if (property instanceof TimeIntervalCollectionPositionProperty) {
             index = subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
-        } else if (innerProperty instanceof ConstantPositionProperty) {
+        } else if (property instanceof ConstantPositionProperty ||
+                   (property instanceof ScaledPositionProperty && Property.isConstant(property))) {
             index = subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
         } else {
             //Fallback to generic sampling.

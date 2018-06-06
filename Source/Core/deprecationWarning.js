@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defined',
         './DeveloperError',
@@ -8,7 +7,7 @@ define([
         DeveloperError,
         oneTimeWarning) {
     'use strict';
-    
+
     /**
      * Logs a deprecation message to the console.  Use this function instead of
      * <code>console.log</code> directly since this does not log duplicate messages

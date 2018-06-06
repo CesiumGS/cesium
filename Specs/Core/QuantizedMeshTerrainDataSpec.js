@@ -1,9 +1,7 @@
-/*global defineSuite*/
 defineSuite([
         'Core/QuantizedMeshTerrainData',
         'Core/BoundingSphere',
         'Core/Cartesian3',
-        'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/TerrainData',
@@ -13,7 +11,6 @@ defineSuite([
         QuantizedMeshTerrainData,
         BoundingSphere,
         Cartesian3,
-        defined,
         GeographicTilingScheme,
         CesiumMath,
         TerrainData,
@@ -554,7 +551,6 @@ defineSuite([
                  northSkirtHeight : 1.0,
                  childTileMask : 15
              });
-
 
              // position in the northwest quadrant of the tile.
              var longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.25;

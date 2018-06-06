@@ -1,17 +1,16 @@
-/*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './freezeObject',
         './Math',
         './scaleToGeodeticSurface'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         freezeObject,
         CesiumMath,
         scaleToGeodeticSurface) {
@@ -63,12 +62,8 @@ define([
      */
     Cartographic.fromRadians = function(longitude, latitude, height, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(longitude)) {
-            throw new DeveloperError('longitude is required.');
-        }
-        if (!defined(latitude)) {
-            throw new DeveloperError('latitude is required.');
-        }
+        Check.typeOf.number('longitude', longitude);
+        Check.typeOf.number('latitude', latitude);
         //>>includeEnd('debug');
 
         height = defaultValue(height, 0.0);
@@ -96,12 +91,8 @@ define([
      */
     Cartographic.fromDegrees = function(longitude, latitude, height, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(longitude)) {
-            throw new DeveloperError('longitude is required.');
-        }
-        if (!defined(latitude)) {
-            throw new DeveloperError('latitude is required.');
-        }
+        Check.typeOf.number('longitude', longitude);
+        Check.typeOf.number('latitude', latitude);
         //>>includeEnd('debug');
         longitude = CesiumMath.toRadians(longitude);
         latitude = CesiumMath.toRadians(latitude);
@@ -137,7 +128,7 @@ define([
             return undefined;
         }
 
-        var n = Cartesian3.multiplyComponents(cartesian, oneOverRadiiSquared, cartesianToCartographicN);
+        var n = Cartesian3.multiplyComponents(p, oneOverRadiiSquared, cartesianToCartographicN);
         n = Cartesian3.normalize(n, n);
 
         var h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
@@ -153,6 +144,23 @@ define([
         result.latitude = latitude;
         result.height = height;
         return result;
+    };
+
+    /**
+     * Creates a new Cartesian3 instance from a Cartographic input. The values in the inputted
+     * object should be in radians.
+     *
+     * @param {Cartographic} cartographic Input to be converted into a Cartesian3 output.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The position
+     */
+    Cartographic.toCartesian = function(cartographic, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('cartographic', cartographic);
+        //>>includeEnd('debug');
+
+        return Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, cartographic.height, ellipsoid, result);
     };
 
     /**
@@ -204,9 +212,7 @@ define([
      */
     Cartographic.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number.');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return (left === right) ||

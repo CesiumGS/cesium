@@ -1,11 +1,8 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
         './defineProperties',
         './destroyObject',
-        './DeveloperError',
-        './Event',
         './Iso8601',
         './JulianDate'
     ], function(
@@ -13,8 +10,6 @@ define([
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
-        Event,
         Iso8601,
         JulianDate) {
     'use strict';
@@ -31,7 +26,7 @@ define([
      * @param {JulianDate} [options.epoch=Iso8601.MINIMUM_VALUE] The simulation time that marks the start of the video.
      * @param {Number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Video.html|Video Material Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Video.html|Video Material Demo}
      */
     function VideoSynchronizer(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -115,13 +110,13 @@ define([
                 }
 
                 if (defined(oldValue)) {
-                    oldValue.removeEventListener("seeked", this._seekFunction, false);
+                    oldValue.removeEventListener('seeked', this._seekFunction, false);
                 }
 
                 if (defined(value)) {
                     this._seeking = false;
                     this._seekFunction = createSeekFunction(this);
-                    value.addEventListener("seeked", this._seekFunction, false);
+                    value.addEventListener('seeked', this._seekFunction, false);
                 }
 
                 this._element = value;

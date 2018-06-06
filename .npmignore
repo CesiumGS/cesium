@@ -1,11 +1,15 @@
+/.concierge
+/.eslintcache
 /.externalToolBuilders
 /.gitattributes
+/.github
 /.idea
 /.metadata
 /.npmignore
 /.project
 /.settings
 /.travis.yml
+/.vscode
 /Apps
 /Build/minifyShaders.state
 /Build/Stubs
@@ -18,7 +22,6 @@
 /index.release.html
 /Instrumented
 /launches
-/logo.png
 /server.js
 /Source/copyrightHeader.js
 /Source/main.js

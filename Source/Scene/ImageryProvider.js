@@ -1,18 +1,19 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/loadImage',
-        '../Core/loadImageViaBlob',
-        '../Core/throttleRequestByServer'
+        '../Core/loadCRN',
+        '../Core/loadKTX',
+        '../Core/Resource'
     ], function(
+        Check,
         defined,
         defineProperties,
         DeveloperError,
-        loadImage,
-        loadImageViaBlob,
-        throttleRequestByServer) {
+        loadCRN,
+        loadKTX,
+        Resource) {
     'use strict';
 
     /**
@@ -23,16 +24,21 @@ define([
      * @constructor
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see MapboxImageryProvider
      * @see createOpenStreetMapImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
+     * @see GoogleEarthEnterpriseImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see GridImageryProvider
+     * @see MapboxImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileCoordinatesImageryProvider
+     * @see UrlTemplateImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**
@@ -86,6 +92,22 @@ define([
          * @default undefined
          */
         this.defaultGamma = undefined;
+
+        /**
+         * The default texture minification filter to apply to this provider.
+         *
+         * @type {TextureMinificationFilter}
+         * @default undefined
+         */
+        this.defaultMinificationFilter = undefined;
+
+        /**
+         * The default texture magnification filter to apply to this provider.
+         *
+         * @type {TextureMagnificationFilter}
+         * @default undefined
+         */
+        this.defaultMagnificationFilter = undefined;
 
         DeveloperError.throwInstantiationError();
     }
@@ -264,6 +286,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -294,22 +317,37 @@ define([
      */
     ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
 
+    var ktxRegex = /\.ktx$/i;
+    var crnRegex = /\.crn$/i;
+
     /**
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
      *
-     * @param {String} url The URL of the image.
+     * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
+     * @param {Resource|String} url The URL of the image.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url) {
-        if (defined(imageryProvider.tileDiscardPolicy)) {
-            return throttleRequestByServer(url, loadImageViaBlob);
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('url', url);
+        //>>includeEnd('debug');
+
+        var resource = Resource.createIfNeeded(url);
+
+        if (ktxRegex.test(resource)) {
+            return loadKTX(resource);
+        } else if (crnRegex.test(resource)) {
+            return loadCRN(resource);
+        } else if (defined(imageryProvider.tileDiscardPolicy)) {
+            return resource.fetchImage(true);
         }
-        return throttleRequestByServer(url, loadImage);
+
+        return resource.fetchImage();
     };
 
     return ImageryProvider;

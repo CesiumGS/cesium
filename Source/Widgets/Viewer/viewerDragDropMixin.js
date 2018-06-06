@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -9,7 +8,6 @@ define([
         '../../DataSources/CzmlDataSource',
         '../../DataSources/GeoJsonDataSource',
         '../../DataSources/KmlDataSource',
-        '../../Scene/GroundPrimitive',
         '../getElement'
     ], function(
         defaultValue,
@@ -21,7 +19,6 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
-        GroundPrimitive,
         getElement) {
     'use strict';
 
@@ -275,7 +272,8 @@ define([
                         sourceUri : fileName,
                         proxy : proxy,
                         camera : scene.camera,
-                        canvas : scene.canvas
+                        canvas : scene.canvas,
+                        clampToGround: clampToGround
                     });
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);

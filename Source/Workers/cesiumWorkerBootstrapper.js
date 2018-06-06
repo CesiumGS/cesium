@@ -178,8 +178,9 @@ var requirejs, require, define;
     /**
      * Constructs an error with a pointer to an URL with more information.
      * @param {String} id the error ID that maps to an ID on a web page.
-     * @param {String} message human readable error.
+     * @param {String} msg human readable error.
      * @param {Error} [err] the original error, if there is one.
+     * @param {RequireModules} requireModules The modules required but not found.
      *
      * @returns {Error}
      */

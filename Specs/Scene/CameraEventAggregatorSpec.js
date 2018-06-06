@@ -1,25 +1,20 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/CameraEventAggregator',
         'Core/Cartesian2',
         'Core/combine',
-        'Core/defined',
         'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
         'Scene/CameraEventType',
         'Specs/createCanvas',
-        'Specs/destroyCanvas',
         'Specs/DomEventSimulator'
     ], function(
         CameraEventAggregator,
         Cartesian2,
         combine,
-        defined,
         FeatureDetection,
         KeyboardEventModifier,
         CameraEventType,
         createCanvas,
-        destroyCanvas,
         DomEventSimulator) {
     'use strict';
 
@@ -33,7 +28,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyCanvas(canvas);
+        document.body.removeChild(canvas);
     });
 
     beforeEach(function() {

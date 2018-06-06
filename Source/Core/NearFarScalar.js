@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -70,7 +69,6 @@ define([
         result.farValue = nearFarScalar.farValue;
         return result;
     };
-
 
     /**
      * The number of elements used to pack the object into an array.

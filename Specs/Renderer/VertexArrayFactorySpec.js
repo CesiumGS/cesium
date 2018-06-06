@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/ComponentDatatype',
         'Core/Geometry',
@@ -328,7 +327,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -336,7 +335,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('sorts interleaved attributes from large to small components (2)', function() {
@@ -390,7 +389,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -400,7 +399,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context).toReadPixels([255, 0, 0, 255]);
 
         command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -410,7 +409,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context).toReadPixels([0, 255, 0, 255]);
     });
 
     it('sorts interleaved attributes from large to small components (3)', function() {
@@ -476,7 +475,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -484,7 +483,7 @@ defineSuite([
             vertexArray : va
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('creates a custom interleaved vertex', function() {
@@ -555,7 +554,7 @@ defineSuite([
         });
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -565,7 +564,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        expect(context).toReadPixels([255, 0, 0, 255]);
 
         var vs2 =
             'attribute vec3 position; ' +
@@ -599,7 +598,7 @@ defineSuite([
             count : 1
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        expect(context).toReadPixels([0, 255, 0, 255]);
     });
 
     it('creates an index buffer', function() {

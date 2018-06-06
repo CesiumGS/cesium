@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/BillboardVisualizer',
         'Core/BoundingRectangle',
@@ -6,6 +5,7 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/NearFarScalar',
@@ -14,7 +14,6 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCluster',
         'DataSources/EntityCollection',
-        'Scene/BillboardCollection',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin',
@@ -28,6 +27,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         DistanceDisplayCondition,
         JulianDate,
         NearFarScalar,
@@ -36,7 +36,6 @@ defineSuite([
         ConstantProperty,
         EntityCluster,
         EntityCollection,
-        BillboardCollection,
         HeightReference,
         HorizontalOrigin,
         VerticalOrigin,
@@ -64,7 +63,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
         entityCluster.destroy();
     });
 
@@ -165,6 +166,7 @@ defineSuite([
         billboard.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         billboard.sizeInMeters = new ConstantProperty(true);
         billboard.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        billboard.disableDepthTestDistance = new ConstantProperty(10.0);
 
         visualizer.update(time);
 
@@ -193,6 +195,7 @@ defineSuite([
             expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
             expect(bb.sizeInMeters).toEqual(testObject.billboard.sizeInMeters.getValue(time));
             expect(bb.distanceDisplayCondition).toEqual(testObject.billboard.distanceDisplayCondition.getValue(time));
+            expect(bb.disableDepthTestDistance).toEqual(testObject.billboard.disableDepthTestDistance.getValue(time));
             expect(bb._imageSubRegion).toEqual(testObject.billboard.imageSubRegion.getValue(time));
 
             billboard.show = new ConstantProperty(false);
@@ -234,6 +237,7 @@ defineSuite([
         billboard.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         billboard.sizeInMeters = new ConstantProperty(true);
         billboard.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
+        billboard.disableDepthTestDistance = new ConstantProperty(10.0);
 
         visualizer.update(time);
 
@@ -252,32 +256,33 @@ defineSuite([
                 visualizer.update(time);
                 return !bb.show;
             }).then(function() {
-		billboard.show = new ConstantProperty(true);
+                billboard.show = new ConstantProperty(true);
 
-		return pollToPromise(function() {
-		    visualizer.update(time);
-		    return bb.show;
-		}).then(function() {
-		    expect(bb.position).toEqual(testObject.position.getValue(time));
-		    expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
-		    expect(bb.eyeOffset).toEqual(testObject.billboard.eyeOffset.getValue(time));
-		    expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
-		    expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
-		    expect(bb.alignedAxis).toEqual(testObject.billboard.alignedAxis.getValue(time));
-		    expect(bb.heightReference).toEqual(testObject.billboard.heightReference.getValue(time));
-		    expect(bb.horizontalOrigin).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
-		    expect(bb.verticalOrigin).toEqual(testObject.billboard.verticalOrigin.getValue(time));
-		    expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
-		    expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
-		    expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
-		    expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
-		    expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
-		    expect(bb.sizeInMeters).toEqual(testObject.billboard.sizeInMeters.getValue(time));
-		    expect(bb.distanceDisplayCondition).toEqual(testObject.billboard.distanceDisplayCondition.getValue(time));
-		    expect(bb.image).toBeDefined();
-		    expect(bb._imageSubRegion).toEqual(testObject.billboard.imageSubRegion.getValue(time));
-		});
-	    });
+                return pollToPromise(function() {
+                    visualizer.update(time);
+                    return bb.show;
+                }).then(function() {
+                    expect(bb.position).toEqual(testObject.position.getValue(time));
+                    expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
+                    expect(bb.eyeOffset).toEqual(testObject.billboard.eyeOffset.getValue(time));
+                    expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
+                    expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
+                    expect(bb.alignedAxis).toEqual(testObject.billboard.alignedAxis.getValue(time));
+                    expect(bb.heightReference).toEqual(testObject.billboard.heightReference.getValue(time));
+                    expect(bb.horizontalOrigin).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
+                    expect(bb.verticalOrigin).toEqual(testObject.billboard.verticalOrigin.getValue(time));
+                    expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
+                    expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
+                    expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
+                    expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
+                    expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
+                    expect(bb.sizeInMeters).toEqual(testObject.billboard.sizeInMeters.getValue(time));
+                    expect(bb.distanceDisplayCondition).toEqual(testObject.billboard.distanceDisplayCondition.getValue(time));
+                    expect(bb.disableDepthTestDistance).toEqual(testObject.billboard.disableDepthTestDistance.getValue(time));
+                    expect(bb.image).toBeDefined();
+                    expect(bb._imageSubRegion).toEqual(testObject.billboard.imageSubRegion.getValue(time));
+                });
+            });
         });
     });
 

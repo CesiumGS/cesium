@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError'
@@ -76,6 +75,16 @@ define([
     });
 
     /**
+     * Called at the beginning of the update cycle, regardless of id a new frame is being rendered, before {@link QuadtreeTileProvider#beginUpdate}
+     * @memberof QuadtreeTileProvider
+     * @function
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     */
+    QuadtreeTileProvider.prototype.update = DeveloperError.throwInstantiationError;
+
+    /**
      * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      * @memberof QuadtreeTileProvider
@@ -105,7 +114,7 @@ define([
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link QuadtreeTileProvider#ready} returns true.
      *
-     * @see {QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError}
+     * @see QuadtreeTileProvider#computeDefaultLevelZeroMaximumGeometricError
      *
      * @memberof QuadtreeTileProvider
      * @function
@@ -198,14 +207,12 @@ define([
      *
      * @memberof QuadtreeTileProvider
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
      * @example
      * provider = provider && provider();
-     * 
+     *
      * @see QuadtreeTileProvider#isDestroyed
      */
     QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;

@@ -1,11 +1,12 @@
-/*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './freezeObject',
         './Math'
     ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -118,12 +119,8 @@ define([
      */
     Cartesian2.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -144,9 +141,7 @@ define([
      */
     Cartesian2.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -168,9 +163,7 @@ define([
      */
     Cartesian2.packArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         var length = array.length;
@@ -195,9 +188,7 @@ define([
      */
     Cartesian2.unpackArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         var length = array.length;
@@ -242,9 +233,7 @@ define([
      */
     Cartesian2.maximumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         return Math.max(cartesian.x, cartesian.y);
@@ -258,9 +247,7 @@ define([
      */
     Cartesian2.minimumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         return Math.min(cartesian.x, cartesian.y);
@@ -276,17 +263,10 @@ define([
      */
     Cartesian2.minimumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(first)) {
-            throw new DeveloperError('first is required.');
-        }
-        if (!defined(second)) {
-            throw new DeveloperError('second is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.object('first', first);
+        Check.typeOf.object('second', second);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
-
 
         result.x = Math.min(first.x, second.x);
         result.y = Math.min(first.y, second.y);
@@ -304,15 +284,9 @@ define([
      */
     Cartesian2.maximumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(first)) {
-            throw new DeveloperError('first is required.');
-        }
-        if (!defined(second)) {
-            throw new DeveloperError('second is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.object('first', first);
+        Check.typeOf.object('second', second);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = Math.max(first.x, second.x);
@@ -328,9 +302,7 @@ define([
      */
     Cartesian2.magnitudeSquared = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         return cartesian.x * cartesian.x + cartesian.y * cartesian.y;
@@ -361,9 +333,8 @@ define([
      */
     Cartesian2.distance = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left) || !defined(right)) {
-            throw new DeveloperError('left and right are required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         Cartesian2.subtract(left, right, distanceScratch);
@@ -384,9 +355,8 @@ define([
      */
     Cartesian2.distanceSquared = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left) || !defined(right)) {
-            throw new DeveloperError('left and right are required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         Cartesian2.subtract(left, right, distanceScratch);
@@ -402,18 +372,21 @@ define([
      */
     Cartesian2.normalize = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var magnitude = Cartesian2.magnitude(cartesian);
 
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (isNaN(result.x) || isNaN(result.y)) {
+            throw new DeveloperError('normalized result is not a number');
+        }
+        //>>includeEnd('debug');
+
         return result;
     };
 
@@ -426,12 +399,8 @@ define([
      */
     Cartesian2.dot = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         return left.x * right.x + left.y * right.y;
@@ -447,19 +416,33 @@ define([
      */
     Cartesian2.multiplyComponents = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x * right.x;
         result.y = left.y * right.y;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise quotient of two Cartesians.
+     *
+     * @param {Cartesian2} left The first Cartesian.
+     * @param {Cartesian2} right The second Cartesian.
+     * @param {Cartesian2} result The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter.
+     */
+    Cartesian2.divideComponents = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        result.x = left.x / right.x;
+        result.y = left.y / right.y;
         return result;
     };
 
@@ -473,15 +456,9 @@ define([
      */
     Cartesian2.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x + right.x;
@@ -499,15 +476,9 @@ define([
      */
     Cartesian2.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = left.x - right.x;
@@ -525,15 +496,9 @@ define([
      */
     Cartesian2.multiplyByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = cartesian.x * scalar;
@@ -551,15 +516,9 @@ define([
      */
     Cartesian2.divideByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = cartesian.x / scalar;
@@ -576,12 +535,8 @@ define([
      */
     Cartesian2.negate = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = -cartesian.x;
@@ -598,12 +553,8 @@ define([
      */
     Cartesian2.abs = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = Math.abs(cartesian.x);
@@ -623,18 +574,10 @@ define([
      */
     Cartesian2.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(start)) {
-            throw new DeveloperError('start is required.');
-        }
-        if (!defined(end)) {
-            throw new DeveloperError('end is required.');
-        }
-        if (typeof t !== 'number') {
-            throw new DeveloperError('t is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.object('start', start);
+        Check.typeOf.object('end', end);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         Cartesian2.multiplyByScalar(end, t, lerpScratch);
@@ -653,12 +596,8 @@ define([
      */
     Cartesian2.angleBetween = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         Cartesian2.normalize(left, angleBetweenScratch);
@@ -676,12 +615,8 @@ define([
      */
     Cartesian2.mostOrthogonalAxis = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var f = Cartesian2.normalize(cartesian, mostOrthogonalAxisScratch);

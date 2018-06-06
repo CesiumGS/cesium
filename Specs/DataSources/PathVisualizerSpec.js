@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
@@ -87,7 +86,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         var visualizer = new PathVisualizer(scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 
@@ -556,7 +555,7 @@ defineSuite([
         expect(result).toEqual([sampledProperty.getValue(t1), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())), sampledProperty.getValue(updateTime), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 5, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 6, new JulianDate()))]);
     });
 
-    it('subSample works for composite properties', function() {
+    function createCompositeTest(useReferenceProperty){
         var t1 = new JulianDate(0, 0);
         var t2 = new JulianDate(1, 0);
         var t3 = new JulianDate(2, 0);
@@ -635,7 +634,15 @@ defineSuite([
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 43200;
         var result = [];
-        PathVisualizer._subSample(property, t1, t6, updateTime, referenceFrame, maximumStep, result);
+
+        var propertyToTest = property;
+        if (useReferenceProperty) {
+            var testReference = entities.getOrCreateEntity('testReference');
+            testReference.position = property;
+            propertyToTest = new ReferenceProperty(entities, 'testReference', ['position']);
+        }
+
+        PathVisualizer._subSample(propertyToTest, t1, t6, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([intervalProperty.intervals.get(0).data,
                                 constantProperty.getValue(t1),
                                 sampledProperty.getValue(t3),
@@ -643,6 +650,14 @@ defineSuite([
                                 sampledProperty.getValue(t4),
                                 targetEntity.position.getValue(t5),
                                 scaledProperty.getValue(t6)]);
+    }
+
+    it('subSample works for composite properties', function() {
+        createCompositeTest(false);
+    });
+
+    it('subSample works for composite properties wrapped in reference properties', function() {
+        createCompositeTest(true);
     });
 
 }, 'WebGL');

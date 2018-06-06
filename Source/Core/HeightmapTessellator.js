@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AxisAlignedBoundingBox',
         './BoundingSphere',
@@ -16,7 +15,7 @@ define([
         './Rectangle',
         './TerrainEncoding',
         './Transforms',
-        './WebMercatorProjection',
+        './WebMercatorProjection'
     ], function(
         AxisAlignedBoundingBox,
         BoundingSphere,
@@ -73,7 +72,7 @@ define([
      * @param {Number} options.width The width of the heightmap, in height samples.
      * @param {Number} options.height The height of the heightmap, in height samples.
      * @param {Number} options.skirtHeight The height of skirts to drape at the edges of the heightmap.
-     * @param {Rectangle} options.nativeRectangle An rectangle in the native coordinates of the heightmap's projection.  For
+     * @param {Rectangle} options.nativeRectangle A rectangle in the native coordinates of the heightmap's projection.  For
      *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
      *                 projection, this is meters.
      * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.
@@ -82,7 +81,7 @@ define([
      *                 are provided, they're assumed to be consistent.
      * @param {Boolean} [options.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
      *                  a {@link WebMercatorProjection}.
-     * @param {Cartesian3} [options.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
+     * @param {Cartesian3} [options.relativeToCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
      * @param {Object} [options.structure] An object describing the structure of the height data.
      * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
@@ -200,7 +199,9 @@ define([
             geographicNorth = rectangle.north;
         }
 
-        var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
+        var relativeToCenter = options.relativeToCenter;
+        var hasRelativeToCenter = defined(relativeToCenter);
+        relativeToCenter = hasRelativeToCenter ? relativeToCenter : Cartesian3.ZERO;
         var exaggeration = defaultValue(options.exaggeration, 1.0);
         var includeWebMercatorT = defaultValue(options.includeWebMercatorT, false);
 
@@ -212,8 +213,16 @@ define([
         var elementMultiplier = defaultValue(structure.elementMultiplier, HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier);
         var isBigEndian = defaultValue(structure.isBigEndian, HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian);
 
-        var granularityX = Rectangle.computeWidth(nativeRectangle) / (width - 1);
-        var granularityY = Rectangle.computeHeight(nativeRectangle) / (height - 1);
+        var rectangleWidth = Rectangle.computeWidth(nativeRectangle);
+        var rectangleHeight = Rectangle.computeHeight(nativeRectangle);
+
+        var granularityX = rectangleWidth / (width - 1);
+        var granularityY = rectangleHeight / (height - 1);
+
+		if (!isGeographic) {
+            rectangleWidth *= oneOverGlobeSemimajorAxis;
+            rectangleHeight *= oneOverGlobeSemimajorAxis;
+        }
 
         var radiiSquared = ellipsoid.radiiSquared;
         var radiiSquaredX = radiiSquared.x;
@@ -335,10 +344,29 @@ define([
 
                 heightSample = (heightSample * heightScale + heightOffset) * exaggeration;
 
+                var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+                u = CesiumMath.clamp(u, 0.0, 1.0);
+                uvs[index] = new Cartesian2(u, v);
+
                 maximumHeight = Math.max(maximumHeight, heightSample);
                 minimumHeight = Math.min(minimumHeight, heightSample);
 
                 if (colIndex !== col || rowIndex !== row) {
+                    var percentage = 0.00001;
+                    if (colIndex < 0) {
+                        longitude -= percentage * rectangleWidth;
+                    } else {
+                        longitude += percentage * rectangleWidth;
+                    }
+                    if (rowIndex < 0) {
+                        latitude += percentage * rectangleHeight;
+                    } else {
+                        latitude -= percentage * rectangleHeight;
+                    }
+
+                    cosLatitude = cos(latitude);
+                    nZ = sin(latitude);
+                    kZ = radiiSquaredZ * nZ;
                     heightSample -= skirtHeight;
                 }
 
@@ -363,10 +391,6 @@ define([
                 positions[index] = position;
                 heights[index] = heightSample;
 
-                var u = (longitude - geographicWest) / (geographicEast - geographicWest);
-                u = CesiumMath.clamp(u, 0.0, 1.0);
-                uvs[index] = new Cartesian2(u, v);
-
                 if (includeWebMercatorT) {
                     webMercatorTs[index] = webMercatorT;
                 }
@@ -390,10 +414,9 @@ define([
         }
 
         var occludeePointInScaledSpace;
-        var center = options.relativetoCenter;
-        if (defined(center)) {
+        if (hasRelativeToCenter) {
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(center, positions);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Draw dashed polylines.">
+    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+var redLine = viewer.entities.add({
+    name : 'Red dashed line',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 38, 250000,
+                                                        -125, 38, 250000]),
+        width : 5,
+        material : new Cesium.PolylineDashMaterialProperty({
+            color: Cesium.Color.RED
+        })
+    }
+});
+
+var blueLine = viewer.entities.add({
+    name : 'Wide blue dashed line with a gap color',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 40, 250000,
+                                                        -125, 40, 250000]),
+        width : 30,
+        material : new Cesium.PolylineDashMaterialProperty({
+            color : Cesium.Color.BLUE,
+            gapColor: Cesium.Color.YELLOW
+        })
+    }
+});
+
+var orangeLine = viewer.entities.add({
+    name : 'Orange dashed line with a short dash length',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 42, 250000,
+                                                               -125, 42, 250000]),
+        width : 5,
+        material : new Cesium.PolylineDashMaterialProperty({
+            color : Cesium.Color.ORANGE,
+            dashLength: 8.0
+        })
+    }
+});
+
+var cyanLine = viewer.entities.add({
+    name : 'Cyan dashed line with a dash pattern.',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 44, 250000,
+                                                               -125, 44, 250000]),
+        width : 10,
+        material : new Cesium.PolylineDashMaterialProperty({
+            color : Cesium.Color.CYAN,
+            dashPattern: parseInt("110000001111", 2)
+        })
+    }
+});
+
+var yellowLine = viewer.entities.add({
+    name : 'Yellow dashed line with a dash pattern.',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 46, 250000,
+                                                               -125, 46, 250000]),
+        width : 10,
+        material : new Cesium.PolylineDashMaterialProperty({
+            color : Cesium.Color.YELLOW,
+            dashPattern: parseInt("1010101010101010", 2)
+        })
+    }
+});
+
+viewer.zoomTo(viewer.entities);
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

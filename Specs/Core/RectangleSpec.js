@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Rectangle',
         'Core/Cartesian3',
@@ -81,6 +80,34 @@ defineSuite([
         expect(rectangle.south).toEqual(CesiumMath.toRadians(south));
         expect(rectangle.east).toEqual(CesiumMath.toRadians(east));
         expect(rectangle.north).toEqual(CesiumMath.toRadians(north));
+    });
+
+    it('fromRadians produces expected values.', function() {
+        var west = -1.0;
+        var south = -2.0;
+        var east = 1.0;
+        var north = 2.0;
+
+        var rectangle = Rectangle.fromRadians(west, south, east, north);
+        expect(rectangle.west).toEqual(west);
+        expect(rectangle.south).toEqual(south);
+        expect(rectangle.east).toEqual(east);
+        expect(rectangle.north).toEqual(north);
+    });
+
+    it('fromRadians works with a result parameter.', function() {
+        var west = -1.0;
+        var south = -2.0;
+        var east = 1.0;
+        var north = 2.0;
+
+        var result = new Rectangle();
+        var rectangle = Rectangle.fromRadians(west, south, east, north, result);
+        expect(result).toBe(rectangle);
+        expect(rectangle.west).toEqual(west);
+        expect(rectangle.south).toEqual(south);
+        expect(rectangle.east).toEqual(east);
+        expect(rectangle.north).toEqual(north);
     });
 
     it('fromCartographicArray produces expected values.', function() {
@@ -174,7 +201,6 @@ defineSuite([
         expect(rectangle.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON15);
     });
 
-
     it('clone works without a result parameter.', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = rectangle.clone();
@@ -220,6 +246,22 @@ defineSuite([
         expect(Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.5, 0.4))).toEqual(false);
         expect(Rectangle.equals(rectangle, new Rectangle(0.1, 0.2, 0.3, 0.5))).toEqual(false);
         expect(Rectangle.equals(rectangle, undefined)).toEqual(false);
+    });
+
+    it('Static equals epsilon works in all cases', function() {
+        var rectangle1 = new Rectangle(0.1, 0.2, 0.3, 0.4);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.3, 0.4), 0.0)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.5, 0.2, 0.3, 0.4), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.5, 0.3, 0.4), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.5, 0.4), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.3, 0.5), 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.5, 0.2, 0.3, 0.4), 0.4)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.5, 0.3, 0.4), 0.3)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.5, 0.4), 0.2)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, new Rectangle(0.1, 0.2, 0.3, 0.5), 0.1)).toEqual(true);
+        expect(Rectangle.equalsEpsilon(rectangle1, undefined, 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(undefined, rectangle1, 0.0)).toEqual(false);
+        expect(Rectangle.equalsEpsilon(rectangle1, rectangle1, 0.0)).toEqual(true);
     });
 
     it('Equals epsilon works in all cases', function() {
@@ -558,7 +600,7 @@ defineSuite([
         expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
         expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
     });
-    
+
     it('union works without a result parameter', function() {
         var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
         var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
@@ -575,6 +617,30 @@ defineSuite([
         var returnedResult = Rectangle.union(rectangle1, rectangle2, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(expected);
+    });
+
+    it('union works with first rectangle crossing the IDL', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, -0.5, 0.9);
+        var rectangle2 = new Rectangle(-0.85, 0.0, -0.4, 0.8);
+        var expected = new Rectangle(0.5, 0.0, -0.4, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('union works with second rectangle crossing the IDL', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var rectangle2 = new Rectangle(0.6, 0.0, -0.2, 0.8);
+        var expected = new Rectangle(0.5, 0.0, -0.2, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('union works with both rectangles crossing the IDL', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, -0.4, 0.9);
+        var rectangle2 = new Rectangle(0.4, 0.0, -0.5, 0.8);
+        var expected = new Rectangle(0.4, 0.0, -0.4, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
     it('expand works if rectangle needs to grow right', function() {

@@ -12,24 +12,16 @@
     border-top-left-radius: 7px;
     border-bottom-left-radius: 7px;
     box-shadow: 0 0 10px 1px #000;
-    -webkit-transform: translate(100%, 0);
-    -moz-transform: translate(100%, 0);
     transform: translate(100%, 0);
     visibility: hidden;
     opacity: 0;
-    -webkit-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -webkit-transform 0.2s ease-in;
-    -moz-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -moz-transform 0.2s ease-in;
     transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
 }
 
 .cesium-infoBox-visible {
-    -webkit-transform: translate(0, 0);
-    -moz-transform: translate(0, 0);
     transform: translate(0, 0);
     visibility: visible;
     opacity: 1;
-    -webkit-transition: opacity 0.2s ease-out, -webkit-transform 0.2s ease-out;
-    -moz-transition: opacity 0.2s ease-out, -moz-transform 0.2s ease-out;
     transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 
@@ -43,8 +35,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    -moz-box-sizing: content-box;
-    -webkit-box-sizing: content-box;
     box-sizing: content-box;
 }
 

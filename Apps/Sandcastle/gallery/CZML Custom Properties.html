@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="CZML Custom Properties">
+    <meta name="cesium-sandcastle-labels" content="CZML">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <div id="propertiesMenu"></div>
+</div>
+</div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var czml = [{
+    "id" : "document",
+    "name" : "CZML Custom Properties",
+    "version" : "1.0",
+    "clock": {
+        "interval": "1970/2010",
+        "currentTime": "1970",
+        "multiplier": 500000000
+    }
+}, {
+    "id" : "custom_property_object",
+    "name" : "An object with custom properties",
+    "properties" : {
+        "constant_property" : true,
+        "population_intervals" : [{
+            "interval": "1970/1980",
+            "number": 2209600
+        }, {
+            "interval": "1980/2090",
+            "number": 2889700
+        }, {
+            "interval" : "1990/2000",
+            "number": 3307600
+        }, {
+            "interval" : "2000/2010",
+            "number" : 4326900
+        }],
+        "population_sampled" : {
+            "number": [
+                "1970", 2209600,
+                "1980", 2889700,
+                "1990", 3307600,
+                "2000", 4326900,
+                "2010", 5049100
+            ]
+        }
+    }
+}, {
+    "id" : "colorado",
+    "name" : "Colorado",
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -109.03, 41, 0,
+                -102.03, 41, 0,
+                -102.03, 37, 0,
+                -109.03, 37, 0
+            ]
+        },
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [0, 255, 0, 150]
+                }
+            }
+        },
+        "height" : 0,
+        "extrudedHeight": 0
+    }
+}];
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
+
+var dataSource = new Cesium.CzmlDataSource();
+
+function scaleProperty(property, scalingFactor) {
+    // returns a property that scales another property by a constant factor.
+    return new Cesium.CallbackProperty(function(time, result) {
+        result = property.getValue(time, result);
+        result = result * scalingFactor;
+        return result;
+    }, property.isConstant);
+}
+
+function setExtrudedHeight(propertyName) {
+    var customPropertyObject = dataSource.entities.getById('custom_property_object');
+    var property = customPropertyObject.properties[propertyName];
+    var colorado = dataSource.entities.getById('colorado');
+
+    // Because the population values are so large, we scale them down
+    // by 50 so they fit on the screen.
+    // If we didn't need to scale, we could directly assign the property
+    // to extrudedHeight.
+    // colorado.polygon.extrudedHeight = scaleProperty(property, 1 / 50.0);
+    colorado.polygon.extrudedHeight = scaleProperty(property, 1 / 50.0);
+}
+
+// Custom properties can be used as the value of graphical properties:
+Sandcastle.addToolbarMenu([{
+    text: 'Use interval data',
+    onselect: function () {
+        setExtrudedHeight('population_intervals');
+    }
+}, {
+    text: 'Use sampled data',
+    onselect: function () {
+        setExtrudedHeight('population_sampled');
+    }
+}], 'propertiesMenu');
+
+dataSource.load(czml);
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

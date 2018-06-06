@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -102,7 +101,7 @@ define([
      * Adds a property to this object.
      *
      * @param {String} propertyName The name of the property to add.
-     * @param {Any} [value] The value of the new property, if provided.
+     * @param {*} [value] The value of the new property, if provided.
      * @param {Function} [createPropertyCallback] A function that will be called when the value of this new property is set to a value that is not a Property.
      *
      * @exception {DeveloperError} "propertyName" is already a registered property.
@@ -206,16 +205,16 @@ define([
             var sourceProperty = source[name];
 
             //Custom properties that are registered on the source must also be added to this.
-            if (!defined(targetProperty) && propertyNames.indexOf(name) === -1) {
+            if (targetProperty === undefined && propertyNames.indexOf(name) === -1) {
                 this.addProperty(name, undefined, createPropertyCallback);
             }
 
-            if (defined(sourceProperty)) {
-                if (defined(targetProperty)) {
-                    if (defined(targetProperty.merge)) {
+            if (sourceProperty !== undefined) {
+                if (targetProperty !== undefined) {
+                    if (defined(targetProperty) && defined(targetProperty.merge)) {
                         targetProperty.merge(sourceProperty);
                     }
-                } else if (defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
+                } else if (defined(sourceProperty) && defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
                     this[name] = sourceProperty.clone();
                 } else {
                     this[name] = sourceProperty;

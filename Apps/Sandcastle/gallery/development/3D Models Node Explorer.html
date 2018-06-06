@@ -146,7 +146,7 @@ Cesium.knockout.defineProperty(viewModel, 'transformation', function() {
     return transformations[nodeName];
 });
 
-// these writable computed properties produce individual values for use in the UI 
+// these writable computed properties produce individual values for use in the UI
 ['translationX', 'translationY', 'translationZ', 'rotationHeading', 'rotationPitch', 'rotationRoll', 'scaleX', 'scaleY', 'scaleZ'].forEach(function(p) {
     Cesium.knockout.defineProperty(viewModel, p, {
         get: function() {
@@ -155,7 +155,7 @@ Cesium.knockout.defineProperty(viewModel, 'transformation', function() {
         set: function(value) {
             // coerce values to number
             viewModel.transformation[p] = +value;
-        } 
+        }
     });
 });
 
@@ -164,7 +164,8 @@ Cesium.knockout.defineProperty(viewModel, 'translation', function() {
     return new Cesium.Cartesian3(viewModel.translationX, viewModel.translationY, viewModel.translationZ);
 });
 Cesium.knockout.defineProperty(viewModel, 'rotation', function() {
-    return Cesium.Quaternion.fromHeadingPitchRoll(viewModel.rotationHeading, viewModel.rotationPitch, viewModel.rotationRoll);
+    var hpr = new Cesium.HeadingPitchRoll(viewModel.rotationHeading, viewModel.rotationPitch, viewModel.rotationRoll);
+    return Cesium.Quaternion.fromHeadingPitchRoll(hpr);
 });
 Cesium.knockout.defineProperty(viewModel, 'scale', function() {
     return new Cesium.Cartesian3(viewModel.scaleX, viewModel.scaleY, viewModel.scaleZ);
@@ -181,11 +182,8 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 
 var height = 250000.0;
-var heading = 0.0;
-var pitch = 0.0;
-var roll = 0.0;
 var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll);
+var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, new Cesium.HeadingPitchRoll());
 
 var model = scene.primitives.add(Cesium.Model.fromGltf({
     url : modelUrl,
@@ -195,17 +193,17 @@ var model = scene.primitives.add(Cesium.Model.fromGltf({
 
 model.readyPromise.then(function(model) {
     var camera = viewer.camera;
-    
+
     // Zoom to model
     var controller = scene.screenSpaceCameraController;
     var r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
     controller.minimumZoomDistance = r * 0.5;
-    
+
     var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cesium.Cartesian3());
     var heading = Cesium.Math.toRadians(230.0);
     var pitch = Cesium.Math.toRadians(-20.0);
     camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
-    
+
     // enumerate nodes and add options
     var options = Object.keys(model._runtime.nodesByName).map(function(nodeName) {
        return {
@@ -217,7 +215,7 @@ model.readyPromise.then(function(model) {
     });
     options[0].onselect();
     Sandcastle.addToolbarMenu(options);
-    
+
     // respond to viewmodel changes by applying the computed matrix
     Cesium.knockout.getObservable(viewModel, 'matrix').subscribe(function(newValue) {
         var node = model.getNode(viewModel.nodeName);

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/PolygonGeometry',
         'Core/BoundingSphere',
@@ -150,7 +149,7 @@ defineSuite([
         expect(p.attributes.st.values.length).toEqual(numVertices * 2);
         expect(p.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(p.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(p.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(p.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(p.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -308,7 +307,7 @@ defineSuite([
                                               -110.0, 35.0
                                           ]);
         for (i = 0; i < p.length; i++) {
-            expect(p[i]).toEqualEpsilon(pExpected[i], CesiumMath.EPSILON10);
+            expect(p[i]).toEqualEpsilon(pExpected[i], CesiumMath.EPSILON7);
         }
 
         var h1Expected = Cartesian3.fromDegreesArray([
@@ -318,7 +317,7 @@ defineSuite([
                                                -122.0, 39.0
                                            ]);
         for (i = 0; i < h1.length; i++) {
-            expect(h1[i]).toEqualEpsilon(h1Expected[i], CesiumMath.EPSILON10);
+            expect(h1[i]).toEqualEpsilon(h1Expected[i], CesiumMath.EPSILON7);
         }
 
         var h2Expected = Cartesian3.fromDegreesArray([
@@ -328,7 +327,7 @@ defineSuite([
                                                -114.0, 36.5
                                            ]);
         for (i = 0; i <h2.length; i++) {
-            expect(h2[i]).toEqualEpsilon(h2Expected[i], CesiumMath.EPSILON10);
+            expect(h2[i]).toEqualEpsilon(h2Expected[i], CesiumMath.EPSILON7);
         }
     });
 
@@ -476,7 +475,7 @@ defineSuite([
                                                          -1.0, 1.0
                                                      ]),
             height: 0,
-            extrudedHeight: CesiumMath.EPSILON10
+            extrudedHeight: CesiumMath.EPSILON7
          }));
 
         expect(p.attributes.position.values.length).toEqual(13 * 3);
@@ -502,7 +501,7 @@ defineSuite([
         expect(p.attributes.st.values.length).toEqual(numVertices * 2);
         expect(p.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(p.attributes.tangent.values.length).toEqual(numVertices * 3);
-        expect(p.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(p.attributes.bitangent.values.length).toEqual(numVertices * 3);
         expect(p.indices.length).toEqual(numTriangles * 3);
     });
 
@@ -546,7 +545,6 @@ defineSuite([
             expect(st[i]).toBeLessThanOrEqualTo(1);
         }
     });
-
 
     it('creates a polygon from hierarchy extruded', function() {
         var hierarchy = {
@@ -649,6 +647,53 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
     });
 
+    it('computing textureCoordinateRotationPoints property', function() {
+        var p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -10.0, -10.0, 0,
+                    -10.0, 10.0, 0,
+                    10.0, -10.0, 0,
+                    10.0, 10.0, 0
+                ])},
+            granularity: CesiumMath.PI,
+            stRotation : CesiumMath.toRadians(90)
+        });
+
+        // 90 degree rotation means (0, 1) should be the new min and (1, 1) (0, 0) are extents
+        var textureCoordinateRotationPoints = p.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+
+        p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -10.0, -10.0, 0,
+                    -10.0, 10.0, 0,
+                    10.0, -10.0, 0,
+                    10.0, 10.0, 0
+                ])},
+            granularity: CesiumMath.PI,
+            stRotation : CesiumMath.toRadians(0)
+        });
+
+        textureCoordinateRotationPoints = p.textureCoordinateRotationPoints;
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
         -12.4, 3.5,
         -12.0, 3.5,
@@ -689,7 +734,7 @@ defineSuite([
             array.push(positions[i].x, positions[i].y, positions[i].z);
         }
     }
-    var rectangle = new Rectangle(-0.21642082724729672, 0.06108652381980151, -0.20943951023931984, 0.06981317007977318);
+
     var packedInstance = [3.0, 1.0];
     addPositions(packedInstance, positions);
     packedInstance.push(3.0, 1.0);
@@ -698,7 +743,6 @@ defineSuite([
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 55);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, 52);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

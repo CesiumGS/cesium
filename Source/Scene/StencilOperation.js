@@ -1,7 +1,6 @@
-/*global define*/
 define([
         '../Core/freezeObject',
-        '../Renderer/WebGLConstants'
+        '../Core/WebGLConstants'
     ], function(
         freezeObject,
         WebGLConstants) {

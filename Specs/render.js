@@ -1,12 +1,9 @@
-/*global define*/
 define([
-        'Core/defaultValue',
         'Core/defined',
         'Core/Intersect',
-        'Scene/Pass',
+        'Renderer/Pass',
         'Scene/SceneMode'
     ], function(
-        defaultValue,
         defined,
         Intersect,
         Pass,

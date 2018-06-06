@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PolylineColorAppearance',
         'Core/Cartesian3',
@@ -72,10 +71,10 @@ defineSuite([
             asynchronous : false
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

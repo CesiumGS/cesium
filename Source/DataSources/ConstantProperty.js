@@ -1,15 +1,10 @@
-/*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Event'
     ], function(
-        defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Event) {
     'use strict';
 
@@ -19,12 +14,9 @@ define([
      * @alias ConstantProperty
      * @constructor
      *
-     * @param {Object} [value] The property value.
+     * @param {*} [value] The property value.
      *
      * @see ConstantPositionProperty
-     *
-     * @exception {DeveloperError} value.clone is a required function.
-     * @exception {DeveloperError} value.equals is a required function.
      */
     function ConstantProperty(value) {
         this._value = undefined;
@@ -76,10 +68,7 @@ define([
     /**
      * Sets the value of the property.
      *
-     * @param {Object} value The property value.
-     *
-     * @exception {DeveloperError} value.clone is a required function.
-     * @exception {DeveloperError} value.equals is a required function.
+     * @param {*} value The property value.
      */
     ConstantProperty.prototype.setValue = function(value) {
         var oldValue = this._value;
@@ -88,12 +77,11 @@ define([
             var hasClone = isDefined && typeof value.clone === 'function';
             var hasEquals = isDefined && typeof value.equals === 'function';
 
-            this._hasClone = hasClone;
-            this._hasEquals = hasEquals;
-
             var changed = !hasEquals || !value.equals(oldValue);
             if (changed) {
-                this._value = !hasClone ? value : value.clone();
+                this._hasClone = hasClone;
+                this._hasEquals = hasEquals;
+                this._value = !hasClone ? value : value.clone(this._value);
                 this._definitionChanged.raiseEvent(this);
             }
         }
@@ -111,6 +99,24 @@ define([
                (other instanceof ConstantProperty && //
                 ((!this._hasEquals && (this._value === other._value)) || //
                 (this._hasEquals && this._value.equals(other._value))));
+    };
+
+    /**
+     * Gets this property's value.
+     *
+     * @returns {*} This property's value.
+     */
+    ConstantProperty.prototype.valueOf = function() {
+        return this._value;
+    };
+
+    /**
+     * Creates a string representing this property's value.
+     *
+     * @returns {String} A string representing the property's value.
+     */
+    ConstantProperty.prototype.toString = function() {
+        return String(this._value);
     };
 
     return ConstantProperty;

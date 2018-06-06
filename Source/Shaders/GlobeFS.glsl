@@ -1,5 +1,4 @@
 //#define SHOW_TILE_BOUNDARIES
-
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0
@@ -9,6 +8,10 @@ uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 
 #ifdef APPLY_ALPHA
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_SPLIT
+uniform float u_dayTextureSplit[TEXTURE_UNITS];
 #endif
 
 #ifdef APPLY_BRIGHTNESS
@@ -48,11 +51,26 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+#ifdef ENABLE_CLIPPING_PLANES
+uniform sampler2D u_clippingPlanes;
+uniform mat4 u_clippingPlanesMatrix;
+uniform vec4 u_clippingPlanesEdgeStyle;
+#endif
+
+#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+uniform float u_minimumBrightness;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
+
+#ifdef APPLY_MATERIAL
+varying float v_height;
+varying float v_slope;
+#endif
 
 #ifdef FOG
 varying float v_distance;
@@ -62,7 +80,7 @@ varying vec3 v_mieColor;
 
 vec4 sampleAndBlend(
     vec4 previousColor,
-    sampler2D texture,
+    sampler2D textureToSample,
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
@@ -71,7 +89,8 @@ vec4 sampleAndBlend(
     float textureContrast,
     float textureHue,
     float textureSaturation,
-    float textureOneOverGamma)
+    float textureOneOverGamma,
+    float split)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -89,9 +108,21 @@ vec4 sampleAndBlend(
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 value = texture2D(texture, textureCoordinates);
+    vec4 value = texture2D(textureToSample, textureCoordinates);
     vec3 color = value.rgb;
     float alpha = value.a;
+
+#ifdef APPLY_SPLIT
+    float splitPosition = czm_imagerySplitPosition;
+    // Split to the left
+    if (split < 0.0 && gl_FragCoord.x > splitPosition) {
+       alpha = 0.0;
+    }
+    // Split to the right
+    else if (split > 0.0 && gl_FragCoord.x < splitPosition) {
+       alpha = 0.0;
+    }
+#endif
 
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
@@ -124,6 +155,10 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
+#ifdef ENABLE_CLIPPING_PLANES
+    float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
@@ -147,6 +182,7 @@ void main()
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
     vec2 waterMaskTextureCoordinates = v_textureCoordinates.xy * waterMaskScale + waterMaskTranslation;
+    waterMaskTextureCoordinates.y = 1.0 - waterMaskTextureCoordinates.y;
 
     float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
 
@@ -161,6 +197,16 @@ void main()
 
         color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask);
     }
+#endif
+
+#ifdef APPLY_MATERIAL
+    czm_materialInput materialInput;
+    materialInput.st = v_textureCoordinates.st;
+    materialInput.normalEC = normalize(v_normalEC);
+    materialInput.slope = v_slope;
+    materialInput.height = v_height;
+    czm_material material = czm_getMaterial(materialInput);
+    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
@@ -178,11 +224,26 @@ void main()
     vec4 finalColor = color;
 #endif
 
+#ifdef ENABLE_CLIPPING_PLANES
+    vec4 clippingPlanesEdgeColor = vec4(1.0);
+    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb;
+    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a;
+
+    if (clipDistance < clippingPlanesEdgeWidth)
+    {
+        finalColor = clippingPlanesEdgeColor;
+    }
+#endif
 
 #ifdef FOG
     const float fExposure = 2.0;
     vec3 fogColor = v_mieColor + finalColor.rgb * v_rayleighColor;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+    fogColor *= darken;
+#endif
 
     gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
 #else

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/defaultValue',
@@ -37,7 +36,7 @@ define([
      * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
      * @param {Color} [options.glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
      * @param {Number} [options.glowWidth=6] The width of lines used for rendering the line glow effect.
-     * @param {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
+     * @param {Color} [options.backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
      * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
      * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      * @param {Number} [options.canvasSize=256] The size of the canvas used for rendering.
@@ -321,12 +320,13 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    GridImageryProvider.prototype.requestImage = function(x, y, level) {
+    GridImageryProvider.prototype.requestImage = function(x, y, level, request) {
         return this._canvas;
     };
 
@@ -344,7 +344,7 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    GridImageryProvider.prototype.pickFeatures = function() {
+    GridImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
 

@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -7,6 +7,7 @@ define([
         './freezeObject',
         './JulianDate'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -84,7 +85,7 @@ define([
 
         /**
          * Gets or sets the data associated with this interval.
-         * @type {Object}
+         * @type {*}
          */
         this.data = options.data;
 
@@ -127,7 +128,9 @@ define([
     };
 
     /**
-     * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} interval.
+     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} interval.
+     *
+     * @throws DeveloperError if options.iso8601 does not match proper formatting.
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.iso8601 An ISO 8601 interval.
@@ -139,15 +142,14 @@ define([
      */
     TimeInterval.fromIso8601 = function(options, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options)) {
-            throw new DeveloperError('options is required.');
-        }
-        if (!defined(options.iso8601)) {
-            throw new DeveloperError('options.iso8601 is required.');
-        }
+        Check.typeOf.object('options', options);
+        Check.typeOf.string('options.iso8601', options.iso8601);
         //>>includeEnd('debug');
 
         var dates = options.iso8601.split('/');
+        if (dates.length !== 2) {
+            throw new DeveloperError('options.iso8601 is an invalid ISO 8601 interval.');
+        }
         var start = JulianDate.fromIso8601(dates[0]);
         var stop = JulianDate.fromIso8601(dates[1]);
         var isStartIncluded = defaultValue(options.isStartIncluded, true);
@@ -180,9 +182,7 @@ define([
      */
     TimeInterval.toIso8601 = function(timeInterval, precision) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(timeInterval)) {
-            throw new DeveloperError('timeInterval is required.');
-        }
+        Check.typeOf.object('timeInterval', timeInterval);
         //>>includeEnd('debug');
 
         return JulianDate.toIso8601(timeInterval.start, precision) + '/' + JulianDate.toIso8601(timeInterval.stop, precision);
@@ -243,9 +243,7 @@ define([
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number.');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return left === right ||
@@ -269,12 +267,8 @@ define([
      */
     TimeInterval.intersect = function(left, right, result, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         if (!defined(right)) {
@@ -317,12 +311,8 @@ define([
      */
     TimeInterval.contains = function(timeInterval, julianDate) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(timeInterval)) {
-            throw new DeveloperError('timeInterval is required.');
-        }
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
+        Check.typeOf.object('timeInterval', timeInterval);
+        Check.typeOf.object('julianDate', julianDate);
         //>>includeEnd('debug');
 
         if (timeInterval.isEmpty) {
@@ -404,16 +394,16 @@ define([
      * Function interface for merging interval data.
      * @callback TimeInterval~MergeCallback
      *
-     * @param {Object} leftData The first data instance.
-     * @param {Object} rightData The second data instance.
-     * @returns {Object} The result of merging the two data instances.
+     * @param {*} leftData The first data instance.
+     * @param {*} rightData The second data instance.
+     * @returns {*} The result of merging the two data instances.
      */
 
     /**
      * Function interface for comparing interval data.
      * @callback TimeInterval~DataComparer
-     * @param {Object} leftData The first data instance.
-     * @param {Object} rightData The second data instance.
+     * @param {*} leftData The first data instance.
+     * @param {*} rightData The second data instance.
      * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
      */
 

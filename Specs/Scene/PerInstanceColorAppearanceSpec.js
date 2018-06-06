@@ -1,11 +1,9 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PerInstanceColorAppearance',
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
         'Specs/createScene'
@@ -15,7 +13,6 @@ defineSuite([
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
-        ClearCommand,
         Appearance,
         Primitive,
         createScene) {
@@ -73,10 +70,10 @@ defineSuite([
     it('renders', function() {
         primitive.appearance = new PerInstanceColorAppearance();
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('renders flat', function() {
@@ -86,10 +83,10 @@ defineSuite([
             closed : true
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

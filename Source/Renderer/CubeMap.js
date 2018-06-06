@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -13,9 +13,9 @@ define([
         './PixelDatatype',
         './Sampler',
         './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap'
+        './TextureMinificationFilter'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -29,18 +29,14 @@ define([
         PixelDatatype,
         Sampler,
         TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
+        TextureMinificationFilter) {
     'use strict';
 
     function CubeMap(options) {
-
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
@@ -108,7 +104,13 @@ define([
         if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
             throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
+
+        if ((pixelDatatype === PixelDatatype.HALF_FLOAT) && !context.halfFloatingPointTexture) {
+            throw new DeveloperError('When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension.');
+        }
         //>>includeEnd('debug');
+
+        var sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, size, size) * 6;
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
@@ -122,25 +124,34 @@ define([
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
-        function createFace(target, sourceFace) {
-            if (sourceFace.arrayBufferView) {
-                gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, sourceFace.arrayBufferView);
+        function createFace(target, sourceFace, preMultiplyAlpha, flipY) {
+            // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
+            var arrayBufferView = sourceFace.arrayBufferView;
+            if (arrayBufferView) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                if (flipY) {
+                    arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, size, size);
+                }
+                gl.texImage2D(target, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, arrayBufferView);
             } else {
+                // Only valid for DOM-Element uploads
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
                 gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, sourceFace);
             }
         }
 
         if (defined(source)) {
-            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY);
-            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ);
-            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ);
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source.negativeY, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source.positiveZ, preMultiplyAlpha, flipY);
+            createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source.negativeZ, preMultiplyAlpha, flipY);
         } else {
             gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
             gl.texImage2D(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, 0, pixelFormat, size, size, 0, pixelFormat, pixelDatatype, null);
@@ -158,16 +169,19 @@ define([
         this._pixelFormat = pixelFormat;
         this._pixelDatatype = pixelDatatype;
         this._size = size;
+        this._hasMipmap = false;
+        this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
         this._sampler = undefined;
 
-        this._positiveX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._negativeX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._positiveY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._negativeY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
-        this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
+        var initialized = defined(source);
+        this._positiveX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._negativeX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._positiveY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._negativeY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
+        this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY, initialized);
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
@@ -218,7 +232,7 @@ define([
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
                 // float textures only support nearest filtering, so override the sampler's settings
-                if (this._pixelDatatype === PixelDatatype.FLOAT) {
+                if (this._pixelDatatype === PixelDatatype.FLOAT || this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
                     minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
                     magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
@@ -255,9 +269,17 @@ define([
                 return this._size;
             }
         },
-        height: {
+        height : {
             get : function() {
                 return this._size;
+            }
+        },
+        sizeInBytes : {
+            get : function() {
+                if (this._hasMipmap) {
+                    return Math.floor(this._sizeInBytes * 4 / 3);
+                }
+                return this._sizeInBytes;
             }
         },
         preMultiplyAlpha : {
@@ -307,6 +329,8 @@ define([
             throw new DeveloperError('hint is invalid.');
         }
         //>>includeEnd('debug');
+
+        this._hasMipmap = true;
 
         var gl = this._gl;
         var target = this._textureTarget;

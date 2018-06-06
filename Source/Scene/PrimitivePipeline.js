@@ -1,9 +1,6 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Color',
         '../Core/ComponentDatatype',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -18,9 +15,7 @@ define([
         '../Core/WebMercatorProjection'
     ], function(
         BoundingSphere,
-        Color,
         ComponentDatatype,
-        defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
@@ -277,17 +272,16 @@ define([
         var attributeLocations;
         var instances = parameters.instances;
         var length = instances.length;
+        var pickOffsets;
 
         if (length > 0) {
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
                 attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
+                if (parameters.createPickOffsets) {
+                    pickOffsets = createInstancePickOffsets(instances, geometries);
+                }
             }
-        }
-
-        var pickOffsets;
-        if (parameters.createPickOffsets && geometries.length > 0) {
-            pickOffsets = createInstancePickOffsets(instances, geometries);
         }
 
         var boundingSpheres = new Array(length);
@@ -667,8 +661,9 @@ define([
         var i = 1;
         while (i < buffer.length) {
             if (buffer[i++] === 1.0) {
-                result[count++] = BoundingSphere.unpack(buffer, i);
+                result[count] = BoundingSphere.unpack(buffer, i);
             }
+            ++count;
             i += BoundingSphere.packedLength;
         }
 

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="High-resolution arctic terrain from the Arctic DEM project (Release 4) and hosted by Cesium ion.">
+    <meta name="cesium-sandcastle-labels" content="ion Assets">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+// High-resolution arctic terrain from the Arctic DEM project (Release 4), tiled and hosted by Cesium ion.
+// https://www.pgc.umn.edu/data/arcticdem/
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: new Cesium.CesiumTerrainProvider({
+        url: Cesium.IonResource.fromAssetId(3956)
+    })
+});
+
+// Add Alaskan locations
+Sandcastle.addDefaultToolbarMenu([{
+    text: 'Denali',
+    onselect: function() {
+        viewer.scene.camera.flyTo({
+            destination: Cesium.Cartesian3.fromRadians(-2.6399828792482234, 1.0993550795541742, 5795),
+            orientation: {
+                heading: 3.8455,
+                pitch: -0.4535,
+                roll: 0.0
+            }
+        });
+    }
+}, {
+    text: 'Anchorage Area',
+    onselect: function() {
+        viewer.scene.camera.flyTo({
+            destination: Cesium.Cartesian3.fromRadians(-2.610708034601548, 1.0671172431736584, 1900),
+            orientation: {
+                heading: 4.6,
+                pitch: -0.341,
+                roll: 0.0
+            }
+        });
+    }
+}, {
+    text: 'Peaks',
+    onselect: function() {
+        viewer.scene.camera.flyTo({
+            destination: Cesium.Cartesian3.fromRadians(-2.6928866820212813, 1.072394255273859, 3700),
+            orientation: {
+                heading: 1.6308222948889464,
+                pitch: -0.6473480165020193,
+                roll: 0.0
+            }
+        });
+    }
+}, {
+    text: 'Riverbed',
+    onselect: function() {
+        viewer.scene.camera.flyTo({
+            destination: Cesium.Cartesian3.fromRadians(-2.6395623497608596, 1.0976443174490356, 2070),
+            orientation: {
+                heading: 6.068794108659519,
+                pitch: -0.08514161789475816,
+                roll: 0.0
+            }
+        });
+    }
+}], 'toolbar');
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

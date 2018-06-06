@@ -1,11 +1,8 @@
-/*global define*/
 define([
-        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,10 +14,8 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
-        '../Renderer/ClearCommand',
         '../Renderer/ComputeCommand',
         '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/Texture',
@@ -32,12 +27,10 @@ define([
         './SceneMode',
         './SceneTransforms'
     ], function(
-        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Color,
         ComponentDatatype,
         defined,
         defineProperties,
@@ -49,10 +42,8 @@ define([
         PrimitiveType,
         Buffer,
         BufferUsage,
-        ClearCommand,
         ComputeCommand,
         DrawCommand,
-        Framebuffer,
         RenderState,
         ShaderProgram,
         Texture,
@@ -75,7 +66,7 @@ define([
      *
      * @example
      * scene.sun = new Cesium.Sun();
-     * 
+     *
      * @see Scene#sun
      */
     function Sun() {
@@ -147,11 +138,7 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(scene) {
-        var passState = scene._passState;
-        var frameState = scene.frameState;
-        var context = scene.context;
-
+    Sun.prototype.update = function(frameState, passState) {
         if (!this.show) {
             return undefined;
         }
@@ -165,6 +152,7 @@ define([
             return undefined;
         }
 
+        var context = frameState.context;
         var drawingBufferWidth = passState.viewport.width;
         var drawingBufferHeight = passState.viewport.height;
 
@@ -297,7 +285,7 @@ define([
 
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
-        var dist = Cartesian3.magnitude(Cartesian3.subtract(position, scene.camera.position, scratchCartesian4));
+        var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
         var projMatrix = context.uniformState.projection;
 
         var positionEC = scratchPositionEC;
@@ -307,11 +295,11 @@ define([
         positionEC.w = 1;
 
         var positionCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(passState.viewport, positionCC, scratchPositionWC);
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(passState.viewport, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(passState.viewport, limbCC, scratchLimbWC);
+        var limbWC = SceneTransforms.clipToGLWindowCoordinates(passState.viewport, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
@@ -341,14 +329,12 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
      * @example
      * sun = sun && sun.destroy();
-     * 
+     *
      *  @see Sun#isDestroyed
      */
     Sun.prototype.destroy = function() {

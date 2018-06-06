@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/TimeIntervalCollectionPositionProperty',
         'Core/Cartesian3',

@@ -1,10 +1,7 @@
-/*global define*/
 define([
-        './defined',
-        './DeveloperError'
+        './Check'
     ], function(
-        defined,
-        DeveloperError) {
+        Check) {
     'use strict';
 
     /**
@@ -13,7 +10,7 @@ define([
      * @exports binarySearch
      *
      * @param {Array} array The sorted array to search.
-     * @param {Object} itemToFind The item to find in the array.
+     * @param {*} itemToFind The item to find in the array.
      * @param {binarySearch~Comparator} comparator The function to use to compare the item to
      *        elements in the array.
      * @returns {Number} The index of <code>itemToFind</code> in the array, if it exists.  If <code>itemToFind</code>
@@ -31,15 +28,9 @@ define([
      */
     function binarySearch(array, itemToFind, comparator) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required.');
-        }
-        if (!defined(itemToFind)) {
-            throw new DeveloperError('itemToFind is required.');
-        }
-        if (!defined(comparator)) {
-            throw new DeveloperError('comparator is required.');
-        }
+        Check.defined('array', array);
+        Check.defined('itemToFind', itemToFind);
+        Check.defined('comparator', comparator);
         //>>includeEnd('debug');
 
         var low = 0;
@@ -67,8 +58,8 @@ define([
      * A function used to compare two items while performing a binary search.
      * @callback binarySearch~Comparator
      *
-     * @param {Object} a An item in the array.
-     * @param {Object} b The item being searched for.
+     * @param {*} a An item in the array.
+     * @param {*} b The item being searched for.
      * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
      *          a positive value if <code>a</code> is greater than <code>b</code>, or
      *          0 if <code>a</code> is equal to <code>b</code>.

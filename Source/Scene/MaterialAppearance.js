@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -48,7 +47,7 @@ define([
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -311,7 +310,7 @@ define([
         /**
          * All materials, including those that work in tangent space, are supported.
          * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
-         * <code>binormal</code>, and <code>tangent</code> vertex attributes.
+         * <code>tangent</code>, and <code>bitangent</code> vertex attributes.
          *
          * @constant
          */

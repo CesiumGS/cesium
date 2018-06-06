@@ -1,11 +1,9 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/DeviceOrientationCameraController',
         'Core/Cartesian3',
         'Core/Math',
         'Specs/createCamera',
         'Specs/createCanvas',
-        'Specs/destroyCanvas',
         'Specs/DomEventSimulator'
     ], function(
         DeviceOrientationCameraController,
@@ -13,7 +11,6 @@ defineSuite([
         CesiumMath,
         createCamera,
         createCanvas,
-        destroyCanvas,
         DomEventSimulator) {
     'use strict';
 
@@ -32,7 +29,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyCanvas(canvas);
+        document.body.removeChild(canvas);
     });
 
     beforeEach(function() {
