@@ -42,7 +42,7 @@ define([
      *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
      * @param {Request} [options.request] The request object.
      *
-     * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
@@ -205,7 +205,7 @@ define([
             if (xhr.status === 204) {
                 // accept no content
                 deferred.resolve();
-            } else if (defined(xhr.response) && (!defined(responseType) || (browserResponseType === responseType))) {
+            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
                 deferred.resolve(response);
             } else if ((responseType === 'json') && typeof response === 'string') {
                 try {
