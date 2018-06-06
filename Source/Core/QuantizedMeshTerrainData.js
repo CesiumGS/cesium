@@ -77,6 +77,8 @@ define([
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
      * @param {Credit[]} [options.credits] Array of credits for this tile.
+     * @param {Float32Array} [options.minimumHeights] The minimum heights of this tile and its descendants.
+     * @param {Float32Array} [options.maximumHeights] The maximum heights of this tile and its descendants.
      *
      *
      * @example

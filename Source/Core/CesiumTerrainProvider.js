@@ -56,6 +56,7 @@ define([
         this.availability = layer.availability;
         this.hasVertexNormals = layer.hasVertexNormals;
         this.hasWaterMask = layer.hasWaterMask;
+        this.hasBvh = layer.hasBvh;
         this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
     }
 
@@ -71,6 +72,7 @@ define([
      * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The URL of the Cesium terrain server.
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
+     * @param {Boolean} [options.requestBvh=true] Flag that indicates if the client should request bounding-volume hierarchy information along with tiles, if available. Using volume hierarchy information should significantly improve performance; there is little reason to disable it.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
@@ -106,6 +108,7 @@ define([
         this._heightmapStructure = undefined;
         this._hasWaterMask = false;
         this._hasVertexNormals = false;
+        this._hasBvh = false;
 
         /**
          * Boolean flag that indicates if the client should request vertex normals from the server.
@@ -122,6 +125,15 @@ define([
          * @private
          */
         this._requestWaterMask = defaultValue(options.requestWaterMask, false);
+
+        /**
+         * Boolean flag that indicates if the client should request tile bounding-volume hierarchy information
+         * from the server.
+         * @type {Boolean}
+         * @default true
+         * @private
+         */
+        this._requestBvh = defaultValue(options.requestBvh, true);
 
         this._errorEvent = new Event();
 
@@ -192,6 +204,7 @@ define([
 
             var hasVertexNormals = false;
             var hasWaterMask = false;
+            var hasBvh = false;
             var littleEndianExtensionSize = true;
             var isHeightmap = false;
             if (data.format === 'heightmap-1.0') {
@@ -255,9 +268,13 @@ define([
             if (defined(data.extensions) && data.extensions.indexOf('watermask') !== -1) {
                 hasWaterMask = true;
             }
+            if (defined(data.extensions) && data.extensions.indexOf('bvh') !== -1) {
+                hasBvh = true;
+            }
 
             that._hasWaterMask = that._hasWaterMask || hasWaterMask;
             that._hasVertexNormals = that._hasVertexNormals || hasVertexNormals;
+            that._hasBvh = that._hasBvh || hasBvh;
             if (defined(data.attribution)) {
                 if (attribution.length > 0) {
                     attribution += ' ';
@@ -273,6 +290,7 @@ define([
                 availability: availability,
                 hasVertexNormals: hasVertexNormals,
                 hasWaterMask: hasWaterMask,
+                hasBvh: hasBvh,
                 littleEndianExtensionSize: littleEndianExtensionSize
             }));
 
@@ -381,7 +399,15 @@ define([
          * @constant
          * @default 2
          */
-        WATER_MASK: 2
+        WATER_MASK: 2,
+        /**
+         * A bounding-volume hierarchy is included as an extension to the tile mesh
+         *
+         * @type {Number}
+         * @constant
+         * @default 3
+         */
+        BVH: 3
     };
 
     function getRequestHeader(extensionsList) {
@@ -501,6 +527,8 @@ define([
 
         var encodedNormalBuffer;
         var waterMaskBuffer;
+        var minimumHeights;
+        var maximumHeights;
         while (pos < view.byteLength) {
             var extensionId = view.getUint8(pos, true);
             pos += Uint8Array.BYTES_PER_ELEMENT;
@@ -511,6 +539,12 @@ define([
                 encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
             } else if (extensionId === QuantizedMeshExtensionIds.WATER_MASK && provider._requestWaterMask) {
                 waterMaskBuffer = new Uint8Array(buffer, pos, extensionLength);
+            } else if (extensionId === QuantizedMeshExtensionIds.BVH && provider._requestBvh) {
+                var numberOfHeights = view.getUint32(pos, true);
+                pos += Uint32Array.BYTES_PER_ELEMENT;
+                minimumHeights = new Float32Array(buffer, pos, numberOfHeights);
+                pos += Float32Array.BYTES_PER_ELEMENT * numberOfHeights;
+                maximumHeights = new Float32Array(buffer, pos, numberOfHeights);
             }
             pos += extensionLength;
         }
@@ -551,7 +585,9 @@ define([
             northSkirtHeight : skirtHeight,
             childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
             waterMask: waterMaskBuffer,
-            credits: provider._tileCredits
+            credits: provider._tileCredits,
+            minimumHeights: minimumHeights,
+            maximumHeights: maximumHeights
         });
     }
 
@@ -614,6 +650,9 @@ define([
         }
         if (this._requestWaterMask && layerToUse.hasWaterMask) {
             extensionList.push('watermask');
+        }
+        if (this._requestBvh && layerToUse.hasBvh) {
+            extensionList.push('bvh');
         }
 
         var headers;
