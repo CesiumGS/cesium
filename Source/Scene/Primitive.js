@@ -1322,7 +1322,9 @@ define([
         }
 
         for (i = 0; i < result.length; i++) {
-            primitive._boundingSpheres[i] = result[i].clone(primitive._boundingSpheres[i]);
+            var boundingSphere = result[i].clone(primitive._boundingSpheres[i]);
+            primitive._boundingSpheres[i] = boundingSphere;
+            primitive._boundingSphereCV[i] = BoundingSphere.projectTo2D(boundingSphere, frameState.mapProjection, primitive._boundingSphereCV[i]);
         }
 
         Primitive._updateBoundingVolumes(primitive, frameState, primitive.modelMatrix, true);
