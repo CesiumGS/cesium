@@ -838,12 +838,12 @@ defineSuite([
             model.clippingPlanes = clippingPlanes;
 
             scene.renderForSpecs();
-            expect(Model._getClippingFunction.calls.count()).toEqual(2);
+            expect(Model._getClippingFunction.calls.count()).toEqual(1);
 
             clippingPlanes.unionClippingRegions = true;
 
             scene.renderForSpecs();
-            expect(Model._getClippingFunction.calls.count()).toEqual(4);
+            expect(Model._getClippingFunction.calls.count()).toEqual(2);
 
             primitives.remove(model);
         });
@@ -2438,38 +2438,6 @@ defineSuite([
         return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
             model.zoomTo();
             expect(scene).toRender([255, 255, 255, 255]);
-            primitives.remove(model);
-        });
-    });
-
-    it('loads with custom pickFragmentShader and pickUniformMap', function() {
-        function pickFragmentShaderLoaded(fs) {
-            return ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-        }
-
-        var pickId = scene.context.createPickId({
-            custom : 'custom'
-        });
-
-        function pickUniformMapLoaded(uniformMap) {
-            return combine(uniformMap, {
-                czm_pickColor : function() {
-                    return pickId.color;
-                }
-            });
-        }
-
-        var options = {
-            pickFragmentShaderLoaded : pickFragmentShaderLoaded,
-            pickUniformMapLoaded : pickUniformMapLoaded
-        };
-
-        return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
-            model.show = true;
-            expect(scene).toPickAndCall(function(result) {
-                expect(result.custom).toEqual('custom');
-            });
-
             primitives.remove(model);
         });
     });
