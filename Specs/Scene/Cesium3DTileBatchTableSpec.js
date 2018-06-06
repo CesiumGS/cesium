@@ -45,8 +45,12 @@ defineSuite([
     var mockTileset = {
         _statistics : {
             texturesByteLength : 0
+        },
+        getFeature : function(batchId) {
+            return { batchId : batchId };
         }
     };
+    mockTileset._tileset = mockTileset;
 
     beforeAll(function() {
         scene = createScene();
@@ -84,7 +88,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('setShow', function() {
+    it('setShow sets show', function() {
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
         // Batch table resources are undefined by default
