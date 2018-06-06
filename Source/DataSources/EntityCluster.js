@@ -50,7 +50,7 @@ define([
      * @alias EntityCluster
      * @constructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
      */
     function EntityCluster(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -582,7 +582,6 @@ define([
      */
     EntityCluster.prototype.getLabel = createGetEntity('_labelCollection', LabelCollection, '_unusedLabelIndices', 'labelIndex');
 
-
     /**
      * Removes the {@link Label} associated with an entity so it can be reused by another entity.
      * @param {Entity} entity The entity that will uses the returned {@link Label} for visualization.
@@ -617,7 +616,6 @@ define([
      * @private
      */
     EntityCluster.prototype.getBillboard = createGetEntity('_billboardCollection', BillboardCollection, '_unusedBillboardIndices', 'billboardIndex');
-
 
     /**
      * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.
@@ -780,8 +778,6 @@ define([
      * Unlike other objects that use WebGL resources, this object can be reused. For example, if a data source is removed
      * from a data source collection and added to another.
      * </p>
-     *
-     * @returns {undefined}
      */
     EntityCluster.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();

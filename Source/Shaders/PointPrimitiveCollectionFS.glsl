@@ -46,4 +46,6 @@ void main()
 #else
     gl_FragColor = color;
 #endif
+
+    czm_writeLogDepth();
 }

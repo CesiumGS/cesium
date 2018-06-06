@@ -26,7 +26,7 @@ define([
      * @param {JulianDate} [options.epoch=Iso8601.MINIMUM_VALUE] The simulation time that marks the start of the video.
      * @param {Number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Video.html|Video Material Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Video.html|Video Material Demo}
      */
     function VideoSynchronizer(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -1,20 +1,19 @@
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
-        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/CullingVolume',
+        'Core/getAbsoluteUri',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
         'Core/Intersect',
         'Core/JulianDate',
-        'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
-        'Core/Plane',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Scene/Cesium3DTile',
@@ -22,6 +21,8 @@ defineSuite([
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
+        'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Scene/CullFace',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -30,20 +31,19 @@ defineSuite([
     ], function(
         Cesium3DTileset,
         Cartesian3,
-        ClippingPlaneCollection,
         Color,
         CullingVolume,
+        getAbsoluteUri,
         getStringFromTypedArray,
         HeadingPitchRange,
         Intersect,
         JulianDate,
-        loadWithXhr,
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
-        Plane,
         PrimitiveType,
         RequestScheduler,
+        Resource,
         ClearCommand,
         ContextLimits,
         Cesium3DTile,
@@ -51,6 +51,8 @@ defineSuite([
         Cesium3DTileContentState,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
+        ClippingPlane,
+        ClippingPlaneCollection,
         CullFace,
         Cesium3DTilesTester,
         createScene,
@@ -63,67 +65,70 @@ defineSuite([
     var centerLatitude = 0.698874;
 
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/';
+    var tilesetUrl = 'Data/Cesium3DTiles/Tilesets/Tileset/';
 
     // Parent tile with no content and four child tiles with content
-    var tilesetEmptyRootUrl = './Data/Cesium3DTiles/Tilesets/TilesetEmptyRoot/';
+    var tilesetEmptyRootUrl = 'Data/Cesium3DTiles/Tilesets/TilesetEmptyRoot/';
 
-    var tilesetReplacement1Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement1/';
-    var tilesetReplacement2Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement2/';
-    var tilesetReplacement3Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement3/';
+    var tilesetReplacement1Url = 'Data/Cesium3DTiles/Tilesets/TilesetReplacement1/';
+    var tilesetReplacement2Url = 'Data/Cesium3DTiles/Tilesets/TilesetReplacement2/';
+    var tilesetReplacement3Url = 'Data/Cesium3DTiles/Tilesets/TilesetReplacement3/';
 
     // 3 level tree with mix of additive and replacement refinement
-    var tilesetRefinementMix = './Data/Cesium3DTiles/Tilesets/TilesetRefinementMix/';
+    var tilesetRefinementMix = 'Data/Cesium3DTiles/Tilesets/TilesetRefinementMix/';
 
     // tileset.json : root content points to tiles2.json
     // tiles2.json: root with b3dm content, three children with b3dm content, one child points to tiles3.json
     // tiles3.json: root with b3dm content
-    var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
+    var tilesetOfTilesetsUrl = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
 
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
-    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
+    var withoutBatchTableUrl = 'Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
+    var withBatchTableUrl = 'Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var noBatchIdsUrl = 'Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
 
-    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
-    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
-    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
-    var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
+    var withTransformBoxUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
+    var withTransformSphereUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
+    var withTransformRegionUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
+    var withBoundingSphereUrl = 'Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
 
-    var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
-    var instancedUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
-    var instancedRedMaterialUrl = './Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
+    var compositeUrl = 'Data/Cesium3DTiles/Composite/Composite/';
+    var instancedUrl = 'Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
+    var instancedRedMaterialUrl = 'Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
 
     // 1 tile where each feature is a different source color
-    var colorsUrl = './Data/Cesium3DTiles/Batched/BatchedColors/';
+    var colorsUrl = 'Data/Cesium3DTiles/Batched/BatchedColors/';
 
     // 1 tile where each feature has a reddish texture
-    var texturedUrl = './Data/Cesium3DTiles/Batched/BatchedTextured/';
+    var texturedUrl = 'Data/Cesium3DTiles/Batched/BatchedTextured/';
 
     // 1 tile with translucent features
-    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
+    var translucentUrl = 'Data/Cesium3DTiles/Batched/BatchedTranslucent/';
 
     // 1 tile with opaque and translucent features
-    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
+    var translucentOpaqueMixUrl = 'Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
 
     // Root tile is transformed from local space to wgs84, child tile is rotated, scaled, and translated locally
-    var tilesetWithTransformsUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithTransforms';
+    var tilesetWithTransformsUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithTransforms';
 
     // Root tile with 4 b3dm children and 1 pnts child with a viewer request volume
-    var tilesetWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume';
+    var tilesetWithViewerRequestVolumeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume';
 
     // Parent tile with content and four child tiles with content with viewer request volume for each child
-    var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
+    var tilesetReplacementWithViewerRequestVolumeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
-    var tilesetWithExternalResourcesUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
-    var tilesetSubtreeExpirationUrl = './Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration';
-    var tilesetSubtreeUrl = './Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
-    var batchedExpirationUrl = './Data/Cesium3DTiles/Batched/BatchedExpiration';
-    var batchedColorsB3dmUrl = './Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm';
+    var tilesetWithExternalResourcesUrl = 'Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
+    var tilesetSubtreeExpirationUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration';
+    var tilesetSubtreeUrl = 'Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
+    var batchedExpirationUrl = 'Data/Cesium3DTiles/Batched/BatchedExpiration';
+    var batchedColorsB3dmUrl = 'Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm';
+    var batchedVertexColorsUrl = 'Data/Cesium3DTiles/Batched/BatchedWithVertexColors';
 
-    var styleUrl = './Data/Cesium3DTiles/Style/style.json';
+    var styleUrl = 'Data/Cesium3DTiles/Style/style.json';
 
-    var pointCloudUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
-    var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
+    var pointCloudUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudRGB';
+    var pointCloudBatchedUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudBatched';
+
+    var invalidTileset = './Data/Cesium3DTiles/Tilesets/TilesetInvalid/';
 
     beforeAll(function() {
         scene = createScene();
@@ -178,6 +183,12 @@ defineSuite([
         scene.camera.moveDown(200.0);
     }
 
+    function viewBottomRight() {
+        viewAllTiles();
+        scene.camera.moveRight(200.0);
+        scene.camera.moveDown(200.0);
+    }
+
     function viewInstances() {
         setZoom(30.0);
     }
@@ -193,7 +204,7 @@ defineSuite([
     });
 
     it('rejects readyPromise with invalid tileset.json', function() {
-        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             deferred.reject();
         });
 
@@ -224,7 +235,7 @@ defineSuite([
     });
 
     it('static method loadJson is used in Cesium3DTileset constructor', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
 
         var originalLoadJson = Cesium3DTileset.loadJson;
 
@@ -240,6 +251,57 @@ defineSuite([
 
         // restore original version
         Cesium3DTileset.loadJson = originalLoadJson;
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+    it('Constructor works with promise to resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : when.resolve(resource)
+        });
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+    it('Constructor works with directory resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : resource
+        });
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+    it('Constructor works with file resource', function() {
+        var resource = new Resource({
+            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json'
+        });
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : resource
+        });
 
         return tileset.readyPromise.then(function() {
             expect(tileset.ready).toEqual(true);
@@ -268,7 +330,7 @@ defineSuite([
     });
 
     it('url and tilesetUrl set up correctly given tileset.json path', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
         var tileset = new Cesium3DTileset({
             url : path
         });
@@ -277,31 +339,31 @@ defineSuite([
     });
 
     it('url and tilesetUrl set up correctly given directory without trailing slash', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
         var tileset = new Cesium3DTileset({
             url : path
         });
-        expect(tileset.url).toEqual(path);
-        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json');
+        expect(tileset.url).toEqual(path + '/');
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json'));
     });
 
     it('url and tilesetUrl set up correctly given directory with trailing slash', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
         var tileset = new Cesium3DTileset({
             url : path
         });
         expect(tileset.url).toEqual(path);
-        expect(tileset._tilesetUrl).toEqual(path + 'tileset.json');
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + 'tileset.json'));
     });
 
     it('url and tilesetUrl set up correctly given path with query string', function() {
-        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var path = 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
         var param = '?param1=1&param2=2';
         var tileset = new Cesium3DTileset({
             url : path + param
         });
-        expect(tileset.url).toEqual(path + param);
-        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json' + param);
+        expect(tileset.url).toEqual(path + '/' + param);
+        expect(tileset._tilesetUrl).toEqual(getAbsoluteUri(path + '/tileset.json' + param));
     });
 
     it('resolves readyPromise', function() {
@@ -333,18 +395,18 @@ defineSuite([
 
     it('passes version in query string to tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            expect(tileset._root.content._url).toEqual(tilesetUrl + 'parent.b3dm?v=1.2.3');
+            expect(tileset._root.content._resource.url).toEqual(getAbsoluteUri(tilesetUrl + 'parent.b3dm?v=1.2.3'));
         });
     });
 
     it('passes version in query string to all external resources', function() {
         // Spy on loadWithXhr so we can verify requested urls
-        spyOn(loadWithXhr, 'load').and.callThrough();
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callThrough();
 
         var queryParams = '?a=1&b=boy';
         var queryParamsWithVersion = '?a=1&b=boy&v=1.2.3';
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl + queryParams).then(function(tileset) {
-            var calls = loadWithXhr.load.calls.all();
+            var calls = Resource._Implementations.loadWithXhr.calls.all();
             var callsLength = calls.length;
             for (var i = 0; i < callsLength; ++i) {
                 var url = calls[0].args[0];
@@ -388,7 +450,7 @@ defineSuite([
         }));
         return tileset.readyPromise.then(function(tileset) {
             // Start spying after the tileset json has been loaded
-            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 deferred.resolve(invalidMagicBuffer);
             });
             scene.renderForSpecs(); // Request root
@@ -409,7 +471,7 @@ defineSuite([
         }));
         return tileset.readyPromise.then(function(tileset) {
             // Start spying after the tileset json has been loaded
-            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 deferred.reject();
             });
             scene.renderForSpecs(); // Request root
@@ -418,6 +480,38 @@ defineSuite([
                 fail('should not resolve');
             }).otherwise(function(error) {
                 expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
+                var statistics = tileset.statistics;
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(0);
+                expect(statistics.numberOfTilesWithContentReady).toBe(0);
+            });
+        });
+    });
+
+    it('handles failed tile processing', function() {
+        viewRootOnly();
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : tilesetUrl
+        }));
+        return tileset.readyPromise.then(function(tileset) {
+            // Start spying after the tileset json has been loaded
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                deferred.resolve(Cesium3DTilesTester.generateBatchedTileBuffer({
+                    version : 0 // Invalid version
+                }));
+            });
+            scene.renderForSpecs(); // Request root
+            var root = tileset._root;
+            return root.contentReadyPromise.then(function() {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
+                var statistics = tileset.statistics;
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(0);
+                expect(statistics.numberOfTilesWithContentReady).toBe(0);
             });
         });
     });
@@ -678,8 +772,8 @@ defineSuite([
         var b3dmGeometryMemory = 840; // Only one box in the tile, unlike most other test tiles
         var i3dmGeometryMemory = 840;
 
-        // Texture is 211x211 RGBA bytes, but upsampled to 256x256 because the wrap mode is REPEAT
-        var texturesByteLength = 262144;
+        // Texture is 211x211 RGB bytes, but upsampled to 256x256 because the wrap mode is REPEAT
+        var texturesByteLength = 196608;
 
         var expectedGeometryMemory = b3dmGeometryMemory * 2 + i3dmGeometryMemory * 3;
         var expectedTextureMemory = texturesByteLength * 5;
@@ -753,7 +847,7 @@ defineSuite([
     function findTileByUrl(tiles, url) {
         var length = tiles.length;
         for (var i = 0; i < length; ++i) {
-            if (tiles[i].content._url.indexOf(url) >= 0) {
+            if (tiles[i].content._resource.url.indexOf(url) >= 0) {
                 return tiles[i];
             }
         }
@@ -1207,15 +1301,15 @@ defineSuite([
         viewNothing();
 
         //Spy on loadWithXhr so we can verify requested urls
-        spyOn(loadWithXhr, 'load').and.callThrough();
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callThrough();
 
-        var queryParams = '?a=1&b=boy';
-        var expectedUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json' + queryParams;
-        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl + queryParams).then(function(tileset) {
+        var queryParams = 'a=1&b=boy';
+        var expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json?' + queryParams);
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl + '?' + queryParams).then(function(tileset) {
             //Make sure tileset.json was requested with query parameters
-            expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
+            expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(expectedUrl);
 
-            loadWithXhr.load.calls.reset();
+            Resource._Implementations.loadWithXhr.calls.reset();
 
             // Set view so that root's content is requested
             viewRootOnly();
@@ -1224,9 +1318,9 @@ defineSuite([
             return tileset._root.contentReadyPromise;
         }).then(function() {
             //Make sure tileset2.json was requested with query parameters and version
-            var queryParamsWithVersion = queryParams + '&v=0.0';
-            expectedUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json' + queryParamsWithVersion;
-            expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
+            var queryParamsWithVersion = 'v=0.0&' + queryParams;
+            expectedUrl = getAbsoluteUri('Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?' + queryParamsWithVersion);
+            expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(expectedUrl);
         });
     });
 
@@ -1684,6 +1778,24 @@ defineSuite([
         });
     });
 
+    it('tile failed event is raised', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, invalidTileset).then(function(tileset) {
+            var spyUpdate = jasmine.createSpy('listener');
+            tileset.tileFailed.addEventListener(spyUpdate);
+            tileset.maximumMemoryUsage = 0;
+            viewRootOnly();
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                expect(spyUpdate.calls.count()).toEqual(1);
+
+                var arg = spyUpdate.calls.argsFor(0)[0];
+                expect(arg).toBeDefined();
+                expect(arg.url).toContain('does_not_exist.b3dm');
+                expect(arg.message).toBeDefined();
+            });
+        });
+    });
+
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var root = tileset._root;
@@ -2117,6 +2229,10 @@ defineSuite([
     it('sets colorBlendMode for instanced tileset', function() {
         viewInstances();
         return testColorBlendMode(instancedRedMaterialUrl);
+    });
+
+    it('sets colorBlendMode for vertex color tileset', function() {
+        return testColorBlendMode(batchedVertexColorsUrl);
     });
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2575,8 +2691,8 @@ defineSuite([
         });
     });
 
-    it('immediatelyLoadDesiredLevelOfDetail', function() {
-        viewBottomLeft();
+    xit('immediatelyLoadDesiredLevelOfDetail', function() {
+        viewBottomRight();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetOfTilesetsUrl,
             immediatelyLoadDesiredLevelOfDetail : true
@@ -2616,8 +2732,8 @@ defineSuite([
     it('tile expires', function() {
         return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(function(tileset) {
             // Intercept the request and load content that produces more draw commands, to simulate fetching new content after the original expires
-            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                loadWithXhr.defaultLoad(batchedColorsB3dmUrl, responseType, method, data, headers, deferred, overrideMimeType);
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._DefaultImplementations.loadWithXhr(batchedColorsB3dmUrl, responseType, method, data, headers, deferred, overrideMimeType);
             });
             var tile = tileset._root;
             var statistics = tileset._statistics;
@@ -2665,7 +2781,7 @@ defineSuite([
             expect(tile._expiredContent).toBeDefined(); // Still holds onto expired content until the content state is READY
 
             // Check that url contains a query param with the timestamp
-            var url = loadWithXhr.load.calls.first().args[0];
+            var url = Resource._Implementations.loadWithXhr.calls.first().args[0];
             expect(url.indexOf('expired=') >= 0).toBe(true);
 
             // statistics are still the same
@@ -2712,9 +2828,9 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetSubtreeExpirationUrl).then(function(tileset) {
             // Intercept the request and load a subtree with one less child. Still want to make an actual request to simulate
             // real use cases instead of immediately returning a pre-created array buffer.
-            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 var newDeferred = when.defer();
-                loadWithXhr.defaultLoad(tilesetSubtreeUrl, responseType, method, data, headers, newDeferred, overrideMimeType);
+                Resource._DefaultImplementations.loadWithXhr(tilesetSubtreeUrl, responseType, method, data, headers, newDeferred, overrideMimeType);
                 newDeferred.promise.then(function(arrayBuffer) {
                     deferred.resolve(modifySubtreeBuffer(arrayBuffer));
                 });
@@ -2747,7 +2863,7 @@ defineSuite([
             expect(spyUpdate.calls.count()).toEqual(4);
 
             // Remove the spy so new tiles load in normally
-            loadWithXhr.load = loadWithXhr.defaultLoad;
+            Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
 
             // Wait for the new tileset content to come in with one less leaf
             return pollToPromise(function() {
@@ -2764,7 +2880,7 @@ defineSuite([
 
     it('tile expires and request fails', function() {
         return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(function(tileset) {
-            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 deferred.reject();
             });
             var tile = tileset._root;
@@ -2809,13 +2925,56 @@ defineSuite([
         });
     });
 
+    it('destroys attached ClippingPlaneCollections and ClippingPlaneCollections that have been detached', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var clippingPlaneCollection1 = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0)
+                ]
+            });
+            expect(clippingPlaneCollection1.owner).not.toBeDefined();
+
+            tileset.clippingPlanes = clippingPlaneCollection1;
+            var clippingPlaneCollection2 = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0)
+                ]
+            });
+
+            tileset.clippingPlanes = clippingPlaneCollection2;
+            expect(clippingPlaneCollection1.isDestroyed()).toBe(true);
+
+            scene.primitives.remove(tileset);
+            expect(clippingPlaneCollection2.isDestroyed()).toBe(true);
+        });
+    });
+
+    it('throws a DeveloperError when given a ClippingPlaneCollection attached to another Tileset', function() {
+        var clippingPlanes;
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset1) {
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new ClippingPlane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            tileset1.clippingPlanes = clippingPlanes;
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl);
+        })
+        .then(function(tileset2) {
+            expect(function() {
+                tileset2.clippingPlanes = clippingPlanes;
+            }).toThrowDeveloperError();
+        });
+    });
+
     it('clipping planes cull hidden tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
 
             expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, -100000000.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -2839,7 +2998,7 @@ defineSuite([
 
             expect(visibility).not.toBe(Intersect.OUTSIDE);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, -100000000.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, -100000000.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -2868,7 +3027,7 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
@@ -2910,7 +3069,7 @@ defineSuite([
 
             tileset.update(scene.frameState);
 
-            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            var plane = new ClippingPlane(Cartesian3.UNIT_Z, 0.0);
             tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane

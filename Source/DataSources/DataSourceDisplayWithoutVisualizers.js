@@ -1,29 +1,43 @@
 define([
     '../Core/BoundingSphere',
     '../Core/Check',
-    '../Core/createGuid',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
     '../Core/destroyObject',
-    '../Core/DeveloperError',
     '../Core/EventHelper',
     '../Scene/GroundPrimitive',
+    '../Scene/OrderedGroundPrimitiveCollection',
+    '../Scene/PrimitiveCollection',
+    // './BillboardVisualizer',
     './BoundingSphereState',
-    './CustomDataSource'
+    './CustomDataSource',
+    // './GeometryVisualizer',
+    // './LabelVisualizer',
+    // './ModelVisualizer',
+    // './PathVisualizer',
+    // './PointVisualizer',
+    // './PolylineVisualizer'
 ], function(
     BoundingSphere,
     Check,
-    createGuid,
     defaultValue,
     defined,
     defineProperties,
     destroyObject,
-    DeveloperError,
     EventHelper,
     GroundPrimitive,
+    OrderedGroundPrimitiveCollection,
+    PrimitiveCollection,
+    // BillboardVisualizer,
     BoundingSphereState,
-    CustomDataSource) {
+    CustomDataSource,
+    // GeometryVisualizer,
+    // LabelVisualizer,
+    // ModelVisualizer,
+    // PathVisualizer,
+    // PointVisualizer,
+    // PolylineVisualizer) {
 'use strict';
 
 /**
@@ -47,18 +61,30 @@ function DataSourceDisplay(options) {
 
     GroundPrimitive.initializeTerrainHeights();
 
-    this._displayID = createGuid();
-
     var scene = options.scene;
     var dataSourceCollection = options.dataSourceCollection;
 
     this._eventHelper = new EventHelper();
     this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
     this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
+    this._eventHelper.add(dataSourceCollection.dataSourceMoved, this._onDataSourceMoved, this);
 
     this._dataSourceCollection = dataSourceCollection;
     this._scene = scene;
     this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
+
+    var primitivesAdded = false;
+    var primitives = new PrimitiveCollection();
+    var groundPrimitives = new PrimitiveCollection();
+
+    if (dataSourceCollection.length > 0) {
+        scene.primitives.add(primitives);
+        scene.groundPrimitives.add(groundPrimitives);
+        primitivesAdded = true;
+    }
+
+    this._primitives = primitives;
+    this._groundPrimitives = groundPrimitives;
 
     for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
         this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
@@ -68,6 +94,25 @@ function DataSourceDisplay(options) {
     this._onDataSourceAdded(undefined, defaultDataSource);
     this._defaultDataSource = defaultDataSource;
 
+    var removeDefaultDataSoureListener;
+    var removeDataSourceCollectionListener;
+    if (!primitivesAdded) {
+        var that = this;
+        var addPrimitives = function() {
+            scene.primitives.add(primitives);
+            scene.groundPrimitives.add(groundPrimitives);
+            removeDefaultDataSoureListener();
+            removeDataSourceCollectionListener();
+            that._removeDefaultDataSoureListener = undefined;
+            that._removeDataSourceCollectionListener = undefined;
+        };
+        removeDefaultDataSoureListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
+        removeDataSourceCollectionListener = dataSourceCollection.dataSourceAdded.addEventListener(addPrimitives);
+    }
+
+    this._removeDefaultDataSoureListener = removeDefaultDataSoureListener;
+    this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
+
     this._ready = false;
 }
 
@@ -75,7 +120,6 @@ function DataSourceDisplay(options) {
  * Gets or sets the default function which creates an array of visualizers used for visualization.
  * By default, this function uses all standard visualizers.
  *
- * @member
  * @type {DataSourceDisplay~VisualizersCallback}
  */
 DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
@@ -152,8 +196,6 @@ DataSourceDisplay.prototype.isDestroyed = function() {
  * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
  * assign the return value (<code>undefined</code>) to the object as done in the example.
  *
- * @returns {undefined}
- *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
  *
@@ -171,6 +213,14 @@ DataSourceDisplay.prototype.destroy = function() {
     }
     this._onDataSourceRemoved(undefined, this._defaultDataSource);
 
+    if (defined(this._removeDefaultDataSoureListener)) {
+        this._removeDefaultDataSoureListener();
+        this._removeDataSourceCollectionListener();
+    } else {
+        this._scene.primitives.remove(this._primitives);
+        this._scene.groundPrimitives.remove(this._groundPrimitives);
+    }
+
     return destroyObject(this);
 };
 
@@ -182,9 +232,7 @@ DataSourceDisplay.prototype.destroy = function() {
  */
 DataSourceDisplay.prototype.update = function(time) {
     //>>includeStart('debug', pragmas.debug);
-    if (!defined(time)) {
-        throw new DeveloperError('time is required.');
-    }
+    Check.defined('time', time);
     //>>includeEnd('debug');
 
     if (!GroundPrimitive._initialized) {
@@ -242,15 +290,9 @@ var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
  */
 DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, result) {
     //>>includeStart('debug', pragmas.debug);
-    if (!defined(entity)) {
-        throw new DeveloperError('entity is required.');
-    }
-    if (!defined(allowPartial)) {
-        throw new DeveloperError('allowPartial is required.');
-    }
-    if (!defined(result)) {
-        throw new DeveloperError('result is required.');
-    }
+    Check.defined('entity', entity);
+    Check.typeOf.bool('allowPartial', allowPartial);
+    Check.defined('result', result);
     //>>includeEnd('debug');
 
     if (!this._ready) {
@@ -311,42 +353,66 @@ DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, r
 DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
     var scene = this._scene;
 
-    var entityCluster;
-    if (defined(dataSource.clustering) && defined(scene.primitives)) {
-        entityCluster = dataSource.clustering;
-        entityCluster._initialize(scene);
+    var displayPrimitives = this._primitives;
+    var displayGroundPrimitives = this._groundPrimitives;
 
-        scene.primitives.add(entityCluster);
-    }
+    var primitives = displayPrimitives.add(new PrimitiveCollection());
+    var groundPrimitives = displayGroundPrimitives.add(new OrderedGroundPrimitiveCollection());
 
-    var visualizers = this._visualizersCallback(this._scene, entityCluster, dataSource);
+    dataSource._primitives = primitives;
+    dataSource._groundPrimitives = groundPrimitives;
 
-    dataSource._visualizersByDisplayID = dataSource._visualizersByDisplayID || {};
-    dataSource._visualizersByDisplayID[this._displayID] = visualizers;
+    var entityCluster = dataSource.clustering;
+    entityCluster._initialize(scene);
 
-    dataSource._visualizers = dataSource._visualizers || [];
-    dataSource._visualizers = dataSource._visualizers.concat(visualizers);
+    primitives.add(entityCluster);
+
+    dataSource._visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
 };
 
 DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
-    var scene = this._scene;
-    if (defined(dataSource.clustering) && defined(scene.primitives)) {
-        var entityCluster = dataSource.clustering;
-        scene.primitives.remove(entityCluster);
-    }
+    var displayPrimitives = this._primitives;
+    var displayGroundPrimitives = this._groundPrimitives;
 
-    var visualizers = dataSource._visualizersByDisplayID[this._displayID];
-    if (!defined(visualizers)) {
-        return;
-    }
+    var primitives = dataSource._primitives;
+    var groundPrimitives = dataSource._groundPrimitives;
 
+    var entityCluster = dataSource.clustering;
+    primitives.remove(entityCluster);
+
+    var visualizers = dataSource._visualizers;
     var length = visualizers.length;
     for (var i = 0; i < length; i++) {
-        var visualizer = visualizers[i];
-        visualizer.destroy();
+        visualizers[i].destroy();
+    }
 
-        var index = dataSource._visualizers.indexOf(visualizer);
-        dataSource._visualizers.splice(index, 1);
+    displayPrimitives.remove(primitives);
+    displayGroundPrimitives.remove(groundPrimitives);
+
+    dataSource._visualizers = undefined;
+};
+
+DataSourceDisplay.prototype._onDataSourceMoved = function(dataSource, newIndex, oldIndex) {
+    var displayPrimitives = this._primitives;
+    var displayGroundPrimitives = this._groundPrimitives;
+
+    var primitives = dataSource._primitives;
+    var groundPrimitives = dataSource._groundPrimitives;
+
+    if (newIndex === oldIndex + 1) {
+        displayPrimitives.raise(primitives);
+        displayGroundPrimitives.raise(groundPrimitives);
+    } else if (newIndex === oldIndex - 1) {
+        displayPrimitives.lower(primitives);
+        displayGroundPrimitives.lower(groundPrimitives);
+    } else if (newIndex === 0) {
+        displayPrimitives.lowerToBottom(primitives);
+        displayGroundPrimitives.lowerToBottom(groundPrimitives);
+        displayPrimitives.raise(primitives); // keep defaultDataSource primitives at index 0 since it's not in the collection
+        displayGroundPrimitives.raise(groundPrimitives);
+    } else {
+        displayPrimitives.raiseToTop(primitives);
+        displayGroundPrimitives.raiseToTop(groundPrimitives);
     }
 };
 

@@ -16,6 +16,14 @@ defineSuite([
         expect(CesiumMath.sign(0)).toEqual(0);
     });
 
+    it('sign of -0', function() {
+        expect(CesiumMath.sign(-0)).toEqual(-0);
+    });
+
+    it('sign of NaN', function() {
+        expect(CesiumMath.sign(NaN)).toBeNaN();
+    });
+
     it('signNotZero of -2', function() {
         expect(CesiumMath.signNotZero(-2)).toEqual(-1);
     });
@@ -432,6 +440,32 @@ defineSuite([
     it('logBase throws without base', function() {
         expect(function() {
             CesiumMath.logBase(64, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('cbrt', function() {
+        expect(CesiumMath.cbrt(27.0)).toEqual(3.0);
+        expect(CesiumMath.cbrt(-27.0)).toEqual(-3.0);
+        expect(CesiumMath.cbrt(0.0)).toEqual(0.0);
+        expect(CesiumMath.cbrt(1.0)).toEqual(1.0);
+        expect(CesiumMath.cbrt()).toEqual(NaN);
+    });
+
+    it('fastApproximateAtan', function() {
+        expect(CesiumMath.fastApproximateAtan(0.0)).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan(1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan(-1.0)).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON3);
+    });
+
+    it('fastApproximateAtan2', function() {
+        expect(CesiumMath.fastApproximateAtan2(1.0, 0.0)).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan2(1.0, 1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan2(-1.0, 1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR + CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON3);
+    });
+
+    it('fastApproximateAtan2 throws if both arguments are zero', function() {
+        expect(function() {
+            CesiumMath.fastApproximateAtan2(0, 0);
         }).toThrowDeveloperError();
     });
 });

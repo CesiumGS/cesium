@@ -205,7 +205,7 @@ define([
             if (xhr.status === 204) {
                 // accept no content
                 deferred.resolve();
-            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+            } else if (defined(xhr.response) && (!defined(responseType) || (browserResponseType === responseType))) {
                 deferred.resolve(response);
             } else if ((responseType === 'json') && typeof response === 'string') {
                 try {

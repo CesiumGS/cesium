@@ -138,7 +138,10 @@ var czml = [{
     }
 }];
 
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
+
 viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
   //Sandcastle_End

@@ -1,5 +1,6 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -26,6 +27,7 @@ define([
         './Property'
     ], function(
         BoundingSphere,
+        Check,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -55,6 +57,7 @@ define([
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};
 
+    var scratchColor = new Color();
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
@@ -100,29 +103,23 @@ define([
         this._distanceDisplayConditionProperty = undefined;
         this._depthFailMaterialProperty = undefined;
         this._options = new GeometryOptions(entity);
+        this._id = 'polyline-' + entity.id;
+
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
 
-    defineProperties(PolylineGeometryUpdater, {
-        /**
-         * Gets the type of Appearance to use for simple color-based geometry.
-         * @memberof PolylineGeometryUpdater
-         * @type {Appearance}
-         */
-        perInstanceColorAppearanceType : {
-            value : PolylineColorAppearance
-        },
-        /**
-         * Gets the type of Appearance to use for material-based geometry.
-         * @memberof PolylineGeometryUpdater
-         * @type {Appearance}
-         */
-        materialAppearanceType : {
-            value : PolylineMaterialAppearance
-        }
-    });
-
     defineProperties(PolylineGeometryUpdater.prototype, {
+        /**
+         * Gets the unique ID associated with this updater
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {String}
+         * @readonly
+         */
+        id: {
+            get: function() {
+                return this._id;
+            }
+        },
         /**
          * Gets the entity associated with this geometry.
          * @memberof PolylineGeometryUpdater.prototype
@@ -331,17 +328,21 @@ define([
 
         var currentColor;
         if (this._materialProperty instanceof ColorMaterialProperty) {
-            currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
-                currentColor = this._materialProperty.color.getValue(time);
+                currentColor = this._materialProperty.color.getValue(time, scratchColor);
+            }
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
             }
             attributes.color = ColorGeometryInstanceAttribute.fromColor(currentColor);
         }
 
         if (defined(this._depthFailMaterialProperty) && this._depthFailMaterialProperty instanceof ColorMaterialProperty) {
-            currentColor = Color.WHITE;
             if (defined(this._depthFailMaterialProperty.color) && (this._depthFailMaterialProperty.color.isConstant || isAvailable)) {
-                currentColor = this._depthFailMaterialProperty.color.getValue(time);
+                currentColor = this._depthFailMaterialProperty.color.getValue(time, scratchColor);
+            }
+            if (!defined(currentColor)) {
+                currentColor = Color.WHITE;
             }
             attributes.depthFailColor = ColorGeometryInstanceAttribute.fromColor(currentColor);
         }
@@ -514,8 +515,8 @@ define([
         this._primitives = primitives;
         this._geometryUpdater = geometryUpdater;
         this._positions = [];
-
     }
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
@@ -551,14 +552,9 @@ define([
         line.distanceDisplayCondition = Property.getValueOrUndefined(polyline._distanceDisplayCondition, time, line.distanceDisplayCondition);
     };
 
-    DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {
+    DynamicGeometryUpdater.prototype.getBoundingSphere = function(result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var line = this._line;

@@ -100,6 +100,7 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
         this._loadQueueTimeSlice = 5.0;
+        this._tilesInvalidated = false;
 
         this._addHeightCallbacks = [];
         this._removeHeightCallbacks = [];
@@ -167,14 +168,20 @@ define([
      * @memberof QuadtreePrimitive
      */
     QuadtreePrimitive.prototype.invalidateAllTiles = function() {
+        this._tilesInvalidated = true;
+    };
+
+    function invalidateAllTiles(primitive) {
         // Clear the replacement queue
-        var replacementQueue = this._tileReplacementQueue;
+        var replacementQueue = primitive._tileReplacementQueue;
         replacementQueue.head = undefined;
         replacementQueue.tail = undefined;
         replacementQueue.count = 0;
 
+        clearTileLoadQueue(primitive);
+
         // Free and recreate the level zero tiles.
-        var levelZeroTiles = this._levelZeroTiles;
+        var levelZeroTiles = primitive._levelZeroTiles;
         if (defined(levelZeroTiles)) {
             for (var i = 0; i < levelZeroTiles.length; ++i) {
                 var tile = levelZeroTiles[i];
@@ -184,17 +191,17 @@ define([
                 for (var j = 0; j < customDataLength; ++j) {
                     var data = customData[j];
                     data.level = 0;
-                    this._addHeightCallbacks.push(data);
+                    primitive._addHeightCallbacks.push(data);
                 }
 
                 levelZeroTiles[i].freeResources();
             }
         }
 
-        this._levelZeroTiles = undefined;
+        primitive._levelZeroTiles = undefined;
 
-        this._tileProvider.cancelReprojections();
-    };
+        primitive._tileProvider.cancelReprojections();
+    }
 
     /**
      * Invokes a specified function for each {@link QuadtreeTile} that is partially
@@ -261,6 +268,30 @@ define([
     };
 
     /**
+     * Updates the tile provider imagery and continues to process the tile load queue.
+     * @private
+     */
+    QuadtreePrimitive.prototype.update = function(frameState) {
+        if (defined(this._tileProvider.update)) {
+            this._tileProvider.update(frameState);
+        }
+    };
+
+    function clearTileLoadQueue(primitive) {
+        var debug = primitive._debug;
+        debug.maxDepth = 0;
+        debug.tilesVisited = 0;
+        debug.tilesCulled = 0;
+        debug.tilesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
+
+        primitive._tileLoadQueueHigh.length = 0;
+        primitive._tileLoadQueueMedium.length = 0;
+        primitive._tileLoadQueueLow.length = 0;
+    }
+
+    /**
+     * Initializes values for a new render frame and prepare the tile load queue.
      * @private
      */
     QuadtreePrimitive.prototype.beginFrame = function(frameState) {
@@ -269,67 +300,53 @@ define([
             return;
         }
 
-        // Gets commands for any texture re-projections and updates the credit display
+        // Gets commands for any texture re-projections
         this._tileProvider.initialize(frameState);
 
-        var debug = this._debug;
-        if (debug.suspendLodUpdate) {
+        if (this._debug.suspendLodUpdate) {
             return;
         }
 
-        debug.maxDepth = 0;
-        debug.tilesVisited = 0;
-        debug.tilesCulled = 0;
-        debug.tilesRendered = 0;
-        debug.tilesWaitingForChildren = 0;
-
-        this._tileLoadQueueHigh.length = 0;
-        this._tileLoadQueueMedium.length = 0;
-        this._tileLoadQueueLow.length = 0;
+        clearTileLoadQueue(this);
         this._tileReplacementQueue.markStartOfRenderFrame();
     };
 
     /**
+     * Selects new tiles to load based on the frame state and creates render commands.
      * @private
      */
-    QuadtreePrimitive.prototype.update = function(frameState) {
+    QuadtreePrimitive.prototype.render = function(frameState) {
         var passes = frameState.passes;
+        var tileProvider = this._tileProvider;
 
         if (passes.render) {
-            this._tileProvider.beginUpdate(frameState);
+            tileProvider.beginUpdate(frameState);
 
             selectTilesForRendering(this, frameState);
             createRenderCommandsForSelectedTiles(this, frameState);
 
-            this._tileProvider.endUpdate(frameState);
+            tileProvider.endUpdate(frameState);
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.updateForPick(frameState);
+            tileProvider.updateForPick(frameState);
         }
     };
 
     /**
-     * @private
+     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
+     * a new change event at the end of the render cycle.
      */
-    QuadtreePrimitive.prototype.endFrame = function(frameState) {
-        var passes = frameState.passes;
-        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
-            // Only process the load queue for a single pass.
-            // Don't process the load queue or update heights during the morph flights.
-            return;
+    function updateTileLoadProgress(primitive, frameState) {
+        var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
+
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength || primitive._tilesInvalidated) {
+            frameState.afterRender.push(Event.prototype.raiseEvent.bind(primitive._tileLoadProgressEvent, currentLoadQueueLength));
+            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
         }
 
-        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
-        processTileLoadQueue(this, frameState);
-        updateHeights(this, frameState);
-
-        var debug = this._debug;
-        if (debug.suspendLodUpdate) {
-            return;
-        }
-
-        if (debug.enableDebugOutput) {
+        var debug = primitive._debug;
+        if (debug.enableDebugOutput  && !debug.suspendLodUpdate) {
             if (debug.tilesVisited !== debug.lastTilesVisited ||
                 debug.tilesRendered !== debug.lastTilesRendered ||
                 debug.tilesCulled !== debug.lastTilesCulled ||
@@ -345,6 +362,30 @@ define([
                 debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
             }
         }
+    }
+
+    /**
+     * Updates terrain heights.
+     * @private
+     */
+    QuadtreePrimitive.prototype.endFrame = function(frameState) {
+        var passes = frameState.passes;
+        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
+            // Only process the load queue for a single pass.
+            // Don't process the load queue or update heights during the morph flights.
+            return;
+        }
+
+        if (this._tilesInvalidated) {
+            invalidateAllTiles(this);
+        }
+
+        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
+        processTileLoadQueue(this, frameState);
+        updateHeights(this, frameState);
+        updateTileLoadProgress(this, frameState);
+
+        this._tilesInvalidated = false;
     };
 
     /**
@@ -372,8 +413,6 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
      * @memberof QuadtreePrimitive
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -407,17 +446,15 @@ define([
             return;
         }
 
-        var i;
-        var len;
-
         // Clear the render list.
         var tilesToRender = primitive._tilesToRender;
         tilesToRender.length = 0;
 
         // We can't render anything before the level zero tiles exist.
+        var tileProvider = primitive._tileProvider;
         if (!defined(primitive._levelZeroTiles)) {
-            if (primitive._tileProvider.ready) {
-                var tilingScheme = primitive._tileProvider.tilingScheme;
+            if (tileProvider.ready) {
+                var tilingScheme = tileProvider.tilingScheme;
                 primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
             } else {
                 // Nothing to do until the provider is ready.
@@ -429,8 +466,6 @@ define([
 
         var tile;
         var levelZeroTiles = primitive._levelZeroTiles;
-
-        var tileProvider = primitive._tileProvider;
         var occluders = levelZeroTiles.length > 1 ? primitive._occluders : undefined;
 
         // Sort the level zero tiles by the distance from the center to the camera.
@@ -443,6 +478,8 @@ define([
         var customDataRemoved = primitive._removeHeightCallbacks;
         var frameNumber = frameState.frameNumber;
 
+        var i;
+        var len;
         if (customDataAdded.length > 0 || customDataRemoved.length > 0) {
             for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
                 tile = levelZeroTiles[i];
@@ -493,14 +530,6 @@ define([
                 ++debug.tilesCulled;
             }
         }
-
-        frameState.afterRender.push(createTileProgressFunction(primitive));
-    }
-
-    function createTileProgressFunction(primitive) {
-        return function() {
-            raiseTileLoadProgressEvent(primitive);
-        };
     }
 
     function visitTile(primitive, frameState, tile) {
@@ -662,18 +691,6 @@ define([
             }
         }
     }
-    /**
-     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
-     * a new one.
-     */
-    function raiseTileLoadProgressEvent(primitive) {
-        var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
-
-        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
-            primitive._tileLoadProgressEvent.raiseEvent(currentLoadQueueLength);
-            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
-        }
-    }
 
     function screenSpaceError(primitive, frameState, tile) {
         if (frameState.mode === SceneMode.SCENE2D || frameState.camera.frustum instanceof OrthographicFrustum) {
@@ -726,7 +743,6 @@ define([
         var tileLoadQueueHigh = primitive._tileLoadQueueHigh;
         var tileLoadQueueMedium = primitive._tileLoadQueueMedium;
         var tileLoadQueueLow = primitive._tileLoadQueueLow;
-        var tileProvider = primitive._tileProvider;
 
         if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
             return;
@@ -737,6 +753,7 @@ define([
         primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
 
         var endTime = getTimestamp() + primitive._loadQueueTimeSlice;
+        var tileProvider = primitive._tileProvider;
 
         processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueHigh);
         processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueMedium);

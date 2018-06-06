@@ -1,5 +1,9 @@
 uniform sampler2D u_atlas;
 
+#ifdef VECTOR_TILE
+uniform vec4 u_highlightColor;
+#endif
+
 varying vec2 v_textureCoordinates;
 
 #ifdef RENDER_FOR_PICK
@@ -40,9 +44,15 @@ void main()
 #endif
 #endif
 
+#ifdef VECTOR_TILE
+    color *= u_highlightColor;
+#endif
+
 #ifdef RENDER_FOR_PICK
     gl_FragColor = v_pickColor;
 #else
     gl_FragColor = color;
 #endif
+
+    czm_writeLogDepth();
 }

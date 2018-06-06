@@ -44,7 +44,11 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
+
+viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var viewModel = {
     rightClickAction: 'annotate',
@@ -69,10 +73,8 @@ viewer.scene.camera.setView({
 });
 
 // Load the NYC buildings tileset.
-var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://beta.cesium.com/api/assets/1461?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkYWJmM2MzNS02OWM5LTQ3OWItYjEyYS0xZmNlODM5ZDNkMTYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjFdLCJpYXQiOjE0OTkyNjQ3NDN9.vuR75SqPDKcggvUrG_vpx0Av02jdiAxnnB1fNf-9f7s'
-}));
-
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(4693) });
+scene.primitives.add(tileset);
 tileset.style = new Cesium.Cesium3DTileStyle({
     meta: {
         description: "'Building id ${id} has height ${height}.'"
@@ -143,8 +145,8 @@ function printProperties(movement, feature) {
 }
 
 function zoom(movement, feature) {
-    var longitude = feature.getProperty('longitude');
-    var latitude = feature.getProperty('latitude');
+    var longitude = Cesium.Math.toRadians(feature.getProperty('longitude'));
+    var latitude = Cesium.Math.toRadians(feature.getProperty('latitude'));
     var height = feature.getProperty('height');
 
     var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);

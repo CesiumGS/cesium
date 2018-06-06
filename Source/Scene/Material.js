@@ -11,11 +11,11 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/loadCRN',
-        '../Core/loadImage',
         '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
         '../Shaders/Materials/BumpMapMaterial',
@@ -48,11 +48,11 @@ define([
         DeveloperError,
         isArray,
         loadCRN,
-        loadImage,
         loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
+        Resource,
         CubeMap,
         Texture,
         BumpMapMaterial,
@@ -273,7 +273,7 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -539,8 +539,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -791,14 +789,15 @@ define([
             }
 
             if (uniformValue !== material._texturePaths[uniformId]) {
-                if (typeof uniformValue === 'string') {
+                if (typeof uniformValue === 'string' || uniformValue instanceof Resource) {
+                    var resource = Resource.createIfNeeded(uniformValue);
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
-                        promise = loadKTX(uniformValue);
+                        promise = loadKTX(resource);
                     } else if (crnRegex.test(uniformValue)) {
-                        promise = loadCRN(uniformValue);
+                        promise = loadCRN(resource);
                     } else {
-                        promise = loadImage(uniformValue);
+                        promise = resource.fetchImage();
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
@@ -848,12 +847,12 @@ define([
 
             if (path !== material._texturePaths[uniformId]) {
                 var promises = [
-                    loadImage(uniformValue.positiveX),
-                    loadImage(uniformValue.negativeX),
-                    loadImage(uniformValue.positiveY),
-                    loadImage(uniformValue.negativeY),
-                    loadImage(uniformValue.positiveZ),
-                    loadImage(uniformValue.negativeZ)
+                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
+                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
                 ];
 
                 when.all(promises).then(function(images) {
@@ -964,7 +963,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
+            } else if (type === 'string' || uniformValue instanceof Resource ||uniformValue instanceof HTMLCanvasElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {
