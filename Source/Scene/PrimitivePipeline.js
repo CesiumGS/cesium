@@ -280,8 +280,14 @@ define([
         var instances = parameters.instances;
         var length = instances.length;
         var pickOffsets;
+        var originalBoundingSpheres = new Array(length);
+        var i;
 
         if (length > 0) {
+            for (i = 0; i < instances.length; i++) {
+                originalBoundingSpheres[i] = BoundingSphere.clone(instances[i].geometry.boundingSphere);
+            }
+
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
                 attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
@@ -293,7 +299,7 @@ define([
 
         var boundingSpheres = new Array(length);
         var boundingSpheresCV = new Array(length);
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             var instance = instances[i];
             var geometry = instance.geometry;
             if (defined(geometry)) {
@@ -318,6 +324,7 @@ define([
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
             pickOffsets : pickOffsets,
+            originalBoundingSpheres : originalBoundingSpheres,
             boundingSpheres : boundingSpheres,
             boundingSpheresCV : boundingSpheresCV
         };

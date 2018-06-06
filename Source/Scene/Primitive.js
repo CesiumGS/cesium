@@ -1188,6 +1188,7 @@ define([
                 primitive._attributeLocations = result.attributeLocations;
                 primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
                 primitive._pickOffsets = result.pickOffsets;
+                primitive._unmodifiedInstanceBoundingSpheres = result.originalBoundingSpheres;
                 primitive._instanceBoundingSpheres = result.boundingSpheres;
                 primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
@@ -1248,6 +1249,7 @@ define([
         primitive._attributeLocations = result.attributeLocations;
         primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
         primitive._pickOffsets = result.pickOffsets;
+        primitive._unmodifiedInstanceBoundingSpheres = result.originalBoundingSpheres;
         primitive._instanceBoundingSpheres = result.boundingSpheres;
         primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
@@ -1257,8 +1259,6 @@ define([
             setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
         }
     }
-
-    var instanceOffsetScratch = new Cartesian3();
 
     function recomputeBoundingSpheres(primitive, frameState) {
         var offsetIndex = primitive._batchTableAttributeIndices.offset;
@@ -1321,8 +1321,11 @@ define([
             throw new DeveloperError('whoops');
         }
 
-        primitive._boundingSpheres = result;
+        for (i = 0; i < result.length; i++) {
+            primitive._boundingSpheres[i] = result[i].clone(primitive._boundingSpheres[i]);
+        }
 
+        Primitive._updateBoundingVolumes(primitive, frameState, primitive.modelMatrix, true);
         primitive._recomputeBoundingSpheres = false;
     }
 
@@ -1713,26 +1716,12 @@ define([
         }
     }
 
-    Primitive._updateBoundingVolumes = function(primitive, frameState, modelMatrix) {
+    Primitive._updateBoundingVolumes = function(primitive, frameState, modelMatrix, forceUpdate) {
         var i;
         var length;
         var boundingSphere;
 
-        // Update bounding volumes for primitives that are sized in pixels.
-        // The pixel size in meters varies based on the distance from the camera.
-        var pixelSize = primitive.appearance.pixelSize;
-        if (defined(pixelSize)) {
-            length = primitive._boundingSpheres.length;
-            for (i = 0; i < length; ++i) {
-                boundingSphere = primitive._boundingSpheres[i];
-                var boundingSphereWC = primitive._boundingSphereWC[i];
-                var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
-                var sizeInMeters = pixelSizeInMeters * pixelSize;
-                boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
-            }
-        }
-
-        if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
+        if (forceUpdate || !Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
             Matrix4.clone(modelMatrix, primitive._modelMatrix);
             length = primitive._boundingSpheres.length;
             for (i = 0; i < length; ++i) {
@@ -1745,6 +1734,20 @@ define([
                         primitive._boundingSphereMorph[i] = BoundingSphere.union(primitive._boundingSphereWC[i], primitive._boundingSphereCV[i]);
                     }
                 }
+            }
+        }
+
+        // Update bounding volumes for primitives that are sized in pixels.
+        // The pixel size in meters varies based on the distance from the camera.
+        var pixelSize = primitive.appearance.pixelSize;
+        if (defined(pixelSize)) {
+            length = primitive._boundingSpheres.length;
+            for (i = 0; i < length; ++i) {
+                boundingSphere = primitive._boundingSpheres[i];
+                var boundingSphereWC = primitive._boundingSphereWC[i];
+                var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+                var sizeInMeters = pixelSizeInMeters * pixelSize;
+                boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
             }
         }
     };
@@ -1854,18 +1857,6 @@ define([
         }
 
         if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
-            if (!defined(this._unmodifiedInstanceBoundingSpheres)) {
-                var instances = this.geometryInstances;
-                if (!isArray(instances)) {
-                    instances = [instances];
-                }
-                var boundingSpheres = new Array(instances.length);
-                for (var i = 0; i < instances.length; i++) {
-                    boundingSpheres[i] = BoundingSphere.clone(instances[i].geometry.boundingSphere);
-                }
-                this._unmodifiedInstanceBoundingSpheres = boundingSpheres;
-            }
-
             if (this.asynchronous) {
                 loadAsynchronous(this, frameState);
             } else {
