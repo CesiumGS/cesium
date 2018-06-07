@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 5.0.0 - 2018-05-01
+* Enable [eol-last](https://eslint.org/docs/rules/eol-last).
+
 ### 4.0.0 - 2018-03-05
 * Enable [no-multiple-empty-lines](https://eslint.org/docs/rules/no-multiple-empty-lines).
 

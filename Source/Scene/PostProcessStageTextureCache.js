@@ -55,9 +55,11 @@ define([
             stageDependencies[getLastStageName(previous)] = true;
         }
         var uniforms = stage.uniforms;
-        for (var name in uniforms) {
-            if (uniforms.hasOwnProperty(name)) {
-                var value = uniforms[name];
+        if (defined(uniforms)) {
+            var uniformNames = Object.getOwnPropertyNames(uniforms);
+            var uniformNamesLength = uniformNames.length;
+            for (var i = 0; i < uniformNamesLength; ++i) {
+                var value = uniforms[uniformNames[i]];
                 if (typeof value === 'string') {
                     var dependent = collection.getStageByName(value);
                     if (defined(dependent)) {
@@ -96,8 +98,8 @@ define([
         // In practice, there are only 2-3 stages in these composites.
         if (!inSeries) {
             for (var j = 1; j < length; ++j) {
-                var current = composite.get(j);
-                var currentDependencies = dependencies[current.name];
+                var name = getLastStageName(composite.get(j));
+                var currentDependencies = dependencies[name];
                 for (var k = 0; k < j; ++k) {
                     currentDependencies[getLastStageName(composite.get(k))] = true;
                 }

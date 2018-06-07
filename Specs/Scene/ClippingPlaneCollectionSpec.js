@@ -158,8 +158,8 @@ defineSuite([
             expect(packedTexture).toBeDefined();
 
             // Two RGBA uint8 clipping planes consume 4 pixels of texture, allocation to be double that
-            expect(packedTexture.width).toEqual(8);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.width).toEqual(4);
+            expect(packedTexture.height).toEqual(2);
 
             expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
             expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
@@ -230,21 +230,26 @@ defineSuite([
             var packedTexture = clippingPlanes.texture;
 
             // Two RGBA uint8 clipping planes consume 4 pixels of texture, allocation to be double that
-            expect(packedTexture.width).toEqual(8);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.width).toEqual(4);
+            expect(packedTexture.height).toEqual(2);
 
+            // Reach capacity
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
-            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
+            clippingPlanes.update(scene.frameState);
 
+            expect(packedTexture.isDestroyed()).toBe(false);
+
+            // Exceed capacity
+            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
             clippingPlanes.update(scene.frameState);
 
             expect(packedTexture.isDestroyed()).toBe(true);
             packedTexture = clippingPlanes.texture;
 
             // Five RGBA uint8 clipping planes consume 10 pixels of texture, allocation to be double that
-            expect(packedTexture.width).toEqual(20);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.width).toEqual(10);
+            expect(packedTexture.height).toEqual(2);
 
             clippingPlanes.removeAll();
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
@@ -255,8 +260,58 @@ defineSuite([
             packedTexture = clippingPlanes.texture;
 
             // One RGBA uint8 clipping plane consume 2 pixels of texture, allocation to be double that
+            expect(packedTexture.width).toEqual(2);
+            expect(packedTexture.height).toEqual(2);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
+        });
+
+        it('performs partial updates when only a single plane has changed and full texture updates otherwise', function() {
+            var scene = createScene();
+            var gl = scene.frameState.context._gl;
+            var copyWidth;
+            var copyHeight;
+            spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
+                copyWidth = width;
+                copyHeight = height;
+            });
+
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : planes,
+                enabled : false,
+                edgeColor : Color.RED,
+                modelMatrix : transform
+            });
+
+            clippingPlanes.update(scene.frameState);
+
+            // Two RGBA uint8 clipping planes consume 4 pixels of texture, allocation to be double that
+            var packedTexture = clippingPlanes.texture;
             expect(packedTexture.width).toEqual(4);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.height).toEqual(2);
+
+            var targetPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
+            clippingPlanes.add(targetPlane);
+            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
+            clippingPlanes.update(scene.frameState);
+
+            // Haven't hit limit yet
+            expect(packedTexture.isDestroyed()).toBe(false);
+
+            // Addition of two planes, expect a full texture update
+            expect(gl.texSubImage2D.calls.count()).toEqual(1);
+            expect(copyWidth).toEqual(packedTexture.width);
+            expect(copyHeight).toEqual(packedTexture.height);
+
+            // Move target plane for partial update
+            targetPlane.distance += 1.0;
+            clippingPlanes.update(scene.frameState);
+
+            expect(packedTexture.isDestroyed()).toBe(false);
+            expect(gl.texSubImage2D.calls.count()).toEqual(2);
+            expect(copyWidth).toEqual(2);
+            expect(copyHeight).toEqual(1);
 
             clippingPlanes.destroy();
             scene.destroyForSpecs();
@@ -284,8 +339,8 @@ defineSuite([
 
             var packedTexture = clippingPlanes.texture;
             expect(packedTexture).toBeDefined();
-            expect(packedTexture.width).toEqual(4);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.width).toEqual(2);
+            expect(packedTexture.height).toEqual(2);
             expect(packedTexture.pixelFormat).toEqual(PixelFormat.RGBA);
             expect(packedTexture.pixelDatatype).toEqual(PixelDatatype.FLOAT);
 
@@ -362,21 +417,26 @@ defineSuite([
             var packedTexture = clippingPlanes.texture;
 
             // Two RGBA float clipping planes consume 2 pixels of texture, allocation to be double that
-            expect(packedTexture.width).toEqual(4);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.width).toEqual(2);
+            expect(packedTexture.height).toEqual(2);
 
+            // Reach capacity
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
-            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
+            clippingPlanes.update(scene.frameState);
 
+            expect(packedTexture.isDestroyed()).toBe(false);
+
+            // Exceed capacity
+            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
             clippingPlanes.update(scene.frameState);
 
             expect(packedTexture.isDestroyed()).toBe(true);
             packedTexture = clippingPlanes.texture;
 
             // Five RGBA float clipping planes consume 5 pixels of texture, allocation to be double that
-            expect(packedTexture.width).toEqual(10);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.width).toEqual(5);
+            expect(packedTexture.height).toEqual(2);
 
             clippingPlanes.removeAll();
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
@@ -387,8 +447,65 @@ defineSuite([
             packedTexture = clippingPlanes.texture;
 
             // One RGBA float clipping plane consume 1 pixels of texture, allocation to be double that
+            expect(packedTexture.width).toEqual(1);
+            expect(packedTexture.height).toEqual(2);
+
+            clippingPlanes.destroy();
+            scene.destroyForSpecs();
+        });
+
+        it('performs partial updates when only a single plane has changed and full texture updates otherwise', function() {
+            var scene = createScene();
+
+            if (!ClippingPlaneCollection.useFloatTexture(scene._context)) {
+                // Don't fail just because float textures aren't supported
+                scene.destroyForSpecs();
+                return;
+            }
+
+            var gl = scene.frameState.context._gl;
+            var copyWidth;
+            var copyHeight;
+            spyOn(gl, 'texSubImage2D').and.callFake(function(target, level, xoffset, yoffset, width, height, format, type, arrayBufferView) {
+                copyWidth = width;
+                copyHeight = height;
+            });
+
+            clippingPlanes = new ClippingPlaneCollection({
+                planes : planes,
+                enabled : false,
+                edgeColor : Color.RED,
+                modelMatrix : transform
+            });
+
+            clippingPlanes.update(scene.frameState);
+
+            // Two RGBA Float clipping planes consume 2 pixels of texture, allocation to be double that
+            var packedTexture = clippingPlanes.texture;
             expect(packedTexture.width).toEqual(2);
-            expect(packedTexture.height).toEqual(1);
+            expect(packedTexture.height).toEqual(2);
+
+            var targetPlane = new ClippingPlane(Cartesian3.UNIT_X, 1.0);
+            clippingPlanes.add(targetPlane);
+            clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_X, 1.0));
+            clippingPlanes.update(scene.frameState);
+
+            // Haven't hit limit yet
+            expect(packedTexture.isDestroyed()).toBe(false);
+
+            // Addition of two planes, expect a full texture update
+            expect(gl.texSubImage2D.calls.count()).toEqual(1);
+            expect(copyWidth).toEqual(packedTexture.width);
+            expect(copyHeight).toEqual(packedTexture.height);
+
+            // Move target plane for partial update
+            targetPlane.distance += 1.0;
+            clippingPlanes.update(scene.frameState);
+
+            expect(packedTexture.isDestroyed()).toBe(false);
+            expect(gl.texSubImage2D.calls.count()).toEqual(2);
+            expect(copyWidth).toEqual(1);
+            expect(copyHeight).toEqual(1);
 
             clippingPlanes.destroy();
             scene.destroyForSpecs();
@@ -595,5 +712,32 @@ defineSuite([
 
         clippingPlanes.remove(holdThisPlane);
         expect(clippingPlanes.clippingPlanesState).toEqual(1);
+    });
+
+    it('provides a function for checking the texture resolution', function() {
+        spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
+
+        var scene = createScene();
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes,
+            enabled : false,
+            edgeColor : Color.RED,
+            modelMatrix : transform
+        });
+
+        // Predicted resolution before texture has been allocated
+        var predictedResolution = ClippingPlaneCollection.getTextureResolution(clippingPlanes, scene.frameState.context, new Cartesian2());
+
+        expect(predictedResolution.x).toEqual(4);
+        expect(predictedResolution.y).toEqual(2);
+
+        clippingPlanes.update(scene.frameState);
+        var actualResolution = ClippingPlaneCollection.getTextureResolution(clippingPlanes, scene.frameState.context, new Cartesian2());
+
+        expect(predictedResolution.x).toEqual(actualResolution.x);
+        expect(predictedResolution.y).toEqual(actualResolution.y);
+
+        clippingPlanes.destroy();
+        scene.destroyForSpecs();
     });
 });

@@ -177,7 +177,6 @@ define([
         this._destroyTextureAtlas = true;
         this._sp = undefined;
         this._spTranslucent = undefined;
-        this._spPick = undefined;
         this._rsOpaque = undefined;
         this._rsTranslucent = undefined;
         this._vaf = undefined;
@@ -190,31 +189,24 @@ define([
 
         this._shaderRotation = false;
         this._compiledShaderRotation = false;
-        this._compiledShaderRotationPick = false;
 
         this._shaderAlignedAxis = false;
         this._compiledShaderAlignedAxis = false;
-        this._compiledShaderAlignedAxisPick = false;
 
         this._shaderScaleByDistance = false;
         this._compiledShaderScaleByDistance = false;
-        this._compiledShaderScaleByDistancePick = false;
 
         this._shaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistance = false;
-        this._compiledShaderTranslucencyByDistancePick = false;
 
         this._shaderPixelOffsetScaleByDistance = false;
         this._compiledShaderPixelOffsetScaleByDistance = false;
-        this._compiledShaderPixelOffsetScaleByDistancePick = false;
 
         this._shaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayCondition = false;
-        this._compiledShaderDistanceDisplayConditionPick = false;
 
         this._shaderDisableDepthDistance = false;
         this._compiledShaderDisableDepthDistance = false;
-        this._compiledShaderDisableDepthDistancePick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -233,7 +225,6 @@ define([
         this._boundingVolumeDirty = false;
 
         this._colorCommands = [];
-        this._pickCommands = [];
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -1655,104 +1646,30 @@ define([
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
         }
 
-        if (!defined(this._spPick) ||
-            (this._shaderRotation !== this._compiledShaderRotationPick) ||
-            (this._shaderAlignedAxis !== this._compiledShaderAlignedAxisPick) ||
-            (this._shaderScaleByDistance !== this._compiledShaderScaleByDistancePick) ||
-            (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
-            (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick) ||
-            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
-
-            vsSource = BillboardCollectionVS;
-            fsSource = BillboardCollectionFS;
-
-            vertDefines = [];
-            if (defined(this._batchTable)) {
-                vertDefines.push('VECTOR_TILE');
-                vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
-                fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
-            }
-
-            vertDefines.push(defined(this._batchTable) ? '' : 'RENDER_FOR_PICK');
-
-            vs = new ShaderSource({
-                defines : vertDefines,
-                sources : [vsSource]
-            });
-
-            if(this._instanced) {
-                vs.defines.push('INSTANCED');
-            }
-            if (this._shaderRotation) {
-                vs.defines.push('ROTATION');
-            }
-            if (this._shaderAlignedAxis) {
-                vs.defines.push('ALIGNED_AXIS');
-            }
-            if (this._shaderScaleByDistance) {
-                vs.defines.push('EYE_DISTANCE_SCALING');
-            }
-            if (this._shaderTranslucencyByDistance) {
-                vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
-            }
-            if (this._shaderPixelOffsetScaleByDistance) {
-                vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-            }
-            if (this._shaderDistanceDisplayCondition) {
-                vs.defines.push('DISTANCE_DISPLAY_CONDITION');
-            }
-            if (this._shaderDisableDepthDistance) {
-                vs.defines.push('DISABLE_DEPTH_DISTANCE');
-            }
-
-            fs = new ShaderSource({
-                defines : vertDefines,
-                sources : [fsSource]
-            });
-
-            this._spPick = ShaderProgram.replaceCache({
-                context : context,
-                shaderProgram : this._spPick,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-            this._compiledShaderRotationPick = this._shaderRotation;
-            this._compiledShaderAlignedAxisPick = this._shaderAlignedAxis;
-            this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
-            this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
-            this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
-            this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
-            this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
-        }
-
-        var va;
-        var vaLength;
-        var command;
-        var uniforms;
-        var j;
-
         var commandList = frameState.commandList;
 
-        if (pass.render) {
+        if (pass.render || pass.pick) {
             var colorList = this._colorCommands;
 
             var opaque = this._blendOption === BlendOption.OPAQUE;
             var opaqueAndTranslucent = this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT;
 
-            va = this._vaf.va;
-            vaLength = va.length;
+            var va = this._vaf.va;
+            var vaLength = va.length;
 
-            uniforms = this._uniforms;
+            var uniforms = this._uniforms;
+            var pickId;
             if (defined(this._batchTable)) {
                 uniforms = this._batchTable.getUniformMapCallback()(uniforms);
+                pickId = this._batchTable.getPickId();
+            } else {
+                pickId = 'v_pickColor';
             }
 
             colorList.length = vaLength;
             var totalLength = opaqueAndTranslucent ? vaLength * 2 : vaLength;
-            for (j = 0; j < totalLength; ++j) {
-                command = colorList[j];
+            for (var j = 0; j < totalLength; ++j) {
+                var command = colorList[j];
                 if (!defined(command)) {
                     command = colorList[j] = new DrawCommand();
                 }
@@ -1771,44 +1688,7 @@ define([
                 command.vertexArray = va[index].va;
                 command.renderState = opaqueCommand ? this._rsOpaque : this._rsTranslucent;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-                if (this._instanced) {
-                    command.count = 6;
-                    command.instanceCount = billboardsLength;
-                }
-
-                commandList.push(command);
-            }
-        }
-
-        if (picking) {
-            var pickList = this._pickCommands;
-
-            va = this._vaf.va;
-            vaLength = va.length;
-
-            uniforms = this._uniforms;
-            if (defined(this._batchTable)) {
-                uniforms = this._batchTable.getPickUniformMapCallback()(uniforms);
-            }
-
-            pickList.length = vaLength;
-            for (j = 0; j < vaLength; ++j) {
-                command = pickList[j];
-                if (!defined(command)) {
-                    command = pickList[j] = new DrawCommand({
-                        pass : Pass.OPAQUE,
-                        owner : this
-                    });
-                }
-
-                command.boundingVolume = boundingVolume;
-                command.modelMatrix = modelMatrix;
-                command.count = va[j].indicesCount;
-                command.shaderProgram = this._spPick;
-                command.uniformMap = uniforms;
-                command.vertexArray = va[j].va;
-                command.renderState = this._rsOpaque;
+                command.pickId = pickId;
 
                 if (this._instanced) {
                     command.count = 6;
@@ -1859,7 +1739,6 @@ define([
         this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spTranslucent = this._spTranslucent && this._spTranslucent.destroy();
-        this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         destroyBillboards(this._billboards);
 

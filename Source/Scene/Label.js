@@ -988,6 +988,18 @@ define([
         },
 
         /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                if (this._glyphs.length === 0 || !defined(this._glyphs[0].billboard)) {
+                    return undefined;
+                }
+                return this._glyphs[0].billboard.pickId;
+            }
+        },
+
+        /**
          * Keeps track of the position of the label based on the height reference.
          * @memberof Label.prototype
          * @type {Cartesian3}

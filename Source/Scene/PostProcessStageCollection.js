@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
@@ -16,6 +17,7 @@ define([
         './PostProcessStageLibrary',
         './PostProcessStageTextureCache'
     ], function(
+        arraySlice,
         Check,
         defaultValue,
         defined,
@@ -89,6 +91,7 @@ define([
 
         this._stages = [];
         this._activeStages = [];
+        this._previousActiveStages = [];
 
         this._randomTexture = undefined; // For AO
 
@@ -295,6 +298,32 @@ define([
 
                 return undefined;
             }
+        },
+        /**
+         * Whether the collection has a stage that has selected features.
+         *
+         * @memberof PostProcessStageCollection.prototype
+         * @type {Boolean}
+         * @readonly
+         * @private
+         */
+        hasSelectedFeatures : {
+            get : function() {
+                var stages = arraySlice(this._stages);
+                while (stages.length > 0) {
+                    var stage = stages.pop();
+                    if (defined(stage.selectedFeatures)) {
+                        return true;
+                    }
+                    var length = stage.length;
+                    if (defined(length)) {
+                        for (var i = 0; i < length; ++i) {
+                            stages.push(stage.get(i));
+                        }
+                    }
+                }
+                return false;
+            }
         }
     });
 
@@ -459,7 +488,10 @@ define([
     PostProcessStageCollection.prototype.update = function(context, useLogDepth, useHDR) {
         removeStages(this);
 
-        var activeStages = this._activeStages;
+        var previousActiveStages = this._activeStages;
+        var activeStages = this._activeStages = this._previousActiveStages;
+        this._previousActiveStages = previousActiveStages;
+
         var stages = this._stages;
         var length = activeStages.length = stages.length;
 
@@ -474,6 +506,16 @@ define([
         }
         activeStages.length = count;
 
+        var activeStagesChanged = count !== previousActiveStages.length;
+        if (!activeStagesChanged) {
+            for (i = 0; i < count; ++i) {
+                if (activeStages[i] !== previousActiveStages[i]) {
+                    activeStagesChanged = true;
+                    break;
+                }
+            }
+        }
+
         var ao = this._ao;
         var bloom = this._bloom;
         var tonemapping = this._tonemapping;
@@ -486,7 +528,7 @@ define([
         var tonemappingEnabled = tonemapping.enabled && tonemapping._isSupported(context);
         var fxaaEnabled = fxaa.enabled && fxaa._isSupported(context);
 
-        if (this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled ||
+        if (activeStagesChanged || this._textureCacheDirty || count !== this._lastLength || aoEnabled !== this._aoEnabled ||
             bloomEnabled !== this._bloomEnabled || tonemappingEnabled !== this._tonemappingEnabled || fxaaEnabled !== this._fxaaEnabled) {
             // The number of stages to execute has changed.
             // Update dependencies and recreate framebuffers.
@@ -577,9 +619,9 @@ define([
         return getOutputTexture(stage);
     };
 
-    function execute(stage, context, colorTexture, depthTexture) {
+    function execute(stage, context, colorTexture, depthTexture, idTexture) {
         if (defined(stage.execute)) {
-            stage.execute(context, colorTexture, depthTexture);
+            stage.execute(context, colorTexture, depthTexture, idTexture);
             return;
         }
 
@@ -587,13 +629,13 @@ define([
         var i;
 
         if (stage.inputPreviousStageTexture) {
-            execute(stage.get(0), context, colorTexture, depthTexture);
+            execute(stage.get(0), context, colorTexture, depthTexture, idTexture);
             for (i = 1; i < length; ++i) {
-                execute(stage.get(i), context, getOutputTexture(stage.get(i - 1)), depthTexture);
+                execute(stage.get(i), context, getOutputTexture(stage.get(i - 1)), depthTexture, idTexture);
             }
         } else {
             for (i = 0; i < length; ++i) {
-                execute(stage.get(i), context, colorTexture, depthTexture);
+                execute(stage.get(i), context, colorTexture, depthTexture, idTexture);
             }
         }
     }
@@ -607,7 +649,7 @@ define([
      *
      * @private
      */
-    PostProcessStageCollection.prototype.execute = function(context, colorTexture, depthTexture) {
+    PostProcessStageCollection.prototype.execute = function(context, colorTexture, depthTexture, idTexture) {
         var activeStages = this._activeStages;
         var length = activeStages.length;
 
@@ -627,11 +669,11 @@ define([
 
         var initialTexture = colorTexture;
         if (aoEnabled && ao.ready) {
-            execute(ao, context, initialTexture, depthTexture);
+            execute(ao, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(ao);
         }
         if (bloomEnabled && bloom.ready) {
-            execute(bloom, context, initialTexture, depthTexture);
+            execute(bloom, context, initialTexture, depthTexture, idTexture);
             initialTexture = getOutputTexture(bloom);
         }
         if (tonemappingEnabled && tonemapping.ready) {
@@ -642,15 +684,15 @@ define([
         var lastTexture = initialTexture;
 
         if (length > 0) {
-            execute(activeStages[0], context, initialTexture, depthTexture);
+            execute(activeStages[0], context, initialTexture, depthTexture, idTexture);
             for (var i = 1; i < length; ++i) {
-                execute(activeStages[i], context, getOutputTexture(activeStages[i - 1]), depthTexture);
+                execute(activeStages[i], context, getOutputTexture(activeStages[i - 1]), depthTexture, idTexture);
             }
             lastTexture = getOutputTexture(activeStages[length - 1]);
         }
 
         if (fxaaEnabled && fxaa.ready) {
-            execute(fxaa, context, lastTexture, depthTexture);
+            execute(fxaa, context, lastTexture, depthTexture, idTexture);
         }
     };
 
