@@ -9,6 +9,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed a bug causing crashes with custom vertex attributes on `Geometry` crossing the IDL. Attributes will be barycentrically interpolated. [#6644](https://github.com/AnalyticalGraphicsInc/cesium/pull/6644)
+* Fixed a bug causing Point Cloud tiles with unsigned int batch-ids to not load. [#6664](https://github.com/AnalyticalGraphicsInc/cesium/pull/6664)
 
 ### 1.46.1 - 2018-06-01
 
