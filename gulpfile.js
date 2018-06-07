@@ -11,9 +11,6 @@ var zlib = require('zlib');
 var readline = require('readline');
 var request = require('request');
 
-var browserify = require('browserify');
-var buffer = require('vinyl-buffer');
-var glob = require('glob-all');
 var globby = require('globby');
 var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
@@ -27,11 +24,6 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
-var source = require('vinyl-source-stream');
-var sourcemaps = require('gulp-sourcemaps');
-var transform = require('vinyl-transform');
-var uglify = require('gulp-uglify');
-var exorcist = require('exorcist');
 var karma = require('karma').Server;
 var yargs = require('yargs');
 var aws = require('aws-sdk');
@@ -1359,50 +1351,3 @@ gulp.task('terria-copy-cesiumWorkerBootstrapper', function() {
 });
 
 gulp.task('terria-default', ['terria-prepare-cesium']);
-
-gulp.task('terria-build-workers', function() {
-    var b = browserify({
-        debug: true
-    });
-
-    var workers = glob.sync(workerGlob);
-    for (var i = 0; i < workers.length; ++i) {
-        var workerFilename = workers[i];
-
-        var lastSlashIndex = workerFilename.lastIndexOf('/');
-        if (lastSlashIndex < 0) {
-            continue;
-        }
-
-        var outName = workerFilename.substring(lastSlashIndex + 1);
-
-        var dotJSIndex = outName.lastIndexOf('.js');
-        var exposeName = 'Workers/' + outName.substring(0, dotJSIndex);
-
-        b.require(workerFilename, {
-            expose: exposeName
-        });
-    }
-
-    var stream = b.bundle()
-        .pipe(source('Cesium-WebWorkers.js'))
-        .pipe(buffer());
-
-    var minify = true;
-    if (minify) {
-        // Minify the combined source.
-        // sourcemaps.init/write maintains a working source map after minification.
-        // "preserveComments: 'some'" preserves JSDoc-style comments tagged with @license or @preserve.
-        stream = stream
-            .pipe(sourcemaps.init({ loadMaps: true }))
-            .pipe(uglify({preserveComments: 'some', mangle: true}))
-            .pipe(sourcemaps.write());
-    }
-
-    stream = stream
-        // Extract the embedded source map to a separate file.
-        .pipe(createExorcistTransform('Cesium-WebWorkers.js'))
-        .pipe(gulp.dest('wwwroot/build/Workers'));
-
-    return stream;
-});

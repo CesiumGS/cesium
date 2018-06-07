@@ -12,15 +12,12 @@ define([
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
         '../Core/isArray',
-        '../Core/loadJson',
-        '../Core/loadText',
-        '../Core/loadWithXhr',
-        '../Core/loadXML',
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './GetFeatureInfoFormat',
         './ImageryProvider',
@@ -39,15 +36,12 @@ define([
         freezeObject,
         GeographicTilingScheme,
         isArray,
-        loadJson,
-        loadText,
-        loadWithXhr,
-        loadXML,
         objectToQuery,
         queryToObject,
         Rectangle,
         Resource,
         WebMercatorTilingScheme,
+        Uri,
         when,
         GetFeatureInfoFormat,
         ImageryProvider,
@@ -655,8 +649,6 @@ define([
         var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
         var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
 
-        var url;
-
         var formatIndex = 0;
 
         var that = this;
@@ -677,17 +669,17 @@ define([
             ++formatIndex;
 
             if (format.type === 'json') {
-                return loadJson(url).then(format.callback).otherwise(doRequest);
+                return Resource.fetchJson(url).then(format.callback).otherwise(doRequest);
             } else if (format.type === 'xml') {
-                return loadXML(url).then(format.callback).otherwise(doRequest);
+                return Resource.fetchXML(url).then(format.callback).otherwise(doRequest);
             } else if (format.type === 'text' || format.type === 'html') {
-                return loadText(url).then(format.callback).otherwise(doRequest);
-            } else {
-                return loadWithXhr({
-                    url: url,
-                    responseType: format.format
-                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+                return Resource.fetchText(url).then(format.callback).otherwise(doRequest);
             }
+
+            return Resource.fetch({
+                url: url,
+                responseType: format.format
+            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
         return doRequest();
