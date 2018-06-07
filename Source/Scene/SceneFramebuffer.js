@@ -44,7 +44,7 @@ define([
         this._idFramebuffer = undefined;
 
         this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
-        
+
         this._useHDR = undefined;
 
         this._clearCommand = new ClearCommand({
@@ -78,7 +78,7 @@ define([
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
         var colorTexture = this._colorTexture;
-        if (defined(colorTexture) && colorTexture.width === width && colorTexture.height === height || hdr !== this._useHDR) {
+        if (defined(colorTexture) && colorTexture.width === width && colorTexture.height === height && hdr === this._useHDR) {
             return;
         }
 
