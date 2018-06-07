@@ -448,19 +448,14 @@ define([
         pointCloud._hasBatchIds = hasBatchIds;
     }
 
-    function prepareStyleableProperties(styleableProperties) {
+    function prepareVertexAttribute(typedArray) {
         // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
-        for (var name in styleableProperties) {
-            if (styleableProperties.hasOwnProperty(name)) {
-                var property = styleableProperties[name];
-                var typedArray = property.typedArray;
-                var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
-                if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
-                    oneTimeWarning('Cast pnts property to floats', 'Point cloud property "' + name + '" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.');
-                    property.typedArray = new Float32Array(typedArray);
-                }
-            }
+        var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
+        if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
+            oneTimeWarning('Cast pnts property to floats', 'Point cloud property "' + name + '" will be casted to a float array because INT, UNSIGNED_INT, and DOUBLE are not valid WebGL vertex attribute types. Some precision may be lost.');
+            return new Float32Array(typedArray);
         }
+        return typedArray;
     }
 
     var scratchPointSizeAndTimeAndGeometricErrorAndDepthMultiplier = new Cartesian4();
@@ -505,19 +500,18 @@ define([
         pointCloud._styleableShaderAttributes = styleableShaderAttributes;
 
         if (hasStyleableProperties) {
-            prepareStyleableProperties(styleableProperties);
             var attributeLocation = numberOfAttributes;
 
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
                     var property = styleableProperties[name];
-                    var typedArray = property.typedArray;
+                    var typedArray = prepareVertexAttribute(property.typedArray);
                     componentsPerAttribute = property.componentCount;
                     componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
                     var vertexBuffer = Buffer.createVertexBuffer({
                         context : context,
-                        typedArray : property.typedArray,
+                        typedArray : typedArray,
                         usage : BufferUsage.STATIC_DRAW
                     });
 
@@ -637,6 +631,7 @@ define([
 
         var batchIdsVertexBuffer;
         if (hasBatchIds) {
+            batchIds = prepareVertexAttribute(batchIds);
             batchIdsVertexBuffer = Buffer.createVertexBuffer({
                 context : context,
                 typedArray : batchIds,

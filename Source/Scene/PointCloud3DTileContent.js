@@ -54,6 +54,9 @@ define([
         this._styleDirty = false;
         this._features = undefined;
 
+        /**
+         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
+         */
         this.featurePropertiesDirty = false;
 
         this._pointCloud = new PointCloud({
