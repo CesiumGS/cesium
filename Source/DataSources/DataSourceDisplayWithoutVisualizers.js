@@ -99,8 +99,12 @@ function DataSourceDisplay(options) {
     if (!primitivesAdded) {
         var that = this;
         var addPrimitives = function() {
-            scene.primitives.add(primitives);
-            scene.groundPrimitives.add(groundPrimitives);
+            if (scene.primitives) {
+                scene.primitives.add(primitives);
+            }
+            if (scene.groundPrimitives) {
+                scene.groundPrimitives.add(groundPrimitives);
+            }
             removeDefaultDataSoureListener();
             removeDataSourceCollectionListener();
             that._removeDefaultDataSoureListener = undefined;
@@ -217,8 +221,12 @@ DataSourceDisplay.prototype.destroy = function() {
         this._removeDefaultDataSoureListener();
         this._removeDataSourceCollectionListener();
     } else {
-        this._scene.primitives.remove(this._primitives);
-        this._scene.groundPrimitives.remove(this._groundPrimitives);
+        if (this._scene.primitives) {
+            this._scene.primitives.remove(this._primitives);
+        }
+        if (this._scene.groundPrimitives) {
+            this._scene.groundPrimitives.remove(this._groundPrimitives);
+        }
     }
 
     return destroyObject(this);
