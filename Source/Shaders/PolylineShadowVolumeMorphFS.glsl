@@ -4,6 +4,7 @@
 
 varying vec3 v_forwardDirectionEC;
 varying vec3 v_texcoordNormalization_and_halfWidth;
+varying float v_batchId;
 
 #ifdef PER_INSTANCE_COLOR
 varying vec4 v_color;

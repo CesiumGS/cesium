@@ -15,6 +15,7 @@ attribute float batchId;
 
 varying vec3 v_forwardDirectionEC;
 varying vec3 v_texcoordNormalization_and_halfWidth;
+varying float v_batchId;
 
 // For materials
 #ifdef WIDTH_VARYING
@@ -35,6 +36,8 @@ varying float v_texcoordT;
 // Morph views are from very far away and aren't meant to be used precisely, so this should be sufficient.
 void main()
 {
+    v_batchId = batchId;
+
     // Start position
     vec4 posRelativeToEye2D = czm_translateRelativeToEye(vec3(0.0, startHiLo2D.xy), vec3(0.0, startHiLo2D.zw));
     vec4 posRelativeToEye3D = czm_translateRelativeToEye(startHi_and_forwardOffsetX.xyz, startLo_and_forwardOffsetY.xyz);

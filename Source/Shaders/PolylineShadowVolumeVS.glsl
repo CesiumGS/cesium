@@ -16,8 +16,8 @@ attribute vec2 texcoordNormalization2D;
 
 attribute float batchId;
 
-varying vec4 v_startPlaneEC_lengthHalfWidth;
-varying vec4 v_endPlaneEC;
+varying vec4 v_startPlaneNormalEC_and_halfWidth;
+varying vec4 v_endPlaneNormalEC_and_batchId;
 varying vec4 v_rightPlaneEC;
 varying vec4 v_ecEnd_and_ecStart_X;
 varying vec4 v_texcoordNormalization_and_ecStart_YZ;
@@ -53,8 +53,9 @@ void main()
     startPlaneEC.w = -dot(startPlaneEC.xyz, ecStart);
 
     // end plane
-    v_endPlaneEC.xyz =  czm_normal * vec3(0.0, startEndNormals2D.zw);
-    v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
+    vec4 endPlaneEC;
+    endPlaneEC.xyz =  czm_normal * vec3(0.0, startEndNormals2D.zw);
+    endPlaneEC.w = -dot(endPlaneEC.xyz, ecEnd);
 
     v_texcoordNormalization_and_ecStart_YZ.xy = vec2(abs(texcoordNormalization2D.x), texcoordNormalization2D.y);
 
@@ -71,8 +72,9 @@ void main()
     startPlaneEC.w = -dot(startPlaneEC.xyz, ecStart);
 
     // end plane
-    v_endPlaneEC.xyz = czm_normal * endNormal_and_textureCoordinateNormalizationX.xyz;
-    v_endPlaneEC.w = -dot(v_endPlaneEC.xyz, ecEnd);
+    vec4 endPlaneEC;
+    endPlaneEC.xyz = czm_normal * endNormal_and_textureCoordinateNormalizationX.xyz;
+    endPlaneEC.w = -dot(endPlaneEC.xyz, ecEnd);
 
     // Right plane
     v_rightPlaneEC.xyz = czm_normal * rightNormal_and_textureCoordinateNormalizationY.xyz;
@@ -98,8 +100,8 @@ void main()
     // Check distance to the end plane and start plane, pick the plane that is closer
     vec4 positionEC = czm_modelViewRelativeToEye * positionRelativeToEye; // w = 1.0, see czm_computePosition
     float absStartPlaneDistance = abs(czm_planeDistance(startPlaneEC, positionEC.xyz));
-    float absEndPlaneDistance = abs(czm_planeDistance(v_endPlaneEC, positionEC.xyz));
-    vec3 planeDirection = czm_branchFreeTernary(absStartPlaneDistance < absEndPlaneDistance, startPlaneEC.xyz, v_endPlaneEC.xyz);
+    float absEndPlaneDistance = abs(czm_planeDistance(endPlaneEC, positionEC.xyz));
+    vec3 planeDirection = czm_branchFreeTernary(absStartPlaneDistance < absEndPlaneDistance, startPlaneEC.xyz, endPlaneEC.xyz);
     vec3 upOrDown = normalize(cross(v_rightPlaneEC.xyz, planeDirection)); // Points "up" for start plane, "down" at end plane.
     vec3 normalEC = normalize(cross(planeDirection, upOrDown));           // In practice, the opposite seems to work too.
 
@@ -124,8 +126,11 @@ void main()
     v_width = width;
 #endif
 
-    v_startPlaneEC_lengthHalfWidth.xyz = startPlaneEC.xyz * width * 0.5;
-    v_startPlaneEC_lengthHalfWidth.w = startPlaneEC.w;
+    v_startPlaneNormalEC_and_halfWidth.xyz = startPlaneEC.xyz;
+    v_startPlaneNormalEC_and_halfWidth.w = width * 0.5;
+
+    v_endPlaneNormalEC_and_batchId.xyz = endPlaneEC.xyz;
+    v_endPlaneNormalEC_and_batchId.w = batchId;
 
     width = width * max(0.0, czm_metersPerPixel(positionEC)); // width = distance to push along R
     width = width / dot(normalEC, v_rightPlaneEC.xyz); // width = distance to push along N

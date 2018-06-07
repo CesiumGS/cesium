@@ -2,9 +2,9 @@
 #extension GL_EXT_frag_depth : enable
 #endif
 
-varying vec4 v_startPlaneEC_lengthHalfWidth;
-varying vec4 v_endPlaneEC;
-varying vec4 v_rightPlaneEC;
+varying vec4 v_startPlaneNormalEC_and_halfWidth;
+varying vec4 v_endPlaneNormalEC_and_batchId;
+varying vec4 v_rightPlaneEC; // Technically can compute distance for this here
 varying vec4 v_ecEnd_and_ecStart_X;
 varying vec4 v_texcoordNormalization_and_ecStart_YZ;
 
@@ -29,15 +29,13 @@ void main(void)
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth);
     eyeCoordinate /= eyeCoordinate.w;
 
-    float halfWidth = length(v_startPlaneEC_lengthHalfWidth.xyz);
-    float halfMaxWidth = halfWidth * czm_metersPerPixel(eyeCoordinate);
+    float halfMaxWidth = v_startPlaneNormalEC_and_halfWidth.w * czm_metersPerPixel(eyeCoordinate);
     // Check distance of the eye coordinate against the right-facing plane
     float widthwiseDistance = czm_planeDistance(v_rightPlaneEC, eyeCoordinate.xyz);
 
     // Check distance of the eye coordinate against the mitering planes
-    vec3 startPlaneNormal = v_startPlaneEC_lengthHalfWidth.xyz / halfWidth;
-    float distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -forwardDirection, startPlaneNormal, v_startPlaneEC_lengthHalfWidth.w);
-    float distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, forwardDirection, v_endPlaneEC.xyz, v_endPlaneEC.w);
+    float distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -forwardDirection, v_startPlaneNormalEC_and_halfWidth.xyz, -dot(ecStart, v_startPlaneNormalEC_and_halfWidth.xyz));
+    float distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, forwardDirection, v_endPlaneNormalEC_and_batchId.xyz, -dot(v_ecEnd_and_ecStart_X.xyz, v_endPlaneNormalEC_and_batchId.xyz));
 
     shouldDiscard = shouldDiscard || (abs(widthwiseDistance) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0);
 
@@ -48,13 +46,13 @@ void main(void)
     vec4 alignedPlane;
 
     // start aligned plane
-    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, startPlaneNormal);
+    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, v_startPlaneNormalEC_and_halfWidth.xyz);
     alignedPlane.xyz = cross(alignedPlane.xyz, v_rightPlaneEC.xyz);
     alignedPlane.w = -dot(alignedPlane.xyz, ecStart);
     distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -forwardDirection, alignedPlane.xyz, alignedPlane.w);
 
     // end aligned plane
-    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, v_endPlaneEC.xyz);
+    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, v_endPlaneNormalEC_and_batchId.xyz);
     alignedPlane.xyz = cross(alignedPlane.xyz, v_rightPlaneEC.xyz);
     alignedPlane.w = -dot(alignedPlane.xyz, v_ecEnd_and_ecStart_X.xyz);
     distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, forwardDirection, alignedPlane.xyz, alignedPlane.w);
@@ -70,9 +68,6 @@ void main(void)
 #endif // DEBUG_SHOW_VOLUME
     }
 
-#ifdef PICK
-    gl_FragColor.a = 1.0;
-#else // PICK
 #ifdef PER_INSTANCE_COLOR
     gl_FragColor = v_color;
 #else // PER_INSTANCE_COLOR
@@ -93,6 +88,4 @@ void main(void)
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #endif // PER_INSTANCE_COLOR
-
-#endif // PICK
 }

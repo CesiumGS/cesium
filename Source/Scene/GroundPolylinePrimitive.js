@@ -166,11 +166,9 @@ define([
         this._primitive = undefined;
 
         this._sp = undefined;
-        this._spPick = undefined;
         this._sp2D = undefined;
-        this._spPick2D = undefined;
         this._spMorph = undefined;
-        this._spPickMorph = undefined;
+
         this._renderState = RenderState.fromCache({
             cull : {
                 enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
@@ -391,6 +389,10 @@ define([
         vsMorph = Primitive._appendDistanceDisplayConditionToShader(primitive, vsMorph);
         vsMorph = Primitive._modifyShaderPosition(groundPolylinePrimitive, vsMorph, frameState.scene3DOnly);
 
+        // Access pick color from fragment shader.
+        // Helps with varying budget.
+        var fs = primitive._batchTable.getVertexShaderCallback()(PolylineShadowVolumeFS);
+
         // Tesselation on these volumes tends to be low,
         // which causes problems when interpolating log depth from vertices.
         // So force computing and writing log depth in the fragment shader.
@@ -415,7 +417,7 @@ define([
         });
         var fsColor3D = new ShaderSource({
             defines : fsDefines,
-            sources : [materialShaderSource, PolylineShadowVolumeFS]
+            sources : [materialShaderSource, fs]
         });
         groundPolylinePrimitive._sp = ShaderProgram.replaceCache({
             context : context,
@@ -449,9 +451,11 @@ define([
                 defines : vsDefines,
                 sources : [vsMorph]
             });
+
+            fs = primitive._batchTable.getVertexShaderCallback()(PolylineShadowVolumeMorphFS);
             var fsColorMorph = new ShaderSource({
                 defines : fsDefines,
-                sources : [materialShaderSource, PolylineShadowVolumeMorphFS]
+                sources : [materialShaderSource, fs]
             });
             colorProgramMorph = context.shaderCache.createDerivedShaderProgram(groundPolylinePrimitive._sp, 'MorphColor', {
                 context : context,
@@ -462,71 +466,6 @@ define([
             });
         }
         groundPolylinePrimitive._spMorph = colorProgramMorph;
-
-        if (groundPolylinePrimitive._primitive.allowPicking) {
-            var vsPick = ShaderSource.createPickVertexShaderSource(vs);
-            vsPick = Primitive._updatePickColorAttribute(vsPick);
-
-            var vsPickMorphSource = ShaderSource.createPickVertexShaderSource(vsMorph);
-            vsPickMorphSource = Primitive._updatePickColorAttribute(vsPick);
-
-            var vsPick3D = new ShaderSource({
-                defines : ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'],
-                sources : [vsPick]
-            });
-            var fsPick3D = new ShaderSource({
-                defines : ['PICK'],
-                sources : [PolylineShadowVolumeFS],
-                pickColorQualifier : 'varying'
-            });
-
-            groundPolylinePrimitive._spPick = ShaderProgram.replaceCache({
-                context : context,
-                shaderProgram : groundPolylinePrimitive._spPick,
-                vertexShaderSource : vsPick3D,
-                fragmentShaderSource : fsPick3D,
-                attributeLocations : attributeLocations
-            });
-
-            // Derive 2D/CV
-            var pickProgram2D = context.shaderCache.getDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dPick');
-            if (!defined(pickProgram2D)) {
-                var vsPick2D = new ShaderSource({
-                    defines : ['COLUMBUS_VIEW_2D', 'ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'],
-                    sources : [vsPick]
-                });
-                pickProgram2D = context.shaderCache.createDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dPick', {
-                    context : context,
-                    shaderProgram : groundPolylinePrimitive._spPick2D,
-                    vertexShaderSource : vsPick2D,
-                    fragmentShaderSource : fsPick3D,
-                    attributeLocations : attributeLocations
-                });
-            }
-            groundPolylinePrimitive._spPick2D = pickProgram2D;
-
-            // Derive Morph
-            var pickProgramMorph = context.shaderCache.getDerivedShaderProgram(groundPolylinePrimitive._spPick, 'MorphPick');
-            if (!defined(pickProgramMorph)) {
-                var vsPickMorph = new ShaderSource({
-                    defines : ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'],
-                    sources : [vsPickMorphSource]
-                });
-                var fsPickMorph = new ShaderSource({
-                    defines : ['PICK'],
-                    sources : [PolylineShadowVolumeMorphFS],
-                    pickColorQualifier : 'varying'
-                });
-                pickProgramMorph = context.shaderCache.createDerivedShaderProgram(groundPolylinePrimitive._spPick, 'MorphPick', {
-                    context : context,
-                    shaderProgram : groundPolylinePrimitive._spPickMorph,
-                    vertexShaderSource : vsPickMorph,
-                    fragmentShaderSource : fsPickMorph,
-                    attributeLocations : attributeLocations
-                });
-            }
-            groundPolylinePrimitive._spPickMorph = pickProgramMorph;
-        }
     }
 
     function createCommands(groundPolylinePrimitive, appearance, material, translucent, colorCommands, pickCommands) {
@@ -559,6 +498,7 @@ define([
             command.shaderProgram = groundPolylinePrimitive._sp;
             command.uniformMap = uniformMap;
             command.pass = pass;
+            command.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEC_and_batchId.w)';
 
             // derive for 2D
             var derivedColorCommand = command.derivedCommands.color2D;
@@ -571,6 +511,7 @@ define([
             derivedColorCommand.shaderProgram = groundPolylinePrimitive._sp2D;
             derivedColorCommand.uniformMap = uniformMap;
             derivedColorCommand.pass = pass;
+            derivedColorCommand.pickId = 'czm_batchTable_pickColor(v_endPlaneNormalEC_and_batchId.w)';
 
             // derive for Morph
             derivedColorCommand = command.derivedCommands.colorMorph;
@@ -583,45 +524,7 @@ define([
             derivedColorCommand.shaderProgram = groundPolylinePrimitive._spMorph;
             derivedColorCommand.uniformMap = uniformMap;
             derivedColorCommand.pass = pass;
-
-            // Pick
-            command = pickCommands[i];
-            if (!defined(command)) {
-                command = pickCommands[i] = new DrawCommand({
-                    owner : groundPolylinePrimitive,
-                    primitiveType : primitive._primitiveType
-                });
-            }
-
-            command.vertexArray = vertexArray;
-            command.renderState = groundPolylinePrimitive._renderState;
-            command.shaderProgram = groundPolylinePrimitive._spPick;
-            command.uniformMap = uniformMap;
-            command.pass = pass;
-
-            // derive for 2D
-            var derivedPickCommand = command.derivedCommands.pick2D;
-            if (!defined(derivedPickCommand)) {
-                derivedPickCommand = DrawCommand.shallowClone(command);
-                command.derivedCommands.pick2D = derivedPickCommand;
-            }
-            derivedPickCommand.vertexArray = vertexArray;
-            derivedPickCommand.renderState = groundPolylinePrimitive._renderState;
-            derivedPickCommand.shaderProgram = groundPolylinePrimitive._spPick2D;
-            derivedPickCommand.uniformMap = uniformMap;
-            derivedPickCommand.pass = pass;
-
-            // derive for Morph
-            derivedPickCommand = command.derivedCommands.pickMorph;
-            if (!defined(derivedPickCommand)) {
-                derivedPickCommand = DrawCommand.shallowClone(command);
-                command.derivedCommands.pickMorph = derivedPickCommand;
-            }
-            derivedPickCommand.vertexArray = vertexArray;
-            derivedPickCommand.renderState = groundPolylinePrimitive._renderStateMorph;
-            derivedPickCommand.shaderProgram = groundPolylinePrimitive._spPickMorph;
-            derivedPickCommand.uniformMap = uniformMap;
-            derivedPickCommand.pass = pass;
+            derivedColorCommand.pickId = 'czm_batchTable_pickColor(v_batchId)';
         }
     }
 
@@ -643,7 +546,7 @@ define([
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
-        if (passes.render) {
+        if (passes.render || (passes.pick && primitive.allowPicking)) {
             var colorLength = colorCommands.length;
 
             for (var j = 0; j < colorLength; ++j) {
@@ -660,24 +563,6 @@ define([
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
 
                 commandList.push(colorCommand);
-            }
-        }
-
-        if (passes.pick && primitive.allowPicking) {
-            var pickLength = pickCommands.length;
-            for (var k = 0; k < pickLength; ++k) {
-                var pickCommand = pickCommands[k];
-                // Use derived pick command for morph and 2D
-                if (frameState.mode === SceneMode.MORPHING && pickCommand.shaderProgram !== groundPolylinePrimitive._spMorph) {
-                    pickCommand = pickCommand.derivedCommands.pickMorph;
-                } else if (frameState.mode !== SceneMode.SCENE3D && pickCommand.shaderProgram !== groundPolylinePrimitive._spPick2D) {
-                    pickCommand = pickCommand.derivedCommands.pick2D;
-                }
-                pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = boundingSpheres[k];
-                pickCommand.cull = cull;
-
-                commandList.push(pickCommand);
             }
         }
     }
@@ -862,13 +747,10 @@ define([
     GroundPolylinePrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         this._sp = this._sp && this._sp.destroy();
-        this._spPick = this._spPick && this._spPick.destroy();
 
         // Derived programs, destroyed above if they existed.
         this._sp2D = undefined;
-        this._spPick2D = undefined;
         this._spMorph = undefined;
-        this._spPickMorph = undefined;
 
         return destroyObject(this);
     };
