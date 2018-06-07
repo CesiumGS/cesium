@@ -78,7 +78,6 @@ define([
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
-     * @param {ClassificationType} [options.classificationType=ClassificationType.TERRAIN] Determines whether terrain, 3D Tiles or both will be classified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
@@ -101,6 +100,7 @@ define([
          * @default undefined
          */
         this.geometryInstances = options.geometryInstances;
+        this._hasPerInstanceColors = true;
 
         var appearance = options.appearance;
         if (!defined(appearance)) {
@@ -175,7 +175,8 @@ define([
             cull : {
                 enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
             },
-            blending : BlendingState.ALPHA_BLEND
+            blending : BlendingState.ALPHA_BLEND,
+            depthMask : false
         });
 
         this._renderStateMorph = RenderState.fromCache({
@@ -186,7 +187,8 @@ define([
             depthTest : {
                 enabled : true
             },
-            blending : BlendingState.ALPHA_BLEND
+            blending : BlendingState.ALPHA_BLEND,
+            depthMask : false
         });
     }
 
@@ -524,13 +526,6 @@ define([
                 });
             }
             groundPolylinePrimitive._spPickMorph = pickProgramMorph;
-        } else {
-            groundPolylinePrimitive._spPick = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vsColor3D,
-                fragmentShaderSource : fsColor3D,
-                attributeLocations : attributeLocations
-            });
         }
     }
 
@@ -668,7 +663,7 @@ define([
             }
         }
 
-        if (passes.pick) {
+        if (passes.pick && primitive.allowPicking) {
             var pickLength = pickCommands.length;
             for (var k = 0; k < pickLength; ++k) {
                 var pickCommand = pickCommands[k];
@@ -696,8 +691,7 @@ define([
      * </p>
      *
      * @exception {DeveloperError} For synchronous GroundPolylinePrimitives, you must call GroundPolylinePrimitives.initializeTerrainHeights() and wait for the returned promise to resolve.
-     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
-     * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     * @exception {DeveloperError} All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.
      */
     GroundPolylinePrimitive.prototype.update = function(frameState) {
         if (!defined(this._primitive) && !defined(this.geometryInstances)) {
@@ -722,22 +716,30 @@ define([
         if (!defined(this._primitive)) {
             var geometryInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var geometryInstancesLength = geometryInstances.length;
+            var groundInstances = new Array(geometryInstancesLength);
+
             var attributes;
 
-            // If using PolylineColorAppearance, check if each instance has a color attribute.
-            if (this.appearance instanceof PolylineColorAppearance) {
-                for (i = 0; i < geometryInstancesLength; ++i) {
-                    attributes = geometryInstances[i].attributes;
-                    if (!defined(attributes) || !defined(attributes.color)) {
-                        throw new DeveloperError('All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.');
-                    }
+            // Check if each instance has a color attribute.
+            for (i = 0; i < geometryInstancesLength; ++i) {
+                attributes = geometryInstances[i].attributes;
+                if (!defined(attributes) || !defined(attributes.color)) {
+                    this._hasPerInstanceColors = false;
+                    break;
                 }
             }
 
-            // Automatically create line width attributes
             for (i = 0; i < geometryInstancesLength; ++i) {
                 var geometryInstance = geometryInstances[i];
-                attributes = geometryInstance.attributes;
+                attributes = {};
+                var instanceAttributes = geometryInstance.attributes;
+                for (var attributeKey in instanceAttributes) {
+                    if (instanceAttributes.hasOwnProperty(attributeKey)) {
+                        attributes[attributeKey] = instanceAttributes[attributeKey];
+                    }
+                }
+
+                // Automatically create line width attribute if not already given
                 if (!defined(attributes.width)) {
                     attributes.width = new GeometryInstanceAttribute({
                         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
@@ -745,9 +747,15 @@ define([
                         value : [geometryInstance.geometry.width]
                     });
                 }
+
+                groundInstances[i] = new GeometryInstance({
+                    geometry : geometryInstance.geometry,
+                    attributes : attributes,
+                    id : geometryInstance.id
+                });
             }
 
-            primitiveOptions.geometryInstances = geometryInstances;
+            primitiveOptions.geometryInstances = groundInstances;
             primitiveOptions.appearance = this.appearance;
 
             primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
@@ -776,6 +784,11 @@ define([
                 }
             });
         }
+
+        if (this.appearance instanceof PolylineColorAppearance && !this._hasPerInstanceColors) {
+            throw new DeveloperError('All GeometryInstances must have color attributes to use PolylineColorAppearance with GroundPolylinePrimitive.');
+        }
+
         this._primitive.appearance = this.appearance;
         this._primitive.show = this.show;
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;

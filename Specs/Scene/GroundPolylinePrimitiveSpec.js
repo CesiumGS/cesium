@@ -787,7 +787,9 @@ defineSuite([
 
         verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
 
-        expect(scene).notToPick();
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.id).toEqual('depth rectangle');
+        });
     });
 
     it('update throws when batched instance colors are missing', function() {

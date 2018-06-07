@@ -382,16 +382,14 @@ defineSuite([
     });
 
     it('throws errors if not enough positions have been provided', function() {
-        var groundPolylineGeometry = new GroundPolylineGeometry({
-            positions : Cartesian3.fromDegreesArray([
-                0.01, 0.0
-            ]),
-            granularity : 0.0,
-            loop : true
-        });
-
         expect(function() {
-            GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
+            return new GroundPolylineGeometry({
+                positions : Cartesian3.fromDegreesArray([
+                    0.01, 0.0
+                ]),
+                granularity : 0.0,
+                loop : true
+            });
         }).toThrowDeveloperError();
     });
 
@@ -407,13 +405,18 @@ defineSuite([
 
         var packedArray = [0];
         GroundPolylineGeometry.pack(groundPolylineGeometry, packedArray, 1);
-        var scratch = new GroundPolylineGeometry();
+        var scratch = new GroundPolylineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, 0.0,
+                1.0, 0.0
+            ])
+        });
         GroundPolylineGeometry.unpack(packedArray, 1, scratch);
 
-        var scratchPositions = scratch.positions;
+        var scratchPositions = scratch._positions;
         expect(scratchPositions.length).toEqual(2);
-        expect(Cartesian3.equals(scratchPositions[0], groundPolylineGeometry.positions[0])).toBe(true);
-        expect(Cartesian3.equals(scratchPositions[1], groundPolylineGeometry.positions[1])).toBe(true);
+        expect(Cartesian3.equals(scratchPositions[0], groundPolylineGeometry._positions[0])).toBe(true);
+        expect(Cartesian3.equals(scratchPositions[1], groundPolylineGeometry._positions[1])).toBe(true);
         expect(scratch.loop).toBe(true);
         expect(scratch.granularity).toEqual(10.0);
         expect(scratch.ellipsoid.equals(Ellipsoid.WGS84)).toBe(true);

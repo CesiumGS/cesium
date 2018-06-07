@@ -73,18 +73,28 @@ define([
      * @alias GroundPolylineGeometry
      * @constructor
      *
-     * @param {Object} [options] Options with the following properties:
+     * @param {Object} options Options with the following properties:
      * @param {Number} [options.width=1.0] The screen space width in pixels.
-     * @param {Cartesian3[]} [options.positions] An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
+     * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
      * @param {Number} [options.granularity=9999.0] The distance interval used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] Ellipsoid that input positions will be clamped to.
      * @param {MapProjection} [options.projection] Map Projection for projecting coordinates to 2D.
      *
+     * @exception {DeveloperError} At least two positions are required.
+     *
+     * @see GroundPolylineGeometry#createGeometry
      * @see GroundPolylinePrimitive
      */
     function GroundPolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var positions = options.positions;
+
+        //>>includeStart('debug', pragmas.debug);
+        if ((!defined(positions)) || (positions.length < 2)) {
+            throw new DeveloperError('At least two positions are required.');
+        }
+        //>>includeEnd('debug');
 
         /**
          * The screen space width in pixels.
@@ -92,11 +102,7 @@ define([
          */
         this.width = defaultValue(options.width, 1.0); // Doesn't get packed, not necessary for computing geometry.
 
-        /**
-         * An array of {@link Cartesian3} defining the polyline's points. Heights above the ellipsoid will be ignored.
-         * @type {Cartesian3[]}
-         */
-        this.positions = defaultValue(options.positions, []);
+        this._positions = positions;
 
         /**
          * The distance interval used for interpolating options.points. Zero indicates no interpolation.
@@ -142,7 +148,7 @@ define([
          */
         packedLength: {
             get: function() {
-                return 1.0 + this.positions.length * 3 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0;
+                return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0;
             }
         }
     });
@@ -225,7 +231,7 @@ define([
         var index = defaultValue(startingIndex, 0);
 
         // Pack position length, then all positions
-        var positions = value.positions;
+        var positions = value._positions;
         var positionsLength = positions.length;
 
         array[index++] = positionsLength;
@@ -260,16 +266,16 @@ define([
         //>>includeEnd('debug');
 
         var index = defaultValue(startingIndex, 0);
-        var positions = [];
-
         var positionsLength = array[index++];
+        var positions = new Array(positionsLength);
+
         for (var i = 0; i < positionsLength; i++) {
-            positions.push(Cartesian3.unpack(array, index));
+            positions[i] = Cartesian3.unpack(array, index);
             index += 3;
         }
 
         var granularity = array[index++];
-        var loop = array[index++] === 1.0 ? true : false;
+        var loop = array[index++] === 1.0;
 
         var ellipsoid = Ellipsoid.unpack(array, index);
         index += Ellipsoid.packedLength;
@@ -286,7 +292,7 @@ define([
             });
         }
 
-        result.positions = positions;
+        result._positions = positions;
         result.granularity = granularity;
         result.loop = loop;
         result.ellipsoid = ellipsoid;
@@ -328,7 +334,6 @@ define([
 
         // Average directions to previous and to next
         result = Cartesian3.add(toNext, toPrevious, result);
-        result = Cartesian3.multiplyByScalar(result, 0.5, result);
         result = Cartesian3.normalize(result, result);
 
         // Rotate this direction to be orthogonal to up
@@ -339,7 +344,7 @@ define([
 
         // Flip the normal if it isn't pointing roughly bound right (aka if forward is pointing more "backwards")
         if (Cartesian3.dot(toNext, forward) < cosine90) {
-            result = Cartesian3.multiplyByScalar(result, -1.0, result);
+            result = Cartesian3.negate(result, result);
         }
 
         return result;
@@ -372,14 +377,9 @@ define([
         var index;
         var i;
 
-        var positions = groundPolylineGeometry.positions;
+        var positions = groundPolylineGeometry._positions;
         var positionsLength = positions.length;
 
-        //>>includeStart('debug', pragmas.debug);
-        if (positionsLength < 2) {
-            throw new DeveloperError('GroundPolylineGeometry must contain two or more positions');
-        }
-        //>>includeEnd('debug');
         if (positionsLength === 2) {
             loop = false;
         }
@@ -567,7 +567,7 @@ define([
         result.z = 0.0;
         result = Cartesian3.normalize(result, result);
         if (flipNormal) {
-            Cartesian3.multiplyByScalar(result, -1.0, result);
+            Cartesian3.negate(result, result);
         }
         return result;
     }
@@ -759,7 +759,7 @@ define([
             var preEndBottom = Cartesian3.unpack(bottomPositionsArray, bottomPositionsArray.length - 6, segmentStartBottomScratch);
             if (breakMiter(endGeometryNormal, preEndBottom, endBottom, endTop)) {
                 // Miter broken as if for the last point in the loop, needs to be inverted for first point (clone of endBottom)
-                endGeometryNormal = Cartesian3.multiplyByScalar(endGeometryNormal, -1.0, endGeometryNormal);
+                endGeometryNormal = Cartesian3.negate(endGeometryNormal, endGeometryNormal);
             }
         }
 
@@ -772,7 +772,7 @@ define([
             var startGeometryNormal = Cartesian3.clone(endGeometryNormal, segmentStartNormalScratch);
 
             if (miterBroken) {
-                startGeometryNormal = Cartesian3.multiplyByScalar(startGeometryNormal, -1.0, startGeometryNormal);
+                startGeometryNormal = Cartesian3.negate(startGeometryNormal, startGeometryNormal);
             }
 
             endBottom = Cartesian3.unpack(bottomPositionsArray, index, segmentEndBottomScratch);
@@ -949,26 +949,26 @@ define([
             nudgeXZ(adjustHeightStartBottom, adjustHeightEndBottom);
             nudgeXZ(adjustHeightStartTop, adjustHeightEndTop);
 
-           Cartesian3.pack(adjustHeightStartBottom, positionsArray, vec3sWriteIndex);
-           Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 3);
-           Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 6);
-           Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 9);
+            Cartesian3.pack(adjustHeightStartBottom, positionsArray, vec3sWriteIndex);
+            Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 3);
+            Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 6);
+            Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 9);
 
-           // Nudge in opposite direction
-           normalNudge = Cartesian3.multiplyByScalar(rightNormal, -2.0 * CesiumMath.EPSILON5, normalNudgeScratch);
-           Cartesian3.add(adjustHeightStartBottom, normalNudge, adjustHeightStartBottom);
-           Cartesian3.add(adjustHeightEndBottom, normalNudge, adjustHeightEndBottom);
-           Cartesian3.add(adjustHeightStartTop, normalNudge, adjustHeightStartTop);
-           Cartesian3.add(adjustHeightEndTop, normalNudge, adjustHeightEndTop);
+            // Nudge in opposite direction
+            normalNudge = Cartesian3.multiplyByScalar(rightNormal, -2.0 * CesiumMath.EPSILON5, normalNudgeScratch);
+            Cartesian3.add(adjustHeightStartBottom, normalNudge, adjustHeightStartBottom);
+            Cartesian3.add(adjustHeightEndBottom, normalNudge, adjustHeightEndBottom);
+            Cartesian3.add(adjustHeightStartTop, normalNudge, adjustHeightStartTop);
+            Cartesian3.add(adjustHeightEndTop, normalNudge, adjustHeightEndTop);
 
-           // Check against XZ plane again
-           nudgeXZ(adjustHeightStartBottom, adjustHeightEndBottom);
-           nudgeXZ(adjustHeightStartTop, adjustHeightEndTop);
+            // Check against XZ plane again
+            nudgeXZ(adjustHeightStartBottom, adjustHeightEndBottom);
+            nudgeXZ(adjustHeightStartTop, adjustHeightEndTop);
 
-           Cartesian3.pack(adjustHeightStartBottom, positionsArray, vec3sWriteIndex + 12);
-           Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 15);
-           Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 18);
-           Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 21);
+            Cartesian3.pack(adjustHeightStartBottom, positionsArray, vec3sWriteIndex + 12);
+            Cartesian3.pack(adjustHeightEndBottom, positionsArray, vec3sWriteIndex + 15);
+            Cartesian3.pack(adjustHeightEndTop, positionsArray, vec3sWriteIndex + 18);
+            Cartesian3.pack(adjustHeightStartTop, positionsArray, vec3sWriteIndex + 21);
 
             cartographicsIndex += 2;
             index += 3;
