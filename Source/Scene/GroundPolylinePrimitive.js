@@ -377,8 +377,6 @@ define([
     function createShaderProgram(groundPolylinePrimitive, frameState, appearance) {
         var context = frameState.context;
         var primitive = groundPolylinePrimitive._primitive;
-        var isPolylineColorAppearance = appearance instanceof PolylineColorAppearance;
-
         var attributeLocations = primitive._attributeLocations;
 
         var vs = primitive._batchTable.getVertexShaderCallback()(PolylineShadowVolumeVS);
@@ -395,9 +393,19 @@ define([
         // which causes problems when interpolating log depth from vertices.
         // So force computing and writing log depth in the fragment shader.
         // Re-enable at far distances to avoid z-fighting.
-        var colorDefine = isPolylineColorAppearance ? 'PER_INSTANCE_COLOR' : '';
+        var colorDefine = appearance instanceof PolylineColorAppearance ? 'PER_INSTANCE_COLOR' : '';
         var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT', colorDefine];
         var fsDefines =  groundPolylinePrimitive.debugShowShadowVolume ? ['DEBUG_SHOW_VOLUME', colorDefine] : [colorDefine];
+        var materialShaderSource = defined(appearance.material) ? appearance.material.shaderSource : '';
+
+        // Check for use of v_width_yzw and v_polylineAngle_yzw in material shader
+        // to determine whether these varyings should be active in the vertex shader.
+        if (materialShaderSource.search(/varying\s+vec4\s+v_polylineAngle_yzw;/g) === -1) {
+            vsDefines.push('ANGLE_VARYING');
+        }
+        if (materialShaderSource.search(/varying\s+vec4\s+v_width_yzw;/g) === -1) {
+            vsDefines.push('WIDTH_VARYING');
+        }
 
         var vsColor3D = new ShaderSource({
             defines : vsDefines,
@@ -405,7 +413,7 @@ define([
         });
         var fsColor3D = new ShaderSource({
             defines : fsDefines,
-            sources : [isPolylineColorAppearance ? '' : appearance.material.shaderSource, PolylineShadowVolumeFS]
+            sources : [materialShaderSource, PolylineShadowVolumeFS]
         });
         groundPolylinePrimitive._sp = ShaderProgram.replaceCache({
             context : context,
@@ -441,7 +449,7 @@ define([
             });
             var fsColorMorph = new ShaderSource({
                 defines : fsDefines,
-                sources : [isPolylineColorAppearance ? '' : appearance.material.shaderSource, PolylineShadowVolumeMorphFS]
+                sources : [materialShaderSource, PolylineShadowVolumeMorphFS]
             });
             colorProgramMorph = context.shaderCache.createDerivedShaderProgram(groundPolylinePrimitive._sp, 'MorphColor', {
                 context : context,
@@ -461,11 +469,11 @@ define([
             vsPickMorphSource = Primitive._updatePickColorAttribute(vsPick);
 
             var vsPick3D = new ShaderSource({
-                defines : vsDefines,
+                defines : ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'],
                 sources : [vsPick]
             });
             var fsPick3D = new ShaderSource({
-                defines : fsDefines.concat(['PICK']),
+                defines : ['PICK'],
                 sources : [PolylineShadowVolumeFS],
                 pickColorQualifier : 'varying'
             });
@@ -482,7 +490,7 @@ define([
             var pickProgram2D = context.shaderCache.getDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dPick');
             if (!defined(pickProgram2D)) {
                 var vsPick2D = new ShaderSource({
-                    defines : vsDefines.concat(['COLUMBUS_VIEW_2D']),
+                    defines : ['COLUMBUS_VIEW_2D', 'ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'],
                     sources : [vsPick]
                 });
                 pickProgram2D = context.shaderCache.createDerivedShaderProgram(groundPolylinePrimitive._spPick, '2dPick', {
@@ -499,7 +507,7 @@ define([
             var pickProgramMorph = context.shaderCache.getDerivedShaderProgram(groundPolylinePrimitive._spPick, 'MorphPick');
             if (!defined(pickProgramMorph)) {
                 var vsPickMorph = new ShaderSource({
-                    defines : vsDefines,
+                    defines : ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT'],
                     sources : [vsPickMorphSource]
                 });
                 var fsPickMorph = new ShaderSource({

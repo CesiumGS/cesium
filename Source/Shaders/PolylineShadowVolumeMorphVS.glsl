@@ -17,8 +17,12 @@ varying vec3 v_forwardDirectionEC;
 varying vec3 v_texcoordNormalization_and_halfWidth;
 
 // For materials
+#ifdef WIDTH_VARYING
 varying float v_width;
+#endif
+#ifdef ANGLE_VARYING
 varying float v_polylineAngle;
+#endif
 
 #ifdef PER_INSTANCE_COLOR
 varying vec4 v_color;
@@ -87,10 +91,15 @@ void main()
     v_alignedPlaneDistances.y = -dot(-v_forwardDirectionEC, ecEnd);
 #endif // PER_INSTANCE_COLOR
 
+#ifdef WIDTH_VARYING
     float width = czm_batchTable_width(batchId);
     float halfWidth = width * 0.5;
     v_width = width;
     v_texcoordNormalization_and_halfWidth.z = halfWidth;
+#else
+    float halfWidth = 0.5 * czm_batchTable_width(batchId);
+    v_texcoordNormalization_and_halfWidth.z = halfWidth;
+#endif
 
     // Compute a normal along which to "push" the position out, extending the miter depending on view distance.
     // Position has already been "pushed" by unit length along miter normal, and miter normals are encoded in the planes.
@@ -137,8 +146,10 @@ void main()
     // Blend for actual position
     gl_Position = czm_projection * mix(positionEC2D, positionEC3D, czm_morphTime);
 
+#ifdef ANGLE_VARYING
     // Approximate relative screen space direction of the line.
     vec2 approxLineDirection = normalize(vec2(v_forwardDirectionEC.x, -v_forwardDirectionEC.y));
     approxLineDirection.y = czm_branchFreeTernary(approxLineDirection.x == 0.0 && approxLineDirection.y == 0.0, -1.0, approxLineDirection.y);
     v_polylineAngle = czm_fastApproximateAtan(approxLineDirection.x, approxLineDirection.y);
+#endif
 }

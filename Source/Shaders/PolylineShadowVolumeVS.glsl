@@ -23,8 +23,12 @@ varying vec4 v_ecEnd_and_ecStart_X;
 varying vec4 v_texcoordNormalization_and_ecStart_YZ;
 
 // For materials
+#ifdef WIDTH_VARYING
 varying float v_width;
+#endif
+#ifdef ANGLE_VARYING
 varying float v_polylineAngle;
+#endif
 
 #ifdef PER_INSTANCE_COLOR
 varying vec4 v_color;
@@ -116,7 +120,9 @@ void main()
     //       o---------- polyline segment ---->
     //
     float width = czm_batchTable_width(batchId);
+#ifdef WIDTH_VARYING
     v_width = width;
+#endif
 
     v_startPlaneEC_lengthHalfWidth.xyz = startPlaneEC.xyz * width * 0.5;
     v_startPlaneEC_lengthHalfWidth.w = startPlaneEC.w;
@@ -125,17 +131,19 @@ void main()
     width = width / dot(normalEC, v_rightPlaneEC.xyz); // width = distance to push along N
 
     // Determine if this vertex is on the "left" or "right"
-    #ifdef COLUMBUS_VIEW_2D
+#ifdef COLUMBUS_VIEW_2D
         normalEC *= sign(texcoordNormalization2D.x);
-    #else
+#else
         normalEC *= sign(endNormal_and_textureCoordinateNormalizationX.w);
-    #endif
+#endif
 
     positionEC.xyz += width * normalEC;
     gl_Position = czm_projection * positionEC;
 
+#ifdef ANGLE_VARYING
     // Approximate relative screen space direction of the line.
     vec2 approxLineDirection = normalize(vec2(forwardDirectionEC.x, -forwardDirectionEC.y));
     approxLineDirection.y = czm_branchFreeTernary(approxLineDirection.x == 0.0 && approxLineDirection.y == 0.0, -1.0, approxLineDirection.y);
     v_polylineAngle = czm_fastApproximateAtan(approxLineDirection.x, approxLineDirection.y);
+#endif
 }
