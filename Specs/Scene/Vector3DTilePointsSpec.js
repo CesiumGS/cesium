@@ -68,7 +68,8 @@ defineSuite([
         },
         tileset : {
             ellipsoid : Ellipsoid.WGS84
-        }
+        },
+        getFeature : function(id) { return { batchId : id }; }
     };
 
     beforeEach(function() {
@@ -209,7 +210,6 @@ defineSuite([
         var positions = encodePositions(rectangle, minHeight, maxHeight, cartoPositions);
 
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-        batchTable.update(mockTileset, scene.frameState);
 
         points = scene.primitives.add(new Vector3DTilePoints({
             positions : positions,
@@ -225,6 +225,8 @@ defineSuite([
             var features = [];
             points.createFeatures(mockTileset, features);
             points.applyStyle(scene.frameState, undefined, features);
+
+            var getFeature = mockTileset.getFeature;
             mockTileset.getFeature = function(index) {
                 return features[index];
             };
@@ -236,7 +238,7 @@ defineSuite([
             });
             scene.frameState.passes.pick = false;
 
-            mockTileset.getFeature = undefined;
+            mockTileset.getFeature = getFeature;
         });
     });
 

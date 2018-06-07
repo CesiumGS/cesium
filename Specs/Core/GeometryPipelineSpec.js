@@ -1871,6 +1871,140 @@ defineSuite([
         expect(splitInstance).toBe(instance);
     });
 
+    it('splitLongitude interpolates custom attributes for geometry split by the IDL', function() {
+        var p0 = Cartesian3.fromDegrees(-179.0, 0.0);
+        var p1 = Cartesian3.fromDegrees(179.0, 0.0);
+        var p2 = Cartesian3.fromDegrees(-179.0, 1.0);
+
+        var positions = new Float64Array([
+            p0.x, p0.y, p0.z,
+            p1.x, p1.y, p1.z,
+            p2.x, p2.y, p2.z
+        ]);
+
+        var vec4s = new Uint8Array([
+            0, 0, 0, 0,
+            0, 0, 0, 255,
+            0, 0, 0, 0
+        ]);
+
+        var vec3s = new Uint8Array([
+            0, 0, 0,
+            0, 0, 255,
+            0, 0, 0
+        ]);
+
+        var vec2s = new Uint8Array([
+            0, 0,
+            0, 255,
+            0, 0
+        ]);
+
+        var scalars = new Uint8Array([0, 255, 0]);
+
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : positions
+                    }),
+                    vec4s: new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute: 4,
+                        values: vec4s
+                    }),
+                    vec3s: new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute: 3,
+                        values: vec3s
+                    }),
+                    vec2s: new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute: 2,
+                        values: vec2s
+                    }),
+                    scalars: new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute: 1,
+                        values: scalars
+                    })
+                },
+                indices : new Uint16Array([0, 1, 2]),
+                primitiveType : PrimitiveType.TRIANGLES,
+                boundingSphere : BoundingSphere.fromVertices(positions)
+            })
+        });
+
+        var splitInstance = GeometryPipeline.splitLongitude(instance);
+        var eastHemisphereGeometry = splitInstance.eastHemisphereGeometry;
+        expect(eastHemisphereGeometry.indices.length).toEqual(3);
+
+        var newVec4s = eastHemisphereGeometry.attributes.vec4s.values;
+        var newVec3s = eastHemisphereGeometry.attributes.vec3s.values;
+        var newVec2s = eastHemisphereGeometry.attributes.vec2s.values;
+        var newScalars = eastHemisphereGeometry.attributes.scalars.values;
+        var i;
+        var index;
+
+        // Expect eastern hemisphere vertices to all be 255 or 127 at the end of the value
+        expect(newScalars.indexOf(127)).not.toBe(-1);
+        expect(newVec4s.indexOf(127)).not.toBe(-1);
+        expect(newVec3s.indexOf(127)).not.toBe(-1);
+        expect(newVec2s.indexOf(127)).not.toBe(-1);
+        for (i = 0; i < 3; i++) {
+            expect(newScalars[i] === 255 || newScalars[i] === 127).toBe(true);
+
+            index = i * 2;
+            expect(newVec2s[index]).toBe(0);
+            expect(newVec2s[index + 1] === 255 || newVec2s[index + 1] === 127).toBe(true);
+
+            index = i * 3;
+            expect(newVec3s[index]).toBe(0);
+            expect(newVec3s[index + 1]).toBe(0);
+            expect(newVec3s[index + 2] === 255 || newVec3s[index + 2] === 127).toBe(true);
+
+            index = i * 4;
+            expect(newVec4s[index]).toBe(0);
+            expect(newVec4s[index + 1]).toBe(0);
+            expect(newVec4s[index + 2]).toBe(0);
+            expect(newVec4s[index + 3] === 255 || newVec4s[index + 3] === 127).toBe(true);
+        }
+
+        var westHemisphereGeometry = splitInstance.westHemisphereGeometry;
+        expect(westHemisphereGeometry.indices.length).toEqual(6);
+
+        newVec4s = westHemisphereGeometry.attributes.vec4s.values;
+        newVec3s = westHemisphereGeometry.attributes.vec3s.values;
+        newVec2s = westHemisphereGeometry.attributes.vec2s.values;
+        newScalars = westHemisphereGeometry.attributes.scalars.values;
+
+        // Expect eastern hemisphere vertices to all be 0 or 127 at the end of the value
+        expect(newScalars.indexOf(127)).not.toBe(-1);
+        expect(newVec4s.indexOf(127)).not.toBe(-1);
+        expect(newVec3s.indexOf(127)).not.toBe(-1);
+        expect(newVec2s.indexOf(127)).not.toBe(-1);
+        for (i = 0; i < 4; i++) {
+            expect(newScalars[i] === 0 || newScalars[i] === 127).toBe(true);
+
+            index = i * 2;
+            expect(newVec2s[index]).toBe(0);
+            expect(newVec2s[index + 1] === 0 || newVec2s[index + 1] === 127).toBe(true);
+
+            index = i * 3;
+            expect(newVec3s[index]).toBe(0);
+            expect(newVec3s[index + 1]).toBe(0);
+            expect(newVec3s[index + 2] === 0 || newVec3s[index + 2] === 127).toBe(true);
+
+            index = i * 4;
+            expect(newVec4s[index]).toBe(0);
+            expect(newVec4s[index + 1]).toBe(0);
+            expect(newVec4s[index + 2]).toBe(0);
+            expect(newVec4s[index + 3] === 0 || newVec4s[index + 3] === 127).toBe(true);
+        }
+    });
+
     it('splitLongitude provides indices for an un-indexed triangle list', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
