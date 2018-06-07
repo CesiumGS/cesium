@@ -383,9 +383,10 @@ define([
 
         this._batchTable = undefined;
         this._batchTableAttributeIndices = undefined;
-        this._unmodifiedInstanceBoundingSpheres = undefined;
+        this._offsetInstanceExtend = undefined;
         this._instanceBoundingSpheres = undefined;
         this._instanceBoundingSpheresCV = undefined;
+        this._tempBoundingSpheres = undefined;
         this._recomputeBoundingSpheres = false;
         this._batchTableBoundingSpheresUpdated = false;
         this._batchTableBoundingSphereAttributeIndices = undefined;
@@ -1199,12 +1200,12 @@ define([
                 primitive._attributeLocations = result.attributeLocations;
                 primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
                 primitive._pickOffsets = result.pickOffsets;
-                primitive._unmodifiedInstanceBoundingSpheres = result.originalBoundingSpheres;
+                primitive._offsetInstanceExtend = result.offsetInstanceExtend;
                 primitive._instanceBoundingSpheres = result.boundingSpheres;
                 primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
                 if (defined(primitive._geometries) && primitive._geometries.length > 0) {
-                    recomputeBoundingSpheres(primitive, frameState);
+                    primitive._recomputeBoundingSpheres = true;
                     primitive._state = PrimitiveState.COMBINED;
                 } else {
                     setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
@@ -1261,12 +1262,12 @@ define([
         primitive._attributeLocations = result.attributeLocations;
         primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
         primitive._pickOffsets = result.pickOffsets;
-        primitive._unmodifiedInstanceBoundingSpheres = result.originalBoundingSpheres;
+        primitive._offsetInstanceExtend = result.offsetInstanceExtend;
         primitive._instanceBoundingSpheres = result.boundingSpheres;
         primitive._instanceBoundingSpheresCV = result.boundingSpheresCV;
 
         if (defined(primitive._geometries) && primitive._geometries.length > 0) {
-            recomputeBoundingSpheres(primitive, frameState);
+            primitive._recomputeBoundingSpheres = true;
             primitive._state = PrimitiveState.COMBINED;
         } else {
             setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
@@ -1280,20 +1281,28 @@ define([
         }
 
         var i;
-        var boundingSpheresObjects = primitive._unmodifiedInstanceBoundingSpheres;
-        var newBoundingSpheres = primitive._instanceBoundingSpheres;
-        for (i = 0; i < boundingSpheresObjects.length; ++i) {
-            var object = boundingSpheresObjects[i];
+        var offsetInstanceExtend = primitive._offsetInstanceExtend;
+        var boundingSpheres = primitive._instanceBoundingSpheres;
+        var length = boundingSpheres.length;
+        var newBoundingSpheres = primitive._tempBoundingSpheres;
+        if (!defined(newBoundingSpheres)) {
+            newBoundingSpheres = new Array(length);
+            for (i = 0; i < length; i++) {
+                newBoundingSpheres[i] = new BoundingSphere();
+            }
+            primitive._tempBoundingSpheres = newBoundingSpheres;
+        }
+        for (i = 0; i < length; ++i) {
             var newBS = newBoundingSpheres[i];
             var offset = primitive._batchTable.getBatchedAttribute(i, offsetIndex, new Cartesian3());
-            newBS = object.boundingSphere.clone(newBS);
-            transformBoundingSphere(newBS, offset, object.extend);
+            newBS = boundingSpheres[i].clone(newBS);
+            transformBoundingSphere(newBS, offset, offsetInstanceExtend[i]);
         }
         var combinedBS = [];
         var combinedWestBS = [];
         var combinedEastBS = [];
 
-        for (i = 0; i < newBoundingSpheres.length; ++i) {
+        for (i = 0; i < length; ++i) {
             var bs = newBoundingSpheres[i];
 
             var minX = bs.center.x - bs.radius;
@@ -1327,10 +1336,6 @@ define([
         }
         if (defined(resultBS3)) {
             result.push(resultBS3);
-        }
-
-        if (result.length !== primitive._boundingSpheres.length) {  // TODO: remove this check
-            throw new DeveloperError('whoops');
         }
 
         for (i = 0; i < result.length; i++) {
@@ -1812,10 +1817,6 @@ define([
             }
         }
 
-        if (this._recomputeBoundingSpheres) {
-            recomputeBoundingSpheres(this, frameState);
-        }
-
         if (this._state === PrimitiveState.COMBINED) {
             updateBatchTableBoundingSpheres(this, frameState);
             createVertexArray(this, frameState);
@@ -1823,6 +1824,10 @@ define([
 
         if (!this.show || this._state !== PrimitiveState.COMPLETE) {
             return;
+        }
+
+        if (this._recomputeBoundingSpheres) {
+            recomputeBoundingSpheres(this, frameState);
         }
 
         // Create or recreate render state and shader program if appearance/material changed
@@ -1940,8 +1945,7 @@ define([
                     var modelMatrix = primitive.modelMatrix;
                     var offset = properties.offset;
                     if (defined(offset)) {
-                        transformBoundingSphere(boundingSphere.center, Cartesian3.fromArray(offset, 0, offsetScratch), primitive._unmodifiedInstanceBoundingSpheres.extend);
-                        //TODO see if instanceBoundingSpheres is still needed. It might be the same as unmodified.bs
+                        transformBoundingSphere(boundingSphere.center, Cartesian3.fromArray(offset, 0, offsetScratch), primitive._offsetInstanceExtend[index]);
                     }
                     if (defined(modelMatrix)) {
                         boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix);

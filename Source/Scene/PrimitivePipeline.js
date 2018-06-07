@@ -1,35 +1,35 @@
 define([
-    '../Core/BoundingSphere',
-    '../Core/ComponentDatatype',
-    '../Core/defined',
-    '../Core/DeveloperError',
-    '../Core/Ellipsoid',
-    '../Core/FeatureDetection',
-    '../Core/GeographicProjection',
-    '../Core/Geometry',
-    '../Core/GeometryAttribute',
-    '../Core/GeometryAttributes',
-    '../Core/GeometryPipeline',
-    '../Core/IndexDatatype',
-    '../Core/Matrix4',
-    '../Core/OffsetGeometryInstanceAttribute',
-    '../Core/WebMercatorProjection'
-], function(
-    BoundingSphere,
-    ComponentDatatype,
-    defined,
-    DeveloperError,
-    Ellipsoid,
-    FeatureDetection,
-    GeographicProjection,
-    Geometry,
-    GeometryAttribute,
-    GeometryAttributes,
-    GeometryPipeline,
-    IndexDatatype,
-    Matrix4,
-    OffsetGeometryInstanceAttribute,
-    WebMercatorProjection) {
+        '../Core/BoundingSphere',
+        '../Core/ComponentDatatype',
+        '../Core/defined',
+        '../Core/DeveloperError',
+        '../Core/Ellipsoid',
+        '../Core/FeatureDetection',
+        '../Core/GeographicProjection',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
+        '../Core/GeometryAttributes',
+        '../Core/GeometryPipeline',
+        '../Core/IndexDatatype',
+        '../Core/Matrix4',
+        '../Core/OffsetGeometryInstanceAttribute',
+        '../Core/WebMercatorProjection'
+    ], function(
+        BoundingSphere,
+        ComponentDatatype,
+        defined,
+        DeveloperError,
+        Ellipsoid,
+        FeatureDetection,
+        GeographicProjection,
+        Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
+        GeometryPipeline,
+        IndexDatatype,
+        Matrix4,
+        OffsetGeometryInstanceAttribute,
+        WebMercatorProjection) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -275,21 +275,9 @@ define([
         var instances = parameters.instances;
         var length = instances.length;
         var pickOffsets;
-        var originalBoundingSpheres = new Array(length);
-        var i;
-        var instance;
+        var offsetInstanceExtend = new Array(length);
 
         if (length > 0) {
-            for (i = 0; i < instances.length; i++) {
-                instance = instances[i];
-                var extend = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
-                var boundingSphere = BoundingSphere.clone(instances[i].geometry.boundingSphere);
-                originalBoundingSpheres[i] = {
-                    extend : extend,
-                    boundingSphere : boundingSphere
-                };
-            }
-
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
                 attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
@@ -301,12 +289,13 @@ define([
 
         var boundingSpheres = new Array(length);
         var boundingSpheresCV = new Array(length);
-        for (i = 0; i < length; ++i) {
-            instance = instances[i];
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
             var geometry = instance.geometry;
             if (defined(geometry)) {
                 boundingSpheres[i] = geometry.boundingSphere;
                 boundingSpheresCV[i] = geometry.boundingSphereCV;
+                offsetInstanceExtend[i] = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
             }
 
             var eastHemisphereGeometry = instance.eastHemisphereGeometry;
@@ -326,7 +315,7 @@ define([
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
             pickOffsets : pickOffsets,
-            originalBoundingSpheres : originalBoundingSpheres,
+            offsetInstanceExtend : offsetInstanceExtend,
             boundingSpheres : boundingSpheres,
             boundingSpheresCV : boundingSpheresCV
         };
