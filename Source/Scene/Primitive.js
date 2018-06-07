@@ -884,9 +884,9 @@ define([
         attr += 'attribute float applyOffset;';
         var modifiedShader = vertexShaderSource.replace(/attribute\s+float\s+batchId;/g, attr);
 
-        var str = 'vec4 p = czm_computePosition();\n';
-        str += '    p = p + vec4(czm_batchTable_offset(batchId) * applyOffset, 0.0);';
-        modifiedShader = modifiedShader.replace(/vec4\s+p\s+=\s+czm_computePosition\(\);/g, str);
+        var str = 'vec4 $1 = czm_computePosition();\n';
+        str += '    $1 = $1 + vec4(czm_batchTable_offset(batchId) * applyOffset, 0.0);';
+        modifiedShader = modifiedShader.replace(/vec4\s+([A-Za-z]+)\s+=\s+czm_computePosition\(\);/g, str);
         return modifiedShader;
     };
 
