@@ -1,35 +1,35 @@
 define([
-        '../Core/BoundingSphere',
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/FeatureDetection',
-        '../Core/GeographicProjection',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
-        '../Core/GeometryAttributes',
-        '../Core/GeometryPipeline',
-        '../Core/IndexDatatype',
-        '../Core/Matrix4',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/WebMercatorProjection'
-    ], function(
-        BoundingSphere,
-        ComponentDatatype,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        GeographicProjection,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryPipeline,
-        IndexDatatype,
-        Matrix4,
-        OffsetGeometryInstanceAttribute,
-        WebMercatorProjection) {
+    '../Core/BoundingSphere',
+    '../Core/ComponentDatatype',
+    '../Core/defined',
+    '../Core/DeveloperError',
+    '../Core/Ellipsoid',
+    '../Core/FeatureDetection',
+    '../Core/GeographicProjection',
+    '../Core/Geometry',
+    '../Core/GeometryAttribute',
+    '../Core/GeometryAttributes',
+    '../Core/GeometryPipeline',
+    '../Core/IndexDatatype',
+    '../Core/Matrix4',
+    '../Core/OffsetGeometryInstanceAttribute',
+    '../Core/WebMercatorProjection'
+], function(
+    BoundingSphere,
+    ComponentDatatype,
+    defined,
+    DeveloperError,
+    Ellipsoid,
+    FeatureDetection,
+    GeographicProjection,
+    Geometry,
+    GeometryAttribute,
+    GeometryAttributes,
+    GeometryPipeline,
+    IndexDatatype,
+    Matrix4,
+    OffsetGeometryInstanceAttribute,
+    WebMercatorProjection) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -47,11 +47,6 @@ define([
             var modelMatrix = instances[0].modelMatrix;
 
             for (i = 1; i < length; ++i) {
-                var offset = instances[i].attributes.offset;
-                if (defined(offset)) {
-                    toWorld = true;
-                    break;
-                }
                 if (!Matrix4.equals(modelMatrix, instances[i].modelMatrix)) {
                     toWorld = true;
                     break;
@@ -116,7 +111,7 @@ define([
         var primitiveType;
         var length = instances.length;
 
-        for (i = 0 ; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             if (defined(instances[i].geometry)) {
                 primitiveType = instances[i].geometry.primitiveType;
                 break;
@@ -282,10 +277,17 @@ define([
         var pickOffsets;
         var originalBoundingSpheres = new Array(length);
         var i;
+        var instance;
 
         if (length > 0) {
             for (i = 0; i < instances.length; i++) {
-                originalBoundingSpheres[i] = BoundingSphere.clone(instances[i].geometry.boundingSphere);
+                instance = instances[i];
+                var extend = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
+                var boundingSphere = BoundingSphere.clone(instances[i].geometry.boundingSphere);
+                originalBoundingSpheres[i] = {
+                    extend : extend,
+                    boundingSphere : boundingSphere
+                };
             }
 
             geometries = geometryPipeline(parameters);
@@ -300,7 +302,7 @@ define([
         var boundingSpheres = new Array(length);
         var boundingSpheresCV = new Array(length);
         for (i = 0; i < length; ++i) {
-            var instance = instances[i];
+            instance = instances[i];
             var geometry = instance.geometry;
             if (defined(geometry)) {
                 boundingSpheres[i] = geometry.boundingSphere;
@@ -332,7 +334,7 @@ define([
 
     function transferGeometry(geometry, transferableObjects) {
         var attributes = geometry.attributes;
-        for ( var name in attributes) {
+        for (var name in attributes) {
             if (attributes.hasOwnProperty(name)) {
                 var attribute = attributes[name];
 
@@ -370,7 +372,7 @@ define([
 
             count += 6 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
 
-            for ( var property in attributes) {
+            for (var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
                     var attribute = attributes[property];
                     count += 5 + attribute.values.length;
@@ -423,7 +425,7 @@ define([
 
             var attributes = geometry.attributes;
             var attributesToWrite = [];
-            for ( var property in attributes) {
+            for (var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
                     attributesToWrite.push(property);
                     if (!defined(stringHash[property])) {
@@ -563,8 +565,8 @@ define([
             if (defined(instance.attributes) && defined(instance.attributes.offset)) {
                 var values = instance.attributes.offset.value;
                 packedData[count] = values[0];
-                packedData[count+1] = values[1];
-                packedData[count+2] = values[2];
+                packedData[count + 1] = values[1];
+                packedData[count + 2] = values[2];
             }
             count += 3;
         }
@@ -585,14 +587,14 @@ define([
             i += Matrix4.packedLength;
             if (defined(packedInstances[i])) {
                 attributes = {
-                    offset: new OffsetGeometryInstanceAttribute(packedInstances[i], packedInstances[i+1], packedInstances[i+2])
+                    offset : new OffsetGeometryInstanceAttribute(packedInstances[i], packedInstances[i + 1], packedInstances[i + 2])
                 };
             }
             i += 3;
 
             result[count++] = {
                 modelMatrix : modelMatrix,
-                attributes: attributes
+                attributes : attributes
             };
         }
 

@@ -1,15 +1,15 @@
 define([
-    './Check',
-    './ComponentDatatype',
-    './defaultValue',
-    './defined',
-    './defineProperties'
-], function(
-    Check,
-    ComponentDatatype,
-    defaultValue,
-    defined,
-    defineProperties) {
+        './Check',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './defineProperties'
+    ], function(
+        Check,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        defineProperties) {
     'use strict';
 
     /**
@@ -38,6 +38,7 @@ define([
      *   }
      * });
      *
+     * @private
      * @see GeometryInstance
      * @see GeometryInstanceAttribute
      */
