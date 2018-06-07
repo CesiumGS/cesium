@@ -51,8 +51,8 @@ define([
     var PROJECTIONS = [GeographicProjection, WebMercatorProjection];
     var PROJECTION_COUNT = PROJECTIONS.length;
 
-    var MITER_BREAK_SMALL = Math.cos(CesiumMath.toRadians(30));
-    var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(150));
+    var MITER_BREAK_SMALL = Math.cos(CesiumMath.toRadians(1));
+    var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(179));
 
     // Initial heights for constructing the wall.
     // Keeping WALL_INITIAL_MIN_HEIGHT near the ellipsoid surface helps

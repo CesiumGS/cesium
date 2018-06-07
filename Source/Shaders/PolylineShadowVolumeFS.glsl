@@ -2,16 +2,14 @@
 #extension GL_EXT_frag_depth : enable
 #endif
 
-varying vec4 v_startPlaneEC;
+varying vec4 v_startPlaneEC_lengthHalfWidth;
 varying vec4 v_endPlaneEC;
 varying vec4 v_rightPlaneEC;
-varying vec3 v_forwardDirectionEC;
-varying vec3 v_texcoordNormalization_and_halfWidth;
+varying vec4 v_ecEnd_and_ecStart_X;
+varying vec4 v_texcoordNormalization_and_ecStart_YZ;
 
 #ifdef PER_INSTANCE_COLOR
 varying vec4 v_color;
-#else
-varying vec2 v_alignedPlaneDistances;
 #endif
 
 float rayPlaneDistanceUnsafe(vec3 origin, vec3 direction, vec3 planeNormal, float planeDistance) {
@@ -22,6 +20,8 @@ float rayPlaneDistanceUnsafe(vec3 origin, vec3 direction, vec3 planeNormal, floa
 void main(void)
 {
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, gl_FragCoord.xy / czm_viewport.zw));
+    vec3 ecStart = vec3(v_ecEnd_and_ecStart_X.w, v_texcoordNormalization_and_ecStart_YZ.zw);
+    vec3 forwardDirection = normalize(v_ecEnd_and_ecStart_X.xyz - ecStart);
 
     // Discard for sky
     bool shouldDiscard = logDepthOrDepth == 0.0;
@@ -29,15 +29,37 @@ void main(void)
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth);
     eyeCoordinate /= eyeCoordinate.w;
 
-    float halfMaxWidth = v_texcoordNormalization_and_halfWidth.z * czm_metersPerPixel(eyeCoordinate);
+    float halfWidth = length(v_startPlaneEC_lengthHalfWidth.xyz);
+    float halfMaxWidth = halfWidth * czm_metersPerPixel(eyeCoordinate);
     // Check distance of the eye coordinate against the right-facing plane
-    float width = czm_planeDistance(v_rightPlaneEC, eyeCoordinate.xyz);
+    float widthwiseDistance = czm_planeDistance(v_rightPlaneEC, eyeCoordinate.xyz);
 
-    // Check distance of the eye coordinate against the forward-facing plane
-    float distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -v_forwardDirectionEC, v_startPlaneEC.xyz, v_startPlaneEC.w);
-    float distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, v_forwardDirectionEC, v_endPlaneEC.xyz, v_endPlaneEC.w);
+    // Check distance of the eye coordinate against the mitering planes
+    vec3 startPlaneNormal = v_startPlaneEC_lengthHalfWidth.xyz / halfWidth;
+    float distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -forwardDirection, startPlaneNormal, v_startPlaneEC_lengthHalfWidth.w);
+    float distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, forwardDirection, v_endPlaneEC.xyz, v_endPlaneEC.w);
 
-    shouldDiscard = shouldDiscard || (abs(width) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0);
+    shouldDiscard = shouldDiscard || (abs(widthwiseDistance) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0);
+
+    // Check distance of the eye coordinate against start and end planes with normals in the right plane.
+    // For computing unskewed linear texture coordinate and for clipping extremely pointy miters
+
+    // aligned plane: cross the right plane normal with miter plane normal, then cross the result with right again to point it more "forward"
+    vec4 alignedPlane;
+
+    // start aligned plane
+    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, startPlaneNormal);
+    alignedPlane.xyz = cross(alignedPlane.xyz, v_rightPlaneEC.xyz);
+    alignedPlane.w = -dot(alignedPlane.xyz, ecStart);
+    distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -forwardDirection, alignedPlane.xyz, alignedPlane.w);
+
+    // end aligned plane
+    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, v_endPlaneEC.xyz);
+    alignedPlane.xyz = cross(alignedPlane.xyz, v_rightPlaneEC.xyz);
+    alignedPlane.w = -dot(alignedPlane.xyz, v_ecEnd_and_ecStart_X.xyz);
+    distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, forwardDirection, alignedPlane.xyz, alignedPlane.w);
+
+    shouldDiscard = shouldDiscard || distanceFromStart < -halfMaxWidth || distanceFromEnd < -halfMaxWidth;
 
     if (shouldDiscard) {
 #ifdef DEBUG_SHOW_VOLUME
@@ -54,17 +76,13 @@ void main(void)
 #ifdef PER_INSTANCE_COLOR
     gl_FragColor = v_color;
 #else // PER_INSTANCE_COLOR
-    // Use distances for planes aligned with segment to prevent skew in dashing
-    distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -v_forwardDirectionEC, v_forwardDirectionEC.xyz, v_alignedPlaneDistances.x);
-    distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, v_forwardDirectionEC, -v_forwardDirectionEC.xyz, v_alignedPlaneDistances.y);
-
     // Clamp - distance to aligned planes may be negative due to mitering
     distanceFromStart = max(0.0, distanceFromStart);
     distanceFromEnd = max(0.0, distanceFromEnd);
 
     float s = distanceFromStart / (distanceFromStart + distanceFromEnd);
-    s = (s * v_texcoordNormalization_and_halfWidth.y) + v_texcoordNormalization_and_halfWidth.x;
-    float t = (width + halfMaxWidth) / (2.0 * halfMaxWidth);
+    s = (s * v_texcoordNormalization_and_ecStart_YZ.y) + v_texcoordNormalization_and_ecStart_YZ.x;
+    float t = (widthwiseDistance + halfMaxWidth) / (2.0 * halfMaxWidth);
 
     czm_materialInput materialInput;
 
