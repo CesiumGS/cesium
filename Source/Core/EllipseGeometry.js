@@ -248,7 +248,7 @@ define([
             });
         }
 
-        if (options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
+        if (extrude && options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
             var offsetAttribute = new Uint8Array(size);
             if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
                 offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);

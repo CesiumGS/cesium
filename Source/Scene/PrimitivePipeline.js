@@ -275,8 +275,9 @@ define([
         var instances = parameters.instances;
         var length = instances.length;
         var pickOffsets;
-        var offsetInstanceExtend = new Array(length);
 
+        var offsetInstanceExtend;// = new Array(length);
+        var hasOffset = false;
         if (length > 0) {
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
@@ -284,6 +285,10 @@ define([
                 if (parameters.createPickOffsets) {
                     pickOffsets = createInstancePickOffsets(instances, geometries);
                 }
+            }
+            if (defined(instances[0].offset)) {
+                offsetInstanceExtend = new Array(length);
+                hasOffset = true;
             }
         }
 
@@ -295,7 +300,9 @@ define([
             if (defined(geometry)) {
                 boundingSpheres[i] = geometry.boundingSphere;
                 boundingSpheresCV[i] = geometry.boundingSphereCV;
-                offsetInstanceExtend[i] = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
+                if (hasOffset) {
+                    offsetInstanceExtend[i] = defined(instance.geometry.attributes) && defined(instance.geometry.attributes.applyOffset) && instance.geometry.attributes.applyOffset.values.indexOf(0) !== -1;
+                }
             }
 
             var eastHemisphereGeometry = instance.eastHemisphereGeometry;

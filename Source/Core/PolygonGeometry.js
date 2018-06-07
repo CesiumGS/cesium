@@ -843,7 +843,8 @@ define([
             stRotation: stRotation,
             bottom: false,
             top: true,
-            wall: false
+            wall: false,
+            offsetAttribute: polygonGeometry._offsetAttribute
         };
 
         var i;
@@ -852,7 +853,6 @@ define([
             options.top = closeTop;
             options.bottom = closeBottom;
             options.shadowVolume = polygonGeometry._shadowVolume;
-            options.offsetAttribute = polygonGeometry._offsetAttribute;
             for (i = 0; i < polygons.length; i++) {
                 var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
 
@@ -892,17 +892,6 @@ define([
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                 options.geometry = geometryInstance.geometry;
                 geometryInstance.geometry = computeAttributes(options);
-
-                if (polygonGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
-                    var length = geometryInstance.geometry.attributes.position.values.length;
-                    var applyOffset = new Uint8Array(length / 3);
-                    arrayFill(applyOffset, 1);
-                    geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute : 1,
-                        values: applyOffset
-                    });
-                }
 
                 geometries.push(geometryInstance);
             }
