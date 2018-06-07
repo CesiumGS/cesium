@@ -394,6 +394,6 @@ defineSuite([
     var packedInstance = [2, positions[0].x, positions[0].y, positions[0].z, positions[1].x, positions[1].y, positions[1].z];
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0, 0.0);
+    packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0, -1);
     createPackableSpecs(CorridorGeometry, corridor, packedInstance);
 });

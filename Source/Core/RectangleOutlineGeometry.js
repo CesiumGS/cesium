@@ -217,7 +217,7 @@ define([
         this._surfaceHeight = Math.max(height, extrudedHeight);
         this._rotation = rotation;
         this._extrudedHeight = Math.min(height, extrudedHeight);
-        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createRectangleOutlineGeometry';
     }
 
@@ -259,7 +259,7 @@ define([
         array[startingIndex++] = value._surfaceHeight;
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex] = value._offsetAttribute;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -310,7 +310,7 @@ define([
             scratchOptions.height = height;
             scratchOptions.rotation = rotation;
             scratchOptions.extrudedHeight = extrudedHeight;
-            scratchOptions.offsetAttribute = offsetAttribute;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
             return new RectangleOutlineGeometry(scratchOptions);
         }
@@ -320,7 +320,7 @@ define([
         result._surfaceHeight = height;
         result._rotation = rotation;
         result._extrudedHeight = extrudedHeight;
-        result._offsetAttribute = offsetAttribute;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -352,16 +352,17 @@ define([
         var surfaceHeight = rectangleGeometry._surfaceHeight;
         var extrudedHeight = rectangleGeometry._extrudedHeight;
         var extrude = !CesiumMath.equalsEpsilon(surfaceHeight, extrudedHeight, 0, CesiumMath.EPSILON2);
-
+        var offsetValue;
         if (extrude) {
             geometry = constructExtrudedRectangle(options);
-            if (rectangleGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+            if (defined(rectangleGeometry._offsetAttribute)) {
                 var size = geometry.attributes.position.values.length / 3;
                 var offsetAttribute = new Uint8Array(size);
                 if (rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
                     offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
                 } else {
-                    offsetAttribute = arrayFill(offsetAttribute, 1);
+                    offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                    offsetAttribute = arrayFill(offsetAttribute, offsetValue);
                 }
 
                 geometry.attributes.applyOffset = new GeometryAttribute({
@@ -377,10 +378,11 @@ define([
             geometry = constructRectangle(options);
             geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
 
-            if (rectangleGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+            if (defined(rectangleGeometry._offsetAttribute)) {
                 var length = geometry.attributes.position.values.length;
                 var applyOffset = new Uint8Array(length / 3);
-                arrayFill(applyOffset, 1);
+                offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                arrayFill(applyOffset, offsetValue);
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,

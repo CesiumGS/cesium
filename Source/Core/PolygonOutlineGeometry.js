@@ -321,7 +321,7 @@ define([
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._perPositionHeightExtrude = perPositionHeightExtrude;
-        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createPolygonOutlineGeometry';
 
         /**
@@ -358,7 +358,7 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
-        array[startingIndex++] = value._offsetAttribute;
+        array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -410,7 +410,7 @@ define([
         result._granularity = granularity;
         result._perPositionHeight = perPositionHeight;
         result._perPositionHeightExtrude = perPositionHeightExtrude;
-        result._offsetAttribute = offsetAttribute;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
         result.packedLength = packedLength;
 
         return result;
@@ -525,18 +525,19 @@ define([
         var height = polygonGeometry._height;
         var extrudedHeight = polygonGeometry._extrudedHeight;
         var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
-
+        var offsetValue;
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
                 geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight);
                 geometryInstance.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometryInstance.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                if (polygonGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+                if (defined(polygonGeometry._offsetAttribute)) {
                     var size = geometryInstance.geometry.attributes.position.values.length / 3;
                     var offsetAttribute = new Uint8Array(size);
                     if (polygonGeometry._offsetAttribute === GeometryOffsetAttribute.TOP) {
                         offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
                     } else {
-                        offsetAttribute = arrayFill(offsetAttribute, 1, 0);
+                        offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                        offsetAttribute = arrayFill(offsetAttribute, offsetValue);
                     }
 
                     geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
@@ -552,10 +553,11 @@ define([
                 geometryInstance = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight);
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
 
-                if (polygonGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+                if (defined(polygonGeometry._offsetAttribute)) {
                     var length = geometryInstance.geometry.attributes.position.values.length;
                     var applyOffset = new Uint8Array(length / 3);
-                    arrayFill(applyOffset, 1);
+                    offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                    arrayFill(applyOffset, offsetValue);
                     geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
                         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                         componentsPerAttribute : 1,

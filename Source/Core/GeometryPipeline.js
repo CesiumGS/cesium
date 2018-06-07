@@ -1944,6 +1944,12 @@ define([
     var interpolateAndPackCartesian4 = generateBarycentricInterpolateFunction(Cartesian4, 4);
     var interpolateAndPackCartesian3 = generateBarycentricInterpolateFunction(Cartesian3, 3);
     var interpolateAndPackCartesian2 = generateBarycentricInterpolateFunction(Cartesian2, 2);
+    var interpolateAndPackBoolean = function(i0, i1, i2, coords, sourceValues, currentValues, insertedIndex) {
+        var v1 = sourceValues[i0] * coords.x;
+        var v2 = sourceValues[i1] * coords.y;
+        var v3 = sourceValues[i2] * coords.z;
+        currentValues[insertedIndex] = (v1 + v2 + v3) > CesiumMath.EPSILON6 ? 1 : 0;
+    };
 
     var p0Scratch = new Cartesian3();
     var p1Scratch = new Cartesian3();
@@ -1988,23 +1994,7 @@ define([
         }
 
         if (defined(applyOffset)) {
-            var off0 = applyOffset[i0];
-            var off1 = applyOffset[i1];
-            var off2 = applyOffset[i2];
-            var sum = off0 + off1 + off2;
-            if (sum === 3.0 || sum === 0.0) {
-                currentAttributes.applyOffset.values[insertedIndex] = off1;
-            } else if (CesiumMath.equalsEpsilon(coords.x, 1.0, CesiumMath.EPSILON10)) {
-                currentAttributes.applyOffset.values[insertedIndex] = off0;
-            } else if (CesiumMath.equalsEpsilon(coords.y, 1.0, CesiumMath.EPSILON10)) {
-                currentAttributes.applyOffset.values[insertedIndex] = off1;
-            } else if (CesiumMath.equalsEpsilon(coords.z, 1.0, CesiumMath.EPSILON10)) {
-                currentAttributes.applyOffset.values[insertedIndex] = off2;
-            } else if (CesiumMath.equalsEpsilon(coords.x, 0.0, CesiumMath.EPSILON10) === 0.0 && off0 === 0.0 || CesiumMath.equalsEpsilon(coords.y, 0.0, CesiumMath.EPSILON10) === 0.0 && off1 === 0.0 || CesiumMath.equalsEpsilon(coords.z, 0.0, CesiumMath.EPSILON10) === 0.0 && off2 === 0.0) {
-                currentAttributes.applyOffset.values[insertedIndex] = 1.0;
-            } else {
-                currentAttributes.applyOffset.values[insertedIndex] = 0.0;
-            }
+            interpolateAndPackBoolean(i0, i1, i2, coords, applyOffset, currentAttributes.applyOffset.values, insertedIndex);
         }
 
         if (defined(tangents)) {
@@ -2255,7 +2245,6 @@ define([
             var p1Attributes = westGeometry.attributes;
             var p1Indices = westGeometry.indices;
             var p1IndexMap = westGeometryIndexMap;
-            var applyOffsetValue;
 
             var intersection = IntersectionTests.lineSegmentPlane(p0, p1, xzPlane, p2Scratch);
             if (defined(intersection)) {
@@ -2273,9 +2262,6 @@ define([
                 }
 
                 var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
-                if (defined(applyOffset)) {
-                    applyOffsetValue = applyOffset[i0];
-                }
 
                 insertIndex = insertSplitPoint(p0Attributes, p0Indices, p0IndexMap, indices, i, p0);
                 computeLineAttributes(i0, i1, p0, positions, insertIndex, p0Attributes, applyOffset);

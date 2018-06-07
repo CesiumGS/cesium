@@ -1277,6 +1277,7 @@ define([
     function recomputeBoundingSpheres(primitive, frameState) {
         var offsetIndex = primitive._batchTableAttributeIndices.offset;
         if (!primitive._recomputeBoundingSpheres || !defined(offsetIndex)) {
+            primitive._recomputeBoundingSpheres = false;
             return;
         }
 

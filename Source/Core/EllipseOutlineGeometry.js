@@ -94,12 +94,13 @@ define([
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var length = positions.length/3;
 
-        if (options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
+        if (defined(options.offsetAttribute)) {
             var applyOffset = new Uint8Array(length);
             if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
                 applyOffset = arrayFill(applyOffset, 1, 0, length / 2);
             } else {
-                applyOffset = arrayFill(applyOffset, 1);
+                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                applyOffset = arrayFill(applyOffset, offsetValue);
             }
 
             attributes.applyOffset = new GeometryAttribute({
@@ -214,7 +215,7 @@ define([
         this._granularity = granularity;
         this._extrudedHeight = Math.min(extrudedHeight, height);
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
-        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createEllipseOutlineGeometry';
     }
 
@@ -258,7 +259,7 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++]   = value._numberOfVerticalLines;
-        array[startingIndex] = value._offsetAttribute;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -318,7 +319,7 @@ define([
             scratchOptions.semiMajorAxis = semiMajorAxis;
             scratchOptions.semiMinorAxis = semiMinorAxis;
             scratchOptions.numberOfVerticalLines = numberOfVerticalLines;
-            scratchOptions.offsetAttribute = offsetAttribute;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
             return new EllipseOutlineGeometry(scratchOptions);
         }
@@ -332,7 +333,7 @@ define([
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
         result._numberOfVerticalLines = numberOfVerticalLines;
-        result._offsetAttribute = offsetAttribute;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -371,10 +372,11 @@ define([
         } else {
             geometry = computeEllipse(options);
 
-            if (ellipseGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+            if (defined(ellipseGeometry._offsetAttribute)) {
                 var length = geometry.attributes.position.values.length;
                 var applyOffset = new Uint8Array(length / 3);
-                arrayFill(applyOffset, 1);
+                var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                arrayFill(applyOffset, offsetValue);
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,

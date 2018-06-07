@@ -286,7 +286,7 @@ define([
                     pickOffsets = createInstancePickOffsets(instances, geometries);
                 }
             }
-            if (defined(instances[0].offset)) {
+            if (defined(instances[0].attributes) && defined(instances[0].attributes.offset)) {
                 offsetInstanceExtend = new Array(length);
                 hasOffset = true;
             }
@@ -713,6 +713,7 @@ define([
             attributeLocations : results.attributeLocations,
             modelMatrix : results.modelMatrix,
             pickOffsets : results.pickOffsets,
+            offsetInstanceExtend: results.offsetInstanceExtend,
             boundingSpheres : packedBoundingSpheres,
             boundingSpheresCV : packedBoundingSpheresCV
         };
@@ -727,6 +728,7 @@ define([
             attributeLocations : packedResult.attributeLocations,
             modelMatrix : packedResult.modelMatrix,
             pickOffsets : packedResult.pickOffsets,
+            offsetInstanceExtend: packedResult.offsetInstanceExtend,
             boundingSpheres : unpackBoundingSpheres(packedResult.boundingSpheres),
             boundingSpheresCV : unpackBoundingSpheres(packedResult.boundingSpheresCV)
         };

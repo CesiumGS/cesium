@@ -484,6 +484,6 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, 0, 43);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, -1, 43);
     createPackableSpecs(PolygonOutlineGeometry, polygon, packedInstance);
 });

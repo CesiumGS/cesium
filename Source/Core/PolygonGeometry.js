@@ -370,7 +370,7 @@ define([
             }
         }
 
-        if (options.offsetAttribute !== GeometryOffsetAttribute.NONE) {
+        if (options.extrude && defined(options.offsetAttribute)) {
             var size = flatPositions.length / 3;
             var offsetAttribute = new Uint8Array(size);
 
@@ -381,7 +381,8 @@ define([
                     offsetAttribute = arrayFill(offsetAttribute, 1);
                 }
             } else {
-                offsetAttribute = arrayFill(offsetAttribute, 1);
+                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
             }
 
             geometry.attributes.applyOffset = new GeometryAttribute({
@@ -619,7 +620,7 @@ define([
         this._perPositionHeightExtrude = perPositionHeightExtrude;
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createPolygonGeometry';
-        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
+        this._offsetAttribute = options.offsetAttribute;
 
         this._rectangle = undefined;
         this._textureCoordinateRotationPoints = undefined;
@@ -722,7 +723,7 @@ define([
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
         array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex++] = value._offsetAttribute;
+        array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -731,7 +732,7 @@ define([
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
 
-    //Only used to avoid inaability to default construct.
+    //Only used to avoid inability to default construct.
     var dummyOptions = {
         polygonHierarchy : {}
     };
@@ -788,7 +789,7 @@ define([
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
         result._shadowVolume = shadowVolume;
-        result._offsetAttribute = offsetAttribute;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
         result.packedLength = packedLength;
         return result;
     };
@@ -844,15 +845,17 @@ define([
             bottom: false,
             top: true,
             wall: false,
-            offsetAttribute: polygonGeometry._offsetAttribute
+            extrude: false
         };
 
         var i;
 
         if (extrude) {
+            options.extrude = true;
             options.top = closeTop;
             options.bottom = closeBottom;
             options.shadowVolume = polygonGeometry._shadowVolume;
+            options.offsetAttribute = polygonGeometry._offsetAttribute;
             for (i = 0; i < polygons.length; i++) {
                 var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
 
@@ -892,6 +895,18 @@ define([
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                 options.geometry = geometryInstance.geometry;
                 geometryInstance.geometry = computeAttributes(options);
+
+                if (defined(polygonGeometry._offsetAttribute)) {
+                    var length = geometryInstance.geometry.attributes.position.values.length;
+                    var applyOffset = new Uint8Array(length / 3);
+                    var offsetValue = polygonGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                    arrayFill(applyOffset, offsetValue);
+                    geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 1,
+                        values: applyOffset
+                    });
+                }
 
                 geometries.push(geometryInstance);
             }

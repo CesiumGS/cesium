@@ -397,13 +397,16 @@ define([
             });
         }
 
-        if (offsetAttributeValue !== GeometryOffsetAttribute.NONE) {
+        var offsetValue;
+        var hasOffsets = defined(offsetAttributeValue);
+        if (hasOffsets) {
             var size = length / 3 * 2;
             var offsetAttribute = new Uint8Array(size);
             if (offsetAttributeValue === GeometryOffsetAttribute.TOP) {
                 offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
             } else {
-                offsetAttribute = arrayFill(offsetAttribute, 1);
+                offsetValue = offsetAttributeValue === GeometryOffsetAttribute.NONE ? 0 : 1;
+                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
             }
 
             topBottomGeo.attributes.applyOffset = new GeometryAttribute({
@@ -452,13 +455,14 @@ define([
 
         var wallPositions = new Float64Array(wallCount * 3);
         var wallExtrudeNormals = shadowVolume ? new Float32Array(wallCount * 3) : undefined;
-        var wallOffsetAttribute = offsetAttributeValue !== GeometryOffsetAttribute.NONE ? new Uint8Array(wallCount) : undefined;
+        var wallOffsetAttribute = hasOffsets ? new Uint8Array(wallCount) : undefined;
         var wallTextures = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
 
-        if (offsetAttributeValue === GeometryOffsetAttribute.ALL) {
-            wallOffsetAttribute = arrayFill(wallOffsetAttribute, 1);
-        }
         var computeTopOffsets = offsetAttributeValue === GeometryOffsetAttribute.TOP;
+        if (hasOffsets && !computeTopOffsets) {
+            offsetValue = offsetAttributeValue === GeometryOffsetAttribute.ALL ? 1 : 0;
+            wallOffsetAttribute = arrayFill(wallOffsetAttribute, offsetValue);
+        }
 
         var posIndex = 0;
         var stIndex = 0;
@@ -564,7 +568,7 @@ define([
                 values : wallExtrudeNormals
             });
         }
-        if (offsetAttributeValue !== GeometryOffsetAttribute.NONE) {
+        if (hasOffsets) {
             geo.attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
@@ -705,7 +709,7 @@ define([
         this._extrudedHeight = Math.min(height, extrudedHeight);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createRectangleGeometry';
-        this._offsetAttribute = defaultValue(options.offsetAttribute, GeometryOffsetAttribute.NONE);
+        this._offsetAttribute = options.offsetAttribute;
         this._rotatedRectangle = undefined;
 
         this._textureCoordinateRotationPoints = undefined;
@@ -749,7 +753,7 @@ define([
         array[startingIndex++] = value._stRotation;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex] = value._offsetAttribute;
+        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
 
         return array;
     };
@@ -808,7 +812,7 @@ define([
             scratchOptions.stRotation = stRotation;
             scratchOptions.extrudedHeight = extrudedHeight;
             scratchOptions.shadowVolume = shadowVolume;
-            scratchOptions.offsetAttribute = offsetAttribute;
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
             return new RectangleGeometry(scratchOptions);
         }
@@ -822,7 +826,7 @@ define([
         result._stRotation = stRotation;
         result._extrudedHeight = extrudedHeight;
         result._shadowVolume = shadowVolume;
-        result._offsetAttribute = offsetAttribute;
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -888,10 +892,11 @@ define([
             geometry = constructRectangle(options);
             geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
 
-            if (rectangleGeometry._offsetAttribute !== GeometryOffsetAttribute.NONE) {
+            if (defined(rectangleGeometry._offsetAttribute)) {
                 var length = geometry.attributes.position.values.length;
                 var applyOffset = new Uint8Array(length / 3);
-                arrayFill(applyOffset, 1);
+                var offsetValue = rectangleGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+                arrayFill(applyOffset, offsetValue);
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
