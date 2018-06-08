@@ -139,18 +139,38 @@ define([
         });
     }
 
+    DracoLoader._decodedModelResourceCache = undefined;
+
     /**
      * Parses draco extension on model primitives and
      * adds the decoding data to the model's load resources.
      *
      * @private
      */
-    DracoLoader.parse = function(model) {
+    DracoLoader.parse = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
             return;
         }
 
         var loadResources = model._loadResources;
+        var cacheKey = model.cacheKey;
+        if (defined(cacheKey)) {
+            if (!define(DracoLoader._decodedModelResourceCache)) {
+                if (!defined(context.cache.modelDecodingCache)) {
+                    context.cache.modelDecodingCache = {};
+                }
+
+                DracoLoader._decodedModelResourceCache = context.cache.modelDecodingCache;
+            }
+
+            // Decoded data for model will be loaded from cache
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            if (defined(cachedData)) {
+                loadResources.pendingDecodingCache = true;
+                return;
+            }
+        }
+
         var dequantizeInShader = model._dequantizeInShader;
         var gltf = model.gltf;
         ForEach.mesh(gltf, function(mesh, meshId) {
@@ -188,6 +208,23 @@ define([
         }
 
         var loadResources = model._loadResources;
+        var cacheKey = model.cacheKey;
+        if (defined(cacheKey)) {
+            var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
+            // Load decoded data for model when cache is ready
+            if (defined(cachedData) && loadResources.pendingDecodingCache) {
+                return when(cachedData.cacheReady, function () {
+                    model._decodedData = cachedData;
+                    loadResources.pendingDecodingCache = false;
+                });
+            }
+
+            // Decoded data for model should be cached when ready
+            DracoLoader._decodedModelResourceCache[cacheKey] = {
+                cacheReady : false
+            };
+        }
+
         if (loadResources.primitivesToDecode.length === 0) {
             // No more tasks to schedule
             return when.resolve();
@@ -203,6 +240,28 @@ define([
         }
 
         return when.all(decodingPromises);
+    };
+
+    /**
+     * Caches a models decoded data so it doesn't need to decode more than once.
+     * @private
+     */
+    DracoLoader.cacheDataForModel = function(model) {
+        var cacheKey = model.cacheKey;
+        if (defined(cacheKey)) {
+            model._decodedData.cacheReady = true;
+            DracoLoader._decodedModelResourceCache[cacheKey] = model._decodedData;
+        }
+    };
+
+    /**
+     * Destroys the cached data that this model references.
+     * @private
+     */
+    DracoLoader.destroyCachedDataForModel = function(model) {
+        if (defined(model.cacheKey)) {
+            delete DracoLoader._decodedModelResourceCache[model.cacheKey];
+        }
     };
 
     return DracoLoader;
