@@ -2380,14 +2380,14 @@ defineSuite([
         });
     });
 
-    it('loads a gltf with WEB3D_quantized_attributes SCALAR attribute', function() {
+    fit('loads a gltf with WEB3D_quantized_attributes SCALAR attribute', function() {
         return loadModel(boxScalarQuantizedUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
     });
 
-    it('loads with custom vertex attributes, vertexShader, fragmentShader, and uniform map', function() {
+    fit('loads with custom vertex attributes, vertexShader, fragmentShader, and uniform map', function() {
         function vertexShaderLoaded(vs) {
             var renamedSource = ShaderSource.replaceMain(vs, 'czm_old_main');
             var newMain =
@@ -2458,6 +2458,23 @@ defineSuite([
             verifyRender(m);
             primitives.remove(m);
         });
+    });
+
+    it('loads multiple draco models from cache without decoding', function() {
+        var initialModel;
+        var decoder = DracoLoader._getDecoderTaskProcessor();
+        return loadModel(dracoCompressedModelUrl)
+            .then(function(m) {
+                verifyRender(m);
+                initialModel = m;
+                spyOn(decoder, 'scheduleTask');
+                return loadModel(dracoCompressedModelUrl);
+            }).then(function(m) {
+                verifyRender(m);
+                expect(decoder.scheduleTask).not.toHaveBeenCalled();
+                primitives.remove(m);
+                primitives.remove(initialModel);
+            });
     });
 
     it('error decoding a draco compressed glTF causes model loading to fail', function() {

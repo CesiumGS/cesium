@@ -209,7 +209,7 @@ define([
 
         var loadResources = model._loadResources;
         var cacheKey = model.cacheKey;
-        if (defined(cacheKey)) {
+        if (defined(cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
             var cachedData = DracoLoader._decodedModelResourceCache[cacheKey];
             // Load decoded data for model when cache is ready
             if (defined(cachedData) && loadResources.pendingDecodingCache) {
@@ -248,7 +248,7 @@ define([
      */
     DracoLoader.cacheDataForModel = function(model) {
         var cacheKey = model.cacheKey;
-        if (defined(cacheKey)) {
+        if (defined(cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
             model._decodedData.cacheReady = true;
             DracoLoader._decodedModelResourceCache[cacheKey] = model._decodedData;
         }
@@ -259,7 +259,7 @@ define([
      * @private
      */
     DracoLoader.destroyCachedDataForModel = function(model) {
-        if (defined(model.cacheKey)) {
+        if (defined(model.cacheKey) && defined(DracoLoader._decodedModelResourceCache)) {
             delete DracoLoader._decodedModelResourceCache[model.cacheKey];
         }
     };
