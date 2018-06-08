@@ -2,7 +2,7 @@
 
 We use a custom build of the [Draco](https://github.com/google/draco) decoder JavaScript module to allow for IE11 compatibility.
 
-1. Clone the [Draco source code](https://github.com/google/draco).
+1. Clone or download the [Draco release](https://github.com/google/draco/releases).
 2. [Download and install Emscripten](https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
 3. Download and install a make tool.
     * For instance, [MSYS2](http://www.msys2.org/). Follow installation instructions and add the path to MSYS2's usr/bin to your `PATH`. For example, if the path is `C:\msys64\usr\bin`, run `PATH=%PATH%;C:\msys64\usr\bin`.
