@@ -1,6 +1,7 @@
 define([
     '../Core/BoundingSphere',
     '../Core/Check',
+    '../Core/createGuid',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
@@ -21,6 +22,7 @@ define([
 ], function(
     BoundingSphere,
     Check,
+    createGuid,
     defaultValue,
     defined,
     defineProperties,
@@ -60,6 +62,8 @@ function DataSourceDisplay(options) {
     //>>includeEnd('debug');
 
     GroundPrimitive.initializeTerrainHeights();
+
+    this._displayID = createGuid();
 
     var scene = options.scene;
     var dataSourceCollection = options.dataSourceCollection;
@@ -398,7 +402,7 @@ DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection
     var groundPrimitives = dataSource._groundPrimitives;
 
     var entityCluster = dataSource.clustering;
-    if (primitives && entityCluster) {
+    if (primitives && entityCluster && this._scene.primitives) {
         primitives.remove(entityCluster);
     }
 
@@ -415,6 +419,8 @@ DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection
         var index = dataSource._visualizers.indexOf(visualizer);
         dataSource._visualizers.splice(index, 1);
     }
+
+    delete dataSource._visualizersByDisplayID[this._displayID];
 
     if (displayPrimitives && primitives) {
         displayPrimitives.remove(primitives);
