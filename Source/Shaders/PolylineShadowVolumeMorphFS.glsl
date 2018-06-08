@@ -38,7 +38,7 @@ void main(void)
     distanceFromEnd = max(0.0, distanceFromEnd);
 
     float s = distanceFromStart / (distanceFromStart + distanceFromEnd);
-    s = (s * v_texcoordNormalization_and_halfWidth.y) + v_texcoordNormalization_and_halfWidth.x;
+    s = (s * v_texcoordNormalization_and_halfWidth.x) + v_texcoordNormalization_and_halfWidth.y;
 
     czm_materialInput materialInput;
 

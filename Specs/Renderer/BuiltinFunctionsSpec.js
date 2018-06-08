@@ -157,6 +157,19 @@ defineSuite([
             context : context,
             fragmentShader : fs
         }).contextToRender();
+
+        fs =
+            'void main() { ' +
+            '  vec4 plane = vec4(1.0, 0.0, 0.0, 0.0); ' +
+            '  vec3 point = vec3(1.0, 0.0, 0.0); ' +
+            '  float expected = 1.0; ' +
+            '  float actual = czm_planeDistance(plane.xyz, plane.w, point); ' +
+            '  gl_FragColor = vec4(actual == expected); ' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_lineDistance', function() {

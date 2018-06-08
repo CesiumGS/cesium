@@ -12,16 +12,10 @@ varying vec4 v_texcoordNormalization_and_ecStart_YZ;
 varying vec4 v_color;
 #endif
 
-float rayPlaneDistanceUnsafe(vec3 origin, vec3 direction, vec3 planeNormal, float planeDistance) {
-    // We don't expect the ray to ever be parallel to the plane
-    return (-planeDistance - dot(planeNormal, origin)) / dot(planeNormal, direction);
-}
-
 void main(void)
 {
     float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, gl_FragCoord.xy / czm_viewport.zw));
     vec3 ecStart = vec3(v_ecEnd_and_ecStart_X.w, v_texcoordNormalization_and_ecStart_YZ.zw);
-    vec3 forwardDirection = normalize(v_ecEnd_and_ecStart_X.xyz - ecStart);
 
     // Discard for sky
     bool shouldDiscard = logDepthOrDepth == 0.0;
@@ -33,9 +27,9 @@ void main(void)
     // Check distance of the eye coordinate against the right-facing plane
     float widthwiseDistance = czm_planeDistance(v_rightPlaneEC, eyeCoordinate.xyz);
 
-    // Check distance of the eye coordinate against the mitering planes
-    float distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -forwardDirection, v_startPlaneNormalEC_and_halfWidth.xyz, -dot(ecStart, v_startPlaneNormalEC_and_halfWidth.xyz));
-    float distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, forwardDirection, v_endPlaneNormalEC_and_batchId.xyz, -dot(v_ecEnd_and_ecStart_X.xyz, v_endPlaneNormalEC_and_batchId.xyz));
+    // Check eye coordinate against the mitering planes
+    float distanceFromStart = czm_planeDistance(v_startPlaneNormalEC_and_halfWidth.xyz, -dot(ecStart, v_startPlaneNormalEC_and_halfWidth.xyz), eyeCoordinate.xyz);
+    float distanceFromEnd = czm_planeDistance(v_endPlaneNormalEC_and_batchId.xyz, -dot(v_ecEnd_and_ecStart_X.xyz, v_endPlaneNormalEC_and_batchId.xyz), eyeCoordinate.xyz);
 
     shouldDiscard = shouldDiscard || (abs(widthwiseDistance) > halfMaxWidth || distanceFromStart < 0.0 || distanceFromEnd < 0.0);
 
@@ -43,19 +37,17 @@ void main(void)
     // For computing unskewed linear texture coordinate and for clipping extremely pointy miters
 
     // aligned plane: cross the right plane normal with miter plane normal, then cross the result with right again to point it more "forward"
-    vec4 alignedPlane;
+    vec3 alignedPlaneNormal;
 
     // start aligned plane
-    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, v_startPlaneNormalEC_and_halfWidth.xyz);
-    alignedPlane.xyz = cross(alignedPlane.xyz, v_rightPlaneEC.xyz);
-    alignedPlane.w = -dot(alignedPlane.xyz, ecStart);
-    distanceFromStart = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, -forwardDirection, alignedPlane.xyz, alignedPlane.w);
+    alignedPlaneNormal = cross(v_rightPlaneEC.xyz, v_startPlaneNormalEC_and_halfWidth.xyz);
+    alignedPlaneNormal = normalize(cross(alignedPlaneNormal, v_rightPlaneEC.xyz));
+    distanceFromStart = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, ecStart), eyeCoordinate.xyz);
 
     // end aligned plane
-    alignedPlane.xyz = cross(v_rightPlaneEC.xyz, v_endPlaneNormalEC_and_batchId.xyz);
-    alignedPlane.xyz = cross(alignedPlane.xyz, v_rightPlaneEC.xyz);
-    alignedPlane.w = -dot(alignedPlane.xyz, v_ecEnd_and_ecStart_X.xyz);
-    distanceFromEnd = rayPlaneDistanceUnsafe(eyeCoordinate.xyz, forwardDirection, alignedPlane.xyz, alignedPlane.w);
+    alignedPlaneNormal = cross(v_rightPlaneEC.xyz, v_endPlaneNormalEC_and_batchId.xyz);
+    alignedPlaneNormal = normalize(cross(alignedPlaneNormal, v_rightPlaneEC.xyz));
+    distanceFromEnd = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, v_ecEnd_and_ecStart_X.xyz), eyeCoordinate.xyz);
 
     shouldDiscard = shouldDiscard || distanceFromStart < -halfMaxWidth || distanceFromEnd < -halfMaxWidth;
 
@@ -71,12 +63,10 @@ void main(void)
 #ifdef PER_INSTANCE_COLOR
     gl_FragColor = v_color;
 #else // PER_INSTANCE_COLOR
-    // Clamp - distance to aligned planes may be negative due to mitering
-    distanceFromStart = max(0.0, distanceFromStart);
-    distanceFromEnd = max(0.0, distanceFromEnd);
-
-    float s = distanceFromStart / (distanceFromStart + distanceFromEnd);
-    s = (s * v_texcoordNormalization_and_ecStart_YZ.y) + v_texcoordNormalization_and_ecStart_YZ.x;
+    // Clamp - distance to aligned planes may be negative due to mitering,
+    // so fragment texture coordinate might be out-of-bounds.
+    float s = clamp(distanceFromStart / (distanceFromStart + distanceFromEnd), 0.0, 1.0);
+    s = (s * v_texcoordNormalization_and_ecStart_YZ.x) + v_texcoordNormalization_and_ecStart_YZ.y;
     float t = (widthwiseDistance + halfMaxWidth) / (2.0 * halfMaxWidth);
 
     czm_materialInput materialInput;
