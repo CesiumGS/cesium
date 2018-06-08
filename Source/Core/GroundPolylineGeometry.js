@@ -593,14 +593,14 @@ define([
         var startToXZdistance = Plane.getPointDistance(XZ_PLANE, start);
         var endToXZdistance = Plane.getPointDistance(XZ_PLANE, end);
         var offset = nudgeDirectionScratch;
-        // Larger epsilon than what's used in GeometryPipeline, less than a centimeter in world space
-        if (CesiumMath.equalsEpsilon(startToXZdistance, 0.0, CesiumMath.EPSILON3)) {
+        // Larger epsilon than what's used in GeometryPipeline, a centimeter in world space
+        if (CesiumMath.equalsEpsilon(startToXZdistance, 0.0, CesiumMath.EPSILON2)) {
             offset = direction(end, start, offset);
-            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON3, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON2, offset);
             Cartesian3.add(start, offset, start);
-        } else if (CesiumMath.equalsEpsilon(endToXZdistance, 0.0, CesiumMath.EPSILON3)) {
+        } else if (CesiumMath.equalsEpsilon(endToXZdistance, 0.0, CesiumMath.EPSILON2)) {
             offset = direction(start, end, offset);
-            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON3, offset);
+            Cartesian3.multiplyByScalar(offset, CesiumMath.EPSILON2, offset);
             Cartesian3.add(end, offset, end);
         }
     }
