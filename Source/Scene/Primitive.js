@@ -886,7 +886,7 @@ define([
 
         var str = 'vec4 $1 = czm_computePosition();\n';
         str += '    $1 = $1 + vec4(czm_batchTable_offset(batchId) * applyOffset, 0.0);';
-        modifiedShader = modifiedShader.replace(/vec4\s+([A-Za-z]+)\s+=\s+czm_computePosition\(\);/g, str);
+        modifiedShader = modifiedShader.replace(/vec4\s+([A-Za-z0-9_]+)\s+=\s+czm_computePosition\(\);/g, str);
         return modifiedShader;
     };
 

@@ -276,7 +276,7 @@ define([
         var length = instances.length;
         var pickOffsets;
 
-        var offsetInstanceExtend;// = new Array(length);
+        var offsetInstanceExtend;
         var hasOffset = false;
         if (length > 0) {
             geometries = geometryPipeline(parameters);
