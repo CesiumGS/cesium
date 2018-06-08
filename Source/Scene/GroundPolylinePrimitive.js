@@ -402,12 +402,12 @@ define([
         var fsDefines =  groundPolylinePrimitive.debugShowShadowVolume ? ['DEBUG_SHOW_VOLUME', colorDefine] : [colorDefine];
         var materialShaderSource = defined(appearance.material) ? appearance.material.shaderSource : '';
 
-        // Check for use of v_width_yzw and v_polylineAngle_yzw in material shader
+        // Check for use of v_width and v_polylineAngle in material shader
         // to determine whether these varyings should be active in the vertex shader.
-        if (materialShaderSource.search(/varying\s+vec4\s+v_polylineAngle_yzw;/g) === -1) {
+        if (materialShaderSource.search(/varying\s+float\s+v_polylineAngle;/g) === -1) {
             vsDefines.push('ANGLE_VARYING');
         }
-        if (materialShaderSource.search(/varying\s+vec4\s+v_width_yzw;/g) === -1) {
+        if (materialShaderSource.search(/varying\s+float\s+v_width;/g) === -1) {
             vsDefines.push('WIDTH_VARYING');
         }
 
