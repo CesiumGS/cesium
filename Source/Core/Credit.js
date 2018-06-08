@@ -1,10 +1,10 @@
+var DOMPurify = require('dompurify/dist/purify');
+
 define([
-        '../ThirdParty/xss',
         './defaultValue',
         './defined',
         './defineProperties'
     ], function(
-        xss,
         defaultValue,
         defined,
         defineProperties) {
@@ -94,7 +94,7 @@ define([
         element: {
             get: function() {
                 if (!defined(this._element)) {
-                    var html = xss(this._html);
+                    var html = DOMPurify.sanitize(this._html);
 
                     var div = document.createElement('div');
                     div._creditId = this._id;
