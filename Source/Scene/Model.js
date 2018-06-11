@@ -577,6 +577,7 @@ define([
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
+        this._forwardAxis = defaultValue(options.forwardAxis, Axis.Z);
 
         /**
          * @private
@@ -967,6 +968,25 @@ define([
         upAxis : {
             get : function() {
                 return this._upAxis;
+            }
+        },
+
+        /**
+         * Gets the model's forward axis.
+         * By default, glTF 2.0 models are z-forward according to the glTF spec, however older
+         * glTF (1.0, 0.8) models used x-forward.  Note that only Axis.X and Axis.Z are supported.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default Axis.Z
+         * @readonly
+         *
+         * @private
+         */
+        forwardAxis : {
+            get : function() {
+                return this._forwardAxis;
             }
         },
 
@@ -1366,6 +1386,10 @@ define([
             BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
         } else if (model._upAxis === Axis.X) {
             BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
+        }
+        if (model._forwardAxis === Axis.Z) {
+            // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Z_UP_TO_X_UP, boundingSphere);
         }
         return boundingSphere;
     }
@@ -4225,6 +4249,10 @@ define([
                     };
                     frameState.brdfLutGenerator.update(frameState);
                     updateVersion(this.gltf);
+                    if (defined(this.gltf.asset) && defined(this.gltf.asset.extras) &&
+                        this.gltf.asset.extras.gltf_pipeline_upgrade_10to20) {
+                            this._forwardAxis = Axis.X;
+                    }
                     ModelUtility.checkSupportedExtensions(this.extensionsRequired);
                     addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
@@ -4357,6 +4385,10 @@ define([
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
                 } else if (this._upAxis === Axis.X) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
+                }
+                if (this._forwardAxis === Axis.Z) {
+                    // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Z_UP_TO_X_UP, computedModelMatrix);
                 }
             }
 
