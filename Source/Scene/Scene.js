@@ -346,6 +346,7 @@ define([
         this._pickDepthFramebufferWidth = undefined;
         this._pickDepthFramebufferHeight = undefined;
         this._depthOnlyRenderStateCache = {};
+        this._pickRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -755,7 +756,8 @@ define([
             useGlobeDepthFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
-            usePostProcess : false
+            usePostProcess : false,
+            usePostProcessSelectedFeatures : false
         };
 
         this._useWebVR = false;
@@ -1522,7 +1524,7 @@ define([
                 derivedCommands.logDepth = undefined;
             }
 
-            if (scene.frameState.passes.pick) {
+            if (scene.frameState.passes.pick && !defined(command.pickId)) {
                 return;
             }
 
@@ -1536,6 +1538,10 @@ define([
             if (useLogDepth) {
                 command = logDepthCommand;
                 derivedCommands = logDepthDerivedCommands;
+            }
+
+            if (defined(command.pickId)) {
+                derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
             }
 
             var oit = scene._oit;
@@ -1573,6 +1579,7 @@ define([
         passes.render = false;
         passes.pick = false;
         passes.depth = false;
+        passes.postProcess = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -2047,13 +2054,21 @@ define([
             command = command.derivedCommands.logDepth.command;
         }
 
-        if (scene.debugShowCommands || scene.debugShowFrustums) {
-            executeDebugCommand(command, scene, passState);
-            return;
+        var passes = frameState.passes;
+        if (passes.pick || passes.depth) {
+            if (passes.pick && !passes.depth && defined(command.derivedCommands.picking)) {
+                command = command.derivedCommands.picking.pickCommand;
+                command.execute(context, passState);
+                return;
+            } else if (defined(command.derivedCommands.depth)) {
+                command = command.derivedCommands.depth.depthOnlyCommand;
+                command.execute(context, passState);
+                return;
+            }
         }
 
-        if (frameState.passes.depth && defined(command.derivedCommands.depth)) {
-            command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
+        if (scene.debugShowCommands || scene.debugShowFrustums) {
+            executeDebugCommand(command, scene, passState);
             return;
         }
 
@@ -2066,6 +2081,24 @@ define([
             // and instead shadowing is built-in. In this case execute the command regularly below.
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
+            command.execute(context, passState);
+        }
+    }
+
+    function executeIdCommand(command, scene, context, passState) {
+        if (!defined(command.derivedCommands)) {
+            return;
+        }
+
+        if (scene._logDepthBuffer && defined(command.derivedCommands.logDepth)) {
+            command = command.derivedCommands.logDepth.command;
+        }
+
+        if (defined(command.derivedCommands.picking)) {
+            command = command.derivedCommands.picking.pickCommand;
+            command.execute(context, passState);
+        } else if (defined(command.derivedCommands.depth)) {
+            command = command.derivedCommands.depth.depthOnlyCommand;
             command.execute(context, passState);
         }
     }
@@ -2195,6 +2228,7 @@ define([
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
+        var usePostProcessSelectedFeatures = environmentState.usePostProcessSelectedFeatures;
 
         var height2D = camera.position.z;
 
@@ -2422,6 +2456,58 @@ define([
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
+
+            if (picking || !usePostProcessSelectedFeatures) {
+                continue;
+            }
+
+            var originalFramebuffer = passState.framebuffer;
+            passState.framebuffer = scene._sceneFramebuffer.getIdFramebuffer();
+
+            // reset frustum
+            frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
+            frustum.far = frustumCommands.far;
+            us.updateFrustum(frustum);
+
+            us.updatePass(Pass.GLOBE);
+            commands = frustumCommands.commands[Pass.GLOBE];
+            length = frustumCommands.indices[Pass.GLOBE];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
+            }
+
+            if (clearGlobeDepth) {
+                clearDepth.framebuffer = passState.framebuffer;
+                clearDepth.execute(context, passState);
+                clearDepth.framebuffer = undefined;
+            }
+
+            if (clearGlobeDepth && useDepthPlane) {
+                depthPlane.execute(context, passState);
+            }
+
+            us.updatePass(Pass.CESIUM_3D_TILE);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
+            }
+
+            us.updatePass(Pass.OPAQUE);
+            commands = frustumCommands.commands[Pass.OPAQUE];
+            length = frustumCommands.indices[Pass.OPAQUE];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
+            }
+
+            us.updatePass(Pass.TRANSLUCENT);
+            commands = frustumCommands.commands[Pass.TRANSLUCENT];
+            length = frustumCommands.indices[Pass.TRANSLUCENT];
+            for (j = 0; j < length; ++j) {
+                executeIdCommand(commands[j], scene, context, passState);
+            }
+
+            passState.framebuffer = originalFramebuffer;
         }
     }
 
@@ -2936,6 +3022,7 @@ define([
 
         var postProcess = scene.postProcessStages;
         var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
+        environmentState.usePostProcessSelectedFeatures = false;
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
@@ -2947,6 +3034,7 @@ define([
             postProcess.clear(context);
 
             usePostProcess = environmentState.usePostProcess = postProcess.ready;
+            environmentState.usePostProcessSelectedFeatures = usePostProcess && postProcess.hasSelectedFeatures;
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
@@ -2998,6 +3086,7 @@ define([
         var defaultFramebuffer = environmentState.originalFramebuffer;
         var globeFramebuffer = useGlobeDepthFramebuffer ? scene._globeDepth.framebuffer : undefined;
         var sceneFramebuffer = scene._sceneFramebuffer.getFramebuffer();
+        var idFramebuffer = scene._sceneFramebuffer.getIdFramebuffer();
 
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
@@ -3012,8 +3101,9 @@ define([
 
             var postProcess = scene.postProcessStages;
             var colorTexture = inputFramebuffer.getColorTexture(0);
+            var idTexture = idFramebuffer.getColorTexture(0);
             var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
-            postProcess.execute(context, colorTexture, depthTexture);
+            postProcess.execute(context, colorTexture, depthTexture, idTexture);
             postProcess.copy(context, defaultFramebuffer);
         }
 
@@ -3130,6 +3220,7 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
+        frameState.passes.postProcess = scene.postProcessStages.hasSelectedFeatures;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         frameState.backgroundColor = backgroundColor;

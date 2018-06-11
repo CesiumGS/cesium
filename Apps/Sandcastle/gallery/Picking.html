@@ -33,6 +33,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var scene = viewer.scene;
+if (!scene.pickPositionSupported) {
+    console.log('This browser does not support pickPosition.');
+}
+
 var handler;
 
 Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {

@@ -175,6 +175,12 @@ define([
         }
     });
 
+    function getPickIdCallback(content) {
+        return function() {
+            return content._batchTable.getPickId();
+        };
+    }
+
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var propertyScratch1 = new Array(4);
     var propertyScratch2 = new Array(4);
@@ -275,7 +281,8 @@ define([
             basePath : undefined,
             incrementallyLoadTextures : false,
             upAxis : content._tileset._gltfUpAxis,
-            opaquePass : Pass.CESIUM_3D_TILE // Draw opaque portions during the 3D Tiles pass
+            opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
+            pickIdLoaded : getPickIdCallback(content)
         };
 
         if (gltfFormat === 0) {
@@ -478,7 +485,7 @@ define([
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && frameState.passes.render) {
+        if ((commandStart < commandEnd) && (frameState.passes.render || frameState.passes.pick)) {
             this._batchTable.addDerivedCommands(frameState, commandStart, false);
         }
     };
