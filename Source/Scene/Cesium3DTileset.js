@@ -90,7 +90,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
+     * @param {Resource|String|Promise<Resource>|Promise<String>} options.url The url to a tileset JSON file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
@@ -668,7 +668,7 @@ define([
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
-        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset.json. If the tiles aren't
+        // A bunch of tilesets were generated that have a leading / in front of all URLs in the tileset JSON file. If the tiles aren't
         //  at the root of the domain they will not load anymore. If we find a b3dm file with a leading slash, we test load a tile.
         //  If it succeeds we continue on. If it fails, we set this to true so we know to strip the slash when loading tiles.
         this._brokenUrlWorkaround = false;
@@ -691,19 +691,13 @@ define([
                     basePath = resource.getBaseUri(true);
                 } else if (resource.isDataUri) {
                     basePath = '';
-                } else {
-                    resource.appendForwardSlash();
-                    tilesetResource = resource.getDerivedResource({
-                        url: 'tileset.json'
-                    });
-                    basePath = resource.url;
                 }
 
                 that._url = resource.url;
                 that._tilesetUrl = tilesetResource.url;
                 that._basePath = basePath;
 
-                // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
+                // We don't know the distance of the tileset until tileset JSON file is loaded, so use the default distance for now
                 return Cesium3DTileset.loadJson(tilesetResource);
             })
             .then(function(tilesetJson) {
@@ -711,7 +705,7 @@ define([
             })
             .then(function(tilesetJson) {
                 if (that._brokenUrlWorkaround) {
-                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset.json is deprecated.');
+                    deprecationWarning('Cesium3DTileset.leadingSlash', 'Having a leading slash in a tile URL that is actually relative to the tileset JSON file is deprecated.');
                 }
 
                 that._root = that.loadTileset(tilesetResource, tilesetJson);
@@ -920,7 +914,7 @@ define([
         },
 
         /**
-         * The url to a tileset.json file or to a directory containing a tileset.json file.
+         * The url to a tileset JSON file.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -934,7 +928,7 @@ define([
         },
 
         /**
-         * The base path that non-absolute paths in tileset.json are relative to.
+         * The base path that non-absolute paths in tileset JSON file are relative to.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -944,7 +938,7 @@ define([
          */
         basePath : {
             get : function() {
-                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset.json that contains them. Use the url property instead.');
+                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset JSON file that contains them. Use the url property instead.');
                 return this._basePath;
             }
         },
@@ -1252,7 +1246,7 @@ define([
     };
 
     /**
-     * Loads the main tileset.json or a tileset.json referenced from a tile.
+     * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
      *
      * @private
      */
@@ -1276,7 +1270,7 @@ define([
             tilesetResource.setQueryParameters(versionQuery);
         }
 
-        // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
+        // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
         // Get the basePath relative to the external tileset.
         var rootTile = new Cesium3DTile(this, tilesetResource, tilesetJson.root, parentTile);
 
