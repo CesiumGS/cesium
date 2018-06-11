@@ -405,10 +405,10 @@ define([
 
             // Check for use of v_width and v_polylineAngle in material shader
             // to determine whether these varyings should be active in the vertex shader.
-            if (materialShaderSource.search(/varying\s+float\s+v_polylineAngle;/g) === -1) {
+            if (materialShaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
                 vsDefines.push('ANGLE_VARYING');
             }
-            if (materialShaderSource.search(/varying\s+float\s+v_width;/g) === -1) {
+            if (materialShaderSource.search(/varying\s+float\s+v_width;/g) !== -1) {
                 vsDefines.push('WIDTH_VARYING');
             }
         } else {
@@ -455,7 +455,7 @@ define([
         var colorProgramMorph = context.shaderCache.getDerivedShaderProgram(groundPolylinePrimitive._sp, 'MorphColor');
         if (!defined(colorProgramMorph)) {
             var vsColorMorph = new ShaderSource({
-                defines : vsDefines,
+                defines : vsDefines.concat(['MAX_TERRAIN_HEIGHT ' + ApproximateTerrainHeights._defaultMaxTerrainHeight.toFixed(1)]),
                 sources : [vsMorph]
             });
 
